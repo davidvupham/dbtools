@@ -1,0 +1,19 @@
+#!/bin/bash
+# Example configuration script for Snowflake Replication Monitor
+# Source this file before running the monitor: source config.sh
+
+# Snowflake credentials
+export SNOWFLAKE_USER="your_snowflake_username"
+export SNOWFLAKE_PASSWORD="your_snowflake_password"
+
+# Email configuration for notifications
+export SMTP_SERVER="smtp.gmail.com"  # or your SMTP server
+export SMTP_USER="your_email@gmail.com"
+export SMTP_PASSWORD="your_app_password"
+export FROM_EMAIL="monitor@yourdomain.com"
+export TO_EMAILS="admin1@yourdomain.com,admin2@yourdomain.com"
+
+# Optional: If using SSO/external browser authentication, uncomment:
+# AUTHENTICATOR="externalbrowser"
+
+echo "Environment variables configured for Snowflake Replication Monitor"
