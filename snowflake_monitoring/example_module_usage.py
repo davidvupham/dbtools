@@ -16,11 +16,10 @@ def example_basic_usage():
     print("Example 1: Basic Usage")
     print("="*60)
     
-    # Create connection
+    # Create connection (using environment variables for Vault config)
     conn = SnowflakeConnection(
         account=os.getenv('SNOWFLAKE_ACCOUNT', 'myaccount'),
         user=os.getenv('SNOWFLAKE_USER', 'myuser'),
-        password=os.getenv('SNOWFLAKE_PASSWORD', 'mypassword'),
         warehouse=os.getenv('SNOWFLAKE_WAREHOUSE'),
         role=os.getenv('SNOWFLAKE_ROLE')
     )
@@ -56,11 +55,10 @@ def example_check_replication_status():
     print("Example 2: Check Replication Status")
     print("="*60)
     
-    # Using context manager for automatic connection cleanup
+    # Using context manager for automatic connection cleanup (env vars for Vault)
     with SnowflakeConnection(
         account=os.getenv('SNOWFLAKE_ACCOUNT', 'myaccount'),
-        user=os.getenv('SNOWFLAKE_USER', 'myuser'),
-        password=os.getenv('SNOWFLAKE_PASSWORD', 'mypassword')
+        user=os.getenv('SNOWFLAKE_USER', 'myuser')
     ) as conn:
         
         replication = SnowflakeReplication(conn)
@@ -92,8 +90,7 @@ def example_query_replication_history():
     
     conn = SnowflakeConnection(
         account=os.getenv('SNOWFLAKE_ACCOUNT', 'myaccount'),
-        user=os.getenv('SNOWFLAKE_USER', 'myuser'),
-        password=os.getenv('SNOWFLAKE_PASSWORD', 'mypassword')
+        user=os.getenv('SNOWFLAKE_USER', 'myuser')
     )
     
     try:
@@ -132,8 +129,7 @@ def example_parse_cron_schedule():
     
     conn = SnowflakeConnection(
         account=os.getenv('SNOWFLAKE_ACCOUNT', 'myaccount'),
-        user=os.getenv('SNOWFLAKE_USER', 'myuser'),
-        password=os.getenv('SNOWFLAKE_PASSWORD', 'mypassword')
+        user=os.getenv('SNOWFLAKE_USER', 'myuser')
     )
     
     try:
@@ -164,8 +160,7 @@ def example_execute_custom_query():
     
     with SnowflakeConnection(
         account=os.getenv('SNOWFLAKE_ACCOUNT', 'myaccount'),
-        user=os.getenv('SNOWFLAKE_USER', 'myuser'),
-        password=os.getenv('SNOWFLAKE_PASSWORD', 'mypassword')
+        user=os.getenv('SNOWFLAKE_USER', 'myuser')
     ) as conn:
         
         # Execute a simple query
@@ -194,9 +189,15 @@ def main():
     print("\nNote: Set these environment variables before running:")
     print("  - SNOWFLAKE_ACCOUNT")
     print("  - SNOWFLAKE_USER")
-    print("  - SNOWFLAKE_PASSWORD")
     print("  - SNOWFLAKE_WAREHOUSE (optional)")
     print("  - SNOWFLAKE_ROLE (optional)")
+    print("\nVault configuration (for RSA key authentication):")
+    print("  - VAULT_ADDR")
+    print("  - VAULT_SECRET_PATH")
+    print("  - VAULT_MOUNT_POINT")
+    print("  - VAULT_ROLE_ID (optional)")
+    print("  - VAULT_SECRET_ID (optional)")
+    print("  - VAULT_NAMESPACE (optional)")
     
     try:
         # Run examples

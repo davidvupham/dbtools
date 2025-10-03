@@ -1,39 +1,26 @@
 """
-GDS Snowflake Package
+Snowflake data analysis and replication monitoring package.
 
-A Python package for managing Snowflake database connections, replication
-monitoring, and database/table metadata retrieval.
-
-This package provides:
-- SnowflakeConnection: Robust connection management with auto-reconnection
-- SnowflakeReplication: Replication monitoring and failover group management
-- SnowflakeDatabase: Database-level metadata retrieval (databases, schemas,
-                     functions, procedures, stages, pipes, tasks, streams)
-- SnowflakeTable: Table-level metadata retrieval (tables, views, columns)
-- FailoverGroup: Data class for failover group representation
-
-Example:
-    >>> from gds_snowflake import SnowflakeConnection
-    >>> from gds_snowflake import SnowflakeDatabase, SnowflakeTable
-    >>> conn = SnowflakeConnection(account='myaccount', user='myuser')
-    >>> conn.connect()
-    >>> db_meta = SnowflakeDatabase(conn)
-    >>> databases = db_meta.get_databases()
-    >>> tbl_meta = SnowflakeTable(conn)
-    >>> tables = tbl_meta.get_tables(database_name='MYDB')
+Provides classes for connecting to Snowflake, managing databases and tables,
+and monitoring replication status for failover groups.
 """
 
-from gds_snowflake.connection import SnowflakeConnection
-from gds_snowflake.replication import SnowflakeReplication, FailoverGroup
-from gds_snowflake.database import SnowflakeDatabase
-from gds_snowflake.table import SnowflakeTable
+from .connection import SnowflakeConnection
+from .database import SnowflakeDatabase
+from .table import SnowflakeTable
+from .replication import SnowflakeReplication, FailoverGroup
+from .monitor import SnowflakeMonitor, AlertSeverity, MonitoringResult, ConnectivityResult, ReplicationResult
 
 __version__ = "1.0.0"
-__author__ = "GDS Team"
 __all__ = [
     "SnowflakeConnection",
+    "SnowflakeDatabase", 
+    "SnowflakeTable",
     "SnowflakeReplication",
     "FailoverGroup",
-    "SnowflakeDatabase",
-    "SnowflakeTable",
+    "SnowflakeMonitor",
+    "AlertSeverity",
+    "MonitoringResult",
+    "ConnectivityResult",
+    "ReplicationResult"
 ]

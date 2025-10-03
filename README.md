@@ -1,4 +1,4 @@
-# Snowflake Monitoring Workspace
+# Snowflake Workspace
 
 This workspace contains two main components:
 
@@ -36,7 +36,7 @@ A complete application for monitoring Snowflake replication with email notificat
 ```bash
 cd snowflake_monitoring
 pip install -r requirements.txt
-python monitor_snowflake_replication_v2.py myaccount
+python monitor_snowflake_replication.py myaccount
 ```
 
 **Documentation:** See [snowflake_monitoring/README.md](snowflake_monitoring/README.md)
@@ -59,8 +59,7 @@ snowflake/
 │   └── MANIFEST.in             # Package manifest
 │
 ├── snowflake_monitoring/       # 🔍 Monitoring Application
-│   ├── monitor_snowflake_replication_v2.py  # Main script
-│   ├── monitor_snowflake_replication.py     # Legacy script
+│   ├── monitor_snowflake_replication.py     # Main script
 │   ├── example_module_usage.py              # Usage examples
 │   ├── config.sh.example                    # Config template
 │   ├── requirements.txt                     # App dependencies
@@ -87,10 +86,9 @@ cd ../snowflake_monitoring
 
 # Set credentials
 export SNOWFLAKE_USER="your_user"
-export SNOWFLAKE_PASSWORD="your_password"
 
 # Run monitor
-python monitor_snowflake_replication_v2.py myaccount
+python monitor_snowflake_replication.py myaccount
 ```
 
 ### 3. Use the Package in Your Code
@@ -98,7 +96,12 @@ python monitor_snowflake_replication_v2.py myaccount
 ```python
 from gds_snowflake import SnowflakeConnection, SnowflakeReplication
 
-conn = SnowflakeConnection(account='myaccount', user='myuser', password='mypass')
+conn = SnowflakeConnection(
+    account='myaccount', 
+    user='myuser', 
+    vault_secret_path='data/snowflake',
+    vault_mount_point='secret'
+)
 conn.connect()
 
 repl = SnowflakeReplication(conn)

@@ -86,7 +86,7 @@
         "name": "Monitor: Run Once",
         "type": "debugpy",
         "request": "launch",
-        "program": "${workspaceFolder}/monitor_snowflake_replication_v2.py",
+        "program": "${workspaceFolder}/monitor_snowflake_replication.py",
         "console": "integratedTerminal",
         "args": [
           "${input:accountName}",
@@ -98,7 +98,7 @@
         "name": "Monitor: Continuous",
         "type": "debugpy",
         "request": "launch",
-        "program": "${workspaceFolder}/monitor_snowflake_replication_v2.py",
+        "program": "${workspaceFolder}/monitor_snowflake_replication.py",
         "console": "integratedTerminal",
         "args": [
           "${input:accountName}",
@@ -269,7 +269,7 @@
           "--ignore-missing-imports",
           "snowflake_connection.py",
           "snowflake_replication.py",
-          "monitor_snowflake_replication_v2.py"
+          "monitor_snowflake_replication.py"
         ],
         "group": "none",
         "presentation": {

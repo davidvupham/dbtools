@@ -23,7 +23,6 @@ January 2025
 snowflake/
 ├── connection.py
 ├── replication.py
-├── monitor_snowflake_replication_v2.py
 ├── monitor_snowflake_replication.py
 ├── tests/
 ├── setup.py
@@ -52,7 +51,6 @@ snowflake/
 ├── snowflake_monitoring/       # 🔍 Self-contained application
 │   ├── README.md
 │   ├── requirements.txt
-│   ├── monitor_snowflake_replication_v2.py
 │   ├── monitor_snowflake_replication.py
 │   ├── example_module_usage.py
 │   └── config.sh.example
@@ -161,7 +159,8 @@ from gds_snowflake import SnowflakeConnection, SnowflakeReplication
 conn = SnowflakeConnection(
     account='myaccount',
     user='myuser',
-    password='mypass'
+    vault_secret_path='data/snowflake',
+    vault_mount_point='secret'
 )
 conn.connect()
 
@@ -183,10 +182,9 @@ pip install -r requirements.txt
 
 # Set credentials
 export SNOWFLAKE_USER="your_user"
-export SNOWFLAKE_PASSWORD="your_password"
 
 # Run monitor
-python monitor_snowflake_replication_v2.py myaccount
+python monitor_snowflake_replication.py myaccount
 ```
 
 ## Testing Status
@@ -229,8 +227,8 @@ python run_tests.py
 - Created new: `setup.py`, `pyproject.toml`, `README.md`, `LICENSE`, `MANIFEST.in`, `__init__.py`, `py.typed`
 
 ### To `snowflake_monitoring/`:
-- `monitor_snowflake_replication_v2.py` → `snowflake_monitoring/monitor_snowflake_replication_v2.py`
-- `monitor_snowflake_replication.py` → `snowflake_monitoring/monitor_snowflake_replication.py`
+- `monitor_snowflake_replication_v2.py` → `snowflake_monitoring/monitor_snowflake_replication.py` (renamed from v2)
+- `monitor_snowflake_replication.py` → `snowflake_monitoring/monitor_snowflake_replication.py` (REMOVED - deprecated legacy script)
 - `example_module_usage.py` → `snowflake_monitoring/example_module_usage.py`
 - `config.sh.example` → `snowflake_monitoring/config.sh.example`
 - Created new: `README.md`, `requirements.txt`, `__init__.py`

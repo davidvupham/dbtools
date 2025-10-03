@@ -47,15 +47,13 @@ class SnowflakeConnection:
                 warehouse: Optional warehouse name
                 role: Optional role name
                 database: Optional database name
-                vault_namespace: Vault namespace (optional, for multi-tenant Vault)
-                vault_secret_path: Path to secret in Vault
+                vault_namespace: Vault namespace (optional, defaults to VAULT_NAMESPACE env)
+                vault_secret_path: Path to secret in Vault (optional, defaults to VAULT_SECRET_PATH env)
                     (e.g., 'namespace/data/snowflake')
-                vault_mount_point: Vault mount point (e.g., 'secret')
-                vault_role_id: Vault AppRole role_id
-                    (optional, defaults to HVAULT_ROLE_ID env)
-                vault_secret_id: Vault AppRole secret_id
-                    (optional, defaults to HVAULT_SECRET_ID env)
-                vault_addr: Vault address (optional, defaults to HVAULT_ADDR env)
+                vault_mount_point: Vault mount point (optional, defaults to VAULT_MOUNT_POINT env)
+                vault_role_id: Vault AppRole role_id (optional, defaults to VAULT_ROLE_ID env)
+                vault_secret_id: Vault AppRole secret_id (optional, defaults to VAULT_SECRET_ID env)
+                vault_addr: Vault address (optional, defaults to VAULT_ADDR env)
         """
         self.account = account
         self.user = user or os.getenv("SNOWFLAKE_USER")
@@ -64,8 +62,13 @@ class SnowflakeConnection:
         self.database = database
         self.connection = None
 
-        # Vault namespace: parameter > env > None
-        self.vault_namespace = vault_namespace or os.getenv("HVAULT_NAMESPACE")
+        # Vault configuration: parameter > env > None
+        self.vault_namespace = vault_namespace or os.getenv("VAULT_NAMESPACE")
+        vault_secret_path = vault_secret_path or os.getenv("VAULT_SECRET_PATH")
+        vault_mount_point = vault_mount_point or os.getenv("VAULT_MOUNT_POINT")
+        vault_role_id = vault_role_id or os.getenv("VAULT_ROLE_ID")
+        vault_secret_id = vault_secret_id or os.getenv("VAULT_SECRET_ID")
+        vault_addr = vault_addr or os.getenv("VAULT_ADDR")
 
         # Fetch RSA private key from Vault
         self.private_key = None
@@ -87,7 +90,9 @@ class SnowflakeConnection:
                 self.private_key = secret.get("private_key")
                 if not self.private_key:
                     raise VaultError("private_key not found in Vault secret")
-                logger.info("Snowflake private key loaded from Vault: %s", secret_path)
+                logger.info(
+                    "Snowflake private key loaded from Vault: %s", secret_path
+                )
             except VaultError as e:
                 logger.error("Vault error: %s", e)
                 raise RuntimeError(
@@ -119,15 +124,16 @@ class SnowflakeConnection:
             if self.database:
                 connection_params["database"] = self.database
             logger.info(
-                f"Connecting to Snowflake account: {self.account} as user: "
-                f"{self.user}"
+                "Connecting to Snowflake account: %s as user: %s",
+                self.account, self.user
             )
             self.connection = snowflake.connector.connect(**connection_params)
             logger.info("Successfully connected to Snowflake account: %s", self.account)
             return self.connection
         except Exception as e:
             logger.error(
-                f"Failed to connect to Snowflake account {self.account}: " f"{str(e)}"
+                "Failed to connect to Snowflake account %s: %s",
+                self.account, str(e)
             )
             raise
 
@@ -141,6 +147,120 @@ class SnowflakeConnection:
         if self.connection is None or self.connection.is_closed():
             self.connect()
         return self.connection
+
+    def test_connectivity(self, timeout_seconds: int = 30) -> dict:
+        """
+        Test connectivity to Snowflake account with comprehensive diagnostics.
+        
+        Args:
+            timeout_seconds: Connection timeout in seconds
+            
+        Returns:
+            Dictionary with connectivity test results:
+            {
+                'success': bool,
+                'response_time_ms': float,
+                'account_info': dict,
+                'error': str (if failed),
+                'timestamp': str
+            }
+        """
+        import time
+        from datetime import datetime
+        
+        start_time = time.time()
+        result = {
+            'success': False,
+            'response_time_ms': 0,
+            'account_info': {},
+            'error': None,
+            'timestamp': datetime.now().isoformat()
+        }
+        
+        try:
+            # Test basic connectivity with a lightweight query
+            test_connection = None
+            connection_params = {
+                "account": self.account,
+                "user": self.user,
+                "private_key": self.private_key,
+                "login_timeout": timeout_seconds,
+                "network_timeout": timeout_seconds
+            }
+            
+            if self.warehouse:
+                connection_params["warehouse"] = self.warehouse
+            if self.role:
+                connection_params["role"] = self.role
+            if self.database:
+                connection_params["database"] = self.database
+                
+            logger.info(
+                "Testing connectivity to Snowflake account: %s", self.account
+            )
+            
+            # Create test connection
+            test_connection = snowflake.connector.connect(**connection_params)
+            
+            # Execute lightweight diagnostic queries
+            cursor = test_connection.cursor()
+            
+            # Test 1: Basic connectivity with SELECT 1
+            cursor.execute("SELECT 1 as connectivity_test")
+            cursor.fetchone()
+            
+            # Test 2: Get account information
+            cursor.execute("""
+                SELECT 
+                    CURRENT_ACCOUNT() as account_name,
+                    CURRENT_USER() as current_user,
+                    CURRENT_ROLE() as current_role,
+                    CURRENT_WAREHOUSE() as current_warehouse,
+                    CURRENT_DATABASE() as current_database,
+                    CURRENT_VERSION() as snowflake_version,
+                    CURRENT_REGION() as region
+            """)
+            
+            account_info = cursor.fetchone()
+            if account_info:
+                result['account_info'] = {
+                    'account_name': account_info[0],
+                    'current_user': account_info[1],
+                    'current_role': account_info[2],
+                    'current_warehouse': account_info[3],
+                    'current_database': account_info[4],
+                    'snowflake_version': account_info[5],
+                    'region': account_info[6]
+                }
+            
+            cursor.close()
+            result['success'] = True
+            
+            end_time = time.time()
+            result['response_time_ms'] = round((end_time - start_time) * 1000, 2)
+            
+            logger.info(
+                f"Connectivity test successful for {self.account} "
+                f"(response time: {result['response_time_ms']}ms)"
+            )
+            
+        except Exception as e:
+            end_time = time.time()
+            result['response_time_ms'] = round((end_time - start_time) * 1000, 2)
+            result['error'] = str(e)
+            logger.error(
+                f"Connectivity test failed for {self.account}: {str(e)} "
+                f"(response time: {result['response_time_ms']}ms)"
+            )
+        finally:
+            # Clean up test connection
+            if test_connection and not test_connection.is_closed():
+                try:
+                    test_connection.close()
+                except Exception as e:
+                    logger.warning(f"Error closing test connection: {str(e)}")
+                    
+        return result
 
     def close(self):
         """Close the Snowflake connection if open."""

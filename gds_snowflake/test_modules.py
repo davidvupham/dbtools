@@ -42,7 +42,8 @@ def test_class_instantiation():
         conn = SnowflakeConnection(
             account='test_account',
             user='test_user',
-            password='test_password'
+            vault_secret_path='data/snowflake',
+            vault_mount_point='secret'
         )
         print("✓ SnowflakeConnection object created successfully")
         

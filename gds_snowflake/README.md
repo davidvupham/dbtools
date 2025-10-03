@@ -24,6 +24,28 @@ cd snowflake/gds_snowflake
 pip install .
 ```
 
+## Configuration
+
+### Environment Variables
+
+The package supports the following environment variables for default configuration:
+
+```bash
+# Snowflake connection
+SNOWFLAKE_USER=your_username
+SNOWFLAKE_ACCOUNT=your_account
+
+# Vault configuration (for RSA key authentication)
+VAULT_ADDR=https://vault.example.com:8200
+VAULT_NAMESPACE=your_namespace
+VAULT_SECRET_PATH=data/snowflake
+VAULT_MOUNT_POINT=secret
+VAULT_ROLE_ID=your_role_id
+VAULT_SECRET_ID=your_secret_id
+```
+
+When environment variables are set, you can create connections with minimal parameters.
+
 ## Quick Start
 
 ### Basic Connection
@@ -31,13 +53,24 @@ pip install .
 ```python
 from gds_snowflake import SnowflakeConnection
 
-# Create connection
+# Method 1: Using environment variables for Vault configuration
+# Set VAULT_ADDR, VAULT_SECRET_PATH, VAULT_MOUNT_POINT, etc. in environment
 conn = SnowflakeConnection(
     account='myaccount',
     user='myuser',
-    password='mypassword',
     warehouse='my_warehouse',
     role='my_role'
+)
+
+# Method 2: Explicitly specifying Vault parameters
+conn = SnowflakeConnection(
+    account='myaccount',
+    user='myuser',
+    warehouse='my_warehouse',
+    role='my_role',
+    vault_secret_path='data/snowflake',
+    vault_mount_point='secret',
+    vault_addr='https://vault.example.com:8200'
 )
 
 # Connect
@@ -56,7 +89,19 @@ conn.close()
 ```python
 from gds_snowflake import SnowflakeConnection
 
-with SnowflakeConnection(account='myaccount', user='myuser', password='mypass') as conn:
+# Using environment variables (recommended)
+with SnowflakeConnection(account='myaccount', user='myuser') as conn:
+    results = conn.execute_query("SELECT * FROM my_table")
+    for row in results:
+        print(row)
+
+# Or with explicit Vault parameters
+with SnowflakeConnection(
+    account='myaccount', 
+    user='myuser', 
+    vault_secret_path='data/snowflake',
+    vault_mount_point='secret'
+) as conn:
     results = conn.execute_query("SELECT * FROM my_table")
     for row in results:
         print(row)
@@ -68,7 +113,12 @@ with SnowflakeConnection(account='myaccount', user='myuser', password='mypass') 
 from gds_snowflake import SnowflakeConnection, SnowflakeReplication
 
 # Connect to Snowflake
-conn = SnowflakeConnection(account='myaccount', user='myuser', password='mypass')
+conn = SnowflakeConnection(
+    account='myaccount', 
+    user='myuser', 
+    vault_secret_path='data/snowflake',
+    vault_mount_point='secret'
+)
 conn.connect()
 
 # Create replication monitor
@@ -100,7 +150,12 @@ conn.close()
 ```python
 from gds_snowflake import SnowflakeConnection, SnowflakeReplication
 
-conn = SnowflakeConnection(account='myaccount', user='myuser', password='mypass')
+conn = SnowflakeConnection(
+    account='myaccount', 
+    user='myuser', 
+    vault_secret_path='data/snowflake',
+    vault_mount_point='secret'
+)
 conn.connect()
 
 repl = SnowflakeReplication(conn)
@@ -133,7 +188,12 @@ for group in groups:
 ```python
 from gds_snowflake import SnowflakeConnection
 
-conn = SnowflakeConnection(account='primary_account', user='myuser', password='mypass')
+conn = SnowflakeConnection(
+    account='primary_account', 
+    user='myuser', 
+    vault_secret_path='data/snowflake',
+    vault_mount_point='secret'
+)
 conn.connect()
 
 # Do work on primary
@@ -154,7 +214,12 @@ conn.close()
 from gds_snowflake import SnowflakeConnection, SnowflakeMetadata
 
 # Connect to Snowflake
-conn = SnowflakeConnection(account='myaccount', user='myuser', password='mypass')
+conn = SnowflakeConnection(
+    account='myaccount', 
+    user='myuser', 
+    vault_secret_path='data/snowflake',
+    vault_mount_point='secret'
+)
 conn.connect()
 
 # Create metadata retriever
@@ -196,7 +261,12 @@ conn.close()
 ```python
 from gds_snowflake import SnowflakeConnection, SnowflakeMetadata
 
-with SnowflakeConnection(account='myaccount', user='myuser', password='mypass') as conn:
+with SnowflakeConnection(
+    account='myaccount', 
+    user='myuser', 
+    vault_secret_path='data/snowflake',
+    vault_mount_point='secret'
+) as conn:
     metadata = SnowflakeMetadata(conn)
     
     # Get stages
@@ -218,6 +288,108 @@ with SnowflakeConnection(account='myaccount', user='myuser', password='mypass') 
     functions = metadata.get_functions(database_name='MYDB', schema_name='PUBLIC')
     procedures = metadata.get_procedures(database_name='MYDB', schema_name='PUBLIC')
 ```
+
+## Monitoring with SnowflakeMonitor
+
+The `SnowflakeMonitor` class provides comprehensive monitoring capabilities for Snowflake accounts:
+
+```python
+from gds_snowflake import SnowflakeMonitor
+
+# Create monitor instance
+monitor = SnowflakeMonitor(
+    account="your-account",
+    connectivity_timeout=30,
+    latency_threshold_minutes=30.0,
+    enable_email_alerts=True
+)
+
+# Run comprehensive monitoring
+results = monitor.monitor_all()
+
+# Check connectivity
+if results['summary']['connectivity_ok']:
+    print("✓ Connectivity OK")
+else:
+    print("✗ Connectivity Failed")
+
+# Check for issues
+failures = results['summary']['groups_with_failures']
+latency_issues = results['summary']['groups_with_latency']
+
+print(f"Replication Failures: {failures}")
+print(f"Latency Issues: {latency_issues}")
+
+# Clean up
+monitor.close()
+```
+
+### Individual Monitoring Methods
+
+```python
+# Test connectivity only
+connectivity = monitor.monitor_connectivity()
+print(f"Connected in {connectivity.response_time_ms}ms")
+
+# Check replication failures
+failures = monitor.monitor_replication_failures()
+for result in failures:
+    if result.has_failure:
+        print(f"✗ {result.failover_group}: {result.failure_message}")
+
+# Check replication latency
+latency_issues = monitor.monitor_replication_latency()
+for result in latency_issues:
+    if result.has_latency:
+        print(f"⚠ {result.failover_group}: {result.latency_minutes} min")
+```
+
+### Context Manager Usage
+
+```python
+# Use with context manager for automatic cleanup
+with SnowflakeMonitor(account="your-account") as monitor:
+    results = monitor.monitor_all()
+    # Monitor automatically closed when exiting context
+```
+
+**Key Features:**
+
+- **Connectivity Testing**: Network and account availability monitoring
+- **Replication Monitoring**: Failure detection and latency tracking
+- **Email Notifications**: Automated alerts for issues
+- **Configurable Thresholds**: Customizable alerting criteria
+- **Production Ready**: Built-in error handling and recovery
+
+See [SNOWFLAKE_MONITOR_GUIDE.md](SNOWFLAKE_MONITOR_GUIDE.md) for comprehensive documentation.
+
+### Legacy Connectivity Testing
+
+The `SnowflakeConnection` class also includes a built-in connectivity testing method:
+
+```python
+from gds_snowflake import SnowflakeConnection
+
+# Create connection
+conn = SnowflakeConnection(account="your-account")
+
+# Test connectivity with timeout
+result = conn.test_connectivity(timeout_seconds=30)
+
+print(f"Success: {result['success']}")
+print(f"Response Time: {result['response_time_ms']} ms")
+print(f"Account Info: {result['account_info']}")
+
+if not result['success']:
+    print(f"Error: {result['error']}")
+```
+
+**Best Practices for Connectivity Testing:**
+
+1. **Regular Health Checks**: Test connectivity before critical operations
+2. **Timeout Configuration**: Set appropriate timeouts for your network environment
+3. **Error Handling**: Always check the success flag before proceeding
+4. **Monitoring Integration**: Use connectivity testing in monitoring scripts
 
 ## API Reference
 
@@ -286,11 +458,35 @@ with SnowflakeConnection(account='myaccount', user='myuser', password='mypass') 
 - `get_tasks(database_name=None, schema_name=None)` - Get task metadata
 - `get_streams(database_name=None, schema_name=None)` - Get stream metadata
 
+### SnowflakeMonitor
+
+**Methods:**
+- `monitor_connectivity()` - Test account connectivity and return detailed results
+- `monitor_replication_failures()` - Check all failover groups for replication failures
+- `monitor_replication_latency()` - Check all failover groups for latency issues
+- `monitor_all()` - Run comprehensive monitoring (connectivity + replication)
+- `close()` - Clean up resources and connections
+
+**Context Manager:**
+- Supports `with` statement for automatic resource cleanup
+
+**Configuration:**
+- `connectivity_timeout` - Timeout for connectivity tests (seconds)
+- `latency_threshold_minutes` - Threshold for latency alerts (minutes)
+- `enable_email_alerts` - Enable/disable email notifications
+- Email settings: `smtp_server`, `smtp_port`, `smtp_user`, `smtp_password`, `from_email`, `to_emails`
+
+**Result Objects:**
+- `ConnectivityResult` - Connectivity test results with timing and diagnostics
+- `ReplicationResult` - Replication monitoring results with failure/latency details
+- `MonitoringResult` - General monitoring operation results
+
 ## Requirements
 
 - Python >= 3.7
 - snowflake-connector-python >= 3.0.0
 - croniter >= 1.3.0
+- gds-hvault (for Vault authentication)
 
 ## License
 
@@ -304,3 +500,4 @@ GDS Team
 
 - [GitHub Repository](https://github.com/davidvupham/snowflake)
 - [Issue Tracker](https://github.com/davidvupham/snowflake/issues)
+- [SnowflakeMonitor Guide](SNOWFLAKE_MONITOR_GUIDE.md)

@@ -10,10 +10,14 @@ from io import StringIO
 from datetime import datetime, timedelta
 
 # Add snowflake_monitoring directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(__file__)), 'snowflake_monitoring'))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'snowflake_monitoring'))
 
-# Import the module
-import monitor_snowflake_replication_v2 as monitor
+# Import the module (updated to use renamed script)
+try:
+    import monitor_snowflake_replication as monitor
+except ImportError:
+    # Skip tests if monitoring module not available
+    monitor = None
 
 
 class TestEmailNotification(unittest.TestCase):

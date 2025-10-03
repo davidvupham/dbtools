@@ -14,8 +14,7 @@ A complete application for monitoring Snowflake replication, detecting failures 
 
 ## Contents
 
-- `monitor_snowflake_replication_v2.py` - Main monitoring script (refactored, uses gds_snowflake package)
-- `monitor_snowflake_replication.py` - Original monolithic version (legacy)
+- `monitor_snowflake_replication.py` - Main monitoring script (uses gds_snowflake package with RSA key authentication)
 - `example_module_usage.py` - Examples of using the gds_snowflake package
 - `config.sh.example` - Configuration template
 - `requirements.txt` - Application dependencies
@@ -48,7 +47,7 @@ The application uses environment variables for credentials and email configurati
 ```bash
 # Snowflake credentials
 export SNOWFLAKE_USER="your_username"
-export SNOWFLAKE_PASSWORD="your_password"
+# Note: Password authentication removed - using RSA key authentication via Vault
 
 # Optional: Warehouse and Role
 export SNOWFLAKE_WAREHOUSE="COMPUTE_WH"
@@ -77,42 +76,57 @@ source config.sh
 
 ```bash
 # Continuous monitoring (checks every 60 seconds)
-python monitor_snowflake_replication_v2.py myaccount
+python monitor_snowflake_replication.py myaccount
 
 # Run once and exit
-python monitor_snowflake_replication_v2.py myaccount --once
+python monitor_snowflake_replication.py myaccount --once
 
 # Custom monitoring interval (in seconds)
-python monitor_snowflake_replication_v2.py myaccount --interval 300  # 5 minutes
+python monitor_snowflake_replication.py myaccount --interval 300  # 5 minutes
+```
+
+### Connectivity Testing
+
+```bash
+# Test connectivity only (no replication monitoring)
+python monitor_snowflake_replication.py myaccount --test-connectivity
+
+# Test with custom timeout
+python monitor_snowflake_replication.py myaccount --test-connectivity --connectivity-timeout 60
 ```
 
 ### With Command-Line Arguments
 
 ```bash
-# Provide credentials via command line
-python monitor_snowflake_replication_v2.py myaccount \
+# Provide credentials via command line (Note: RSA key authentication via Vault)
+python monitor_snowflake_replication.py myaccount \
     --user myuser \
-    --password mypassword \
     --warehouse COMPUTE_WH \
     --role ACCOUNTADMIN
 
 # Run once for testing
-python monitor_snowflake_replication_v2.py myaccount \
+python monitor_snowflake_replication.py myaccount \
     --user myuser \
-    --password mypassword \
     --once
-```
-
-### Legacy Version
-
-```bash
-# Using the original monolithic script
-python monitor_snowflake_replication.py myaccount
 ```
 
 ## What It Monitors
 
-### 1. Replication Failures
+### 1. Snowflake Connectivity
+
+**Before each monitoring cycle**, the script tests:
+- Network connectivity to Snowflake
+- Authentication and authorization
+- Account availability and status
+- Response time and performance
+
+**Benefits:**
+- Early detection of network issues
+- Prevents unnecessary processing when Snowflake is unavailable
+- Provides detailed diagnostics for troubleshooting
+- Automatic email alerts for connectivity problems
+
+### 2. Replication Failures
 
 The monitor checks for:
 - Missing replication history entries
@@ -121,7 +135,7 @@ The monitor checks for:
 
 **Alert Trigger:** When replication history shows failures or is missing for expected time periods
 
-### 2. Replication Latency
+### 3. Replication Latency
 
 Latency is calculated using the formula:
 ```
@@ -204,11 +218,10 @@ Type=simple
 User=snowflake-monitor
 WorkingDirectory=/opt/snowflake_monitoring
 Environment="SNOWFLAKE_USER=myuser"
-Environment="SNOWFLAKE_PASSWORD=mypassword"
 Environment="SMTP_SERVER=smtp.example.com"
 Environment="FROM_EMAIL=monitor@example.com"
 Environment="TO_EMAILS=admin@example.com"
-ExecStart=/usr/bin/python3 monitor_snowflake_replication_v2.py myaccount
+ExecStart=/usr/bin/python3 monitor_snowflake_replication.py myaccount
 Restart=always
 RestartSec=10
 
@@ -243,7 +256,7 @@ RUN pip install --no-cache-dir gds-snowflake
 
 COPY . .
 
-CMD ["python", "monitor_snowflake_replication_v2.py", "myaccount"]
+CMD ["python", "monitor_snowflake_replication.py", "myaccount"]
 ```
 
 ### Running in Kubernetes
@@ -257,11 +270,11 @@ Create a CronJob or Deployment to run the monitor.
 ```bash
 #!/bin/bash
 export SNOWFLAKE_USER="monitor_user"
-export SNOWFLAKE_PASSWORD="secure_password"
+# Note: Using RSA key authentication via Vault instead of password
 export FROM_EMAIL="snowflake-monitor@company.com"
 export TO_EMAILS="dba-team@company.com"
 
-python monitor_snowflake_replication_v2.py prod_account
+python monitor_snowflake_replication.py prod_account
 ```
 
 ### Example 2: Using the gds_snowflake Package
@@ -318,9 +331,9 @@ See `example_module_usage.py` for detailed examples of:
 
 ## Security
 
-- **Credentials**: Use environment variables, never hardcode
+- **Credentials**: Use RSA key authentication via Vault, environment variables for user info
 - **Permissions**: Use least-privilege principle (dedicated monitoring user)
-- **Logging**: Passwords never logged
+- **Logging**: Sensitive data never logged
 - **Network**: Use TLS for Snowflake and SMTP connections
 
 ## License
