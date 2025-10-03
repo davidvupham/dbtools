@@ -1,0 +1,9 @@
+{
+  "folders": [
+    {
+      "path": ".",
+      "name": "snowflake"
+    }
+  ],
+  // ...existing code from the previous workspace file...
+}

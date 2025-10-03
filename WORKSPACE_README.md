@@ -68,7 +68,7 @@ snowflake/
 │
 ├── tests/                      # 🧪 Shared tests (legacy)
 ├── .github/                    # GitHub Actions
-└── snowflake-monitor.code-workspace  # VS Code workspace
+└── snowflake.code-workspace  # VS Code workspace
 ```
 
 ## Quick Start
@@ -128,7 +128,7 @@ python run_tests.py
 
 Open the workspace:
 ```bash
-code snowflake-monitor.code-workspace
+code snowflake.code-workspace
 ```
 
 See [VSCODE_SETUP.md](VSCODE_SETUP.md) for detailed setup instructions.
