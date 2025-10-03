@@ -1,0 +1,57 @@
+[build-system]
+requires = ["setuptools>=45", "wheel", "setuptools_scm[toml]>=6.2"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gds-snowflake"
+version = "1.0.0"
+description = "A Python package for Snowflake connection management and replication monitoring"
+readme = "README.md"
+requires-python = ">=3.7"
+license = {text = "MIT"}
+authors = [
+    {name = "GDS Team", email = "gds@example.com"}
+]
+keywords = ["snowflake", "database", "replication", "monitoring", "failover", "gds"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Topic :: Database",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "snowflake-connector-python>=3.0.0",
+    "croniter>=1.3.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "pytest-mock>=3.10.0",
+    "black>=23.0.0",
+    "flake8>=6.0.0",
+    "pylint>=2.17.0",
+    "mypy>=1.0.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/davidvupham/snowflake"
+Documentation = "https://github.com/davidvupham/snowflake/tree/main/gds_snowflake"
+Repository = "https://github.com/davidvupham/snowflake"
+"Bug Reports" = "https://github.com/davidvupham/snowflake/issues"
+
+[tool.setuptools]
+packages = ["gds_snowflake"]
+
+[tool.setuptools.package-data]
+gds_snowflake = ["py.typed"]

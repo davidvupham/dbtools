@@ -1,0 +1,6 @@
+include README.md
+include LICENSE
+include COMPARISON.md
+include ENHANCEMENTS.md
+recursive-include gds_hvault *.py
+recursive-include tests *.py

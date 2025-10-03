@@ -1,3 +1,12 @@
+# Environment variables
+.env
+.env.local
+config.sh
+
+# VS Code
+.vscode/
+*.code-workspace.backup
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]

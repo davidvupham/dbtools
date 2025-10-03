@@ -1,0 +1,423 @@
+{
+  "folders": [
+    {
+      "path": ".",
+      "name": "Snowflake Replication Monitor"
+    }
+  ],
+  "settings": {
+    // Python settings
+    "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
+    "python.envFile": "${workspaceFolder}/.env",
+    
+    // Linting
+    "python.linting.enabled": true,
+    "python.linting.pylintEnabled": true,
+    "python.linting.flake8Enabled": true,
+    "python.linting.mypyEnabled": true,
+    "python.linting.lintOnSave": true,
+    
+    // Formatting
+    "python.formatting.provider": "black",
+    "python.formatting.blackArgs": [
+      "--line-length=120"
+    ],
+    "[python]": {
+      "editor.formatOnSave": true,
+      "editor.codeActionsOnSave": {
+        "source.organizeImports": "explicit"
+      },
+      "editor.tabSize": 4,
+      "editor.insertSpaces": true
+    },
+    
+    // Testing
+    "python.testing.unittestEnabled": true,
+    "python.testing.pytestEnabled": true,
+    "python.testing.unittestArgs": [
+      "-v",
+      "-s",
+      "./tests",
+      "-p",
+      "test*.py"
+    ],
+    "python.testing.pytestArgs": [
+      "tests"
+    ],
+    "python.testing.autoTestDiscoverOnSaveEnabled": true,
+    
+    // Editor settings
+    "files.exclude": {
+      "**/__pycache__": true,
+      "**/*.pyc": true,
+      "**/.pytest_cache": true,
+      "**/.coverage": true,
+      "**/htmlcov": true,
+      "**/*.egg-info": true
+    },
+    "files.watcherExclude": {
+      "**/__pycache__/**": true,
+      "**/.pytest_cache/**": true,
+      "**/htmlcov/**": true
+    },
+    
+    // Terminal
+    "terminal.integrated.env.linux": {
+      "PYTHONPATH": "${workspaceFolder}"
+    },
+    "terminal.integrated.env.osx": {
+      "PYTHONPATH": "${workspaceFolder}"
+    },
+    "terminal.integrated.env.windows": {
+      "PYTHONPATH": "${workspaceFolder}"
+    },
+    
+    // File associations
+    "files.associations": {
+      "*.py": "python",
+      "*.ini": "ini",
+      ".env.example": "dotenv",
+      "config.sh.example": "shellscript"
+    },
+    
+    // Search
+    "search.exclude": {
+      "**/__pycache__": true,
+      "**/.pytest_cache": true,
+      "**/htmlcov": true,
+      "**/*.pyc": true
+    },
+    
+    // Git
+    "git.ignoreLimitWarning": true,
+    
+    // Problems
+    "problems.showCurrentInStatus": true
+  },
+  "extensions": {
+    "recommendations": [
+      "ms-python.python",
+      "ms-python.vscode-pylance",
+      "ms-python.black-formatter",
+      "ms-python.pylint",
+      "ms-python.flake8",
+      "littlefoxteam.vscode-python-test-adapter",
+      "donjayamanne.python-environment-manager",
+      "njpwerner.autodocstring",
+      "wholroyd.jinja",
+      "redhat.vscode-yaml",
+      "github.vscode-github-actions"
+    ]
+  },
+  "launch": {
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "name": "Python: Current File",
+        "type": "debugpy",
+        "request": "launch",
+        "program": "${file}",
+        "console": "integratedTerminal",
+        "justMyCode": true
+      },
+      {
+        "name": "Monitor: Run Once",
+        "type": "debugpy",
+        "request": "launch",
+        "program": "${workspaceFolder}/monitor_snowflake_replication_v2.py",
+        "console": "integratedTerminal",
+        "args": [
+          "${input:accountName}",
+          "--once"
+        ],
+        "envFile": "${workspaceFolder}/.env"
+      },
+      {
+        "name": "Monitor: Continuous",
+        "type": "debugpy",
+        "request": "launch",
+        "program": "${workspaceFolder}/monitor_snowflake_replication_v2.py",
+        "console": "integratedTerminal",
+        "args": [
+          "${input:accountName}",
+          "--interval",
+          "60"
+        ],
+        "envFile": "${workspaceFolder}/.env"
+      },
+      {
+        "name": "Tests: Run All",
+        "type": "debugpy",
+        "request": "launch",
+        "program": "${workspaceFolder}/run_tests.py",
+        "console": "integratedTerminal",
+        "args": ["-v"],
+        "justMyCode": false
+      },
+      {
+        "name": "Tests: Current File",
+        "type": "debugpy",
+        "request": "launch",
+        "module": "pytest",
+        "args": [
+          "${file}",
+          "-v"
+        ],
+        "console": "integratedTerminal",
+        "justMyCode": false
+      },
+      {
+        "name": "Tests: With Coverage",
+        "type": "debugpy",
+        "request": "launch",
+        "module": "pytest",
+        "args": [
+          "--cov=.",
+          "--cov-report=html",
+          "--cov-report=term",
+          "-v"
+        ],
+        "console": "integratedTerminal",
+        "justMyCode": false
+      },
+      {
+        "name": "Example: Module Usage",
+        "type": "debugpy",
+        "request": "launch",
+        "program": "${workspaceFolder}/example_module_usage.py",
+        "console": "integratedTerminal",
+        "envFile": "${workspaceFolder}/.env"
+      },
+      {
+        "name": "Python: Debug Tests",
+        "type": "debugpy",
+        "request": "launch",
+        "module": "unittest",
+        "args": [
+          "discover",
+          "-s",
+          "./tests",
+          "-p",
+          "test*.py",
+          "-v"
+        ],
+        "console": "integratedTerminal",
+        "justMyCode": false
+      }
+    ],
+    "inputs": [
+      {
+        "id": "accountName",
+        "type": "promptString",
+        "description": "Enter Snowflake account name",
+        "default": "myaccount"
+      }
+    ]
+  },
+  "tasks": {
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "label": "Run All Tests",
+        "type": "shell",
+        "command": "python",
+        "args": [
+          "run_tests.py",
+          "-v"
+        ],
+        "group": {
+          "kind": "test",
+          "isDefault": true
+        },
+        "presentation": {
+          "reveal": "always",
+          "panel": "dedicated"
+        },
+        "problemMatcher": []
+      },
+      {
+        "label": "Run Tests with Coverage",
+        "type": "shell",
+        "command": "pytest",
+        "args": [
+          "--cov=.",
+          "--cov-report=html",
+          "--cov-report=term",
+          "-v"
+        ],
+        "group": "test",
+        "presentation": {
+          "reveal": "always",
+          "panel": "dedicated"
+        },
+        "problemMatcher": []
+      },
+      {
+        "label": "Run Specific Test Module",
+        "type": "shell",
+        "command": "python",
+        "args": [
+          "run_tests.py",
+          "-m",
+          "${input:testModule}"
+        ],
+        "group": "test",
+        "presentation": {
+          "reveal": "always",
+          "panel": "dedicated"
+        },
+        "problemMatcher": []
+      },
+      {
+        "label": "Format Code (Black)",
+        "type": "shell",
+        "command": "black",
+        "args": [
+          ".",
+          "--line-length=120"
+        ],
+        "group": "none",
+        "presentation": {
+          "reveal": "always",
+          "panel": "shared"
+        },
+        "problemMatcher": []
+      },
+      {
+        "label": "Lint with Flake8",
+        "type": "shell",
+        "command": "flake8",
+        "args": [
+          ".",
+          "--max-line-length=120",
+          "--extend-ignore=E203,W503"
+        ],
+        "group": "none",
+        "presentation": {
+          "reveal": "always",
+          "panel": "shared"
+        },
+        "problemMatcher": []
+      },
+      {
+        "label": "Type Check (mypy)",
+        "type": "shell",
+        "command": "mypy",
+        "args": [
+          "--ignore-missing-imports",
+          "snowflake_connection.py",
+          "snowflake_replication.py",
+          "monitor_snowflake_replication_v2.py"
+        ],
+        "group": "none",
+        "presentation": {
+          "reveal": "always",
+          "panel": "shared"
+        },
+        "problemMatcher": []
+      },
+      {
+        "label": "Install Dependencies",
+        "type": "shell",
+        "command": "pip",
+        "args": [
+          "install",
+          "-r",
+          "requirements.txt"
+        ],
+        "group": "none",
+        "presentation": {
+          "reveal": "always",
+          "panel": "shared"
+        },
+        "problemMatcher": []
+      },
+      {
+        "label": "Install Dev Dependencies",
+        "type": "shell",
+        "command": "pip",
+        "args": [
+          "install",
+          "-r",
+          "requirements-dev.txt"
+        ],
+        "group": "none",
+        "presentation": {
+          "reveal": "always",
+          "panel": "shared"
+        },
+        "problemMatcher": []
+      },
+      {
+        "label": "Generate Coverage Report",
+        "type": "shell",
+        "command": "coverage",
+        "args": [
+          "html"
+        ],
+        "group": "none",
+        "dependsOn": "Run Tests with Coverage",
+        "presentation": {
+          "reveal": "always",
+          "panel": "shared"
+        },
+        "problemMatcher": []
+      },
+      {
+        "label": "Open Coverage Report",
+        "type": "shell",
+        "command": "xdg-open",
+        "args": [
+          "htmlcov/index.html"
+        ],
+        "windows": {
+          "command": "start",
+          "args": [
+            "htmlcov/index.html"
+          ]
+        },
+        "osx": {
+          "command": "open",
+          "args": [
+            "htmlcov/index.html"
+          ]
+        },
+        "group": "none",
+        "dependsOn": "Generate Coverage Report",
+        "presentation": {
+          "reveal": "silent",
+          "panel": "shared"
+        },
+        "problemMatcher": []
+      },
+      {
+        "label": "Validate Module Structure",
+        "type": "shell",
+        "command": "python",
+        "args": [
+          "test_modules.py"
+        ],
+        "group": "test",
+        "presentation": {
+          "reveal": "always",
+          "panel": "dedicated"
+        },
+        "problemMatcher": []
+      }
+    ],
+    "inputs": [
+      {
+        "id": "testModule",
+        "type": "pickString",
+        "description": "Select test module to run",
+        "options": [
+          "test_snowflake_connection",
+          "test_snowflake_replication",
+          "test_monitor_integration",
+          "test_connection_pytest"
+        ],
+        "default": "test_snowflake_connection"
+      }
+    ]
+  }
+}

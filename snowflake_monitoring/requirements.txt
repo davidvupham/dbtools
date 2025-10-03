@@ -1,0 +1,8 @@
+# Requirements for Snowflake Monitoring Application
+
+# Core GDS Snowflake package
+gds-snowflake>=1.0.0
+
+# The gds-snowflake package already includes these, but listing for clarity:
+# - snowflake-connector-python>=3.0.0
+# - croniter>=1.3.0
