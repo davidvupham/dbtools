@@ -1,3 +1,9 @@
+"""
+Basic integration tests for gds_vault package.
+
+These tests require a running Vault dev server and valid environment variables.
+Tests will be skipped if the required environment variables are not set.
+"""
 import os
 import pytest
 from gds_vault.vault import get_secret_from_vault, VaultError
@@ -15,6 +21,9 @@ pytestmark = pytest.mark.skipif(
 
 
 def test_secret_fetch(monkeypatch):
+    """
+    Test that get_secret_from_vault raises VaultError without valid vault.
+    """
     # Example: monkeypatch env vars for test/dev
     monkeypatch.setenv("VAULT_ROLE_ID", "test-role-id")
     monkeypatch.setenv("VAULT_SECRET_ID", "test-secret-id")

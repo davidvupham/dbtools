@@ -45,7 +45,7 @@ class SnowflakeDatabase:
             List of dictionaries containing database metadata
         """
         query = """
-        SELECT 
+        SELECT
             DATABASE_NAME,
             DATABASE_OWNER,
             IS_TRANSIENT,
@@ -74,7 +74,7 @@ class SnowflakeDatabase:
             Dictionary containing database metadata or None if not found
         """
         query = """
-        SELECT 
+        SELECT
             DATABASE_NAME,
             DATABASE_OWNER,
             IS_TRANSIENT,
@@ -107,7 +107,7 @@ class SnowflakeDatabase:
         """
         if database_name:
             query = """
-            SELECT 
+            SELECT
                 CATALOG_NAME AS DATABASE_NAME,
                 SCHEMA_NAME,
                 SCHEMA_OWNER,
@@ -124,7 +124,7 @@ class SnowflakeDatabase:
             params = (database_name,)
         else:
             query = """
-            SELECT 
+            SELECT
                 CATALOG_NAME AS DATABASE_NAME,
                 SCHEMA_NAME,
                 SCHEMA_OWNER,
@@ -182,7 +182,7 @@ class SnowflakeDatabase:
         where_clause = " AND ".join(conditions) if conditions else "1=1"
 
         query = f"""
-        SELECT 
+        SELECT
             FUNCTION_CATALOG AS DATABASE_NAME,
             FUNCTION_SCHEMA AS SCHEMA_NAME,
             FUNCTION_NAME,
@@ -235,7 +235,7 @@ class SnowflakeDatabase:
         where_clause = " AND ".join(conditions) if conditions else "1=1"
 
         query = f"""
-        SELECT 
+        SELECT
             PROCEDURE_CATALOG AS DATABASE_NAME,
             PROCEDURE_SCHEMA AS SCHEMA_NAME,
             PROCEDURE_NAME,
@@ -290,7 +290,7 @@ class SnowflakeDatabase:
         where_clause = " AND ".join(conditions) if conditions else "1=1"
 
         query = f"""
-        SELECT 
+        SELECT
             SEQUENCE_CATALOG AS DATABASE_NAME,
             SEQUENCE_SCHEMA AS SCHEMA_NAME,
             SEQUENCE_NAME,
@@ -349,7 +349,7 @@ class SnowflakeDatabase:
         where_clause = " AND ".join(conditions) if conditions else "1=1"
 
         query = f"""
-        SELECT 
+        SELECT
             STAGE_CATALOG AS DATABASE_NAME,
             STAGE_SCHEMA AS SCHEMA_NAME,
             STAGE_NAME,
@@ -404,7 +404,7 @@ class SnowflakeDatabase:
         where_clause = " AND ".join(conditions) if conditions else "1=1"
 
         query = f"""
-        SELECT 
+        SELECT
             FILE_FORMAT_CATALOG AS DATABASE_NAME,
             FILE_FORMAT_SCHEMA AS SCHEMA_NAME,
             FILE_FORMAT_NAME,
@@ -457,7 +457,7 @@ class SnowflakeDatabase:
         where_clause = " AND ".join(conditions) if conditions else "1=1"
 
         query = f"""
-        SELECT 
+        SELECT
             PIPE_CATALOG AS DATABASE_NAME,
             PIPE_SCHEMA AS SCHEMA_NAME,
             PIPE_NAME,
@@ -511,7 +511,7 @@ class SnowflakeDatabase:
         where_clause = " AND ".join(conditions) if conditions else "1=1"
 
         query = f"""
-        SELECT 
+        SELECT
             database_name,
             schema_name,
             name AS task_name,
@@ -564,7 +564,7 @@ class SnowflakeDatabase:
         where_clause = " AND ".join(conditions) if conditions else "1=1"
 
         query = f"""
-        SELECT 
+        SELECT
             TABLE_CATALOG AS DATABASE_NAME,
             TABLE_SCHEMA AS SCHEMA_NAME,
             TABLE_NAME AS STREAM_NAME,

@@ -1,0 +1,37 @@
+[MASTER]
+# Use multiple processes to speed up Pylint.
+jobs=1
+
+[MESSAGES CONTROL]
+# Disable design-related warnings that are acceptable in production code
+disable=
+    too-many-instance-attributes,
+    too-many-arguments,
+    too-many-positional-arguments,
+    too-many-locals,
+    broad-exception-caught,
+    import-outside-toplevel,
+    cyclic-import,
+    consider-using-in,
+    broad-exception-raised
+
+[FORMAT]
+# Maximum number of characters on a single line.
+max-line-length=120
+
+# Maximum number of lines in a module.
+max-module-lines=1000
+
+[BASIC]
+# Good variable names which should always be accepted
+good-names=i,j,k,ex,Run,_,e,fg,db
+
+[DESIGN]
+# Maximum number of attributes for a class (see R0902).
+max-attributes=15
+
+# Maximum number of arguments for function / method (see R0913).
+max-args=12
+
+# Maximum number of locals for function / method body (see R0914).
+max-locals=20

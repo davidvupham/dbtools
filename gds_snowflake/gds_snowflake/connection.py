@@ -4,10 +4,11 @@ Snowflake Connection Module
 This module handles Snowflake database connections and connection management.
 """
 
-import snowflake.connector
 import logging
-from typing import Optional
 import os
+from typing import Optional
+
+import snowflake.connector
 
 try:
     from gds_vault.vault import get_secret_from_vault, VaultError
@@ -47,13 +48,19 @@ class SnowflakeConnection:
                 warehouse: Optional warehouse name
                 role: Optional role name
                 database: Optional database name
-                vault_namespace: Vault namespace (optional, defaults to VAULT_NAMESPACE env)
-                vault_secret_path: Path to secret in Vault (optional, defaults to VAULT_SECRET_PATH env)
+                vault_namespace: Vault namespace
+                    (optional, defaults to VAULT_NAMESPACE env)
+                vault_secret_path: Path to secret in Vault
+                    (optional, defaults to VAULT_SECRET_PATH env)
                     (e.g., 'namespace/data/snowflake')
-                vault_mount_point: Vault mount point (optional, defaults to VAULT_MOUNT_POINT env)
-                vault_role_id: Vault AppRole role_id (optional, defaults to VAULT_ROLE_ID env)
-                vault_secret_id: Vault AppRole secret_id (optional, defaults to VAULT_SECRET_ID env)
-                vault_addr: Vault address (optional, defaults to VAULT_ADDR env)
+                vault_mount_point: Vault mount point
+                    (optional, defaults to VAULT_MOUNT_POINT env)
+                vault_role_id: Vault AppRole role_id
+                    (optional, defaults to VAULT_ROLE_ID env)
+                vault_secret_id: Vault AppRole secret_id
+                    (optional, defaults to VAULT_SECRET_ID env)
+                vault_addr: Vault address
+                    (optional, defaults to VAULT_ADDR env)
         """
         self.account = account
         self.user = user or os.getenv("SNOWFLAKE_USER")
@@ -151,10 +158,10 @@ class SnowflakeConnection:
     def test_connectivity(self, timeout_seconds: int = 30) -> dict:
         """
         Test connectivity to Snowflake account with comprehensive diagnostics.
-        
+
         Args:
             timeout_seconds: Connection timeout in seconds
-            
+
         Returns:
             Dictionary with connectivity test results:
             {
@@ -167,7 +174,7 @@ class SnowflakeConnection:
         """
         import time
         from datetime import datetime
-        
+
         start_time = time.time()
         result = {
             'success': False,
@@ -176,7 +183,7 @@ class SnowflakeConnection:
             'error': None,
             'timestamp': datetime.now().isoformat()
         }
-        
+
         try:
             # Test basic connectivity with a lightweight query
             test_connection = None
@@ -187,31 +194,31 @@ class SnowflakeConnection:
                 "login_timeout": timeout_seconds,
                 "network_timeout": timeout_seconds
             }
-            
+
             if self.warehouse:
                 connection_params["warehouse"] = self.warehouse
             if self.role:
                 connection_params["role"] = self.role
             if self.database:
                 connection_params["database"] = self.database
-                
+
             logger.info(
                 "Testing connectivity to Snowflake account: %s", self.account
             )
-            
+
             # Create test connection
             test_connection = snowflake.connector.connect(**connection_params)
-            
+
             # Execute lightweight diagnostic queries
             cursor = test_connection.cursor()
-            
+
             # Test 1: Basic connectivity with SELECT 1
             cursor.execute("SELECT 1 as connectivity_test")
             cursor.fetchone()
-            
+
             # Test 2: Get account information
             cursor.execute("""
-                SELECT 
+                SELECT
                     CURRENT_ACCOUNT() as account_name,
                     CURRENT_USER() as current_user,
                     CURRENT_ROLE() as current_role,
@@ -220,7 +227,7 @@ class SnowflakeConnection:
                     CURRENT_VERSION() as snowflake_version,
                     CURRENT_REGION() as region
             """)
-            
+
             account_info = cursor.fetchone()
             if account_info:
                 result['account_info'] = {
@@ -232,25 +239,28 @@ class SnowflakeConnection:
                     'snowflake_version': account_info[5],
                     'region': account_info[6]
                 }
-            
+
             cursor.close()
             result['success'] = True
-            
+
             end_time = time.time()
             result['response_time_ms'] = round((end_time - start_time) * 1000, 2)
-            
+
             logger.info(
-                f"Connectivity test successful for {self.account} "
-                f"(response time: {result['response_time_ms']}ms)"
+                "Connectivity test successful for %s (response time: %sms)",
+                self.account,
+                result['response_time_ms']
             )
-            
+
         except Exception as e:
             end_time = time.time()
             result['response_time_ms'] = round((end_time - start_time) * 1000, 2)
             result['error'] = str(e)
             logger.error(
-                f"Connectivity test failed for {self.account}: {str(e)} "
-                f"(response time: {result['response_time_ms']}ms)"
+                "Connectivity test failed for %s: %s (response time: %sms)",
+                self.account,
+                str(e),
+                result['response_time_ms']
             )
         finally:
             # Clean up test connection
@@ -258,8 +268,8 @@ class SnowflakeConnection:
                 try:
                     test_connection.close()
                 except Exception as e:
-                    logger.warning(f"Error closing test connection: {str(e)}")
-                    
+                    logger.warning("Error closing test connection: %s", str(e))
+
         return result
 
     def close(self):
@@ -269,7 +279,7 @@ class SnowflakeConnection:
                 self.connection.close()
                 logger.info("Closed connection to Snowflake account: %s", self.account)
             except Exception as e:
-                logger.error(f"Error closing connection: {str(e)}")
+                logger.error("Error closing connection: %s", str(e))
 
     def execute_query(self, query: str, params: Optional[tuple] = None) -> list:
         """
@@ -299,8 +309,8 @@ class SnowflakeConnection:
             return results
 
         except Exception as e:
-            logger.error(f"Error executing query: {str(e)}")
-            logger.error(f"Query: {query}")
+            logger.error("Error executing query: %s", str(e))
+            logger.error("Query: %s", query)
             raise
 
     def execute_query_dict(self, query: str, params: Optional[tuple] = None) -> list:
@@ -331,8 +341,8 @@ class SnowflakeConnection:
             return results
 
         except Exception as e:
-            logger.error(f"Error executing query: {str(e)}")
-            logger.error(f"Query: {query}")
+            logger.error("Error executing query: %s", str(e))
+            logger.error("Query: %s", query)
             raise
 
     def switch_account(
@@ -347,7 +357,7 @@ class SnowflakeConnection:
         Returns:
             New Snowflake connection object
         """
-        logger.info(f"Switching from account {self.account} to {new_account}")
+        logger.info("Switching from account %s to %s", self.account, new_account)
         self.close()
         self.account = new_account
         return self.connect()

@@ -9,12 +9,18 @@ from .connection import SnowflakeConnection
 from .database import SnowflakeDatabase
 from .table import SnowflakeTable
 from .replication import SnowflakeReplication, FailoverGroup
-from .monitor import SnowflakeMonitor, AlertSeverity, MonitoringResult, ConnectivityResult, ReplicationResult
+from .monitor import (
+    SnowflakeMonitor,
+    AlertSeverity,
+    MonitoringResult,
+    ConnectivityResult,
+    ReplicationResult
+)
 
 __version__ = "1.0.0"
 __all__ = [
     "SnowflakeConnection",
-    "SnowflakeDatabase", 
+    "SnowflakeDatabase",
     "SnowflakeTable",
     "SnowflakeReplication",
     "FailoverGroup",
