@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Test runner for gds-hvault package."""
+"""Test runner for gds-vault package."""
 
 import sys
 import unittest

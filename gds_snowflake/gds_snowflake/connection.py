@@ -10,7 +10,7 @@ from typing import Optional
 import os
 
 try:
-    from gds_hvault.vault import get_secret_from_vault, VaultError
+    from gds_vault.vault import get_secret_from_vault, VaultError
 except ImportError:
     get_secret_from_vault = None
     VaultError = Exception
@@ -83,9 +83,9 @@ class SnowflakeConnection:
                 if vault_addr:
                     vault_kwargs["vault_addr"] = vault_addr
                 if vault_role_id:
-                    os.environ["HVAULT_ROLE_ID"] = vault_role_id
+                    os.environ["VAULT_ROLE_ID"] = vault_role_id
                 if vault_secret_id:
-                    os.environ["HVAULT_SECRET_ID"] = vault_secret_id
+                    os.environ["VAULT_SECRET_ID"] = vault_secret_id
                 secret = get_secret_from_vault(secret_path, **vault_kwargs)
                 self.private_key = secret.get("private_key")
                 if not self.private_key:

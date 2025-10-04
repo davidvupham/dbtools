@@ -7,7 +7,7 @@ with open(readme_path, encoding="utf-8") as f:
     long_description = f.read()
 
 setup(
-    name="gds-hvault",
+    name="gds-vault",
     version="0.1.0",
     description=("HashiCorp Vault helper for secret retrieval via AppRole auth."),
     long_description=long_description,

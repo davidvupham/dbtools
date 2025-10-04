@@ -486,7 +486,7 @@ if not result['success']:
 - Python >= 3.7
 - snowflake-connector-python >= 3.0.0
 - croniter >= 1.3.0
-- gds-hvault (for Vault authentication)
+- gds-vault (for Vault authentication)
 
 ## License
 

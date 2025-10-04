@@ -2,7 +2,7 @@
 """
 Enhanced Vault client with additional features.
 
-This is an example of how gds_hvault could be extended with:
+This is an example of how gds_vault could be extended with:
 - Token caching
 - Retry logic
 - Context manager support
@@ -78,14 +78,12 @@ class EnhancedVaultClient:
             max_retries: Maximum number of retries
             verify_ssl: Verify SSL certificates
         """
-        self.vault_addr = (
-            vault_addr or os.getenv("HVAULT_ADDR") or os.getenv("VAULT_ADDR")
-        )
+        self.vault_addr = vault_addr or os.getenv("VAULT_ADDR")
         if not self.vault_addr:
             raise VaultError("Vault address must be provided")
 
-        self.role_id = role_id or os.getenv("HVAULT_ROLE_ID")
-        self.secret_id = secret_id or os.getenv("HVAULT_SECRET_ID")
+        self.role_id = role_id or os.getenv("VAULT_ROLE_ID")
+        self.secret_id = secret_id or os.getenv("VAULT_SECRET_ID")
         self.token = token
         self.timeout = timeout
         self.max_retries = max_retries

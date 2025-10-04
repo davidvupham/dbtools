@@ -1,10 +1,10 @@
-"""Unit tests for gds_hvault.vault module."""
+"""Unit tests for gds_vault.vault module."""
 
 import os
 import unittest
 from unittest.mock import patch, Mock
 
-from gds_hvault.vault import get_secret_from_vault, VaultError
+from gds_vault.vault import get_secret_from_vault, VaultError
 
 
 class TestVaultError(unittest.TestCase):
@@ -26,7 +26,7 @@ class TestGetSecretFromVault(unittest.TestCase):
 
     def setUp(self):
         """Clear environment variables before each test."""
-        env_vars = ["HVAULT_ROLE_ID", "HVAULT_SECRET_ID", "HVAULT_ADDR", "VAULT_ADDR"]
+        env_vars = ["VAULT_ROLE_ID", "VAULT_SECRET_ID", "VAULT_ADDR"]
         for var in env_vars:
             if var in os.environ:
                 del os.environ[var]
@@ -34,13 +34,13 @@ class TestGetSecretFromVault(unittest.TestCase):
     @patch.dict(
         os.environ,
         {
-            "HVAULT_ROLE_ID": "test-role-id",
-            "HVAULT_SECRET_ID": "test-secret-id",
-            "HVAULT_ADDR": "https://vault.example.com",
+            "VAULT_ROLE_ID": "test-role-id",
+            "VAULT_SECRET_ID": "test-secret-id",
+            "VAULT_ADDR": "https://vault.example.com",
         },
     )
-    @patch("gds_hvault.vault.requests.post")
-    @patch("gds_hvault.vault.requests.get")
+    @patch("gds_vault.vault.requests.post")
+    @patch("gds_vault.vault.requests.get")
     def test_successful_secret_retrieval_kv_v2(self, mock_get, mock_post):
         """Test successful secret retrieval from KV v2."""
         # Mock AppRole login response
@@ -76,13 +76,13 @@ class TestGetSecretFromVault(unittest.TestCase):
     @patch.dict(
         os.environ,
         {
-            "HVAULT_ROLE_ID": "test-role",
-            "HVAULT_SECRET_ID": "test-secret",
-            "HVAULT_ADDR": "https://vault.test.com",
+            "VAULT_ROLE_ID": "test-role",
+            "VAULT_SECRET_ID": "test-secret",
+            "VAULT_ADDR": "https://vault.test.com",
         },
     )
-    @patch("gds_hvault.vault.requests.post")
-    @patch("gds_hvault.vault.requests.get")
+    @patch("gds_vault.vault.requests.post")
+    @patch("gds_vault.vault.requests.get")
     def test_successful_secret_retrieval_kv_v1(self, mock_get, mock_post):
         """Test successful secret retrieval from KV v1."""
         mock_post.return_value = Mock(ok=True)
@@ -103,25 +103,25 @@ class TestGetSecretFromVault(unittest.TestCase):
         )
 
     def test_missing_role_id_raises_error(self):
-        """Test VaultError when HVAULT_ROLE_ID is missing."""
+        """Test VaultError when VAULT_ROLE_ID is missing."""
         with self.assertRaises(VaultError) as context:
             get_secret_from_vault("secret/data/test")
 
         self.assertIn(
-            "HVAULT_ROLE_ID and HVAULT_SECRET_ID must be set", str(context.exception)
+            "VAULT_ROLE_ID and VAULT_SECRET_ID must be set", str(context.exception)
         )
 
-    @patch.dict(os.environ, {"HVAULT_ROLE_ID": "test-role"})
+    @patch.dict(os.environ, {"VAULT_ROLE_ID": "test-role"})
     def test_missing_secret_id_raises_error(self):
-        """Test VaultError when HVAULT_SECRET_ID is missing."""
+        """Test VaultError when VAULT_SECRET_ID is missing."""
         with self.assertRaises(VaultError) as context:
             get_secret_from_vault("secret/data/test")
 
         self.assertIn(
-            "HVAULT_ROLE_ID and HVAULT_SECRET_ID must be set", str(context.exception)
+            "VAULT_ROLE_ID and VAULT_SECRET_ID must be set", str(context.exception)
         )
 
-    @patch.dict(os.environ, {"HVAULT_ROLE_ID": "role", "HVAULT_SECRET_ID": "secret"})
+    @patch.dict(os.environ, {"VAULT_ROLE_ID": "role", "VAULT_SECRET_ID": "secret"})
     def test_missing_vault_addr_raises_error(self):
         """Test VaultError when Vault address is not provided."""
         with self.assertRaises(VaultError) as context:
@@ -129,12 +129,12 @@ class TestGetSecretFromVault(unittest.TestCase):
 
         self.assertIn("Vault address must be set", str(context.exception))
 
-    @patch.dict(os.environ, {"HVAULT_ROLE_ID": "role", "HVAULT_SECRET_ID": "secret"})
+    @patch.dict(os.environ, {"VAULT_ROLE_ID": "role", "VAULT_SECRET_ID": "secret"})
     def test_vault_addr_from_vault_addr_env(self):
         """Test using VAULT_ADDR environment variable."""
         os.environ["VAULT_ADDR"] = "https://vault-from-standard.com"
 
-        with patch("gds_hvault.vault.requests.post") as mock_post:
+        with patch("gds_vault.vault.requests.post") as mock_post:
             mock_post.return_value = Mock(ok=False, text="Expected for test")
 
             with self.assertRaises(VaultError):
@@ -145,33 +145,9 @@ class TestGetSecretFromVault(unittest.TestCase):
 
     @patch.dict(
         os.environ,
-        {
-            "HVAULT_ROLE_ID": "role",
-            "HVAULT_SECRET_ID": "secret",
-            "HVAULT_ADDR": "https://hvault.com",
-            "VAULT_ADDR": "https://vault.com",
-        },
+        {"VAULT_ROLE_ID": "role", "VAULT_SECRET_ID": "secret", "VAULT_ADDR": "https://vault.com"},
     )
-    def test_hvault_addr_takes_precedence(self):
-        """Test HVAULT_ADDR takes precedence over VAULT_ADDR."""
-        with patch("gds_hvault.vault.requests.post") as mock_post:
-            mock_post.return_value = Mock(ok=False, text="test")
-
-            with self.assertRaises(VaultError):
-                get_secret_from_vault("secret/data/test")
-
-            # Should use HVAULT_ADDR
-            self.assertIn("https://hvault.com", mock_post.call_args[0][0])
-
-    @patch.dict(
-        os.environ,
-        {
-            "HVAULT_ROLE_ID": "role",
-            "HVAULT_SECRET_ID": "secret",
-            "HVAULT_ADDR": "https://vault.com",
-        },
-    )
-    @patch("gds_hvault.vault.requests.post")
+    @patch("gds_vault.vault.requests.post")
     def test_vault_addr_parameter_override(self, mock_post):
         """Test vault_addr parameter overrides environment variables."""
         mock_post.return_value = Mock(ok=False, text="test")
@@ -184,13 +160,9 @@ class TestGetSecretFromVault(unittest.TestCase):
 
     @patch.dict(
         os.environ,
-        {
-            "HVAULT_ROLE_ID": "role",
-            "HVAULT_SECRET_ID": "secret",
-            "HVAULT_ADDR": "https://vault.com",
-        },
+        {"VAULT_ROLE_ID": "role", "VAULT_SECRET_ID": "secret", "VAULT_ADDR": "https://vault.com"},
     )
-    @patch("gds_hvault.vault.requests.post")
+    @patch("gds_vault.vault.requests.post")
     def test_approle_login_failure(self, mock_post):
         """Test VaultError on failed AppRole login."""
         mock_post.return_value = Mock(
@@ -205,14 +177,10 @@ class TestGetSecretFromVault(unittest.TestCase):
 
     @patch.dict(
         os.environ,
-        {
-            "HVAULT_ROLE_ID": "role",
-            "HVAULT_SECRET_ID": "secret",
-            "HVAULT_ADDR": "https://vault.com",
-        },
+        {"VAULT_ROLE_ID": "role", "VAULT_SECRET_ID": "secret", "VAULT_ADDR": "https://vault.com"},
     )
-    @patch("gds_hvault.vault.requests.post")
-    @patch("gds_hvault.vault.requests.get")
+    @patch("gds_vault.vault.requests.post")
+    @patch("gds_vault.vault.requests.get")
     def test_secret_fetch_failure(self, mock_get, mock_post):
         """Test VaultError on failed secret fetch."""
         # Successful login
@@ -230,14 +198,10 @@ class TestGetSecretFromVault(unittest.TestCase):
 
     @patch.dict(
         os.environ,
-        {
-            "HVAULT_ROLE_ID": "role",
-            "HVAULT_SECRET_ID": "secret",
-            "HVAULT_ADDR": "https://vault.com",
-        },
+        {"VAULT_ROLE_ID": "role", "VAULT_SECRET_ID": "secret", "VAULT_ADDR": "https://vault.com"},
     )
-    @patch("gds_hvault.vault.requests.post")
-    @patch("gds_hvault.vault.requests.get")
+    @patch("gds_vault.vault.requests.post")
+    @patch("gds_vault.vault.requests.get")
     def test_malformed_response_raises_error(self, mock_get, mock_post):
         """Test VaultError when response is malformed."""
         mock_post.return_value = Mock(ok=True)

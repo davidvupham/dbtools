@@ -43,7 +43,7 @@ setup(
     install_requires=[
         'snowflake-connector-python>=3.0.0',
         'croniter>=1.3.0',
-        'gds-hvault>=1.0.0',
+        'gds-vault>=0.1.0',
     ],
     extras_require={
         'dev': [

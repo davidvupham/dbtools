@@ -1,6 +1,6 @@
-# gds-hvault Enhancement Recommendations
+# gds-vault Enhancement Recommendations
 
-Based on research of the `hvac` library and HashiCorp Vault best practices, here are recommended enhancements for `gds_hvault`.
+Based on research of the `hvac` library and HashiCorp Vault best practices, here are recommended enhancements for `gds_vault`.
 
 ## Current Features
 - ✅ AppRole authentication
@@ -83,7 +83,7 @@ Expand beyond just reading secrets:
 ## Example Enhanced API
 
 ```python
-from gds_hvault import VaultClient
+from gds_vault import VaultClient
 
 # Initialize with more options
 client = VaultClient(
