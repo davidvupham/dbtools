@@ -11,6 +11,7 @@ This example shows:
 import logging
 import os
 from logging.handlers import RotatingFileHandler
+
 from gds_vault import VaultClient, VaultError
 
 
@@ -19,18 +20,18 @@ def example_basic_logging():
     print("\n" + "="*60)
     print("Example 1: Basic Console Logging")
     print("="*60)
-    
+
     # Configure basic logging to console
     logging.basicConfig(
         level=logging.INFO,
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     )
-    
+
     # Set environment variables (in production, these come from env)
     os.environ['VAULT_ADDR'] = 'https://vault.example.com'
     os.environ['VAULT_ROLE_ID'] = 'my-role-id'
     os.environ['VAULT_SECRET_ID'] = 'my-secret-id'
-    
+
     try:
         client = VaultClient()
         print("\nVaultClient created successfully")
@@ -45,23 +46,23 @@ def example_debug_logging():
     print("\n" + "="*60)
     print("Example 2: Debug Logging (Verbose)")
     print("="*60)
-    
+
     # Clear existing handlers
     for handler in logging.root.handlers[:]:
         logging.root.removeHandler(handler)
-    
+
     # Configure DEBUG level for detailed information
     logging.basicConfig(
         level=logging.DEBUG,
         format='%(asctime)s - %(levelname)-8s - %(message)s'
     )
-    
+
     print("\nWith DEBUG level, you see:")
     print("- Cache hits/misses")
     print("- Token expiry details")
     print("- KV version detection")
     print("- All retry attempts")
-    
+
     try:
         client = VaultClient()
         print("\nCheck logs for detailed DEBUG messages")
@@ -74,21 +75,21 @@ def example_production_file_logging():
     print("\n" + "="*60)
     print("Example 3: Production File Logging with Rotation")
     print("="*60)
-    
+
     # Clear existing handlers
     for handler in logging.root.handlers[:]:
         logging.root.removeHandler(handler)
-    
+
     # Create a logger for gds_vault
     logger = logging.getLogger('gds_vault.vault')
     logger.setLevel(logging.INFO)
-    
+
     # Console handler (errors only)
     console_handler = logging.StreamHandler()
     console_handler.setLevel(logging.ERROR)
     console_formatter = logging.Formatter('ERROR: %(message)s')
     console_handler.setFormatter(console_formatter)
-    
+
     # File handler with rotation (simulated - would write to /var/log in production)
     try:
         file_handler = RotatingFileHandler(
@@ -107,9 +108,9 @@ def example_production_file_logging():
         print("- Keeps 3 backup files")
     except Exception as e:
         print(f"\nFile logging setup failed: {e}")
-    
+
     logger.addHandler(console_handler)
-    
+
     try:
         client = VaultClient()
         print("\nLogs written to /tmp/vault_example.log")
@@ -123,17 +124,17 @@ def example_cache_behavior():
     print("\n" + "="*60)
     print("Example 4: Cache Behavior Logging")
     print("="*60)
-    
+
     # Clear existing handlers
     for handler in logging.root.handlers[:]:
         logging.root.removeHandler(handler)
-    
+
     # Configure logging
     logging.basicConfig(
         level=logging.DEBUG,
         format='%(levelname)-8s - %(message)s'
     )
-    
+
     print("\nThis example would show:")
     print("- First fetch: 'INFO: Fetching secret from Vault: secret/data/myapp'")
     print("- Second fetch: 'DEBUG: Cache hit for secret: secret/data/myapp'")
@@ -146,7 +147,7 @@ def example_retry_behavior():
     print("\n" + "="*60)
     print("Example 5: Retry Logic Explanation")
     print("="*60)
-    
+
     print("\nRetry logic with exponential backoff:")
     print("\nWhen a network error occurs, gds_vault automatically:")
     print("1. Logs a WARNING with the error and retry delay")
@@ -171,17 +172,17 @@ def example_context_manager_logging():
     print("\n" + "="*60)
     print("Example 6: Context Manager Lifecycle")
     print("="*60)
-    
+
     # Clear existing handlers
     for handler in logging.root.handlers[:]:
         logging.root.removeHandler(handler)
-    
+
     # Configure logging
     logging.basicConfig(
         level=logging.DEBUG,
         format='%(levelname)-8s - %(message)s'
     )
-    
+
     print("\nContext manager logs lifecycle events:")
     print("DEBUG: Entering VaultClient context manager")
     print("INFO: Authenticating with Vault at https://vault.example.com")
@@ -196,31 +197,31 @@ def example_production_best_practices():
     print("\n" + "="*60)
     print("Example 7: Production Best Practices")
     print("="*60)
-    
+
     print("\n1. LOG LEVELS BY ENVIRONMENT:")
     print("   Development:  DEBUG   (see everything)")
     print("   Staging:      INFO    (track operations)")
     print("   Production:   WARNING (only issues)")
     print("   Troubleshoot: DEBUG   (temporarily)")
-    
+
     print("\n2. LOG ROTATION:")
     print("   Use RotatingFileHandler to prevent disk space issues")
     print("   Recommended: 10MB per file, keep 5 backups")
-    
+
     print("\n3. STRUCTURED LOGGING:")
     print("   Use JSON format for log aggregation systems")
     print("   (Splunk, ELK, CloudWatch, Datadog)")
-    
+
     print("\n4. SECURITY:")
     print("   ✓ gds_vault never logs token values")
     print("   ✓ gds_vault never logs secret contents")
     print("   ✓ Only logs operation outcomes and paths")
-    
+
     print("\n5. MONITORING:")
     print("   Alert on: Multiple ERROR logs within time window")
     print("   Alert on: High retry attempt frequency")
     print("   Alert on: 'failed after 3 retries' messages")
-    
+
     print("\n6. RETRY CUSTOMIZATION:")
     print("   Default settings work for most use cases")
     print("   Customize if you have specific requirements")
@@ -234,7 +235,7 @@ def main():
     print("="*70)
     print("\nThese examples demonstrate the logging and retry features")
     print("added to gds_vault for production resilience and debugging.")
-    
+
     # Run examples
     example_basic_logging()
     example_debug_logging()
@@ -243,7 +244,7 @@ def main():
     example_retry_behavior()
     example_context_manager_logging()
     example_production_best_practices()
-    
+
     print("\n" + "="*70)
     print("SUMMARY")
     print("="*70)

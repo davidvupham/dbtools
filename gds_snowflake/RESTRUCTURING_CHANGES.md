@@ -187,7 +187,7 @@ with SnowflakeConnection(...) as conn:
 
 **Old Code**:
 ```python
-from gds_snowflake import SnowflakeConnection, SnowflakeMetadata
+from gds_snowflake import SnowflakeConnection, SnowflakeDatabase
 
 conn = SnowflakeConnection(...)
 conn.connect()

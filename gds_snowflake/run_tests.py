@@ -4,9 +4,9 @@ Test runner for Snowflake Replication Monitor
 Runs all unit and integration tests
 """
 
+import os
 import sys
 import unittest
-import os
 
 # Add the parent directory to the path so tests can import modules
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -27,10 +27,10 @@ def run_tests(verbosity=2, pattern='test*.py'):
     loader = unittest.TestLoader()
     start_dir = os.path.join(os.path.dirname(__file__), 'tests')
     suite = loader.discover(start_dir, pattern=pattern)
-    
+
     runner = unittest.TextTestRunner(verbosity=verbosity)
     result = runner.run(suite)
-    
+
     return result.wasSuccessful()
 
 
@@ -47,10 +47,10 @@ def run_specific_test_module(module_name, verbosity=2):
     """
     loader = unittest.TestLoader()
     suite = loader.loadTestsFromName(f'tests.{module_name}')
-    
+
     runner = unittest.TextTestRunner(verbosity=verbosity)
     result = runner.run(suite)
-    
+
     return result.wasSuccessful()
 
 
@@ -91,7 +91,7 @@ Examples:
 def main():
     """Main entry point"""
     import argparse
-    
+
     parser = argparse.ArgumentParser(
         description='Run tests for Snowflake Replication Monitor',
         add_help=False
@@ -104,40 +104,39 @@ def main():
                        help='Quiet output')
     parser.add_argument('-m', '--module', type=str,
                        help='Run specific test module')
-    
+
     args = parser.parse_args()
-    
+
     if args.help:
         print_usage()
         return 0
-    
+
     # Determine verbosity
     verbosity = 2  # Default
     if args.quiet:
         verbosity = 0
     elif args.verbose:
         verbosity = 2
-    
+
     print("="*70)
     print("Snowflake Replication Monitor - Test Suite")
     print("="*70)
-    
+
     if args.module:
         print(f"\nRunning tests from module: {args.module}\n")
         success = run_specific_test_module(args.module, verbosity)
     else:
         print("\nRunning all tests...\n")
         success = run_tests(verbosity)
-    
+
     print("\n" + "="*70)
     if success:
         print("✓ All tests passed!")
         print("="*70)
         return 0
-    else:
-        print("✗ Some tests failed")
-        print("="*70)
-        return 1
+    print("✗ Some tests failed")
+    print("="*70)
+    return 1
 
 
 if __name__ == '__main__':

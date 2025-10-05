@@ -10,9 +10,10 @@ Note:
   (tables, views, columns)
 """
 
-from gds_snowflake import SnowflakeConnection, SnowflakeDatabase, SnowflakeTable
 import json
 import logging
+
+from gds_snowflake import SnowflakeConnection, SnowflakeDatabase, SnowflakeTable
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -230,7 +231,7 @@ def example_filtering_results():
 
         # Get columns for a specific table
         table_columns = table_metadata.get_columns(table_name="CUSTOMERS", database_name="MYDB", schema_name="PUBLIC")
-        print(f"\nColumns in CUSTOMERS table:")
+        print("\nColumns in CUSTOMERS table:")
         for col in table_columns:
             print(f"  - {col['COLUMN_NAME']}: {col['DATA_TYPE']} " f"(Nullable: {col['IS_NULLABLE']})")
 

@@ -10,11 +10,12 @@ Usage:
     python monitor_snowflake.py --account your-account [options]
 """
 
-import logging
 import argparse
 import json
-import sys
+import logging
 import os
+import sys
+
 from gds_snowflake import SnowflakeMonitor
 
 
@@ -33,14 +34,14 @@ def main():
     parser = argparse.ArgumentParser(
         description="Monitor Snowflake account connectivity and replication"
     )
-    
+
     # Required arguments
     parser.add_argument(
         "--account",
         required=True,
         help="Snowflake account name"
     )
-    
+
     # Monitoring mode
     parser.add_argument(
         "--connectivity-only",
@@ -52,7 +53,7 @@ def main():
         action="store_true",
         help="Only check replication (failures and latency)"
     )
-    
+
     # Configuration
     parser.add_argument(
         "--connectivity-timeout",
@@ -66,14 +67,14 @@ def main():
         default=30.0,
         help="Latency threshold in minutes (default: 30.0)"
     )
-    
+
     # Email notifications
     parser.add_argument(
         "--enable-email",
         action="store_true",
         help="Enable email notifications (requires env vars)"
     )
-    
+
     # Output
     parser.add_argument(
         "--json",
@@ -85,17 +86,17 @@ def main():
         action="store_true",
         help="Enable verbose logging"
     )
-    
+
     args = parser.parse_args()
-    
+
     # Set up logging
     setup_logging(args.verbose)
     logger = logging.getLogger(__name__)
-    
+
     try:
         # Create monitor with environment-based configuration
         logger.info(f"Creating SnowflakeMonitor for account: {args.account}")
-        
+
         monitor = SnowflakeMonitor(
             account=args.account,
             connectivity_timeout=args.connectivity_timeout,
@@ -109,12 +110,12 @@ def main():
             from_email=os.getenv('FROM_EMAIL'),
             to_emails=os.getenv('TO_EMAILS', '').split(',') if os.getenv('TO_EMAILS') else None,
         )
-        
+
         # Run monitoring based on options
         if args.connectivity_only:
             logger.info("Running connectivity monitoring only")
             result = monitor.monitor_connectivity()
-            
+
             if args.json:
                 output = {
                     'connectivity': {
@@ -133,17 +134,17 @@ def main():
                     print(f"Response Time: {result.response_time_ms} ms")
                 else:
                     print(f"Error: {result.error}")
-            
+
             # Exit with appropriate code
             sys.exit(0 if result.success else 1)
-            
+
         elif args.replication_only:
             logger.info("Running replication monitoring only")
-            
+
             # Check failures
             failure_results = monitor.monitor_replication_failures()
             latency_results = monitor.monitor_replication_latency()
-            
+
             if args.json:
                 output = {
                     'replication_failures': [
@@ -168,34 +169,34 @@ def main():
             else:
                 failures = sum(1 for r in failure_results if r.has_failure)
                 latency_issues = sum(1 for r in latency_results if r.has_latency)
-                
-                print(f"Replication Status:")
+
+                print("Replication Status:")
                 print(f"  Total Groups: {len(failure_results)}")
                 print(f"  Failures: {failures}")
                 print(f"  Latency Issues: {latency_issues}")
-                
+
                 if failures > 0:
                     print("\nFailures:")
                     for r in failure_results:
                         if r.has_failure:
                             print(f"  ✗ {r.failover_group}: {r.failure_message}")
-                
+
                 if latency_issues > 0:
                     print("\nLatency Issues:")
                     for r in latency_results:
                         if r.has_latency:
                             duration = f" ({r.latency_minutes} min)" if r.latency_minutes else ""
                             print(f"  ⚠ {r.failover_group}: {r.latency_message}{duration}")
-            
+
             # Exit with appropriate code
             has_issues = failures > 0 or latency_issues > 0
             sys.exit(1 if has_issues else 0)
-            
+
         else:
             # Comprehensive monitoring (default)
             logger.info("Running comprehensive monitoring")
             results = monitor.monitor_all()
-            
+
             if args.json:
                 # Convert datetime objects for JSON serialization
                 json_results = json.loads(json.dumps(results, default=str))
@@ -205,38 +206,38 @@ def main():
                 conn_ok = summary['connectivity_ok']
                 failures = summary['groups_with_failures']
                 latency_issues = summary['groups_with_latency']
-                
-                print(f"Monitoring Results:")
+
+                print("Monitoring Results:")
                 print(f"  Account: {results['account']}")
                 print(f"  Connectivity: {'✓ OK' if conn_ok else '✗ FAILED'}")
                 print(f"  Failover Groups: {summary['total_failover_groups']}")
                 print(f"  Replication Failures: {failures}")
                 print(f"  Latency Issues: {latency_issues}")
                 print(f"  Duration: {summary['monitoring_duration_ms']} ms")
-                
+
                 # Show details if there are issues
                 if not conn_ok:
                     conn = results.get('connectivity', {})
                     print(f"\nConnectivity Error: {conn.get('error', 'Unknown')}")
-                
+
                 if failures > 0:
                     print("\nReplication Failures:")
                     for r in results.get('replication_failures', []):
                         if r.has_failure:
                             print(f"  ✗ {r.failover_group}: {r.failure_message}")
-                
+
                 if latency_issues > 0:
                     print("\nLatency Issues:")
                     for r in results.get('replication_latency', []):
                         if r.has_latency:
                             duration = f" ({r.latency_minutes} min)" if r.latency_minutes else ""
                             print(f"  ⚠ {r.failover_group}: {r.latency_message}{duration}")
-                
+
                 # Overall status
                 has_issues = not conn_ok or failures > 0 or latency_issues > 0
                 overall = "⚠ ISSUES DETECTED" if has_issues else "✓ ALL OK"
                 print(f"\nOverall Status: {overall}")
-            
+
             # Exit with appropriate code
             has_issues = (
                 not results['summary']['connectivity_ok'] or
@@ -244,12 +245,12 @@ def main():
                 results['summary']['groups_with_latency'] > 0
             )
             sys.exit(1 if has_issues else 0)
-        
+
     except KeyboardInterrupt:
         logger.info("Monitoring interrupted by user")
         sys.exit(1)
     except Exception as e:
-        logger.error(f"Error during monitoring: {str(e)}")
+        logger.error(f"Error during monitoring: {e!s}")
         if args.verbose:
             import traceback
             traceback.print_exc()

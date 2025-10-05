@@ -2,14 +2,16 @@
 Comprehensive monitor integration tests for 10/10 coverage
 """
 
-import pytest
-from unittest.mock import Mock, patch, MagicMock
 from datetime import datetime
+from unittest.mock import Mock, patch
+
+import pytest
+
 from gds_snowflake.monitor import (
-    SnowflakeMonitor,
     AlertSeverity,
     ConnectivityResult,
     ReplicationResult,
+    SnowflakeMonitor,
 )
 
 

@@ -6,20 +6,24 @@ This module handles Snowflake database connections and connection management.
 
 import logging
 import os
-from typing import Optional
+import time
+from datetime import datetime
+from typing import Any, Dict, List, Optional
 
 import snowflake.connector
 
 try:
-    from gds_vault.vault import get_secret_from_vault, VaultError
+    from gds_vault.vault import VaultError, get_secret_from_vault
 except ImportError:
     get_secret_from_vault = None
     VaultError = Exception
 
+from .base import ConfigurableComponent, DatabaseConnection, ResourceManager
+
 logger = logging.getLogger(__name__)
 
 
-class SnowflakeConnection:
+class SnowflakeConnection(DatabaseConnection, ConfigurableComponent, ResourceManager):
     """
     Manages Snowflake database connections using RSA key pair
     authentication.
@@ -38,6 +42,7 @@ class SnowflakeConnection:
         vault_role_id: Optional[str] = None,
         vault_secret_id: Optional[str] = None,
         vault_addr: Optional[str] = None,
+        config: Optional[Dict[str, Any]] = None,
     ):
         """
         Initialize Snowflake connection parameters using RSA private key
@@ -61,13 +66,18 @@ class SnowflakeConnection:
                     (optional, defaults to VAULT_SECRET_ID env)
                 vault_addr: Vault address
                     (optional, defaults to VAULT_ADDR env)
+                config: Optional configuration dictionary
         """
+        # Initialize base classes
+        ConfigurableComponent.__init__(self, config)
+
         self.account = account
         self.user = user or os.getenv("SNOWFLAKE_USER")
         self.warehouse = warehouse
         self.role = role
         self.database = database
         self.connection = None
+        self._initialized = False
 
         # Vault configuration: parameter > env > None
         self.vault_namespace = vault_namespace or os.getenv("VAULT_NAMESPACE")
@@ -109,6 +119,47 @@ class SnowflakeConnection:
             raise RuntimeError(
                 "Vault secret path must be provided to retrieve private key."
             )
+
+    # Abstract method implementations
+    def validate_config(self) -> bool:
+        """Validate the current configuration."""
+        required_fields = ['account']
+        for field in required_fields:
+            if not hasattr(self, field) or getattr(self, field) is None:
+                return False
+        return True
+
+    def initialize(self) -> None:
+        """Initialize resources."""
+        self._initialized = True
+
+    def cleanup(self) -> None:
+        """Clean up resources."""
+        self.close()
+        self._initialized = False
+
+    def is_initialized(self) -> bool:
+        """Check if resources are initialized."""
+        return self._initialized
+
+    def disconnect(self) -> None:
+        """Close database connection."""
+        self.close()
+
+    def is_connected(self) -> bool:
+        """Check if connection is active."""
+        return self.connection is not None and not self.connection.is_closed()
+
+    def get_connection_info(self) -> Dict[str, Any]:
+        """Get connection information."""
+        return {
+            'account': self.account,
+            'user': self.user,
+            'warehouse': self.warehouse,
+            'role': self.role,
+            'database': self.database,
+            'connected': self.is_connected()
+        }
 
     def connect(self) -> snowflake.connector.SnowflakeConnection:
         """
@@ -172,8 +223,6 @@ class SnowflakeConnection:
                 'timestamp': str
             }
         """
-        import time
-        from datetime import datetime
 
         start_time = time.time()
         result = {
@@ -281,7 +330,7 @@ class SnowflakeConnection:
             except Exception as e:
                 logger.error("Error closing connection: %s", str(e))
 
-    def execute_query(self, query: str, params: Optional[tuple] = None) -> list:
+    def execute_query(self, query: str, params: Optional[tuple] = None) -> List[Any]:
         """
         Execute a SQL query and return results.
 
@@ -364,9 +413,10 @@ class SnowflakeConnection:
 
     def __enter__(self):
         """Context manager entry."""
+        self.initialize()
         self.connect()
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         """Context manager exit."""
-        self.close()
+        self.cleanup()

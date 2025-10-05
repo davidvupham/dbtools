@@ -9,16 +9,18 @@ A comprehensive monitoring class for Snowflake accounts, providing:
 - Configurable alerts and thresholds
 """
 
-import logging
 import smtplib
-from datetime import datetime
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
-from typing import Dict, List, Optional, Set, Any
+import time
 from dataclasses import dataclass
+from datetime import datetime
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 from enum import Enum
+from typing import Any, Dict, List, Optional, Set
 
-from gds_snowflake import SnowflakeConnection, SnowflakeReplication, FailoverGroup
+from gds_snowflake import FailoverGroup, SnowflakeConnection, SnowflakeReplication
+
+from .base import BaseMonitor
 
 
 class AlertSeverity(Enum):
@@ -62,7 +64,7 @@ class ReplicationResult:
     next_refresh: Optional[datetime]
 
 
-class SnowflakeMonitor:
+class SnowflakeMonitor(BaseMonitor):
     """
     Comprehensive Snowflake monitoring class.
 
@@ -119,6 +121,12 @@ class SnowflakeMonitor:
             enable_email_alerts: Whether to send email alerts
             vault_*: Vault configuration parameters (optional)
         """
+        # Initialize base monitor
+        super().__init__(
+            name=f"SnowflakeMonitor-{account}",
+            timeout=connectivity_timeout
+        )
+
         self.account = account
         self.connectivity_timeout = connectivity_timeout
         self.latency_threshold_minutes = latency_threshold_minutes
@@ -152,7 +160,49 @@ class SnowflakeMonitor:
         )
 
         self.replication = None
-        self.logger = logging.getLogger(__name__)
+
+    def check(self) -> Dict[str, Any]:
+        """
+        Perform the monitoring check (required by BaseMonitor).
+        
+        Returns:
+            Dictionary containing check results
+        """
+        start_time = time.time()
+
+        try:
+            # Run comprehensive monitoring
+            results = self.monitor_all()
+
+            # Convert to standardized format
+            duration_ms = (time.time() - start_time) * 1000
+
+            result = {
+                'success': results['summary']['connectivity_ok'],
+                'message': f"Monitoring completed for {self.account}",
+                'duration_ms': duration_ms,
+                'data': results
+            }
+
+            # Log and record the result
+            self._log_result(result)
+            self._record_check(result)
+
+            return result
+
+        except Exception as e:
+            duration_ms = (time.time() - start_time) * 1000
+            result = {
+                'success': False,
+                'message': f"Monitoring failed for {self.account}: {e!s}",
+                'duration_ms': duration_ms,
+                'error': str(e)
+            }
+
+            self._log_result(result)
+            self._record_check(result)
+
+            return result
 
     def monitor_connectivity(self) -> ConnectivityResult:
         """
@@ -246,9 +296,9 @@ class SnowflakeMonitor:
                 results.append(result)
 
                 # Send alert if failure detected and not already notified
-                if (result.has_failure and
-                    self.enable_email_alerts and
-                    fg.name not in self.notified_failures):
+                if (result.has_failure
+                        and self.enable_email_alerts
+                        and fg.name not in self.notified_failures):
 
                     self._send_replication_failure_alert(result)
                     self.notified_failures.add(fg.name)
@@ -291,9 +341,9 @@ class SnowflakeMonitor:
                 results.append(result)
 
                 # Send alert if latency exceeds threshold
-                if (result.has_latency and
-                    self.enable_email_alerts and
-                    f"{fg.name}_latency" not in self.notified_failures):
+                if (result.has_latency
+                        and self.enable_email_alerts
+                        and f"{fg.name}_latency" not in self.notified_failures):
 
                     self._send_replication_latency_alert(result)
                     self.notified_failures.add(f"{fg.name}_latency")
@@ -412,7 +462,7 @@ class SnowflakeMonitor:
                 has_failure=True,
                 has_latency=False,
                 latency_minutes=None,
-                failure_message=f"Error checking failures: {str(e)}",
+                failure_message=f"Error checking failures: {e!s}",
                 latency_message=None,
                 last_refresh=None,
                 next_refresh=None
@@ -431,15 +481,15 @@ class SnowflakeMonitor:
                     parts = latency_msg.split()
                     for i, part in enumerate(parts):
                         if "minute" in part and i > 0:
-                            latency_minutes = float(parts[i-1])
+                            latency_minutes = float(parts[i - 1])
                             break
                 except (ValueError, IndexError):
                     pass
 
             # Check against our threshold
             threshold_exceeded = (
-                latency_minutes is not None and
-                latency_minutes > self.latency_threshold_minutes
+                latency_minutes is not None
+                and latency_minutes > self.latency_threshold_minutes
             )
 
             return ReplicationResult(
@@ -461,7 +511,7 @@ class SnowflakeMonitor:
                 has_latency=True,
                 latency_minutes=None,
                 failure_message=None,
-                latency_message=f"Error checking latency: {str(e)}",
+                latency_message=f"Error checking latency: {e!s}",
                 last_refresh=None,
                 next_refresh=None
             )

@@ -1,0 +1,6 @@
+# Alternative Ruff configuration file
+# This file takes precedence over pyproject.toml [tool.ruff] section
+# You can delete this file if you prefer to keep config in pyproject.toml
+
+# Symlink to pyproject.toml configuration
+# (Ruff will automatically read from pyproject.toml if this file doesn't exist)

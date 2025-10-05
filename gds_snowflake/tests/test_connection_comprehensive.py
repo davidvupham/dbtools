@@ -2,15 +2,12 @@
 Comprehensive connection module tests for 10/10 coverage
 """
 
-import pytest
-from unittest.mock import Mock, patch, MagicMock
 import os
+from unittest.mock import MagicMock, Mock, patch
+
+import pytest
+
 from gds_snowflake.connection import SnowflakeConnection
-from gds_snowflake.exceptions import (
-    SnowflakeConnectionError,
-    VaultSecretError,
-    SnowflakeConfigurationError,
-)
 
 
 @pytest.fixture

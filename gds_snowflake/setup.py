@@ -2,15 +2,17 @@
 Setup configuration for gds_snowflake package
 """
 
-from setuptools import setup, find_packages
 import os
+
+from setuptools import find_packages, setup
+
 
 # Read the README file for long description
 def read_file(filename):
     """Read file contents."""
     filepath = os.path.join(os.path.dirname(__file__), filename)
     if os.path.exists(filepath):
-        with open(filepath, 'r', encoding='utf-8') as f:
+        with open(filepath, encoding='utf-8') as f:
             return f.read()
     return ''
 

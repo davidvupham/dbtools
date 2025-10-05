@@ -1,9 +1,9 @@
-# SnowflakeMetadata Quick Reference
+# SnowflakeDatabase Quick Reference
 
 ## Import
 
 ```python
-from gds_snowflake import SnowflakeConnection, SnowflakeMetadata
+from gds_snowflake import SnowflakeConnection, SnowflakeDatabase
 ```
 
 ## Initialization

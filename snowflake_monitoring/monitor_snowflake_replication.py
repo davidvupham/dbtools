@@ -14,15 +14,14 @@ not here.
 import argparse
 import logging
 import os
+import smtplib
 import sys
 import time
-import smtplib
-from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 from typing import List, Set
 
-from gds_snowflake import SnowflakeConnection, SnowflakeReplication, FailoverGroup
-
+from gds_snowflake import FailoverGroup, SnowflakeConnection, SnowflakeReplication
 
 # Script name for logging
 SCRIPT_NAME = os.path.splitext(os.path.basename(__file__))[0]
@@ -117,20 +116,20 @@ def check_snowflake_connectivity(account: str, timeout_seconds: int = 30) -> boo
         bool: True if connectivity test passed, False otherwise
     """
     logging.info(f"Starting connectivity check for account: {account}")
-    
+
     try:
         # Create a temporary connection just for testing
         test_conn = SnowflakeConnection(account=account)
-        
+
         # Run connectivity test
         result = test_conn.test_connectivity(timeout_seconds=timeout_seconds)
-        
+
         if result['success']:
             logging.info(
                 f"✓ Connectivity test PASSED for {account} "
                 f"(response time: {result['response_time_ms']}ms)"
             )
-            
+
             # Log account information
             account_info = result.get('account_info', {})
             if account_info:
@@ -140,22 +139,21 @@ def check_snowflake_connectivity(account: str, timeout_seconds: int = 30) -> boo
                 logging.info(f"  - Warehouse: {account_info.get('current_warehouse')}")
                 logging.info(f"  - Region: {account_info.get('region')}")
                 logging.info(f"  - Version: {account_info.get('snowflake_version')}")
-            
+
             return True
-        else:
-            logging.error(
-                f"✗ Connectivity test FAILED for {account} "
-                f"(response time: {result['response_time_ms']}ms)"
-            )
-            logging.error(f"  Error: {result.get('error', 'Unknown error')}")
-            
-            # Send alert for connectivity issues
-            send_connectivity_alert(account, result)
-            return False
-            
+        logging.error(
+            f"✗ Connectivity test FAILED for {account} "
+            f"(response time: {result['response_time_ms']}ms)"
+        )
+        logging.error(f"  Error: {result.get('error', 'Unknown error')}")
+
+        # Send alert for connectivity issues
+        send_connectivity_alert(account, result)
+        return False
+
     except Exception as e:
-        logging.error(f"✗ Connectivity test FAILED for {account}: {str(e)}")
-        
+        logging.error(f"✗ Connectivity test FAILED for {account}: {e!s}")
+
         # Send alert for connectivity issues
         send_connectivity_alert(account, {'error': str(e), 'success': False})
         return False
@@ -170,7 +168,7 @@ def send_connectivity_alert(account: str, test_result: dict):
         test_result: Connectivity test result dictionary
     """
     subject = f"🚨 Snowflake Connectivity Alert - {account}"
-    
+
     body = f"""
 Snowflake connectivity test failed for account: {account}
 
@@ -192,7 +190,7 @@ Please investigate immediately.
 Snowflake Replication Monitor
 Account: {account}
     """
-    
+
     try:
         send_email_notification(subject.strip(), body.strip())
         logging.info(f"Connectivity alert email sent for {account}")
@@ -298,7 +296,7 @@ The replication is running behind schedule. Please investigate.
                     logging.info(f"Cleared latency notification flag for {fg_name}")
 
     except Exception as e:
-        logging.error(f"Error processing failover group {fg_name}: {str(e)}")
+        logging.error(f"Error processing failover group {fg_name}: {e!s}")
 
     finally:
         # Switch back to original account if we changed it
@@ -307,7 +305,7 @@ The replication is running behind schedule. Please investigate.
                 logging.info(f"Switching back to original account: {original_account}")
                 connection.switch_account(original_account)
             except Exception as e:
-                logging.error(f"Error switching back to original account: {str(e)}")
+                logging.error(f"Error switching back to original account: {e!s}")
 
 
 def monitor_failover_groups(
@@ -351,17 +349,17 @@ def monitor_failover_groups(
         logging.info("=" * 60)
         logging.info("Starting Snowflake connectivity check")
         logging.info("=" * 60)
-        
+
         if not check_snowflake_connectivity(account):
             logging.error(
                 f"Connectivity test failed for {account}. "
                 "Skipping replication monitoring."
             )
             return
-            
+
         logging.info("Connectivity test passed. Proceeding with replication monitoring.")
         logging.info("=" * 60)
-        
+
         # Connect to Snowflake
         connection.connect()
 
@@ -454,18 +452,18 @@ Example:
         "Starting Snowflake Replication Monitor (Refactored) for account: %s",
         args.account,
     )
-    
+
     # Handle connectivity test only mode
     if args.test_connectivity:
         logging.info("Running connectivity test only...")
         logging.info("Connectivity timeout: %d seconds", args.connectivity_timeout)
         logging.info("=" * 80)
-        
+
         success = check_snowflake_connectivity(
-            args.account, 
+            args.account,
             timeout_seconds=args.connectivity_timeout
         )
-        
+
         if success:
             logging.info("=" * 80)
             logging.info("✓ Connectivity test completed successfully")
@@ -474,7 +472,7 @@ Example:
             logging.error("=" * 80)
             logging.error("✗ Connectivity test failed")
             sys.exit(1)
-    
+
     logging.info("Monitoring interval: %d seconds", args.interval)
     logging.info("Run mode: %s", "One-time" if args.once else "Continuous")
     logging.info("=" * 80)

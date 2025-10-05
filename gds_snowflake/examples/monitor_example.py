@@ -12,12 +12,12 @@ Usage:
     python monitor_example.py --account your-account [options]
 """
 
-import logging
 import argparse
 import json
+import logging
 import sys
-from datetime import datetime
-from gds_snowflake import SnowflakeMonitor, AlertSeverity
+
+from gds_snowflake import SnowflakeMonitor
 
 
 def setup_logging(verbose: bool = False):
@@ -35,20 +35,20 @@ def main():
     parser = argparse.ArgumentParser(
         description="Snowflake monitoring example using SnowflakeMonitor class"
     )
-    
+
     # Required arguments
     parser.add_argument(
-        "--account", 
+        "--account",
         required=True,
         help="Snowflake account name"
     )
-    
+
     # Optional Snowflake connection parameters
     parser.add_argument("--user", help="Snowflake username")
     parser.add_argument("--warehouse", help="Snowflake warehouse")
     parser.add_argument("--role", help="Snowflake role")
     parser.add_argument("--database", help="Snowflake database")
-    
+
     # Monitoring options
     parser.add_argument(
         "--connectivity-only",
@@ -57,7 +57,7 @@ def main():
     )
     parser.add_argument(
         "--failures-only",
-        action="store_true", 
+        action="store_true",
         help="Only check replication failures"
     )
     parser.add_argument(
@@ -77,7 +77,7 @@ def main():
         default=30.0,
         help="Latency threshold in minutes (default: 30.0)"
     )
-    
+
     # Email configuration
     parser.add_argument("--smtp-server", help="SMTP server for notifications")
     parser.add_argument("--smtp-port", type=int, default=587, help="SMTP port")
@@ -85,8 +85,8 @@ def main():
     parser.add_argument("--smtp-password", help="SMTP password")
     parser.add_argument("--from-email", help="From email address")
     parser.add_argument(
-        "--to-emails", 
-        nargs="+", 
+        "--to-emails",
+        nargs="+",
         help="Recipient email addresses"
     )
     parser.add_argument(
@@ -94,7 +94,7 @@ def main():
         action="store_true",
         help="Disable email notifications"
     )
-    
+
     # Output options
     parser.add_argument(
         "--json-output",
@@ -106,17 +106,17 @@ def main():
         action="store_true",
         help="Enable verbose logging"
     )
-    
+
     args = parser.parse_args()
-    
+
     # Set up logging
     setup_logging(args.verbose)
     logger = logging.getLogger(__name__)
-    
+
     try:
         # Create monitor instance
         logger.info(f"Creating SnowflakeMonitor for account: {args.account}")
-        
+
         monitor = SnowflakeMonitor(
             account=args.account,
             user=args.user,
@@ -133,12 +133,12 @@ def main():
             latency_threshold_minutes=args.latency_threshold,
             enable_email_alerts=not args.disable_email,
         )
-        
+
         # Run monitoring based on options
         if args.connectivity_only:
             logger.info("Running connectivity monitoring only")
             result = monitor.monitor_connectivity()
-            
+
             if args.json_output:
                 print(json.dumps({
                     'connectivity': {
@@ -151,11 +151,11 @@ def main():
                 }, indent=2))
             else:
                 print_connectivity_result(result)
-                
+
         elif args.failures_only:
             logger.info("Running replication failure monitoring only")
             results = monitor.monitor_replication_failures()
-            
+
             if args.json_output:
                 print(json.dumps({
                     'replication_failures': [
@@ -171,11 +171,11 @@ def main():
                 }, indent=2))
             else:
                 print_replication_results(results, "Failure")
-                
+
         elif args.latency_only:
             logger.info("Running replication latency monitoring only")
             results = monitor.monitor_replication_latency()
-            
+
             if args.json_output:
                 print(json.dumps({
                     'replication_latency': [
@@ -192,28 +192,28 @@ def main():
                 }, indent=2))
             else:
                 print_replication_results(results, "Latency")
-                
+
         else:
             logger.info("Running comprehensive monitoring")
             results = monitor.monitor_all()
-            
+
             if args.json_output:
                 # Convert datetime objects to ISO strings for JSON serialization
                 json_results = json.loads(json.dumps(results, default=str))
                 print(json.dumps(json_results, indent=2))
             else:
                 print_comprehensive_results(results)
-        
+
         # Close monitor
         monitor.close()
-        
+
         logger.info("Monitoring completed successfully")
-        
+
     except KeyboardInterrupt:
         logger.info("Monitoring interrupted by user")
         sys.exit(1)
     except Exception as e:
-        logger.error(f"Error during monitoring: {str(e)}")
+        logger.error(f"Error during monitoring: {e!s}")
         if args.verbose:
             import traceback
             traceback.print_exc()
@@ -222,17 +222,17 @@ def main():
 
 def print_connectivity_result(result):
     """Print connectivity result in human-readable format."""
-    print(f"\n=== Connectivity Results ===")
+    print("\n=== Connectivity Results ===")
     print(f"Account: {result.account_info.get('account', 'Unknown')}")
     print(f"Success: {'✓' if result.success else '✗'}")
     print(f"Response Time: {result.response_time_ms} ms")
     print(f"Timestamp: {result.timestamp}")
-    
+
     if result.error:
         print(f"Error: {result.error}")
-    
+
     if result.account_info:
-        print(f"\nAccount Information:")
+        print("\nAccount Information:")
         for key, value in result.account_info.items():
             print(f"  {key.replace('_', ' ').title()}: {value}")
 
@@ -240,22 +240,22 @@ def print_connectivity_result(result):
 def print_replication_results(results, check_type):
     """Print replication results in human-readable format."""
     print(f"\n=== Replication {check_type} Results ===")
-    
+
     if not results:
         print("No failover groups found")
         return
-    
+
     for result in results:
         status_icon = "✗" if (result.has_failure or result.has_latency) else "✓"
         print(f"\n{status_icon} Failover Group: {result.failover_group}")
-        
+
         if check_type == "Failure" and result.has_failure:
             print(f"   Failure: {result.failure_message}")
         elif check_type == "Latency" and result.has_latency:
             print(f"   Latency: {result.latency_message}")
             if result.latency_minutes:
                 print(f"   Duration: {result.latency_minutes} minutes")
-        
+
         if result.last_refresh:
             print(f"   Last Refresh: {result.last_refresh}")
         if result.next_refresh:
@@ -264,11 +264,11 @@ def print_replication_results(results, check_type):
 
 def print_comprehensive_results(results):
     """Print comprehensive monitoring results in human-readable format."""
-    print(f"\n=== Comprehensive Monitoring Results ===")
+    print("\n=== Comprehensive Monitoring Results ===")
     print(f"Account: {results['account']}")
     print(f"Timestamp: {results['timestamp']}")
     print(f"Duration: {results['summary']['monitoring_duration_ms']} ms")
-    
+
     # Connectivity
     conn = results.get('connectivity')
     if conn:
@@ -278,38 +278,38 @@ def print_comprehensive_results(results):
             print(f"  Error: {conn.error}")
         else:
             print(f"  Response Time: {conn.response_time_ms} ms")
-    
+
     # Summary
     summary = results['summary']
-    print(f"\nSummary:")
+    print("\nSummary:")
     print(f"  Total Failover Groups: {summary['total_failover_groups']}")
     print(f"  Groups with Failures: {summary['groups_with_failures']}")
     print(f"  Groups with Latency Issues: {summary['groups_with_latency']}")
-    
+
     # Failures
     failures = results.get('replication_failures', [])
     if any(r.has_failure for r in failures):
-        print(f"\nReplication Failures:")
+        print("\nReplication Failures:")
         for result in failures:
             if result.has_failure:
                 print(f"  ✗ {result.failover_group}: {result.failure_message}")
-    
+
     # Latency
     latency_issues = results.get('replication_latency', [])
     if any(r.has_latency for r in latency_issues):
-        print(f"\nLatency Issues:")
+        print("\nLatency Issues:")
         for result in latency_issues:
             if result.has_latency:
                 duration = f" ({result.latency_minutes} min)" if result.latency_minutes else ""
                 print(f"  ⚠ {result.failover_group}: {result.latency_message}{duration}")
-    
+
     # Overall status
     has_issues = (
-        not summary['connectivity_ok'] or 
-        summary['groups_with_failures'] > 0 or 
+        not summary['connectivity_ok'] or
+        summary['groups_with_failures'] > 0 or
         summary['groups_with_latency'] > 0
     )
-    
+
     overall_status = "⚠ ISSUES DETECTED" if has_issues else "✓ ALL SYSTEMS OK"
     print(f"\nOverall Status: {overall_status}")
 

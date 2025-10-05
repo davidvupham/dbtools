@@ -4,6 +4,7 @@ Unit tests for the SnowflakeDatabase class.
 
 import unittest
 from unittest.mock import Mock
+
 from gds_snowflake.database import SnowflakeDatabase
 
 

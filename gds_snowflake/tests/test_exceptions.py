@@ -3,12 +3,13 @@ Comprehensive tests for custom exception classes
 """
 
 import pytest
+
 from gds_snowflake.exceptions import (
+    SnowflakeConfigurationError,
     SnowflakeConnectionError,
     SnowflakeQueryError,
     VaultAuthenticationError,
     VaultSecretError,
-    SnowflakeConfigurationError,
 )
 
 

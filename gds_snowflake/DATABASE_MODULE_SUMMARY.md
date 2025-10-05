@@ -125,7 +125,7 @@ The `get_all_metadata()` method provides:
 ## Usage Example
 
 ```python
-from gds_snowflake import SnowflakeConnection, SnowflakeMetadata
+from gds_snowflake import SnowflakeConnection, SnowflakeDatabase
 
 # Connect to Snowflake
 with SnowflakeConnection(

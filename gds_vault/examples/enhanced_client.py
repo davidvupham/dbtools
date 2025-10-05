@@ -11,9 +11,10 @@ This is an example of how gds_vault could be extended with:
 
 import os
 import time
-import requests
-from typing import Optional, Dict, Any
 from functools import wraps
+from typing import Any, Dict, Optional
+
+import requests
 
 
 class VaultError(Exception):
@@ -179,10 +180,9 @@ class EnhancedVaultClient:
         # Handle KV v1 vs v2
         if "data" in data and "data" in data["data"]:
             return data["data"]["data"]
-        elif "data" in data:
+        if "data" in data:
             return data["data"]
-        else:
-            raise VaultError("Unexpected response format")
+        raise VaultError("Unexpected response format")
 
     @retry_on_failure(max_retries=3)
     def write_secret(self, path: str, data: Dict[str, Any]) -> bool:

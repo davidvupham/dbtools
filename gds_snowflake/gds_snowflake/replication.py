@@ -7,7 +7,9 @@ This module handles Snowflake replication and failover group operations.
 import logging
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Tuple
+
 from croniter import croniter
+
 from gds_snowflake.connection import SnowflakeConnection
 
 logger = logging.getLogger(__name__)
@@ -307,9 +309,9 @@ class SnowflakeReplication:
             if current_time > expected_next:
                 delay_minutes = (current_time - expected_next).total_seconds() / 60
                 message = (f"Replication latency detected for {failover_group.name}. "
-                          f"Expected completion by {expected_next}, but current time is {current_time}. "
-                          f"Delay: {delay_minutes:.1f} minutes. "
-                          f"Last replication took {duration:.1f} minutes, interval is {interval_minutes} minutes.")
+                           f"Expected completion by {expected_next}, but current time is {current_time}. "
+                           f"Delay: {delay_minutes:.1f} minutes. "
+                           f"Last replication took {duration:.1f} minutes, interval is {interval_minutes} minutes.")
                 logger.warning(message)
                 return True, message
 

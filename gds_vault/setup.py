@@ -1,5 +1,6 @@
-from setuptools import setup, find_packages
 import os
+
+from setuptools import find_packages, setup
 
 # Read README
 readme_path = os.path.join(os.path.dirname(__file__), "README.md")

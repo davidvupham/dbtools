@@ -9,11 +9,11 @@ This module provides a production-ready Vault client with:
 - Comprehensive logging
 """
 
+import logging
 import os
 import time
-import logging
-from typing import Optional, Dict, Any, Callable
 from functools import wraps
+from typing import Any, Callable, Dict, Optional
 
 import requests
 

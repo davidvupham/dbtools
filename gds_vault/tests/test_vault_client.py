@@ -1,10 +1,11 @@
 """Tests for VaultClient class."""
 
 import os
-import time
 import unittest
+from unittest.mock import Mock, patch
+
 import requests
-from unittest.mock import Mock, patch, call
+
 from gds_vault import VaultClient, VaultError
 
 

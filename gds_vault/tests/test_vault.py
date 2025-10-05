@@ -2,9 +2,9 @@
 
 import os
 import unittest
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
 
-from gds_vault.vault import get_secret_from_vault, VaultError
+from gds_vault.vault import VaultError, get_secret_from_vault
 
 
 class TestVaultError(unittest.TestCase):

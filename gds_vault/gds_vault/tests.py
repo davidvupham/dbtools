@@ -5,8 +5,10 @@ These tests require a running Vault dev server and valid environment variables.
 Tests will be skipped if the required environment variables are not set.
 """
 import os
+
 import pytest
-from gds_vault.vault import get_secret_from_vault, VaultError
+
+from gds_vault.vault import VaultError, get_secret_from_vault
 
 # These tests require a running Vault dev server and valid env vars.
 # To skip if not configured:

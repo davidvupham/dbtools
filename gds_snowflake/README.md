@@ -211,7 +211,7 @@ conn.close()
 ### Database Metadata Retrieval
 
 ```python
-from gds_snowflake import SnowflakeConnection, SnowflakeMetadata
+from gds_snowflake import SnowflakeConnection, SnowflakeDatabase
 
 # Connect to Snowflake
 conn = SnowflakeConnection(
@@ -223,7 +223,7 @@ conn = SnowflakeConnection(
 conn.connect()
 
 # Create metadata retriever
-metadata = SnowflakeMetadata(conn)
+metadata = SnowflakeDatabase(conn)
 
 # Get all databases
 databases = metadata.get_databases()
@@ -259,7 +259,7 @@ conn.close()
 ### Metadata for Data Pipeline Objects
 
 ```python
-from gds_snowflake import SnowflakeConnection, SnowflakeMetadata
+from gds_snowflake import SnowflakeConnection, SnowflakeDatabase
 
 with SnowflakeConnection(
     account='myaccount', 
@@ -267,7 +267,7 @@ with SnowflakeConnection(
     vault_secret_path='data/snowflake',
     vault_mount_point='secret'
 ) as conn:
-    metadata = SnowflakeMetadata(conn)
+    metadata = SnowflakeDatabase(conn)
     
     # Get stages
     stages = metadata.get_stages(database_name='MYDB', schema_name='PUBLIC')
@@ -430,7 +430,7 @@ if not result['success']:
 - `get_secondary_accounts()` - Get list of secondary account identifiers
 - `get_secondary_account()` - Get a single available secondary account
 
-### SnowflakeMetadata
+### SnowflakeDatabase
 
 **Methods:**
 
