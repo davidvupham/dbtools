@@ -48,8 +48,8 @@ def example_class_without_caching():
         client = VaultClient()
 
         # Fetch secrets without caching (use_cache=False)
-        secret1 = client.get_secret('secret/data/app1', use_cache=False)
-        secret2 = client.get_secret('secret/data/app2', use_cache=False)
+        client.get_secret('secret/data/app1', use_cache=False)
+        client.get_secret('secret/data/app2', use_cache=False)
 
         print("✓ Retrieved 2 secrets without caching")
         print(f"  Cache info: {client.get_cache_info()}")
@@ -79,12 +79,12 @@ def example_class_with_caching():
 
         # Authenticate once and reuse token
         print("→ Fetching multiple secrets...")
-        secret1 = client.get_secret('secret/data/database')
-        secret2 = client.get_secret('secret/data/api-keys')
-        secret3 = client.get_secret('secret/data/smtp')
+        client.get_secret('secret/data/database')
+        client.get_secret('secret/data/api-keys')
+        client.get_secret('secret/data/smtp')
 
         # Fetching the same secret again uses cache
-        cached_secret = client.get_secret('secret/data/database')
+        client.get_secret('secret/data/database')
 
         print("✓ Retrieved 3 unique secrets")
         print("✓ Second fetch of database secret used cache")
@@ -248,7 +248,7 @@ def example_error_handling():
             role_id="test",
             secret_id="test"
         )
-        secret = client.get_secret('invalid/path')
+        client.get_secret('invalid/path')
     except VaultError as e:
         print(f"✓ Caught invalid path error: {e}")
 

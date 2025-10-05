@@ -12,7 +12,7 @@ This is an example of how gds_vault could be extended with:
 import os
 import time
 from functools import wraps
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 import requests
 
@@ -151,7 +151,7 @@ class EnhancedVaultClient:
         return self._token_cache
 
     @retry_on_failure(max_retries=3)
-    def read_secret(self, path: str, version: Optional[int] = None) -> Dict[str, Any]:
+    def read_secret(self, path: str, version: Optional[int] = None) -> dict[str, Any]:
         """
         Read a secret from Vault.
 
@@ -185,7 +185,7 @@ class EnhancedVaultClient:
         raise VaultError("Unexpected response format")
 
     @retry_on_failure(max_retries=3)
-    def write_secret(self, path: str, data: Dict[str, Any]) -> bool:
+    def write_secret(self, path: str, data: dict[str, Any]) -> bool:
         """
         Write a secret to Vault.
 

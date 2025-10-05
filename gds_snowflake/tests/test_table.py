@@ -264,7 +264,7 @@ class TestSnowflakeTable(unittest.TestCase):
         self.table_metadata.get_views = Mock(return_value=[])
         self.table_metadata.get_columns = Mock(return_value=[])
 
-        result = self.table_metadata.get_all_table_metadata(
+        self.table_metadata.get_all_table_metadata(
             database_name="TEST_DB", schema_name="PUBLIC"
         )
 

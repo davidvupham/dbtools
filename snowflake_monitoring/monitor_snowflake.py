@@ -259,7 +259,7 @@ def main():
         # Clean up
         try:
             monitor.close()
-        except:
+        except Exception:
             pass
 
 

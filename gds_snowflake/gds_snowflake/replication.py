@@ -6,7 +6,7 @@ This module handles Snowflake replication and failover group operations.
 
 import logging
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Tuple
+from typing import Optional
 
 from croniter import croniter
 
@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 class FailoverGroup:
     """Represents a Snowflake failover group with its properties."""
 
-    def __init__(self, name: str, properties: Dict):
+    def __init__(self, name: str, properties: dict):
         """
         Initialize a failover group.
 
@@ -37,7 +37,7 @@ class FailoverGroup:
         self.allowed_shares = properties.get('allowed_shares', '')
         self.allowed_integration_types = properties.get('allowed_integration_types', '')
 
-    def _parse_secondary_accounts(self, secondary_state: str) -> List[str]:
+    def _parse_secondary_accounts(self, secondary_state: str) -> list[str]:
         """
         Parse secondary accounts from the secondary_state string.
 
@@ -109,7 +109,7 @@ class SnowflakeReplication:
         """
         self.connection = connection
 
-    def get_failover_groups(self) -> List[FailoverGroup]:
+    def get_failover_groups(self) -> list[FailoverGroup]:
         """
         Retrieve all failover groups from Snowflake.
 
@@ -158,7 +158,7 @@ class SnowflakeReplication:
             logger.error("Error retrieving failover groups: %s", str(e))
             raise
 
-    def get_replication_history(self, failover_group_name: str, limit: int = 10) -> List[Dict]:
+    def get_replication_history(self, failover_group_name: str, limit: int = 10) -> list[dict]:
         """
         Get replication history for a failover group.
 
@@ -232,7 +232,7 @@ class SnowflakeReplication:
             logger.error("Error parsing cron schedule '%s': %s", cron_expression, str(e))
             return None
 
-    def check_replication_failure(self, failover_group: FailoverGroup) -> Tuple[bool, Optional[str]]:
+    def check_replication_failure(self, failover_group: FailoverGroup) -> tuple[bool, Optional[str]]:
         """
         Check if the last replication failed for a failover group.
 
@@ -263,7 +263,7 @@ class SnowflakeReplication:
             logger.error("Error checking replication failure for %s: %s", failover_group.name, str(e))
             return False, None
 
-    def check_replication_latency(self, failover_group: FailoverGroup) -> Tuple[bool, Optional[str]]:
+    def check_replication_latency(self, failover_group: FailoverGroup) -> tuple[bool, Optional[str]]:
         """
         Check if there is replication latency for a failover group.
 

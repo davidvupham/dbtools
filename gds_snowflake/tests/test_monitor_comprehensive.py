@@ -496,7 +496,7 @@ class TestSnowflakeMonitorContextManager:
             mock_conn = Mock()
             mock_conn_class.return_value = mock_conn
 
-            with SnowflakeMonitor(account="test_account") as monitor:
+            with SnowflakeMonitor(account="test_account"):
                 pass  # Just enter and exit
 
             # Verify connection close was called

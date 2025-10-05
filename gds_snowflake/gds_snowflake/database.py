@@ -7,7 +7,7 @@ For table-related metadata, use the table module.
 """
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from gds_snowflake.connection import SnowflakeConnection
 
@@ -38,7 +38,7 @@ class SnowflakeDatabase:
     # Database and Schema Metadata
     # =========================================================================
 
-    def get_databases(self) -> List[Dict[str, Any]]:
+    def get_databases(self) -> list[dict[str, Any]]:
         """
         Get metadata about all databases in the account.
 
@@ -64,7 +64,7 @@ class SnowflakeDatabase:
             logger.error("Error retrieving database metadata: %s", e)
             raise
 
-    def get_database_info(self, database_name: str) -> Optional[Dict[str, Any]]:
+    def get_database_info(self, database_name: str) -> Optional[dict[str, Any]]:
         """
         Get detailed information about a specific database.
 
@@ -96,7 +96,7 @@ class SnowflakeDatabase:
             )
             raise
 
-    def get_schemas(self, database_name: Optional[str] = None) -> List[Dict[str, Any]]:
+    def get_schemas(self, database_name: Optional[str] = None) -> list[dict[str, Any]]:
         """
         Get metadata about schemas.
 
@@ -159,7 +159,7 @@ class SnowflakeDatabase:
 
     def get_functions(
         self, database_name: Optional[str] = None, schema_name: Optional[str] = None
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Get metadata about user-defined functions (UDFs).
 
@@ -212,7 +212,7 @@ class SnowflakeDatabase:
 
     def get_procedures(
         self, database_name: Optional[str] = None, schema_name: Optional[str] = None
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Get metadata about stored procedures.
 
@@ -267,7 +267,7 @@ class SnowflakeDatabase:
 
     def get_sequences(
         self, database_name: Optional[str] = None, schema_name: Optional[str] = None
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Get metadata about sequences.
 
@@ -326,7 +326,7 @@ class SnowflakeDatabase:
 
     def get_stages(
         self, database_name: Optional[str] = None, schema_name: Optional[str] = None
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Get metadata about stages.
 
@@ -381,7 +381,7 @@ class SnowflakeDatabase:
 
     def get_file_formats(
         self, database_name: Optional[str] = None, schema_name: Optional[str] = None
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Get metadata about file formats.
 
@@ -434,7 +434,7 @@ class SnowflakeDatabase:
 
     def get_pipes(
         self, database_name: Optional[str] = None, schema_name: Optional[str] = None
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Get metadata about pipes (for Snowpipe).
 
@@ -488,7 +488,7 @@ class SnowflakeDatabase:
 
     def get_tasks(
         self, database_name: Optional[str] = None, schema_name: Optional[str] = None
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Get metadata about tasks.
 
@@ -541,7 +541,7 @@ class SnowflakeDatabase:
 
     def get_streams(
         self, database_name: Optional[str] = None, schema_name: Optional[str] = None
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Get metadata about streams.
 
@@ -595,7 +595,7 @@ class SnowflakeDatabase:
 
     def get_all_database_metadata(
         self, database_name: Optional[str] = None, schema_name: Optional[str] = None
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Get comprehensive metadata about database-level Snowflake objects.
 

@@ -16,7 +16,7 @@ from datetime import datetime
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Optional
 
 from gds_snowflake import FailoverGroup, SnowflakeConnection, SnowflakeReplication
 
@@ -37,7 +37,7 @@ class MonitoringResult:
     timestamp: datetime
     account: str
     message: str
-    details: Dict[str, Any]
+    details: dict[str, Any]
     severity: AlertSeverity = AlertSeverity.INFO
 
 
@@ -46,7 +46,7 @@ class ConnectivityResult:
     """Result of connectivity monitoring"""
     success: bool
     response_time_ms: float
-    account_info: Dict[str, str]
+    account_info: dict[str, str]
     error: Optional[str]
     timestamp: datetime
 
@@ -88,7 +88,7 @@ class SnowflakeMonitor(BaseMonitor):
         smtp_user: Optional[str] = None,
         smtp_password: Optional[str] = None,
         from_email: Optional[str] = None,
-        to_emails: Optional[List[str]] = None,
+        to_emails: Optional[list[str]] = None,
         # Monitoring configuration
         connectivity_timeout: int = 30,
         latency_threshold_minutes: float = 30.0,
@@ -141,7 +141,7 @@ class SnowflakeMonitor(BaseMonitor):
         self.to_emails = to_emails or []
 
         # Tracking for notifications (to avoid spam)
-        self.notified_failures: Set[str] = set()
+        self.notified_failures: set[str] = set()
         self.notified_connectivity: bool = False
 
         # Create Snowflake connection
@@ -161,7 +161,7 @@ class SnowflakeMonitor(BaseMonitor):
 
         self.replication = None
 
-    def check(self) -> Dict[str, Any]:
+    def check(self) -> dict[str, Any]:
         """
         Perform the monitoring check (required by BaseMonitor).
         
@@ -265,7 +265,7 @@ class SnowflakeMonitor(BaseMonitor):
 
             return result
 
-    def monitor_replication_failures(self) -> List[ReplicationResult]:
+    def monitor_replication_failures(self) -> list[ReplicationResult]:
         """
         Monitor replication failures for all failover groups.
 
@@ -312,7 +312,7 @@ class SnowflakeMonitor(BaseMonitor):
             self.logger.error("Error in replication failure monitoring: %s", str(e))
             return results
 
-    def monitor_replication_latency(self) -> List[ReplicationResult]:
+    def monitor_replication_latency(self) -> list[ReplicationResult]:
         """
         Monitor replication latency for all failover groups.
 
@@ -357,7 +357,7 @@ class SnowflakeMonitor(BaseMonitor):
             self.logger.error("Error in replication latency monitoring: %s", str(e))
             return results
 
-    def monitor_all(self) -> Dict[str, Any]:
+    def monitor_all(self) -> dict[str, Any]:
         """
         Run all monitoring checks and return comprehensive results.
 
@@ -625,7 +625,7 @@ Account: {self.account}
         except Exception as e:
             self.logger.error("Failed to send email notification: %s", e)
 
-    def _format_account_info(self, account_info: Dict[str, str]) -> str:
+    def _format_account_info(self, account_info: dict[str, str]) -> str:
         """Format account information for display."""
         if not account_info:
             return "No account information available"

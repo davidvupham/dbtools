@@ -10,7 +10,7 @@ import time
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 
 class BaseMonitor(ABC):
@@ -49,7 +49,7 @@ class BaseMonitor(ABC):
         self._check_count = 0
 
     @abstractmethod
-    def check(self) -> Dict[str, Any]:
+    def check(self) -> dict[str, Any]:
         """
         Perform the monitoring check.
         
@@ -58,7 +58,7 @@ class BaseMonitor(ABC):
         """
         pass
 
-    def _log_result(self, result: Dict[str, Any]) -> None:
+    def _log_result(self, result: dict[str, Any]) -> None:
         """Log monitoring result with standardized format."""
         status = "SUCCESS" if result.get('success', False) else "FAILED"
         duration = result.get('duration_ms', 0)
@@ -71,7 +71,7 @@ class BaseMonitor(ABC):
             result.get('message', 'No message')
         )
 
-    def _record_check(self, result: Dict[str, Any]) -> None:
+    def _record_check(self, result: dict[str, Any]) -> None:
         """Record check statistics."""
         self._check_count += 1
         self._last_check = datetime.now()
@@ -79,7 +79,7 @@ class BaseMonitor(ABC):
         if self._start_time is None:
             self._start_time = self._last_check
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get monitoring statistics."""
         uptime = None
         if self._start_time:
@@ -113,7 +113,7 @@ class DatabaseConnection(ABC):
         pass
 
     @abstractmethod
-    def execute_query(self, query: str, params: Optional[tuple] = None) -> List[Any]:
+    def execute_query(self, query: str, params: Optional[tuple] = None) -> list[Any]:
         """Execute a query and return results."""
         pass
 
@@ -123,7 +123,7 @@ class DatabaseConnection(ABC):
         pass
 
     @abstractmethod
-    def get_connection_info(self) -> Dict[str, Any]:
+    def get_connection_info(self) -> dict[str, Any]:
         """Get connection information."""
         pass
 
@@ -136,7 +136,7 @@ class SecretProvider(ABC):
     """
 
     @abstractmethod
-    def get_secret(self, path: str, **kwargs) -> Dict[str, Any]:
+    def get_secret(self, path: str, **kwargs) -> dict[str, Any]:
         """Retrieve a secret from the provider."""
         pass
 
@@ -196,7 +196,7 @@ class ConfigurableComponent(ABC):
     Abstract base class for components that support configuration.
     """
 
-    def __init__(self, config: Optional[Dict[str, Any]] = None):
+    def __init__(self, config: Optional[dict[str, Any]] = None):
         """
         Initialize configurable component.
         
@@ -219,7 +219,7 @@ class ConfigurableComponent(ABC):
         self.config[key] = value
         self.validate_config()
 
-    def update_config(self, config: Dict[str, Any]) -> None:
+    def update_config(self, config: dict[str, Any]) -> None:
         """Update multiple configuration values."""
         self.config.update(config)
         self.validate_config()
@@ -232,7 +232,7 @@ class OperationResult:
     """
     success: bool
     message: str
-    data: Optional[Dict[str, Any]] = None
+    data: Optional[dict[str, Any]] = None
     error: Optional[str] = None
     duration_ms: float = 0.0
     timestamp: datetime = None
@@ -242,7 +242,7 @@ class OperationResult:
             self.timestamp = datetime.now()
 
     @classmethod
-    def success_result(cls, message: str, data: Optional[Dict[str, Any]] = None) -> 'OperationResult':
+    def success_result(cls, message: str, data: Optional[dict[str, Any]] = None) -> 'OperationResult':
         """Create a successful result."""
         return cls(success=True, message=message, data=data)
 
@@ -251,7 +251,7 @@ class OperationResult:
         """Create a failure result."""
         return cls(success=False, message=message, error=error)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             'success': self.success,

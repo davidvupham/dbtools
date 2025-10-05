@@ -6,7 +6,7 @@ views, and columns.
 """
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from gds_snowflake.connection import SnowflakeConnection
 
@@ -39,7 +39,7 @@ class SnowflakeTable:
         database_name: Optional[str] = None,
         schema_name: Optional[str] = None,
         include_views: bool = False,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Get metadata about tables and optionally views.
 
@@ -99,7 +99,7 @@ class SnowflakeTable:
         table_name: str,
         database_name: Optional[str] = None,
         schema_name: Optional[str] = None,
-    ) -> Optional[Dict[str, Any]]:
+    ) -> Optional[dict[str, Any]]:
         """
         Get detailed information about a specific table.
 
@@ -152,7 +152,7 @@ class SnowflakeTable:
 
     def get_views(
         self, database_name: Optional[str] = None, schema_name: Optional[str] = None
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Get metadata about views.
 
@@ -209,7 +209,7 @@ class SnowflakeTable:
         table_name: Optional[str] = None,
         database_name: Optional[str] = None,
         schema_name: Optional[str] = None,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Get metadata about columns.
 
@@ -273,7 +273,7 @@ class SnowflakeTable:
 
     def get_all_table_metadata(
         self, database_name: Optional[str] = None, schema_name: Optional[str] = None
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Get comprehensive metadata about all tables, views, and columns.
 

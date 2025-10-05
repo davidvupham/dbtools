@@ -70,7 +70,10 @@ dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
     "S101",   # Use of assert (OK in tests)
     "PLR2004", # Magic values (OK in tests)
 ]
-"docs/tutorials/exercises/*.py" = [
+"gds_snowflake/test_modules.py" = [
+    "F401",  # Unused imports (testing import functionality)
+]
+"docs/tutorials/exercises/*_exercises.py" = [
     "F821",   # Undefined name (exercises have TODO sections)
     "ARG001", # Unused arguments (exercises may be incomplete)
 ]

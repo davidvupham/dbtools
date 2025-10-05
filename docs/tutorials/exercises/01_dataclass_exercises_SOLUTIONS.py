@@ -12,7 +12,6 @@ Run this file to verify all exercises pass:
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import List
 
 # ============================================================================
 # EXERCISE 1: Create Your First Dataclass (Easy)
@@ -77,7 +76,7 @@ def test_exercise_2():
         product1 = Product("Laptop", 999.99)
         print(f"✓ Created product with defaults: {product1}")
         assert product1.quantity == 0
-        assert product1.in_stock == True
+        assert product1.in_stock
         print("✓ Default values work!")
 
         # Test with explicit values
@@ -323,7 +322,7 @@ class MonitoringSystem:
         alert = Alert(level=level, message=message)
         self.alerts.append(alert)
 
-    def get_critical_alerts(self) -> List[Alert]:
+    def get_critical_alerts(self) -> list[Alert]:
         return [alert for alert in self.alerts if alert.level == AlertLevel.CRITICAL]
 
     def get_alert_count(self) -> int:

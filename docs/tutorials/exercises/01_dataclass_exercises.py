@@ -82,7 +82,7 @@ def test_exercise_2():
         product1 = Product("Laptop", 999.99)
         print(f"✓ Created product with defaults: {product1}")
         assert product1.quantity == 0
-        assert product1.in_stock == True
+        assert product1.in_stock
         print("✓ Default values work!")
 
         # Test with explicit values

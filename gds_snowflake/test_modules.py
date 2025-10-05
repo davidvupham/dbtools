@@ -8,14 +8,14 @@ def test_imports():
     print("Testing package imports...")
 
     try:
-        from gds_snowflake import SnowflakeConnection
+        from gds_snowflake import SnowflakeConnection  # noqa: F401
         print("✓ gds_snowflake.SnowflakeConnection imported successfully")
     except ImportError as e:
         print(f"✗ Failed to import SnowflakeConnection: {e}")
         return False
 
     try:
-        from gds_snowflake import FailoverGroup, SnowflakeReplication
+        from gds_snowflake import FailoverGroup, SnowflakeReplication  # noqa: F401
         print("✓ gds_snowflake.SnowflakeReplication and FailoverGroup imported successfully")
     except ImportError as e:
         print(f"✗ Failed to import SnowflakeReplication/FailoverGroup: {e}")
@@ -39,7 +39,7 @@ def test_class_instantiation():
         from gds_snowflake import SnowflakeConnection
 
         # Test creating a connection object (without actually connecting)
-        conn = SnowflakeConnection(
+        SnowflakeConnection(
             account='test_account',
             user='test_user',
             vault_secret_path='data/snowflake',
@@ -151,9 +151,9 @@ def test_failover_group_logic():
         })
 
         # Test is_primary
-        assert fg.is_primary('ACCOUNT1') == True, "Should be primary for ACCOUNT1"
-        assert fg.is_primary('ACCOUNT1.US-WEST-2') == True, "Should be primary for ACCOUNT1.US-WEST-2"
-        assert fg.is_primary('ACCOUNT2') == False, "Should not be primary for ACCOUNT2"
+        assert fg.is_primary('ACCOUNT1'), "Should be primary for ACCOUNT1"
+        assert fg.is_primary('ACCOUNT1.US-WEST-2'), "Should be primary for ACCOUNT1.US-WEST-2"
+        assert not fg.is_primary('ACCOUNT2'), "Should not be primary for ACCOUNT2"
         print("✓ is_primary() works correctly")
 
         # Test get_secondary_account

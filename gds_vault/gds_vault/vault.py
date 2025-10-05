@@ -13,7 +13,7 @@ import logging
 import os
 import time
 from functools import wraps
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable, Optional
 
 import requests
 
@@ -143,7 +143,7 @@ class VaultClient:
         self.timeout = timeout
         self._token: Optional[str] = None
         self._token_expiry: Optional[float] = None
-        self._secret_cache: Dict[str, Dict[str, Any]] = {}
+        self._secret_cache: dict[str, dict[str, Any]] = {}
 
     def __enter__(self):
         """Context manager entry."""
@@ -226,7 +226,7 @@ class VaultClient:
         secret_path: str,
         use_cache: bool = True,
         version: Optional[int] = None
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Retrieve a secret from Vault.
 
@@ -356,7 +356,7 @@ class VaultClient:
         self._secret_cache.clear()
         logger.info("Cleared cache (removed %s secrets)", cached_count)
 
-    def get_cache_info(self) -> Dict[str, Any]:
+    def get_cache_info(self) -> dict[str, Any]:
         """
         Get information about cached data.
 

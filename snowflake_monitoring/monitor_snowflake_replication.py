@@ -19,7 +19,6 @@ import sys
 import time
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from typing import List, Set
 
 from gds_snowflake import FailoverGroup, SnowflakeConnection, SnowflakeReplication
 
@@ -28,7 +27,7 @@ SCRIPT_NAME = os.path.splitext(os.path.basename(__file__))[0]
 LOG_FILE = f"/var/log/{SCRIPT_NAME}.log"
 
 # Email notification tracking (to send only once per failure)
-notified_failures: Set[str] = set()
+notified_failures: set[str] = set()
 
 
 def setup_logging():
@@ -46,7 +45,7 @@ def send_email_notification(
     smtp_server: str = None,
     smtp_port: int = 587,
     from_addr: str = None,
-    to_addrs: List[str] = None,
+    to_addrs: list[str] = None,
     smtp_user: str = None,
     smtp_password: str = None,
 ):

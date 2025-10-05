@@ -8,7 +8,7 @@ to demonstrate proper OOP inheritance and abstraction.
 import logging
 import os
 import time
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable, Optional
 
 import requests
 
@@ -21,7 +21,7 @@ except ImportError:
 
     class SecretProvider(ABC):
         @abstractmethod
-        def get_secret(self, path: str, **kwargs) -> Dict[str, Any]:
+        def get_secret(self, path: str, **kwargs) -> dict[str, Any]:
             pass
 
         @abstractmethod
@@ -33,7 +33,7 @@ except ImportError:
             pass
 
     class ConfigurableComponent:
-        def __init__(self, config: Optional[Dict[str, Any]] = None):
+        def __init__(self, config: Optional[dict[str, Any]] = None):
             self.config = config or {}
 
         def get_config(self, key: str, default: Any = None) -> Any:
@@ -90,7 +90,7 @@ class EnhancedVaultClient(SecretProvider, ConfigurableComponent, ResourceManager
         role_id: Optional[str] = None,
         secret_id: Optional[str] = None,
         timeout: int = 10,
-        config: Optional[Dict[str, Any]] = None,
+        config: Optional[dict[str, Any]] = None,
         max_retries: int = 3,
         backoff_factor: float = 2.0
     ):
@@ -119,7 +119,7 @@ class EnhancedVaultClient(SecretProvider, ConfigurableComponent, ResourceManager
         # State management
         self._token: Optional[str] = None
         self._token_expiry: Optional[float] = None
-        self._secret_cache: Dict[str, Dict[str, Any]] = {}
+        self._secret_cache: dict[str, dict[str, Any]] = {}
         self._initialized = False
         self._authenticated = False
 
@@ -135,7 +135,7 @@ class EnhancedVaultClient(SecretProvider, ConfigurableComponent, ResourceManager
             raise VaultError("VAULT_ROLE_ID and VAULT_SECRET_ID must be provided or set in environment")
 
     # SecretProvider interface implementation
-    def get_secret(self, path: str, **kwargs) -> Dict[str, Any]:
+    def get_secret(self, path: str, **kwargs) -> dict[str, Any]:
         """Retrieve a secret from Vault."""
         use_cache = kwargs.get('use_cache', True)
         version = kwargs.get('version')
@@ -250,7 +250,7 @@ class EnhancedVaultClient(SecretProvider, ConfigurableComponent, ResourceManager
 
         return token
 
-    def _fetch_secret_from_vault(self, secret_path: str, version: Optional[int] = None) -> Dict[str, Any]:
+    def _fetch_secret_from_vault(self, secret_path: str, version: Optional[int] = None) -> dict[str, Any]:
         """Fetch secret from Vault."""
         if not self.is_authenticated():
             self.authenticate()
@@ -291,7 +291,7 @@ class EnhancedVaultClient(SecretProvider, ConfigurableComponent, ResourceManager
         self._secret_cache.clear()
         logger.info("Cleared cache (removed %d secrets)", cached_count)
 
-    def get_cache_info(self) -> Dict[str, Any]:
+    def get_cache_info(self) -> dict[str, Any]:
         """Get information about cached data."""
         return {
             "has_token": self._token is not None,
@@ -303,7 +303,7 @@ class EnhancedVaultClient(SecretProvider, ConfigurableComponent, ResourceManager
         }
 
     # Configuration management
-    def get_vault_config(self) -> Dict[str, Any]:
+    def get_vault_config(self) -> dict[str, Any]:
         """Get Vault configuration."""
         return {
             'vault_addr': self.vault_addr,

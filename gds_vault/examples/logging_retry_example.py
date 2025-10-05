@@ -33,7 +33,7 @@ def example_basic_logging():
     os.environ['VAULT_SECRET_ID'] = 'my-secret-id'
 
     try:
-        client = VaultClient()
+        VaultClient()
         print("\nVaultClient created successfully")
         print("Check the logs above - you'll see authentication attempts")
         print("(In production, this would connect to real Vault)")
@@ -64,7 +64,7 @@ def example_debug_logging():
     print("- All retry attempts")
 
     try:
-        client = VaultClient()
+        VaultClient()
         print("\nCheck logs for detailed DEBUG messages")
     except VaultError as e:
         print(f"\nExpected error: {e}")
@@ -112,7 +112,7 @@ def example_production_file_logging():
     logger.addHandler(console_handler)
 
     try:
-        client = VaultClient()
+        VaultClient()
         print("\nLogs written to /tmp/vault_example.log")
         print("Only ERRORs appear on console")
     except VaultError as e:

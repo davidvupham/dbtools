@@ -8,7 +8,7 @@ import logging
 import os
 import time
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 import snowflake.connector
 
@@ -42,7 +42,7 @@ class SnowflakeConnection(DatabaseConnection, ConfigurableComponent, ResourceMan
         vault_role_id: Optional[str] = None,
         vault_secret_id: Optional[str] = None,
         vault_addr: Optional[str] = None,
-        config: Optional[Dict[str, Any]] = None,
+        config: Optional[dict[str, Any]] = None,
     ):
         """
         Initialize Snowflake connection parameters using RSA private key
@@ -150,7 +150,7 @@ class SnowflakeConnection(DatabaseConnection, ConfigurableComponent, ResourceMan
         """Check if connection is active."""
         return self.connection is not None and not self.connection.is_closed()
 
-    def get_connection_info(self) -> Dict[str, Any]:
+    def get_connection_info(self) -> dict[str, Any]:
         """Get connection information."""
         return {
             'account': self.account,
@@ -330,7 +330,7 @@ class SnowflakeConnection(DatabaseConnection, ConfigurableComponent, ResourceMan
             except Exception as e:
                 logger.error("Error closing connection: %s", str(e))
 
-    def execute_query(self, query: str, params: Optional[tuple] = None) -> List[Any]:
+    def execute_query(self, query: str, params: Optional[tuple] = None) -> list[Any]:
         """
         Execute a SQL query and return results.
 

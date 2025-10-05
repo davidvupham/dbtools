@@ -279,11 +279,11 @@ class TestVaultClientGetSecret(unittest.TestCase):
         )
 
         # First call with caching disabled
-        secret1 = client.get_secret("secret/data/myapp", use_cache=False)
+        client.get_secret("secret/data/myapp", use_cache=False)
         self.assertEqual(mock_get.call_count, 1)
 
         # Second call should still fetch from Vault
-        secret2 = client.get_secret("secret/data/myapp", use_cache=False)
+        client.get_secret("secret/data/myapp", use_cache=False)
         self.assertEqual(mock_get.call_count, 2)
 
     @patch("gds_vault.vault.requests.get")
