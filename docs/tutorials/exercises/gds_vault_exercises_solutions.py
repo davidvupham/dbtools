@@ -13,6 +13,7 @@ from typing import Optional, Any
 # EXERCISE 1 SOLUTION: Abstract Base Classes
 # ============================================================================
 
+
 class AuthStrategy(ABC):
     """Abstract base class for authentication strategies."""
 
@@ -36,6 +37,7 @@ class SimpleTokenAuth(AuthStrategy):
 # ============================================================================
 # EXERCISE 2 SOLUTION: Properties
 # ============================================================================
+
 
 class CacheConfig:
     """Configuration for cache."""
@@ -64,6 +66,7 @@ class CacheConfig:
 # ============================================================================
 # EXERCISE 3 SOLUTION: Magic Methods
 # ============================================================================
+
 
 class SimpleCache:
     """Simple in-memory cache."""
@@ -96,6 +99,7 @@ class SimpleCache:
 # EXERCISE 4 SOLUTION: Context Managers
 # ============================================================================
 
+
 class SimpleClient:
     """Simple client with context manager support."""
 
@@ -118,6 +122,7 @@ class SimpleClient:
 # ============================================================================
 # EXERCISE 5 SOLUTION: Strategy Pattern
 # ============================================================================
+
 
 class NoOpCache:
     """Cache that doesn't cache anything."""
@@ -150,24 +155,29 @@ class MemoryCache:
 # EXERCISE 6 SOLUTION: Exception Hierarchy
 # ============================================================================
 
+
 class SecretError(Exception):
     """Base exception for secret operations."""
+
     pass
 
 
 class SecretNotFoundError(SecretError):
     """Secret not found."""
+
     pass
 
 
 class SecretPermissionError(SecretError):
     """Permission denied for secret."""
+
     pass
 
 
 # ============================================================================
 # EXERCISE 7 SOLUTION: Composition
 # ============================================================================
+
 
 class Client:
     """Client that uses composition for caching."""
@@ -187,6 +197,7 @@ class Client:
 # ============================================================================
 # EXERCISE 8 SOLUTION: Multiple Inheritance
 # ============================================================================
+
 
 class Authenticatable:
     """Mixin for authentication."""
@@ -227,6 +238,7 @@ class VaultClient(Authenticatable, Cacheable):
 # ============================================================================
 # EXERCISE 9 SOLUTION: Complete Mini-Client
 # ============================================================================
+
 
 class SecretProvider(ABC):
     """Abstract base for secret providers."""
@@ -293,7 +305,7 @@ class SecretClient(SecretProvider):
 
     def __len__(self) -> int:
         """Return number of cached secrets."""
-        if hasattr(self._cache, '__len__'):
+        if hasattr(self._cache, "__len__"):
             return len(self._cache._cache)
         return 0
 
