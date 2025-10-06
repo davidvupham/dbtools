@@ -18,9 +18,9 @@ from email.mime.text import MIMEText
 from enum import Enum
 from typing import Any, Optional
 
-from gds_snowflake import FailoverGroup, SnowflakeConnection, SnowflakeReplication
-
 from .base import BaseMonitor
+from .connection import SnowflakeConnection
+from .replication import FailoverGroup, SnowflakeReplication
 
 
 class AlertSeverity(Enum):

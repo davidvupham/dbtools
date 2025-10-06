@@ -5,6 +5,7 @@ Provides classes for connecting to Snowflake, managing databases and tables,
 and monitoring replication status for failover groups.
 """
 
+from .account import AccountInfo, SnowflakeAccount
 from .base import (
     BaseMonitor,
     ConfigurableComponent,
@@ -16,7 +17,13 @@ from .base import (
 )
 from .connection import SnowflakeConnection
 from .database import SnowflakeDatabase
-from .monitor import AlertSeverity, ConnectivityResult, MonitoringResult, ReplicationResult, SnowflakeMonitor
+from .monitor import (
+    AlertSeverity,
+    ConnectivityResult,
+    MonitoringResult,
+    ReplicationResult,
+    SnowflakeMonitor,
+)
 from .replication import FailoverGroup, SnowflakeReplication
 from .table import SnowflakeTable
 
@@ -25,6 +32,8 @@ __all__ = [
     "SnowflakeConnection",
     "SnowflakeDatabase",
     "SnowflakeTable",
+    "SnowflakeAccount",
+    "AccountInfo",
     "SnowflakeReplication",
     "FailoverGroup",
     "SnowflakeMonitor",
@@ -39,5 +48,5 @@ __all__ = [
     "ConfigurableComponent",
     "ResourceManager",
     "RetryableOperation",
-    "OperationResult"
+    "OperationResult",
 ]

@@ -5,9 +5,11 @@ A Python package for managing Snowflake database connections, replication monito
 ## Features
 
 - **Robust Connection Management**: Automatic reconnection, connection pooling, and account switching
+- **Account Management**: Retrieve and manage Snowflake account information across organizations
 - **Replication Monitoring**: Monitor failover groups for replication failures and latency
 - **Failover Group Management**: Query and manage Snowflake failover groups
 - **Database Metadata Retrieval**: Comprehensive metadata about Snowflake objects (databases, schemas, tables, views, functions, procedures, stages, pipes, tasks, streams, etc.)
+- **Data Storage**: Store account and metadata information in JSON format with configurable data directory
 - **Cron Schedule Parsing**: Parse replication schedules and calculate intervals
 
 ## Installation
@@ -42,6 +44,9 @@ VAULT_SECRET_PATH=data/snowflake
 VAULT_MOUNT_POINT=secret
 VAULT_ROLE_ID=your_role_id
 VAULT_SECRET_ID=your_secret_id
+
+# Data directory for account and metadata storage
+GDS_DATA_DIR=/path/to/data  # Default: ./data
 ```
 
 When environment variables are set, you can create connections with minimal parameters.
@@ -256,6 +261,54 @@ print(f"Summary: {all_metadata['summary']}")
 conn.close()
 ```
 
+### Account Management
+
+```python
+from gds_snowflake import SnowflakeConnection, SnowflakeAccount
+
+# Connect to Snowflake
+conn = SnowflakeConnection(
+    account='myaccount',
+    user='myuser',
+    vault_secret_path='data/snowflake',
+    vault_mount_point='secret'
+)
+conn.connect()
+
+# Create account manager
+account_mgr = SnowflakeAccount(conn)
+
+# Get current account information
+current_account = account_mgr.get_current_account()
+print(f"Account: {current_account.account_name}")
+print(f"Region: {current_account.region}")
+print(f"Cloud: {current_account.cloud_provider}")
+
+# Get all accounts in organization (requires org admin privileges)
+accounts = account_mgr.get_all_accounts()
+for account in accounts:
+    print(f"{account.account_name}: {account.region}/{account.cloud_provider}")
+
+# Save accounts to JSON
+filepath = account_mgr.save_accounts_to_json(accounts)
+print(f"Saved to {filepath}")
+
+# Generate account summary
+summary = account_mgr.get_account_summary(accounts)
+print(f"Total accounts: {summary['total_accounts']}")
+print(f"Regions: {summary['regions']}")
+print(f"Cloud providers: {summary['cloud_providers']}")
+
+# Load accounts from JSON
+loaded_accounts = account_mgr.load_accounts_from_json(filepath.name)
+
+# Get account parameters
+parameters = account_mgr.get_account_parameters()
+print(f"Timezone: {parameters.get('TIMEZONE')}")
+
+conn.close()
+```
+
 ### Metadata for Data Pipeline Objects
 
 ```python
@@ -458,6 +511,41 @@ if not result['success']:
 - `get_tasks(database_name=None, schema_name=None)` - Get task metadata
 - `get_streams(database_name=None, schema_name=None)` - Get stream metadata
 
+### SnowflakeAccount
+
+**Methods:**
+
+*Account Information:*
+- `get_current_account()` - Get information about the currently connected account
+- `get_all_accounts()` - Get all Snowflake accounts in the organization (requires org admin privileges)
+- `get_account_parameters(account_name=None)` - Get account-level parameters and settings
+
+*Data Storage:*
+- `save_accounts_to_json(accounts, filename=None)` - Save account information to JSON file
+- `load_accounts_from_json(filename)` - Load account information from JSON file
+
+*Analysis:*
+- `get_account_summary(accounts)` - Generate summary statistics for accounts
+
+*File Management:*
+- `list_saved_account_files()` - List all saved account JSON files
+- `get_latest_account_file()` - Get the most recently saved account file
+
+**Configuration:**
+- Data directory location from `GDS_DATA_DIR` environment variable or constructor parameter
+
+**AccountInfo Attributes:**
+- `account_name` - The name of the Snowflake account
+- `organization_name` - The organization the account belongs to
+- `account_locator` - The unique locator for the account
+- `region` - The cloud region where the account is hosted
+- `cloud_provider` - The cloud provider (AWS, Azure, GCP)
+- `account_url` - The URL for accessing the account
+- `created_on` - When the account was created
+- `is_org_admin` - Whether the account has org admin privileges
+- `account_edition` - The Snowflake edition (Standard, Enterprise, Business Critical)
+- `is_current` - Whether this is the currently connected account
+
 ### SnowflakeMonitor
 
 **Methods:**
@@ -496,8 +584,10 @@ MIT License
 
 GDS Team
 
-## Links
+## Documentation
 
 - [GitHub Repository](https://github.com/davidvupham/snowflake)
 - [Issue Tracker](https://github.com/davidvupham/snowflake/issues)
 - [SnowflakeMonitor Guide](SNOWFLAKE_MONITOR_GUIDE.md)
+- [Account Module Documentation](ACCOUNT_MODULE_DOCUMENTATION.md)
+- [Database Module Summary](DATABASE_MODULE_SUMMARY.md)
