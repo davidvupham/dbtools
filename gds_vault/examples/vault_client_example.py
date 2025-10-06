@@ -16,7 +16,7 @@ from gds_vault import VaultClient, VaultError, get_secret_from_vault
 def example_functional_approach():
     """
     Example 1: Simple functional approach.
-    
+
     Use this when you need to fetch a single secret.
     This is the simplest way to use gds-vault.
     """
@@ -26,7 +26,7 @@ def example_functional_approach():
 
     try:
         # Fetch a single secret
-        secret = get_secret_from_vault('secret/data/myapp')
+        secret = get_secret_from_vault("secret/data/myapp")
         print(f"✓ Retrieved secret: {list(secret.keys())}")
     except VaultError as e:
         print(f"✗ Error: {e}")
@@ -37,7 +37,7 @@ def example_functional_approach():
 def example_class_without_caching():
     """
     Example 2: VaultClient without caching.
-    
+
     Demonstrates explicitly disabling cache for each request.
     """
     print("=" * 60)
@@ -48,8 +48,8 @@ def example_class_without_caching():
         client = VaultClient()
 
         # Fetch secrets without caching (use_cache=False)
-        client.get_secret('secret/data/app1', use_cache=False)
-        client.get_secret('secret/data/app2', use_cache=False)
+        client.get_secret("secret/data/app1", use_cache=False)
+        client.get_secret("secret/data/app2", use_cache=False)
 
         print("✓ Retrieved 2 secrets without caching")
         print(f"  Cache info: {client.get_cache_info()}")
@@ -62,7 +62,7 @@ def example_class_without_caching():
 def example_class_with_caching():
     """
     Example 3: VaultClient with caching (default behavior).
-    
+
     Use this when fetching multiple secrets to:
     - Reuse authentication token (more efficient)
     - Cache secret values (avoid redundant Vault calls)
@@ -72,19 +72,16 @@ def example_class_with_caching():
     print("=" * 60)
 
     try:
-        client = VaultClient(
-            vault_addr="https://vault.example.com",
-            timeout=15
-        )
+        client = VaultClient(vault_addr="https://vault.example.com", timeout=15)
 
         # Authenticate once and reuse token
         print("→ Fetching multiple secrets...")
-        client.get_secret('secret/data/database')
-        client.get_secret('secret/data/api-keys')
-        client.get_secret('secret/data/smtp')
+        client.get_secret("secret/data/database")
+        client.get_secret("secret/data/api-keys")
+        client.get_secret("secret/data/smtp")
 
         # Fetching the same secret again uses cache
-        client.get_secret('secret/data/database')
+        client.get_secret("secret/data/database")
 
         print("✓ Retrieved 3 unique secrets")
         print("✓ Second fetch of database secret used cache")
@@ -106,7 +103,7 @@ def example_class_with_caching():
 def example_context_manager():
     """
     Example 4: Using VaultClient as context manager.
-    
+
     The context manager automatically clears the cache when done.
     This is the recommended approach for scripts.
     """
@@ -119,8 +116,8 @@ def example_context_manager():
             print("→ Inside context manager...")
 
             # Fetch multiple secrets
-            db_secret = client.get_secret('secret/data/database')
-            api_secret = client.get_secret('secret/data/api-keys')
+            db_secret = client.get_secret("secret/data/database")
+            api_secret = client.get_secret("secret/data/api-keys")
 
             print(f"✓ Retrieved {len(client._secret_cache)} secrets")
             print(f"  Database fields: {list(db_secret.keys())}")
@@ -137,7 +134,7 @@ def example_context_manager():
 def example_list_secrets():
     """
     Example 5: Listing secrets in a path.
-    
+
     VaultClient provides additional operations beyond get_secret.
     """
     print("=" * 60)
@@ -148,7 +145,7 @@ def example_list_secrets():
         client = VaultClient()
 
         # List all secrets in a path
-        secrets = client.list_secrets('secret/metadata/myapp')
+        secrets = client.list_secrets("secret/metadata/myapp")
 
         print(f"✓ Found {len(secrets)} secrets:")
         for secret_name in secrets:
@@ -163,7 +160,7 @@ def example_list_secrets():
 def example_version_retrieval():
     """
     Example 6: Retrieving specific versions (KV v2 only).
-    
+
     KV v2 secret engines support versioning.
     """
     print("=" * 60)
@@ -174,11 +171,11 @@ def example_version_retrieval():
         client = VaultClient()
 
         # Get current version
-        current = client.get_secret('secret/data/myapp')
+        current = client.get_secret("secret/data/myapp")
         print(f"✓ Current version: {current}")
 
         # Get specific version
-        v2 = client.get_secret('secret/data/myapp', version=2)
+        v2 = client.get_secret("secret/data/myapp", version=2)
         print(f"✓ Version 2: {v2}")
 
         # Note: Different versions are cached separately
@@ -194,7 +191,7 @@ def example_version_retrieval():
 def example_manual_cache_management():
     """
     Example 7: Manual cache management.
-    
+
     You can manually clear cache when needed.
     """
     print("=" * 60)
@@ -205,8 +202,8 @@ def example_manual_cache_management():
         client = VaultClient()
 
         # Fetch some secrets
-        client.get_secret('secret/data/app1')
-        client.get_secret('secret/data/app2')
+        client.get_secret("secret/data/app1")
+        client.get_secret("secret/data/app2")
 
         print(f"✓ Cached secrets: {len(client._secret_cache)}")
 
@@ -215,7 +212,7 @@ def example_manual_cache_management():
         print(f"✓ After clear: {len(client._secret_cache)} cached")
 
         # Next fetch will re-authenticate
-        client.get_secret('secret/data/app3')
+        client.get_secret("secret/data/app3")
         print(f"✓ After new fetch: {len(client._secret_cache)} cached")
 
     except VaultError as e:
@@ -227,7 +224,7 @@ def example_manual_cache_management():
 def example_error_handling():
     """
     Example 8: Comprehensive error handling.
-    
+
     Shows how to handle various error conditions.
     """
     print("=" * 60)
@@ -236,7 +233,7 @@ def example_error_handling():
 
     # Example 1: Missing credentials
     try:
-        os.environ.pop('VAULT_ROLE_ID', None)
+        os.environ.pop("VAULT_ROLE_ID", None)
         client = VaultClient()
     except VaultError as e:
         print(f"✓ Caught missing credentials: {e}")
@@ -244,11 +241,9 @@ def example_error_handling():
     # Example 2: Invalid secret path
     try:
         client = VaultClient(
-            vault_addr="https://vault.example.com",
-            role_id="test",
-            secret_id="test"
+            vault_addr="https://vault.example.com", role_id="test", secret_id="test"
         )
-        client.get_secret('invalid/path')
+        client.get_secret("invalid/path")
     except VaultError as e:
         print(f"✓ Caught invalid path error: {e}")
 
@@ -264,7 +259,7 @@ def main():
     print()
 
     # Check if environment variables are set
-    required_vars = ['VAULT_ADDR', 'VAULT_ROLE_ID', 'VAULT_SECRET_ID']
+    required_vars = ["VAULT_ADDR", "VAULT_ROLE_ID", "VAULT_SECRET_ID"]
     missing_vars = [var for var in required_vars if not os.getenv(var)]
 
     if missing_vars:

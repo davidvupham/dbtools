@@ -145,7 +145,11 @@ class TestGetSecretFromVault(unittest.TestCase):
 
     @patch.dict(
         os.environ,
-        {"VAULT_ROLE_ID": "role", "VAULT_SECRET_ID": "secret", "VAULT_ADDR": "https://vault.com"},
+        {
+            "VAULT_ROLE_ID": "role",
+            "VAULT_SECRET_ID": "secret",
+            "VAULT_ADDR": "https://vault.com",
+        },
     )
     @patch("gds_vault.vault.requests.post")
     def test_vault_addr_parameter_override(self, mock_post):
@@ -160,7 +164,11 @@ class TestGetSecretFromVault(unittest.TestCase):
 
     @patch.dict(
         os.environ,
-        {"VAULT_ROLE_ID": "role", "VAULT_SECRET_ID": "secret", "VAULT_ADDR": "https://vault.com"},
+        {
+            "VAULT_ROLE_ID": "role",
+            "VAULT_SECRET_ID": "secret",
+            "VAULT_ADDR": "https://vault.com",
+        },
     )
     @patch("gds_vault.vault.requests.post")
     def test_approle_login_failure(self, mock_post):
@@ -177,7 +185,11 @@ class TestGetSecretFromVault(unittest.TestCase):
 
     @patch.dict(
         os.environ,
-        {"VAULT_ROLE_ID": "role", "VAULT_SECRET_ID": "secret", "VAULT_ADDR": "https://vault.com"},
+        {
+            "VAULT_ROLE_ID": "role",
+            "VAULT_SECRET_ID": "secret",
+            "VAULT_ADDR": "https://vault.com",
+        },
     )
     @patch("gds_vault.vault.requests.post")
     @patch("gds_vault.vault.requests.get")
@@ -198,7 +210,11 @@ class TestGetSecretFromVault(unittest.TestCase):
 
     @patch.dict(
         os.environ,
-        {"VAULT_ROLE_ID": "role", "VAULT_SECRET_ID": "secret", "VAULT_ADDR": "https://vault.com"},
+        {
+            "VAULT_ROLE_ID": "role",
+            "VAULT_SECRET_ID": "secret",
+            "VAULT_ADDR": "https://vault.com",
+        },
     )
     @patch("gds_vault.vault.requests.post")
     @patch("gds_vault.vault.requests.get")

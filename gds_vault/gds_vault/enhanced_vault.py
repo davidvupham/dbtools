@@ -14,7 +14,12 @@ import requests
 
 # Import base classes (assuming they're available)
 try:
-    from gds_snowflake.base import ConfigurableComponent, ResourceManager, RetryableOperation, SecretProvider
+    from gds_snowflake.base import (
+        ConfigurableComponent,
+        ResourceManager,
+        RetryableOperation,
+        SecretProvider,
+    )
 except ImportError:
     # Fallback for standalone usage
     from abc import ABC, abstractmethod
@@ -73,10 +78,12 @@ class VaultError(Exception):
     """Exception raised for Vault operation errors."""
 
 
-class EnhancedVaultClient(SecretProvider, ConfigurableComponent, ResourceManager, RetryableOperation):
+class EnhancedVaultClient(
+    SecretProvider, ConfigurableComponent, ResourceManager, RetryableOperation
+):
     """
     Enhanced Vault client with proper OOP inheritance.
-    
+
     Inherits from multiple base classes to demonstrate:
     - SecretProvider interface
     - ConfigurableComponent for settings management
@@ -92,11 +99,11 @@ class EnhancedVaultClient(SecretProvider, ConfigurableComponent, ResourceManager
         timeout: int = 10,
         config: Optional[dict[str, Any]] = None,
         max_retries: int = 3,
-        backoff_factor: float = 2.0
+        backoff_factor: float = 2.0,
     ):
         """
         Initialize enhanced Vault client.
-        
+
         Args:
             vault_addr: Vault server address
             role_id: AppRole role_id
@@ -129,16 +136,20 @@ class EnhancedVaultClient(SecretProvider, ConfigurableComponent, ResourceManager
     def _validate_config(self) -> None:
         """Validate Vault configuration."""
         if not self.vault_addr:
-            raise VaultError("Vault address must be provided or set in VAULT_ADDR environment variable")
+            raise VaultError(
+                "Vault address must be provided or set in VAULT_ADDR environment variable"
+            )
 
         if not self.role_id or not self.secret_id:
-            raise VaultError("VAULT_ROLE_ID and VAULT_SECRET_ID must be provided or set in environment")
+            raise VaultError(
+                "VAULT_ROLE_ID and VAULT_SECRET_ID must be provided or set in environment"
+            )
 
     # SecretProvider interface implementation
     def get_secret(self, path: str, **kwargs) -> dict[str, Any]:
         """Retrieve a secret from Vault."""
-        use_cache = kwargs.get('use_cache', True)
-        version = kwargs.get('version')
+        use_cache = kwargs.get("use_cache", True)
+        version = kwargs.get("version")
 
         cache_key = f"{path}:v{version}" if version else path
 
@@ -155,7 +166,12 @@ class EnhancedVaultClient(SecretProvider, ConfigurableComponent, ResourceManager
         try:
             secret_data = self._execute_with_retry_logic(_fetch_secret)
         except Exception as e:
-            logger.error("Failed to fetch secret %s after %d retries: %s", path, self.max_retries, e)
+            logger.error(
+                "Failed to fetch secret %s after %d retries: %s",
+                path,
+                self.max_retries,
+                e,
+            )
             raise VaultError(f"Failed to fetch secret {path}: {e}") from e
 
         # Cache the secret
@@ -221,9 +237,14 @@ class EnhancedVaultClient(SecretProvider, ConfigurableComponent, ResourceManager
                     break
 
                 # Calculate delay with exponential backoff
-                delay = min(self.backoff_factor ** attempt, 60)  # Max 60 seconds
-                logger.warning("Operation failed (attempt %d/%d): %s. Retrying in %.1fs...",
-                             attempt + 1, self.max_retries + 1, e, delay)
+                delay = min(self.backoff_factor**attempt, 60)  # Max 60 seconds
+                logger.warning(
+                    "Operation failed (attempt %d/%d): %s. Retrying in %.1fs...",
+                    attempt + 1,
+                    self.max_retries + 1,
+                    e,
+                    delay,
+                )
                 time.sleep(delay)
 
         raise last_exception
@@ -246,11 +267,15 @@ class EnhancedVaultClient(SecretProvider, ConfigurableComponent, ResourceManager
 
         # Cache token with expiry
         lease_duration = auth_data.get("lease_duration", 3600)
-        self._token_expiry = time.time() + lease_duration - 300  # 5-minute early refresh
+        self._token_expiry = (
+            time.time() + lease_duration - 300
+        )  # 5-minute early refresh
 
         return token
 
-    def _fetch_secret_from_vault(self, secret_path: str, version: Optional[int] = None) -> dict[str, Any]:
+    def _fetch_secret_from_vault(
+        self, secret_path: str, version: Optional[int] = None
+    ) -> dict[str, Any]:
         """Fetch secret from Vault."""
         if not self.is_authenticated():
             self.authenticate()
@@ -261,10 +286,7 @@ class EnhancedVaultClient(SecretProvider, ConfigurableComponent, ResourceManager
 
         try:
             resp = requests.get(
-                secret_url,
-                headers=headers,
-                params=params,
-                timeout=self.timeout
+                secret_url, headers=headers, params=params, timeout=self.timeout
             )
         except requests.RequestException as e:
             raise VaultError(f"Failed to connect to Vault: {e}") from e
@@ -306,25 +328,29 @@ class EnhancedVaultClient(SecretProvider, ConfigurableComponent, ResourceManager
     def get_vault_config(self) -> dict[str, Any]:
         """Get Vault configuration."""
         return {
-            'vault_addr': self.vault_addr,
-            'timeout': self.timeout,
-            'max_retries': self.max_retries,
-            'backoff_factor': self.backoff_factor,
-            'role_id': self.role_id[:4] + "..." if self.role_id else None,  # Masked for security
-            'secret_id': self.secret_id[:4] + "..." if self.secret_id else None,  # Masked for security
+            "vault_addr": self.vault_addr,
+            "timeout": self.timeout,
+            "max_retries": self.max_retries,
+            "backoff_factor": self.backoff_factor,
+            "role_id": self.role_id[:4] + "..."
+            if self.role_id
+            else None,  # Masked for security
+            "secret_id": self.secret_id[:4] + "..."
+            if self.secret_id
+            else None,  # Masked for security
         }
 
     def update_timeout(self, timeout: int) -> None:
         """Update request timeout."""
         self.timeout = timeout
-        self.set_config('timeout', timeout)
+        self.set_config("timeout", timeout)
 
     def update_retry_config(self, max_retries: int, backoff_factor: float) -> None:
         """Update retry configuration."""
         self.max_retries = max_retries
         self.backoff_factor = backoff_factor
-        self.set_config('max_retries', max_retries)
-        self.set_config('backoff_factor', backoff_factor)
+        self.set_config("max_retries", max_retries)
+        self.set_config("backoff_factor", backoff_factor)
 
 
 # Factory function for backward compatibility
@@ -332,22 +358,25 @@ def create_vault_client(
     vault_addr: Optional[str] = None,
     role_id: Optional[str] = None,
     secret_id: Optional[str] = None,
-    enhanced: bool = True
+    enhanced: bool = True,
 ) -> Any:
     """
     Factory function to create Vault client.
-    
+
     Args:
         vault_addr: Vault server address
         role_id: AppRole role_id
         secret_id: AppRole secret_id
         enhanced: Whether to use enhanced client with OOP features
-    
+
     Returns:
         Vault client instance
     """
     if enhanced:
-        return EnhancedVaultClient(vault_addr=vault_addr, role_id=role_id, secret_id=secret_id)
+        return EnhancedVaultClient(
+            vault_addr=vault_addr, role_id=role_id, secret_id=secret_id
+        )
     # Import original VaultClient for fallback
     from .vault import VaultClient
+
     return VaultClient(vault_addr=vault_addr, role_id=role_id, secret_id=secret_id)

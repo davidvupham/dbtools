@@ -1,0 +1,196 @@
+"""
+Authentication strategies for HashiCorp Vault.
+
+This module implements various authentication methods using the Strategy pattern,
+allowing flexible authentication without modifying client code.
+"""
+
+import logging
+import os
+import time
+from typing import Optional
+
+import requests
+
+from gds_vault.base import AuthStrategy
+from gds_vault.exceptions import VaultAuthError
+
+logger = logging.getLogger(__name__)
+
+
+class AppRoleAuth(AuthStrategy):
+    """
+    AppRole authentication strategy for HashiCorp Vault.
+
+    AppRole is designed for machine authentication, making it ideal for
+    servers, applications, and automation workflows.
+
+    Args:
+        role_id: AppRole role_id (or None to use VAULT_ROLE_ID env var)
+        secret_id: AppRole secret_id (or None to use VAULT_SECRET_ID env var)
+
+    Example:
+        auth = AppRoleAuth(role_id="my-role-id", secret_id="my-secret-id")
+        token, expiry = auth.authenticate("https://vault.example.com", timeout=10)
+    """
+
+    def __init__(self, role_id: Optional[str] = None, secret_id: Optional[str] = None):
+        """Initialize AppRole authentication."""
+        self.role_id = role_id or os.getenv("VAULT_ROLE_ID")
+        self.secret_id = secret_id or os.getenv("VAULT_SECRET_ID")
+
+        if not self.role_id or not self.secret_id:
+            raise VaultAuthError(
+                "AppRole credentials must be provided or set in "
+                "VAULT_ROLE_ID and VAULT_SECRET_ID environment variables"
+            )
+
+    def authenticate(self, vault_addr: str, timeout: int) -> tuple[str, float]:
+        """
+        Authenticate with Vault using AppRole.
+
+        Args:
+            vault_addr: Vault server address
+            timeout: Request timeout in seconds
+
+        Returns:
+            tuple: (token, expiry_timestamp)
+
+        Raises:
+            VaultAuthError: If authentication fails
+        """
+        logger.info("Authenticating with Vault using AppRole at %s", vault_addr)
+        login_url = f"{vault_addr}/v1/auth/approle/login"
+        login_payload = {"role_id": self.role_id, "secret_id": self.secret_id}
+
+        try:
+            resp = requests.post(login_url, json=login_payload, timeout=timeout)
+        except requests.RequestException as e:
+            logger.error("Network error during AppRole authentication: %s", e)
+            raise VaultAuthError(f"Failed to connect to Vault: {e}") from e
+
+        if not resp.ok:
+            logger.error(
+                "AppRole authentication failed with status %s: %s",
+                resp.status_code,
+                resp.text,
+            )
+            raise VaultAuthError(f"Vault AppRole login failed: {resp.text}")
+
+        auth_data = resp.json()["auth"]
+        token = auth_data["client_token"]
+
+        # Calculate token expiry with 5-minute early refresh buffer
+        lease_duration = auth_data.get("lease_duration", 3600)
+        expiry = time.time() + lease_duration - 300
+
+        logger.info(
+            "Successfully authenticated with AppRole. Token valid for %ss",
+            lease_duration,
+        )
+        logger.debug("Token will expire at timestamp: %s", expiry)
+
+        return token, expiry
+
+    def __repr__(self) -> str:
+        """Developer-friendly representation."""
+        role_id_masked = f"{self.role_id[:8]}..." if self.role_id else "None"
+        return f"AppRoleAuth(role_id='{role_id_masked}')"
+
+    def __str__(self) -> str:
+        """User-friendly representation."""
+        return "AppRole Authentication"
+
+
+class TokenAuth(AuthStrategy):
+    """
+    Direct token authentication strategy.
+
+    Use this when you already have a Vault token (e.g., from environment
+    or a previous authentication). The token is used directly without
+    additional authentication.
+
+    Args:
+        token: Vault token
+        ttl: Token time-to-live in seconds (default: 3600)
+
+    Example:
+        auth = TokenAuth(token="hvs.CAESIF...")
+        token, expiry = auth.authenticate("https://vault.example.com", timeout=10)
+    """
+
+    def __init__(self, token: str, ttl: int = 3600):
+        """Initialize token authentication."""
+        if not token:
+            raise VaultAuthError("Token must be provided")
+        self.token = token
+        self.ttl = ttl
+
+    def authenticate(self, vault_addr: str, timeout: int) -> tuple[str, float]:
+        """
+        Return the provided token with calculated expiry.
+
+        Args:
+            vault_addr: Vault server address (not used)
+            timeout: Request timeout (not used)
+
+        Returns:
+            tuple: (token, expiry_timestamp)
+        """
+        logger.info("Using direct token authentication")
+        expiry = time.time() + self.ttl - 300  # 5-minute early refresh
+        return self.token, expiry
+
+    def __repr__(self) -> str:
+        """Developer-friendly representation."""
+        token_masked = f"{self.token[:8]}..." if self.token else "None"
+        return f"TokenAuth(token='{token_masked}', ttl={self.ttl})"
+
+    def __str__(self) -> str:
+        """User-friendly representation."""
+        return "Direct Token Authentication"
+
+
+class EnvironmentAuth(AuthStrategy):
+    """
+    Authentication using VAULT_TOKEN environment variable.
+
+    This is convenient for development and testing where the token
+    is provided via environment variables.
+
+    Example:
+        # Set VAULT_TOKEN environment variable
+        auth = EnvironmentAuth()
+        token, expiry = auth.authenticate("https://vault.example.com", timeout=10)
+    """
+
+    def __init__(self, ttl: int = 3600):
+        """Initialize environment-based authentication."""
+        self.ttl = ttl
+        self.token = os.getenv("VAULT_TOKEN")
+        if not self.token:
+            raise VaultAuthError("VAULT_TOKEN environment variable must be set")
+
+    def authenticate(self, vault_addr: str, timeout: int) -> tuple[str, float]:
+        """
+        Return token from environment with calculated expiry.
+
+        Args:
+            vault_addr: Vault server address (not used)
+            timeout: Request timeout (not used)
+
+        Returns:
+            tuple: (token, expiry_timestamp)
+        """
+        logger.info("Using token from VAULT_TOKEN environment variable")
+        expiry = time.time() + self.ttl - 300
+        return self.token, expiry
+
+    def __repr__(self) -> str:
+        """Developer-friendly representation."""
+        token_masked = f"{self.token[:8]}..." if self.token else "None"
+        return f"EnvironmentAuth(token='{token_masked}', ttl={self.ttl})"
+
+    def __str__(self) -> str:
+        """User-friendly representation."""
+        return "Environment Variable Token Authentication"

@@ -4,6 +4,7 @@ Basic integration tests for gds_vault package.
 These tests require a running Vault dev server and valid environment variables.
 Tests will be skipped if the required environment variables are not set.
 """
+
 import os
 
 import pytest

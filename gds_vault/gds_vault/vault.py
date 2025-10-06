@@ -30,7 +30,7 @@ def retry_with_backoff(
     initial_delay: float = 1.0,
     max_delay: float = 32.0,
     backoff_factor: float = 2.0,
-    retriable_exceptions: tuple = (requests.RequestException,)
+    retriable_exceptions: tuple = (requests.RequestException,),
 ) -> Callable:
     """
     Decorator that retries a function with exponential backoff.
@@ -50,6 +50,7 @@ def retry_with_backoff(
         def fetch_data():
             return requests.get('https://api.example.com/data')
     """
+
     def decorator(func: Callable) -> Callable:
         @wraps(func)
         def wrapper(*args, **kwargs):
@@ -66,7 +67,7 @@ def retry_with_backoff(
                             "%s failed after %s retries: %s",
                             func.__name__,
                             max_retries,
-                            e
+                            e,
                         )
                         raise
 
@@ -77,7 +78,7 @@ def retry_with_backoff(
                         func.__name__,
                         attempt + 1,
                         e,
-                        current_delay
+                        current_delay,
                     )
                     time.sleep(current_delay)
                     delay *= backoff_factor
@@ -85,6 +86,7 @@ def retry_with_backoff(
             raise last_exception
 
         return wrapper
+
     return decorator
 
 
@@ -156,7 +158,7 @@ class VaultClient:
             logger.error(
                 "Exiting VaultClient context with exception: %s: %s",
                 exc_type.__name__,
-                exc_val
+                exc_val,
             )
         else:
             logger.debug("Exiting VaultClient context manager")
@@ -188,7 +190,7 @@ class VaultClient:
             logger.error(
                 "Vault AppRole login failed with status %s: %s",
                 resp.status_code,
-                resp.text
+                resp.text,
             )
             raise VaultError(f"Vault AppRole login failed: {resp.text}")
 
@@ -200,8 +202,7 @@ class VaultClient:
         self._token_expiry = time.time() + lease_duration - 300
 
         logger.info(
-            "Successfully authenticated with Vault. Token valid for %ss",
-            lease_duration
+            "Successfully authenticated with Vault. Token valid for %ss", lease_duration
         )
         logger.debug("Token will be refreshed at %s", self._token_expiry)
 
@@ -222,10 +223,7 @@ class VaultClient:
 
     @retry_with_backoff(max_retries=3, initial_delay=1.0)
     def get_secret(
-        self,
-        secret_path: str,
-        use_cache: bool = True,
-        version: Optional[int] = None
+        self, secret_path: str, use_cache: bool = True, version: Optional[int] = None
     ) -> dict[str, Any]:
         """
         Retrieve a secret from Vault.
@@ -259,10 +257,7 @@ class VaultClient:
 
         try:
             resp = requests.get(
-                secret_url,
-                headers=headers,
-                params=params,
-                timeout=self.timeout
+                secret_url, headers=headers, params=params, timeout=self.timeout
             )
         except requests.RequestException as e:
             logger.error("Network error fetching secret %s: %s", secret_path, e)
@@ -273,7 +268,7 @@ class VaultClient:
                 "Failed to fetch secret %s (status %s): %s",
                 secret_path,
                 resp.status_code,
-                resp.text
+                resp.text,
             )
             raise VaultError(f"Vault secret fetch failed: {resp.text}")
 
@@ -292,7 +287,7 @@ class VaultClient:
             logger.error(
                 "Unexpected response format for secret %s: %s",
                 secret_path,
-                list(data.keys())
+                list(data.keys()),
             )
             raise VaultError("Secret data not found in Vault response")
 
@@ -324,10 +319,7 @@ class VaultClient:
 
         try:
             resp = requests.request(
-                "LIST",
-                list_url,
-                headers=headers,
-                timeout=self.timeout
+                "LIST", list_url, headers=headers, timeout=self.timeout
             )
         except requests.RequestException as e:
             logger.error("Network error listing secrets at %s: %s", path, e)
@@ -338,7 +330,7 @@ class VaultClient:
                 "Failed to list secrets at %s (status %s): %s",
                 path,
                 resp.status_code,
-                resp.text
+                resp.text,
             )
             raise VaultError(f"Vault list operation failed: {resp.text}")
 
@@ -365,9 +357,8 @@ class VaultClient:
         """
         return {
             "has_token": self._token is not None,
-            "token_valid": self._token is not None and (
-                self._token_expiry is None or time.time() < self._token_expiry
-            ),
+            "token_valid": self._token is not None
+            and (self._token_expiry is None or time.time() < self._token_expiry),
             "cached_secrets_count": len(self._secret_cache),
             "cached_secret_paths": list(self._secret_cache.keys()),
         }
@@ -393,12 +384,8 @@ def get_secret_from_vault(secret_path: str, vault_addr: str = None) -> dict:
     role_id = os.getenv("VAULT_ROLE_ID")
     secret_id = os.getenv("VAULT_SECRET_ID")
     if not role_id or not secret_id:
-        logger.error(
-            "VAULT_ROLE_ID and VAULT_SECRET_ID not found in environment"
-        )
-        raise VaultError(
-            "VAULT_ROLE_ID and VAULT_SECRET_ID must be set in environment"
-        )
+        logger.error("VAULT_ROLE_ID and VAULT_SECRET_ID not found in environment")
+        raise VaultError("VAULT_ROLE_ID and VAULT_SECRET_ID must be set in environment")
 
     vault_addr = vault_addr or os.getenv("VAULT_ADDR")
     if not vault_addr:
@@ -419,9 +406,7 @@ def get_secret_from_vault(secret_path: str, vault_addr: str = None) -> dict:
 
     if not resp.ok:
         logger.error(
-            "AppRole login failed (status %s): %s",
-            resp.status_code,
-            resp.text
+            "AppRole login failed (status %s): %s", resp.status_code, resp.text
         )
         raise VaultError(f"Vault AppRole login failed: {resp.text}")
 
@@ -443,7 +428,7 @@ def get_secret_from_vault(secret_path: str, vault_addr: str = None) -> dict:
             "Failed to fetch secret %s (status %s): %s",
             secret_path,
             resp.status_code,
-            resp.text
+            resp.text,
         )
         raise VaultError(f"Vault secret fetch failed: {resp.text}")
 
@@ -460,8 +445,6 @@ def get_secret_from_vault(secret_path: str, vault_addr: str = None) -> dict:
         return data["data"]
 
     logger.error(
-        "Unexpected response format for secret %s: %s",
-        secret_path,
-        list(data.keys())
+        "Unexpected response format for secret %s: %s", secret_path, list(data.keys())
     )
     raise VaultError("Secret data not found in Vault response")

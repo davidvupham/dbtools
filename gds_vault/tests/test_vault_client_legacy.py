@@ -64,7 +64,9 @@ class TestVaultClientInit(unittest.TestCase):
             VaultClient()
         self.assertIn("VAULT_ROLE_ID and VAULT_SECRET_ID", str(context.exception))
 
-    @patch.dict(os.environ, {"VAULT_ADDR": "https://vault.com", "VAULT_ROLE_ID": "role"})
+    @patch.dict(
+        os.environ, {"VAULT_ADDR": "https://vault.com", "VAULT_ROLE_ID": "role"}
+    )
     def test_init_missing_secret_id(self):
         """Test initialization fails with only role_id."""
         with self.assertRaises(VaultError) as context:
@@ -352,9 +354,7 @@ class TestVaultClientTokenReuse(unittest.TestCase):
 
         # Mock secret fetches
         mock_get.return_value = Mock(ok=True)
-        mock_get.return_value.json.return_value = {
-            "data": {"data": {"value": "test"}}
-        }
+        mock_get.return_value.json.return_value = {"data": {"data": {"value": "test"}}}
 
         client = VaultClient(
             vault_addr="https://vault.com",
@@ -371,8 +371,6 @@ class TestVaultClientTokenReuse(unittest.TestCase):
         self.assertEqual(mock_post.call_count, 1)
         # Should fetch 3 secrets
         self.assertEqual(mock_get.call_count, 3)
-
-
 
 
 class TestVaultClientListSecrets(unittest.TestCase):
@@ -448,9 +446,7 @@ class TestVaultClientCacheManagement(unittest.TestCase):
 
         # Mock secret fetch
         mock_get.return_value = Mock(ok=True)
-        mock_get.return_value.json.return_value = {
-            "data": {"data": {"value": "test"}}
-        }
+        mock_get.return_value.json.return_value = {"data": {"data": {"value": "test"}}}
 
         client = VaultClient(
             vault_addr="https://vault.com",
