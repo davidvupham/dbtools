@@ -115,6 +115,8 @@ class VaultClient:
         role_id: Optional[str] = None,
         secret_id: Optional[str] = None,
         timeout: int = 10,
+        verify_ssl: bool = True,
+        ssl_cert_path: Optional[str] = None,
     ):
         """
         Initialize Vault client.
@@ -124,6 +126,8 @@ class VaultClient:
             role_id: AppRole role_id (overrides VAULT_ROLE_ID env var)
             secret_id: AppRole secret_id (overrides VAULT_SECRET_ID env var)
             timeout: Request timeout in seconds
+            verify_ssl: Whether to verify SSL certificates (default: True)
+            ssl_cert_path: Path to SSL certificate bundle (overrides VAULT_SSL_CERT env var)
 
         Raises:
             VaultError: If required credentials are not provided
@@ -143,6 +147,8 @@ class VaultClient:
             )
 
         self.timeout = timeout
+        self.verify_ssl = verify_ssl
+        self.ssl_cert_path = ssl_cert_path or os.getenv("VAULT_SSL_CERT")
         self._token: Optional[str] = None
         self._token_expiry: Optional[float] = None
         self._secret_cache: dict[str, dict[str, Any]] = {}
@@ -179,9 +185,12 @@ class VaultClient:
         logger.info("Authenticating with Vault at %s", self.vault_addr)
         login_url = f"{self.vault_addr}/v1/auth/approle/login"
         login_payload = {"role_id": self.role_id, "secret_id": self.secret_id}
+        
+        # Configure SSL verification
+        verify = self.ssl_cert_path if self.ssl_cert_path else self.verify_ssl
 
         try:
-            resp = requests.post(login_url, json=login_payload, timeout=self.timeout)
+            resp = requests.post(login_url, json=login_payload, timeout=self.timeout, verify=verify)
         except requests.RequestException as e:
             logger.error("Network error connecting to Vault: %s", e)
             raise VaultError(f"Failed to connect to Vault: {e}") from e
@@ -254,10 +263,14 @@ class VaultClient:
         secret_url = f"{self.vault_addr}/v1/{secret_path}"
         headers = {"X-Vault-Token": token}
         params = {"version": version} if version else None
+        
+        # Configure SSL verification
+        verify = self.ssl_cert_path if self.ssl_cert_path else self.verify_ssl
 
         try:
             resp = requests.get(
-                secret_url, headers=headers, params=params, timeout=self.timeout
+                secret_url, headers=headers, params=params, timeout=self.timeout,
+                verify=verify
             )
         except requests.RequestException as e:
             logger.error("Network error fetching secret %s: %s", secret_path, e)
@@ -316,10 +329,14 @@ class VaultClient:
         token = self._get_token()
         list_url = f"{self.vault_addr}/v1/{path}"
         headers = {"X-Vault-Token": token}
+        
+        # Configure SSL verification
+        verify = self.ssl_cert_path if self.ssl_cert_path else self.verify_ssl
 
         try:
             resp = requests.request(
-                "LIST", list_url, headers=headers, timeout=self.timeout
+                "LIST", list_url, headers=headers, timeout=self.timeout,
+                verify=verify
             )
         except requests.RequestException as e:
             logger.error("Network error listing secrets at %s: %s", path, e)
@@ -394,12 +411,16 @@ def get_secret_from_vault(secret_path: str, vault_addr: str = None) -> dict:
 
     logger.debug("Authenticating with Vault at %s", vault_addr)
 
+    # Configure SSL verification
+    ssl_cert_path = os.getenv("VAULT_SSL_CERT")
+    verify = ssl_cert_path if ssl_cert_path else True
+    
     # Step 1: Login with AppRole
     login_url = f"{vault_addr}/v1/auth/approle/login"
     login_payload = {"role_id": role_id, "secret_id": secret_id}
 
     try:
-        resp = requests.post(login_url, json=login_payload, timeout=10)
+        resp = requests.post(login_url, json=login_payload, timeout=10, verify=verify)
     except requests.RequestException as e:
         logger.error("Network error during authentication: %s", e)
         raise VaultError(f"Failed to connect to Vault: {e}") from e
@@ -418,7 +439,7 @@ def get_secret_from_vault(secret_path: str, vault_addr: str = None) -> dict:
     headers = {"X-Vault-Token": client_token}
 
     try:
-        resp = requests.get(secret_url, headers=headers, timeout=10)
+        resp = requests.get(secret_url, headers=headers, timeout=10, verify=verify)
     except requests.RequestException as e:
         logger.error("Network error fetching secret %s: %s", secret_path, e)
         raise VaultError(f"Failed to connect to Vault: {e}") from e

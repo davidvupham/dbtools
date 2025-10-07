@@ -72,6 +72,18 @@ class VaultClient(SecretProvider, ResourceManager, Configurable):
             auth=TokenAuth(token="hvs.CAESIF..."),
             cache=TTLCache(max_size=50, default_ttl=600),
         )
+        
+        # With SSL certificate
+        client = VaultClient(
+            vault_addr="https://vault.example.com",
+            ssl_cert_path="/path/to/ca-bundle.crt"
+        )
+        
+        # Disable SSL verification (not recommended for production)
+        client = VaultClient(
+            vault_addr="https://vault.example.com",
+            verify_ssl=False
+        )
     """
 
     def __init__(
@@ -82,6 +94,8 @@ class VaultClient(SecretProvider, ResourceManager, Configurable):
         retry_policy: Optional[RetryPolicy] = None,
         timeout: int = 10,
         config: Optional[dict[str, Any]] = None,
+        verify_ssl: bool = True,
+        ssl_cert_path: Optional[str] = None,
     ):
         """Initialize Vault client with OOP best practices."""
         # Initialize base classes
@@ -92,6 +106,10 @@ class VaultClient(SecretProvider, ResourceManager, Configurable):
         self._config = config or {}
         self._vault_addr = vault_addr or os.getenv("VAULT_ADDR")
         self._timeout = timeout
+        
+        # SSL Configuration
+        self._verify_ssl = verify_ssl
+        self._ssl_cert_path = ssl_cert_path or os.getenv("VAULT_SSL_CERT")
 
         # Validate configuration
         self._validate_configuration()
@@ -107,7 +125,7 @@ class VaultClient(SecretProvider, ResourceManager, Configurable):
         self._initialized = False
         self._authenticated = False
 
-        logger.debug("VaultClient initialized")
+        logger.debug("VaultClient initialized with SSL verification: %s", self._verify_ssl)
 
     def _validate_configuration(self) -> None:
         """Validate client configuration."""
@@ -173,6 +191,28 @@ class VaultClient(SecretProvider, ResourceManager, Configurable):
     def cache_stats(self) -> dict[str, Any]:
         """Cache statistics."""
         return self._cache.get_stats()
+    
+    @property
+    def verify_ssl(self) -> bool:
+        """Whether SSL certificate verification is enabled."""
+        return self._verify_ssl
+    
+    @verify_ssl.setter
+    def verify_ssl(self, value: bool) -> None:
+        """Set SSL verification (use with caution in production)."""
+        self._verify_ssl = value
+        logger.warning("SSL verification set to: %s", value)
+    
+    @property
+    def ssl_cert_path(self) -> Optional[str]:
+        """Path to SSL certificate bundle."""
+        return self._ssl_cert_path
+    
+    @ssl_cert_path.setter
+    def ssl_cert_path(self, value: Optional[str]) -> None:
+        """Set SSL certificate path."""
+        self._ssl_cert_path = value
+        logger.info("SSL certificate path set to: %s", value)
 
     # ========================================================================
     # SecretProvider interface implementation
@@ -192,7 +232,13 @@ class VaultClient(SecretProvider, ResourceManager, Configurable):
             logger.info("Authenticating with Vault at %s", self._vault_addr)
 
             def _auth():
-                return self._auth.authenticate(self._vault_addr, self._timeout)
+                # Pass SSL configuration to auth strategy
+                return self._auth.authenticate(
+                    self._vault_addr, 
+                    self._timeout,
+                    verify_ssl=self._verify_ssl,
+                    ssl_cert_path=self._ssl_cert_path
+                )
 
             self._token, self._token_expiry = self._retry_policy.execute(_auth)
             self._authenticated = True
@@ -287,9 +333,13 @@ class VaultClient(SecretProvider, ResourceManager, Configurable):
         secret_url = f"{self._vault_addr}/v1/{secret_path}"
         headers = {"X-Vault-Token": self._token}
         params = {"version": version} if version else None
+        
+        # Configure SSL verification
+        verify = self._ssl_cert_path if self._ssl_cert_path else self._verify_ssl
 
         resp = requests.get(
-            secret_url, headers=headers, params=params, timeout=self._timeout
+            secret_url, headers=headers, params=params, timeout=self._timeout,
+            verify=verify
         )
         resp.raise_for_status()
 
@@ -332,9 +382,13 @@ class VaultClient(SecretProvider, ResourceManager, Configurable):
 
             list_url = f"{self._vault_addr}/v1/{path}"
             headers = {"X-Vault-Token": self._token}
+            
+            # Configure SSL verification
+            verify = self._ssl_cert_path if self._ssl_cert_path else self._verify_ssl
 
             resp = requests.request(
-                "LIST", list_url, headers=headers, timeout=self._timeout
+                "LIST", list_url, headers=headers, timeout=self._timeout,
+                verify=verify
             )
             resp.raise_for_status()
             return resp.json()
@@ -389,6 +443,8 @@ class VaultClient(SecretProvider, ResourceManager, Configurable):
         return {
             "vault_addr": self._vault_addr,
             "timeout": self._timeout,
+            "verify_ssl": self._verify_ssl,
+            "ssl_cert_path": self._ssl_cert_path,
             "cache_type": type(self._cache).__name__,
             "auth_type": type(self._auth).__name__,
             "retry_max_retries": self._retry_policy.max_retries,

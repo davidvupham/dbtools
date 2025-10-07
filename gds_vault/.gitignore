@@ -64,3 +64,16 @@ venv.bak/
 # OS
 .DS_Store
 Thumbs.db
+
+# SSL Certificates - NEVER commit these to version control!
+*.crt
+*.pem
+*.cer
+*.key
+*.p12
+*.pfx
+*.der
+
+# Keep the cert directory structure in root
+!../cert/README.md
+!../cert/.gitkeep

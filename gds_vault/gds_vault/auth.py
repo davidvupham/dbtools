@@ -45,13 +45,21 @@ class AppRoleAuth(AuthStrategy):
                 "VAULT_ROLE_ID and VAULT_SECRET_ID environment variables"
             )
 
-    def authenticate(self, vault_addr: str, timeout: int) -> tuple[str, float]:
+    def authenticate(
+        self, 
+        vault_addr: str, 
+        timeout: int,
+        verify_ssl: bool = True,
+        ssl_cert_path: Optional[str] = None
+    ) -> tuple[str, float]:
         """
         Authenticate with Vault using AppRole.
 
         Args:
             vault_addr: Vault server address
             timeout: Request timeout in seconds
+            verify_ssl: Whether to verify SSL certificates
+            ssl_cert_path: Path to SSL certificate bundle
 
         Returns:
             tuple: (token, expiry_timestamp)
@@ -62,9 +70,12 @@ class AppRoleAuth(AuthStrategy):
         logger.info("Authenticating with Vault using AppRole at %s", vault_addr)
         login_url = f"{vault_addr}/v1/auth/approle/login"
         login_payload = {"role_id": self.role_id, "secret_id": self.secret_id}
+        
+        # Configure SSL verification
+        verify = ssl_cert_path if ssl_cert_path else verify_ssl
 
         try:
-            resp = requests.post(login_url, json=login_payload, timeout=timeout)
+            resp = requests.post(login_url, json=login_payload, timeout=timeout, verify=verify)
         except requests.RequestException as e:
             logger.error("Network error during AppRole authentication: %s", e)
             raise VaultAuthError(f"Failed to connect to Vault: {e}") from e
@@ -126,13 +137,21 @@ class TokenAuth(AuthStrategy):
         self.token = token
         self.ttl = ttl
 
-    def authenticate(self, vault_addr: str, timeout: int) -> tuple[str, float]:
+    def authenticate(
+        self, 
+        vault_addr: str, 
+        timeout: int,
+        verify_ssl: bool = True,
+        ssl_cert_path: Optional[str] = None
+    ) -> tuple[str, float]:
         """
         Return the provided token with calculated expiry.
 
         Args:
             vault_addr: Vault server address (not used)
             timeout: Request timeout (not used)
+            verify_ssl: Whether to verify SSL certificates (not used)
+            ssl_cert_path: Path to SSL certificate bundle (not used)
 
         Returns:
             tuple: (token, expiry_timestamp)
@@ -171,13 +190,21 @@ class EnvironmentAuth(AuthStrategy):
         if not self.token:
             raise VaultAuthError("VAULT_TOKEN environment variable must be set")
 
-    def authenticate(self, vault_addr: str, timeout: int) -> tuple[str, float]:
+    def authenticate(
+        self, 
+        vault_addr: str, 
+        timeout: int,
+        verify_ssl: bool = True,
+        ssl_cert_path: Optional[str] = None
+    ) -> tuple[str, float]:
         """
         Return token from environment with calculated expiry.
 
         Args:
             vault_addr: Vault server address (not used)
             timeout: Request timeout (not used)
+            verify_ssl: Whether to verify SSL certificates (not used)
+            ssl_cert_path: Path to SSL certificate bundle (not used)
 
         Returns:
             tuple: (token, expiry_timestamp)

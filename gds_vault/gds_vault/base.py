@@ -92,13 +92,21 @@ class AuthStrategy(ABC):
     """
 
     @abstractmethod
-    def authenticate(self, vault_addr: str, timeout: int) -> tuple[str, float]:
+    def authenticate(
+        self, 
+        vault_addr: str, 
+        timeout: int,
+        verify_ssl: bool = True,
+        ssl_cert_path: Optional[str] = None
+    ) -> tuple[str, float]:
         """
         Authenticate and return token with expiry.
 
         Args:
             vault_addr: Vault server address
             timeout: Request timeout in seconds
+            verify_ssl: Whether to verify SSL certificates (default: True)
+            ssl_cert_path: Path to SSL certificate bundle (optional)
 
         Returns:
             tuple: (token, expiry_timestamp)
