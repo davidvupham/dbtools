@@ -84,6 +84,10 @@ class VaultClient(SecretProvider, ResourceManager, Configurable):
             vault_addr="https://vault.example.com",
             verify_ssl=False
         )
+        
+        # With mount point (automatically prepends to secret paths)
+        client = VaultClient(mount_point="kv-v2")
+        secret = client.get_secret("data/myapp")  # Fetches from kv-v2/data/myapp
     """
 
     def __init__(
@@ -96,6 +100,7 @@ class VaultClient(SecretProvider, ResourceManager, Configurable):
         config: Optional[dict[str, Any]] = None,
         verify_ssl: bool = True,
         ssl_cert_path: Optional[str] = None,
+        mount_point: Optional[str] = None,
     ):
         """Initialize Vault client with OOP best practices."""
         # Initialize base classes
@@ -110,6 +115,9 @@ class VaultClient(SecretProvider, ResourceManager, Configurable):
         # SSL Configuration
         self._verify_ssl = verify_ssl
         self._ssl_cert_path = ssl_cert_path or os.getenv("VAULT_SSL_CERT")
+        
+        # Mount point configuration
+        self._mount_point = mount_point or os.getenv("VAULT_MOUNT_POINT")
 
         # Validate configuration
         self._validate_configuration()
@@ -213,10 +221,44 @@ class VaultClient(SecretProvider, ResourceManager, Configurable):
         """Set SSL certificate path."""
         self._ssl_cert_path = value
         logger.info("SSL certificate path set to: %s", value)
+    
+    @property
+    def mount_point(self) -> Optional[str]:
+        """Vault mount point (e.g., 'secret', 'kv-v2')."""
+        return self._mount_point
+    
+    @mount_point.setter
+    def mount_point(self, value: Optional[str]) -> None:
+        """Set Vault mount point."""
+        self._mount_point = value
+        logger.info("Vault mount point set to: %s", value)
 
     # ========================================================================
     # SecretProvider interface implementation
     # ========================================================================
+
+    def _construct_secret_path(self, path: str) -> str:
+        """
+        Construct the full secret path with mount point if specified.
+        
+        Args:
+            path: Base secret path (e.g., 'data/myapp' or 'secret/data/myapp')
+            
+        Returns:
+            str: Full path with mount point prepended if configured
+            
+        Example:
+            # Without mount point
+            _construct_secret_path('secret/data/myapp') -> 'secret/data/myapp'
+            
+            # With mount point 'kv-v2'
+            _construct_secret_path('data/myapp') -> 'kv-v2/data/myapp'
+        """
+        if self._mount_point:
+            # Only prepend mount point if path doesn't already start with it
+            if not path.startswith(f"{self._mount_point}/"):
+                return f"{self._mount_point}/{path}"
+        return path
 
     def authenticate(self) -> bool:
         """
@@ -258,7 +300,8 @@ class VaultClient(SecretProvider, ResourceManager, Configurable):
         Retrieve a secret from Vault.
 
         Args:
-            path: Path to the secret (e.g., 'secret/data/myapp')
+            path: Path to the secret (e.g., 'secret/data/myapp' or 'data/myapp')
+                  If mount_point is configured, it will be prepended automatically
             use_cache: Whether to use cached secret if available
             version: Specific version to retrieve (KV v2 only)
             **kwargs: Additional options
@@ -272,33 +315,35 @@ class VaultClient(SecretProvider, ResourceManager, Configurable):
             VaultConnectionError: If connection fails
             VaultError: For other errors
         """
-        cache_key = f"{path}:v{version}" if version else path
+        # Construct full path with mount point
+        full_path = self._construct_secret_path(path)
+        cache_key = f"{full_path}:v{version}" if version else full_path
 
         # Check cache first
         if use_cache:
             cached = self._cache.get(cache_key)
             if cached is not None:
-                logger.debug("Cache hit for secret: %s", path)
+                logger.debug("Cache hit for secret: %s", full_path)
                 return cached
 
         # Fetch from Vault
-        logger.info("Fetching secret from Vault: %s", path)
+        logger.info("Fetching secret from Vault: %s", full_path)
 
         def _fetch():
-            return self._fetch_secret_from_vault(path, version)
+            return self._fetch_secret_from_vault(full_path, version)
 
         try:
             secret_data = self._retry_policy.execute(_fetch)
         except requests.HTTPError as e:
             # Parse HTTP errors into specific exception types
             if e.response.status_code == 404:
-                raise VaultSecretNotFoundError(f"Secret not found: {path}") from e
+                raise VaultSecretNotFoundError(f"Secret not found: {full_path}") from e
             elif e.response.status_code == 403:
                 raise VaultPermissionError(
-                    f"Permission denied for secret: {path}"
+                    f"Permission denied for secret: {full_path}"
                 ) from e
             else:
-                raise VaultError(f"Failed to fetch secret {path}: {e}") from e
+                raise VaultError(f"Failed to fetch secret {full_path}: {e}") from e
         except requests.RequestException as e:
             raise VaultConnectionError(f"Failed to connect to Vault: {e}") from e
 
@@ -366,7 +411,8 @@ class VaultClient(SecretProvider, ResourceManager, Configurable):
         List secrets at the given path.
 
         Args:
-            path: Path to list (e.g., 'secret/metadata/myapp')
+            path: Path to list (e.g., 'secret/metadata/myapp' or 'metadata/myapp')
+                  If mount_point is configured, it will be prepended automatically
 
         Returns:
             list: List of secret names
@@ -374,13 +420,15 @@ class VaultClient(SecretProvider, ResourceManager, Configurable):
         Raises:
             VaultError: If list operation fails
         """
-        logger.info("Listing secrets at path: %s", path)
+        # Construct full path with mount point
+        full_path = self._construct_secret_path(path)
+        logger.info("Listing secrets at path: %s", full_path)
 
         def _list():
             if not self.is_authenticated:
                 self.authenticate()
 
-            list_url = f"{self._vault_addr}/v1/{path}"
+            list_url = f"{self._vault_addr}/v1/{full_path}"
             headers = {"X-Vault-Token": self._token}
             
             # Configure SSL verification
@@ -396,10 +444,10 @@ class VaultClient(SecretProvider, ResourceManager, Configurable):
         try:
             data = self._retry_policy.execute(_list)
             keys = data.get("data", {}).get("keys", [])
-            logger.info("Found %d secrets at %s", len(keys), path)
+            logger.info("Found %d secrets at %s", len(keys), full_path)
             return keys
         except requests.RequestException as e:
-            raise VaultConnectionError(f"Failed to list secrets at {path}: {e}") from e
+            raise VaultConnectionError(f"Failed to list secrets at {full_path}: {e}") from e
 
     # ========================================================================
     # ResourceManager interface implementation
@@ -445,6 +493,7 @@ class VaultClient(SecretProvider, ResourceManager, Configurable):
             "timeout": self._timeout,
             "verify_ssl": self._verify_ssl,
             "ssl_cert_path": self._ssl_cert_path,
+            "mount_point": self._mount_point,
             "cache_type": type(self._cache).__name__,
             "auth_type": type(self._auth).__name__,
             "retry_max_retries": self._retry_policy.max_retries,
@@ -505,6 +554,7 @@ class VaultClient(SecretProvider, ResourceManager, Configurable):
                 - timeout: Request timeout
                 - max_retries: Maximum retry attempts
                 - cache_max_size: Cache size limit
+                - mount_point: Vault mount point
 
         Returns:
             VaultClient: Configured client
@@ -513,13 +563,15 @@ class VaultClient(SecretProvider, ResourceManager, Configurable):
             config = {
                 "vault_addr": "https://vault.example.com",
                 "timeout": 15,
-                "max_retries": 5
+                "max_retries": 5,
+                "mount_point": "kv-v2"
             }
             client = VaultClient.from_config(config)
         """
         vault_addr = config.get("vault_addr")
         timeout = config.get("timeout", 10)
         max_retries = config.get("max_retries", 3)
+        mount_point = config.get("mount_point")
 
         retry_policy = RetryPolicy(max_retries=max_retries)
 
@@ -527,6 +579,7 @@ class VaultClient(SecretProvider, ResourceManager, Configurable):
             vault_addr=vault_addr,
             timeout=timeout,
             retry_policy=retry_policy,
+            mount_point=mount_point,
             config=config,
         )
 
@@ -605,7 +658,7 @@ class VaultClient(SecretProvider, ResourceManager, Configurable):
 
 
 def get_secret_from_vault(
-    secret_path: str, vault_addr: Optional[str] = None
+    secret_path: str, vault_addr: Optional[str] = None, mount_point: Optional[str] = None
 ) -> dict[str, Any]:
     """
     Retrieve a secret from Vault using AppRole authentication.
@@ -614,8 +667,9 @@ def get_secret_from_vault(
     the secret, and cleans up resources automatically.
 
     Args:
-        secret_path: Path to the secret (e.g., 'secret/data/myapp')
+        secret_path: Path to the secret (e.g., 'secret/data/myapp' or 'data/myapp')
         vault_addr: Vault address (overrides VAULT_ADDR env var)
+        mount_point: Vault mount point (overrides VAULT_MOUNT_POINT env var)
 
     Returns:
         dict: Secret data
@@ -626,6 +680,9 @@ def get_secret_from_vault(
     Example:
         secret = get_secret_from_vault('secret/data/myapp')
         password = secret['password']
+        
+        # With mount point
+        secret = get_secret_from_vault('data/myapp', mount_point='kv-v2')
     """
-    with VaultClient(vault_addr=vault_addr) as client:
+    with VaultClient(vault_addr=vault_addr, mount_point=mount_point) as client:
         return client.get_secret(secret_path)

@@ -117,6 +117,7 @@ class VaultClient:
         timeout: int = 10,
         verify_ssl: bool = True,
         ssl_cert_path: Optional[str] = None,
+        mount_point: Optional[str] = None,
     ):
         """
         Initialize Vault client.
@@ -128,6 +129,7 @@ class VaultClient:
             timeout: Request timeout in seconds
             verify_ssl: Whether to verify SSL certificates (default: True)
             ssl_cert_path: Path to SSL certificate bundle (overrides VAULT_SSL_CERT env var)
+            mount_point: Vault mount point (overrides VAULT_MOUNT_POINT env var)
 
         Raises:
             VaultError: If required credentials are not provided
@@ -149,6 +151,7 @@ class VaultClient:
         self.timeout = timeout
         self.verify_ssl = verify_ssl
         self.ssl_cert_path = ssl_cert_path or os.getenv("VAULT_SSL_CERT")
+        self.mount_point = mount_point or os.getenv("VAULT_MOUNT_POINT")
         self._token: Optional[str] = None
         self._token_expiry: Optional[float] = None
         self._secret_cache: dict[str, dict[str, Any]] = {}
@@ -230,6 +233,29 @@ class VaultClient:
             self.authenticate()
         return self._token
 
+    def _construct_secret_path(self, path: str) -> str:
+        """
+        Construct the full secret path with mount point if specified.
+
+        Args:
+            path: Base secret path (e.g., 'data/myapp' or 'secret/data/myapp')
+
+        Returns:
+            str: Full path with mount point prepended if configured
+
+        Example:
+            # Without mount point
+            _construct_secret_path('secret/data/myapp') -> 'secret/data/myapp'
+
+            # With mount point 'kv-v2'
+            _construct_secret_path('data/myapp') -> 'kv-v2/data/myapp'
+        """
+        if self.mount_point:
+            # Only prepend mount point if path doesn't already start with it
+            if not path.startswith(f"{self.mount_point}/"):
+                return f"{self.mount_point}/{path}"
+        return path
+
     @retry_with_backoff(max_retries=3, initial_delay=1.0)
     def get_secret(
         self, secret_path: str, use_cache: bool = True, version: Optional[int] = None
@@ -238,7 +264,8 @@ class VaultClient:
         Retrieve a secret from Vault.
 
         Args:
-            secret_path: Path to the secret (e.g., 'secret/data/myapp')
+            secret_path: Path to the secret (e.g., 'secret/data/myapp' or 'data/myapp')
+                        If mount_point is configured, it will be prepended automatically
             use_cache: If True, return cached secret if available
             version: Specific version to retrieve (KV v2 only)
 
@@ -248,19 +275,21 @@ class VaultClient:
         Raises:
             VaultError: If secret fetch fails
         """
-        cache_key = f"{secret_path}:v{version}" if version else secret_path
+        # Construct full path with mount point
+        full_path = self._construct_secret_path(secret_path)
+        cache_key = f"{full_path}:v{version}" if version else full_path
 
         # Check cache first
         if use_cache and cache_key in self._secret_cache:
-            logger.debug("Cache hit for secret: %s", secret_path)
+            logger.debug("Cache hit for secret: %s", full_path)
             return self._secret_cache[cache_key]
 
-        logger.info("Fetching secret from Vault: %s", secret_path)
+        logger.info("Fetching secret from Vault: %s", full_path)
         if version:
             logger.debug("Requesting specific version: %s", version)
 
         token = self._get_token()
-        secret_url = f"{self.vault_addr}/v1/{secret_path}"
+        secret_url = f"{self.vault_addr}/v1/{full_path}"
         headers = {"X-Vault-Token": token}
         params = {"version": version} if version else None
         
@@ -291,15 +320,15 @@ class VaultClient:
         if "data" in data and "data" in data["data"]:
             # KV v2
             secret_data = data["data"]["data"]
-            logger.debug("Successfully fetched KV v2 secret: %s", secret_path)
+            logger.debug("Successfully fetched KV v2 secret: %s", full_path)
         elif "data" in data:
             # KV v1
             secret_data = data["data"]
-            logger.debug("Successfully fetched KV v1 secret: %s", secret_path)
+            logger.debug("Successfully fetched KV v1 secret: %s", full_path)
         else:
             logger.error(
                 "Unexpected response format for secret %s: %s",
-                secret_path,
+                full_path,
                 list(data.keys()),
             )
             raise VaultError("Secret data not found in Vault response")
@@ -317,7 +346,8 @@ class VaultClient:
         List secrets at the given path.
 
         Args:
-            path: Path to list (e.g., 'secret/metadata/myapp')
+            path: Path to list (e.g., 'secret/metadata/myapp' or 'metadata/myapp')
+                  If mount_point is configured, it will be prepended automatically
 
         Returns:
             list: List of secret names
@@ -325,9 +355,11 @@ class VaultClient:
         Raises:
             VaultError: If list operation fails
         """
-        logger.info("Listing secrets at path: %s", path)
+        # Construct full path with mount point
+        full_path = self._construct_secret_path(path)
+        logger.info("Listing secrets at path: %s", full_path)
         token = self._get_token()
-        list_url = f"{self.vault_addr}/v1/{path}"
+        list_url = f"{self.vault_addr}/v1/{full_path}"
         headers = {"X-Vault-Token": token}
         
         # Configure SSL verification
@@ -353,7 +385,7 @@ class VaultClient:
 
         data = resp.json()
         keys = data.get("data", {}).get("keys", [])
-        logger.info("Found %s secrets at %s", len(keys), path)
+        logger.info("Found %s secrets at %s", len(keys), full_path)
         logger.debug("Secret keys: %s", keys)
         return keys
 
@@ -382,15 +414,16 @@ class VaultClient:
 
 
 @retry_with_backoff(max_retries=3, initial_delay=1.0)
-def get_secret_from_vault(secret_path: str, vault_addr: str = None) -> dict:
+def get_secret_from_vault(secret_path: str, vault_addr: str = None, mount_point: str = None) -> dict:
     """
     Retrieve a secret from HashiCorp Vault using AppRole authentication.
     Expects VAULT_ROLE_ID and VAULT_SECRET_ID in environment variables.
-    Optionally, VAULT_ADDR for Vault address.
+    Optionally, VAULT_ADDR for Vault address and VAULT_MOUNT_POINT for mount point.
 
     Args:
-        secret_path: Path to the secret in Vault (e.g., 'secret/data/myapp')
+        secret_path: Path to the secret in Vault (e.g., 'secret/data/myapp' or 'data/myapp')
         vault_addr: Vault address (overrides env if provided)
+        mount_point: Vault mount point (overrides env if provided)
     Returns:
         dict: Secret data
     Raises:
@@ -408,6 +441,13 @@ def get_secret_from_vault(secret_path: str, vault_addr: str = None) -> dict:
     if not vault_addr:
         logger.error("VAULT_ADDR not found in environment")
         raise VaultError("Vault address must be set in VAULT_ADDR")
+
+    # Construct full path with mount point
+    mount_point = mount_point or os.getenv("VAULT_MOUNT_POINT")
+    full_path = secret_path
+    if mount_point and not secret_path.startswith(f"{mount_point}/"):
+        full_path = f"{mount_point}/{secret_path}"
+        logger.debug("Prepending mount point: %s -> %s", secret_path, full_path)
 
     logger.debug("Authenticating with Vault at %s", vault_addr)
 
@@ -435,7 +475,7 @@ def get_secret_from_vault(secret_path: str, vault_addr: str = None) -> dict:
     logger.debug("Successfully authenticated with Vault")
 
     # Step 2: Read secret
-    secret_url = f"{vault_addr}/v1/{secret_path}"
+    secret_url = f"{vault_addr}/v1/{full_path}"
     headers = {"X-Vault-Token": client_token}
 
     try:
@@ -447,7 +487,7 @@ def get_secret_from_vault(secret_path: str, vault_addr: str = None) -> dict:
     if not resp.ok:
         logger.error(
             "Failed to fetch secret %s (status %s): %s",
-            secret_path,
+            full_path,
             resp.status_code,
             resp.text,
         )
@@ -458,14 +498,14 @@ def get_secret_from_vault(secret_path: str, vault_addr: str = None) -> dict:
     # Support both v1 and v2 kv
     if "data" in data and "data" in data["data"]:
         # kv v2
-        logger.debug("Successfully fetched KV v2 secret: %s", secret_path)
+        logger.debug("Successfully fetched KV v2 secret: %s", full_path)
         return data["data"]["data"]
     if "data" in data:
         # kv v1
-        logger.debug("Successfully fetched KV v1 secret: %s", secret_path)
+        logger.debug("Successfully fetched KV v1 secret: %s", full_path)
         return data["data"]
 
     logger.error(
-        "Unexpected response format for secret %s: %s", secret_path, list(data.keys())
+        "Unexpected response format for secret %s: %s", full_path, list(data.keys())
     )
     raise VaultError("Secret data not found in Vault response")

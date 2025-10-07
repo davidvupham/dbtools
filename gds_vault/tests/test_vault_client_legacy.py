@@ -1,4 +1,4 @@
-"""Tests for VaultClient class."""
+"""Tests for legacy VaultClient class (vault.py)."""
 
 import os
 import unittest
@@ -6,7 +6,7 @@ from unittest.mock import Mock, patch
 
 import requests
 
-from gds_vault import VaultClient, VaultError
+from gds_vault.vault import VaultClient, VaultError
 
 
 class TestVaultClientInit(unittest.TestCase):
@@ -105,6 +105,7 @@ class TestVaultClientAuthentication(unittest.TestCase):
             "https://vault.com/v1/auth/approle/login",
             json={"role_id": "role", "secret_id": "secret"},
             timeout=10,
+            verify=True,
         )
 
     @patch("gds_vault.vault.requests.post")
@@ -405,6 +406,7 @@ class TestVaultClientListSecrets(unittest.TestCase):
             "https://vault.com/v1/secret/metadata",
             headers={"X-Vault-Token": "token"},
             timeout=10,
+            verify=True,
         )
 
     @patch("gds_vault.vault.requests.request")

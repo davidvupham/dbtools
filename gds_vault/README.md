@@ -61,6 +61,22 @@ with VaultClient() as client:
 # Client automatically cleans up resources on exit
 ```
 
+### With Mount Point
+
+```python
+from gds_vault import VaultClient
+
+# Specify mount point to prepend to all secret paths
+client = VaultClient(mount_point='kv-v2')
+secret = client.get_secret('data/myapp')  # Fetches from kv-v2/data/myapp
+print(secret['password'])
+
+# Or use environment variable VAULT_MOUNT_POINT
+# export VAULT_MOUNT_POINT=kv-v2
+client = VaultClient()
+secret = client.get_secret('data/myapp')  # Automatically prepends kv-v2/
+```
+
 ### Convenience Function (Backward Compatible)
 
 ```python
@@ -68,6 +84,9 @@ from gds_vault import get_secret_from_vault
 
 # Quick one-off secret retrieval (v0.1.0 style)
 secret = get_secret_from_vault('secret/data/myapp')
+
+# With mount point
+secret = get_secret_from_vault('data/myapp', mount_point='kv-v2')
 ```
 
 ---
@@ -172,7 +191,79 @@ client = VaultClient(cache=cache)
 
 ---
 
-## 🔄 Retry Logic
+## � Mount Point Support
+
+HashiCorp Vault allows mounting secrets engines at different paths. The `mount_point` parameter automatically prepends the mount point to all secret paths, making it easy to work with non-default mounts.
+
+### Basic Mount Point Usage
+
+```python
+from gds_vault import VaultClient
+
+# Without mount point - use full paths
+client = VaultClient()
+secret = client.get_secret('kv-v2/data/myapp')
+
+# With mount point - paths are automatically prefixed
+client = VaultClient(mount_point='kv-v2')
+secret = client.get_secret('data/myapp')  # Fetches from kv-v2/data/myapp
+```
+
+### Using Environment Variable
+
+```bash
+# Set in environment
+export VAULT_MOUNT_POINT=kv-v2
+
+# Python code
+client = VaultClient()
+secret = client.get_secret('data/myapp')  # Automatically uses kv-v2/data/myapp
+```
+
+### Dynamic Mount Point Changes
+
+```python
+client = VaultClient()
+
+# Change mount point on the fly
+client.mount_point = 'kv-v2'
+secret1 = client.get_secret('data/app1')  # Fetches from kv-v2/data/app1
+
+client.mount_point = 'secret'
+secret2 = client.get_secret('data/app2')  # Fetches from secret/data/app2
+```
+
+### Mount Point with Different Environments
+
+```python
+import os
+from gds_vault import VaultClient
+
+# Development uses 'secret' mount
+if os.getenv('ENV') == 'dev':
+    client = VaultClient(mount_point='secret')
+# Production uses 'kv-v2' mount
+else:
+    client = VaultClient(mount_point='kv-v2')
+
+secret = client.get_secret('data/myapp')
+```
+
+### Smart Path Handling
+
+The client intelligently handles paths to avoid duplication:
+
+```python
+client = VaultClient(mount_point='kv-v2')
+
+# Both work correctly
+secret1 = client.get_secret('data/myapp')          # kv-v2/data/myapp
+secret2 = client.get_secret('kv-v2/data/myapp')    # kv-v2/data/myapp (no duplication)
+```
+
+---
+
+## �🔄 Retry Logic
 
 ### Default Retry Policy
 
@@ -249,7 +340,8 @@ client = VaultClient(
     auth=AppRoleAuth(role_id="role", secret_id="secret"),
     cache=TTLCache(max_size=50, default_ttl=600),
     retry_policy=RetryPolicy(max_retries=5),
-    timeout=15
+    timeout=15,
+    mount_point="kv-v2"  # Optional: prepend to all secret paths
 )
 ```
 
@@ -274,6 +366,10 @@ print(f"Vault server: {client.vault_addr}")
 # Get/set timeout
 print(f"Current timeout: {client.timeout}s")
 client.timeout = 20
+
+# Get/set mount point
+print(f"Mount point: {client.mount_point}")
+client.mount_point = "kv-v2"
 
 # Check cached secret count
 print(f"Cached secrets: {client.cached_secret_count}")
@@ -509,6 +605,8 @@ Test coverage: **100%** for new implementation
 | `VAULT_ROLE_ID` | For AppRole | AppRole role_id |
 | `VAULT_SECRET_ID` | For AppRole | AppRole secret_id |
 | `VAULT_TOKEN` | For Token Auth | Vault token |
+| `VAULT_MOUNT_POINT` | No | Mount point to prepend to secret paths (e.g., `kv-v2`, `secret`) |
+| `VAULT_SSL_CERT` | No | Path to SSL certificate bundle for custom CA verification |
 
 ---
 

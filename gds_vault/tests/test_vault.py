@@ -66,11 +66,13 @@ class TestGetSecretFromVault(unittest.TestCase):
             "https://vault.example.com/v1/auth/approle/login",
             json={"role_id": "test-role-id", "secret_id": "test-secret-id"},
             timeout=10,
+            verify=True,
         )
         mock_get.assert_called_once_with(
             "https://vault.example.com/v1/secret/data/myapp",
             headers={"X-Vault-Token": "test-token-123"},
             timeout=10,
+            verify=True,
         )
 
     @patch.dict(
