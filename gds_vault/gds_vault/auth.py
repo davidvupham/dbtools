@@ -28,16 +28,23 @@ class AppRoleAuth(AuthStrategy):
     Args:
         role_id: AppRole role_id (or None to use VAULT_ROLE_ID env var)
         secret_id: AppRole secret_id (or None to use VAULT_SECRET_ID env var)
+        namespace: Vault namespace (or None to use VAULT_NAMESPACE env var)
 
     Example:
         auth = AppRoleAuth(role_id="my-role-id", secret_id="my-secret-id")
         token, expiry = auth.authenticate("https://vault.example.com", timeout=10)
     """
 
-    def __init__(self, role_id: Optional[str] = None, secret_id: Optional[str] = None):
+    def __init__(
+        self, 
+        role_id: Optional[str] = None, 
+        secret_id: Optional[str] = None,
+        namespace: Optional[str] = None
+    ):
         """Initialize AppRole authentication."""
         self.role_id = role_id or os.getenv("VAULT_ROLE_ID")
         self.secret_id = secret_id or os.getenv("VAULT_SECRET_ID")
+        self.namespace = namespace or os.getenv("VAULT_NAMESPACE")
 
         if not self.role_id or not self.secret_id:
             raise VaultAuthError(
@@ -68,14 +75,28 @@ class AppRoleAuth(AuthStrategy):
             VaultAuthError: If authentication fails
         """
         logger.info("Authenticating with Vault using AppRole at %s", vault_addr)
+        if self.namespace:
+            logger.debug("Using Vault namespace: %s", self.namespace)
+        
         login_url = f"{vault_addr}/v1/auth/approle/login"
         login_payload = {"role_id": self.role_id, "secret_id": self.secret_id}
+        
+        # Add namespace header if configured
+        headers = {}
+        if self.namespace:
+            headers["X-Vault-Namespace"] = self.namespace
         
         # Configure SSL verification
         verify = ssl_cert_path if ssl_cert_path else verify_ssl
 
         try:
-            resp = requests.post(login_url, json=login_payload, timeout=timeout, verify=verify)
+            resp = requests.post(
+                login_url, 
+                json=login_payload, 
+                headers=headers,
+                timeout=timeout, 
+                verify=verify
+            )
         except requests.RequestException as e:
             logger.error("Network error during AppRole authentication: %s", e)
             raise VaultAuthError(f"Failed to connect to Vault: {e}") from e

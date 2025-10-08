@@ -65,6 +65,7 @@ class TestGetSecretFromVault(unittest.TestCase):
         mock_post.assert_called_once_with(
             "https://vault.example.com/v1/auth/approle/login",
             json={"role_id": "test-role-id", "secret_id": "test-secret-id"},
+            headers={},
             timeout=10,
             verify=True,
         )

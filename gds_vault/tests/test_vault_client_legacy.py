@@ -104,6 +104,7 @@ class TestVaultClientAuthentication(unittest.TestCase):
         mock_post.assert_called_once_with(
             "https://vault.com/v1/auth/approle/login",
             json={"role_id": "role", "secret_id": "secret"},
+            headers={},
             timeout=10,
             verify=True,
         )

@@ -101,6 +101,7 @@ class VaultClient(SecretProvider, ResourceManager, Configurable):
         verify_ssl: bool = True,
         ssl_cert_path: Optional[str] = None,
         mount_point: Optional[str] = None,
+        namespace: Optional[str] = None,
     ):
         """Initialize Vault client with OOP best practices."""
         # Initialize base classes
@@ -118,6 +119,9 @@ class VaultClient(SecretProvider, ResourceManager, Configurable):
         
         # Mount point configuration
         self._mount_point = mount_point or os.getenv("VAULT_MOUNT_POINT")
+        
+        # Namespace configuration
+        self._namespace = namespace or os.getenv("VAULT_NAMESPACE")
 
         # Validate configuration
         self._validate_configuration()
@@ -377,6 +381,11 @@ class VaultClient(SecretProvider, ResourceManager, Configurable):
 
         secret_url = f"{self._vault_addr}/v1/{secret_path}"
         headers = {"X-Vault-Token": self._token}
+        
+        # Add namespace header if configured
+        if self._namespace:
+            headers["X-Vault-Namespace"] = self._namespace
+        
         params = {"version": version} if version else None
         
         # Configure SSL verification
@@ -430,6 +439,10 @@ class VaultClient(SecretProvider, ResourceManager, Configurable):
 
             list_url = f"{self._vault_addr}/v1/{full_path}"
             headers = {"X-Vault-Token": self._token}
+            
+            # Add namespace header if configured
+            if self._namespace:
+                headers["X-Vault-Namespace"] = self._namespace
             
             # Configure SSL verification
             verify = self._ssl_cert_path if self._ssl_cert_path else self._verify_ssl

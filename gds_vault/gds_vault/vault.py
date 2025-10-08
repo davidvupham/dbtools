@@ -118,6 +118,7 @@ class VaultClient:
         verify_ssl: bool = True,
         ssl_cert_path: Optional[str] = None,
         mount_point: Optional[str] = None,
+        namespace: Optional[str] = None,
     ):
         """
         Initialize Vault client.
@@ -130,6 +131,7 @@ class VaultClient:
             verify_ssl: Whether to verify SSL certificates (default: True)
             ssl_cert_path: Path to SSL certificate bundle (overrides VAULT_SSL_CERT env var)
             mount_point: Vault mount point (overrides VAULT_MOUNT_POINT env var)
+            namespace: Vault namespace for multi-tenant deployments (overrides VAULT_NAMESPACE env var)
 
         Raises:
             VaultError: If required credentials are not provided
@@ -152,6 +154,7 @@ class VaultClient:
         self.verify_ssl = verify_ssl
         self.ssl_cert_path = ssl_cert_path or os.getenv("VAULT_SSL_CERT")
         self.mount_point = mount_point or os.getenv("VAULT_MOUNT_POINT")
+        self.namespace = namespace or os.getenv("VAULT_NAMESPACE")
         self._token: Optional[str] = None
         self._token_expiry: Optional[float] = None
         self._secret_cache: dict[str, dict[str, Any]] = {}
@@ -186,14 +189,28 @@ class VaultClient:
             VaultError: If authentication fails
         """
         logger.info("Authenticating with Vault at %s", self.vault_addr)
+        if self.namespace:
+            logger.debug("Using Vault namespace: %s", self.namespace)
+        
         login_url = f"{self.vault_addr}/v1/auth/approle/login"
         login_payload = {"role_id": self.role_id, "secret_id": self.secret_id}
+        
+        # Add namespace header if configured (required for Vault Enterprise multi-tenancy)
+        headers = {}
+        if self.namespace:
+            headers["X-Vault-Namespace"] = self.namespace
         
         # Configure SSL verification
         verify = self.ssl_cert_path if self.ssl_cert_path else self.verify_ssl
 
         try:
-            resp = requests.post(login_url, json=login_payload, timeout=self.timeout, verify=verify)
+            resp = requests.post(
+                login_url, 
+                json=login_payload, 
+                headers=headers,
+                timeout=self.timeout, 
+                verify=verify
+            )
         except requests.RequestException as e:
             logger.error("Network error connecting to Vault: %s", e)
             raise VaultError(f"Failed to connect to Vault: {e}") from e
@@ -291,6 +308,11 @@ class VaultClient:
         token = self._get_token()
         secret_url = f"{self.vault_addr}/v1/{full_path}"
         headers = {"X-Vault-Token": token}
+        
+        # Add namespace header if configured
+        if self.namespace:
+            headers["X-Vault-Namespace"] = self.namespace
+        
         params = {"version": version} if version else None
         
         # Configure SSL verification
@@ -362,6 +384,10 @@ class VaultClient:
         list_url = f"{self.vault_addr}/v1/{full_path}"
         headers = {"X-Vault-Token": token}
         
+        # Add namespace header if configured
+        if self.namespace:
+            headers["X-Vault-Namespace"] = self.namespace
+        
         # Configure SSL verification
         verify = self.ssl_cert_path if self.ssl_cert_path else self.verify_ssl
 
@@ -414,16 +440,18 @@ class VaultClient:
 
 
 @retry_with_backoff(max_retries=3, initial_delay=1.0)
-def get_secret_from_vault(secret_path: str, vault_addr: str = None, mount_point: str = None) -> dict:
+def get_secret_from_vault(secret_path: str, vault_addr: str = None, mount_point: str = None, namespace: str = None) -> dict:
     """
     Retrieve a secret from HashiCorp Vault using AppRole authentication.
     Expects VAULT_ROLE_ID and VAULT_SECRET_ID in environment variables.
-    Optionally, VAULT_ADDR for Vault address and VAULT_MOUNT_POINT for mount point.
+    Optionally, VAULT_ADDR for Vault address, VAULT_MOUNT_POINT for mount point,
+    and VAULT_NAMESPACE for namespace.
 
     Args:
         secret_path: Path to the secret in Vault (e.g., 'secret/data/myapp' or 'data/myapp')
         vault_addr: Vault address (overrides env if provided)
         mount_point: Vault mount point (overrides env if provided)
+        namespace: Vault namespace (overrides env if provided)
     Returns:
         dict: Secret data
     Raises:
@@ -442,6 +470,11 @@ def get_secret_from_vault(secret_path: str, vault_addr: str = None, mount_point:
         logger.error("VAULT_ADDR not found in environment")
         raise VaultError("Vault address must be set in VAULT_ADDR")
 
+    # Get namespace from parameter or environment
+    namespace = namespace or os.getenv("VAULT_NAMESPACE")
+    if namespace:
+        logger.debug("Using Vault namespace: %s", namespace)
+
     # Construct full path with mount point
     mount_point = mount_point or os.getenv("VAULT_MOUNT_POINT")
     full_path = secret_path
@@ -458,9 +491,14 @@ def get_secret_from_vault(secret_path: str, vault_addr: str = None, mount_point:
     # Step 1: Login with AppRole
     login_url = f"{vault_addr}/v1/auth/approle/login"
     login_payload = {"role_id": role_id, "secret_id": secret_id}
+    
+    # Add namespace header if configured
+    auth_headers = {}
+    if namespace:
+        auth_headers["X-Vault-Namespace"] = namespace
 
     try:
-        resp = requests.post(login_url, json=login_payload, timeout=10, verify=verify)
+        resp = requests.post(login_url, json=login_payload, headers=auth_headers, timeout=10, verify=verify)
     except requests.RequestException as e:
         logger.error("Network error during authentication: %s", e)
         raise VaultError(f"Failed to connect to Vault: {e}") from e
@@ -477,6 +515,10 @@ def get_secret_from_vault(secret_path: str, vault_addr: str = None, mount_point:
     # Step 2: Read secret
     secret_url = f"{vault_addr}/v1/{full_path}"
     headers = {"X-Vault-Token": client_token}
+    
+    # Add namespace header if configured
+    if namespace:
+        headers["X-Vault-Namespace"] = namespace
 
     try:
         resp = requests.get(secret_url, headers=headers, timeout=10, verify=verify)

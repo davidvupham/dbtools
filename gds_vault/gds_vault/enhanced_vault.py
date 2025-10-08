@@ -92,15 +92,16 @@ class EnhancedVaultClient(
     """
 
     def __init__(
-        self,
-        vault_addr: Optional[str] = None,
-        role_id: Optional[str] = None,
-        secret_id: Optional[str] = None,
-        timeout: int = 10,
-        config: Optional[dict[str, Any]] = None,
-        max_retries: int = 3,
-        backoff_factor: float = 2.0,
-    ):
+            self,
+            vault_addr: Optional[str] = None,
+            role_id: Optional[str] = None,
+            secret_id: Optional[str] = None,
+            timeout: int = 10,
+            config: Optional[dict[str, Any]] = None,
+            max_retries: int = 3,
+            backoff_factor: float = 2.0,
+            namespace: Optional[str] = None,
+        ):
         """
         Initialize enhanced Vault client.
 
@@ -112,6 +113,7 @@ class EnhancedVaultClient(
             config: Configuration dictionary
             max_retries: Maximum retry attempts
             backoff_factor: Exponential backoff factor
+            namespace: Vault namespace (for multi-tenancy)
         """
         # Initialize base classes
         ConfigurableComponent.__init__(self, config)
@@ -122,11 +124,12 @@ class EnhancedVaultClient(
         self.role_id = role_id or os.getenv("VAULT_ROLE_ID")
         self.secret_id = secret_id or os.getenv("VAULT_SECRET_ID")
         self.timeout = timeout
+        self.namespace = namespace or os.getenv("VAULT_NAMESPACE")
 
         # State management
-        self._token: Optional[str] = None
-        self._token_expiry: Optional[float] = None
-        self._secret_cache: dict[str, dict[str, Any]] = {}
+        self._token = None
+        self._token_expiry = None
+        self._secret_cache = {}
         self._initialized = False
         self._authenticated = False
 
@@ -253,9 +256,12 @@ class EnhancedVaultClient(
         """Authenticate with Vault using AppRole."""
         login_url = f"{self.vault_addr}/v1/auth/approle/login"
         login_payload = {"role_id": self.role_id, "secret_id": self.secret_id}
+        headers = {}
+        if self.namespace:
+            headers["X-Vault-Namespace"] = self.namespace
 
         try:
-            resp = requests.post(login_url, json=login_payload, timeout=self.timeout)
+            resp = requests.post(login_url, json=login_payload, headers=headers, timeout=self.timeout)
         except requests.RequestException as e:
             raise VaultError(f"Failed to connect to Vault: {e}") from e
 
@@ -282,6 +288,8 @@ class EnhancedVaultClient(
 
         secret_url = f"{self.vault_addr}/v1/{secret_path}"
         headers = {"X-Vault-Token": self._token}
+        if self.namespace:
+            headers["X-Vault-Namespace"] = self.namespace
         params = {"version": version} if version else None
 
         try:
