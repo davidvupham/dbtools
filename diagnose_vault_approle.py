@@ -184,8 +184,8 @@ def test_approle_login(vault_addr: str, role_id: str, secret_id: str) -> None:
         print()
 
 
-def check_approle_mount_points(vault_addr: str) -> None:
-    """Try to list auth methods (requires a valid token)."""
+def check_auth_methods(vault_addr: str) -> None:
+    """Try to list all auth methods (requires a valid token)."""
     print("=" * 70)
     print("4. ADDITIONAL CHECKS")
     print("=" * 70)
@@ -244,7 +244,7 @@ def main():
     test_approle_login(vault_addr, role_id, secret_id)
     
     # Step 4: Additional checks
-    check_approle_mount_points(vault_addr)
+    check_auth_methods(vault_addr)
     
     print("=" * 70)
     print("DIAGNOSTIC COMPLETE")

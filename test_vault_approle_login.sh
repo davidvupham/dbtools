@@ -99,10 +99,10 @@ test_login \
     "Basic (No namespace, default mount)" \
     "${VAULT_ADDR}/v1/auth/approle/login"
 
-# Test 2: With namespace header
+# Test 2: With namespace header (this is what works!)
 if [ -n "${VAULT_NAMESPACE}" ]; then
     test_login \
-        "With Namespace Header" \
+        "With Namespace Header (REQUIRED for Vault Enterprise)" \
         "${VAULT_ADDR}/v1/auth/approle/login" \
         "X-Vault-Namespace: ${VAULT_NAMESPACE}"
 else
@@ -110,64 +110,6 @@ else
     echo "Skipping: Namespace test (VAULT_NAMESPACE not set)"
     echo "=========================================="
     echo ""
-fi
-
-# Test 3: Custom mount point (if configured)
-if [ -n "${VAULT_APPROLE_MOUNT_POINT}" ] && [ "${VAULT_APPROLE_MOUNT_POINT}" != "approle" ]; then
-    test_login \
-        "Custom AppRole Mount Point" \
-        "${VAULT_ADDR}/v1/auth/${VAULT_APPROLE_MOUNT_POINT}/login"
-    
-    # Test 4: Custom mount point WITH namespace
-    if [ -n "${VAULT_NAMESPACE}" ]; then
-        test_login \
-            "Custom Mount Point + Namespace" \
-            "${VAULT_ADDR}/v1/auth/${VAULT_APPROLE_MOUNT_POINT}/login" \
-            "X-Vault-Namespace: ${VAULT_NAMESPACE}"
-    fi
-else
-    echo "=========================================="
-    echo "Skipping: Custom mount point tests"
-    echo "=========================================="
-    echo "VAULT_APPROLE_MOUNT_POINT not set or using default 'approle'"
-    echo ""
-fi
-
-# Test 5: Full configuration (namespace + custom mount if available)
-echo "=========================================="
-echo "Test: Full Configuration (All Available Options)"
-echo "=========================================="
-MOUNT_POINT="${VAULT_APPROLE_MOUNT_POINT:-approle}"
-FULL_URL="${VAULT_ADDR}/v1/auth/${MOUNT_POINT}/login"
-
-echo "URL: ${FULL_URL}"
-echo "Mount Point: ${MOUNT_POINT}"
-
-if [ -n "${VAULT_NAMESPACE}" ]; then
-    echo "Namespace: ${VAULT_NAMESPACE}"
-    
-    curl -k -s -w "\n\nHTTP Status: %{http_code}\n" -X POST \
-        "${FULL_URL}" \
-        -H "Content-Type: application/json" \
-        -H "X-Vault-Namespace: ${VAULT_NAMESPACE}" \
-        -d "{\"role_id\":\"${VAULT_ROLE_ID}\",\"secret_id\":\"${VAULT_SECRET_ID}\"}" | \
-        if command -v jq &> /dev/null; then
-            jq '.' 2>/dev/null || cat
-        else
-            cat
-        fi
-else
-    echo "Namespace: (not set)"
-    
-    curl -k -s -w "\n\nHTTP Status: %{http_code}\n" -X POST \
-        "${FULL_URL}" \
-        -H "Content-Type: application/json" \
-        -d "{\"role_id\":\"${VAULT_ROLE_ID}\",\"secret_id\":\"${VAULT_SECRET_ID}\"}" | \
-        if command -v jq &> /dev/null; then
-            jq '.' 2>/dev/null || cat
-        else
-            cat
-        fi
 fi
 
 echo ""
@@ -191,6 +133,6 @@ echo "  - HTTP Status: 400 → Malformed request"
 echo ""
 echo "Next Steps:"
 echo "  1. Identify which test succeeded"
-echo "  2. Note the configuration (namespace/mount point)"
-echo "  3. Update gds_vault code to match working configuration"
+echo "  2. Note the configuration (namespace required for Vault Enterprise)"
+echo "  3. Ensure VAULT_NAMESPACE is set in your .env file"
 echo "=========================================="
