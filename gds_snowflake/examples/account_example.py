@@ -60,7 +60,7 @@ def main():
                 )
         except Exception as e:
             print(
-                f"Note: Could not retrieve all accounts. This may require organization admin privileges."
+                "Note: Could not retrieve all accounts. This may require organization admin privileges."
             )
             print(f"Error: {e}")
             # Use current account only for demonstration

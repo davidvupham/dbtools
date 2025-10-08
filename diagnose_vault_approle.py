@@ -70,7 +70,7 @@ def test_vault_connectivity(vault_addr: str) -> bool:
         return True
         
     except requests.ConnectionError as e:
-        print(f"❌ CONNECTION ERROR: Cannot reach Vault server")
+        print("❌ CONNECTION ERROR: Cannot reach Vault server")
         print(f"   Error: {e}")
         print("\n   Possible causes:")
         print("   - Vault server is not running")
@@ -118,18 +118,18 @@ def test_approle_login(vault_addr: str, role_id: str, secret_id: str) -> None:
             return
         
         # Authentication failed
-        print(f"❌ AUTHENTICATION FAILED!")
-        print(f"\nResponse Body:")
+        print("❌ AUTHENTICATION FAILED!")
+        print("\nResponse Body:")
         try:
             error_data = resp.json()
             print(json.dumps(error_data, indent=2))
             
             errors = error_data.get("errors", [])
             if errors:
-                print(f"\nError Messages:")
+                print("\nError Messages:")
                 for error in errors:
                     print(f"  - {error}")
-        except:
+        except (json.JSONDecodeError, ValueError):
             print(resp.text)
         
         # Provide specific guidance based on status code

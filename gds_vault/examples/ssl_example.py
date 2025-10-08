@@ -272,12 +272,12 @@ def example_8_certificate_validation():
         )
     
     try:
-        cert_path = "/path/to/vault-ca.crt"
+        _cert_path = "/path/to/vault-ca.crt"
         # client = validate_and_create_client(
         #     "https://vault.example.com",
-        #     cert_path
+        #     _cert_path
         # )
-        print(f"✅ Client created with validated certificate")
+        print("✅ Client created with validated certificate")
         
     except (FileNotFoundError, PermissionError, ValueError) as e:
         print(f"❌ Certificate validation failed: {e}")

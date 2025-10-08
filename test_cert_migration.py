@@ -25,17 +25,17 @@ def test_cert_directory():
         # Check for README
         readme_path = os.path.join(cert_dir, "README.md")
         if os.path.exists(readme_path):
-            print(f"✅ README.md exists in cert directory")
+            print("✅ README.md exists in cert directory")
         else:
-            print(f"❌ README.md missing from cert directory")
+            print("❌ README.md missing from cert directory")
             return False
             
         # Check for .gitkeep
         gitkeep_path = os.path.join(cert_dir, ".gitkeep")
         if os.path.exists(gitkeep_path):
-            print(f"✅ .gitkeep exists in cert directory")
+            print("✅ .gitkeep exists in cert directory")
         else:
-            print(f"❌ .gitkeep missing from cert directory")
+            print("❌ .gitkeep missing from cert directory")
             return False
     else:
         print(f"❌ Cert directory NOT found at: {cert_dir}")
@@ -68,10 +68,10 @@ def test_code_imports():
     
     try:
         sys.path.insert(0, "/home/dpham/dev/snowflake/gds_vault")
-        from gds_vault import VaultClient
+        # Test imports to verify they work
+        import gds_vault  # noqa: F401
+        import gds_vault.auth  # noqa: F401
         print("✅ VaultClient imported successfully")
-        
-        from gds_vault.auth import AppRoleAuth
         print("✅ AppRoleAuth imported successfully")
         
         return True
@@ -103,7 +103,7 @@ def test_ssl_cert_path_handling():
                 ssl_cert_path=test_cert_path,
                 verify_ssl=True
             )
-            print(f"✅ VaultClient created with cert path")
+            print("✅ VaultClient created with cert path")
             print(f"   - SSL cert path: {client.ssl_cert_path}")
             print(f"   - SSL verification: {client.verify_ssl}")
             

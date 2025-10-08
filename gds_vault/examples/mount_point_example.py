@@ -57,8 +57,8 @@ def example_environment_variable():
     print(f"Mount point from environment: {client.mount_point}")
 
     # All secret paths are automatically prefixed
-    secret = client.get_secret('data/myapp')
-    print(f"Fetched secret from: kv-v2/data/myapp")
+    _secret = client.get_secret('data/myapp')
+    print("Fetched secret from: kv-v2/data/myapp")
 
     # Clean up
     del os.environ['VAULT_MOUNT_POINT']
@@ -75,7 +75,7 @@ def example_parameter_override():
 
     # Parameter takes precedence
     client = VaultClient(mount_point='kv-v2')
-    print(f"Environment says: secret")
+    print("Environment says: secret")
     print(f"Client uses: {client.mount_point}")
 
     # Clean up
@@ -96,14 +96,14 @@ def example_dynamic_mount_point():
     # Change to 'kv-v2'
     client.mount_point = 'kv-v2'
     print(f"Changed to: {client.mount_point}")
-    secret1 = client.get_secret('data/app1')
-    print(f"Fetched from: kv-v2/data/app1")
+    _secret1 = client.get_secret('data/app1')
+    print("Fetched from: kv-v2/data/app1")
 
     # Change to 'secret'
     client.mount_point = 'secret'
     print(f"Changed to: {client.mount_point}")
-    secret2 = client.get_secret('data/app2')
-    print(f"Fetched from: secret/data/app2")
+    _secret2 = client.get_secret('data/app2')
+    print("Fetched from: secret/data/app2")
 
 
 def example_multi_environment():
@@ -132,13 +132,13 @@ def example_multi_environment():
     secret_path = 'data/database/credentials'
     
     # But fetch from different mounts
-    dev_secret = dev_client.get_secret(secret_path)
+    _dev_secret = dev_client.get_secret(secret_path)
     print(f"Dev fetches from: secret/{secret_path}")
     
-    staging_secret = staging_client.get_secret(secret_path)
+    _staging_secret = staging_client.get_secret(secret_path)
     print(f"Staging fetches from: kv-v2/{secret_path}")
     
-    prod_secret = prod_client.get_secret(secret_path)
+    _prod_secret = prod_client.get_secret(secret_path)
     print(f"Prod fetches from: kv-prod/{secret_path}")
 
 
@@ -155,14 +155,14 @@ def example_smart_path_handling():
     path2 = 'kv-v2/data/myapp'
 
     print(f"Path 1: {path1}")
-    print(f"Resolves to: kv-v2/data/myapp")
+    print("Resolves to: kv-v2/data/myapp")
     
     print(f"\nPath 2: {path2}")
-    print(f"Resolves to: kv-v2/data/myapp (no duplication)")
+    print("Resolves to: kv-v2/data/myapp (no duplication)")
 
     # The client is smart enough not to duplicate the mount point
-    secret1 = client.get_secret(path1)
-    secret2 = client.get_secret(path2)
+    _secret1 = client.get_secret(path1)
+    _secret2 = client.get_secret(path2)
     
     print("\nBoth paths fetch the same secret successfully!")
 
@@ -180,7 +180,7 @@ def example_list_secrets_with_mount():
     # With mount point, just use: metadata/myapp
     secrets = client.list_secrets('metadata/myapp')
     
-    print(f"Secrets in kv-v2/metadata/myapp:")
+    print("Secrets in kv-v2/metadata/myapp:")
     for secret_name in secrets:
         print(f"  - {secret_name}")
 
@@ -204,7 +204,7 @@ def example_configuration():
 
     # Mount point is included in config
     all_config = client.get_all_config()
-    print(f"\nAll configuration:")
+    print("\nAll configuration:")
     for key, value in all_config.items():
         print(f"  {key}: {value}")
 
@@ -219,7 +219,7 @@ def example_convenience_function():
 
     # Quick one-off secret fetch with mount point
     secret = get_secret_from_vault('data/myapp', mount_point='kv-v2')
-    print(f"Fetched secret from kv-v2/data/myapp")
+    print("Fetched secret from kv-v2/data/myapp")
     print(f"Secret keys: {list(secret.keys())}")
 
 
@@ -231,9 +231,9 @@ def example_context_manager():
 
     with VaultClient(mount_point='kv-v2') as client:
         # Fetch multiple secrets
-        secret1 = client.get_secret('data/app1')
-        secret2 = client.get_secret('data/app2')
-        secret3 = client.get_secret('data/app3')
+        _secret1 = client.get_secret('data/app1')
+        _secret2 = client.get_secret('data/app2')
+        _secret3 = client.get_secret('data/app3')
         
         print(f"Fetched {len(client)} secrets from kv-v2 mount")
         print(f"Cache statistics: {client.cache_stats}")

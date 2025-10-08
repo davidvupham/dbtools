@@ -8,7 +8,7 @@ import tempfile
 import unittest
 from datetime import datetime
 from pathlib import Path
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch
 
 from gds_snowflake.account import AccountInfo, SnowflakeAccount
 
@@ -98,7 +98,7 @@ class TestSnowflakeAccount(unittest.TestCase):
         test_dir = os.path.join(self.temp_dir, "test_data")
         self.assertFalse(os.path.exists(test_dir))
 
-        account_mgr = SnowflakeAccount(self.mock_connection, data_dir=test_dir)
+        _account_mgr = SnowflakeAccount(self.mock_connection, data_dir=test_dir)
 
         self.assertTrue(os.path.exists(test_dir))
         self.assertTrue(os.path.isdir(test_dir))

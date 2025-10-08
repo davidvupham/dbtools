@@ -11,9 +11,7 @@ import unittest
 from unittest.mock import MagicMock, patch
 
 from gds_vault import VaultClient
-from gds_vault.auth import AppRoleAuth
 from gds_vault.cache import NoOpCache
-from gds_vault.exceptions import VaultAuthError
 from gds_vault.vault import VaultClient as LegacyVaultClient
 
 
