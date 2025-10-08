@@ -18,7 +18,11 @@ except ImportError:
     get_secret_from_vault = None
     VaultError = Exception
 
-from .base import ConfigurableComponent, DatabaseConnection, ResourceManager
+try:
+    from gds_database import DatabaseConnection, ConfigurableComponent, ResourceManager
+except ImportError:
+    # Fallback to local base classes if gds_database not available
+    from .base import ConfigurableComponent, DatabaseConnection, ResourceManager
 
 logger = logging.getLogger(__name__)
 

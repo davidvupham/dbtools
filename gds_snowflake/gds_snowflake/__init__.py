@@ -6,13 +6,28 @@ and monitoring replication status for failover groups.
 """
 
 from .account import AccountInfo, SnowflakeAccount
+
+# Import database interfaces - prefer gds_database package if available
+try:
+    from gds_database import (
+        ConfigurableComponent,
+        DatabaseConnection,
+        OperationResult,
+        ResourceManager,
+        RetryableOperation,
+    )
+except ImportError:
+    # Fallback to local base classes if gds_database not available
+    from .base import (
+        ConfigurableComponent,
+        DatabaseConnection,
+        OperationResult,
+        ResourceManager,
+        RetryableOperation,
+    )
+
 from .base import (
     BaseMonitor,
-    ConfigurableComponent,
-    DatabaseConnection,
-    OperationResult,
-    ResourceManager,
-    RetryableOperation,
     SecretProvider,
 )
 from .connection import SnowflakeConnection
