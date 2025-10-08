@@ -12,15 +12,13 @@ Welcome! This tutorial will teach you Python from the ground up, using real exam
 3. [Data Structures](#data-structures)
 4. [Functions](#functions)
 5. [Object-Oriented Programming (OOP)](#object-oriented-programming)
-6. [Inheritance and Polymorphism](#inheritance-and-polymorphism)
-7. [Abstract Base Classes](#abstract-base-classes)
-8. [Error Handling](#error-handling)
-9. [Type Hints](#type-hints)
-10. [Decorators](#decorators)
-11. [Context Managers](#context-managers)
-12. [Logging](#logging)
-13. [Modules and Packages](#modules-and-packages)
-14. [Design Patterns](#design-patterns)
+6. [Error Handling](#error-handling)
+7. [Type Hints](#type-hints)
+8. [Decorators](#decorators)
+9. [Context Managers](#context-managers)
+10. [Logging](#logging)
+11. [Modules and Packages](#modules-and-packages)
+12. [Design Patterns](#design-patterns)
 
 ---
 
@@ -372,111 +370,38 @@ def test_connectivity(self, timeout_seconds: int = 30) -> Dict[str, Any]:
 
 ## Object-Oriented Programming
 
-### What is OOP?
+Object-Oriented Programming (OOP) is a fundamental programming paradigm that organizes code into classes and objects. It's essential for building maintainable, scalable software.
 
-**Object-Oriented Programming** organizes code into "objects" that contain both data and functions. Think of it like creating blueprints (classes) and then building things (objects) from those blueprints.
+**📖 Complete OOP Guide**: For a comprehensive guide to Object-Oriented Programming in Python, including advanced concepts, design patterns, and best practices, see our dedicated tutorial:
 
-### Real-World Analogy
+**[→ Complete Object-Oriented Programming Guide](./02_OBJECT_ORIENTED_PROGRAMMING_GUIDE.md)**
 
-Imagine a **Car** blueprint:
-- **Data (Attributes)**: color, brand, speed, fuel_level
-- **Actions (Methods)**: start(), stop(), accelerate(), brake()
+This detailed guide covers:
+- **Fundamentals**: Classes, objects, `self`, encapsulation
+- **Inheritance & Polymorphism**: Building class hierarchies and flexible interfaces
+- **Abstract Base Classes**: Defining contracts and interfaces
+- **SOLID Principles**: Professional design principles for maintainable code
+- **Design Patterns**: Common solutions to recurring problems
+- **Best Practices**: Modern Python OOP techniques and conventions
+- **Real Examples**: Practical examples from our Snowflake monitoring codebase
 
-From one blueprint, you can create many cars:
-```python
-my_car = Car(color="red", brand="Toyota")
-your_car = Car(color="blue", brand="Honda")
-```
+### Quick OOP Example from Our Code
 
-### Your First Class
+Here's a brief example of how we use OOP in our project:
 
-```python
-class Dog:
-    """A simple class representing a dog."""
-    
-    # Constructor - runs when creating a new dog
-    def __init__(self, name, age):
-        """Initialize a dog with name and age."""
-        self.name = name  # Each dog has its own name
-        self.age = age    # Each dog has its own age
-    
-    # Method - a function inside a class
-    def bark(self):
-        """Make the dog bark."""
-        print(f"{self.name} says Woof!")
-    
-    def get_age_in_months(self):
-        """Calculate age in months."""
-        return self.age * 12
-    
-    def have_birthday(self):
-        """Increase age by 1."""
-        self.age += 1
-        print(f"Happy birthday {self.name}! Now {self.age} years old.")
-
-# Create dog objects (instances)
-my_dog = Dog("Buddy", 5)
-your_dog = Dog("Max", 3)
-
-# Each dog is independent
-my_dog.bark()  # "Buddy says Woof!"
-your_dog.bark()  # "Max says Woof!"
-
-print(my_dog.get_age_in_months())  # 60
-print(your_dog.get_age_in_months())  # 36
-
-my_dog.have_birthday()  # Only Buddy ages
-print(my_dog.age)   # 6
-print(your_dog.age)  # Still 3
-```
-
-### Understanding `self`
-
-`self` refers to the specific object (instance) you're working with:
-
-```python
-class Counter:
-    def __init__(self):
-        self.count = 0  # THIS counter's count
-    
-    def increment(self):
-        self.count += 1  # Modify THIS counter's count
-    
-    def get_count(self):
-        return self.count  # Return THIS counter's count
-
-# Create two independent counters
-counter1 = Counter()
-counter2 = Counter()
-
-counter1.increment()
-counter1.increment()
-counter2.increment()
-
-print(counter1.get_count())  # 2 (counter1's count)
-print(counter2.get_count())  # 1 (counter2's count)
-```
-
-**Key Point:** Each object has its own data. `self` lets methods access that object's specific data.
-
-### Example from Our Code
-
-From `connection.py`:
 ```python
 class SnowflakeConnection:
     """Manages connections to Snowflake database."""
     
     def __init__(self, account: str, user: Optional[str] = None):
         """Initialize a new connection."""
-        # Store connection parameters for THIS connection
         self.account = account
         self.user = user
-        self.connection = None  # No connection yet
+        self.connection = None
         self._initialized = False
     
     def connect(self):
         """Establish connection to Snowflake."""
-        # Use THIS connection's account and user
         self.connection = snowflake.connector.connect(
             account=self.account,
             user=self.user,
@@ -486,559 +411,23 @@ class SnowflakeConnection:
         return self.connection
     
     def is_connected(self) -> bool:
-        """Check if THIS connection is active."""
-        return self.connection is not None and not self.connection.is_closed()
-    
-    def close(self):
-        """Close THIS connection."""
-        if self.connection is not None:
-            self.connection.close()
-            self._initialized = False
-
-# Create multiple independent connections
-prod_conn = SnowflakeConnection(account="prod_account", user="admin")
-dev_conn = SnowflakeConnection(account="dev_account", user="developer")
-
-# Each connection is independent
-prod_conn.connect()  # Connects to production
-dev_conn.connect()   # Connects to development
-
-print(prod_conn.is_connected())  # True
-print(dev_conn.is_connected())   # True
-
-prod_conn.close()  # Only closes production
-print(prod_conn.is_connected())  # False
-print(dev_conn.is_connected())   # Still True!
-```
-
-**Why use a class here?**
-- Each connection needs its own account, user, and connection object
-- Methods like `connect()` and `close()` operate on specific connections
-- Encapsulates all connection logic in one place
-- Can create multiple connections that don't interfere with each other
-
-### Public vs Private Attributes
-
-```python
-class BankAccount:
-    def __init__(self, owner, balance):
-        self.owner = owner          # Public - anyone can access
-        self._balance = balance     # Private (by convention) - internal use
-        self.__pin = "1234"         # Really private - name mangled
-    
-    def get_balance(self):
-        """Public method to access private balance."""
-        return self._balance
-    
-    def deposit(self, amount):
-        """Public method to modify private balance."""
-        if amount > 0:
-            self._balance += amount
-            return True
-        return False
-
-account = BankAccount("Alice", 1000)
-
-# Public attribute - OK to access
-print(account.owner)  # "Alice"
-
-# Private attribute - shouldn't access directly (but can)
-print(account._balance)  # 1000 (works but discouraged)
-
-# Should use public methods instead
-print(account.get_balance())  # 1000 (proper way)
-account.deposit(500)
-print(account.get_balance())  # 1500
-```
-
-**Naming Conventions:**
-- `name` - Public (anyone can use)
-- `_name` - Private by convention (internal use, but not enforced)
-- `__name` - Really private (Python mangles the name)
-
-**Example from Our Code** (`connection.py`):
-```python
-class SnowflakeConnection:
-    def __init__(self, account: str):
-        self.account = account          # Public - users need this
-        self.connection = None          # Public - users might need this
-        self._initialized = False       # Private - internal state
-    
-    def is_initialized(self) -> bool:
-        """Public method to check private state."""
-        return self._initialized
-```
-
-**Why this design?**
-- Public attributes (`account`, `connection`) are part of the API
-- Private attributes (`_initialized`) are implementation details
-- Users don't need to know about `_initialized`, but `is_initialized()` provides access if needed
-
----
-
-## Inheritance and Polymorphism
-
-### What is Inheritance?
-
-Inheritance lets you create a new class based on an existing class. The new class gets all the features of the original, plus you can add more or change things.
-
-### Simple Inheritance Example
-
-```python
-# Base class (parent)
-class Animal:
-    """Base class for all animals."""
-    
-    def __init__(self, name):
-        self.name = name
-    
-    def speak(self):
-        """Make a sound."""
-        return "Some sound"
-    
-    def move(self):
-        """Move around."""
-        return f"{self.name} is moving"
-
-# Derived class (child) inherits from Animal
-class Dog(Animal):
-    """Dog is a type of Animal."""
-    
-    def speak(self):
-        """Override speak method."""
-        return f"{self.name} says Woof!"
-    
-    def fetch(self):
-        """New method specific to dogs."""
-        return f"{self.name} is fetching the ball"
-
-class Cat(Animal):
-    """Cat is a type of Animal."""
-    
-    def speak(self):
-        """Override speak method."""
-        return f"{self.name} says Meow!"
-    
-    def climb(self):
-        """New method specific to cats."""
-        return f"{self.name} is climbing a tree"
-
-# Create instances
-dog = Dog("Buddy")
-cat = Cat("Whiskers")
-
-# Inherited method (same for both)
-print(dog.move())   # "Buddy is moving"
-print(cat.move())   # "Whiskers is moving"
-
-# Overridden method (different for each)
-print(dog.speak())  # "Buddy says Woof!"
-print(cat.speak())  # "Whiskers says Meow!"
-
-# Specific methods
-print(dog.fetch())  # "Buddy is fetching the ball"
-print(cat.climb())  # "Whiskers is climbing a tree"
-```
-
-**Key Concepts:**
-- `Dog(Animal)` means Dog inherits from Animal
-- Dog gets all of Animal's methods automatically
-- Dog can override methods (like `speak()`)
-- Dog can add new methods (like `fetch()`)
-
-### Example from Our Code
-
-From `base.py` and `connection.py`:
-```python
-# Base class defines the interface
-class DatabaseConnection(ABC):
-    """Abstract base class for all database connections."""
-    
-    @abstractmethod
-    def connect(self) -> Any:
-        """Establish database connection."""
-        pass
-    
-    @abstractmethod
-    def disconnect(self) -> None:
-        """Close database connection."""
-        pass
-    
-    @abstractmethod
-    def execute_query(self, query: str, params: Optional[tuple] = None) -> List[Any]:
-        """Execute a query and return results."""
-        pass
-    
-    @abstractmethod
-    def is_connected(self) -> bool:
         """Check if connection is active."""
-        pass
-
-# Snowflake-specific implementation
-class SnowflakeConnection(DatabaseConnection, ConfigurableComponent, ResourceManager):
-    """Snowflake implementation of DatabaseConnection."""
-    
-    def connect(self) -> snowflake.connector.SnowflakeConnection:
-        """Establish connection to Snowflake."""
-        self.connection = snowflake.connector.connect(
-            account=self.account,
-            user=self.user,
-            private_key=self.private_key
-        )
-        return self.connection
-    
-    def disconnect(self) -> None:
-        """Close Snowflake connection."""
-        self.close()
-    
-    def execute_query(self, query: str, params: Optional[tuple] = None) -> List[Any]:
-        """Execute a Snowflake query."""
-        with self.connection.cursor() as cursor:
-            cursor.execute(query, params)
-            return cursor.fetchall()
-    
-    def is_connected(self) -> bool:
-        """Check if Snowflake connection is active."""
         return self.connection is not None and not self.connection.is_closed()
+
+# Create and use connection
+conn = SnowflakeConnection(account="my-account", user="admin")
+conn.connect()
+if conn.is_connected():
+    print("Successfully connected!")
 ```
 
-**Why this design?**
-- `DatabaseConnection` defines what ALL database connections must do
-- `SnowflakeConnection` provides Snowflake-specific implementation
-- Could easily add `PostgreSQLConnection`, `MySQLConnection`, etc.
-- All would have the same methods, making them interchangeable
+**Why OOP here?**
+- **Encapsulation**: Connection details are bundled together
+- **Reusability**: Can create multiple independent connections
+- **Maintainability**: All connection logic is in one place
+- **Extensibility**: Easy to add new features or connection types
 
-### Multiple Inheritance
-
-Python allows inheriting from multiple classes:
-
-```python
-class Flyable:
-    """Mixin for things that can fly."""
-    def fly(self):
-        return f"{self.name} is flying"
-
-class Swimmable:
-    """Mixin for things that can swim."""
-    def swim(self):
-        return f"{self.name} is swimming"
-
-class Duck(Animal, Flyable, Swimmable):
-    """Duck can do everything!"""
-    def speak(self):
-        return f"{self.name} says Quack!"
-
-duck = Duck("Donald")
-print(duck.speak())  # From Animal (overridden)
-print(duck.move())   # From Animal
-print(duck.fly())    # From Flyable
-print(duck.swim())   # From Swimmable
-```
-
-**Example from Our Code** (`connection.py`):
-```python
-class SnowflakeConnection(DatabaseConnection, ConfigurableComponent, ResourceManager):
-    """
-    Inherits from three base classes:
-    - DatabaseConnection: Database-specific methods
-    - ConfigurableComponent: Configuration management
-    - ResourceManager: Resource lifecycle management
-    """
-    
-    # Gets methods from all three parent classes!
-    # - connect(), disconnect(), execute_query() from DatabaseConnection
-    # - get_config(), set_config() from ConfigurableComponent
-    # - initialize(), cleanup(), __enter__(), __exit__() from ResourceManager
-```
-
-**Why multiple inheritance?**
-- Each base class provides a specific set of functionality
-- Combines features without duplicating code
-- Follows "composition over inheritance" principle
-- Makes the class more flexible and reusable
-
-### Polymorphism
-
-Polymorphism means "many forms" - different classes can be used interchangeably if they have the same methods:
-
-```python
-def make_animal_speak(animal):
-    """Works with any animal that has a speak() method."""
-    print(animal.speak())
-
-dog = Dog("Buddy")
-cat = Cat("Whiskers")
-duck = Duck("Donald")
-
-# All work with the same function!
-make_animal_speak(dog)   # "Buddy says Woof!"
-make_animal_speak(cat)   # "Whiskers says Meow!"
-make_animal_speak(duck)  # "Donald says Quack!"
-
-# Can also use in loops
-animals = [dog, cat, duck]
-for animal in animals:
-    print(animal.speak())  # Each speaks differently!
-```
-
-**Example from Our Code** (`base.py`):
-```python
-class BaseMonitor(ABC):
-    """Base class for all monitors."""
-    
-    @abstractmethod
-    def check(self) -> Dict[str, Any]:
-        """Perform monitoring check."""
-        pass
-
-class SnowflakeMonitor(BaseMonitor):
-    """Snowflake-specific monitor."""
-    def check(self) -> Dict[str, Any]:
-        return self.monitor_all()
-
-class PostgreSQLMonitor(BaseMonitor):
-    """PostgreSQL-specific monitor."""
-    def check(self) -> Dict[str, Any]:
-        return self.check_postgres()
-
-# Polymorphism in action
-def run_monitoring(monitors: List[BaseMonitor]):
-    """Run all monitors, regardless of type."""
-    for monitor in monitors:
-        result = monitor.check()  # Works for any monitor!
-        print(f"Monitor result: {result}")
-
-# All monitors can be used the same way
-monitors = [
-    SnowflakeMonitor(account="prod"),
-    PostgreSQLMonitor(host="localhost")
-]
-run_monitoring(monitors)  # Works with both!
-```
-
-**Why polymorphism?**
-- Write code that works with any type of monitor
-- Add new monitor types without changing existing code
-- Makes code more flexible and maintainable
-
----
-
-## Abstract Base Classes
-
-### What is an Abstract Base Class?
-
-An **Abstract Base Class (ABC)** is a blueprint that defines what methods a class MUST have, but doesn't implement them. It's like a contract: "If you inherit from me, you MUST implement these methods."
-
-### Why Use ABCs?
-
-```python
-from abc import ABC, abstractmethod
-
-# Without ABC - no enforcement
-class Animal:
-    def speak(self):
-        pass  # Forgot to implement!
-
-dog = Animal()
-dog.speak()  # Does nothing, no error!
-
-# With ABC - enforced
-class Animal(ABC):
-    @abstractmethod
-    def speak(self):
-        """All animals must be able to speak."""
-        pass
-
-# This will raise an error!
-# dog = Animal()  # TypeError: Can't instantiate abstract class
-
-# Must create a concrete class
-class Dog(Animal):
-    def speak(self):  # MUST implement this
-        return "Woof!"
-
-dog = Dog()  # Now it works!
-```
-
-### Example from Our Code
-
-From `base.py`:
-```python
-from abc import ABC, abstractmethod
-
-class DatabaseConnection(ABC):
-    """
-    Abstract base class for database connections.
-    
-    Defines the interface that ALL database connection classes must implement.
-    """
-    
-    @abstractmethod
-    def connect(self) -> Any:
-        """Establish database connection."""
-        pass
-    
-    @abstractmethod
-    def disconnect(self) -> None:
-        """Close database connection."""
-        pass
-    
-    @abstractmethod
-    def execute_query(self, query: str, params: Optional[tuple] = None) -> List[Any]:
-        """Execute a query and return results."""
-        pass
-    
-    @abstractmethod
-    def is_connected(self) -> bool:
-        """Check if connection is active."""
-        pass
-    
-    @abstractmethod
-    def get_connection_info(self) -> Dict[str, Any]:
-        """Get connection information."""
-        pass
-```
-
-**Why this design?**
-- **Enforces consistency**: All database connections must have these methods
-- **Self-documenting**: Clear what a database connection should do
-- **Prevents errors**: Can't forget to implement required methods
-- **Enables polymorphism**: Any DatabaseConnection can be used interchangeably
-
-### Implementing an ABC
-
-```python
-class SnowflakeConnection(DatabaseConnection):
-    """Concrete implementation of DatabaseConnection for Snowflake."""
-    
-    # MUST implement all abstract methods
-    
-    def connect(self) -> snowflake.connector.SnowflakeConnection:
-        """Establish connection to Snowflake."""
-        self.connection = snowflake.connector.connect(...)
-        return self.connection
-    
-    def disconnect(self) -> None:
-        """Close Snowflake connection."""
-        if self.connection:
-            self.connection.close()
-    
-    def execute_query(self, query: str, params: Optional[tuple] = None) -> List[Any]:
-        """Execute Snowflake query."""
-        with self.connection.cursor() as cursor:
-            cursor.execute(query, params)
-            return cursor.fetchall()
-    
-    def is_connected(self) -> bool:
-        """Check if connected to Snowflake."""
-        return self.connection is not None and not self.connection.is_closed()
-    
-    def get_connection_info(self) -> Dict[str, Any]:
-        """Get Snowflake connection info."""
-        return {
-            'account': self.account,
-            'user': self.user,
-            'connected': self.is_connected()
-        }
-```
-
-If you forget to implement even ONE method, Python will raise an error when you try to create an instance!
-
-### More Examples from Our Code
-
-**BaseMonitor** (`base.py`):
-```python
-class BaseMonitor(ABC):
-    """
-    Abstract base class for all monitoring operations.
-    
-    Provides common functionality and defines required interface.
-    """
-    
-    def __init__(self, name: str, timeout: int = 30):
-        """Initialize base monitor."""
-        self.name = name
-        self.timeout = timeout
-        self._check_count = 0
-    
-    @abstractmethod
-    def check(self) -> Dict[str, Any]:
-        """
-        Perform the monitoring check.
-        
-        MUST be implemented by subclasses.
-        """
-        pass
-    
-    def _log_result(self, result: Dict[str, Any]) -> None:
-        """Log monitoring result (concrete method - already implemented)."""
-        status = "SUCCESS" if result.get('success', False) else "FAILED"
-        print(f"{self.name} check {status}")
-    
-    def get_stats(self) -> Dict[str, Any]:
-        """Get monitoring statistics (concrete method)."""
-        return {
-            'name': self.name,
-            'check_count': self._check_count,
-            'timeout': self.timeout
-        }
-```
-
-**SnowflakeMonitor** (`monitor.py`):
-```python
-class SnowflakeMonitor(BaseMonitor):
-    """Concrete implementation of BaseMonitor for Snowflake."""
-    
-    def __init__(self, account: str, **kwargs):
-        # Call parent constructor
-        super().__init__(name=f"SnowflakeMonitor-{account}", timeout=30)
-        self.account = account
-    
-    def check(self) -> Dict[str, Any]:
-        """
-        Implement required check method.
-        
-        This is what BaseMonitor requires us to implement.
-        """
-        start_time = time.time()
-        
-        try:
-            # Run Snowflake-specific monitoring
-            results = self.monitor_all()
-            
-            duration_ms = (time.time() - start_time) * 1000
-            
-            result = {
-                'success': results['summary']['connectivity_ok'],
-                'message': f"Monitoring completed for {self.account}",
-                'duration_ms': duration_ms,
-                'data': results
-            }
-            
-            # Use inherited method
-            self._log_result(result)
-            
-            return result
-            
-        except Exception as e:
-            # Handle errors...
-            pass
-```
-
-**Key Points:**
-- `BaseMonitor` defines what ALL monitors must do (`check()`)
-- `BaseMonitor` provides common functionality (`_log_result()`, `get_stats()`)
-- `SnowflakeMonitor` MUST implement `check()`
-- `SnowflakeMonitor` can use inherited methods
-- `super().__init__()` calls the parent's constructor
-
-### Benefits of ABCs
-
-1. **Enforces Interface**: Can't forget required methods
-2. **Documentation**: Clear what a class should do
-3. **Polymorphism**: All implementations can be used interchangeably
-4. **Early Error Detection**: Errors at class creation, not runtime
-5. **Code Organization**: Separates interface from implementation
+For the complete explanation of these concepts and much more, see the **[Complete OOP Guide](./02_OBJECT_ORIENTED_PROGRAMMING_GUIDE.md)**.
 
 ---
 
