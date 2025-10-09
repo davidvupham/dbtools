@@ -23,7 +23,7 @@ from gds_vault.exceptions import (
 from gds_vault.auth import AppRoleAuth, EnvironmentAuth, TokenAuth
 
 # Cache implementations
-from gds_vault.cache import NoOpCache, SecretCache, TTLCache
+from gds_vault.cache import NoOpCache, RotationAwareCache, SecretCache, TTLCache
 
 # Retry mechanisms
 from gds_vault.retry import RetryPolicy, retry_with_backoff
@@ -52,6 +52,7 @@ __all__ = [
     # Caching
     "SecretCache",
     "TTLCache",
+    "RotationAwareCache",
     "NoOpCache",
     # Retry
     "RetryPolicy",

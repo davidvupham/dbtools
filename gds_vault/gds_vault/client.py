@@ -6,6 +6,7 @@ Python OOP best practices including inheritance, composition, proper
 encapsulation, and extensive use of magic methods and properties.
 """
 
+import inspect
 import logging
 import os
 import time
@@ -327,8 +328,18 @@ class VaultClient(SecretProvider, ResourceManager, Configurable):
         if use_cache:
             cached = self._cache.get(cache_key)
             if cached is not None:
-                logger.debug("Cache hit for secret: %s", full_path)
-                return cached
+                # For rotation-aware caches, check if immediate refresh is needed
+                if hasattr(self._cache, 'force_refresh_check'):
+                    if self._cache.force_refresh_check(cache_key):
+                        logger.info("Rotation schedule requires immediate refresh for: %s", full_path)
+                        # Remove from cache and fetch fresh
+                        self._cache.remove(cache_key)
+                    else:
+                        logger.debug("Cache hit for secret: %s", full_path)
+                        return cached
+                else:
+                    logger.debug("Cache hit for secret: %s", full_path)
+                    return cached
 
         # Fetch from Vault
         logger.info("Fetching secret from Vault: %s", full_path)
@@ -351,10 +362,25 @@ class VaultClient(SecretProvider, ResourceManager, Configurable):
         except requests.RequestException as e:
             raise VaultConnectionError(f"Failed to connect to Vault: {e}") from e
 
-        # Cache the secret
+        # Cache the secret with rotation metadata if available
         if use_cache:
-            self._cache.set(cache_key, secret_data)
-            logger.debug("Cached secret: %s", cache_key)
+            # Extract rotation metadata from secret data
+            rotation_metadata = secret_data.pop("_vault_rotation_metadata", None)
+            
+            # Pass rotation metadata to rotation-aware caches
+            if hasattr(self._cache, 'set') and rotation_metadata:
+                # Check if cache supports rotation metadata
+                import inspect
+                set_signature = inspect.signature(self._cache.set)
+                if 'rotation_metadata' in set_signature.parameters:
+                    self._cache.set(cache_key, secret_data, rotation_metadata=rotation_metadata)
+                    logger.debug("Cached secret with rotation metadata: %s", cache_key)
+                else:
+                    self._cache.set(cache_key, secret_data)
+                    logger.debug("Cached secret (cache doesn't support rotation metadata): %s", cache_key)
+            else:
+                self._cache.set(cache_key, secret_data)
+                logger.debug("Cached secret: %s", cache_key)
 
         return secret_data
 
@@ -369,7 +395,7 @@ class VaultClient(SecretProvider, ResourceManager, Configurable):
             version: Specific version to retrieve
 
         Returns:
-            dict: Secret data
+            dict: Secret data with optional rotation metadata
 
         Raises:
             requests.HTTPError: If HTTP request fails
@@ -398,18 +424,48 @@ class VaultClient(SecretProvider, ResourceManager, Configurable):
         resp.raise_for_status()
 
         data = resp.json()
+        
+        # Extract rotation metadata from response
+        rotation_metadata = self._extract_rotation_metadata(data)
 
         # Support both KV v1 and v2
         if "data" in data and "data" in data["data"]:
             # KV v2
             logger.debug("Successfully fetched KV v2 secret: %s", secret_path)
-            return data["data"]["data"]
+            secret_data = data["data"]["data"]
         elif "data" in data:
             # KV v1
             logger.debug("Successfully fetched KV v1 secret: %s", secret_path)
-            return data["data"]
+            secret_data = data["data"]
         else:
             raise VaultError(f"Unexpected response format for secret {secret_path}")
+        
+        # Add rotation metadata to secret data if available
+        if rotation_metadata:
+            secret_data["_vault_rotation_metadata"] = rotation_metadata
+            logger.debug("Found rotation metadata for secret: %s", secret_path)
+        
+        return secret_data
+    
+    def _extract_rotation_metadata(self, vault_response: dict) -> Optional[dict]:
+        """
+        Extract rotation metadata from Vault response.
+        
+        Args:
+            vault_response: Full response from Vault API
+            
+        Returns:
+            dict: Rotation metadata or None if not found
+        """
+        try:
+            from gds_vault.rotation import parse_vault_rotation_metadata
+            return parse_vault_rotation_metadata(vault_response)
+        except ImportError:
+            logger.debug("Rotation module not available, skipping metadata extraction")
+            return None
+        except Exception as e:
+            logger.warning("Failed to extract rotation metadata: %s", e)
+            return None
 
     # ========================================================================
     # Additional Vault operations

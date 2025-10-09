@@ -7,7 +7,8 @@ improving performance and reducing load on the Vault server.
 
 import logging
 import time
-from typing import Any, Optional
+from datetime import datetime
+from typing import Any, Optional, Union
 
 from gds_vault.exceptions import VaultCacheError
 
@@ -190,7 +191,13 @@ class TTLCache(SecretCache):
         logger.debug("Cache miss for key: %s", key)
         return None
 
-    def set(self, key: str, value: dict[str, Any], ttl: Optional[int] = None) -> None:
+    def set(
+        self, 
+        key: str, 
+        value: dict[str, Any], 
+        ttl: Optional[int] = None,
+        rotation_metadata: Optional[dict[str, Any]] = None
+    ) -> None:
         """
         Set cached secret with TTL.
 
@@ -198,11 +205,36 @@ class TTLCache(SecretCache):
             key: Cache key
             value: Secret data to cache
             ttl: Time-to-live in seconds (uses default_ttl if None)
+            rotation_metadata: Optional rotation metadata for TTL calculation
         """
         super().set(key, value)
-        ttl = ttl if ttl is not None else self.default_ttl
-        self._expiry[key] = time.time() + ttl
-        logger.debug("Cached secret for key: %s (TTL: %ds)", key, ttl)
+        
+        # Use rotation metadata to calculate TTL if available and no manual TTL provided
+        if rotation_metadata and ttl is None:
+            try:
+                from gds_vault.rotation import calculate_rotation_ttl
+                
+                calculated_ttl = calculate_rotation_ttl(
+                    rotation_metadata.get('last_rotation'),
+                    rotation_metadata.get('schedule'),
+                    buffer_minutes=10  # Default buffer
+                )
+                
+                effective_ttl = calculated_ttl if calculated_ttl > 0 else self.default_ttl
+                logger.debug(
+                    "Using rotation-based TTL for %s: %ds (from schedule: %s)",
+                    key, effective_ttl, rotation_metadata.get('schedule')
+                )
+                
+            except Exception as e:
+                logger.debug("Failed to calculate rotation TTL, using default: %s", e)
+                effective_ttl = self.default_ttl
+        else:
+            # Use provided TTL or default
+            effective_ttl = ttl if ttl is not None else self.default_ttl
+        
+        self._expiry[key] = time.time() + effective_ttl
+        logger.debug("Cached secret for key: %s (TTL: %ds)", key, effective_ttl)
 
     def remove(self, key: str) -> bool:
         """Remove key from cache and expiry tracking."""
@@ -263,6 +295,251 @@ class TTLCache(SecretCache):
         return (
             f"TTL Secret Cache ({len(self._cache)}/{self.max_size} entries, "
             f"TTL: {self.default_ttl}s)"
+        )
+
+
+class RotationAwareCache(SecretCache):
+    """
+    Rotation-aware cache for Vault secrets with rotation schedule support.
+
+    This cache automatically calculates TTL based on Vault secret rotation schedules
+    and cron expressions. Secrets are automatically refreshed before their next
+    scheduled rotation with a configurable buffer time.
+
+    Args:
+        max_size: Maximum number of secrets to cache
+        buffer_minutes: Safety buffer in minutes before rotation (default: 10)
+        fallback_ttl: Default TTL when no rotation schedule is available (default: 300)
+
+    Example:
+        cache = RotationAwareCache(max_size=50, buffer_minutes=15)
+        
+        # Cache with rotation metadata
+        rotation_metadata = {
+            'last_rotation': '2024-01-01T02:00:00Z',
+            'schedule': '0 2 * * *'  # Daily at 2 AM
+        }
+        cache.set("secret/data/app1", {"key": "value"}, rotation_metadata=rotation_metadata)
+        
+        # Secret will be automatically invalidated 15 minutes before next 2 AM
+        secret = cache.get("secret/data/app1")  # Returns None if within buffer time
+    """
+
+    def __init__(self, max_size: int = 100, buffer_minutes: int = 10, fallback_ttl: int = 300):
+        """Initialize rotation-aware cache."""
+        super().__init__(max_size)
+        self.buffer_minutes = buffer_minutes
+        self.fallback_ttl = fallback_ttl
+        
+        # Store rotation metadata for each secret
+        self._rotation_metadata: dict[str, dict[str, Any]] = {}
+        self._expiry: dict[str, float] = {}
+
+    def get(self, key: str) -> Optional[dict[str, Any]]:
+        """
+        Get cached secret, checking rotation schedule.
+
+        Returns None if secret is expired based on rotation schedule
+        or if within buffer time of next rotation.
+        """
+        # Check if key exists in cache
+        if key not in self._cache:
+            return None
+
+        # Check rotation-based expiration
+        if self._is_rotation_expired(key):
+            logger.debug("Secret expired due to rotation schedule: %s", key)
+            self.remove(key)
+            return None
+
+        # Check standard TTL expiration
+        if key in self._expiry:
+            if time.time() >= self._expiry[key]:
+                logger.debug("Secret TTL expired: %s", key)
+                self.remove(key)
+                return None
+
+        return super().get(key)
+
+    def set(
+        self,
+        key: str,
+        value: dict[str, Any],
+        rotation_metadata: Optional[dict[str, Any]] = None,
+        ttl: Optional[int] = None
+    ) -> None:
+        """
+        Set cached secret with optional rotation metadata.
+
+        Args:
+            key: Cache key
+            value: Secret data to cache
+            rotation_metadata: Vault rotation metadata with 'last_rotation' and 'schedule'
+            ttl: Manual TTL override (uses rotation schedule if None)
+        """
+        super().set(key, value)
+
+        # Store rotation metadata if provided
+        if rotation_metadata:
+            self._rotation_metadata[key] = rotation_metadata
+            
+            # Calculate TTL based on rotation schedule
+            try:
+                from gds_vault.rotation import calculate_rotation_ttl
+                
+                calculated_ttl = calculate_rotation_ttl(
+                    rotation_metadata.get('last_rotation'),
+                    rotation_metadata.get('schedule'),
+                    self.buffer_minutes
+                )
+                
+                # Use calculated TTL or fallback
+                effective_ttl = calculated_ttl if calculated_ttl > 0 else self.fallback_ttl
+                self._expiry[key] = time.time() + effective_ttl
+                
+                logger.debug(
+                    "Cached secret with rotation-based TTL: %s (TTL: %ds)",
+                    key, effective_ttl
+                )
+                
+            except Exception as e:
+                logger.warning(
+                    "Failed to calculate rotation TTL for %s, using fallback: %s",
+                    key, e
+                )
+                self._expiry[key] = time.time() + self.fallback_ttl
+        else:
+            # Use manual TTL or fallback
+            effective_ttl = ttl if ttl is not None else self.fallback_ttl
+            self._expiry[key] = time.time() + effective_ttl
+            logger.debug("Cached secret with manual TTL: %s (TTL: %ds)", key, effective_ttl)
+
+    def _is_rotation_expired(self, key: str) -> bool:
+        """Check if secret is expired based on rotation schedule."""
+        if key not in self._rotation_metadata:
+            return False
+
+        rotation_data = self._rotation_metadata[key]
+        if not rotation_data.get('last_rotation') or not rotation_data.get('schedule'):
+            return False
+
+        try:
+            from gds_vault.rotation import should_refresh_secret
+            
+            return should_refresh_secret(
+                rotation_data['last_rotation'],
+                rotation_data['schedule'],
+                self.buffer_minutes
+            )
+        except Exception as e:
+            logger.warning(
+                "Error checking rotation schedule for %s, assuming expired: %s",
+                key, e
+            )
+            return True
+
+    def remove(self, key: str) -> bool:
+        """Remove key from cache, rotation metadata, and expiry tracking."""
+        if key in self._rotation_metadata:
+            del self._rotation_metadata[key]
+        if key in self._expiry:
+            del self._expiry[key]
+        return super().remove(key)
+
+    def clear(self) -> None:
+        """Clear all cached secrets, rotation metadata, and expiry data."""
+        super().clear()
+        self._rotation_metadata.clear()
+        self._expiry.clear()
+
+    def cleanup_expired(self) -> int:
+        """Clean up expired secrets based on both TTL and rotation schedules."""
+        removed_count = 0
+        current_time = time.time()
+        
+        # Get keys to check (copy to avoid modification during iteration)
+        keys_to_check = list(self._cache.keys())
+        
+        for key in keys_to_check:
+            should_remove = False
+            
+            # Check TTL expiration
+            if key in self._expiry and current_time >= self._expiry[key]:
+                should_remove = True
+                logger.debug("Removing TTL-expired secret: %s", key)
+            
+            # Check rotation expiration
+            elif self._is_rotation_expired(key):
+                should_remove = True
+                logger.debug("Removing rotation-expired secret: %s", key)
+            
+            if should_remove:
+                self.remove(key)
+                removed_count += 1
+        
+        if removed_count > 0:
+            logger.info("Cleaned up %d expired secrets", removed_count)
+        
+        return removed_count
+
+    def force_refresh_check(self, key: str) -> bool:
+        """
+        Force check if a secret needs immediate refresh.
+        
+        Returns True if secret should be refreshed immediately due to
+        rotation schedule, even if still in cache.
+        """
+        if key not in self._rotation_metadata:
+            return False
+        
+        return self._is_rotation_expired(key)
+
+    def get_rotation_info(self, key: str) -> Optional[dict[str, Any]]:
+        """Get rotation metadata for a cached secret."""
+        return self._rotation_metadata.get(key)
+
+    def get_stats(self) -> dict[str, Any]:
+        """Get cache statistics including rotation information."""
+        stats = super().get_stats()
+        stats.update({
+            "buffer_minutes": self.buffer_minutes,
+            "fallback_ttl": self.fallback_ttl,
+            "secrets_with_rotation": len(self._rotation_metadata),
+        })
+
+        # Calculate secrets needing refresh
+        needs_refresh = 0
+        for key in self._cache:
+            if self._is_rotation_expired(key):
+                needs_refresh += 1
+        
+        stats["secrets_needing_refresh"] = needs_refresh
+        
+        # Calculate average remaining TTL
+        current_time = time.time()
+        remaining_ttls = [
+            expiry - current_time 
+            for expiry in self._expiry.values() 
+            if expiry > current_time
+        ]
+        stats["avg_remaining_ttl"] = (
+            sum(remaining_ttls) / len(remaining_ttls) if remaining_ttls else 0.0
+        )
+        
+        return stats
+
+    def __repr__(self) -> str:
+        """Developer-friendly representation."""
+        return (
+            f"RotationAwareCache(size={len(self._cache)}, max_size={self.max_size}, "
+            f"buffer_minutes={self.buffer_minutes}, with_rotation={len(self._rotation_metadata)})"
+        )
+
+    def __str__(self) -> str:
+        """User-friendly representation."""
+        return (
+            f"Rotation-Aware Cache ({len(self._cache)}/{self.max_size} entries, "
+            f"{len(self._rotation_metadata)} with rotation schedules)"
         )
 
 
