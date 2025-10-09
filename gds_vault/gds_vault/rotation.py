@@ -101,7 +101,7 @@ class CronParser:
                 next_time.hour in hours and
                 next_time.day in days and
                 next_time.month in months and
-                next_time.weekday() + 1 % 7 in weekdays):  # Convert to Sunday=0
+                (next_time.weekday() + 1) % 7 in weekdays):  # Convert to Sunday=0
                 return next_time
             
             next_time += timedelta(minutes=1)

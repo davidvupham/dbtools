@@ -47,20 +47,17 @@ class TestRotationUtils(unittest.TestCase):
         current_time = datetime(2024, 10, 8, 15, 0, 0)  # 3 PM
         last_rotation = datetime(2024, 10, 8, 2, 0, 0)   # 2 AM same day
         
-        with patch('gds_vault.rotation.datetime') as mock_datetime:
-            mock_datetime.now.return_value = current_time
-            
-            ttl = calculate_rotation_ttl(
-                last_rotation.isoformat(),
-                "0 2 * * *",  # Daily at 2 AM
-                buffer_minutes=10,
-                current_time=current_time
-            )
-            
-            # Next rotation is tomorrow at 2 AM (11 hours from 3 PM)
-            # Minus 10 minutes buffer = 10h 50m = 39000 seconds
-            expected_ttl = (11 * 60 - 10) * 60  # 39000 seconds
-            self.assertAlmostEqual(ttl, expected_ttl, delta=60)  # Within 1 minute
+        ttl = calculate_rotation_ttl(
+            last_rotation.isoformat(),
+            "0 2 * * *",  # Daily at 2 AM
+            buffer_minutes=10,
+            current_time=current_time
+        )
+        
+        # Next rotation is tomorrow at 2 AM (11 hours from 3 PM)
+        # Minus 10 minutes buffer = 10h 50m = 39000 seconds
+        expected_ttl = (11 * 60 - 10) * 60  # 39000 seconds
+        self.assertAlmostEqual(ttl, expected_ttl, delta=60)  # Within 1 minute
 
     def test_should_refresh_secret_within_buffer(self):
         """Test refresh check when within buffer time."""
@@ -136,22 +133,25 @@ class TestRotationAwareCache(unittest.TestCase):
     def test_cache_with_rotation_metadata(self):
         """Test caching with rotation metadata."""
         secret_data = {"password": "secret123"}
+        
+        # Use current time for rotation - make it recent (5 minutes ago)
+        from datetime import datetime, timedelta
+        recent_rotation = datetime.now() - timedelta(minutes=5)
+        
         rotation_metadata = {
-            "last_rotation": "2024-10-08T02:00:00Z",
-            "schedule": "0 2 * * *"
+            "last_rotation": recent_rotation.isoformat(),
+            "schedule": "0 2 * * *"  # Daily at 2 AM
         }
         
         self.cache.set(
-            "test-secret", 
-            secret_data, 
+            "test-secret",
+            secret_data,
             rotation_metadata=rotation_metadata
         )
         
-        # Should be cached
+        # Should be cached (rotation just happened, next one is far away)
         retrieved = self.cache.get("test-secret")
-        self.assertEqual(retrieved, secret_data)
-        
-        # Check rotation info is stored
+        self.assertEqual(retrieved, secret_data)        # Check rotation info is stored
         rotation_info = self.cache.get_rotation_info("test-secret")
         self.assertEqual(rotation_info, rotation_metadata)
 
@@ -181,8 +181,13 @@ class TestRotationAwareCache(unittest.TestCase):
     def test_cache_stats(self):
         """Test cache statistics."""
         secret_data = {"password": "secret123"}
+        
+        # Use recent rotation time
+        from datetime import datetime, timedelta
+        recent_rotation = datetime.now() - timedelta(minutes=5)
+        
         rotation_metadata = {
-            "last_rotation": "2024-10-08T02:00:00Z",
+            "last_rotation": recent_rotation.isoformat(),
             "schedule": "0 2 * * *"
         }
         
@@ -210,8 +215,13 @@ class TestTTLCacheRotationSupport(unittest.TestCase):
     def test_ttl_cache_with_rotation_metadata(self):
         """Test TTLCache with rotation metadata."""
         secret_data = {"password": "secret123"}
+        
+        # Use recent rotation time  
+        from datetime import datetime, timedelta
+        recent_rotation = datetime.now() - timedelta(minutes=5)
+        
         rotation_metadata = {
-            "last_rotation": "2024-10-08T02:00:00Z",
+            "last_rotation": recent_rotation.isoformat(),
             "schedule": "0 2 * * *"
         }
         
