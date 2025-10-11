@@ -8,6 +8,7 @@ from gds_snowflake.replication import FailoverGroup, SnowflakeReplication
 
 
 def test_switch_to_secondary_already_secondary():
+    """Test: switch to secondary already secondary."""
     conn = MagicMock()
     repl = SnowflakeReplication(conn)
     fg = FailoverGroup(
@@ -18,6 +19,7 @@ def test_switch_to_secondary_already_secondary():
 
 
 def test_switch_to_secondary_none_available():
+    """Test: switch to secondary none available."""
     conn = MagicMock()
     repl = SnowflakeReplication(conn)
     fg = FailoverGroup('FG', {'primary': 'ACC1', 'secondary_state': ''})
@@ -25,6 +27,7 @@ def test_switch_to_secondary_none_available():
 
 
 def test_parse_cron_schedule_exception_path():
+    """Test: parse cron schedule exception path."""
     conn = MagicMock()
     repl = SnowflakeReplication(conn)
     # Force croniter import path to raise by patching croniter.croniter

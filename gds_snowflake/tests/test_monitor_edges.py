@@ -10,6 +10,7 @@ from gds_snowflake.monitor import ReplicationResult, SnowflakeMonitor
 
 @patch('gds_snowflake.connection.get_secret_from_vault')
 def test_email_skipped_on_incomplete_config(mock_vault):
+    """Test: email skipped on incomplete config."""
     mock_vault.return_value = {'private_key': 'k', 'user': 'u'}
     mon = SnowflakeMonitor(
         account='acc',
@@ -29,6 +30,7 @@ def test_email_skipped_on_incomplete_config(mock_vault):
 
 @patch('gds_snowflake.connection.get_secret_from_vault')
 def test_email_failure_path_logged(mock_vault):
+    """Test: email failure path logged."""
     mock_vault.return_value = {'private_key': 'k', 'user': 'u'}
     mon = SnowflakeMonitor(
         account='acc',
@@ -49,6 +51,7 @@ def test_email_failure_path_logged(mock_vault):
 
 @patch('gds_snowflake.connection.get_secret_from_vault')
 def test_format_account_info_and_notification_reset(mock_vault):
+    """Test: format account info and notification reset."""
     mock_vault.return_value = {'private_key': 'k', 'user': 'u'}
     mon = SnowflakeMonitor(account='acc', vault_secret_path='secret/path')
 

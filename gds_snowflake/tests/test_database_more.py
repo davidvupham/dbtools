@@ -9,6 +9,7 @@ from gds_snowflake.database import SnowflakeDatabase
 
 
 def test_get_all_database_metadata_summary_and_none_entry():
+    """Test: get all database metadata summary and none entry."""
     conn = MagicMock()
     db = SnowflakeDatabase(conn)
 

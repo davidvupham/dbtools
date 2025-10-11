@@ -10,6 +10,7 @@ from gds_snowflake.database import SnowflakeDatabase
 
 
 def test_functions_with_filters_and_empty():
+    """Test: functions with filters and empty."""
     conn = MagicMock()
     db = SnowflakeDatabase(conn)
     conn.execute_query_dict.return_value = []
@@ -21,6 +22,7 @@ def test_functions_with_filters_and_empty():
 
 
 def test_procedures_error_path():
+    """Test: procedures error path."""
     conn = MagicMock()
     db = SnowflakeDatabase(conn)
     conn.execute_query_dict.side_effect = RuntimeError('fail')
@@ -29,6 +31,7 @@ def test_procedures_error_path():
 
 
 def test_sequences_with_filters():
+    """Test: sequences with filters."""
     conn = MagicMock()
     db = SnowflakeDatabase(conn)
     conn.execute_query_dict.return_value = []
@@ -38,6 +41,7 @@ def test_sequences_with_filters():
 
 
 def test_stages_empty_no_filters():
+    """Test: stages empty no filters."""
     conn = MagicMock()
     db = SnowflakeDatabase(conn)
     conn.execute_query_dict.return_value = []
@@ -45,6 +49,7 @@ def test_stages_empty_no_filters():
 
 
 def test_file_formats_error_path():
+    """Test: file formats error path."""
     conn = MagicMock()
     db = SnowflakeDatabase(conn)
     conn.execute_query_dict.side_effect = ValueError('bad')
@@ -53,6 +58,7 @@ def test_file_formats_error_path():
 
 
 def test_pipes_with_filters():
+    """Test: pipes with filters."""
     conn = MagicMock()
     db = SnowflakeDatabase(conn)
     conn.execute_query_dict.return_value = []
@@ -62,6 +68,7 @@ def test_pipes_with_filters():
 
 
 def test_tasks_error_path():
+    """Test: tasks error path."""
     conn = MagicMock()
     db = SnowflakeDatabase(conn)
     conn.execute_query_dict.side_effect = RuntimeError('down')
@@ -70,6 +77,7 @@ def test_tasks_error_path():
 
 
 def test_streams_with_filters_and_empty():
+    """Test: streams with filters and empty."""
     conn = MagicMock()
     db = SnowflakeDatabase(conn)
     conn.execute_query_dict.return_value = []

@@ -11,6 +11,7 @@ from gds_snowflake.account import AccountInfo, SnowflakeAccount
 
 
 def test_get_current_account_empty_raises(tmp_path):
+    """get_current_account raises ValueError when no rows are returned."""
     mock_conn = MagicMock()
     mock_conn.execute_query_dict.return_value = []
 
@@ -21,6 +22,7 @@ def test_get_current_account_empty_raises(tmp_path):
 
 
 def test_list_saved_account_files_error_returns_empty(tmp_path, monkeypatch):
+    """Return empty list when data_dir.glob raises during file listing."""
     mgr = SnowflakeAccount(MagicMock(), data_dir=str(tmp_path))
 
     def boom(*args, **kwargs):
@@ -40,7 +42,8 @@ def test_list_saved_account_files_error_returns_empty(tmp_path, monkeypatch):
         assert files == []
 
 
-def test_ensure_data_directory_error(monkeypatch, tmp_path):
+def test_ensure_data_directory_error(tmp_path):
+    """Constructor propagates OSError if data directory cannot be created."""
     # Force mkdir to raise to hit error handling
     mock_conn = MagicMock()
 
@@ -53,6 +56,9 @@ def test_ensure_data_directory_error(monkeypatch, tmp_path):
 
 
 def test_load_accounts_roundtrip(tmp_path):
+    """
+    Save then load accounts JSON and ensure names are preserved in order.
+    """
     mock_conn = MagicMock()
     mgr = SnowflakeAccount(mock_conn, data_dir=str(tmp_path))
     accounts = [

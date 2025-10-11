@@ -11,6 +11,7 @@ from gds_snowflake.monitor import SnowflakeMonitor
 @patch("gds_snowflake.connection.get_secret_from_vault")
 def test_latency_threshold_triggers_alert_and_clears_on_recovery(mock_vault):
     # Ensure connection initialization is satisfied
+    """Test: latency threshold triggers alert and clears on recovery."""
     mock_vault.return_value = {"private_key": "k", "user": "u"}
 
     mon = SnowflakeMonitor(
@@ -66,6 +67,7 @@ def test_latency_threshold_triggers_alert_and_clears_on_recovery(mock_vault):
 
 @patch("gds_snowflake.connection.get_secret_from_vault")
 def test_connectivity_exception_sets_flag_no_email_without_config(mock_vault):
+    """Test: connectivity exception sets flag no email without config."""
     mock_vault.return_value = {"private_key": "k", "user": "u"}
 
     mon = SnowflakeMonitor(
