@@ -1,0 +1,51 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gds-mssql"
+version = "1.0.0"
+description = "Microsoft SQL Server database connection library built on gds-database"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [
+    {name = "GDS Team", email = "gds-team@example.com"},
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Database",
+    "Topic :: Database :: Database Engines/Servers",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+keywords = ["mssql", "sql server", "database", "connection", "gds"]
+requires-python = ">=3.8"
+dependencies = [
+    "gds-database>=1.0.0",
+    "pyodbc>=4.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+    "pytest-mock>=3.0",
+    "black>=23.0",
+    "ruff>=0.1.0",
+    "mypy>=1.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["gds_mssql*"]
+
+[tool.setuptools.package-data]
+gds_mssql = ["py.typed"]
