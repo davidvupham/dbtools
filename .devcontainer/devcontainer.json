@@ -16,7 +16,7 @@
     "PYTHONUNBUFFERED": "1"
   },
   "mounts": [
-    "source=${localWorkspaceFolder}/.devcontainer/krb5/krb5.conf,target=/etc/krb5.conf,type=bind,consistency=cached"
+    "source=${localWorkspaceFolder}/.devcontainer/krb5/krb5.conf,target=/etc/krb5.conf,type=bind"
   ],
   "remoteEnv": {
     "KRB5_CONFIG": "/etc/krb5.conf"
