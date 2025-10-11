@@ -4,13 +4,16 @@ This repository includes a VS Code Dev Container to provide a reproducible Minic
 
 ## What you get
 
-- Base image: Miniconda3 (continuumio/miniconda3:latest)
-- Conda environment: `gds` with the latest available Python
+- Base image: Microsoft Dev Containers Miniconda (`mcr.microsoft.com/devcontainers/miniconda:latest`)
+- Conda environment: `gds` with Python 3.13
 - Auto-activation of `gds` for interactive shells
-- Python extensions preinstalled (Python, Pylance, GitHub Copilot)
+- Python extensions preinstalled (Python, Pylance, Jupyter, Ruff, Docker, Windows AI Studio)
 - Post-create command installs local editable packages: gds_database, gds_postgres, gds_snowflake, gds_vault
+- Docker-in-Docker support for container operations
+- SSH key mounting for Git authentication
+- Pre-commit hooks setup (if configured)
 
-For a step-by-step beginner’s walkthrough (what Docker is, how the Dockerfile and devcontainer.json work, and how to build/run), see:
+For a step-by-step beginner's walkthrough (what Docker is, how the Dockerfile and devcontainer.json work, and how to build/run), see:
 - `DEVCONTAINER_BEGINNERS_GUIDE.md`
 
 ## Open in Dev Container
@@ -34,8 +37,8 @@ For a step-by-step beginner’s walkthrough (what Docker is, how the Dockerfile 
 ### Kerberos configuration (optional)
 
 - A template is provided at `.devcontainer/krb5/krb5.conf`. Edit this file to set your REALM and KDC.
-- The dev container bind-mounts this file to `/etc/krb5.conf` and sets `KRB5_CONFIG` accordingly.
-- To acquire a ticket:
+- **Note:** Kerberos is not currently configured in the devcontainer.json. To enable it, add the mount and environment variable as described in `DEVCONTAINER_BEGINNERS_GUIDE.md`.
+- To acquire a ticket (once configured):
   ```bash
   kinit user@EXAMPLE.COM
   klist
