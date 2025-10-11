@@ -10,6 +10,10 @@ ARG CONDA_ENV_NAME=gds
 # Avoid prompts from apt
 ENV DEBIAN_FRONTEND=noninteractive
 
+# Install system dependencies for pyodbc
+RUN apt-get update && apt-get install -y unixodbc-dev ca-certificates && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
 # Create the conda environment and install base packages
 RUN conda update -n base -c defaults conda -y && \
     conda create -n ${CONDA_ENV_NAME} -c conda-forge python=${PYTHON_VERSION} -y && \
@@ -39,7 +43,7 @@ BASH
 
 # Install some common build tooling in the env
 RUN conda run -n ${CONDA_ENV_NAME} python -m pip install --upgrade pip && \
-    conda run -n ${CONDA_ENV_NAME} pip install ruff pytest pytest-cov wheel build
+    conda run -n ${CONDA_ENV_NAME} pip install ruff pytest pytest-cov wheel build pyodbc
 
 # Set path
 ENV PATH=/opt/conda/envs/${CONDA_ENV_NAME}/bin:$PATH
