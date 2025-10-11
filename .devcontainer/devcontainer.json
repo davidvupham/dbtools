@@ -1,0 +1,91 @@
+{
+  "name": "dbtools - Miniconda (gds)",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "args": {}
+  },
+  "remoteUser": "root",
+  "features": {
+    "ghcr.io/devcontainers/features/common-utils:2": {
+      "installZsh": false,
+      "username": "root",
+      "upgradePackages": true
+    }
+  },
+  "containerEnv": {
+    "PYTHONUNBUFFERED": "1"
+  },
+  "mounts": [
+    "source=${localWorkspaceFolder}/.devcontainer/krb5/krb5.conf,target=/etc/krb5.conf,type=bind,consistency=cached"
+  ],
+  "remoteEnv": {
+    "KRB5_CONFIG": "/etc/krb5.conf"
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "ms-mssql.mssql",
+        "github.copilot",
+        "github.copilot-chat",
+        "hashicorp.terraform",
+        "redhat.ansible",
+  "amazonwebservices.aws-toolkit-vscode",
+        "anthropic.claude-code",
+        "azps-tools.azps-tools",
+        "dbatools.search",
+        "github.vscode-github-actions",
+        "github.vscode-pull-request-github",
+        "hbenl.vscode-test-explorer",
+        "littlefoxteam.vscode-python-test-adapter",
+        "ms-azure-devops.azure-pipelines",
+        "ms-azure-load-testing.microsoft-testing",
+        "ms-azuretools.azure-dev",
+        "ms-azuretools.vscode-azure-github-copilot",
+        "ms-azuretools.vscode-azure-mcp-server",
+        "ms-azuretools.vscode-azureappservice",
+        "ms-azuretools.vscode-azurecontainerapps",
+        "ms-azuretools.vscode-azurefunctions",
+        "ms-azuretools.vscode-azureresourcegroups",
+        "ms-azuretools.vscode-azurestaticwebapps",
+        "ms-azuretools.vscode-azurestorage",
+        "ms-azuretools.vscode-azureterraform",
+        "ms-azuretools.vscode-azurevirtualmachines",
+        "ms-azuretools.vscode-containers",
+        "ms-azuretools.vscode-cosmosdb",
+        "ms-azuretools.vscode-docker",
+        "ms-dotnettools.vscode-dotnet-runtime",
+        "ms-mssql.data-workspace-vscode",
+        "ms-mssql.sql-bindings-vscode",
+        "ms-mssql.sql-database-projects-vscode",
+        "ms-python.black-formatter",
+        "ms-python.debugpy",
+        "ms-python.flake8",
+        "ms-python.pylint",
+        "ms-python.vscode-python-envs",
+        "ms-toolsai.vscode-ai",
+        "ms-toolsai.vscode-ai-remote",
+        "ms-vscode.azurecli",
+        "ms-vscode.powershell",
+        "ms-vscode.test-adapter-converter",
+        "ms-vscode.vscode-node-azure-pack",
+        "ms-windows-ai-studio.windows-ai-studio",
+        "njpwerner.autodocstring",
+        "redhat.vscode-yaml",
+        "teamsdevapp.vscode-ai-foundry"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "/opt/conda/envs/gds/bin/python",
+        "python.terminal.activateEnvironment": true,
+        "python.analysis.exclude": ["**/.venv/**", "**/build/**", "**/dist/**", "**/.conda/**", "**/.mamba/**"],
+        "python.testing.pytestEnabled": true,
+        "python.testing.unittestEnabled": false
+      }
+    }
+  },
+  "postCreateCommand": "python -V && pip -V && pip install -e ./gds_database -e ./gds_postgres -e ./gds_snowflake -e ./gds_vault || true; if [ -f .pre-commit-config.yaml ]; then pre-commit install; fi",
+  "runArgs": [
+    "--init"
+  ]
+}
