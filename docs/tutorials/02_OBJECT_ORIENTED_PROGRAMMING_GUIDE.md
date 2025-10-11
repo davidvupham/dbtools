@@ -3014,15 +3014,17 @@ user = service.get_user_by_id(123)
 
 ## What's Missing?
 
-This guide covers the core OOP concepts and best practices, but there are always more advanced topics to explore:
+This guide covers the core OOP concepts and best practices. For advanced topics that go beyond the fundamentals, see our companion tutorial:
 
-- **Async/await with classes**
-- **Multiple inheritance diamond problem**
-- **Monkey patching and dynamic class modification**
-- **Advanced metaclass usage**
-- **Protocol buffers and serialization**
-- **Performance optimization techniques**
-- **Memory management and weak references**
+**[04_ADVANCED_OOP_CONCEPTS.md](../04_ADVANCED_OOP_CONCEPTS.md)** - Covers advanced OOP concepts including:
+
+- **Async/await with classes** - Building responsive, concurrent systems
+- **Multiple inheritance diamond problem** - Advanced inheritance patterns
+- **Monkey patching and dynamic class modification** - Runtime code modification
+- **Advanced metaclass usage** - Controlling class creation and behavior
+- **Protocol buffers and serialization** - Efficient data serialization
+- **Performance optimization techniques** - Advanced performance tuning
+- **Memory management and weak references** - Preventing memory leaks
 
 The key is to master the fundamentals first, then gradually explore more advanced concepts as your projects require them.
 

@@ -161,6 +161,9 @@ See [VSCODE_SETUP.md](VSCODE_SETUP.md) for detailed setup instructions.
 
 - **Package API**: [gds_snowflake/README.md](gds_snowflake/README.md)
 - **Monitoring App**: [snowflake_monitoring/README.md](snowflake_monitoring/README.md)
+- **Python Tutorials**: [docs/tutorials/README.md](docs/tutorials/README.md) - Learn Python through this codebase
+- **OOP Guide**: [docs/tutorials/02_OBJECT_ORIENTED_PROGRAMMING_GUIDE.md](docs/tutorials/02_OBJECT_ORIENTED_PROGRAMMING_GUIDE.md) - Complete OOP tutorial
+- **Advanced OOP**: [docs/tutorials/04_ADVANCED_OOP_CONCEPTS.md](docs/tutorials/04_ADVANCED_OOP_CONCEPTS.md) - Advanced OOP concepts
 - **VS Code Setup**: [VSCODE_SETUP.md](VSCODE_SETUP.md)
 - **Testing Guide**: [TESTING.md](TESTING.md)
 - **Project History**: [PROMPTS.md](PROMPTS.md)

@@ -39,30 +39,58 @@ Start here if you're new to Python or programming:
    - Sets
    - Advanced f-strings
 
+### Object-Oriented Programming Deep Dive
+
+For comprehensive OOP understanding:
+
+4. **[Complete OOP Guide](02_OBJECT_ORIENTED_PROGRAMMING_GUIDE.md)** ⭐ COMPREHENSIVE!
+   - Classes and objects in depth
+   - Encapsulation and data hiding
+   - Inheritance patterns
+   - Polymorphism and duck typing
+   - Abstract Base Classes
+   - SOLID principles
+   - Design patterns
+   - Modern Python OOP features
+   - Performance considerations
+   - Error handling in OOP
+   - Testing OOP code
+   - Real-world examples
+
+5. **[Advanced OOP Concepts](04_ADVANCED_OOP_CONCEPTS.md)** ⭐ ADVANCED!
+   - Async/await with classes
+   - Multiple inheritance diamond problem
+   - Monkey patching and dynamic modification
+   - Advanced metaclass usage
+   - Protocol buffers and serialization
+   - Performance optimization techniques
+   - Memory management and weak references
+   - Comprehensive exercises and examples
+
 ### Module-Specific Tutorials
 
 Once you understand the basics, dive into specific modules:
 
-3. **[Vault Module Tutorial](02_VAULT_MODULE_TUTORIAL.md)**
+6. **[Vault Module Tutorial](02_VAULT_MODULE_TUTORIAL.md)**
    - HashiCorp Vault integration
    - Secret management
    - Authentication and caching
    - Retry logic
 
-4. **[GDS Vault Deep Dive](05_GDS_VAULT_PYTHON_CONCEPTS.md)** ⭐ NEW!
+7. **[GDS Vault Deep Dive](05_GDS_VAULT_PYTHON_CONCEPTS.md)** ⭐ NEW!
    - All Python concepts used in gds_vault
    - Abstract Base Classes with real examples
    - Properties, Magic Methods, Context Managers
    - Strategy Pattern and Composition
    - Complete concept-to-code mapping
 
-5. **[Connection Module Tutorial](03_CONNECTION_MODULE_TUTORIAL.md)**
+8. **[Connection Module Tutorial](03_CONNECTION_MODULE_TUTORIAL.md)**
    - Snowflake connections
    - Database operations
    - Connection management
    - Context managers in practice
 
-6. **[Replication Module Tutorial](04_REPLICATION_MODULE_TUTORIAL.md)**
+9. **[Replication Module Tutorial](04_REPLICATION_MODULE_TUTORIAL.md)**
    - Replication monitoring
    - Failover groups
    - Cron schedule parsing
@@ -72,19 +100,19 @@ Once you understand the basics, dive into specific modules:
 
 Master concepts through progressive exercises:
 
-7. **[Python Exercises](exercises/README.md)** ⭐ NEW!
-   - 57 progressive exercises (Easy → Hard)
-   - Dataclasses, Enums, @classmethod, super()
-   - List comprehensions, enumerate(), Sets
-   - Automatic testing and verification
-   - Real-world applications
+10. **[Python Exercises](exercises/README.md)** ⭐ NEW!
+    - 57 progressive exercises (Easy → Hard)
+    - Dataclasses, Enums, @classmethod, super()
+    - List comprehensions, enumerate(), Sets
+    - Automatic testing and verification
+    - Real-world applications
 
-8. **[GDS Vault Exercises](exercises/gds_vault_exercises.py)** ⭐ NEW!
-   - 9 exercises building gds_vault from scratch
-   - Abstract Base Classes, Properties, Magic Methods
-   - Context Managers, Strategy Pattern, Composition
-   - Complete mini-client implementation
-   - [Solutions provided](exercises/gds_vault_exercises_solutions.py)
+11. **[GDS Vault Exercises](exercises/gds_vault_exercises.py)** ⭐ NEW!
+    - 9 exercises building gds_vault from scratch
+    - Abstract Base Classes, Properties, Magic Methods
+    - Context Managers, Strategy Pattern, Composition
+    - Complete mini-client implementation
+    - [Solutions provided](exercises/gds_vault_exercises_solutions.py)
 
 ---
 
@@ -109,6 +137,9 @@ Master concepts through progressive exercises:
 - **Abstract Base Classes**: Defining interfaces
 - **Multiple Inheritance**: Combining multiple classes
 - **SOLID Principles**: Writing maintainable code
+- **Design Patterns**: Proven OOP solutions
+- **Advanced OOP**: Async classes, metaclasses, monkey patching
+- **Performance & Memory**: Optimization and weak references
 
 ### Advanced Concepts
 
@@ -162,7 +193,7 @@ Start with [Part 1: Python Fundamentals](01_PYTHON_BASICS_FOR_THIS_PROJECT.md). 
 
 ### Some Python Experience?
 
-Skim [Part 1](01_PYTHON_BASICS_FOR_THIS_PROJECT.md) to review basics, then focus on the OOP sections. Continue with [Part 2](01_PYTHON_BASICS_PART2.md) for advanced topics.
+Skim [Part 1](01_PYTHON_BASICS_FOR_THIS_PROJECT.md) to review basics, then focus on the OOP sections. Continue with [Part 2](01_PYTHON_BASICS_PART2.md) for advanced topics. For deep OOP understanding, read the [Complete OOP Guide](02_OBJECT_ORIENTED_PROGRAMMING_GUIDE.md) and [Advanced OOP Concepts](04_ADVANCED_OOP_CONCEPTS.md).
 
 ### Want to Understand Specific Code?
 
@@ -175,33 +206,38 @@ Jump to the relevant module tutorial:
 
 ## 📖 Tutorial Structure
 
-### Part 1: Python Fundamentals (1436 lines)
+### Complete OOP Guide (3031 lines)
 
-**Section 1: Basics**
-- Introduction to Python
-- Variables and data types
-- Data structures (lists, dicts, tuples)
-- Functions and parameters
+**Complete coverage of Object-Oriented Programming:**
+- Classes and objects fundamentals
+- Understanding `self` and instance methods
+- Encapsulation and data hiding
+- Inheritance patterns and best practices
+- Polymorphism and duck typing
+- Abstract Base Classes and interfaces
+- SOLID principles for maintainable code
+- Composition vs inheritance
+- Design patterns overview
+- Advanced OOP concepts (basic coverage)
+- Modern Python OOP features (dataclasses, etc.)
+- Best practices summary
+- Performance considerations
+- Error handling in OOP
+- Testing OOP code
+- Real-world examples from codebase
 
-**Section 2: Object-Oriented Programming**
-- Classes and objects
-- Understanding `self`
-- Public vs private attributes
-- Inheritance basics
-- Multiple inheritance
-- Polymorphism
+### Advanced OOP Concepts (2000+ lines)
 
-**Section 3: Advanced OOP**
-- Abstract Base Classes
-- Interface design
-- Implementing ABCs
-- Benefits and use cases
-
-**Section 4: Core Concepts**
-- Error handling (try/except/finally)
-- Custom exceptions
-- Exception chaining
-- Type hints and annotations
+**Deep dive into advanced OOP topics:**
+- Async/await with classes and concurrent programming
+- Multiple inheritance diamond problem solutions
+- Monkey patching and runtime class modification
+- Advanced metaclass usage and class factories
+- Protocol buffers and custom serialization
+- Performance optimization techniques
+- Memory management and weak references
+- Comprehensive exercises and practice projects
+- Real-world advanced OOP examples
 
 ### Part 2: Advanced Concepts
 
@@ -474,9 +510,12 @@ See **[GDS_VAULT_LEARNING_PATH.md](GDS_VAULT_LEARNING_PATH.md)** for detailed gu
 
 | Concept | Tutorial Section | Example File |
 |---------|-----------------|--------------|
-| Classes | Part 1 - OOP | `connection.py` |
-| Inheritance | Part 1 - OOP | `base.py`, `connection.py` |
-| Abstract Classes | Part 1 - Advanced OOP | `base.py` |
+| Classes | [Complete OOP Guide](02_OBJECT_ORIENTED_PROGRAMMING_GUIDE.md) | `connection.py` |
+| Inheritance | [Complete OOP Guide](02_OBJECT_ORIENTED_PROGRAMMING_GUIDE.md) | `base.py`, `connection.py` |
+| Abstract Classes | [Complete OOP Guide](02_OBJECT_ORIENTED_PROGRAMMING_GUIDE.md) | `base.py` |
+| Multiple Inheritance | [Advanced OOP](04_ADVANCED_OOP_CONCEPTS.md) | Various |
+| Metaclasses | [Advanced OOP](04_ADVANCED_OOP_CONCEPTS.md) | Various |
+| Async Classes | [Advanced OOP](04_ADVANCED_OOP_CONCEPTS.md) | Various |
 | Decorators | Part 2 - Decorators | `vault.py` |
 | Context Managers | Part 2 - Context Managers | `connection.py` |
 | Error Handling | Part 1 - Core Concepts | `exceptions.py` |
