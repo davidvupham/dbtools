@@ -20,6 +20,11 @@ Welcome to the comprehensive guide to Object-Oriented Programming (OOP) in Pytho
 11. [Advanced OOP Concepts](#advanced-oop-concepts)
 12. [Modern Python OOP Features](#modern-python-oop-features)
 13. [Best Practices Summary](#best-practices-summary)
+14. [Performance Considerations](#performance-considerations)
+15. [Error Handling in OOP](#error-handling-in-oop)
+16. [Testing OOP Code](#testing-oop-code)
+17. [Real-World Examples from Our Codebase](#real-world-examples-from-our-codebase)
+18. [What's Missing?](#whats-missing)
 
 ---
 
@@ -1700,6 +1705,1310 @@ with PostgreSQLConnection(config) as db:
 6. **Refactor Regularly**: Improve your design as you learn
 7. **Learn Patterns**: Study common design patterns
 8. **Practice**: The more you use OOP, the better you'll get
+
+# Connection automatically closed
+```
+
+---
+
+## Performance Considerations
+
+While OOP provides excellent maintainability and organization, it's important to understand its performance implications and optimization techniques.
+
+### Object Creation Overhead
+
+**Understanding the Cost:**
+```python
+import time
+
+# Function-based approach
+def create_user_dict(name, email, age):
+    return {'name': name, 'email': email, 'age': age}
+
+# Class-based approach
+class User:
+    def __init__(self, name, email, age):
+        self.name = name
+        self.email = email
+        self.age = age
+
+# Performance comparison
+def benchmark_creation(n=100000):
+    # Dictionary approach
+    start = time.time()
+    users_dict = [create_user_dict(f"User{i}", f"user{i}@example.com", i%100) for i in range(n)]
+    dict_time = time.time() - start
+    
+    # Class approach
+    start = time.time()
+    users_class = [User(f"User{i}", f"user{i}@example.com", i%100) for i in range(n)]
+    class_time = time.time() - start
+    
+    print(f"Dictionary creation: {dict_time:.4f}s")
+    print(f"Class creation: {class_time:.4f}s")
+    print(f"Class overhead: {((class_time/dict_time - 1) * 100):.1f}%")
+
+benchmark_creation()
+```
+
+**Key Insights:**
+- Objects have ~20-50% overhead compared to dictionaries
+- Use classes when behavior matters more than raw performance
+- Consider `__slots__` for memory optimization
+
+### Memory Optimization with `__slots__`
+
+```python
+class RegularClass:
+    def __init__(self, x, y, z):
+        self.x = x
+        self.y = y
+        self.z = z
+
+class SlottedClass:
+    __slots__ = ('x', 'y', 'z')  # Restricts attributes
+    
+    def __init__(self, x, y, z):
+        self.x = x
+        self.y = y
+        self.z = z
+
+import sys
+
+regular = RegularClass(1, 2, 3)
+slotted = SlottedClass(1, 2, 3)
+
+print(f"Regular class memory: {sys.getsizeof(regular)} bytes")
+print(f"Slotted class memory: {sys.getsizeof(slotted)} bytes")
+print(f"Memory savings: {((sys.getsizeof(regular) - sys.getsizeof(slotted)) / sys.getsizeof(regular) * 100):.1f}%")
+```
+
+**Benefits of `__slots__`:**
+- Reduces memory usage by ~40-50%
+- Faster attribute access
+- Prevents accidental attribute creation
+- Trade-off: Less flexible, no `__dict__`
+
+### Method Dispatch Costs
+
+```python
+class Animal:
+    def speak(self):
+        return "Some sound"
+
+class Dog(Animal):
+    def speak(self):
+        return "Woof!"
+
+def call_speak_polymorphic(animal):
+    return animal.speak()
+
+def call_speak_direct(dog):
+    return dog.speak()
+
+# Performance comparison
+dog = Dog()
+iterations = 1000000
+
+import time
+
+# Polymorphic calls (virtual method dispatch)
+start = time.time()
+for _ in range(iterations):
+    result = call_speak_polymorphic(dog)
+poly_time = time.time() - start
+
+# Direct calls
+start = time.time()
+for _ in range(iterations):
+    result = call_speak_direct(dog)
+direct_time = time.time() - start
+
+print(f"Polymorphic calls: {poly_time:.4f}s")
+print(f"Direct calls: {direct_time:.4f}s")
+print(f"Overhead: {((poly_time/direct_time - 1) * 100):.1f}%")
+```
+
+**Optimization Strategies:**
+- Use direct calls when polymorphism isn't needed
+- Cache method references for repeated calls
+- Consider protocols/structual typing over inheritance for performance-critical code
+
+### Inheritance Depth and Method Resolution
+
+```python
+# Shallow inheritance
+class A:
+    def method(self): return "A"
+
+class B(A):
+    def method(self): return "B"
+
+# Deep inheritance
+class Deep1: pass
+class Deep2(Deep1): pass
+class Deep3(Deep2): pass
+class Deep4(Deep3): pass
+class Deep5(Deep4): pass
+class Deep6(Deep5): pass
+class Deep7(Deep6): pass
+class Deep8(Deep7): pass
+class Deep9(Deep8): pass
+class Deep10(Deep9):
+    def method(self): return "Deep10"
+
+# Performance comparison
+shallow = B()
+deep = Deep10()
+
+iterations = 1000000
+import time
+
+start = time.time()
+for _ in range(iterations):
+    result = shallow.method()
+shallow_time = time.time() - start
+
+start = time.time()
+for _ in range(iterations):
+    result = deep.method()
+deep_time = time.time() - start
+
+print(f"Shallow inheritance: {shallow_time:.4f}s")
+print(f"Deep inheritance: {deep_time:.4f}s")
+print(f"Overhead: {((deep_time/shallow_time - 1) * 100):.1f}%")
+```
+
+**Best Practices:**
+- Keep inheritance hierarchies shallow (3-4 levels max)
+- Use composition over deep inheritance
+- Profile before optimizing - inheritance overhead is usually minimal
+
+### When OOP Performance Matters
+
+**Use Classes When:**
+- Code maintainability is priority
+- Objects have complex behavior
+- Polymorphism is needed
+- Memory usage isn't critical
+
+**Consider Alternatives When:**
+- Processing millions of simple data objects
+- Memory is constrained
+- Raw speed is critical
+- Data is mostly static
+
+**Hybrid Approach:**
+```python
+from dataclasses import dataclass
+from typing import List
+
+@dataclass
+class UserData:
+    """Fast data container."""
+    id: int
+    name: str
+    email: str
+
+class UserService:
+    """Behavioral class."""
+    
+    def __init__(self, users: List[UserData]):
+        self.users = users
+    
+    def find_by_email(self, email: str) -> UserData:
+        return next((u for u in self.users if u.email == email), None)
+    
+    def validate_user(self, user: UserData) -> bool:
+        return len(user.name) > 0 and '@' in user.email
+
+# Usage: Fast data with behavioral methods
+users = [UserData(i, f"User{i}", f"user{i}@example.com") for i in range(1000)]
+service = UserService(users)
+```
+
+---
+
+## Error Handling in OOP
+
+Proper error handling is crucial for robust object-oriented code. OOP provides excellent patterns for managing errors consistently across your application.
+
+### Custom Exception Hierarchies
+
+```python
+class DatabaseError(Exception):
+    """Base class for all database-related errors."""
+    pass
+
+class ConnectionError(DatabaseError):
+    """Raised when database connection fails."""
+    pass
+
+class QueryError(DatabaseError):
+    """Raised when a query execution fails."""
+    pass
+
+class ValidationError(DatabaseError):
+    """Raised when data validation fails."""
+    pass
+
+class DatabaseConnection:
+    def __init__(self, config):
+        self.config = config
+        self._connected = False
+    
+    def connect(self):
+        try:
+            # Connection logic here
+            if not self._validate_config():
+                raise ValidationError("Invalid database configuration")
+            self._connected = True
+        except ConnectionError:
+            raise  # Re-raise connection errors
+        except Exception as e:
+            raise ConnectionError(f"Failed to connect: {e}") from e
+    
+    def execute_query(self, query):
+        if not self._connected:
+            raise ConnectionError("Not connected to database")
+        
+        try:
+            # Query execution logic
+            return self._run_query(query)
+        except Exception as e:
+            raise QueryError(f"Query failed: {e}") from e
+    
+    def _validate_config(self):
+        return bool(self.config.get('host') and self.config.get('database'))
+    
+    def _run_query(self, query):
+        # Simulate query execution
+        if "SELECT" in query:
+            return [{"id": 1, "name": "Test"}]
+        else:
+            raise QueryError("Unsupported query type")
+
+# Usage with proper error handling
+db = DatabaseConnection({"host": "localhost", "database": "test"})
+
+try:
+    db.connect()
+    results = db.execute_query("SELECT * FROM users")
+    print(f"Query results: {results}")
+except ValidationError as e:
+    print(f"Configuration error: {e}")
+except ConnectionError as e:
+    print(f"Connection error: {e}")
+except QueryError as e:
+    print(f"Query error: {e}")
+except DatabaseError as e:
+    print(f"General database error: {e}")
+```
+
+### Context Managers for Resource Management
+
+```python
+class DatabaseTransaction:
+    def __init__(self, connection):
+        self.connection = connection
+        self._committed = False
+        self._rolled_back = False
+    
+    def __enter__(self):
+        self.connection.execute_query("BEGIN TRANSACTION")
+        return self
+    
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if exc_type is None:
+            # No exception - commit
+            self.connection.execute_query("COMMIT")
+            self._committed = True
+        else:
+            # Exception occurred - rollback
+            self.connection.execute_query("ROLLBACK")
+            self._rolled_back = True
+            return False  # Re-raise the exception
+    
+    def execute(self, query):
+        if self._committed or self._rolled_back:
+            raise RuntimeError("Transaction already finished")
+        return self.connection.execute_query(query)
+
+# Usage
+db = DatabaseConnection({"host": "localhost", "database": "test"})
+db.connect()
+
+try:
+    with DatabaseTransaction(db) as transaction:
+        transaction.execute("INSERT INTO users (name) VALUES ('Alice')")
+        transaction.execute("INSERT INTO users (name) VALUES ('Bob')")
+        # If this fails, everything rolls back automatically
+        transaction.execute("INVALID QUERY")
+except QueryError as e:
+    print(f"Transaction failed and was rolled back: {e}")
+```
+
+### Defensive Programming with Validation
+
+```python
+from typing import Optional, Union
+
+class User:
+    def __init__(self, user_id: int, name: str, email: str):
+        self._user_id = None
+        self._name = None
+        self._email = None
+        
+        # Validate and set attributes
+        self.user_id = user_id
+        self.name = name
+        self.email = email
+    
+    @property
+    def user_id(self) -> int:
+        return self._user_id
+    
+    @user_id.setter
+    def user_id(self, value: int):
+        if not isinstance(value, int) or value <= 0:
+            raise ValueError("User ID must be a positive integer")
+        self._user_id = value
+    
+    @property
+    def name(self) -> str:
+        return self._name
+    
+    @name.setter
+    def name(self, value: str):
+        if not isinstance(value, str) or not value.strip():
+            raise ValueError("Name must be a non-empty string")
+        if len(value.strip()) > 100:
+            raise ValueError("Name must be 100 characters or less")
+        self._name = value.strip()
+    
+    @property
+    def email(self) -> str:
+        return self._email
+    
+    @email.setter
+    def email(self, value: str):
+        if not isinstance(value, str):
+            raise ValueError("Email must be a string")
+        value = value.strip().lower()
+        if '@' not in value or '.' not in value.split('@')[1]:
+            raise ValueError("Invalid email format")
+        self._email = value
+    
+    def update_profile(self, name: Optional[str] = None, email: Optional[str] = None):
+        """Update user profile with validation."""
+        if name is not None:
+            self.name = name
+        if email is not None:
+            self.email = email
+    
+    def to_dict(self) -> dict:
+        """Safe export of user data."""
+        return {
+            'user_id': self.user_id,
+            'name': self.name,
+            'email': self.email
+        }
+
+# Usage with comprehensive error handling
+def create_user_from_input(user_data: dict) -> Union[User, None]:
+    try:
+        user = User(
+            user_id=user_data.get('user_id'),
+            name=user_data.get('name'),
+            email=user_data.get('email')
+        )
+        return user
+    except (ValueError, TypeError) as e:
+        print(f"Invalid user data: {e}")
+        return None
+    except Exception as e:
+        print(f"Unexpected error creating user: {e}")
+        return None
+
+# Example usage
+valid_data = {'user_id': 1, 'name': 'Alice', 'email': 'alice@example.com'}
+invalid_data = {'user_id': 'not_a_number', 'name': '', 'email': 'invalid-email'}
+
+user1 = create_user_from_input(valid_data)  # Success
+user2 = create_user_from_input(invalid_data)  # None with error message
+```
+
+### Error Recovery Patterns
+
+```python
+class ResilientDatabaseConnection:
+    def __init__(self, config, max_retries=3, retry_delay=1.0):
+        self.config = config
+        self.max_retries = max_retries
+        self.retry_delay = retry_delay
+        self._connection = None
+        self._retry_count = 0
+    
+    def connect_with_retry(self):
+        """Connect with automatic retry on failure."""
+        for attempt in range(self.max_retries + 1):
+            try:
+                self._connect()
+                self._retry_count = 0  # Reset on success
+                return True
+            except ConnectionError as e:
+                if attempt < self.max_retries:
+                    print(f"Connection attempt {attempt + 1} failed: {e}")
+                    print(f"Retrying in {self.retry_delay}s...")
+                    time.sleep(self.retry_delay)
+                    self.retry_delay *= 2  # Exponential backoff
+                else:
+                    print(f"All {self.max_retries + 1} connection attempts failed")
+                    raise
+    
+    def execute_query_with_retry(self, query):
+        """Execute query with retry on transient failures."""
+        for attempt in range(self.max_retries + 1):
+            try:
+                return self._execute_query(query)
+            except QueryError as e:
+                if self._is_transient_error(e) and attempt < self.max_retries:
+                    print(f"Query attempt {attempt + 1} failed: {e}")
+                    time.sleep(self.retry_delay)
+                else:
+                    raise
+    
+    def _is_transient_error(self, error):
+        """Check if error is transient and worth retrying."""
+        transient_messages = [
+            "connection timeout",
+            "temporary server error",
+            "lock wait timeout"
+        ]
+        error_msg = str(error).lower()
+        return any(msg in error_msg for msg in transient_messages)
+    
+    def _connect(self):
+        # Actual connection logic
+        pass
+    
+    def _execute_query(self, query):
+        # Actual query execution
+        pass
+```
+
+---
+
+## Testing OOP Code
+
+Well-designed OOP code is inherently testable. Here's how to write effective tests for your classes and objects.
+
+### Unit Testing Classes
+
+```python
+import pytest
+from unittest.mock import Mock, patch
+
+class Calculator:
+    def __init__(self):
+        self.history = []
+    
+    def add(self, a, b):
+        result = a + b
+        self.history.append(f"{a} + {b} = {result}")
+        return result
+    
+    def get_history(self):
+        return self.history.copy()
+
+# Test file: test_calculator.py
+class TestCalculator:
+    
+    def test_add_basic(self):
+        """Test basic addition functionality."""
+        calc = Calculator()
+        result = calc.add(2, 3)
+        assert result == 5
+    
+    def test_add_history(self):
+        """Test that addition is recorded in history."""
+        calc = Calculator()
+        calc.add(1, 2)
+        calc.add(3, 4)
+        
+        history = calc.get_history()
+        assert len(history) == 2
+        assert "1 + 2 = 3" in history
+        assert "3 + 4 = 7" in history
+    
+    def test_get_history_returns_copy(self):
+        """Test that get_history returns a copy, not the original list."""
+        calc = Calculator()
+        calc.add(1, 1)
+        
+        history = calc.get_history()
+        history.append("modified")  # This shouldn't affect the original
+        
+        assert len(calc.get_history()) == 1  # Original unchanged
+    
+    def test_add_with_floats(self):
+        """Test addition with floating point numbers."""
+        calc = Calculator()
+        result = calc.add(1.5, 2.5)
+        assert result == 4.0
+    
+    @pytest.mark.parametrize("a,b,expected", [
+        (1, 2, 3),
+        (-1, 1, 0),
+        (0, 0, 0),
+        (100, 200, 300)
+    ])
+    def test_add_parametrized(self, a, b, expected):
+        """Test addition with multiple input combinations."""
+        calc = Calculator()
+        assert calc.add(a, b) == expected
+
+# Running the tests
+if __name__ == "__main__":
+    pytest.main([__file__])
+```
+
+### Testing Inheritance and Polymorphism
+
+```python
+from abc import ABC, abstractmethod
+
+class Notifier(ABC):
+    @abstractmethod
+    def send(self, message, recipient):
+        pass
+
+class EmailNotifier(Notifier):
+    def send(self, message, recipient):
+        # Send email logic
+        return f"Email sent to {recipient}: {message}"
+
+class SMSNotifier(Notifier):
+    def send(self, message, recipient):
+        # Send SMS logic
+        return f"SMS sent to {recipient}: {message}"
+
+class NotificationService:
+    def __init__(self, notifiers):
+        self.notifiers = notifiers
+    
+    def notify_all(self, message, recipients):
+        results = []
+        for notifier in self.notifiers:
+            for recipient in recipients:
+                results.append(notifier.send(message, recipient))
+        return results
+
+# Test file: test_notifications.py
+import pytest
+from unittest.mock import Mock
+
+class TestEmailNotifier:
+    
+    def test_send_email(self):
+        notifier = EmailNotifier()
+        result = notifier.send("Hello", "user@example.com")
+        assert "Email sent to user@example.com: Hello" == result
+
+class TestSMSNotifier:
+    
+    def test_send_sms(self):
+        notifier = SMSNotifier()
+        result = notifier.send("Alert!", "+1234567890")
+        assert "SMS sent to +1234567890: Alert!" == result
+
+class TestNotificationService:
+    
+    def test_notify_all_with_multiple_notifiers(self):
+        # Create mock notifiers
+        email_mock = Mock()
+        email_mock.send.return_value = "Email sent"
+        
+        sms_mock = Mock()
+        sms_mock.send.return_value = "SMS sent"
+        
+        service = NotificationService([email_mock, sms_mock])
+        recipients = ["user1@example.com", "user2@example.com"]
+        
+        results = service.notify_all("Test message", recipients)
+        
+        # Verify both notifiers were called for each recipient
+        assert email_mock.send.call_count == 2
+        assert sms_mock.send.call_count == 2
+        assert len(results) == 4
+    
+    def test_polymorphic_behavior(self):
+        """Test that any Notifier implementation works."""
+        # Create a custom notifier for testing
+        class TestNotifier(Notifier):
+            def send(self, message, recipient):
+                return f"Test: {message} to {recipient}"
+        
+        service = NotificationService([TestNotifier()])
+        results = service.notify_all("Hello", ["test@example.com"])
+        
+        assert results == ["Test: Hello to test@example.com"]
+
+# Testing abstract base classes
+def test_notifier_is_abstract():
+    """Test that Notifier cannot be instantiated directly."""
+    with pytest.raises(TypeError):
+        Notifier()
+```
+
+### Mocking Dependencies
+
+```python
+from unittest.mock import Mock, patch, MagicMock
+import requests
+
+class APIClient:
+    def __init__(self, base_url):
+        self.base_url = base_url
+        self.session = requests.Session()
+    
+    def get_user(self, user_id):
+        url = f"{self.base_url}/users/{user_id}"
+        response = self.session.get(url)
+        response.raise_for_status()
+        return response.json()
+    
+    def create_user(self, user_data):
+        url = f"{self.base_url}/users"
+        response = self.session.post(url, json=user_data)
+        response.raise_for_status()
+        return response.json()
+
+# Test file: test_api_client.py
+import pytest
+from requests.exceptions import HTTPError
+
+class TestAPIClient:
+    
+    def test_get_user_success(self):
+        # Create mock response
+        mock_response = Mock()
+        mock_response.json.return_value = {"id": 1, "name": "Alice"}
+        mock_response.raise_for_status.return_value = None
+        
+        # Create mock session
+        mock_session = Mock()
+        mock_session.get.return_value = mock_response
+        
+        # Create client with mocked session
+        client = APIClient("https://api.example.com")
+        client.session = mock_session
+        
+        result = client.get_user(1)
+        
+        # Verify the call was made correctly
+        mock_session.get.assert_called_once_with("https://api.example.com/users/1")
+        assert result == {"id": 1, "name": "Alice"}
+    
+    def test_get_user_http_error(self):
+        # Create mock response that raises HTTPError
+        mock_response = Mock()
+        mock_response.raise_for_status.side_effect = HTTPError("404 Not Found")
+        
+        mock_session = Mock()
+        mock_session.get.return_value = mock_response
+        
+        client = APIClient("https://api.example.com")
+        client.session = mock_session
+        
+        with pytest.raises(HTTPError):
+            client.get_user(999)
+    
+    @patch('requests.Session')  # Patch at import level
+    def test_create_user_with_patch(self, mock_session_class):
+        # Setup mock session instance
+        mock_session = Mock()
+        mock_session_class.return_value = mock_session
+        
+        mock_response = Mock()
+        mock_response.json.return_value = {"id": 2, "name": "Bob"}
+        mock_session.post.return_value = mock_response
+        
+        client = APIClient("https://api.example.com")
+        result = client.create_user({"name": "Bob"})
+        
+        mock_session.post.assert_called_once_with(
+            "https://api.example.com/users", 
+            json={"name": "Bob"}
+        )
+        assert result == {"id": 2, "name": "Bob"}
+
+# Integration test example
+class TestAPIClientIntegration:
+    
+    @pytest.mark.integration
+    def test_real_api_call(self):
+        # This would run against a real test server
+        client = APIClient("https://jsonplaceholder.typicode.com")
+        user = client.get_user(1)
+        
+        assert user["id"] == 1
+        assert "name" in user
+```
+
+### Testing Context Managers
+
+```python
+class DatabaseConnection:
+    def __init__(self, config):
+        self.config = config
+        self.connected = False
+    
+    def __enter__(self):
+        self.connect()
+        return self
+    
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.disconnect()
+    
+    def connect(self):
+        self.connected = True
+    
+    def disconnect(self):
+        self.connected = False
+    
+    def execute(self, query):
+        if not self.connected:
+            raise RuntimeError("Not connected")
+        return f"Executed: {query}"
+
+# Test file: test_database_connection.py
+import pytest
+
+class TestDatabaseConnection:
+    
+    def test_context_manager(self):
+        """Test that context manager properly connects and disconnects."""
+        config = {"host": "localhost", "database": "test"}
+        db = DatabaseConnection(config)
+        
+        assert not db.connected
+        
+        with db as conn:
+            assert conn.connected
+            result = conn.execute("SELECT 1")
+            assert result == "Executed: SELECT 1"
+        
+        # Should be disconnected after context
+        assert not db.connected
+    
+    def test_context_manager_exception_handling(self):
+        """Test that connection is closed even when exception occurs."""
+        db = DatabaseConnection({})
+        
+        with pytest.raises(RuntimeError):
+            with db as conn:
+                assert conn.connected
+                # This will raise an exception
+                conn.execute("INVALID QUERY")
+        
+        # Should still be disconnected
+        assert not db.connected
+    
+    def test_manual_connection(self):
+        """Test manual connect/disconnect without context manager."""
+        db = DatabaseConnection({})
+        
+        db.connect()
+        assert db.connected
+        
+        db.disconnect()
+        assert not db.connected
+```
+
+### Test Organization Best Practices
+
+```python
+# tests/conftest.py - Shared fixtures
+import pytest
+
+@pytest.fixture
+def sample_user_data():
+    return {
+        "id": 1,
+        "name": "Alice",
+        "email": "alice@example.com"
+    }
+
+@pytest.fixture
+def mock_database():
+    """Fixture providing a mocked database connection."""
+    db = Mock()
+    db.execute_query.return_value = [{"id": 1, "name": "Test"}]
+    return db
+
+# tests/test_user_service.py
+class TestUserService:
+    
+    def test_create_user(self, sample_user_data, mock_database):
+        service = UserService(mock_database)
+        user = service.create_user(sample_user_data)
+        
+        assert user.id == 1
+        assert user.name == "Alice"
+        mock_database.execute_query.assert_called_once()
+    
+    def test_get_user_by_id(self, mock_database):
+        service = UserService(mock_database)
+        user = service.get_user_by_id(1)
+        
+        assert user is not None
+        mock_database.execute_query.assert_called_once_with(
+            "SELECT * FROM users WHERE id = ?", (1,)
+        )
+
+# tests/integration/test_user_workflow.py
+class TestUserWorkflow:
+    
+    @pytest.mark.integration
+    def test_complete_user_workflow(self, test_database):
+        """Test creating, updating, and deleting a user."""
+        # This would use a real test database
+        service = UserService(test_database)
+        
+        # Create user
+        user_data = {"name": "Alice", "email": "alice@example.com"}
+        user = service.create_user(user_data)
+        assert user.id is not None
+        
+        # Update user
+        user.name = "Alice Smith"
+        service.update_user(user)
+        
+        # Verify update
+        updated_user = service.get_user_by_id(user.id)
+        assert updated_user.name == "Alice Smith"
+        
+        # Delete user
+        service.delete_user(user.id)
+        assert service.get_user_by_id(user.id) is None
+```
+
+---
+
+## Real-World Examples from Our Codebase
+
+Let's look at how OOP concepts are applied in our actual project code, with references to the real implementations.
+
+### Database Connection Hierarchy
+
+From `gds_snowflake/gds_snowflake/base.py`:
+```python
+from abc import ABC, abstractmethod
+from typing import Any, Dict, List, Optional
+
+class DatabaseConnection(ABC):
+    """
+    Abstract base class defining the interface for all database connections.
+    
+    This ensures all database implementations have the same core methods,
+    enabling polymorphism across different database types.
+    """
+    
+    @abstractmethod
+    def connect(self) -> Any:
+        """Establish connection to the database."""
+        pass
+    
+    @abstractmethod
+    def disconnect(self) -> None:
+        """Close the database connection."""
+        pass
+    
+    @abstractmethod
+    def execute_query(self, query: str, params: Optional[tuple] = None) -> List[Dict[str, Any]]:
+        """Execute a query and return results."""
+        pass
+    
+    @abstractmethod
+    def is_connected(self) -> bool:
+        """Check if connection is active."""
+        pass
+    
+    @abstractmethod
+    def get_connection_info(self) -> Dict[str, Any]:
+        """Get information about the current connection."""
+        pass
+
+class ConfigurableComponent(ABC):
+    """
+    Abstract base class for components that can be configured.
+    
+    Demonstrates the Interface Segregation Principle - components only
+    implement configuration if they need it.
+    """
+    
+    def __init__(self, config: Optional[Dict[str, Any]] = None):
+        self._config = config or {}
+    
+    @abstractmethod
+    def validate_config(self) -> bool:
+        """Validate the current configuration."""
+        pass
+    
+    def get_config(self) -> Dict[str, Any]:
+        """Get current configuration."""
+        return self._config.copy()
+    
+    def update_config(self, new_config: Dict[str, Any]) -> None:
+        """Update configuration and validate."""
+        self._config.update(new_config)
+        if not self.validate_config():
+            raise ValueError("Invalid configuration")
+```
+
+From `gds_snowflake/gds_snowflake/connection.py`:
+```python
+class SnowflakeConnection(DatabaseConnection, ConfigurableComponent, ResourceManager):
+    """
+    Snowflake database connection implementation.
+    
+    Demonstrates multiple inheritance and composition:
+    - DatabaseConnection: Core database interface
+    - ConfigurableComponent: Configuration management
+    - ResourceManager: Resource lifecycle management
+    """
+    
+    def __init__(self, account: str, user: Optional[str] = None, **kwargs):
+        # Initialize parent classes
+        ConfigurableComponent.__init__(self, kwargs.get('config'))
+        
+        self.account = account
+        self.user = user
+        self.connection = None
+        self._initialized = False
+        
+        # Composition: Use other objects for specific functionality
+        self._logger = logging.getLogger(__name__)
+    
+    def connect(self) -> snowflake.connector.SnowflakeConnection:
+        """Connect to Snowflake with proper error handling."""
+        try:
+            self.connection = snowflake.connector.connect(
+                account=self.account,
+                user=self.user,
+                # ... other parameters
+            )
+            self._initialized = True
+            self._logger.info(f"Connected to Snowflake account: {self.account}")
+            return self.connection
+        except Exception as e:
+            self._logger.error(f"Failed to connect to Snowflake: {e}")
+            raise ConnectionError(f"Snowflake connection failed: {e}") from e
+    
+    def execute_query(self, query: str, params: Optional[tuple] = None) -> List[Dict[str, Any]]:
+        """Execute query with error handling and logging."""
+        if not self.is_connected():
+            raise ConnectionError("Not connected to Snowflake")
+        
+        try:
+            with self.connection.cursor() as cursor:
+                cursor.execute(query, params or ())
+                results = cursor.fetchall()
+                
+                # Convert to list of dictionaries for consistency
+                if cursor.description:
+                    columns = [desc[0] for desc in cursor.description]
+                    return [dict(zip(columns, row)) for row in results]
+                return results
+        except Exception as e:
+            self._logger.error(f"Query execution failed: {e}")
+            raise QueryError(f"Failed to execute query: {e}") from e
+    
+    def is_connected(self) -> bool:
+        """Check connection status."""
+        return (self.connection is not None and 
+                not self.connection.is_closed())
+    
+    def get_connection_info(self) -> Dict[str, Any]:
+        """Get connection details."""
+        return {
+            'type': 'Snowflake',
+            'account': self.account,
+            'user': self.user,
+            'connected': self.is_connected(),
+            'warehouse': getattr(self, 'warehouse', None),
+            'database': getattr(self, 'database', None)
+        }
+    
+    # Context manager implementation
+    def __enter__(self):
+        self.connect()
+        return self
+    
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.disconnect()
+```
+
+### Monitor Pattern Implementation
+
+From `gds_snowflake/gds_snowflake/base.py`:
+```python
+class BaseMonitor(ABC):
+    """
+    Abstract base class for monitoring components.
+    
+    Demonstrates the Template Method pattern and Strategy pattern:
+    - Template Method: Common monitoring workflow in check()
+    - Strategy: Different monitors implement different checking strategies
+    """
+    
+    def __init__(self, name: str, timeout: int = 30):
+        self.name = name
+        self.timeout = timeout
+        self._logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
+        
+        # State tracking
+        self._check_count = 0
+        self._last_check_time = None
+        self._errors = []
+    
+    @abstractmethod
+    def check(self) -> Dict[str, Any]:
+        """
+        Perform the actual monitoring check.
+        
+        Returns:
+            Dictionary with check results
+        """
+        pass
+    
+    def run_check(self) -> Dict[str, Any]:
+        """
+        Template method: Standard monitoring workflow.
+        
+        This method defines the algorithm skeleton, while subclasses
+        implement the specific check logic.
+        """
+        start_time = datetime.now()
+        
+        try:
+            # Pre-check setup
+            self._check_count += 1
+            
+            # Perform the actual check (implemented by subclasses)
+            result = self.check()
+            
+            # Post-check processing
+            result['check_number'] = self._check_count
+            result['duration_ms'] = (datetime.now() - start_time).total_seconds() * 1000
+            result['timestamp'] = start_time.isoformat()
+            
+            # Log success
+            self._log_success(result)
+            
+            return result
+            
+        except Exception as e:
+            # Handle errors consistently
+            error_result = {
+                'success': False,
+                'error': str(e),
+                'check_number': self._check_count,
+                'duration_ms': (datetime.now() - start_time).total_seconds() * 1000,
+                'timestamp': start_time.isoformat()
+            }
+            
+            self._errors.append(error_result)
+            self._log_error(error_result)
+            
+            return error_result
+    
+    def get_stats(self) -> Dict[str, Any]:
+        """Get monitoring statistics."""
+        return {
+            'name': self.name,
+            'total_checks': self._check_count,
+            'error_count': len(self._errors),
+            'last_check': self._last_check_time,
+            'recent_errors': self._errors[-5:]  # Last 5 errors
+        }
+    
+    def _log_success(self, result: Dict[str, Any]) -> None:
+        """Log successful check."""
+        duration = result.get('duration_ms', 0)
+        self._logger.info(
+            f"{self.name} check PASSED in {duration:.1f}ms"
+        )
+    
+    def _log_error(self, result: Dict[str, Any]) -> None:
+        """Log failed check."""
+        duration = result.get('duration_ms', 0)
+        error = result.get('error', 'Unknown error')
+        self._logger.error(
+            f"{self.name} check FAILED in {duration:.1f}ms: {error}"
+        )
+```
+
+### Factory Pattern in Action
+
+From monitoring modules:
+```python
+class MonitorFactory:
+    """
+    Factory pattern for creating monitor instances.
+    
+    Demonstrates the Factory pattern: Centralizes monitor creation logic
+    and allows easy addition of new monitor types.
+    """
+    
+    @staticmethod
+    def create_monitor(monitor_type: str, name: str, **kwargs) -> BaseMonitor:
+        """
+        Create a monitor instance based on type.
+        
+        Args:
+            monitor_type: Type of monitor ('snowflake', 'postgres', etc.)
+            name: Name for the monitor instance
+            **kwargs: Monitor-specific configuration
+        
+        Returns:
+            Configured monitor instance
+        """
+        if monitor_type.lower() == 'snowflake':
+            return SnowflakeMonitor(name=name, **kwargs)
+        elif monitor_type.lower() == 'postgres':
+            return PostgreSQLMonitor(name=name, **kwargs)
+        elif monitor_type.lower() == 'health':
+            return HealthMonitor(name=name, **kwargs)
+        else:
+            raise ValueError(f"Unknown monitor type: {monitor_type}")
+    
+    @staticmethod
+    def create_monitors_from_config(config: Dict[str, Any]) -> List[BaseMonitor]:
+        """
+        Create multiple monitors from configuration.
+        
+        Demonstrates bulk object creation and configuration-driven design.
+        """
+        monitors = []
+        
+        for monitor_config in config.get('monitors', []):
+            monitor_type = monitor_config.pop('type')
+            monitor_name = monitor_config.pop('name', f"{monitor_type}_monitor")
+            
+            monitor = MonitorFactory.create_monitor(
+                monitor_type, monitor_name, **monitor_config
+            )
+            monitors.append(monitor)
+        
+        return monitors
+
+# Usage example
+factory = MonitorFactory()
+
+# Create single monitor
+snowflake_monitor = factory.create_monitor(
+    'snowflake',
+    'prod_snowflake_monitor',
+    account='prod_account',
+    timeout=60
+)
+
+# Create multiple monitors from config
+config = {
+    'monitors': [
+        {'type': 'snowflake', 'name': 'prod_monitor', 'account': 'prod'},
+        {'type': 'postgres', 'name': 'db_monitor', 'host': 'localhost'},
+        {'type': 'health', 'name': 'health_monitor'}
+    ]
+}
+
+monitors = factory.create_monitors_from_config(config)
+```
+
+### Dependency Injection Example
+
+From service classes:
+```python
+class DatabaseService:
+    """
+    Service class demonstrating dependency injection.
+    
+    The service depends on abstractions (DatabaseConnection) rather than
+    concrete implementations, following the Dependency Inversion Principle.
+    """
+    
+    def __init__(self, connection: DatabaseConnection):
+        """
+        Inject the database connection dependency.
+        
+        Args:
+            connection: Any database connection implementing DatabaseConnection
+        """
+        self._connection = connection
+        self._logger = logging.getLogger(__name__)
+    
+    def get_user_by_id(self, user_id: int) -> Optional[Dict[str, Any]]:
+        """Get user by ID with proper error handling."""
+        try:
+            query = "SELECT id, name, email FROM users WHERE id = ?"
+            results = self._connection.execute_query(query, (user_id,))
+            return results[0] if results else None
+        except Exception as e:
+            self._logger.error(f"Failed to get user {user_id}: {e}")
+            raise
+    
+    def create_user(self, user_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Create new user."""
+        try:
+            query = """
+                INSERT INTO users (name, email, created_at)
+                VALUES (?, ?, CURRENT_TIMESTAMP)
+            """
+            self._connection.execute_query(query, 
+                (user_data['name'], user_data['email'])
+            )
+            
+            # Get the created user
+            return self.get_user_by_id(self._get_last_insert_id())
+        except Exception as e:
+            self._logger.error(f"Failed to create user: {e}")
+            raise
+    
+    def _get_last_insert_id(self) -> int:
+        """Get the last inserted ID (database-specific implementation)."""
+        # This would be implemented differently for each database
+        pass
+
+# Usage with dependency injection
+def create_user_service(connection_type: str = 'snowflake') -> DatabaseService:
+    """
+    Factory function demonstrating dependency injection setup.
+    
+    This function creates the appropriate connection and injects it
+    into the service, following the Dependency Inversion Principle.
+    """
+    if connection_type == 'snowflake':
+        connection = SnowflakeConnection(
+            account='my_account',
+            user='my_user'
+        )
+    elif connection_type == 'postgres':
+        connection = PostgreSQLConnection(
+            host='localhost',
+            database='myapp'
+        )
+    else:
+        raise ValueError(f"Unsupported connection type: {connection_type}")
+    
+    # Inject the connection into the service
+    return DatabaseService(connection)
+
+# Usage
+service = create_user_service('snowflake')
+user = service.get_user_by_id(123)
+```
 
 ---
 
