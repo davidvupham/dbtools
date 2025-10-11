@@ -1,4 +1,4 @@
-# Pre-commit hooks for Snowflake Monitoring Project
+# Pre-commit hooks for DBTools Project
 # Install: pip install pre-commit
 # Setup: pre-commit install
 # Run manually: pre-commit run --all-files

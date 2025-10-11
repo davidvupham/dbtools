@@ -24,7 +24,7 @@ setup(
     description='A Python package for Snowflake connection management and replication monitoring',
     long_description=read_file('README.md'),
     long_description_content_type='text/markdown',
-    url='https://github.com/davidvupham/snowflake',
+    url='https://github.com/davidvupham/dbtools',
     packages=find_packages(where='.', exclude=['tests', 'tests.*']),
     classifiers=[
         'Development Status :: 4 - Beta',
@@ -64,8 +64,8 @@ setup(
     },
     keywords='snowflake database replication monitoring failover gds',
     project_urls={
-        'Bug Reports': 'https://github.com/davidvupham/snowflake/issues',
-        'Source': 'https://github.com/davidvupham/snowflake',
-        'Documentation': 'https://github.com/davidvupham/snowflake/tree/main/gds_snowflake',
+        'Bug Reports': 'https://github.com/davidvupham/dbtools/issues',
+        'Source': 'https://github.com/davidvupham/dbtools',
+        'Documentation': 'https://github.com/davidvupham/dbtools/tree/main/gds_snowflake',
     },
 )

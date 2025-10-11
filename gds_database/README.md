@@ -147,7 +147,7 @@ See the `examples/` directory for comprehensive usage examples.
 
 ```bash
 # Clone the repository
-git clone https://github.com/davidvupham/snowflake.git
+git clone https://github.com/davidvupham/dbtools.git
 cd snowflake/gds_database
 
 # Install in development mode

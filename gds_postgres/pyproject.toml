@@ -50,10 +50,10 @@ pool = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/davidvupham/snowflake"
-Repository = "https://github.com/davidvupham/snowflake"
-Documentation = "https://github.com/davidvupham/snowflake/tree/main/gds_postgres"
-Issues = "https://github.com/davidvupham/snowflake/issues"
+Homepage = "https://github.com/davidvupham/dbtools"
+Repository = "https://github.com/davidvupham/dbtools"
+Documentation = "https://github.com/davidvupham/dbtools/tree/main/gds_postgres"
+Issues = "https://github.com/davidvupham/dbtools/issues"
 
 [tool.setuptools.packages.find]
 where = ["."]

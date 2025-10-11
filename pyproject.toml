@@ -1,5 +1,5 @@
-# Ruff Configuration for Snowflake Monitoring Project
-# ====================================================
+# Ruff Configuration for DBTools Project
+# ========================================
 # This configuration applies to the entire workspace
 
 [tool.ruff]

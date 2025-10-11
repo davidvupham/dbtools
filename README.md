@@ -1,6 +1,6 @@
-# Snowflake Workspace
+# DBTools Workspace
 
-This workspace contains two main components:
+This workspace contains multiple database tools and packages:
 
 ## 📦 [gds_snowflake/](gds_snowflake/) - Python Package
 
@@ -44,7 +44,7 @@ python monitor_snowflake_replication.py myaccount
 ## Project Structure
 
 ```
-snowflake/
+dbtools/
 ├── gds_snowflake/              # 📦 Python Package
 │   ├── gds_snowflake/          # Package source code
 │   │   ├── __init__.py
@@ -175,7 +175,7 @@ Contributions welcome! Please see individual component READMEs for specific guid
 
 ## Support
 
-- GitHub Issues: https://github.com/davidvupham/snowflake/issues
+- GitHub Issues: https://github.com/davidvupham/dbtools/issues
 - Email: gds@example.com
 
 ---

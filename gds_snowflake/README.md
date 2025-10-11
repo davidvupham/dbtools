@@ -21,7 +21,7 @@ pip install gds-snowflake
 Or install from source:
 
 ```bash
-git clone https://github.com/davidvupham/snowflake.git
+git clone https://github.com/davidvupham/dbtools.git
 cd snowflake/gds_snowflake
 pip install .
 ```
@@ -616,8 +616,8 @@ GDS Team
 
 ## Documentation
 
-- [GitHub Repository](https://github.com/davidvupham/snowflake)
-- [Issue Tracker](https://github.com/davidvupham/snowflake/issues)
+- [GitHub Repository](https://github.com/davidvupham/dbtools)
+- [Issue Tracker](https://github.com/davidvupham/dbtools/issues)
 - [SnowflakeMonitor Guide](SNOWFLAKE_MONITOR_GUIDE.md)
 - [Account Module Documentation](ACCOUNT_MODULE_DOCUMENTATION.md)
 - [Database Module Summary](DATABASE_MODULE_SUMMARY.md)

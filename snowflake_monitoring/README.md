@@ -1,6 +1,6 @@
 # Snowflake Monitoring Application
 
-A complete application for monitoring Snowflake replication, detecting failures and latency issues, with email notifications.
+A complete application for monitoring Snowflake replication, detecting failures and latency issues, with email notifications. This is part of the DBTools workspace.
 
 ## Features
 
@@ -343,7 +343,7 @@ See LICENSE file in the package root.
 ## Support
 
 For issues and questions:
-- GitHub Issues: https://github.com/davidvupham/snowflake/issues
+- GitHub Issues: https://github.com/davidvupham/dbtools/issues
 - Email: gds@example.com
 
 ## Version History

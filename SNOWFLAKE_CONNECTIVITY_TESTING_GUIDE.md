@@ -1,7 +1,7 @@
 # Snowflake Connectivity Testing Guide
 
 ## Overview
-The monitoring script now includes comprehensive connectivity testing to detect network issues, account availability, and authentication problems before attempting replication monitoring.
+This guide is part of the DBTools workspace. The monitoring script includes comprehensive connectivity testing to detect network issues, account availability, and authentication problems before attempting replication monitoring.
 
 ## Best Practices for Snowflake Connectivity Testing
 

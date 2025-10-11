@@ -352,7 +352,7 @@ psql -c "GRANT ALL PRIVILEGES ON DATABASE testdb TO testuser;"
 
 ```bash
 # Clone repository
-git clone https://github.com/davidvupham/snowflake.git
+git clone https://github.com/davidvupham/dbtools.git
 cd snowflake/gds_postgres
 
 # Create virtual environment
@@ -458,6 +458,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 For issues and questions:
 
-1. Check the [Issues](https://github.com/davidvupham/snowflake/issues) page
+1. Check the [Issues](https://github.com/davidvupham/dbtools/issues) page
 2. Review the documentation and examples
 3. Create a new issue with detailed information about your problem

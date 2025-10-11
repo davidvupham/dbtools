@@ -46,10 +46,10 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/davidvupham/snowflake"
-Documentation = "https://github.com/davidvupham/snowflake/tree/main/gds_snowflake"
-Repository = "https://github.com/davidvupham/snowflake"
-"Bug Reports" = "https://github.com/davidvupham/snowflake/issues"
+Homepage = "https://github.com/davidvupham/dbtools"
+Documentation = "https://github.com/davidvupham/dbtools/tree/main/gds_snowflake"
+Repository = "https://github.com/davidvupham/dbtools"
+"Bug Reports" = "https://github.com/davidvupham/dbtools/issues"
 
 [tool.setuptools]
 packages = ["gds_snowflake"]
