@@ -1,91 +1,58 @@
 {
-  "name": "dbtools - Miniconda (gds)",
+  "name": "dbtools - Miniconda3 (Py3.13)",
   "build": {
     "dockerfile": "Dockerfile",
-    "args": {}
+    "context": "..",
+    "args": {
+      "PYTHON_VERSION": "3.13",
+      "CONDA_ENV_NAME": "gds"
+    }
   },
-  "remoteUser": "root",
+  "remoteUser": "vscode",
   "features": {
     "ghcr.io/devcontainers/features/common-utils:2": {
       "installZsh": false,
-      "username": "root",
-      "upgradePackages": true
+      "username": "vscode",
+      "userUid": "1000",
+      "userGid": "1000"
+    },
+    "ghcr.io/devcontainers/features/git:1": {},
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {
+      "version": "latest"
     }
-  },
-  "containerEnv": {
-    "PYTHONUNBUFFERED": "1"
-  },
-  "mounts": [
-    "source=${localWorkspaceFolder}/.devcontainer/krb5/krb5.conf,target=/etc/krb5.conf,type=bind"
-  ],
-  "remoteEnv": {
-    "KRB5_CONFIG": "/etc/krb5.conf"
   },
   "customizations": {
     "vscode": {
       "extensions": [
         "ms-python.python",
         "ms-python.vscode-pylance",
-        "ms-mssql.mssql",
-        "github.copilot",
-        "github.copilot-chat",
-        "hashicorp.terraform",
-        "redhat.ansible",
-  "amazonwebservices.aws-toolkit-vscode",
-        "anthropic.claude-code",
-        "azps-tools.azps-tools",
-        "dbatools.search",
-        "github.vscode-github-actions",
-        "github.vscode-pull-request-github",
-        "hbenl.vscode-test-explorer",
-        "littlefoxteam.vscode-python-test-adapter",
-        "ms-azure-devops.azure-pipelines",
-        "ms-azure-load-testing.microsoft-testing",
-        "ms-azuretools.azure-dev",
-        "ms-azuretools.vscode-azure-github-copilot",
-        "ms-azuretools.vscode-azure-mcp-server",
-        "ms-azuretools.vscode-azureappservice",
-        "ms-azuretools.vscode-azurecontainerapps",
-        "ms-azuretools.vscode-azurefunctions",
-        "ms-azuretools.vscode-azureresourcegroups",
-        "ms-azuretools.vscode-azurestaticwebapps",
-        "ms-azuretools.vscode-azurestorage",
-        "ms-azuretools.vscode-azureterraform",
-        "ms-azuretools.vscode-azurevirtualmachines",
-        "ms-azuretools.vscode-containers",
-        "ms-azuretools.vscode-cosmosdb",
+        "ms-toolsai.jupyter",
+        "charliermarsh.ruff",
         "ms-azuretools.vscode-docker",
-        "ms-dotnettools.vscode-dotnet-runtime",
-        "ms-mssql.data-workspace-vscode",
-        "ms-mssql.sql-bindings-vscode",
-        "ms-mssql.sql-database-projects-vscode",
-        "ms-python.black-formatter",
-        "ms-python.debugpy",
-        "ms-python.flake8",
-        "ms-python.pylint",
-        "ms-python.vscode-python-envs",
-        "ms-toolsai.vscode-ai",
-        "ms-toolsai.vscode-ai-remote",
-        "ms-vscode.azurecli",
-        "ms-vscode.powershell",
-        "ms-vscode.test-adapter-converter",
-        "ms-vscode.vscode-node-azure-pack",
-        "ms-windows-ai-studio.windows-ai-studio",
-        "njpwerner.autodocstring",
-        "redhat.vscode-yaml",
-        "teamsdevapp.vscode-ai-foundry"
+        "ms-windows-ai-studio.windows-ai-studio"
       ],
       "settings": {
         "python.defaultInterpreterPath": "/opt/conda/envs/gds/bin/python",
         "python.terminal.activateEnvironment": true,
-        "python.analysis.exclude": ["**/.venv/**", "**/build/**", "**/dist/**", "**/.conda/**", "**/.mamba/**"],
         "python.testing.pytestEnabled": true,
-        "python.testing.unittestEnabled": false
+        "python.testing.unittestEnabled": false,
+        "editor.formatOnSave": true,
+        "ruff.organizeImports": true,
+        "ruff.enable": true
       }
     }
   },
-  "postCreateCommand": "python -V && pip -V && pip install -e ./gds_database -e ./gds_postgres -e ./gds_snowflake -e ./gds_vault || true; if [ -f .pre-commit-config.yaml ]; then pre-commit install; fi",
+  "workspaceFolder": "/workspaces/dbtools",
   "runArgs": [
-    "--init"
+    "--env", "PYTHONUNBUFFERED=1",
+    "--mount", "type=volume,source=vscode-server-cache,target=/home/vscode/.vscode-server,consistency=cached"
+  ],
+  "postCreateCommand": "bash .devcontainer/postCreate.sh",
+  "postStartCommand": "bash -lc 'mkdir -p ~/.vscode-server/extensions ~/.vscode-server/extensionsCache && chmod -R 775 ~/.vscode-server && chown -R vscode:vscode ~/.vscode-server || true'",
+  "containerEnv": {
+    "PIP_DISABLE_PIP_VERSION_CHECK": "1"
+  },
+  "mounts": [
+    "source=${localEnv:HOME}/.ssh,target=/home/vscode/.ssh,type=bind,consistency=cached,readonly"
   ]
 }

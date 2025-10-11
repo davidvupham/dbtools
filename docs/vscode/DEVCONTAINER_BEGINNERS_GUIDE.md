@@ -72,7 +72,10 @@ Key fields explained:
 - `remoteEnv`: Sets `KRB5_CONFIG` so tools use the mounted config.
 - `customizations.vscode.extensions`: List of VS Code extensions that auto-install inside the container.
 - `customizations.vscode.settings`: VS Code settings (interpreter path, testing, etc.).
-- `postCreateCommand`: Commands run after the container is built the first time (installs local packages, sets up pre-commit hooks if configured).
+- `postCreateCommand`: Commands run after the container is built the first time. In this repo it calls `.devcontainer/postCreate.sh`, which:
+  - Installs local packages in editable mode (prefers `[dev]` extras when available)
+  - Installs and configures pre-commit hooks if `.pre-commit-config.yaml` exists
+  - Is the right place to add any additional first-run setup steps
 - `runArgs`: Extra Docker runtime flags; `--init` adds a tiny init to handle processes cleanly.
 
 ## Using the Dev Container in VS Code
