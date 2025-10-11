@@ -23,6 +23,20 @@ RUN for f in /etc/skel/.bashrc /home/vscode/.bashrc /home/vscode/.profile; do \
             echo "conda activate ${CONDA_ENV_NAME}" >> "$f"; \
         done
 
+# Set a colorful, multi-line prompt for interactive shells in the dev container
+RUN <<'BASH'
+set -euo pipefail
+for f in /etc/skel/.bashrc /home/vscode/.bashrc /home/vscode/.profile; do
+    cat >> "$f" <<'EOF'
+# dbtools devcontainer prompt
+if [[ $- == *i* ]]; then
+export PS1="\[$(tput setaf 208)\]\d  \[$(tput setaf 226)\]\u\[$(tput setaf 220)\]@\[$(tput setaf 214)\]\h \[$(tput setaf 33)\]\w
+\[$(tput sgr0)\]$ "
+fi
+EOF
+done
+BASH
+
 # Install some common build tooling in the env
 RUN conda run -n ${CONDA_ENV_NAME} python -m pip install --upgrade pip && \
     conda run -n ${CONDA_ENV_NAME} pip install ruff pytest pytest-cov wheel build
