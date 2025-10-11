@@ -7,8 +7,7 @@ improving performance and reducing load on the Vault server.
 
 import logging
 import time
-from datetime import datetime
-from typing import Any, Optional, Union
+from typing import Any, Optional
 
 from gds_vault.exceptions import VaultCacheError
 

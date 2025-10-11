@@ -5,7 +5,6 @@ This module provides abstract base classes and common functionality
 that can be inherited by specific database implementations.
 """
 
-import logging
 import time
 from abc import ABC, abstractmethod
 from dataclasses import dataclass

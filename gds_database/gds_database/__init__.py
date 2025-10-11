@@ -19,8 +19,8 @@ Exceptions:
 
 from .base import (
     ConfigurableComponent,
-    ConnectionError,
     ConfigurationError,
+    ConnectionError,
     DatabaseConnection,
     OperationResult,
     QueryError,
@@ -31,7 +31,7 @@ from .base import (
 __version__ = "1.0.0"
 __all__ = [
     "DatabaseConnection",
-    "ConfigurableComponent", 
+    "ConfigurableComponent",
     "ResourceManager",
     "RetryableOperation",
     "OperationResult",

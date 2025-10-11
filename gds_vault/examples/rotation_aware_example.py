@@ -8,8 +8,6 @@ The cache will automatically refresh secrets before their scheduled rotation
 time with a configurable buffer period.
 """
 
-import time
-from datetime import datetime
 
 from gds_vault import VaultClient, RotationAwareCache, TTLCache
 from gds_vault.exceptions import VaultError
@@ -35,9 +33,9 @@ def example_rotation_aware_cache():
         
         client = VaultClient(cache=cache)
         
-        print(f"✓ Created VaultClient with RotationAwareCache")
-        print(f"  - Buffer time: 15 minutes")
-        print(f"  - Fallback TTL: 10 minutes")
+        print("✓ Created VaultClient with RotationAwareCache")
+        print("  - Buffer time: 15 minutes")
+        print("  - Fallback TTL: 10 minutes")
         
         # Fetch secret (would include rotation metadata in real scenario)
         # secret = client.get_secret('secret/data/database-creds')
@@ -116,7 +114,7 @@ def example_ttl_cache_with_rotation():
         
         client = VaultClient(cache=cache)
         
-        print(f"✓ Created VaultClient with enhanced TTLCache")
+        print("✓ Created VaultClient with enhanced TTLCache")
         
         # The cache will automatically use rotation metadata if available
         # or fall back to default TTL behavior

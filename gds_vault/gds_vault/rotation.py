@@ -6,8 +6,6 @@ including cron expression parsing and TTL calculation based on rotation times.
 """
 
 import logging
-import re
-import time
 from datetime import datetime, timedelta
 from typing import Optional, Union
 

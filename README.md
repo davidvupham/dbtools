@@ -124,8 +124,29 @@ pip install -e ".[dev]"
 
 ```bash
 cd gds_snowflake
+# Option A: unittest runner
 python run_tests.py
+
+# Option B: pytest with coverage (recommended)
+pytest -q --maxfail=1 --disable-warnings --cov=gds_snowflake --cov-report=term-missing
 ```
+### Linting and Formatting
+
+Use the repo lint helper script (Ruff):
+
+```bash
+# From repo root
+./lint.sh                 # Check only
+./lint.sh --stats         # Check with statistics
+./lint.sh --fix           # Auto-fix where safe
+./lint.sh --fix --format  # Auto-fix + format code
+```
+
+Notes:
+- The script runs Ruff across the entire repo.
+- Some legacy subpackages may require manual fixes for examples/tests.
+- For iterative work, you can lint a specific file with: `./lint.sh --file path/to/file.py`
+
 
 ### VS Code Setup
 

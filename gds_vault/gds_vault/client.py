@@ -6,7 +6,6 @@ Python OOP best practices including inheritance, composition, proper
 encapsulation, and extensive use of magic methods and properties.
 """
 
-import inspect
 import logging
 import os
 import time

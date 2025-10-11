@@ -52,6 +52,36 @@ GDS_DATA_DIR=/path/to/data  # Default: ./data
 When environment variables are set, you can create connections with minimal parameters.
 
 ## Quick Start
+## Development
+
+### Run Tests with Coverage
+
+From the package directory:
+
+```bash
+cd gds_snowflake
+pytest -q --maxfail=1 --disable-warnings --cov=gds_snowflake --cov-report=term-missing
+```
+
+This prints missing lines per file; for HTML output, add `--cov-report=html` and open `htmlcov/index.html`.
+
+### Linting and Formatting (Ruff)
+
+Use the repo lint helper script from the workspace root:
+
+```bash
+./lint.sh                 # Check only
+./lint.sh --stats         # Check with statistics
+./lint.sh --fix           # Auto-fix where safe
+./lint.sh --fix --format  # Auto-fix + format code
+```
+
+To lint just this package:
+
+```bash
+./lint.sh --file gds_snowflake
+```
+
 
 ### Basic Connection
 

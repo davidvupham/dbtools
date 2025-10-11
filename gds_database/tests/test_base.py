@@ -4,15 +4,12 @@ Test suite for gds_database base classes.
 
 import unittest
 from datetime import datetime
-from unittest.mock import Mock
 
 from gds_database import (
     ConfigurableComponent,
-    ConnectionError,
     ConfigurationError,
     DatabaseConnection,
     OperationResult,
-    QueryError,
     ResourceManager,
     RetryableOperation,
 )
@@ -28,7 +25,7 @@ class TestDatabaseConnection(unittest.TestCase):
 
     def test_subclass_must_implement_all_methods(self):
         """Test that subclasses must implement all abstract methods."""
-        
+
         class IncompleteDatabaseConnection(DatabaseConnection):
             def connect(self):
                 pass
@@ -39,20 +36,20 @@ class TestDatabaseConnection(unittest.TestCase):
 
     def test_complete_implementation(self):
         """Test that complete implementation works."""
-        
+
         class CompleteDatabaseConnection(DatabaseConnection):
             def connect(self):
                 return "connected"
-            
+
             def disconnect(self):
                 pass
-            
+
             def execute_query(self, query, params=None):
                 return [{"result": "data"}]
-            
+
             def is_connected(self):
                 return True
-            
+
             def get_connection_info(self):
                 return {"host": "localhost", "database": "test"}
 
@@ -74,7 +71,7 @@ class TestConfigurableComponent(unittest.TestCase):
 
     def test_complete_implementation(self):
         """Test complete implementation of ConfigurableComponent."""
-        
+
         class TestComponent(ConfigurableComponent):
             def validate_config(self):
                 required_keys = ['host', 'port']
@@ -98,7 +95,7 @@ class TestConfigurableComponent(unittest.TestCase):
 
     def test_validation_error(self):
         """Test that validation errors are raised."""
-        
+
         class TestComponent(ConfigurableComponent):
             def validate_config(self):
                 if 'required_field' not in self.config:
@@ -122,18 +119,18 @@ class TestResourceManager(unittest.TestCase):
 
     def test_context_manager_protocol(self):
         """Test context manager functionality."""
-        
+
         class TestResourceManager(ResourceManager):
             def __init__(self):
                 self.initialized = False
                 self.cleaned_up = False
-            
+
             def initialize(self):
                 self.initialized = True
-            
+
             def cleanup(self):
                 self.cleaned_up = True
-            
+
             def is_initialized(self):
                 return self.initialized
 
@@ -143,19 +140,19 @@ class TestResourceManager(unittest.TestCase):
         with manager as m:
             self.assertTrue(m.is_initialized())
             self.assertFalse(m.cleaned_up)
-        
+
         self.assertTrue(manager.cleaned_up)
 
     def test_exception_handling(self):
         """Test that exceptions are not suppressed."""
-        
+
         class TestResourceManager(ResourceManager):
             def initialize(self):
                 pass
-            
+
             def cleanup(self):
                 pass
-            
+
             def is_initialized(self):
                 return True
 
@@ -169,7 +166,7 @@ class TestRetryableOperation(unittest.TestCase):
 
     def test_successful_operation(self):
         """Test operation that succeeds on first try."""
-        
+
         class TestOperation(RetryableOperation):
             def _execute(self):
                 return "success"
@@ -180,12 +177,12 @@ class TestRetryableOperation(unittest.TestCase):
 
     def test_retry_on_failure(self):
         """Test operation that fails then succeeds."""
-        
+
         class TestOperation(RetryableOperation):
             def __init__(self, *args, **kwargs):
                 super().__init__(*args, **kwargs)
                 self.attempt_count = 0
-            
+
             def _execute(self):
                 self.attempt_count += 1
                 if self.attempt_count < 3:
@@ -199,7 +196,7 @@ class TestRetryableOperation(unittest.TestCase):
 
     def test_max_retries_exceeded(self):
         """Test operation that always fails."""
-        
+
         class TestOperation(RetryableOperation):
             def _execute(self):
                 raise ValueError("Always fails")
@@ -235,7 +232,7 @@ class TestOperationResult(unittest.TestCase):
         """Test converting result to dictionary."""
         result = OperationResult.success_result("Test", {"key": "value"})
         result_dict = result.to_dict()
-        
+
         expected_keys = {'success', 'message', 'data', 'error', 'duration_ms', 'timestamp'}
         self.assertEqual(set(result_dict.keys()), expected_keys)
         self.assertTrue(result_dict['success'])

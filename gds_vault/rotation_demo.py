@@ -5,7 +5,6 @@ Simple demo of rotation-aware TTL functionality.
 This demonstrates the core functionality without requiring a Vault server.
 """
 
-import time
 from datetime import datetime, timedelta
 
 # Import the modules directly
@@ -123,9 +122,9 @@ def demo_rotation_aware_cache():
     )
     
     print("Created RotationAwareCache:")
-    print(f"  Max size: 10 secrets")
-    print(f"  Buffer time: 15 minutes")
-    print(f"  Fallback TTL: 5 minutes")
+    print("  Max size: 10 secrets")
+    print("  Buffer time: 15 minutes")
+    print("  Fallback TTL: 5 minutes")
     print()
     
     # Test scenarios
@@ -168,12 +167,12 @@ def demo_rotation_aware_cache():
         # Check if it's retrieved successfully
         result = cache.get(case['key'])
         if result:
-            print(f"  ✓ Cached and retrieved successfully")
+            print("  ✓ Cached and retrieved successfully")
             if case['rotation']:
                 rotation_info = cache.get_rotation_info(case['key'])
                 print(f"  ✓ Rotation schedule: {rotation_info['schedule']}")
         else:
-            print(f"  ⚠ Secret filtered (needs refresh due to rotation)")
+            print("  ⚠ Secret filtered (needs refresh due to rotation)")
         print()
     
     # Show cache statistics
@@ -195,8 +194,8 @@ def demo_ttl_cache_compatibility():
     cache = TTLCache(max_size=10, default_ttl=600)
     
     print("Created TTLCache with rotation support:")
-    print(f"  Default TTL: 10 minutes")
-    print(f"  Now supports rotation metadata")
+    print("  Default TTL: 10 minutes")
+    print("  Now supports rotation metadata")
     print()
     
     # Test with rotation metadata

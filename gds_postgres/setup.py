@@ -3,7 +3,7 @@
 Setup script for gds_postgres package.
 """
 
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
 
 setup(
     name="gds-postgres",

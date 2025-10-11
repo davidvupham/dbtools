@@ -5,10 +5,8 @@ These tests verify that the rotation-aware caching works correctly
 with Vault secret rotation schedules.
 """
 
-import time
 import unittest
 from datetime import datetime, timedelta
-from unittest.mock import patch
 
 from gds_vault.cache import RotationAwareCache, TTLCache
 from gds_vault.rotation import (
@@ -268,7 +266,7 @@ if __name__ == "__main__":
     ttl_runner = unittest.TextTestRunner(verbosity=1)
     ttl_result = ttl_runner.run(ttl_suite)
     
-    print(f"\nTest Summary:")
+    print("\nTest Summary:")
     print(f"  Rotation Utils: {utils_result.testsRun} tests, {len(utils_result.failures)} failures")
     print(f"  RotationAwareCache: {cache_result.testsRun} tests, {len(cache_result.failures)} failures")
     print(f"  TTLCache Support: {ttl_result.testsRun} tests, {len(ttl_result.failures)} failures")
