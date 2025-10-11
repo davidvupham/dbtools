@@ -88,7 +88,7 @@ class PostgreSQLConnection(DatabaseConnection, ConfigurableComponent, ResourceMa
             **kwargs: Additional psycopg2 connection parameters
         """
         # Build configuration from parameters
-        conn_config = config or {}
+        conn_config: Dict[str, Any] = dict(config) if config else {}
 
         if connection_url:
             # Parse connection URL
@@ -99,22 +99,24 @@ class PostgreSQLConnection(DatabaseConnection, ConfigurableComponent, ResourceMa
                 'database': parsed.path.lstrip('/'),
                 'user': parsed.username,
                 'password': parsed.password,
+                'connection_url': connection_url,
             })
         else:
             # Use individual parameters
-            if host:
+            if host is not None:
                 conn_config['host'] = host
-            if port:
+            if port is not None:
                 conn_config['port'] = port
-            if database:
+            if database is not None:
                 conn_config['database'] = database
-            if user:
+            if user is not None:
                 conn_config['user'] = user
-            if password:
+            if password is not None:
                 conn_config['password'] = password
 
         # Add any additional parameters
-        conn_config.update(kwargs)
+        if kwargs:
+            conn_config.update(kwargs)
 
         # Set defaults
         conn_config.setdefault('port', 5432)
@@ -169,33 +171,22 @@ class PostgreSQLConnection(DatabaseConnection, ConfigurableComponent, ResourceMa
             return self.connection
 
         try:
-            # Extract connection parameters
-            conn_params = {
-                'host': self.config['host'],
-                'port': self.config['port'],
-                'database': self.config['database'],
-                'user': self.config['user'],
-            }
-
-            # Add optional parameters
-            if self.config.get('password'):
-                conn_params['password'] = self.config['password']
-            if self.config.get('connect_timeout'):
-                conn_params['connect_timeout'] = self.config['connect_timeout']
+            conn_params = self._build_connection_parameters()
+            autocommit = conn_params.pop('autocommit', False)
 
             logger.info(
                 "Connecting to PostgreSQL database: %s@%s:%s/%s",
-                conn_params['user'],
-                conn_params['host'],
-                conn_params['port'],
-                conn_params['database']
+                conn_params.get('user'),
+                conn_params.get('host'),
+                conn_params.get('port'),
+                conn_params.get('database')
             )
 
             # Establish connection
             self.connection = psycopg2.connect(**conn_params)
 
             # Set autocommit mode if configured
-            if self.config.get('autocommit', False):
+            if autocommit:
                 self.connection.autocommit = True
 
             logger.info("Successfully connected to PostgreSQL database")
@@ -214,17 +205,17 @@ class PostgreSQLConnection(DatabaseConnection, ConfigurableComponent, ResourceMa
         """
         try:
             if self._cursor:
-                self._cursor.close()
-                self._cursor = None
-                logger.debug("Cursor closed")
+                self._close_cursor(self._cursor)
 
             if self.connection:
                 self.connection.close()
-                self.connection = None
                 logger.info("Disconnected from PostgreSQL database")
 
         except psycopg2.Error as e:
             logger.warning("Error during disconnect: %s", e)
+        finally:
+            self._cursor = None
+            self.connection = None
 
     def execute_query(
         self,
@@ -253,11 +244,17 @@ class PostgreSQLConnection(DatabaseConnection, ConfigurableComponent, ResourceMa
             raise ConnectionError("Not connected to PostgreSQL database")
 
         try:
+            # Clean up any lingering cursor before creating a new one
+            if self._cursor and fetch_all:
+                self.close_active_cursor()
+
             # Create cursor with appropriate row factory
             if return_dict:
                 cursor = self.connection.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
             else:
                 cursor = self.connection.cursor()
+
+            self._cursor = cursor
 
             logger.debug("Executing query: %s", query[:100] + "..." if len(query) > 100 else query)
 
@@ -269,14 +266,16 @@ class PostgreSQLConnection(DatabaseConnection, ConfigurableComponent, ResourceMa
                 # Non-SELECT query (INSERT, UPDATE, DELETE, etc.)
                 affected_rows = cursor.rowcount
                 logger.debug("Query affected %d rows", affected_rows)
-                cursor.close()
+                self._close_cursor(cursor)
+                self._cursor = None
                 return [{'affected_rows': affected_rows}]
 
             # SELECT query - fetch results
             if fetch_all:
                 results = cursor.fetchall()
                 logger.debug("Query returned %d rows", len(results))
-                cursor.close()
+                self._close_cursor(cursor)
+                self._cursor = None
 
                 # Convert RealDictRow to regular dict if needed
                 if return_dict and results:
@@ -284,6 +283,7 @@ class PostgreSQLConnection(DatabaseConnection, ConfigurableComponent, ResourceMa
                 return results
             else:
                 # Return cursor for manual fetching
+                logger.debug("Returning open cursor for manual fetching")
                 return cursor
 
         except psycopg2.Error as e:
@@ -317,14 +317,21 @@ class PostgreSQLConnection(DatabaseConnection, ConfigurableComponent, ResourceMa
         Returns:
             True if connection is active and usable, False otherwise
         """
-        if not self.connection:
+        conn = self.connection
+        if not conn:
             return False
 
         try:
-            # Test connection with a simple query
-            with self.connection.cursor() as cursor:
-                cursor.execute("SELECT 1")
-                cursor.fetchone()
+            if getattr(conn, 'closed', 1) != 0:
+                return False
+
+            poll = getattr(conn, 'poll', None)
+            if callable(poll):
+                try:
+                    poll()
+                except psycopg2.Error:
+                    return False
+
             return True
         except (psycopg2.Error, AttributeError):
             return False
@@ -453,3 +460,24 @@ class PostgreSQLConnection(DatabaseConnection, ConfigurableComponent, ResourceMa
     def is_initialized(self) -> bool:
         """Check if resources are initialized (connected)."""
         return self.is_connected()
+
+    def close_active_cursor(self) -> None:
+        """Close the currently tracked cursor if it is still open."""
+        if self._cursor:
+            self._close_cursor(self._cursor)
+            self._cursor = None
+
+    def _build_connection_parameters(self) -> Dict[str, Any]:
+        """Return psycopg2-compatible connection parameters."""
+        conn_params = {key: value for key, value in self.config.items() if value is not None}
+        # Remove internal keys that psycopg2 should not receive
+        conn_params.pop('connection_url', None)
+        return conn_params
+
+    def _close_cursor(self, cursor: psycopg2.extensions.cursor) -> None:
+        """Safely close a psycopg2 cursor."""
+        try:
+            cursor.close()
+            logger.debug("Cursor closed")
+        except psycopg2.Error as exc:
+            logger.debug("Failed to close cursor cleanly: %s", exc)

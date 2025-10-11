@@ -5,7 +5,7 @@ Test suite for PostgreSQL connection implementation.
 import unittest
 from unittest.mock import MagicMock, Mock, patch
 
-from gds_database import ConfigurationError, ConnectionError
+from gds_database import ConfigurationError, ConnectionError, QueryError
 
 # Mock psycopg2 to avoid import errors in test environment
 mock_psycopg2 = MagicMock()
@@ -27,8 +27,12 @@ class TestPostgreSQLConnection(unittest.TestCase):
             'port': 5432,
             'database': 'testdb',
             'user': 'testuser',
-            'password': 'testpass'
+            'password': 'testpass',
+            'sslmode': 'require',
+            'application_name': 'unit-test',
         }
+        mock_psycopg2.reset_mock()
+        mock_psycopg2.connect.side_effect = None
 
     def test_initialization_with_parameters(self):
         """Test initialization with individual parameters."""
@@ -64,6 +68,17 @@ class TestPostgreSQLConnection(unittest.TestCase):
         self.assertEqual(conn.config['user'], 'testuser')
         self.assertEqual(conn.config['password'], 'testpass')
 
+    def test_initialization_with_kwargs(self):
+        """Test initialization with supplementary kwargs."""
+        conn = PostgreSQLConnection(
+            host='localhost',
+            database='testdb',
+            user='testuser',
+            options='-c search_path=public'
+        )
+
+        self.assertEqual(conn.config['options'], '-c search_path=public')
+
     def test_validate_config_success(self):
         """Test successful configuration validation."""
         conn = PostgreSQLConnection(config=self.config)
@@ -84,28 +99,71 @@ class TestPostgreSQLConnection(unittest.TestCase):
         with self.assertRaises(ConfigurationError):
             PostgreSQLConnection(config=invalid_config)
 
-    @patch('gds_postgres.connection.psycopg2.connect')
-    def test_connect_success(self, mock_connect):
+    def test_connect_success(self):
         """Test successful database connection."""
         mock_connection = Mock()
-        mock_connect.return_value = mock_connection
+        mock_psycopg2.connect.return_value = mock_connection
 
         conn = PostgreSQLConnection(config=self.config)
         result = conn.connect()
 
         self.assertEqual(result, mock_connection)
         self.assertEqual(conn.connection, mock_connection)
-        mock_connect.assert_called_once()
+        mock_psycopg2.connect.assert_called_once_with(
+            host='localhost',
+            port=5432,
+            database='testdb',
+            user='testuser',
+            password='testpass',
+            connect_timeout=30,
+            sslmode='require',
+            application_name='unit-test'
+        )
 
-    @patch('gds_postgres.connection.psycopg2.connect')
-    def test_connect_failure(self, mock_connect):
+    def test_connect_failure(self):
         """Test connection failure handling."""
-        mock_connect.side_effect = mock_psycopg2.Error("Connection failed")
+        mock_psycopg2.connect.side_effect = mock_psycopg2.Error("Connection failed")
+        self.addCleanup(lambda: setattr(mock_psycopg2.connect, 'side_effect', None))
 
         conn = PostgreSQLConnection(config=self.config)
 
         with self.assertRaises(ConnectionError):
             conn.connect()
+
+    def test_connect_returns_existing_connection(self):
+        """Connection should return existing handle when already connected."""
+        conn = PostgreSQLConnection(config=self.config)
+        existing_connection = Mock()
+        conn.connection = existing_connection
+        conn.is_connected = Mock(return_value=True)
+
+        result = conn.connect()
+
+        self.assertIs(result, existing_connection)
+        conn.is_connected.assert_called_once()
+
+    def test_build_connection_parameters_does_not_mutate_config(self):
+        """Ensure helper copies configuration values."""
+        conn = PostgreSQLConnection(config=self.config)
+        params = conn._build_connection_parameters()
+
+        self.assertIn('host', params)
+        self.assertIn('host', conn.config)
+        params['host'] = 'mutated'
+        self.assertEqual(conn.config['host'], 'localhost')
+
+    def test_connect_respects_autocommit_flag(self):
+        """Verify autocommit flag is applied after connection."""
+        config = dict(self.config)
+        config['autocommit'] = True
+
+        mock_connection = Mock()
+        mock_psycopg2.connect.return_value = mock_connection
+
+        conn = PostgreSQLConnection(config=config)
+        conn.connect()
+
+        self.assertTrue(mock_connection.autocommit)
 
     def test_disconnect(self):
         """Test database disconnection."""
@@ -123,16 +181,30 @@ class TestPostgreSQLConnection(unittest.TestCase):
         self.assertIsNone(conn.connection)
         self.assertIsNone(conn._cursor)
 
+    def test_disconnect_handles_close_error(self):
+        """Disconnect should swallow errors from cursor/connection close."""
+        conn = PostgreSQLConnection(config=self.config)
+        broken_cursor = Mock()
+        broken_cursor.close.side_effect = mock_psycopg2.Error("cursor error")
+        conn._cursor = broken_cursor
+
+        broken_connection = Mock()
+        broken_connection.close.side_effect = mock_psycopg2.Error("close error")
+        conn.connection = broken_connection
+
+        conn.disconnect()
+
+        broken_cursor.close.assert_called_once()
+        broken_connection.close.assert_called_once()
+        self.assertIsNone(conn.connection)
+        self.assertIsNone(conn._cursor)
+
     def test_is_connected_true(self):
         """Test is_connected when connection is active."""
         conn = PostgreSQLConnection(config=self.config)
         mock_connection = Mock()
-        mock_cursor = Mock()
-
-        # Mock successful connection test
-        mock_connection.cursor.return_value.__enter__.return_value = mock_cursor
-        mock_cursor.execute.return_value = None
-        mock_cursor.fetchone.return_value = (1,)
+        mock_connection.closed = 0
+        mock_connection.poll = Mock()
 
         conn.connection = mock_connection
 
@@ -141,6 +213,17 @@ class TestPostgreSQLConnection(unittest.TestCase):
     def test_is_connected_false(self):
         """Test is_connected when not connected."""
         conn = PostgreSQLConnection(config=self.config)
+        self.assertFalse(conn.is_connected())
+
+    def test_is_connected_handles_poll_failure(self):
+        """Poll errors should mark connection as inactive."""
+        conn = PostgreSQLConnection(config=self.config)
+        mock_connection = Mock()
+        mock_connection.closed = 0
+        mock_connection.poll.side_effect = mock_psycopg2.Error("poll error")
+
+        conn.connection = mock_connection
+
         self.assertFalse(conn.is_connected())
 
     def test_execute_query_select(self):
@@ -163,6 +246,27 @@ class TestPostgreSQLConnection(unittest.TestCase):
         mock_cursor.execute.assert_called_once_with("SELECT * FROM users", None)
         mock_cursor.fetchall.assert_called_once()
         self.assertEqual(results, [(1, 'test'), (2, 'test2')])
+        mock_cursor.close.assert_called_once()
+        self.assertIsNone(conn._cursor)
+
+    def test_execute_query_closes_existing_cursor_before_new_query(self):
+        """Existing cursor should be closed before running new SELECT."""
+        conn = PostgreSQLConnection(config=self.config)
+        conn.connection = Mock()
+        conn.is_connected = Mock(return_value=True)
+        conn._cursor = Mock()
+        conn.close_active_cursor = Mock()
+
+        new_cursor = Mock()
+        new_cursor.description = [('id',)]
+        new_cursor.fetchall.return_value = [(1,)]
+        conn.connection.cursor.return_value = new_cursor
+
+        conn.execute_query("SELECT 1")
+
+        conn.close_active_cursor.assert_called_once()
+        new_cursor.close.assert_called_once()
+        self.assertIsNone(conn._cursor)
 
     def test_execute_query_insert(self):
         """Test executing INSERT query."""
@@ -183,6 +287,8 @@ class TestPostgreSQLConnection(unittest.TestCase):
 
         mock_cursor.execute.assert_called_once_with("INSERT INTO users VALUES (%s, %s)", ('test', 'user'))
         self.assertEqual(results, [{'affected_rows': 1}])
+        mock_cursor.close.assert_called_once()
+        self.assertIsNone(conn._cursor)
 
     def test_execute_query_not_connected(self):
         """Test executing query when not connected."""
@@ -194,8 +300,6 @@ class TestPostgreSQLConnection(unittest.TestCase):
     def test_execute_query_dict(self):
         """Test executing query with dictionary results."""
         conn = PostgreSQLConnection(config=self.config)
-        mock_connection = Mock()
-
         # Mock is_connected and execute_query
         conn.is_connected = Mock(return_value=True)
         conn.execute_query = Mock(return_value=[{'id': 1, 'name': 'test'}])
@@ -204,6 +308,76 @@ class TestPostgreSQLConnection(unittest.TestCase):
 
         conn.execute_query.assert_called_once_with("SELECT * FROM users", None, return_dict=True)
         self.assertEqual(results, [{'id': 1, 'name': 'test'}])
+
+    def test_execute_query_streaming_returns_open_cursor(self):
+        """Ensure fetch_all=False leaves cursor open for caller."""
+        conn = PostgreSQLConnection(config=self.config)
+        mock_connection = Mock()
+        mock_cursor = Mock()
+
+        conn.connection = mock_connection
+        conn.is_connected = Mock(return_value=True)
+        mock_connection.cursor.return_value = mock_cursor
+        mock_cursor.description = [('id',)]
+
+        cursor = conn.execute_query("SELECT 1", fetch_all=False)
+
+        self.assertIs(cursor, mock_cursor)
+        self.assertIs(conn._cursor, mock_cursor)
+
+    def test_execute_query_return_dict(self):
+        """SELECT with return_dict should convert results to dicts."""
+        conn = PostgreSQLConnection(config=self.config)
+        mock_connection = Mock()
+        mock_cursor = Mock()
+
+        conn.connection = mock_connection
+        conn.is_connected = Mock(return_value=True)
+        mock_connection.cursor.return_value = mock_cursor
+        mock_cursor.description = [('id',)]
+        mock_cursor.fetchall.return_value = [{'id': 1}]
+
+        results = conn.execute_query("SELECT id FROM users", return_dict=True)
+
+        self.assertEqual(results, [{'id': 1}])
+        mock_connection.cursor.assert_called_once_with(
+            cursor_factory=mock_psycopg2.extras.RealDictCursor
+        )
+        mock_cursor.close.assert_called_once()
+        self.assertIsNone(conn._cursor)
+
+    def test_execute_query_raises_query_error(self):
+        """Database errors should surface as QueryError."""
+        conn = PostgreSQLConnection(config=self.config)
+        conn.connection = Mock()
+        conn.is_connected = Mock(return_value=True)
+        conn.connection.cursor.side_effect = mock_psycopg2.Error("boom")
+
+        with self.assertRaises(QueryError):
+            conn.execute_query("SELECT 1")
+
+    def test_close_active_cursor_closes_tracked_cursor(self):
+        """close_active_cursor should shut down any tracked cursor."""
+        conn = PostgreSQLConnection(config=self.config)
+        mock_cursor = Mock()
+        conn._cursor = mock_cursor
+
+        conn.close_active_cursor()
+
+        mock_cursor.close.assert_called_once()
+        self.assertIsNone(conn._cursor)
+
+    def test_close_active_cursor_handles_close_error(self):
+        """Cursor close errors should be swallowed."""
+        conn = PostgreSQLConnection(config=self.config)
+        mock_cursor = Mock()
+        mock_cursor.close.side_effect = mock_psycopg2.Error("close failure")
+        conn._cursor = mock_cursor
+
+        conn.close_active_cursor()
+
+        mock_cursor.close.assert_called_once()
+        self.assertIsNone(conn._cursor)
 
     def test_get_connection_info(self):
         """Test getting connection information."""
@@ -216,6 +390,26 @@ class TestPostgreSQLConnection(unittest.TestCase):
         self.assertEqual(info['database_type'], 'postgresql')
         self.assertEqual(info['host'], 'localhost')
         self.assertEqual(info['database'], 'testdb')
+
+    def test_get_connection_info_includes_metadata(self):
+        """Active connection should populate server metadata."""
+        conn = PostgreSQLConnection(config=self.config)
+        mock_connection = Mock()
+        mock_connection.closed = 0
+        mock_connection.poll = Mock()
+        mock_connection.server_version = '15.4'
+        mock_connection.protocol_version = 3
+        mock_connection.autocommit = False
+        mock_connection.encoding = 'UTF8'
+
+        conn.connection = mock_connection
+
+        info = conn.get_connection_info()
+
+        self.assertEqual(info['server_version'], '15.4')
+        self.assertEqual(info['protocol_version'], 3)
+        self.assertIn('autocommit', info)
+        self.assertEqual(info['encoding'], 'UTF8')
 
     def test_context_manager(self):
         """Test using connection as context manager."""
@@ -230,6 +424,26 @@ class TestPostgreSQLConnection(unittest.TestCase):
             conn.initialize.assert_called_once()
 
         conn.cleanup.assert_called_once()
+
+    def test_initialize_and_cleanup_delegate(self):
+        """Resource manager helpers should delegate to connect/disconnect."""
+        conn = PostgreSQLConnection(config=self.config)
+        conn.connect = Mock()
+        conn.disconnect = Mock()
+
+        conn.initialize()
+        conn.connect.assert_called_once()
+
+        conn.cleanup()
+        conn.disconnect.assert_called_once()
+
+    def test_is_initialized_delegates_to_is_connected(self):
+        """is_initialized should mirror is_connected."""
+        conn = PostgreSQLConnection(config=self.config)
+        conn.is_connected = Mock(return_value=True)
+
+        self.assertTrue(conn.is_initialized())
+        conn.is_connected.assert_called_once()
 
     def test_transaction_methods(self):
         """Test transaction management methods."""
@@ -247,6 +461,46 @@ class TestPostgreSQLConnection(unittest.TestCase):
         # Test rollback
         conn.rollback()
         mock_connection.rollback.assert_called_once()
+
+    def test_begin_transaction_not_connected(self):
+        """begin_transaction should raise when disconnected."""
+        conn = PostgreSQLConnection(config=self.config)
+        conn.is_connected = Mock(return_value=False)
+
+        with self.assertRaises(ConnectionError):
+            conn.begin_transaction()
+
+    def test_begin_transaction_logs_when_autocommit_disabled(self):
+        """Ensure begin_transaction executes silently when autocommit is False."""
+        conn = PostgreSQLConnection(config=self.config)
+        mock_connection = Mock()
+        mock_connection.autocommit = False
+        conn.connection = mock_connection
+        conn.is_connected = Mock(return_value=True)
+
+        conn.begin_transaction()
+
+    def test_commit_error_raises_query_error(self):
+        """Commit failures should raise QueryError."""
+        conn = PostgreSQLConnection(config=self.config)
+        mock_connection = Mock()
+        mock_connection.commit.side_effect = mock_psycopg2.Error("commit error")
+        conn.connection = mock_connection
+        conn.is_connected = Mock(return_value=True)
+
+        with self.assertRaises(QueryError):
+            conn.commit()
+
+    def test_rollback_error_raises_query_error(self):
+        """Rollback failures should raise QueryError."""
+        conn = PostgreSQLConnection(config=self.config)
+        mock_connection = Mock()
+        mock_connection.rollback.side_effect = mock_psycopg2.Error("rollback error")
+        conn.connection = mock_connection
+        conn.is_connected = Mock(return_value=True)
+
+        with self.assertRaises(QueryError):
+            conn.rollback()
 
     def test_get_table_names(self):
         """Test getting table names."""
