@@ -18,6 +18,10 @@ Start here if you're new to Python or programming:
    - Object-Oriented Programming basics
    - Classes and objects
    - Inheritance and polymorphism
+
+### Additional Tutorials
+
+- **[PowerShell Beginner's Tutorial](PowerShellBeginnersTutorial.md)** - Learn PowerShell from basics to object-oriented programming
    - Abstract Base Classes
    - Error handling
    - Type hints
