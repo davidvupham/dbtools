@@ -49,7 +49,7 @@ sys.modules["pysnmp.entity.engine"] = _engine
 sys.modules["pysnmp.entity.config"] = _config
 sys.modules["pysnmp.entity.rfc3413"] = _rfc
 
-from gds_snmp_receiver.core import SNMPReceiver
+from gds_snmp_receiver.core import SNMPReceiver  # noqa: E402
 
 
 def test_compute_idempotency_returns_hex_64():
