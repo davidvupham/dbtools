@@ -15,7 +15,14 @@ from datetime import datetime
 from typing import Any, Iterable, Optional
 
 import pika
-from pysnmp.carrier.asynsock.dgram import udp
+# pysnmp changed carrier backends over versions: older versions expose
+# pysnmp.carrier.asynsock, newer versions expose pysnmp.carrier.asyncio.
+# Try to import the asynsock backend first for compatibility, otherwise
+# fall back to the asyncio backend.
+try:
+    from pysnmp.carrier.asynsock.dgram import udp
+except Exception:
+    from pysnmp.carrier.asyncio.dgram import udp
 from pysnmp.entity import engine, config
 from pysnmp.entity.rfc3413 import ntfrcv
 
@@ -70,7 +77,31 @@ class SNMPReceiver:
         Registers SIGINT/SIGTERM handlers for graceful shutdown.
         """
         self._setup_snmp_engine()
-        self._ensure_pika_connection()
+        # Ensure we have a pika connection before we start receiving traps.
+        # RabbitMQ may take a short while to become ready; retry for a
+        # configurable period so the receiver declares its queue and is
+        # deterministic for E2E tests.
+        max_wait = 30
+        waited = 0
+        while self._pika_conn is None or self._pika_ch is None:
+            self._ensure_pika_connection()
+            if self._pika_conn is not None and self._pika_ch is not None:
+                # Create a readiness marker file so external test helpers can
+                # detect the receiver is ready (AMQP connected and queue declared).
+                try:
+                    with open("/tmp/gds_snmp_ready", "w") as f:
+                        f.write("ready\n")
+                except Exception:
+                    logger.debug("Could not write readiness marker, continuing")
+                break
+            if waited >= max_wait:
+                logger.warning("Could not establish RabbitMQ connection after %ds, continuing without AMQP", max_wait)
+                break
+            waited += 1
+            logger.info("Waiting for RabbitMQ to become available (%ds/%ds)", waited, max_wait)
+            import time
+
+            time.sleep(1)
 
         signal.signal(signal.SIGINT, self._signal_handler)
         signal.signal(signal.SIGTERM, self._signal_handler)
@@ -111,6 +142,15 @@ class SNMPReceiver:
             finally:
                 self._pika_conn = None
                 self._pika_ch = None
+
+        # Remove readiness marker if present
+        try:
+            import os
+
+            if os.path.exists("/tmp/gds_snmp_ready"):
+                os.remove("/tmp/gds_snmp_ready")
+        except Exception:
+            logger.debug("Could not remove readiness marker")
 
         self._running.clear()
 

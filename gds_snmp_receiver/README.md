@@ -26,6 +26,18 @@ Run the receiver (container environments may map host UDP ports differently):
 python -m gds_snmp_receiver.receiver --host 0.0.0.0 --port 162 --rabbit amqp://guest:guest@rabbitmq:5672/ --queue alerts
 ```
 
+Container notes
+---------------
+This package provides a package-local `Dockerfile` at `gds_snmp_receiver/Dockerfile`.
+Build the image from the package directory to keep the build context small:
+
+```bash
+docker build -t gds_snmp_receiver:latest gds_snmp_receiver/
+```
+
+The image includes a small `healthcheck.py` which the Dockerfile wires into a `HEALTHCHECK` so orchestrators can probe the container's health. The healthcheck checks for the receiver Python process; it does not attempt to validate RabbitMQ connectivity.
+
+
 Environment variables
 ---------------------
 All CLI options may be provided via environment variables as well:

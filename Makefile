@@ -1,3 +1,19 @@
+.PHONY: build-gds-snmp build-gds-notification build-all
+
+# Build package images in this mono-repo. Each target builds from the
+# package directory so the docker build context is small and package-owned.
+
+build-gds-snmp:
+	docker build -t gds_snmp_receiver:latest gds_snmp_receiver/
+
+build-gds-notification:
+	@if [ -d gds_notification ]; then \
+	  docker build -t gds_notification:latest gds_notification/; \
+	else \
+	  echo "gds_notification/ not present, skipping"; \
+	fi
+
+build-all: build-gds-snmp build-gds-notification
 # Makefile for dev container workflows
 
 IMAGE_NAME ?= dbtools-dev
