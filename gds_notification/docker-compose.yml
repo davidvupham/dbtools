@@ -1,0 +1,46 @@
+version: '3.8'
+services:
+  rabbitmq:
+    image: rabbitmq:3.11-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+  mailhog:
+    image: mailhog/mailhog
+    ports:
+      - "1025:1025" # SMTP
+      - "8025:8025" # Web UI
+
+  ingest:
+    build: .
+    command: uvicorn service.main:app --host 0.0.0.0 --port 8000 --reload
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./:/app
+    depends_on:
+      - rabbitmq
+      - mailhog
+
+  worker:
+    build: .
+    command: python -u worker/worker.py
+    volumes:
+      - ./:/app
+    depends_on:
+      - rabbitmq
+
+  snmp:
+    build: .
+    command: python -u gds_snmp_receiver/receiver.py
+    volumes:
+      - ./:/app
+    depends_on:
+      - rabbitmq
+    ports:
+      - "1162:162/udp" # Map host UDP 1162 to container port 162 for SNMP traps
+
+# Notes:
+# - The `ingest` service uses FastAPI and exposes /ingest for PoC. MailHog provides a local outgoing SMTP sink.
+# - Build context is the project root; for a full Dockerfile add a simple Python build image as needed.
