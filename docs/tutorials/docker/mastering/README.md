@@ -36,6 +36,36 @@ Use this as the primary landing page. Each chapter links to runnable examples an
 
 ---
 
+## What’s in each chapter
+
+- [Chapter 1: The Why and How of Docker](./chapter01_why_and_how.md) — motivations, containers vs. VMs, core terms (image, container, registry), and your first `hello-world` run.
+- [Chapter 2: Setting Up Your Docker Environment](./chapter02_setup.md) — install on Linux/macOS/Windows, verify the engine, and quick sanity checks.
+- [Chapter 3: CLI Essentials and First Run](./chapter03_cli_essentials.md) — `run`, `ps`, `logs`, `exec`, stop/remove; mapping ports and working with env vars.
+- [Chapter 4: Dockerfile Basics](./chapter04_dockerfile_basics.md) — layers and context, `.dockerignore`, a minimal Python HTTP server image.
+- [Chapter 5: Advanced Dockerfile Techniques](./chapter05_dockerfile_advanced.md) — multi‑stage builds, build args/env, cache behavior, and minimal base images.
+- [Chapter 6: Managing Images](./chapter06_image_management.md) — `inspect`, `history`, pruning safely, save/load, tagging/pushing, and finding images in use by containers.
+- [Chapter 7: Container Management](./chapter07_container_management.md) — logs, `exec`, stats, healthchecks, restart policies, and lifecycle tips.
+- [Chapter 8: Docker Networking](./chapter08_networking.md) — bridge/host/user‑defined networks, DNS, connectivity, and troubleshooting. See also: networking deep dive and runnable examples:
+  - Deep dive: `docs/tutorials/docker/networking_deep_dive.md`
+  - Examples (Compose + echo servers): `docs/tutorials/docker/examples/networking/`
+- [Chapter 9: Persistence with Volumes and Mounts](./chapter09_volumes_and_mounts.md) — named volumes, bind mounts, backups, and common data pitfalls.
+- [Chapter 10: Advanced Data & Storage](./chapter10_advanced_storage.md) — storage drivers, tmpfs, performance considerations, and when to choose what.
+- [Chapter 11: Introduction to Docker Compose](./chapter11_compose_intro.md) — define multi‑container apps, `up`/`down`, logs, and networks. Try a small stack in the networking examples:
+  - Examples: `docs/tutorials/docker/examples/networking/`
+- [Chapter 12: Advanced Compose](./chapter12_compose_advanced.md) — profiles, overrides, scaling, env files, and production‑friendly patterns.
+- [Chapter 13: Orchestration 101 (Swarm)](./chapter13_orchestration_swarm.md) — services, rolling updates, and when Swarm still fits.
+- [Chapter 14: Kubernetes Concepts for Docker Users](./chapter14_kubernetes_for_docker_users.md) — pods/deployments/services mapped from Docker concepts with a quick deployment example.
+- [Chapter 15: Docker‑Driven Dev Workflow](./chapter15_dev_workflow.md) — live reload, bind mounts, local stacks via Compose, and productive inner loops.
+- [Chapter 16: CI/CD for Containers](./chapter16_cicd.md) — Buildx multi‑arch builds, registry pushes, caching, and scanning. See the Buildx example:
+  - Examples (Buildx multi‑arch demo): `docs/tutorials/docker/examples/buildx/`
+- [Chapter 17: Security Hardening](./chapter17_security.md) — run as non‑root, drop capabilities, read‑only filesystems, secrets management, and image scanning.
+- [Chapter 18: Troubleshooting & Debugging](./chapter18_troubleshooting.md) — logs, events, stats, common networking issues, and safe cleanup.
+- [Chapter 19: Ecosystem Tools](./chapter19_ecosystem_tools.md) — registries (Hub/GHCR/ECR/ACR/Harbor), contexts and remote builders, rootless mode, scanners (Trivy/Grype/Snyk), and SBOMs (Syft).
+- [Chapter 20: Beyond the Basics](./chapter20_beyond_the_basics.md) — BuildKit cache export/import and mounts, advanced multi‑stage patterns, reproducible builds, provenance/attestations, and signing (cosign/OCI artifacts). See also Buildx example:
+  - Examples (Buildx multi‑arch demo): `docs/tutorials/docker/examples/buildx/`
+
+---
+
 ## How to use this tutorial
 
 - Start at Chapter 1 and progress linearly, or jump to a chapter you need.
