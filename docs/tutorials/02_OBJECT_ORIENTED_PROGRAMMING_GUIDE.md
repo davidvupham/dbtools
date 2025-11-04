@@ -56,6 +56,30 @@ your_car = Car(color="blue", brand="Honda")
 
 ---
 
+### Quickstart: How to run the examples
+
+- Save any code block to a file like `example.py` and run it:
+    - Linux/macOS: `python3 example.py`
+- Or paste snippets into a Python REPL: run `python3`, then paste code.
+- Recommended Python: 3.10+ (examples use type hints and modern features).
+
+Tip: If an example references project-specific classes (e.g., Snowflake), treat it as illustrative unless you have those dependencies installed.
+
+### Glossary (beginner-friendly)
+
+- Class: A blueprint for creating objects.
+- Object (instance): A thing created from a class.
+- Attribute: A piece of data stored on an object (e.g., `user.name`).
+- Method: A function defined in a class that operates on objects (e.g., `user.save()`).
+- Constructor: The `__init__` method that runs when creating an object.
+- Encapsulation: Keeping implementation details private behind a clean interface.
+- Inheritance: A class reusing/extending another class’s behavior.
+- Polymorphism: Different classes exposing the same interface so you can use them interchangeably.
+- Interface/ABC: A contract specifying required methods; ABC enforces this in Python.
+- Composition: Building classes by combining other objects ("has-a"), rather than inheriting ("is-a").
+
+---
+
 ## Classes and Objects
 
 ### Your First Class
@@ -140,14 +164,17 @@ print(Dog.is_good_boy())  # True
 
 From `connection.py`:
 ```python
+from typing import Optional
+
 class SnowflakeConnection:
     """Manages connections to Snowflake database."""
     
-    def __init__(self, account: str, user: Optional[str] = None):
+    def __init__(self, account: str, user: Optional[str] = None, private_key: Optional[str] = None):
         """Initialize a new connection."""
         # Store connection parameters for THIS connection
         self.account = account
         self.user = user
+        self.private_key = private_key
         self.connection = None  # No connection yet
         self._initialized = False
     
@@ -157,7 +184,7 @@ class SnowflakeConnection:
         self.connection = snowflake.connector.connect(
             account=self.account,
             user=self.user,
-            private_key=self.private_key
+            private_key=self.private_key,
         )
         self._initialized = True
         return self.connection
@@ -313,9 +340,12 @@ print(temp.celsius)    # 37.77... (converted)
 
 **Example from Our Code** (`connection.py`):
 ```python
+from typing import Optional, Dict, Any
+
 class SnowflakeConnection:
-    def __init__(self, account: str):
+    def __init__(self, account: str, user: Optional[str] = None):
         self.account = account          # Public - users need this
+        self.user = user                # Public - often part of info
         self.connection = None          # Public - users might need this
         self._initialized = False       # Private - internal state
     
@@ -330,7 +360,7 @@ class SnowflakeConnection:
         return {
             'account': self.account,
             'user': self.user,
-            'connected': self.is_connected()
+            'connected': (self.connection is not None)
         }
 ```
 
@@ -538,7 +568,7 @@ class DatabaseConnection(ABC):
         pass
 
 # Snowflake-specific implementation
-class SnowflakeConnection(DatabaseConnection, ConfigurableComponent, ResourceManager):
+class SnowflakeConnection(DatabaseConnection, ConfigurableComponent):
     """Snowflake implementation of DatabaseConnection."""
     
     def connect(self) -> snowflake.connector.SnowflakeConnection:
@@ -546,13 +576,15 @@ class SnowflakeConnection(DatabaseConnection, ConfigurableComponent, ResourceMan
         self.connection = snowflake.connector.connect(
             account=self.account,
             user=self.user,
-            private_key=self.private_key
+            # ... other parameters
         )
         return self.connection
     
     def disconnect(self) -> None:
         """Close Snowflake connection."""
-        self.close()
+        if self.connection is not None:
+            self.connection.close()
+            self.connection = None
     
     def execute_query(self, query: str, params: Optional[tuple] = None) -> List[Any]:
         """Execute a Snowflake query."""
@@ -1359,6 +1391,179 @@ print(coffee_with_milk_and_sugar.description())  # "Simple coffee, milk, sugar"
 print(coffee_with_milk_and_sugar.cost())         # 8
 ```
 
+### 5. Composite Pattern
+
+Treat individual objects (leaves) and compositions (groups) uniformly.
+
+```python
+from abc import ABC, abstractmethod
+
+class Node(ABC):
+    @abstractmethod
+    def size(self) -> int: ...
+    @abstractmethod
+    def show(self, indent: int = 0) -> None: ...
+
+class File(Node):  # Leaf
+    def __init__(self, name: str, size: int):
+        self.name, self._size = name, size
+    def size(self) -> int:
+        return self._size
+    def show(self, indent: int = 0) -> None:
+        print(" " * indent + f"- {self.name} ({self._size} bytes)")
+
+class Directory(Node):  # Composite
+    def __init__(self, name: str):
+        self.name = name
+        self.children: list[Node] = []
+    def add(self, node: Node) -> None:
+        self.children.append(node)
+    def size(self) -> int:
+        return sum(child.size() for child in self.children)
+    def show(self, indent: int = 0) -> None:
+        print(" " * indent + f"+ {self.name}/ ({self.size()} bytes)")
+        for child in self.children:
+            child.show(indent + 2)
+
+# Usage
+root = Directory("root")
+docs = Directory("docs")
+root.add(File("readme.txt", 1200))
+docs.add(File("guide.md", 5000))
+root.add(docs)
+
+root.show()
+# Both File and Directory share the same interface (size, show)
+```
+
+When to use:
+- Tree structures (files/dirs, UI widgets, organization charts) where you want a uniform API.
+
+Pitfalls:
+- Mutability: be careful with shared children; consider making leaves immutable.
+
+### 6. State Pattern
+
+Let an object change its behavior when its internal state changes—object appears to change class.
+
+```python
+from abc import ABC, abstractmethod
+
+class State(ABC):
+    @abstractmethod
+    def send(self, ctx, data: str) -> str: ...
+
+class Disconnected(State):
+    def send(self, ctx, data: str) -> str:
+        ctx.state = Connected()  # auto-connect for demo
+        return "connecting... then sending: " + data
+
+class Connected(State):
+    def send(self, ctx, data: str) -> str:
+        return "sent: " + data
+
+class Client:
+    def __init__(self):
+        self.state: State = Disconnected()
+    def send(self, data: str) -> str:
+        return self.state.send(self, data)
+
+# Usage
+c = Client()
+print(c.send("hello"))  # connects, then sends
+print(c.send("world"))  # already connected, sends directly
+```
+
+When to use:
+- Objects with clear modes (disconnected/connected, draft/published) where behavior varies by mode.
+
+Pitfalls:
+- Too many tiny state classes can add overhead; keep transitions clear and documented.
+
+### 7. Proxy Pattern
+
+Provide a placeholder to control access to another object (lazy load, caching, access control, remote proxy).
+
+```python
+class ImageRepository:
+    def get(self, image_id: str) -> bytes:
+        print("fetching from origin...")
+        return b"<image-bytes>"  # pretend expensive IO
+
+class CachingRepoProxy:
+    def __init__(self, repo: ImageRepository):
+        self._repo = repo
+        self._cache: dict[str, bytes] = {}
+    def get(self, image_id: str) -> bytes:
+        if image_id not in self._cache:
+            self._cache[image_id] = self._repo.get(image_id)
+        return self._cache[image_id]
+
+# Usage
+repo = CachingRepoProxy(ImageRepository())
+repo.get("logo")  # hits origin
+repo.get("logo")  # served from cache
+```
+
+When to use:
+- Remote calls, expensive loads, access control, logging, rate limiting.
+
+Pitfalls:
+- Keep proxy responsibilities focused; otherwise it drifts into a God object.
+
+### 8. Visitor Pattern
+
+Separate algorithms from the objects they operate on. Add new operations without modifying the classes.
+
+```python
+from abc import ABC, abstractmethod
+
+class Visitable(ABC):
+    @abstractmethod
+    def accept(self, v): ...
+
+class File(Visitable):
+    def __init__(self, name: str):
+        self.name = name
+    def accept(self, v):
+        return v.visit_file(self)
+
+class Directory(Visitable):
+    def __init__(self, name: str, children: list[Visitable] | None = None):
+        self.name = name
+        self.children = children or []
+    def accept(self, v):
+        return v.visit_directory(self)
+
+class CountVisitor:
+    def visit_file(self, f: File) -> int:
+        return 1
+    def visit_directory(self, d: Directory) -> int:
+        return sum(child.accept(self) for child in d.children)
+
+# Usage
+tree = Directory("root", [File("a"), Directory("docs", [File("g1"), File("g2")])])
+total = tree.accept(CountVisitor())
+print(total)  # 3
+```
+
+When to use:
+- Stable hierarchies where you frequently add new operations over the structure.
+
+Pitfalls:
+- Adding new element types requires updating all visitors (trade-off vs adding new operations).
+
+### Other patterns to explore
+
+- Adapter: Make incompatible interfaces work together (wrap/translate).
+- Facade: Provide a simple API over a complex subsystem.
+- Command: Encapsulate an action as an object (undo/redo, queues).
+- Chain of Responsibility: Pass requests along a chain until handled.
+- Mediator: Centralize complex communication among many objects.
+- Memento: Capture/restore object state (snapshots, undo).
+- Builder: Step-by-step object construction with fluent APIs.
+- Prototype: Clone existing objects to create new ones.
+
 ---
 
 ## Advanced OOP Concepts
@@ -1451,6 +1656,31 @@ print(db1 is db2)  # True - same instance
 
 ---
 
+### Thread-safety basics
+
+When classes mutate shared state across threads, protect critical sections:
+
+```python
+import threading
+
+class Counter:
+    def __init__(self):
+        self._value = 0
+        self._lock = threading.Lock()
+    def increment(self):
+        with self._lock:
+            self._value += 1
+    @property
+    def value(self):
+        with self._lock:
+            return self._value
+```
+
+Guidelines:
+- Avoid exposing partially updated state; use locks or immutable snapshots.
+- Prefer message-passing (queues) for complex coordination.
+- Consider async (`asyncio`) for IO-bound concurrency.
+
 ## Modern Python OOP Features
 
 ### Dataclasses
@@ -1478,6 +1708,25 @@ print(person)  # Person(name='Alice', age=30, email='alice@example.com', hobbies
 
 person.hobbies.append("reading")
 print(person.hobbies)  # ['reading']
+```
+
+#### Dataclass options and caveats
+
+- `slots=True`: Generates slotted classes to reduce memory and speed up attribute access.
+- `eq`, `order`, `frozen`, `unsafe_hash`: Control equality, ordering, immutability, and hashing.
+- Mutable defaults: Always use `field(default_factory=list)` (or dict, set) to avoid shared mutable defaults.
+- Interop: Dataclasses can be easily converted to dicts with `dataclasses.asdict` (but be mindful of nested objects).
+
+Example with slots and ordering:
+
+```python
+from dataclasses import dataclass, field
+
+@dataclass(slots=True, order=True)
+class User:
+    id: int
+    name: str
+    tags: list[str] = field(default_factory=list)
 ```
 
 ### Frozen Dataclasses (Immutable)
@@ -1528,6 +1777,30 @@ print(order.status)  # Status.PENDING
 order.process()      # "Order 12345 is now processing"
 ```
 
+### Dunder methods and object model
+
+Common special methods help your objects integrate with Python idioms:
+
+- `__repr__`/`__str__`: Debug vs user-friendly string representations
+- `__eq__`, `__hash__`: Equality and dictionary/set keys
+- Ordering: `__lt__`, `__le__`, `__gt__`, `__ge__` (or use `functools.total_ordering`)
+- Containers/iteration: `__len__`, `__iter__`, `__contains__`
+- Context managers: `__enter__`, `__exit__`
+
+```python
+class Vector:
+    def __init__(self, x: float, y: float):
+        self.x, self.y = x, y
+    def __repr__(self):
+        return f"Vector(x={self.x}, y={self.y})"
+    def __eq__(self, other):
+        return isinstance(other, Vector) and (self.x, self.y) == (other.x, other.y)
+    def __add__(self, other):
+        if not isinstance(other, Vector):
+            return NotImplemented
+        return Vector(self.x + other.x, self.y + other.y)
+```
+
 ### Type Hints and Protocols
 
 Define structural typing:
@@ -1554,6 +1827,28 @@ def draw_shape(shape: Drawable) -> None:
 draw_shape(Circle())  # "Drawing a circle"
 draw_shape(Square())  # "Drawing a square"
 ```
+
+### JSON serialization tips
+
+Convert objects to/from JSON safely:
+
+```python
+from dataclasses import dataclass, asdict
+import json
+
+@dataclass
+class User:
+    id: int
+    name: str
+
+u = User(1, "Alice")
+payload = json.dumps(asdict(u))       # Serialize
+loaded = User(**json.loads(payload))  # Deserialize
+```
+
+Notes:
+- Non-serializable types (datetime, Decimal) need custom encoding/decoding.
+- For big models with versions, include a `schema_version` field and migration logic.
 
 ---
 
@@ -1600,6 +1895,19 @@ draw_shape(Square())  # "Drawing a square"
 - Use dependency injection
 - Create focused unit tests
 - Test edge cases and error conditions
+
+### 7. Project structure and imports
+
+- Group related classes into modules and packages (folders with `__init__.py`).
+- Keep module size modest; split when files get long or responsibilities diverge.
+- Prefer absolute imports in applications; consider relative imports inside packages when refactoring.
+- Example layout:
+    - `package_name/`
+        - `__init__.py`
+        - `models/` (domain classes)
+        - `services/` (classes orchestrating models)
+        - `adapters/` (DB/API integrations)
+        - `tests/` (mirrors package structure)
 
 ### Example: Well-Designed Class
 
@@ -1706,7 +2014,6 @@ with PostgreSQLConnection(config) as db:
 7. **Learn Patterns**: Study common design patterns
 8. **Practice**: The more you use OOP, the better you'll get
 
-# Connection automatically closed
 ```
 
 ---
@@ -1717,38 +2024,31 @@ While OOP provides excellent maintainability and organization, it's important to
 
 ### Object Creation Overhead
 
-**Understanding the Cost:**
+**Understanding the Cost (with timeit):**
 ```python
-import time
+import timeit
 
-# Function-based approach
 def create_user_dict(name, email, age):
     return {'name': name, 'email': email, 'age': age}
 
-# Class-based approach
 class User:
     def __init__(self, name, email, age):
         self.name = name
         self.email = email
         self.age = age
 
-# Performance comparison
-def benchmark_creation(n=100000):
-    # Dictionary approach
-    start = time.time()
-    users_dict = [create_user_dict(f"User{i}", f"user{i}@example.com", i%100) for i in range(n)]
-    dict_time = time.time() - start
-    
-    # Class approach
-    start = time.time()
-    users_class = [User(f"User{i}", f"user{i}@example.com", i%100) for i in range(n)]
-    class_time = time.time() - start
-    
-    print(f"Dictionary creation: {dict_time:.4f}s")
-    print(f"Class creation: {class_time:.4f}s")
-    print(f"Class overhead: {((class_time/dict_time - 1) * 100):.1f}%")
+def bench(n=100_000):
+    dict_stmt = "[create_user_dict(f'User{i}', f'user{i}@example.com', i%100) for i in range(n)]"
+    class_stmt = "[User(f'User{i}', f'user{i}@example.com', i%100) for i in range(n)]"
+    setup = "from __main__ import create_user_dict, User, n"
+    dict_time = timeit.timeit(dict_stmt, setup=setup, number=5, globals={'n': n})
+    class_time = timeit.timeit(class_stmt, setup=setup, number=5, globals={'n': n})
+    print(f"Dictionary creation (5x): {dict_time:.4f}s")
+    print(f"Class creation (5x):     {class_time:.4f}s")
+    if dict_time > 0:
+        print(f"Relative overhead:      {((class_time/dict_time - 1) * 100):.1f}%")
 
-benchmark_creation()
+bench()
 ```
 
 **Key Insights:**
@@ -1759,6 +2059,8 @@ benchmark_creation()
 ### Memory Optimization with `__slots__`
 
 ```python
+import tracemalloc
+
 class RegularClass:
     def __init__(self, x, y, z):
         self.x = x
@@ -1767,27 +2069,37 @@ class RegularClass:
 
 class SlottedClass:
     __slots__ = ('x', 'y', 'z')  # Restricts attributes
-    
     def __init__(self, x, y, z):
         self.x = x
         self.y = y
         self.z = z
 
-import sys
+def measure_allocation(cls, n=200_000):
+    tracemalloc.start()
+    before = tracemalloc.take_snapshot()
+    objs = [cls(1, 2, 3) for _ in range(n)]
+    after = tracemalloc.take_snapshot()
+    stats = after.compare_to(before, 'lineno')
+    total = sum(s.size_diff for s in stats)
+    tracemalloc.stop()
+    return total / (1024 * 1024)  # MiB
 
-regular = RegularClass(1, 2, 3)
-slotted = SlottedClass(1, 2, 3)
-
-print(f"Regular class memory: {sys.getsizeof(regular)} bytes")
-print(f"Slotted class memory: {sys.getsizeof(slotted)} bytes")
-print(f"Memory savings: {((sys.getsizeof(regular) - sys.getsizeof(slotted)) / sys.getsizeof(regular) * 100):.1f}%")
+reg_mb = measure_allocation(RegularClass)
+slot_mb = measure_allocation(SlottedClass)
+print(f"RegularClass: {reg_mb:.2f} MiB for many instances")
+print(f"SlottedClass: {slot_mb:.2f} MiB for many instances")
+if reg_mb > 0:
+    print(f"Approx savings: {(1 - slot_mb/reg_mb)*100:.1f}%")
 ```
 
-**Benefits of `__slots__`:**
-- Reduces memory usage by ~40-50%
-- Faster attribute access
-- Prevents accidental attribute creation
-- Trade-off: Less flexible, no `__dict__`
+**Benefits of `__slots__` (with caveats):**
+- Can reduce per-instance memory and speed up attribute access for many simple objects.
+- Prevents accidental attribute creation.
+- Caveats:
+    - No per-instance `__dict__` (unless explicitly added); attribute set is fixed.
+    - Multiple inheritance and `weakref` need care (`__weakref__` slot).
+    - CPython’s key-sharing dicts already reduce some overhead; measure your case.
+    - Dataclasses support `@dataclass(slots=True)` as an easy alternative.
 
 ### Method Dispatch Costs
 
@@ -1806,27 +2118,14 @@ def call_speak_polymorphic(animal):
 def call_speak_direct(dog):
     return dog.speak()
 
-# Performance comparison
+import timeit
 dog = Dog()
-iterations = 1000000
-
-import time
-
-# Polymorphic calls (virtual method dispatch)
-start = time.time()
-for _ in range(iterations):
-    result = call_speak_polymorphic(dog)
-poly_time = time.time() - start
-
-# Direct calls
-start = time.time()
-for _ in range(iterations):
-    result = call_speak_direct(dog)
-direct_time = time.time() - start
-
-print(f"Polymorphic calls: {poly_time:.4f}s")
-print(f"Direct calls: {direct_time:.4f}s")
-print(f"Overhead: {((poly_time/direct_time - 1) * 100):.1f}%")
+iterations = 1_000_00  # smaller for demo
+poly = timeit.timeit(lambda: call_speak_polymorphic(dog), number=iterations)
+direct = timeit.timeit(lambda: call_speak_direct(dog), number=iterations)
+print(f"Polymorphic total: {poly:.4f}s  Direct total: {direct:.4f}s")
+if direct > 0:
+    print(f"Relative overhead: {((poly/direct - 1) * 100):.1f}% (usually small)")
 ```
 
 **Optimization Strategies:**
@@ -1880,9 +2179,9 @@ print(f"Overhead: {((deep_time/shallow_time - 1) * 100):.1f}%")
 ```
 
 **Best Practices:**
-- Keep inheritance hierarchies shallow (3-4 levels max)
-- Use composition over deep inheritance
-- Profile before optimizing - inheritance overhead is usually minimal
+- Keep inheritance hierarchies shallow for readability and maintainability.
+- Prefer composition over deep inheritance.
+- Performance differences from inheritance depth are typically negligible; optimize only when profiling shows a hotspot.
 
 ### When OOP Performance Matters
 
@@ -1926,6 +2225,13 @@ class UserService:
 users = [UserData(i, f"User{i}", f"user{i}@example.com") for i in range(1000)]
 service = UserService(users)
 ```
+
+### Quick performance guidance
+
+- Data-only and lots of instances: prefer `dataclass(slots=True)` or `collections.namedtuple` (immutable) over custom classes with `__dict__`.
+- Tight loops: cache attribute/method references to local variables inside the loop when profiling shows it helps.
+- Polymorphism costs are usually small; optimize for clarity first.
+- Use the right tools: `timeit` for microbenchmarks, `tracemalloc` for memory, and `cProfile`/`py-spy` for whole-program profiling.
 
 ---
 
@@ -2598,6 +2904,26 @@ class TestUserWorkflow:
 
 ## Real-World Examples from Our Codebase
 
+## Practice Exercises
+
+Try these short exercises to reinforce each concept:
+
+1) Encapsulation: Create a `SafeCounter` with a private value and `increment()`, `decrement()` methods that never let it drop below zero. Add a read-only property `value`.
+
+2) Inheritance & Polymorphism: Implement `Shape` with `area()`; add `Rectangle` and `Circle`, then write a function that takes a list of shapes and prints their areas.
+
+3) Composition: Build a `Car` that uses `Engine` and `GPS` components. Add `start()`, `accelerate()`, and `navigate_to()` methods.
+
+4) ABCs: Define an abstract `Notifier` and implement `EmailNotifier` and `SMSNotifier`. Write a function that accepts any notifier and sends messages.
+
+5) Dataclasses: Create a `@dataclass(slots=True)` `User` with `id`, `name`; serialize to JSON and back.
+
+6) Dunder methods: Create a `Vector` supporting `+`, printable with `repr`, and equality checks.
+
+7) Thread-safety: Implement a thread-safe `BankAccount` supporting `deposit`/`withdraw` with a lock.
+
+Optional: Add tests with `pytest` for the above.
+
 Let's look at how OOP concepts are applied in our actual project code, with references to the real implementations.
 
 ### Database Connection Hierarchy
@@ -2669,14 +2995,13 @@ class ConfigurableComponent(ABC):
 
 From `gds_snowflake/gds_snowflake/connection.py`:
 ```python
-class SnowflakeConnection(DatabaseConnection, ConfigurableComponent, ResourceManager):
+class SnowflakeConnection(DatabaseConnection, ConfigurableComponent):
     """
     Snowflake database connection implementation.
     
     Demonstrates multiple inheritance and composition:
     - DatabaseConnection: Core database interface
     - ConfigurableComponent: Configuration management
-    - ResourceManager: Resource lifecycle management
     """
     
     def __init__(self, account: str, user: Optional[str] = None, **kwargs):
