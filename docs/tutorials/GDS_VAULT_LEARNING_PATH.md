@@ -51,17 +51,17 @@ This directory contains comprehensive tutorials and exercises to help you unders
 ### For Complete Beginners
 
 **Week 1: Python Fundamentals**
-1. Read [01_PYTHON_BASICS_FOR_THIS_PROJECT.md](01_PYTHON_BASICS_FOR_THIS_PROJECT.md)
+1. Read [01_PYTHON_BASICS_FOR_THIS_PROJECT.md](python/01_PYTHON_BASICS_FOR_THIS_PROJECT.md)
 2. Do exercises: `01_dataclass_exercises.py` through `04_super_exercises.py`
 3. Practice with Python REPL
 
 **Week 2: Object-Oriented Programming**
-1. Read [01_PYTHON_BASICS_PART2.md](01_PYTHON_BASICS_PART2.md)
+1. Read [01_PYTHON_BASICS_PART2.md](python/01_PYTHON_BASICS_PART2.md)
 2. Focus on classes, inheritance, and composition
 3. Do exercises: `09_oop_comprehensive.py`
 
 **Week 3: Advanced Concepts**
-1. Read [01_PYTHON_BASICS_PART3.md](01_PYTHON_BASICS_PART3.md)
+1. Read [01_PYTHON_BASICS_PART3.md](python/01_PYTHON_BASICS_PART3.md)
 2. Learn about decorators, properties, magic methods
 3. Read [05_GDS_VAULT_PYTHON_CONCEPTS.md](05_GDS_VAULT_PYTHON_CONCEPTS.md)
 
@@ -248,7 +248,7 @@ Build a complete client combining all concepts.
 ### 1. Choose Your Starting Point
 
 **Complete Beginner?**
-- Start with [01_PYTHON_BASICS_FOR_THIS_PROJECT.md](01_PYTHON_BASICS_FOR_THIS_PROJECT.md)
+- Start with [01_PYTHON_BASICS_FOR_THIS_PROJECT.md](python/01_PYTHON_BASICS_FOR_THIS_PROJECT.md)
 - Work through all three parts
 - Do the basic exercises first
 

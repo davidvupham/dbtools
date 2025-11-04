@@ -11,14 +11,13 @@ Welcome! This tutorial will teach you Python from the ground up, using real exam
 2. [Variables and Data Types](#variables-and-data-types)
 3. [Data Structures](#data-structures)
 4. [Functions](#functions)
-5. [Object-Oriented Programming (OOP)](#object-oriented-programming)
-6. [Error Handling](#error-handling)
-7. [Type Hints](#type-hints)
-8. [Decorators](#decorators)
-9. [Context Managers](#context-managers)
-10. [Logging](#logging)
-11. [Modules and Packages](#modules-and-packages)
-12. [Design Patterns](#design-patterns)
+5. [Error Handling](#error-handling)
+6. [Type Hints](#type-hints)
+7. [Decorators](#decorators)
+8. [Context Managers](#context-managers)
+9. [Logging](#logging)
+10. [Modules and Packages](#modules-and-packages)
+11. [Design Patterns](#design-patterns)
 
 ---
 
@@ -368,68 +367,7 @@ def test_connectivity(self, timeout_seconds: int = 30) -> Dict[str, Any]:
 
 ---
 
-## Object-Oriented Programming
-
-Object-Oriented Programming (OOP) is a fundamental programming paradigm that organizes code into classes and objects. It's essential for building maintainable, scalable software.
-
-**📖 Complete OOP Guide**: For a comprehensive guide to Object-Oriented Programming in Python, including advanced concepts, design patterns, and best practices, see our dedicated tutorial:
-
-**[→ Complete Object-Oriented Programming Guide](./02_OBJECT_ORIENTED_PROGRAMMING_GUIDE.md)**
-
-This detailed guide covers:
-- **Fundamentals**: Classes, objects, `self`, encapsulation
-- **Inheritance & Polymorphism**: Building class hierarchies and flexible interfaces
-- **Abstract Base Classes**: Defining contracts and interfaces
-- **SOLID Principles**: Professional design principles for maintainable code
-- **Design Patterns**: Common solutions to recurring problems
-- **Best Practices**: Modern Python OOP techniques and conventions
-- **Real Examples**: Practical examples from our Snowflake monitoring codebase
-
-### Quick OOP Example from Our Code
-
-Here's a brief example of how we use OOP in our project:
-
-```python
-class SnowflakeConnection:
-    """Manages connections to Snowflake database."""
-    
-    def __init__(self, account: str, user: Optional[str] = None):
-        """Initialize a new connection."""
-        self.account = account
-        self.user = user
-        self.connection = None
-        self._initialized = False
-    
-    def connect(self):
-        """Establish connection to Snowflake."""
-        self.connection = snowflake.connector.connect(
-            account=self.account,
-            user=self.user,
-            private_key=self.private_key
-        )
-        self._initialized = True
-        return self.connection
-    
-    def is_connected(self) -> bool:
-        """Check if connection is active."""
-        return self.connection is not None and not self.connection.is_closed()
-
-# Create and use connection
-conn = SnowflakeConnection(account="my-account", user="admin")
-conn.connect()
-if conn.is_connected():
-    print("Successfully connected!")
-```
-
-**Why OOP here?**
-- **Encapsulation**: Connection details are bundled together
-- **Reusability**: Can create multiple independent connections
-- **Maintainability**: All connection logic is in one place
-- **Extensibility**: Easy to add new features or connection types
-
-For the complete explanation of these concepts and much more, see the **[Complete OOP Guide](./02_OBJECT_ORIENTED_PROGRAMMING_GUIDE.md)**.
-
----
+<!-- OOP content intentionally removed to keep Python Part 1 focused on core language fundamentals. For OOP, see docs/tutorials/oop/. -->
 
 ## Error Handling
 

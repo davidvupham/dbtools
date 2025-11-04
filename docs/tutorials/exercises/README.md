@@ -44,8 +44,8 @@ Each exercise file focuses on one concept and progresses from **easy** to **hard
 ### Step 1: Read the Tutorial
 
 Before starting exercises, read the corresponding tutorial section:
-- Dataclasses → [Part 3: Dataclasses](../01_PYTHON_BASICS_PART3.md#dataclasses)
-- Enums → [Part 3: Enumerations](../01_PYTHON_BASICS_PART3.md#enumerations-enum)
+- Dataclasses → [Part 3: Dataclasses](../python/01_PYTHON_BASICS_PART3.md#dataclasses)
+- Enums → [Part 3: Enumerations](../python/01_PYTHON_BASICS_PART3.md#enumerations-enum)
 - etc.
 
 ### Step 2: Open the Exercise File
@@ -357,9 +357,9 @@ Each exercise includes hints in the comments:
 - [Python super()](https://docs.python.org/3/library/functions.html#super)
 
 ### Tutorials
-- [Part 1: Python Fundamentals](../01_PYTHON_BASICS_FOR_THIS_PROJECT.md)
-- [Part 2: Advanced Concepts](../01_PYTHON_BASICS_PART2.md)
-- [Part 3: Missing Concepts](../01_PYTHON_BASICS_PART3.md)
+- [Part 1: Python Fundamentals](../python/01_PYTHON_BASICS_FOR_THIS_PROJECT.md)
+- [Part 2: Advanced Concepts](../python/01_PYTHON_BASICS_PART2.md)
+- [Part 3: Missing Concepts](../python/01_PYTHON_BASICS_PART3.md)
 
 ### Codebase Examples
 - `gds_snowflake/monitor.py` - Dataclasses and Enums

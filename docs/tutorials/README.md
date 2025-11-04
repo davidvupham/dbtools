@@ -11,13 +11,10 @@ Welcome! This tutorial series will teach you Python from the ground up, using re
 
 Start here if you're new to Python or programming:
 
-1. **[Part 1: Python Fundamentals](01_PYTHON_BASICS_FOR_THIS_PROJECT.md)**
+1. **[Part 1: Python Fundamentals](python/01_PYTHON_BASICS_FOR_THIS_PROJECT.md)**
    - Variables and data types
    - Data structures (lists, dictionaries, tuples)
    - Functions and parameters
-   - Object-Oriented Programming basics
-   - Classes and objects
-   - Inheritance and polymorphism
 
 ### Additional Tutorials
 
@@ -26,14 +23,14 @@ Start here if you're new to Python or programming:
    - Error handling
    - Type hints
 
-2. **[Part 2: Advanced Concepts](01_PYTHON_BASICS_PART2.md)**
+2. **[Part 2: Advanced Concepts](python/01_PYTHON_BASICS_PART2.md)**
    - Decorators
    - Context managers
    - Logging
    - Modules and packages
    - Design patterns
 
-3. **[Part 3: Missing Concepts](01_PYTHON_BASICS_PART3.md)** ⭐ NEW!
+3. **[Part 3: Missing Concepts](python/01_PYTHON_BASICS_PART3.md)** ⭐ NEW!
    - @dataclass decorator
    - Enum classes
    - @classmethod decorator
@@ -47,7 +44,7 @@ Start here if you're new to Python or programming:
 
 For comprehensive OOP understanding:
 
-4. **[Complete OOP Guide](02_OBJECT_ORIENTED_PROGRAMMING_GUIDE.md)** ⭐ COMPREHENSIVE!
+4. **[Complete OOP Guide](oop/oop_guide.md)** ⭐ COMPREHENSIVE!
    - Classes and objects in depth
    - Encapsulation and data hiding
    - Inheritance patterns
@@ -61,7 +58,7 @@ For comprehensive OOP understanding:
    - Testing OOP code
    - Real-world examples
 
-5. **[Advanced OOP Concepts](04_ADVANCED_OOP_CONCEPTS.md)** ⭐ ADVANCED!
+5. **[Advanced OOP Concepts](oop/advanced_oop_concepts.md)** ⭐ ADVANCED!
    - Async/await with classes
    - Multiple inheritance diamond problem
    - Monkey patching and dynamic modification
@@ -193,11 +190,11 @@ Every concept is explained with:
 
 ### Complete Beginner?
 
-Start with [Part 1: Python Fundamentals](01_PYTHON_BASICS_FOR_THIS_PROJECT.md). Read it in order, try the examples, and do the exercises.
+Start with [Part 1: Python Fundamentals](python/01_PYTHON_BASICS_FOR_THIS_PROJECT.md). Read it in order, try the examples, and do the exercises.
 
 ### Some Python Experience?
 
-Skim [Part 1](01_PYTHON_BASICS_FOR_THIS_PROJECT.md) to review basics, then focus on the OOP sections. Continue with [Part 2](01_PYTHON_BASICS_PART2.md) for advanced topics. For deep OOP understanding, read the [Complete OOP Guide](02_OBJECT_ORIENTED_PROGRAMMING_GUIDE.md) and [Advanced OOP Concepts](04_ADVANCED_OOP_CONCEPTS.md).
+Skim [Part 1](python/01_PYTHON_BASICS_FOR_THIS_PROJECT.md) to review basics. Continue with [Part 2](python/01_PYTHON_BASICS_PART2.md) for advanced topics. For deep OOP understanding, read the [Complete OOP Guide](oop/oop_guide.md) and [Advanced OOP Concepts](oop/advanced_oop_concepts.md).
 
 ### Want to Understand Specific Code?
 
@@ -457,7 +454,7 @@ Please let us know! The goal is to make Python accessible to everyone.
 
 ## 🎉 Ready to Start?
 
-Begin your Python journey with **[Part 1: Python Fundamentals](01_PYTHON_BASICS_FOR_THIS_PROJECT.md)**!
+Begin your Python journey with **[Part 1: Python Fundamentals](python/01_PYTHON_BASICS_FOR_THIS_PROJECT.md)**!
 
 Remember: Everyone starts as a beginner. Take your time, practice regularly, and don't be afraid to experiment. Happy coding! 🐍
 
@@ -514,12 +511,12 @@ See **[GDS_VAULT_LEARNING_PATH.md](GDS_VAULT_LEARNING_PATH.md)** for detailed gu
 
 | Concept | Tutorial Section | Example File |
 |---------|-----------------|--------------|
-| Classes | [Complete OOP Guide](02_OBJECT_ORIENTED_PROGRAMMING_GUIDE.md) | `connection.py` |
-| Inheritance | [Complete OOP Guide](02_OBJECT_ORIENTED_PROGRAMMING_GUIDE.md) | `base.py`, `connection.py` |
-| Abstract Classes | [Complete OOP Guide](02_OBJECT_ORIENTED_PROGRAMMING_GUIDE.md) | `base.py` |
-| Multiple Inheritance | [Advanced OOP](04_ADVANCED_OOP_CONCEPTS.md) | Various |
-| Metaclasses | [Advanced OOP](04_ADVANCED_OOP_CONCEPTS.md) | Various |
-| Async Classes | [Advanced OOP](04_ADVANCED_OOP_CONCEPTS.md) | Various |
+| Classes | [Complete OOP Guide](oop/oop_guide.md) | `connection.py` |
+| Inheritance | [Complete OOP Guide](oop/oop_guide.md) | `base.py`, `connection.py` |
+| Abstract Classes | [Complete OOP Guide](oop/oop_guide.md) | `base.py` |
+| Multiple Inheritance | [Advanced OOP](oop/advanced_oop_concepts.md) | Various |
+| Metaclasses | [Advanced OOP](oop/advanced_oop_concepts.md) | Various |
+| Async Classes | [Advanced OOP](oop/advanced_oop_concepts.md) | Various |
 | Decorators | Part 2 - Decorators | `vault.py` |
 | Context Managers | Part 2 - Context Managers | `connection.py` |
 | Error Handling | Part 1 - Core Concepts | `exceptions.py` |

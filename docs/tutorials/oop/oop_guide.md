@@ -499,6 +499,8 @@ print(duck.fly())    # From Flyable
 print(duck.swim())   # From Swimmable
 ```
 
+Note: For diamond-problem details and cooperative multiple inheritance with `super()`, see the advanced guide `advanced_oop_concepts.md`.
+
 ### Method Resolution Order (MRO)
 
 ```python
@@ -1633,26 +1635,7 @@ print(person.age)  # 30
 
 ### Metaclasses
 
-Classes that create classes:
-
-```python
-class SingletonMeta(type):
-    _instances = {}
-    
-    def __call__(cls, *args, **kwargs):
-        if cls not in cls._instances:
-            cls._instances[cls] = super().__call__(*args, **kwargs)
-        return cls._instances[cls]
-
-class Database(metaclass=SingletonMeta):
-    def __init__(self):
-        self.connection = "Database connection"
-
-# Usage
-db1 = Database()
-db2 = Database()
-print(db1 is db2)  # True - same instance
-```
+Metaclasses are “classes of classes” that can control how classes are created or modified (e.g., automatic registration, API generation, singletons, attribute validation). They are powerful but easy to overuse. Prefer decorators, descriptors, or simple registries unless a metaclass is clearly the right tool. For worked examples and best practices, see `advanced_oop_concepts.md` (Advanced Metaclass Usage).
 
 ---
 
@@ -2020,218 +2003,14 @@ with PostgreSQLConnection(config) as db:
 
 ## Performance Considerations
 
-While OOP provides excellent maintainability and organization, it's important to understand its performance implications and optimization techniques.
+OOP trades a bit of raw speed for clarity and maintainability. For most application code, the benefits outweigh the costs. If you do hit performance bottlenecks:
 
-### Object Creation Overhead
+- Prefer composition and simple data containers (`@dataclass(slots=True)`) when modeling lots of simple, immutable records.
+- Keep inheritance shallow; use `super()` correctly and avoid over-engineering hierarchies.
+- Measure first. Use `timeit` for microbenchmarks and profile whole programs with `cProfile` and memory with `tracemalloc`.
+- Optimize algorithms and data structures before micro-tuning method dispatch or attribute access.
 
-**Understanding the Cost (with timeit):**
-```python
-import timeit
-
-def create_user_dict(name, email, age):
-    return {'name': name, 'email': email, 'age': age}
-
-class User:
-    def __init__(self, name, email, age):
-        self.name = name
-        self.email = email
-        self.age = age
-
-def bench(n=100_000):
-    dict_stmt = "[create_user_dict(f'User{i}', f'user{i}@example.com', i%100) for i in range(n)]"
-    class_stmt = "[User(f'User{i}', f'user{i}@example.com', i%100) for i in range(n)]"
-    setup = "from __main__ import create_user_dict, User, n"
-    dict_time = timeit.timeit(dict_stmt, setup=setup, number=5, globals={'n': n})
-    class_time = timeit.timeit(class_stmt, setup=setup, number=5, globals={'n': n})
-    print(f"Dictionary creation (5x): {dict_time:.4f}s")
-    print(f"Class creation (5x):     {class_time:.4f}s")
-    if dict_time > 0:
-        print(f"Relative overhead:      {((class_time/dict_time - 1) * 100):.1f}%")
-
-bench()
-```
-
-**Key Insights:**
-- Objects have ~20-50% overhead compared to dictionaries
-- Use classes when behavior matters more than raw performance
-- Consider `__slots__` for memory optimization
-
-### Memory Optimization with `__slots__`
-
-```python
-import tracemalloc
-
-class RegularClass:
-    def __init__(self, x, y, z):
-        self.x = x
-        self.y = y
-        self.z = z
-
-class SlottedClass:
-    __slots__ = ('x', 'y', 'z')  # Restricts attributes
-    def __init__(self, x, y, z):
-        self.x = x
-        self.y = y
-        self.z = z
-
-def measure_allocation(cls, n=200_000):
-    tracemalloc.start()
-    before = tracemalloc.take_snapshot()
-    objs = [cls(1, 2, 3) for _ in range(n)]
-    after = tracemalloc.take_snapshot()
-    stats = after.compare_to(before, 'lineno')
-    total = sum(s.size_diff for s in stats)
-    tracemalloc.stop()
-    return total / (1024 * 1024)  # MiB
-
-reg_mb = measure_allocation(RegularClass)
-slot_mb = measure_allocation(SlottedClass)
-print(f"RegularClass: {reg_mb:.2f} MiB for many instances")
-print(f"SlottedClass: {slot_mb:.2f} MiB for many instances")
-if reg_mb > 0:
-    print(f"Approx savings: {(1 - slot_mb/reg_mb)*100:.1f}%")
-```
-
-**Benefits of `__slots__` (with caveats):**
-- Can reduce per-instance memory and speed up attribute access for many simple objects.
-- Prevents accidental attribute creation.
-- Caveats:
-    - No per-instance `__dict__` (unless explicitly added); attribute set is fixed.
-    - Multiple inheritance and `weakref` need care (`__weakref__` slot).
-    - CPython’s key-sharing dicts already reduce some overhead; measure your case.
-    - Dataclasses support `@dataclass(slots=True)` as an easy alternative.
-
-### Method Dispatch Costs
-
-```python
-class Animal:
-    def speak(self):
-        return "Some sound"
-
-class Dog(Animal):
-    def speak(self):
-        return "Woof!"
-
-def call_speak_polymorphic(animal):
-    return animal.speak()
-
-def call_speak_direct(dog):
-    return dog.speak()
-
-import timeit
-dog = Dog()
-iterations = 1_000_00  # smaller for demo
-poly = timeit.timeit(lambda: call_speak_polymorphic(dog), number=iterations)
-direct = timeit.timeit(lambda: call_speak_direct(dog), number=iterations)
-print(f"Polymorphic total: {poly:.4f}s  Direct total: {direct:.4f}s")
-if direct > 0:
-    print(f"Relative overhead: {((poly/direct - 1) * 100):.1f}% (usually small)")
-```
-
-**Optimization Strategies:**
-- Use direct calls when polymorphism isn't needed
-- Cache method references for repeated calls
-- Consider protocols/structual typing over inheritance for performance-critical code
-
-### Inheritance Depth and Method Resolution
-
-```python
-# Shallow inheritance
-class A:
-    def method(self): return "A"
-
-class B(A):
-    def method(self): return "B"
-
-# Deep inheritance
-class Deep1: pass
-class Deep2(Deep1): pass
-class Deep3(Deep2): pass
-class Deep4(Deep3): pass
-class Deep5(Deep4): pass
-class Deep6(Deep5): pass
-class Deep7(Deep6): pass
-class Deep8(Deep7): pass
-class Deep9(Deep8): pass
-class Deep10(Deep9):
-    def method(self): return "Deep10"
-
-# Performance comparison
-shallow = B()
-deep = Deep10()
-
-iterations = 1000000
-import time
-
-start = time.time()
-for _ in range(iterations):
-    result = shallow.method()
-shallow_time = time.time() - start
-
-start = time.time()
-for _ in range(iterations):
-    result = deep.method()
-deep_time = time.time() - start
-
-print(f"Shallow inheritance: {shallow_time:.4f}s")
-print(f"Deep inheritance: {deep_time:.4f}s")
-print(f"Overhead: {((deep_time/shallow_time - 1) * 100):.1f}%")
-```
-
-**Best Practices:**
-- Keep inheritance hierarchies shallow for readability and maintainability.
-- Prefer composition over deep inheritance.
-- Performance differences from inheritance depth are typically negligible; optimize only when profiling shows a hotspot.
-
-### When OOP Performance Matters
-
-**Use Classes When:**
-- Code maintainability is priority
-- Objects have complex behavior
-- Polymorphism is needed
-- Memory usage isn't critical
-
-**Consider Alternatives When:**
-- Processing millions of simple data objects
-- Memory is constrained
-- Raw speed is critical
-- Data is mostly static
-
-**Hybrid Approach:**
-```python
-from dataclasses import dataclass
-from typing import List
-
-@dataclass
-class UserData:
-    """Fast data container."""
-    id: int
-    name: str
-    email: str
-
-class UserService:
-    """Behavioral class."""
-    
-    def __init__(self, users: List[UserData]):
-        self.users = users
-    
-    def find_by_email(self, email: str) -> UserData:
-        return next((u for u in self.users if u.email == email), None)
-    
-    def validate_user(self, user: UserData) -> bool:
-        return len(user.name) > 0 and '@' in user.email
-
-# Usage: Fast data with behavioral methods
-users = [UserData(i, f"User{i}", f"user{i}@example.com") for i in range(1000)]
-service = UserService(users)
-```
-
-### Quick performance guidance
-
-- Data-only and lots of instances: prefer `dataclass(slots=True)` or `collections.namedtuple` (immutable) over custom classes with `__dict__`.
-- Tight loops: cache attribute/method references to local variables inside the loop when profiling shows it helps.
-- Polymorphism costs are usually small; optimize for clarity first.
-- Use the right tools: `timeit` for microbenchmarks, `tracemalloc` for memory, and `cProfile`/`py-spy` for whole-program profiling.
+For in-depth techniques (caching strategies, lazy loading, batching, algorithmic improvements, profiling examples, `__slots__` trade-offs, and a performance checklist), see `advanced_oop_concepts.md` (Performance Optimization Techniques).
 
 ---
 
@@ -3341,7 +3120,7 @@ user = service.get_user_by_id(123)
 
 This guide covers the core OOP concepts and best practices. For advanced topics that go beyond the fundamentals, see our companion tutorial:
 
-**[04_ADVANCED_OOP_CONCEPTS.md](04_ADVANCED_OOP_CONCEPTS.md)** - Covers advanced OOP concepts including:
+**[Advanced OOP Concepts](advanced_oop_concepts.md)** - Covers advanced OOP concepts including:
 
 - **Async/await with classes** - Building responsive, concurrent systems
 - **Multiple inheritance diamond problem** - Advanced inheritance patterns

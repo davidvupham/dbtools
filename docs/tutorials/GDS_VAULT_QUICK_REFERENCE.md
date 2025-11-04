@@ -40,9 +40,9 @@ docs/tutorials/
 **Path: Total Beginner → Python Fundamentals → GDS Vault**
 
 1. **Week 1-2:** Python Fundamentals
-   - `docs/tutorials/01_PYTHON_BASICS_FOR_THIS_PROJECT.md`
-   - `docs/tutorials/01_PYTHON_BASICS_PART2.md`
-   - `docs/tutorials/01_PYTHON_BASICS_PART3.md`
+   - `docs/tutorials/python/01_PYTHON_BASICS_FOR_THIS_PROJECT.md`
+   - `docs/tutorials/python/01_PYTHON_BASICS_PART2.md`
+   - `docs/tutorials/python/01_PYTHON_BASICS_PART3.md`
 
 2. **Week 3:** Python Concepts in GDS Vault
    - `docs/tutorials/05_GDS_VAULT_PYTHON_CONCEPTS.md`
@@ -478,9 +478,9 @@ Apply what you learned:
 For optimal learning, follow this order:
 
 ### Week 1: Foundations
-1. `docs/tutorials/01_PYTHON_BASICS_FOR_THIS_PROJECT.md`
-2. `docs/tutorials/01_PYTHON_BASICS_PART2.md`
-3. `docs/tutorials/01_PYTHON_BASICS_PART3.md`
+1. `docs/tutorials/python/01_PYTHON_BASICS_FOR_THIS_PROJECT.md`
+2. `docs/tutorials/python/01_PYTHON_BASICS_PART2.md`
+3. `docs/tutorials/python/01_PYTHON_BASICS_PART3.md`
 
 ### Week 2: Advanced Concepts
 4. `docs/tutorials/05_GDS_VAULT_PYTHON_CONCEPTS.md`

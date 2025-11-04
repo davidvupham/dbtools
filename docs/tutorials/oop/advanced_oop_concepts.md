@@ -18,6 +18,10 @@ Welcome to the advanced OOP tutorial! This guide covers sophisticated concepts t
 
 ---
 
+### Prerequisites and roadmap
+
+This document assumes you’re comfortable with core OOP in Python (classes/objects, encapsulation, inheritance, polymorphism), dataclasses, basic testing, and error handling. If you’re new to these, start with `oop_guide.md` and come back here for deep dives.
+
 ## Async/Await with Classes
 
 Asynchronous programming allows your code to handle multiple operations concurrently without blocking. When combined with OOP, it enables building responsive, scalable systems.
@@ -165,6 +169,8 @@ async def demo_async_properties():
 
 # asyncio.run(demo_async_properties())
 ```
+
+Note: Awaitable properties (e.g., `await obj.connection_status`) are unconventional in Python and can surprise readers. Prefer explicit async methods (e.g., `await obj.get_connection_status()`) for clarity unless a descriptor-based API is a clear win.
 
 ### Async Context Managers and Resource Management
 
@@ -358,8 +364,9 @@ class ResourceManager(ABC):
 # The SnowflakeConnection inherits from all three
 class SnowflakeConnection(DatabaseConnection, ConfigurableComponent, ResourceManager):
     def __init__(self, **kwargs):
-        # Initialize all parent classes
-        ConfigurableComponent.__init__(self, kwargs.get('config'))
+        # Cooperative multiple inheritance: rely on super() so all bases
+        # participate according to the MRO
+        super().__init__(**kwargs)
         # ... other initialization
     
     # Implement all abstract methods
@@ -578,10 +585,12 @@ db = DatabaseConnection("localhost")
 # Add method to specific instance only
 def debug_connect(self):
     print(f"DEBUG: Connecting to {self.host}")
-    result = self.connect()
+    # Call the original class method to avoid recursion
+    result = DatabaseConnection.connect(self)
     print(f"DEBUG: {result}")
     return result
 
+original_connect = DatabaseConnection.connect  # keep original for reference
 db.connect = debug_connect.__get__(db, DatabaseConnection)
 
 # Only this instance has the debug behavior
@@ -634,18 +643,26 @@ class MonkeyPatch:
     
     def patch(self, obj: Any, attr: str, new_value: Any):
         """Add a patch to be applied."""
-        self.patches.append((obj, attr, getattr(obj, attr), new_value))
+        existed = hasattr(obj, attr)
+        original = getattr(obj, attr) if existed else None
+        self.patches.append((obj, attr, existed, original, new_value))
     
     def __enter__(self):
         # Apply all patches
-        for obj, attr, _, new_value in self.patches:
+        for obj, attr, _, _, new_value in self.patches:
             setattr(obj, attr, new_value)
         return self
     
     def __exit__(self, exc_type, exc_val, exc_tb):
         # Restore original values
-        for obj, attr, original_value, _ in self.patches:
-            setattr(obj, attr, original_value)
+        for obj, attr, existed, original_value, _ in reversed(self.patches):
+            if existed:
+                setattr(obj, attr, original_value)
+            else:
+                try:
+                    delattr(obj, attr)
+                except AttributeError:
+                    pass
 
 # Usage
 def patched_method(self):
@@ -1331,7 +1348,6 @@ class DatabaseQueryOptimizer:
     def __init__(self):
         self.cache = Cache()
     
-    @lru_cache(maxsize=128)
     def get_user_count(self, department: str = None) -> int:
         """Get user count with caching."""
         cache_key = f"user_count_{department or 'all'}"
@@ -1450,7 +1466,7 @@ def is_long_line(line):
 def uppercase_line(line):
     return line.upper()
 
-processor = StreamingDataProcessor("/etc/passwd")  # Example file
+processor = StreamingDataProcessor("path/to/large_file.txt")  # Example file path
 
 # Process large file efficiently
 long_lines = list(processor.filter_and_transform(is_long_line, uppercase_line))
@@ -1565,6 +1581,58 @@ class DataProcessor:
 ```
 
 ---
+
+### Profiling and measurement
+
+Before optimizing, measure where time and memory go.
+
+```python
+import timeit
+
+def work():
+    return sum(range(1000))
+
+print(timeit.timeit(work, number=10000))
+```
+
+CPU profiling with cProfile:
+
+```python
+import cProfile, pstats, io
+
+def main():
+    for _ in range(1000):
+        sum(range(1000))
+
+pr = cProfile.Profile()
+pr.enable()
+main()
+pr.disable()
+s = io.StringIO()
+ps = pstats.Stats(pr, stream=s).sort_stats(pstats.SortKey.TIME)
+ps.print_stats(10)
+print(s.getvalue())
+```
+
+Memory tracing with tracemalloc:
+
+```python
+import tracemalloc
+
+tracemalloc.start()
+# ... run workload ...
+snapshot = tracemalloc.take_snapshot()
+for stat in snapshot.statistics('lineno')[:10]:
+    print(stat)
+```
+
+### Performance checklist
+
+- Define a success metric (latency, throughput, memory)
+- Profile first (CPU, memory); optimize the biggest hotspot
+- Prefer algorithmic/data-structure wins over micro-optimizations
+- Bound concurrency and backpressure for I/O-heavy flows
+- Re-measure after each change; add regression micro-benchmarks where it matters
 
 ## Memory Management and Weak References
 
@@ -1745,14 +1813,20 @@ event_system.notify("another_click")  # Only label receives it
 ### Weak Reference Proxies
 
 ```python
+class DataItem:
+    def __init__(self, value: str):
+        self.value = value
+    def __repr__(self):
+        return f"DataItem({self.value!r})"
+
 class DataProcessor:
     """Processor that holds weak references to data."""
     
     def __init__(self):
         self._data_refs = []
     
-    def add_data(self, data):
-        """Add data with weak reference."""
+    def add_data(self, data: DataItem):
+        """Add data with weak reference (must be weakref-able)."""
         ref = weakref.ref(data, self._cleanup_data)
         self._data_refs.append(ref)
     
@@ -1773,16 +1847,16 @@ class DataProcessor:
         
         return results
     
-    def _process_data(self, data):
+    def _process_data(self, data: DataItem):
         """Process individual data item."""
-        return f"Processed: {data}"
+        return f"Processed: {data.value}"
 
 # Usage
 processor = DataProcessor()
 
-# Add some data
-data1 = "Important data 1"
-data2 = "Important data 2"
+# Add some data (strings are not weakref-able; use a custom class)
+data1 = DataItem("Important data 1")
+data2 = DataItem("Important data 2")
 processor.add_data(data1)
 processor.add_data(data2)
 
