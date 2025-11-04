@@ -1,7 +1,23 @@
 # Advanced Object-Oriented Programming Concepts
 ## Beyond the Basics - Mastering Python OOP
 
-Welcome to the advanced OOP tutorial! This guide covers sophisticated concepts that take your object-oriented programming skills to the next level. While these concepts may not be used extensively in the current codebase, they represent powerful tools for complex software design.
+Welcome to the advanced OOP tutorial! This guide covers sophisticated concepts that take your object-oriented programming skills to the next level.
+
+**⚠️ Important Note for Beginners:**
+If you're new to OOP, **start with [oop_guide.md](./oop_guide.md) first!** This guide assumes you already understand:
+- Classes, objects, and methods
+- Inheritance and polymorphism
+- Abstract base classes
+- SOLID principles
+- Basic design patterns
+
+**When should you learn these advanced topics?**
+- When you encounter specific problems they solve
+- When working on complex, large-scale applications
+- When you're comfortable with basic OOP and want to deepen your knowledge
+- NOT as your first introduction to OOP!
+
+**Remember:** Just because something is "advanced" doesn't mean you should use it everywhere. Many professional developers rarely use some of these concepts. Use them when they solve real problems, not just because they're interesting!
 
 ---
 
