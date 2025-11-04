@@ -3341,7 +3341,7 @@ user = service.get_user_by_id(123)
 
 This guide covers the core OOP concepts and best practices. For advanced topics that go beyond the fundamentals, see our companion tutorial:
 
-**[04_ADVANCED_OOP_CONCEPTS.md](../04_ADVANCED_OOP_CONCEPTS.md)** - Covers advanced OOP concepts including:
+**[04_ADVANCED_OOP_CONCEPTS.md](04_ADVANCED_OOP_CONCEPTS.md)** - Covers advanced OOP concepts including:
 
 - **Async/await with classes** - Building responsive, concurrent systems
 - **Multiple inheritance diamond problem** - Advanced inheritance patterns
