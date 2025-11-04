@@ -9,10 +9,15 @@ The `gds_database` package provides abstract base classes and interfaces that ca
 ## Features
 
 - **Abstract Database Connection Interface**: `DatabaseConnection` ABC defining standard database operations
+- **Async Support**: `AsyncDatabaseConnection` for async/await operations
 - **Configurable Components**: Base classes for configuration management
-- **Resource Management**: Context manager support for proper resource cleanup
-- **Retry Logic**: Built-in retry mechanisms for database operations
-- **Type Safety**: Full type hints for better IDE support and runtime safety
+- **Resource Management**: Context manager support for proper resource cleanup (sync and async)
+- **Retry Logic**: Built-in retry mechanisms with exponential backoff
+- **Connection Pooling**: Abstract `ConnectionPool` class for connection management
+- **Transaction Support**: `TransactionalConnection` for transaction handling
+- **Performance Monitoring**: `PerformanceMonitored` mixin for operation timing
+- **Type Safety**: Full type hints with Protocol support for duck typing
+- **Standardized Results**: `OperationResult` dataclass for consistent return values
 
 ## Installation
 
@@ -129,17 +134,25 @@ Adds retry logic to operations:
 - `execute_with_retry()` - Execute with automatic retry
 - Configurable retry count and backoff
 
+## Documentation
+
+📚 **For comprehensive guides, see:**
+
+- **[Architecture Guide](docs/ARCHITECTURE.md)** - Learn OOP concepts, design patterns, and package architecture
+- **[Build Guide](docs/BUILD_GUIDE.md)** - Installation, development setup, testing, and release process
+- **[Developer Guide](docs/DEVELOPER_GUIDE.md)** - Contributing guidelines, code style, testing, and best practices
+
 ## Examples
 
 See the `examples/` directory for comprehensive usage examples.
 
 ## Contributing
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+Please read [DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md) for detailed contributing guidelines including:
+- Git workflow
+- Coding standards
+- Testing requirements
+- Documentation expectations
 
 ## Development
 

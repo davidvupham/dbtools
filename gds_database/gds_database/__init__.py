@@ -10,32 +10,53 @@ Classes:
     ResourceManager: Base class for resource management with context managers
     RetryableOperation: Base class for operations with retry logic
     OperationResult: Standardized result object for operations
+    ConnectionPool: Abstract base class for connection pooling
+    TransactionalConnection: Abstract base class with transaction support
+    PerformanceMonitored: Mixin for performance monitoring
+
+Protocols:
+    Connectable: Protocol for connectable objects
+    Queryable: Protocol for queryable objects
 
 Exceptions:
     QueryError: Raised when query execution fails
-    ConnectionError: Raised when database connection fails
+    DatabaseConnectionError: Raised when database connection fails
     ConfigurationError: Raised when configuration is invalid
 """
 
 from .base import (
+    AsyncDatabaseConnection,
+    AsyncResourceManager,
     ConfigurableComponent,
     ConfigurationError,
-    ConnectionError,
+    Connectable,
+    ConnectionPool,
     DatabaseConnection,
+    DatabaseConnectionError,
     OperationResult,
+    PerformanceMonitored,
+    Queryable,
     QueryError,
     ResourceManager,
     RetryableOperation,
+    TransactionalConnection,
 )
 
 __version__ = "1.0.0"
 __all__ = [
-    "DatabaseConnection",
+    "AsyncDatabaseConnection",
+    "AsyncResourceManager",
+    "Connectable",
     "ConfigurableComponent",
+    "ConfigurationError",
+    "ConnectionPool",
+    "DatabaseConnection",
+    "DatabaseConnectionError",
+    "OperationResult",
+    "PerformanceMonitored",
+    "Queryable",
+    "QueryError",
     "ResourceManager",
     "RetryableOperation",
-    "OperationResult",
-    "QueryError",
-    "ConnectionError",
-    "ConfigurationError",
+    "TransactionalConnection",
 ]
