@@ -87,22 +87,22 @@ Tip: If an example references project-specific classes (e.g., Snowflake), treat 
 ```python
 class Dog:
     """A simple class representing a dog."""
-    
+
     # Constructor - runs when creating a new dog
     def __init__(self, name, age):
         """Initialize a dog with name and age."""
         self.name = name  # Each dog has its own name
         self.age = age    # Each dog has its own age
-    
+
     # Method - a function inside a class
     def bark(self):
         """Make the dog bark."""
         print(f"{self.name} says Woof!")
-    
+
     def get_age_in_months(self):
         """Calculate age in months."""
         return self.age * 12
-    
+
     def have_birthday(self):
         """Increase age by 1."""
         self.age += 1
@@ -126,39 +126,69 @@ print(your_dog.age)  # Still 3
 
 ### Class vs Instance Variables
 
+Variables in a class can belong to the class itself (shared by all instances) or to each instance (unique per object).
+
 ```python
 class Dog:
     # Class variable - shared by ALL dogs
     species = "Canis lupus"
     total_dogs = 0
-    
+
     def __init__(self, name, age):
         # Instance variables - unique to each dog
         self.name = name
         self.age = age
-        
-        # Update class variable
+
+        # Update class variable when a new instance is created
         Dog.total_dogs += 1
-    
+
     @classmethod
     def get_total_dogs(cls):
-        """Class method to access class variables."""
-        return cls.total_dogs
-    
+        """
+        A class method receives the class itself as the first argument,
+        conventionally named `cls`. It can access and modify class state.
+        Use case: Factory methods or operations on the class itself.
+        """
+        return f"Total dogs: {cls.total_dogs}"
+
+    @classmethod
+    def from_birth_year(cls, name, birth_year):
+        """Alternative constructor using a class method."""
+        from datetime import date
+        age = date.today().year - birth_year
+        return cls(name, age)
+
     @staticmethod
     def is_good_boy():
-        """Static method - doesn't need class or instance."""
+        """
+        A static method doesn't receive any implicit first argument.
+        It's essentially a regular function namespaced within the class.
+        It cannot modify class or instance state.
+        Use case: Utility functions that are logically related to the class.
+        """
         return True
 
 # Usage
 dog1 = Dog("Buddy", 5)
-dog2 = Dog("Max", 3)
+dog2 = Dog.from_birth_year("Max", 2020)
 
-print(Dog.species)        # "Canis lupus" (class variable)
-print(dog1.species)       # "Canis lupus" (accessed through instance)
-print(Dog.get_total_dogs())  # 2
-print(Dog.is_good_boy())  # True
+# Accessing class variables
+print(f"Species: {Dog.species}")        # "Species: Canis lupus"
+print(f"Dog 1 species: {dog1.species}") # Also accessible via instance
+
+# Using the class method
+print(Dog.get_total_dogs())  # "Total dogs: 2"
+
+# Using the static method
+print(f"Is Max a good boy? {Dog.is_good_boy()}")  # "Is Max a good boy? True"
+
+print(f"{dog2.name} is {dog2.age} years old.")
 ```
+
+**When to use which?**
+- **Instance Method (`def method(self, ...)`):** The most common type. Needs access to the object's instance data (`self`).
+- **Class Method (`@classmethod def method(cls, ...)`):** Needs access to the class, but not a specific instance. Perfect for factory methods that create instances in alternative ways (e.g., from a file, a dictionary, or a different representation).
+- **Static Method (`@staticmethod def method(...)`):** Doesn't need access to the instance or the class. It's a helper function that lives inside the class's namespace for organizational purposes.
 
 ### Example from Our Codebase
 
@@ -168,7 +198,7 @@ from typing import Optional
 
 class SnowflakeConnection:
     """Manages connections to Snowflake database."""
-    
+
     def __init__(self, account: str, user: Optional[str] = None, private_key: Optional[str] = None):
         """Initialize a new connection."""
         # Store connection parameters for THIS connection
@@ -177,7 +207,7 @@ class SnowflakeConnection:
         self.private_key = private_key
         self.connection = None  # No connection yet
         self._initialized = False
-    
+
     def connect(self):
         """Establish connection to Snowflake."""
         # Use THIS connection's account and user
@@ -188,11 +218,11 @@ class SnowflakeConnection:
         )
         self._initialized = True
         return self.connection
-    
+
     def is_connected(self) -> bool:
         """Check if THIS connection is active."""
         return self.connection is not None and not self.connection.is_closed()
-    
+
     def close(self):
         """Close THIS connection."""
         if self.connection is not None:
@@ -231,10 +261,10 @@ print(dev_conn.is_connected())   # Still True!
 class Counter:
     def __init__(self):
         self.count = 0  # THIS counter's count
-    
+
     def increment(self):
         self.count += 1  # Modify THIS counter's count
-    
+
     def get_count(self):
         return self.count  # Return THIS counter's count
 
@@ -264,18 +294,18 @@ class BankAccount:
         self.owner = owner          # Public - anyone can access
         self._balance = balance     # Private (by convention) - internal use
         self.__pin = "1234"         # Really private - name mangled
-    
+
     def get_balance(self):
         """Public method to access private balance."""
         return self._balance
-    
+
     def deposit(self, amount):
         """Public method to modify private balance."""
         if amount > 0:
             self._balance += amount
             return True
         return False
-    
+
     def _internal_audit(self):
         """Private method for internal use."""
         print("Performing internal audit...")
@@ -305,24 +335,24 @@ print(account.get_balance())  # 1500
 class Temperature:
     def __init__(self, celsius=0):
         self._celsius = celsius
-    
+
     @property
     def celsius(self):
         """Get temperature in Celsius."""
         return self._celsius
-    
+
     @celsius.setter
     def celsius(self, value):
         """Set temperature in Celsius with validation."""
         if value < -273.15:
             raise ValueError("Temperature cannot be below absolute zero!")
         self._celsius = value
-    
+
     @property
     def fahrenheit(self):
         """Get temperature in Fahrenheit."""
         return (self._celsius * 9/5) + 32
-    
+
     @fahrenheit.setter
     def fahrenheit(self, value):
         """Set temperature using Fahrenheit."""
@@ -348,12 +378,12 @@ class SnowflakeConnection:
         self.user = user                # Public - often part of info
         self.connection = None          # Public - users might need this
         self._initialized = False       # Private - internal state
-    
+
     @property
     def is_initialized(self) -> bool:
         """Public property to check private state."""
         return self._initialized
-    
+
     @property
     def connection_info(self) -> Dict[str, Any]:
         """Get connection information as a property."""
@@ -384,21 +414,21 @@ Inheritance lets you create a new class based on an existing class. The new clas
 # Base class (parent)
 class Animal:
     """Base class for all animals."""
-    
+
     def __init__(self, name, species):
         self.name = name
         self.species = species
         self.energy = 100
-    
+
     def speak(self):
         """Make a sound."""
         return "Some sound"
-    
+
     def move(self):
         """Move around."""
         self.energy -= 10
         return f"{self.name} is moving"
-    
+
     def rest(self):
         """Rest to regain energy."""
         self.energy = min(100, self.energy + 20)
@@ -407,16 +437,16 @@ class Animal:
 # Derived class (child) inherits from Animal
 class Dog(Animal):
     """Dog is a type of Animal."""
-    
+
     def __init__(self, name, breed):
         # Call parent constructor
         super().__init__(name, "Canis lupus")
         self.breed = breed
-    
+
     def speak(self):
         """Override speak method."""
         return f"{self.name} says Woof!"
-    
+
     def fetch(self):
         """New method specific to dogs."""
         self.energy -= 15
@@ -424,15 +454,15 @@ class Dog(Animal):
 
 class Cat(Animal):
     """Cat is a type of Animal."""
-    
+
     def __init__(self, name):
         super().__init__(name, "Felis catus")
         self.lives = 9
-    
+
     def speak(self):
         """Override speak method."""
         return f"{self.name} says Meow!"
-    
+
     def climb(self):
         """New method specific to cats."""
         self.energy -= 5
@@ -485,10 +515,10 @@ class Swimmable:
 
 class Duck(Animal, Flyable, Swimmable):
     """Duck can do everything!"""
-    
+
     def __init__(self, name):
         super().__init__(name, "Anas platyrhynchos")
-    
+
     def speak(self):
         return f"{self.name} says Quack!"
 
@@ -548,22 +578,22 @@ From `base.py` and `connection.py`:
 # Base class defines the interface
 class DatabaseConnection(ABC):
     """Abstract base class for all database connections."""
-    
+
     @abstractmethod
     def connect(self) -> Any:
         """Establish database connection."""
         pass
-    
+
     @abstractmethod
     def disconnect(self) -> None:
         """Close database connection."""
         pass
-    
+
     @abstractmethod
     def execute_query(self, query: str, params: Optional[tuple] = None) -> List[Any]:
         """Execute a query and return results."""
         pass
-    
+
     @abstractmethod
     def is_connected(self) -> bool:
         """Check if connection is active."""
@@ -572,7 +602,7 @@ class DatabaseConnection(ABC):
 # Snowflake-specific implementation
 class SnowflakeConnection(DatabaseConnection, ConfigurableComponent):
     """Snowflake implementation of DatabaseConnection."""
-    
+
     def connect(self) -> snowflake.connector.SnowflakeConnection:
         """Establish connection to Snowflake."""
         self.connection = snowflake.connector.connect(
@@ -581,19 +611,19 @@ class SnowflakeConnection(DatabaseConnection, ConfigurableComponent):
             # ... other parameters
         )
         return self.connection
-    
+
     def disconnect(self) -> None:
         """Close Snowflake connection."""
         if self.connection is not None:
             self.connection.close()
             self.connection = None
-    
+
     def execute_query(self, query: str, params: Optional[tuple] = None) -> List[Any]:
         """Execute a Snowflake query."""
         with self.connection.cursor() as cursor:
             cursor.execute(query, params)
             return cursor.fetchall()
-    
+
     def is_connected(self) -> bool:
         """Check if Snowflake connection is active."""
         return self.connection is not None and not self.connection.is_closed()
@@ -646,14 +676,14 @@ Python uses "duck typing" - if it walks like a duck and quacks like a duck, it's
 ```python
 class RobotDog:
     """Doesn't inherit from Animal, but has same interface."""
-    
+
     def __init__(self, model):
         self.name = f"RobotDog-{model}"
         self.battery = 100
-    
+
     def speak(self):
         return f"{self.name} says *BEEP*"
-    
+
     def move(self):
         self.battery -= 5
         return f"{self.name} is rolling"
@@ -674,7 +704,7 @@ for creature in all_creatures:
 ```python
 class BaseMonitor(ABC):
     """Base class for all monitors."""
-    
+
     @abstractmethod
     def check(self) -> Dict[str, Any]:
         """Perform monitoring check."""
@@ -757,25 +787,25 @@ from typing import Any, Dict, List, Optional
 
 class Shape(ABC):
     """Abstract base class for all shapes."""
-    
+
     def __init__(self, name: str):
         self.name = name
-    
+
     @abstractmethod
     def area(self) -> float:
         """Calculate the area of the shape."""
         pass
-    
+
     @abstractmethod
     def perimeter(self) -> float:
         """Calculate the perimeter of the shape."""
         pass
-    
+
     # Concrete method that uses abstract methods
     def describe(self) -> str:
         """Describe the shape."""
         return f"{self.name}: Area = {self.area():.2f}, Perimeter = {self.perimeter():.2f}"
-    
+
     @classmethod
     @abstractmethod
     def from_string(cls, data: str) -> 'Shape':
@@ -784,18 +814,18 @@ class Shape(ABC):
 
 class Rectangle(Shape):
     """Concrete implementation of Shape."""
-    
+
     def __init__(self, width: float, height: float):
         super().__init__("Rectangle")
         self.width = width
         self.height = height
-    
+
     def area(self) -> float:
         return self.width * self.height
-    
+
     def perimeter(self) -> float:
         return 2 * (self.width + self.height)
-    
+
     @classmethod
     def from_string(cls, data: str) -> 'Rectangle':
         # Parse "5x3" format
@@ -804,17 +834,17 @@ class Rectangle(Shape):
 
 class Circle(Shape):
     """Another concrete implementation."""
-    
+
     def __init__(self, radius: float):
         super().__init__("Circle")
         self.radius = radius
-    
+
     def area(self) -> float:
         return 3.14159 * self.radius ** 2
-    
+
     def perimeter(self) -> float:
         return 2 * 3.14159 * self.radius
-    
+
     @classmethod
     def from_string(cls, data: str) -> 'Circle':
         # Parse "r5" format
@@ -842,30 +872,30 @@ from abc import ABC, abstractmethod
 class DatabaseConnection(ABC):
     """
     Abstract base class for database connections.
-    
+
     Defines the interface that ALL database connection classes must implement.
     """
-    
+
     @abstractmethod
     def connect(self) -> Any:
         """Establish database connection."""
         pass
-    
+
     @abstractmethod
     def disconnect(self) -> None:
         """Close database connection."""
         pass
-    
+
     @abstractmethod
     def execute_query(self, query: str, params: Optional[tuple] = None) -> List[Any]:
         """Execute a query and return results."""
         pass
-    
+
     @abstractmethod
     def is_connected(self) -> bool:
         """Check if connection is active."""
         pass
-    
+
     @abstractmethod
     def get_connection_info(self) -> Dict[str, Any]:
         """Get connection information."""
@@ -896,15 +926,15 @@ class User:
     def __init__(self, name, email):
         self.name = name
         self.email = email
-    
+
     def save_to_database(self):
         # Database logic
         pass
-    
+
     def send_email(self):
         # Email logic
         pass
-    
+
     def generate_report(self):
         # Report logic
         pass
@@ -993,7 +1023,7 @@ class Bird(ABC):
 class FlyingBird(Bird):
     def move(self):
         return "Flying"
-    
+
     def fly(self):
         return "Flying high"
 
@@ -1019,11 +1049,11 @@ class Worker(ABC):
     @abstractmethod
     def work(self):
         pass
-    
+
     @abstractmethod
     def eat(self):
         pass
-    
+
     @abstractmethod
     def sleep(self):
         pass
@@ -1031,10 +1061,10 @@ class Worker(ABC):
 class Robot(Worker):
     def work(self):
         return "Working"
-    
+
     def eat(self):
         raise NotImplementedError("Robots don't eat!")  # Forced to implement!
-    
+
     def sleep(self):
         raise NotImplementedError("Robots don't sleep!")  # Forced to implement!
 
@@ -1057,10 +1087,10 @@ class Sleepable(ABC):
 class Human(Workable, Eatable, Sleepable):
     def work(self):
         return "Working"
-    
+
     def eat(self):
         return "Eating"
-    
+
     def sleep(self):
         return "Sleeping"
 
@@ -1083,7 +1113,7 @@ class MySQLDatabase:
 class UserService:
     def __init__(self):
         self.db = MySQLDatabase()  # Directly depends on MySQL!
-    
+
     def create_user(self, user_data):
         self.db.save(user_data)
 
@@ -1106,7 +1136,7 @@ class PostgreSQLDatabase(Database):
 class UserService:
     def __init__(self, database: Database):  # Depends on abstraction
         self.db = database
-    
+
     def create_user(self, user_data):
         self.db.save(user_data)
 
@@ -1142,11 +1172,11 @@ class Engine:
     def __init__(self, horsepower):
         self.horsepower = horsepower
         self.running = False
-    
+
     def start(self):
         self.running = True
         return "Engine started"
-    
+
     def stop(self):
         self.running = False
         return "Engine stopped"
@@ -1154,7 +1184,7 @@ class Engine:
 class GPS:
     def __init__(self):
         self.current_location = "Unknown"
-    
+
     def navigate_to(self, destination):
         return f"Navigating to {destination}"
 
@@ -1165,16 +1195,16 @@ class Car:
         self.engine = Engine(engine_hp)  # Composition
         self.gps = GPS()                 # Composition
         self.speed = 0
-    
+
     def start(self):
         return self.engine.start()
-    
+
     def accelerate(self):
         if self.engine.running:
             self.speed += 10
             return f"Accelerating to {self.speed} mph"
         return "Can't accelerate - engine not running"
-    
+
     def navigate_to(self, destination):
         return self.gps.navigate_to(destination)
 
@@ -1201,10 +1231,10 @@ class QuickSort:
 class Sorter:
     def __init__(self, strategy):
         self.strategy = strategy  # Composition
-    
+
     def set_strategy(self, strategy):
         self.strategy = strategy
-    
+
     def sort_data(self, data):
         return self.strategy.sort(data)
 
@@ -1269,17 +1299,17 @@ Ensures only one instance of a class exists:
 class DatabaseConnection:
     _instance = None
     _initialized = False
-    
+
     def __new__(cls):
         if cls._instance is None:
             cls._instance = super().__new__(cls)
         return cls._instance
-    
+
     def __init__(self):
         if not self._initialized:
             self.connection = None
             self._initialized = True
-    
+
     def connect(self):
         if not self.connection:
             self.connection = "Connected to database"
@@ -1309,21 +1339,21 @@ class Subject:
     def __init__(self):
         self._observers: List[Observer] = []
         self._state = None
-    
+
     def attach(self, observer: Observer):
         self._observers.append(observer)
-    
+
     def detach(self, observer: Observer):
         self._observers.remove(observer)
-    
+
     def notify(self):
         for observer in self._observers:
             observer.update(self)
-    
+
     @property
     def state(self):
         return self._state
-    
+
     @state.setter
     def state(self, value):
         self._state = value
@@ -1356,31 +1386,31 @@ Adds behavior to objects dynamically:
 class Coffee:
     def cost(self):
         return 5
-    
+
     def description(self):
         return "Simple coffee"
 
 class CoffeeDecorator:
     def __init__(self, coffee):
         self._coffee = coffee
-    
+
     def cost(self):
         return self._coffee.cost()
-    
+
     def description(self):
         return self._coffee.description()
 
 class MilkDecorator(CoffeeDecorator):
     def cost(self):
         return self._coffee.cost() + 2
-    
+
     def description(self):
         return self._coffee.description() + ", milk"
 
 class SugarDecorator(CoffeeDecorator):
     def cost(self):
         return self._coffee.cost() + 1
-    
+
     def description(self):
         return self._coffee.description() + ", sugar"
 
@@ -1580,12 +1610,12 @@ class FileManager:
         self.filename = filename
         self.mode = mode
         self.file = None
-    
+
     def __enter__(self):
         print(f"Opening {self.filename}")
         self.file = open(self.filename, self.mode)
         return self.file
-    
+
     def __exit__(self, exc_type, exc_val, exc_tb):
         print(f"Closing {self.filename}")
         if self.file:
@@ -1607,10 +1637,10 @@ class ValidatedAttribute:
         self.min_value = min_value
         self.max_value = max_value
         self.value = None
-    
+
     def __get__(self, obj, objtype=None):
         return self.value
-    
+
     def __set__(self, obj, value):
         if self.min_value is not None and value < self.min_value:
             raise ValueError(f"Value must be >= {self.min_value}")
@@ -1620,7 +1650,7 @@ class ValidatedAttribute:
 
 class Person:
     age = ValidatedAttribute(min_value=0, max_value=150)
-    
+
     def __init__(self, name, age):
         self.name = name
         self.age = age  # Uses the descriptor
@@ -1680,7 +1710,7 @@ class Person:
     age: int
     email: str = ""  # Default value
     hobbies: List[str] = field(default_factory=list)  # Mutable default
-    
+
     def __post_init__(self):
         if self.age < 0:
             raise ValueError("Age cannot be negative")
@@ -1719,7 +1749,7 @@ class User:
 class Point:
     x: float
     y: float
-    
+
     def distance_from_origin(self) -> float:
         return (self.x ** 2 + self.y ** 2) ** 0.5
 
@@ -1746,7 +1776,7 @@ class Order:
     def __init__(self, id: str):
         self.id = id
         self.status = Status.PENDING
-    
+
     def process(self):
         if self.status == Status.PENDING:
             self.status = Status.PROCESSING
@@ -1760,29 +1790,114 @@ print(order.status)  # Status.PENDING
 order.process()      # "Order 12345 is now processing"
 ```
 
-### Dunder methods and object model
+### The Python Data Model (Dunder Methods)
 
-Common special methods help your objects integrate with Python idioms:
+"Dunder" methods (short for "double underscore") are special methods that allow your custom objects to integrate with Python's built-in syntax and behaviors. Implementing them is key to creating idiomatic, "Pythonic" classes.
 
-- `__repr__`/`__str__`: Debug vs user-friendly string representations
-- `__eq__`, `__hash__`: Equality and dictionary/set keys
-- Ordering: `__lt__`, `__le__`, `__gt__`, `__ge__` (or use `functools.total_ordering`)
-- Containers/iteration: `__len__`, `__iter__`, `__contains__`
-- Context managers: `__enter__`, `__exit__`
+#### String Representation: `__str__` vs. `__repr__`
+
+- **`__repr__(self)`**: Should return an **unambiguous**, developer-focused string representation of the object. Ideally, `eval(repr(obj)) == obj`. This is what you see in a debugger or when you type the object's name in a shell.
+- **`__str__(self)`**: Should return a **readable**, user-focused string representation. This is what `print(obj)` and `str(obj)` use. If `__str__` is not defined, Python falls back to `__repr__`.
 
 ```python
 class Vector:
-    def __init__(self, x: float, y: float):
+    def __init__(self, x, y):
         self.x, self.y = x, y
+
     def __repr__(self):
+        # Unambiguous, good for developers
         return f"Vector(x={self.x}, y={self.y})"
-    def __eq__(self, other):
-        return isinstance(other, Vector) and (self.x, self.y) == (other.x, other.y)
-    def __add__(self, other):
-        if not isinstance(other, Vector):
-            return NotImplemented
-        return Vector(self.x + other.x, self.y + other.y)
+
+    def __str__(self):
+        # Readable, good for users
+        return f"({self.x}, {self.y})"
+
+v = Vector(3, 4)
+print(repr(v))  # Output: Vector(x=3, y=4)
+print(str(v))   # Output: (3, 4)
+print(v)        # print() uses __str__: (3, 4)
+# In a Python shell, just typing 'v' would show the __repr__
 ```
+
+#### Equality and Hashing: `__eq__` and `__hash__`
+
+- **`__eq__(self, other)`**: Defines behavior for the equality operator (`==`). Without it, Python defaults to identity comparison (`is`), which is rarely what you want.
+- **`__hash__(self)`**: Computes an integer hash for the object, allowing it to be used as a key in dictionaries and as an element in sets.
+
+**Rule:** If you implement `__eq__`, you should also implement `__hash__` if your object is immutable. If the object is mutable, you should set `__hash__ = None` to make it unhashable.
+
+```python
+@dataclass(frozen=True) # frozen=True makes it immutable and auto-generates __hash__
+class Point:
+    x: int
+    y: int
+
+p1 = Point(1, 2)
+p2 = Point(1, 2)
+p3 = Point(3, 4)
+
+print(p1 == p2)  # True, because __eq__ is implemented by dataclass
+
+# Because Point is hashable, we can use it in a set or as a dict key
+point_set = {p1, p2, p3}
+print(len(point_set))  # 2, because p1 and p2 are considered equal
+
+# For mutable classes:
+class MutablePoint:
+    __hash__ = None # Explicitly make it unhashable
+
+    def __init__(self, x, y):
+        self.x, self.y = x, y
+
+    def __eq__(self, other):
+        return isinstance(other, MutablePoint) and self.x == other.x and self.y == other.y
+
+# {MutablePoint(1, 2)} would raise a TypeError
+```
+
+#### Making Your Class a Container: `__len__`, `__getitem__`, `__iter__`
+
+Implement these methods to make your object behave like a sequence or collection.
+
+```python
+class Team:
+    def __init__(self, name, members):
+        self.name = name
+        self.members = members
+
+    def __len__(self):
+        """Returns the number of members in the team."""
+        return len(self.members)
+
+    def __getitem__(self, position):
+        """Allows accessing members by index, e.g., team[0]."""
+        return self.members[position]
+
+    def __iter__(self):
+        """Allows iterating over the team, e.g., for member in team: ..."""
+        return iter(self.members)
+
+    def __contains__(self, member):
+        """Allows using the 'in' operator, e.g., 'Alice' in team."""
+        return member in self.members
+
+# Usage
+justice_league = Team("Justice League", ["Batman", "Superman", "Wonder Woman"])
+
+print(f"The team has {len(justice_league)} members.") # Uses __len__
+print(f"The first member is {justice_league[0]}.")   # Uses __getitem__
+
+print("Is Batman on the team?", "Batman" in justice_league) # Uses __contains__
+
+print("Team members:")
+for member in justice_league: # Uses __iter__
+    print(f"- {member}")
+```
+
+Other common dunder methods include:
+- **Numeric operators**: `__add__`, `__sub__`, `__mul__`, etc.
+- **Ordering**: `__lt__`, `__le__`, `__gt__`, `__ge__` (or use `functools.total_ordering`).
+- **Context Managers**: `__enter__`, `__exit__`.
 
 ### Type Hints and Protocols
 
@@ -1910,17 +2025,17 @@ class ConnectionConfig:
 
 class DatabaseConnection(ABC):
     """Abstract base class for database connections."""
-    
+
     @abstractmethod
     def connect(self) -> bool:
         """Establish connection to database."""
         pass
-    
+
     @abstractmethod
     def disconnect(self) -> None:
         """Close database connection."""
         pass
-    
+
     @abstractmethod
     def execute_query(self, query: str) -> list:
         """Execute query and return results."""
@@ -1928,17 +2043,17 @@ class DatabaseConnection(ABC):
 
 class PostgreSQLConnection(DatabaseConnection):
     """PostgreSQL database connection implementation."""
-    
+
     def __init__(self, config: ConnectionConfig):
         self._config = config
         self._connection = None
         self._logger = logging.getLogger(__name__)
-    
+
     @property
     def is_connected(self) -> bool:
         """Check if connection is active."""
         return self._connection is not None
-    
+
     def connect(self) -> bool:
         """Establish connection to PostgreSQL database."""
         try:
@@ -1948,27 +2063,27 @@ class PostgreSQLConnection(DatabaseConnection):
         except Exception as e:
             self._logger.error(f"Connection failed: {e}")
             return False
-    
+
     def disconnect(self) -> None:
         """Close PostgreSQL connection."""
         if self._connection:
             self._connection.close()
             self._connection = None
             self._logger.info("Disconnected from database")
-    
+
     def execute_query(self, query: str) -> list:
         """Execute SQL query and return results."""
         if not self.is_connected:
             raise RuntimeError("Not connected to database")
-        
+
         # Query execution logic here
         return []
-    
+
     def __enter__(self):
         """Context manager entry."""
         self.connect()
         return self
-    
+
     def __exit__(self, exc_type, exc_val, exc_tb):
         """Context manager exit."""
         self.disconnect()
@@ -2003,14 +2118,15 @@ with PostgreSQLConnection(config) as db:
 
 ## Performance Considerations
 
-OOP trades a bit of raw speed for clarity and maintainability. For most application code, the benefits outweigh the costs. If you do hit performance bottlenecks:
+Writing performant code is crucial, but it's important to balance performance with clarity and maintainability. For a deep dive into performance optimization, including profiling, memory management, and advanced techniques, please refer to our dedicated guide:
 
-- Prefer composition and simple data containers (`@dataclass(slots=True)`) when modeling lots of simple, immutable records.
-- Keep inheritance shallow; use `super()` correctly and avoid over-engineering hierarchies.
-- Measure first. Use `timeit` for microbenchmarks and profile whole programs with `cProfile` and memory with `tracemalloc`.
-- Optimize algorithms and data structures before micro-tuning method dispatch or attribute access.
+**[Python Performance Optimization Guide](../python/performance_guide.md)**
 
-For in-depth techniques (caching strategies, lazy loading, batching, algorithmic improvements, profiling examples, `__slots__` trade-offs, and a performance checklist), see `advanced_oop_concepts.md` (Performance Optimization Techniques).
+This guide covers:
+- How to profile your code to find bottlenecks.
+- Strategies for optimizing memory usage, including `__slots__`.
+- Caching techniques to avoid re-computing expensive results.
+- Lazy loading patterns to defer expensive operations.
 
 ---
 
@@ -2041,7 +2157,7 @@ class DatabaseConnection:
     def __init__(self, config):
         self.config = config
         self._connected = False
-    
+
     def connect(self):
         try:
             # Connection logic here
@@ -2052,20 +2168,20 @@ class DatabaseConnection:
             raise  # Re-raise connection errors
         except Exception as e:
             raise ConnectionError(f"Failed to connect: {e}") from e
-    
+
     def execute_query(self, query):
         if not self._connected:
             raise ConnectionError("Not connected to database")
-        
+
         try:
             # Query execution logic
             return self._run_query(query)
         except Exception as e:
             raise QueryError(f"Query failed: {e}") from e
-    
+
     def _validate_config(self):
         return bool(self.config.get('host') and self.config.get('database'))
-    
+
     def _run_query(self, query):
         # Simulate query execution
         if "SELECT" in query:
@@ -2098,11 +2214,11 @@ class DatabaseTransaction:
         self.connection = connection
         self._committed = False
         self._rolled_back = False
-    
+
     def __enter__(self):
         self.connection.execute_query("BEGIN TRANSACTION")
         return self
-    
+
     def __exit__(self, exc_type, exc_val, exc_tb):
         if exc_type is None:
             # No exception - commit
@@ -2113,7 +2229,7 @@ class DatabaseTransaction:
             self.connection.execute_query("ROLLBACK")
             self._rolled_back = True
             return False  # Re-raise the exception
-    
+
     def execute(self, query):
         if self._committed or self._rolled_back:
             raise RuntimeError("Transaction already finished")
@@ -2143,26 +2259,26 @@ class User:
         self._user_id = None
         self._name = None
         self._email = None
-        
+
         # Validate and set attributes
         self.user_id = user_id
         self.name = name
         self.email = email
-    
+
     @property
     def user_id(self) -> int:
         return self._user_id
-    
+
     @user_id.setter
     def user_id(self, value: int):
         if not isinstance(value, int) or value <= 0:
             raise ValueError("User ID must be a positive integer")
         self._user_id = value
-    
+
     @property
     def name(self) -> str:
         return self._name
-    
+
     @name.setter
     def name(self, value: str):
         if not isinstance(value, str) or not value.strip():
@@ -2170,11 +2286,11 @@ class User:
         if len(value.strip()) > 100:
             raise ValueError("Name must be 100 characters or less")
         self._name = value.strip()
-    
+
     @property
     def email(self) -> str:
         return self._email
-    
+
     @email.setter
     def email(self, value: str):
         if not isinstance(value, str):
@@ -2183,14 +2299,14 @@ class User:
         if '@' not in value or '.' not in value.split('@')[1]:
             raise ValueError("Invalid email format")
         self._email = value
-    
+
     def update_profile(self, name: Optional[str] = None, email: Optional[str] = None):
         """Update user profile with validation."""
         if name is not None:
             self.name = name
         if email is not None:
             self.email = email
-    
+
     def to_dict(self) -> dict:
         """Safe export of user data."""
         return {
@@ -2233,7 +2349,7 @@ class ResilientDatabaseConnection:
         self.retry_delay = retry_delay
         self._connection = None
         self._retry_count = 0
-    
+
     def connect_with_retry(self):
         """Connect with automatic retry on failure."""
         for attempt in range(self.max_retries + 1):
@@ -2250,7 +2366,7 @@ class ResilientDatabaseConnection:
                 else:
                     print(f"All {self.max_retries + 1} connection attempts failed")
                     raise
-    
+
     def execute_query_with_retry(self, query):
         """Execute query with retry on transient failures."""
         for attempt in range(self.max_retries + 1):
@@ -2262,7 +2378,7 @@ class ResilientDatabaseConnection:
                     time.sleep(self.retry_delay)
                 else:
                     raise
-    
+
     def _is_transient_error(self, error):
         """Check if error is transient and worth retrying."""
         transient_messages = [
@@ -2272,11 +2388,11 @@ class ResilientDatabaseConnection:
         ]
         error_msg = str(error).lower()
         return any(msg in error_msg for msg in transient_messages)
-    
+
     def _connect(self):
         # Actual connection logic
         pass
-    
+
     def _execute_query(self, query):
         # Actual query execution
         pass
@@ -2297,51 +2413,51 @@ from unittest.mock import Mock, patch
 class Calculator:
     def __init__(self):
         self.history = []
-    
+
     def add(self, a, b):
         result = a + b
         self.history.append(f"{a} + {b} = {result}")
         return result
-    
+
     def get_history(self):
         return self.history.copy()
 
 # Test file: test_calculator.py
 class TestCalculator:
-    
+
     def test_add_basic(self):
         """Test basic addition functionality."""
         calc = Calculator()
         result = calc.add(2, 3)
         assert result == 5
-    
+
     def test_add_history(self):
         """Test that addition is recorded in history."""
         calc = Calculator()
         calc.add(1, 2)
         calc.add(3, 4)
-        
+
         history = calc.get_history()
         assert len(history) == 2
         assert "1 + 2 = 3" in history
         assert "3 + 4 = 7" in history
-    
+
     def test_get_history_returns_copy(self):
         """Test that get_history returns a copy, not the original list."""
         calc = Calculator()
         calc.add(1, 1)
-        
+
         history = calc.get_history()
         history.append("modified")  # This shouldn't affect the original
-        
+
         assert len(calc.get_history()) == 1  # Original unchanged
-    
+
     def test_add_with_floats(self):
         """Test addition with floating point numbers."""
         calc = Calculator()
         result = calc.add(1.5, 2.5)
         assert result == 4.0
-    
+
     @pytest.mark.parametrize("a,b,expected", [
         (1, 2, 3),
         (-1, 1, 0),
@@ -2381,7 +2497,7 @@ class SMSNotifier(Notifier):
 class NotificationService:
     def __init__(self, notifiers):
         self.notifiers = notifiers
-    
+
     def notify_all(self, message, recipients):
         results = []
         for notifier in self.notifiers:
@@ -2394,49 +2510,49 @@ import pytest
 from unittest.mock import Mock
 
 class TestEmailNotifier:
-    
+
     def test_send_email(self):
         notifier = EmailNotifier()
         result = notifier.send("Hello", "user@example.com")
         assert "Email sent to user@example.com: Hello" == result
 
 class TestSMSNotifier:
-    
+
     def test_send_sms(self):
         notifier = SMSNotifier()
         result = notifier.send("Alert!", "+1234567890")
         assert "SMS sent to +1234567890: Alert!" == result
 
 class TestNotificationService:
-    
+
     def test_notify_all_with_multiple_notifiers(self):
         # Create mock notifiers
         email_mock = Mock()
         email_mock.send.return_value = "Email sent"
-        
+
         sms_mock = Mock()
         sms_mock.send.return_value = "SMS sent"
-        
+
         service = NotificationService([email_mock, sms_mock])
         recipients = ["user1@example.com", "user2@example.com"]
-        
+
         results = service.notify_all("Test message", recipients)
-        
+
         # Verify both notifiers were called for each recipient
         assert email_mock.send.call_count == 2
         assert sms_mock.send.call_count == 2
         assert len(results) == 4
-    
+
     def test_polymorphic_behavior(self):
         """Test that any Notifier implementation works."""
         # Create a custom notifier for testing
         class TestNotifier(Notifier):
             def send(self, message, recipient):
                 return f"Test: {message} to {recipient}"
-        
+
         service = NotificationService([TestNotifier()])
         results = service.notify_all("Hello", ["test@example.com"])
-        
+
         assert results == ["Test: Hello to test@example.com"]
 
 # Testing abstract base classes
@@ -2456,13 +2572,13 @@ class APIClient:
     def __init__(self, base_url):
         self.base_url = base_url
         self.session = requests.Session()
-    
+
     def get_user(self, user_id):
         url = f"{self.base_url}/users/{user_id}"
         response = self.session.get(url)
         response.raise_for_status()
         return response.json()
-    
+
     def create_user(self, user_data):
         url = f"{self.base_url}/users"
         response = self.session.post(url, json=user_data)
@@ -2474,69 +2590,69 @@ import pytest
 from requests.exceptions import HTTPError
 
 class TestAPIClient:
-    
+
     def test_get_user_success(self):
         # Create mock response
         mock_response = Mock()
         mock_response.json.return_value = {"id": 1, "name": "Alice"}
         mock_response.raise_for_status.return_value = None
-        
+
         # Create mock session
         mock_session = Mock()
         mock_session.get.return_value = mock_response
-        
+
         # Create client with mocked session
         client = APIClient("https://api.example.com")
         client.session = mock_session
-        
+
         result = client.get_user(1)
-        
+
         # Verify the call was made correctly
         mock_session.get.assert_called_once_with("https://api.example.com/users/1")
         assert result == {"id": 1, "name": "Alice"}
-    
+
     def test_get_user_http_error(self):
         # Create mock response that raises HTTPError
         mock_response = Mock()
         mock_response.raise_for_status.side_effect = HTTPError("404 Not Found")
-        
+
         mock_session = Mock()
         mock_session.get.return_value = mock_response
-        
+
         client = APIClient("https://api.example.com")
         client.session = mock_session
-        
+
         with pytest.raises(HTTPError):
             client.get_user(999)
-    
+
     @patch('requests.Session')  # Patch at import level
     def test_create_user_with_patch(self, mock_session_class):
         # Setup mock session instance
         mock_session = Mock()
         mock_session_class.return_value = mock_session
-        
+
         mock_response = Mock()
         mock_response.json.return_value = {"id": 2, "name": "Bob"}
         mock_session.post.return_value = mock_response
-        
+
         client = APIClient("https://api.example.com")
         result = client.create_user({"name": "Bob"})
-        
+
         mock_session.post.assert_called_once_with(
-            "https://api.example.com/users", 
+            "https://api.example.com/users",
             json={"name": "Bob"}
         )
         assert result == {"id": 2, "name": "Bob"}
 
 # Integration test example
 class TestAPIClientIntegration:
-    
+
     @pytest.mark.integration
     def test_real_api_call(self):
         # This would run against a real test server
         client = APIClient("https://jsonplaceholder.typicode.com")
         user = client.get_user(1)
-        
+
         assert user["id"] == 1
         assert "name" in user
 ```
@@ -2548,20 +2664,20 @@ class DatabaseConnection:
     def __init__(self, config):
         self.config = config
         self.connected = False
-    
+
     def __enter__(self):
         self.connect()
         return self
-    
+
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.disconnect()
-    
+
     def connect(self):
         self.connected = True
-    
+
     def disconnect(self):
         self.connected = False
-    
+
     def execute(self, query):
         if not self.connected:
             raise RuntimeError("Not connected")
@@ -2571,42 +2687,42 @@ class DatabaseConnection:
 import pytest
 
 class TestDatabaseConnection:
-    
+
     def test_context_manager(self):
         """Test that context manager properly connects and disconnects."""
         config = {"host": "localhost", "database": "test"}
         db = DatabaseConnection(config)
-        
+
         assert not db.connected
-        
+
         with db as conn:
             assert conn.connected
             result = conn.execute("SELECT 1")
             assert result == "Executed: SELECT 1"
-        
+
         # Should be disconnected after context
         assert not db.connected
-    
+
     def test_context_manager_exception_handling(self):
         """Test that connection is closed even when exception occurs."""
         db = DatabaseConnection({})
-        
+
         with pytest.raises(RuntimeError):
             with db as conn:
                 assert conn.connected
                 # This will raise an exception
                 conn.execute("INVALID QUERY")
-        
+
         # Should still be disconnected
         assert not db.connected
-    
+
     def test_manual_connection(self):
         """Test manual connect/disconnect without context manager."""
         db = DatabaseConnection({})
-        
+
         db.connect()
         assert db.connected
-        
+
         db.disconnect()
         assert not db.connected
 ```
@@ -2634,19 +2750,19 @@ def mock_database():
 
 # tests/test_user_service.py
 class TestUserService:
-    
+
     def test_create_user(self, sample_user_data, mock_database):
         service = UserService(mock_database)
         user = service.create_user(sample_user_data)
-        
+
         assert user.id == 1
         assert user.name == "Alice"
         mock_database.execute_query.assert_called_once()
-    
+
     def test_get_user_by_id(self, mock_database):
         service = UserService(mock_database)
         user = service.get_user_by_id(1)
-        
+
         assert user is not None
         mock_database.execute_query.assert_called_once_with(
             "SELECT * FROM users WHERE id = ?", (1,)
@@ -2654,26 +2770,26 @@ class TestUserService:
 
 # tests/integration/test_user_workflow.py
 class TestUserWorkflow:
-    
+
     @pytest.mark.integration
     def test_complete_user_workflow(self, test_database):
         """Test creating, updating, and deleting a user."""
         # This would use a real test database
         service = UserService(test_database)
-        
+
         # Create user
         user_data = {"name": "Alice", "email": "alice@example.com"}
         user = service.create_user(user_data)
         assert user.id is not None
-        
+
         # Update user
         user.name = "Alice Smith"
         service.update_user(user)
-        
+
         # Verify update
         updated_user = service.get_user_by_id(user.id)
         assert updated_user.name == "Alice Smith"
-        
+
         # Delete user
         service.delete_user(user.id)
         assert service.get_user_by_id(user.id) is None
@@ -2715,31 +2831,31 @@ from typing import Any, Dict, List, Optional
 class DatabaseConnection(ABC):
     """
     Abstract base class defining the interface for all database connections.
-    
+
     This ensures all database implementations have the same core methods,
     enabling polymorphism across different database types.
     """
-    
+
     @abstractmethod
     def connect(self) -> Any:
         """Establish connection to the database."""
         pass
-    
+
     @abstractmethod
     def disconnect(self) -> None:
         """Close the database connection."""
         pass
-    
+
     @abstractmethod
     def execute_query(self, query: str, params: Optional[tuple] = None) -> List[Dict[str, Any]]:
         """Execute a query and return results."""
         pass
-    
+
     @abstractmethod
     def is_connected(self) -> bool:
         """Check if connection is active."""
         pass
-    
+
     @abstractmethod
     def get_connection_info(self) -> Dict[str, Any]:
         """Get information about the current connection."""
@@ -2748,23 +2864,23 @@ class DatabaseConnection(ABC):
 class ConfigurableComponent(ABC):
     """
     Abstract base class for components that can be configured.
-    
+
     Demonstrates the Interface Segregation Principle - components only
     implement configuration if they need it.
     """
-    
+
     def __init__(self, config: Optional[Dict[str, Any]] = None):
         self._config = config or {}
-    
+
     @abstractmethod
     def validate_config(self) -> bool:
         """Validate the current configuration."""
         pass
-    
+
     def get_config(self) -> Dict[str, Any]:
         """Get current configuration."""
         return self._config.copy()
-    
+
     def update_config(self, new_config: Dict[str, Any]) -> None:
         """Update configuration and validate."""
         self._config.update(new_config)
@@ -2777,24 +2893,24 @@ From `gds_snowflake/gds_snowflake/connection.py`:
 class SnowflakeConnection(DatabaseConnection, ConfigurableComponent):
     """
     Snowflake database connection implementation.
-    
+
     Demonstrates multiple inheritance and composition:
     - DatabaseConnection: Core database interface
     - ConfigurableComponent: Configuration management
     """
-    
+
     def __init__(self, account: str, user: Optional[str] = None, **kwargs):
         # Initialize parent classes
         ConfigurableComponent.__init__(self, kwargs.get('config'))
-        
+
         self.account = account
         self.user = user
         self.connection = None
         self._initialized = False
-        
+
         # Composition: Use other objects for specific functionality
         self._logger = logging.getLogger(__name__)
-    
+
     def connect(self) -> snowflake.connector.SnowflakeConnection:
         """Connect to Snowflake with proper error handling."""
         try:
@@ -2809,17 +2925,17 @@ class SnowflakeConnection(DatabaseConnection, ConfigurableComponent):
         except Exception as e:
             self._logger.error(f"Failed to connect to Snowflake: {e}")
             raise ConnectionError(f"Snowflake connection failed: {e}") from e
-    
+
     def execute_query(self, query: str, params: Optional[tuple] = None) -> List[Dict[str, Any]]:
         """Execute query with error handling and logging."""
         if not self.is_connected():
             raise ConnectionError("Not connected to Snowflake")
-        
+
         try:
             with self.connection.cursor() as cursor:
                 cursor.execute(query, params or ())
                 results = cursor.fetchall()
-                
+
                 # Convert to list of dictionaries for consistency
                 if cursor.description:
                     columns = [desc[0] for desc in cursor.description]
@@ -2828,12 +2944,12 @@ class SnowflakeConnection(DatabaseConnection, ConfigurableComponent):
         except Exception as e:
             self._logger.error(f"Query execution failed: {e}")
             raise QueryError(f"Failed to execute query: {e}") from e
-    
+
     def is_connected(self) -> bool:
         """Check connection status."""
-        return (self.connection is not None and 
+        return (self.connection is not None and
                 not self.connection.is_closed())
-    
+
     def get_connection_info(self) -> Dict[str, Any]:
         """Get connection details."""
         return {
@@ -2844,12 +2960,12 @@ class SnowflakeConnection(DatabaseConnection, ConfigurableComponent):
             'warehouse': getattr(self, 'warehouse', None),
             'database': getattr(self, 'database', None)
         }
-    
+
     # Context manager implementation
     def __enter__(self):
         self.connect()
         return self
-    
+
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.disconnect()
 ```
@@ -2861,58 +2977,58 @@ From `gds_snowflake/gds_snowflake/base.py`:
 class BaseMonitor(ABC):
     """
     Abstract base class for monitoring components.
-    
+
     Demonstrates the Template Method pattern and Strategy pattern:
     - Template Method: Common monitoring workflow in check()
     - Strategy: Different monitors implement different checking strategies
     """
-    
+
     def __init__(self, name: str, timeout: int = 30):
         self.name = name
         self.timeout = timeout
         self._logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
-        
+
         # State tracking
         self._check_count = 0
         self._last_check_time = None
         self._errors = []
-    
+
     @abstractmethod
     def check(self) -> Dict[str, Any]:
         """
         Perform the actual monitoring check.
-        
+
         Returns:
             Dictionary with check results
         """
         pass
-    
+
     def run_check(self) -> Dict[str, Any]:
         """
         Template method: Standard monitoring workflow.
-        
+
         This method defines the algorithm skeleton, while subclasses
         implement the specific check logic.
         """
         start_time = datetime.now()
-        
+
         try:
             # Pre-check setup
             self._check_count += 1
-            
+
             # Perform the actual check (implemented by subclasses)
             result = self.check()
-            
+
             # Post-check processing
             result['check_number'] = self._check_count
             result['duration_ms'] = (datetime.now() - start_time).total_seconds() * 1000
             result['timestamp'] = start_time.isoformat()
-            
+
             # Log success
             self._log_success(result)
-            
+
             return result
-            
+
         except Exception as e:
             # Handle errors consistently
             error_result = {
@@ -2922,12 +3038,12 @@ class BaseMonitor(ABC):
                 'duration_ms': (datetime.now() - start_time).total_seconds() * 1000,
                 'timestamp': start_time.isoformat()
             }
-            
+
             self._errors.append(error_result)
             self._log_error(error_result)
-            
+
             return error_result
-    
+
     def get_stats(self) -> Dict[str, Any]:
         """Get monitoring statistics."""
         return {
@@ -2937,14 +3053,14 @@ class BaseMonitor(ABC):
             'last_check': self._last_check_time,
             'recent_errors': self._errors[-5:]  # Last 5 errors
         }
-    
+
     def _log_success(self, result: Dict[str, Any]) -> None:
         """Log successful check."""
         duration = result.get('duration_ms', 0)
         self._logger.info(
             f"{self.name} check PASSED in {duration:.1f}ms"
         )
-    
+
     def _log_error(self, result: Dict[str, Any]) -> None:
         """Log failed check."""
         duration = result.get('duration_ms', 0)
@@ -2961,21 +3077,21 @@ From monitoring modules:
 class MonitorFactory:
     """
     Factory pattern for creating monitor instances.
-    
+
     Demonstrates the Factory pattern: Centralizes monitor creation logic
     and allows easy addition of new monitor types.
     """
-    
+
     @staticmethod
     def create_monitor(monitor_type: str, name: str, **kwargs) -> BaseMonitor:
         """
         Create a monitor instance based on type.
-        
+
         Args:
             monitor_type: Type of monitor ('snowflake', 'postgres', etc.)
             name: Name for the monitor instance
             **kwargs: Monitor-specific configuration
-        
+
         Returns:
             Configured monitor instance
         """
@@ -2987,25 +3103,25 @@ class MonitorFactory:
             return HealthMonitor(name=name, **kwargs)
         else:
             raise ValueError(f"Unknown monitor type: {monitor_type}")
-    
+
     @staticmethod
     def create_monitors_from_config(config: Dict[str, Any]) -> List[BaseMonitor]:
         """
         Create multiple monitors from configuration.
-        
+
         Demonstrates bulk object creation and configuration-driven design.
         """
         monitors = []
-        
+
         for monitor_config in config.get('monitors', []):
             monitor_type = monitor_config.pop('type')
             monitor_name = monitor_config.pop('name', f"{monitor_type}_monitor")
-            
+
             monitor = MonitorFactory.create_monitor(
                 monitor_type, monitor_name, **monitor_config
             )
             monitors.append(monitor)
-        
+
         return monitors
 
 # Usage example
@@ -3038,21 +3154,21 @@ From service classes:
 class DatabaseService:
     """
     Service class demonstrating dependency injection.
-    
+
     The service depends on abstractions (DatabaseConnection) rather than
     concrete implementations, following the Dependency Inversion Principle.
     """
-    
+
     def __init__(self, connection: DatabaseConnection):
         """
         Inject the database connection dependency.
-        
+
         Args:
             connection: Any database connection implementing DatabaseConnection
         """
         self._connection = connection
         self._logger = logging.getLogger(__name__)
-    
+
     def get_user_by_id(self, user_id: int) -> Optional[Dict[str, Any]]:
         """Get user by ID with proper error handling."""
         try:
@@ -3062,7 +3178,7 @@ class DatabaseService:
         except Exception as e:
             self._logger.error(f"Failed to get user {user_id}: {e}")
             raise
-    
+
     def create_user(self, user_data: Dict[str, Any]) -> Dict[str, Any]:
         """Create new user."""
         try:
@@ -3070,16 +3186,16 @@ class DatabaseService:
                 INSERT INTO users (name, email, created_at)
                 VALUES (?, ?, CURRENT_TIMESTAMP)
             """
-            self._connection.execute_query(query, 
+            self._connection.execute_query(query,
                 (user_data['name'], user_data['email'])
             )
-            
+
             # Get the created user
             return self.get_user_by_id(self._get_last_insert_id())
         except Exception as e:
             self._logger.error(f"Failed to create user: {e}")
             raise
-    
+
     def _get_last_insert_id(self) -> int:
         """Get the last inserted ID (database-specific implementation)."""
         # This would be implemented differently for each database
@@ -3089,7 +3205,7 @@ class DatabaseService:
 def create_user_service(connection_type: str = 'snowflake') -> DatabaseService:
     """
     Factory function demonstrating dependency injection setup.
-    
+
     This function creates the appropriate connection and injects it
     into the service, following the Dependency Inversion Principle.
     """
@@ -3105,7 +3221,7 @@ def create_user_service(connection_type: str = 'snowflake') -> DatabaseService:
         )
     else:
         raise ValueError(f"Unsupported connection type: {connection_type}")
-    
+
     # Inject the connection into the service
     return DatabaseService(connection)
 

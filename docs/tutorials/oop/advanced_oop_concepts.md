@@ -327,7 +327,7 @@ From `gds_snowflake/connection.py`:
 class SnowflakeConnection(DatabaseConnection, ConfigurableComponent, ResourceManager):
     """
     Multiple inheritance example from our codebase.
-    
+
     This class inherits from three abstract base classes:
     - DatabaseConnection: Database interface
     - ConfigurableComponent: Configuration management
@@ -349,7 +349,7 @@ class DatabaseConnection(ABC):
 class ConfigurableComponent(ABC):
     def __init__(self, config=None):
         self.config = config or {}
-    
+
     @abstractmethod
     def validate_config(self): pass
     # ... other methods
@@ -368,7 +368,7 @@ class SnowflakeConnection(DatabaseConnection, ConfigurableComponent, ResourceMan
         # participate according to the MRO
         super().__init__(**kwargs)
         # ... other initialization
-    
+
     # Implement all abstract methods
     def connect(self): pass
     def disconnect(self): pass
@@ -383,7 +383,7 @@ class SnowflakeConnection(DatabaseConnection, ConfigurableComponent, ResourceMan
 ```python
 class LoggerMixin:
     """Mixin for logging functionality."""
-    
+
     def __init__(self, logger_name=None, **kwargs):
         super().__init__(**kwargs)
         self.logger_name = logger_name or self.__class__.__name__
@@ -391,7 +391,7 @@ class LoggerMixin:
 
 class SerializableMixin:
     """Mixin for serialization functionality."""
-    
+
     def to_dict(self):
         """Convert object to dictionary."""
         return {
@@ -399,7 +399,7 @@ class SerializableMixin:
             for attr in dir(self)
             if not attr.startswith('_') and not callable(getattr(self, attr))
         }
-    
+
     def to_json(self):
         """Convert object to JSON string."""
         import json
@@ -407,46 +407,46 @@ class SerializableMixin:
 
 class ValidatableMixin:
     """Mixin for validation functionality."""
-    
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self._errors = []
-    
+
     def validate(self):
         """Validate the object."""
         self._errors = []
         self._run_validations()
         return len(self._errors) == 0
-    
+
     def _run_validations(self):
         """Override in subclasses to add validations."""
         pass
-    
+
     def add_error(self, field, message):
         """Add validation error."""
         self._errors.append({'field': field, 'message': message})
-    
+
     def get_errors(self):
         """Get validation errors."""
         return self._errors.copy()
 
 class User(LoggerMixin, SerializableMixin, ValidatableMixin):
     """User class with multiple mixins."""
-    
+
     def __init__(self, name, email, age=None, **kwargs):
         super().__init__(**kwargs)  # Initialize mixins
         self.name = name
         self.email = email
         self.age = age
-    
+
     def _run_validations(self):
         """Custom validations for User."""
         if not self.name or len(self.name.strip()) == 0:
             self.add_error('name', 'Name is required')
-        
+
         if not self.email or '@' not in self.email:
             self.add_error('email', 'Valid email is required')
-        
+
         if self.age is not None and (self.age < 0 or self.age > 150):
             self.add_error('age', 'Age must be between 0 and 150')
 
@@ -575,7 +575,7 @@ print(calc.add(1, 2))   # Shows debug output
 class DatabaseConnection:
     def __init__(self, host):
         self.host = host
-    
+
     def connect(self):
         return f"Connected to {self.host}"
 
@@ -605,7 +605,7 @@ print(db2.connect())  # Normal output
 class APIClient:
     BASE_URL = "https://api.example.com"
     TIMEOUT = 30
-    
+
     def __init__(self, api_key):
         self.api_key = api_key
 
@@ -637,22 +637,22 @@ from typing import Any, Callable
 
 class MonkeyPatch:
     """Context manager for safe monkey patching."""
-    
+
     def __init__(self):
         self.patches = []
-    
+
     def patch(self, obj: Any, attr: str, new_value: Any):
         """Add a patch to be applied."""
         existed = hasattr(obj, attr)
         original = getattr(obj, attr) if existed else None
         self.patches.append((obj, attr, existed, original, new_value))
-    
+
     def __enter__(self):
         # Apply all patches
         for obj, attr, _, _, new_value in self.patches:
             setattr(obj, attr, new_value)
         return self
-    
+
     def __exit__(self, exc_type, exc_val, exc_tb):
         # Restore original values
         for obj, attr, existed, original_value, _ in reversed(self.patches):
@@ -672,7 +672,7 @@ original_method = DatabaseConnection.connect
 
 with MonkeyPatch() as mp:
     mp.patch(DatabaseConnection, 'connect', patched_method)
-    
+
     db = DatabaseConnection("test")
     print(db.connect())  # "Patched result!"
 
@@ -689,7 +689,7 @@ import unittest.mock as mock
 class PaymentService:
     def __init__(self):
         self.api_key = "secret"
-    
+
     def process_payment(self, amount, card_number):
         # Simulate API call
         return {"status": "success", "transaction_id": "123"}
@@ -697,13 +697,13 @@ class PaymentService:
 class OrderProcessor:
     def __init__(self):
         self.payment_service = PaymentService()
-    
+
     def process_order(self, order):
         payment_result = self.payment_service.process_payment(
-            order['amount'], 
+            order['amount'],
             order['card_number']
         )
-        
+
         if payment_result['status'] == 'success':
             return {
                 'order_id': order['id'],
@@ -716,24 +716,24 @@ class OrderProcessor:
 # Testing with monkey patching
 def test_order_processing():
     processor = OrderProcessor()
-    
+
     # Mock the payment service method
     original_process = processor.payment_service.process_payment
-    
+
     def mock_payment(amount, card_number):
         if amount > 1000:
             return {"status": "declined"}
         return {"status": "success", "transaction_id": "mock_123"}
-    
+
     # Apply patch for testing
     processor.payment_service.process_payment = mock_payment
-    
+
     try:
         # Test successful payment
         order = {'id': 'order_1', 'amount': 100, 'card_number': '4111...'}
         result = processor.process_order(order)
         assert result['status'] == 'processed'
-        
+
         # Test failed payment
         order2 = {'id': 'order_2', 'amount': 1500, 'card_number': '4111...'}
         try:
@@ -741,7 +741,7 @@ def test_order_processing():
             assert False, "Should have raised ValueError"
         except ValueError:
             pass  # Expected
-    
+
     finally:
         # Restore original method
         processor.payment_service.process_payment = original_process
@@ -769,22 +769,22 @@ from typing import Any, Dict, List
 
 class SafeMonkeyPatch:
     """Safe monkey patching utility."""
-    
+
     def __init__(self):
         self._patches = []
-    
+
     def patch(self, target: Any, attribute: str, new_value: Any):
         """Add a patch to be applied."""
         # TODO: Implement patch registration
-    
+
     def apply(self):
         """Apply all patches."""
         # TODO: Implement patch application
-    
+
     def restore(self):
         """Restore all original values."""
         # TODO: Implement restoration
-    
+
     @contextmanager
     def patch_context(self):
         """Context manager for patches."""
@@ -792,6 +792,104 @@ class SafeMonkeyPatch:
 
 # TODO: Test the implementation
 ```
+
+---
+
+## The Descriptor Protocol
+
+Descriptors are one of Python's most powerful and unique features. They are the mechanism behind properties, static methods, class methods, and `super()`. A descriptor is any object that defines at least one of the `__get__`, `__set__`, or `__delete__` methods.
+
+By implementing the descriptor protocol, you can customize what happens when an attribute is accessed, assigned, or deleted.
+
+### How Descriptors Work
+
+-   `__get__(self, instance, owner)`: Called to get the attribute from the owner class (`owner`) or from an instance of that class (`instance`).
+-   `__set__(self, instance, value)`: Called to set the attribute on an instance of the owner class to a new `value`.
+-   `__delete__(self, instance)`: Called to delete the attribute from an instance of the owner class.
+
+### Example: A Validation Descriptor
+
+Let's create a descriptor that enforces type and value constraints on an attribute.
+
+```python
+class Validated:
+    """A descriptor for validating attribute values."""
+
+    def __init__(self, validator, doc="A validated attribute."):
+        self.validator = validator
+        self.__doc__ = doc
+        self._name = '' # Will be set by __set_name__
+
+    def __set_name__(self, owner, name):
+        # In Python 3.6+, this is called to set the descriptor's name
+        self._name = name
+
+    def __get__(self, instance, owner):
+        if instance is None:
+            return self # Accessing from the class, return the descriptor itself
+        # Use a private name to store the value in the instance's __dict__
+        return instance.__dict__.get(self._name)
+
+    def __set__(self, instance, value):
+        self.validator(value)
+        instance.__dict__[self._name] = value
+
+# --- Validator Functions ---
+def is_positive_number(value):
+    if not isinstance(value, (int, float)):
+        raise TypeError("Must be a number.")
+    if value <= 0:
+        raise ValueError("Must be a positive number.")
+
+def is_non_empty_string(value):
+    if not isinstance(value, str):
+        raise TypeError("Must be a string.")
+    if not value.strip():
+        raise ValueError("Must not be an empty string.")
+
+# --- Class using the descriptor ---
+class Product:
+    """A product with validated attributes."""
+    name = Validated(is_non_empty_string, "The name of the product.")
+    price = Validated(is_positive_number, "The price of the product.")
+    quantity = Validated(is_positive_number, "The available quantity.")
+
+    def __init__(self, name, price, quantity):
+        self.name = name
+        self.price = price
+        self.quantity = quantity
+
+# --- Usage ---
+try:
+    # Valid usage
+    product = Product("Laptop", 1200.50, 10)
+    print(f"Created: {product.name}, Price: ${product.price}")
+
+    # The descriptor intercepts the assignment and validates the value
+    product.price = 1150.00
+    print(f"New price: ${product.price}")
+
+    # Invalid usage
+    print("\nAttempting invalid assignments...")
+    product.quantity = -5
+except ValueError as e:
+    print(f"Caught expected error: {e}")
+
+try:
+    product.name = ""
+except ValueError as e:
+    print(f"Caught expected error: {e}")
+
+try:
+    product.price = "free"
+except TypeError as e:
+    print(f"Caught expected error: {e}")
+```
+
+**Why use descriptors?**
+-   **Reusable Logic:** The validation logic is encapsulated in the `Validated` class and can be reused for any attribute in any class.
+-   **Clean Code:** The `Product` class remains clean and declarative. The validation rules are attached directly to the attribute definitions.
+-   **Single Source of Truth:** The validation logic is defined in one place, making it easy to maintain and update.
 
 ---
 
@@ -804,9 +902,9 @@ Metaclasses are "classes of classes" - they control class creation and behavior.
 ```python
 class SingletonMeta(type):
     """Metaclass for singleton pattern."""
-    
+
     _instances = {}
-    
+
     def __call__(cls, *args, **kwargs):
         if cls not in cls._instances:
             cls._instances[cls] = super().__call__(*args, **kwargs)
@@ -830,23 +928,23 @@ print(db1.connection_string)  # "sqlite:///test.db" - first one wins
 ```python
 class PluginRegistry(type):
     """Metaclass that automatically registers plugin classes."""
-    
+
     registry = {}
-    
+
     def __new__(cls, name, bases, attrs):
         # Create the class
         new_class = super().__new__(cls, name, bases, attrs)
-        
+
         # Register if it's a plugin (not the base class)
         if name != 'PluginBase':
             plugin_name = attrs.get('PLUGIN_NAME', name.lower())
             cls.registry[plugin_name] = new_class
-        
+
         return new_class
 
 class PluginBase(metaclass=PluginRegistry):
     """Base class for plugins."""
-    
+
     @classmethod
     def get_plugin(cls, name):
         """Get a plugin by name."""
@@ -854,13 +952,13 @@ class PluginBase(metaclass=PluginRegistry):
 
 class EmailPlugin(PluginBase):
     PLUGIN_NAME = 'email'
-    
+
     def send(self, message):
         return f"Email: {message}"
 
 class SMSPlugin(PluginBase):
     PLUGIN_NAME = 'sms'
-    
+
     def send(self, message):
         return f"SMS: {message}"
 
@@ -879,22 +977,22 @@ print("Available plugins:", list(PluginBase.registry.keys()))
 ```python
 class ValidatedMeta(type):
     """Metaclass that adds validation to class attributes."""
-    
+
     def __new__(cls, name, bases, attrs):
         # Add validation to attributes
         for attr_name, attr_value in attrs.items():
             if not attr_name.startswith('_') and not callable(attr_value):
                 # Create a validated property
                 attrs[attr_name] = cls._create_validated_property(attr_name, attr_value)
-        
+
         return super().__new__(cls, name, bases, attrs)
-    
+
     @staticmethod
     def _create_validated_property(name, default_value):
         """Create a property with validation."""
         def getter(self):
             return getattr(self, f'_{name}', default_value)
-        
+
         def setter(self, value):
             # Basic validation
             if name == 'age' and (value < 0 or value > 150):
@@ -902,7 +1000,7 @@ class ValidatedMeta(type):
             elif name == 'email' and '@' not in str(value):
                 raise ValueError(f"Invalid email: {value}")
             setattr(self, f'_{name}', value)
-        
+
         return property(getter, setter)
 
 class Person(metaclass=ValidatedMeta):
@@ -932,31 +1030,31 @@ except ValueError as e:
 ```python
 class APIMeta(type):
     """Metaclass that generates API methods automatically."""
-    
+
     def __new__(cls, name, bases, attrs):
         # Generate CRUD methods
         if 'MODEL' in attrs:
             model = attrs['MODEL']
             cls._generate_api_methods(attrs, model)
-        
+
         return super().__new__(cls, name, bases, attrs)
-    
+
     @staticmethod
     def _generate_api_methods(attrs, model):
         """Generate API methods for the model."""
-        
+
         def create_method(self, data):
             return f"Created {model}: {data}"
-        
+
         def read_method(self, id):
             return f"Read {model} {id}"
-        
+
         def update_method(self, id, data):
             return f"Updated {model} {id}: {data}"
-        
+
         def delete_method(self, id):
             return f"Deleted {model} {id}"
-        
+
         attrs['create'] = create_method
         attrs['read'] = read_method
         attrs['update'] = update_method
@@ -995,17 +1093,17 @@ from typing import Any
 
 class LoggingMeta(type):
     """Metaclass that adds logging to all methods."""
-    
+
     def __new__(cls, name, bases, attrs):
         # TODO: Add logging to methods
         return super().__new__(cls, name, bases, attrs)
 
 class LoggedClass(metaclass=LoggingMeta):
     """Example class with automatic logging."""
-    
+
     def method1(self, arg1, arg2=None):
         return f"Result: {arg1} {arg2}"
-    
+
     def method2(self):
         raise ValueError("Test error")
 
@@ -1043,13 +1141,13 @@ import json
 
 class ProtoUser:
     """Simulated Protocol Buffer User message."""
-    
+
     def __init__(self, name: str = "", email: str = "", age: int = 0, hobbies: List[str] = None):
         self.name = name
         self.email = email
         self.age = age
         self.hobbies = hobbies or []
-    
+
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary (simulates proto serialization)."""
         return {
@@ -1058,19 +1156,19 @@ class ProtoUser:
             'age': self.age,
             'hobbies': self.hobbies
         }
-    
+
     def to_bytes(self) -> bytes:
         """Serialize to bytes (simulates proto binary format)."""
         # In real protobuf, this would be much more efficient
         data = json.dumps(self.to_dict()).encode('utf-8')
         return data
-    
+
     @classmethod
     def from_bytes(cls, data: bytes) -> 'ProtoUser':
         """Deserialize from bytes."""
         dict_data = json.loads(data.decode('utf-8'))
         return cls(**dict_data)
-    
+
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'ProtoUser':
         """Create from dictionary."""
@@ -1102,7 +1200,7 @@ import pickle  # For complex Python objects
 
 class SerializableMixin:
     """Mixin for serializable objects."""
-    
+
     def to_dict(self) -> Dict[str, Any]:
         """Convert object to dictionary."""
         result = {}
@@ -1114,7 +1212,7 @@ class SerializableMixin:
                 continue
             result[attr] = self._serialize_value(value)
         return result
-    
+
     def _serialize_value(self, value: Any) -> Any:
         """Serialize a single value."""
         if isinstance(value, datetime):
@@ -1127,7 +1225,7 @@ class SerializableMixin:
             return value.to_dict()
         else:
             return value
-    
+
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'SerializableMixin':
         """Create object from dictionary."""
@@ -1135,12 +1233,12 @@ class SerializableMixin:
         deserialized_data = {}
         for key, value in data.items():
             deserialized_data[key] = cls._deserialize_value(value)
-        
+
         instance = cls.__new__(cls)
         for key, value in deserialized_data.items():
             setattr(instance, key, value)
         return instance
-    
+
     @classmethod
     def _deserialize_value(cls, value: Any) -> Any:
         """Deserialize a single value."""
@@ -1198,46 +1296,46 @@ from typing import List
 
 class BinarySerializer:
     """Efficient binary serialization."""
-    
+
     @staticmethod
     def pack_user(user: ProtoUser) -> bytes:
         """Pack user data into binary format."""
         # Format: name_len(4) + name + email_len(4) + email + age(4) + hobbies_count(4) + hobbies
         name_bytes = user.name.encode('utf-8')
         email_bytes = user.email.encode('utf-8')
-        
+
         # Pack header
         header = struct.pack('>III', len(name_bytes), len(email_bytes), user.age)
-        
+
         # Pack hobbies
         hobbies_data = b''
         for hobby in user.hobbies:
             hobby_bytes = hobby.encode('utf-8')
             hobbies_data += struct.pack('>I', len(hobby_bytes)) + hobby_bytes
-        
+
         return header + name_bytes + email_bytes + struct.pack('>I', len(user.hobbies)) + hobbies_data
-    
+
     @staticmethod
     def unpack_user(data: bytes) -> ProtoUser:
         """Unpack user data from binary format."""
         # Unpack header
         header_size = 12  # 3 ints * 4 bytes
         name_len, email_len, age = struct.unpack('>III', data[:header_size])
-        
+
         pos = header_size
-        
+
         # Unpack name
         name = data[pos:pos + name_len].decode('utf-8')
         pos += name_len
-        
+
         # Unpack email
         email = data[pos:pos + email_len].decode('utf-8')
         pos += email_len
-        
+
         # Unpack hobbies count
         hobbies_count = struct.unpack('>I', data[pos:pos + 4])[0]
         pos += 4
-        
+
         # Unpack hobbies
         hobbies = []
         for _ in range(hobbies_count):
@@ -1246,7 +1344,7 @@ class BinarySerializer:
             hobby = data[pos:pos + hobby_len].decode('utf-8')
             pos += hobby_len
             hobbies.append(hobby)
-        
+
         return ProtoUser(name=name, email=email, age=age, hobbies=hobbies)
 
 # Performance comparison
@@ -1286,15 +1384,15 @@ import pickle
 
 class AdvancedSerializer:
     """Advanced serialization framework."""
-    
+
     def __init__(self):
         self._seen_objects = {}
         self._object_ids = {}
-    
+
     def serialize(self, obj: Any) -> bytes:
         """Serialize an object to bytes."""
         # TODO: Implement serialization
-    
+
     def deserialize(self, data: bytes) -> Any:
         """Deserialize bytes to object."""
         # TODO: Implement deserialization
@@ -1304,335 +1402,15 @@ class AdvancedSerializer:
 
 ---
 
-## Performance Optimization Techniques
+## Performance Optimization
 
-Advanced performance optimization goes beyond basic efficiency to include caching, lazy loading, and algorithmic improvements.
+For a deep dive into performance optimization, including profiling, memory management, and advanced techniques, please refer to our dedicated guide:
 
-### Memoization and Caching
+**[Python Performance Optimization Guide](../python/performance_guide.md)**
 
-```python
-from functools import lru_cache, wraps
-from typing import Dict, Any
-import time
-
-class Cache:
-    """Custom cache with TTL support."""
-    
-    def __init__(self):
-        self._cache: Dict[str, Dict[str, Any]] = {}
-    
-    def get(self, key: str) -> Any:
-        """Get value from cache."""
-        if key in self._cache:
-            entry = self._cache[key]
-            if time.time() < entry['expires']:
-                return entry['value']
-            else:
-                del self._cache[key]
-        return None
-    
-    def set(self, key: str, value: Any, ttl: int = 300):
-        """Set value in cache with TTL."""
-        self._cache[key] = {
-            'value': value,
-            'expires': time.time() + ttl
-        }
-    
-    def clear(self):
-        """Clear all cache entries."""
-        self._cache.clear()
-
-class DatabaseQueryOptimizer:
-    """Database query optimizer with caching."""
-    
-    def __init__(self):
-        self.cache = Cache()
-    
-    def get_user_count(self, department: str = None) -> int:
-        """Get user count with caching."""
-        cache_key = f"user_count_{department or 'all'}"
-        cached_result = self.cache.get(cache_key)
-        
-        if cached_result is not None:
-            return cached_result
-        
-        # Simulate expensive query
-        time.sleep(0.1)
-        result = 42 if department else 1000
-        
-        self.cache.set(cache_key, result, ttl=60)
-        return result
-    
-    def get_user_details(self, user_id: int) -> Dict[str, Any]:
-        """Get user details with lazy loading."""
-        # Check cache first
-        cache_key = f"user_{user_id}"
-        cached = self.cache.get(cache_key)
-        if cached:
-            return cached
-        
-        # Simulate database query
-        time.sleep(0.05)
-        user_data = {
-            'id': user_id,
-            'name': f'User {user_id}',
-            'email': f'user{user_id}@example.com'
-        }
-        
-        self.cache.set(cache_key, user_data, ttl=300)
-        return user_data
-
-# Usage
-optimizer = DatabaseQueryOptimizer()
-
-# First call - cache miss
-start = time.time()
-count = optimizer.get_user_count()
-print(f"User count: {count} (took {(time.time() - start)*1000:.1f}ms)")
-
-# Second call - cache hit
-start = time.time()
-count = optimizer.get_user_count()
-print(f"User count: {count} (took {(time.time() - start)*1000:.1f}ms)")
-```
-
-### Lazy Loading and Generators
-
-```python
-from typing import Iterator, List, Optional
-import time
-
-class LazyDataLoader:
-    """Lazy loading data access."""
-    
-    def __init__(self, data_source):
-        self.data_source = data_source
-        self._loaded_data = None
-        self._is_loaded = False
-    
-    @property
-    def data(self):
-        """Lazy load data on first access."""
-        if not self._is_loaded:
-            self._load_data()
-        return self._loaded_data
-    
-    def _load_data(self):
-        """Simulate expensive data loading."""
-        print("Loading data...")
-        time.sleep(0.5)  # Simulate I/O
-        self._loaded_data = [f"Item {i}" for i in range(1000)]
-        self._is_loaded = True
-
-class StreamingDataProcessor:
-    """Process large datasets without loading everything into memory."""
-    
-    def __init__(self, file_path: str):
-        self.file_path = file_path
-    
-    def process_lines(self, batch_size: int = 100) -> Iterator[List[str]]:
-        """Process file in batches."""
-        batch = []
-        
-        with open(self.file_path, 'r') as file:
-            for line in file:
-                batch.append(line.strip())
-                
-                if len(batch) >= batch_size:
-                    yield batch
-                    batch = []
-            
-            if batch:  # Yield remaining items
-                yield batch
-    
-    def filter_and_transform(self, predicate, transformer) -> Iterator[Any]:
-        """Filter and transform data on the fly."""
-        for batch in self.process_lines():
-            for item in batch:
-                if predicate(item):
-                    yield transformer(item)
-
-# Usage
-loader = LazyDataLoader("source")
-
-print("Loader created, data not loaded yet")
-print(f"First 5 items: {loader.data[:5]}")  # Triggers loading
-print(f"Total items: {len(loader.data)}")    # Data already loaded
-
-# Streaming processor
-def is_long_line(line):
-    return len(line) > 10
-
-def uppercase_line(line):
-    return line.upper()
-
-processor = StreamingDataProcessor("path/to/large_file.txt")  # Example file path
-
-# Process large file efficiently
-long_lines = list(processor.filter_and_transform(is_long_line, uppercase_line))
-print(f"Found {len(long_lines)} long lines")
-```
-
-### Algorithm Optimization
-
-```python
-from typing import List, Set
-import time
-
-class OptimizedAlgorithms:
-    """Collection of optimized algorithms."""
-    
-    @staticmethod
-    def find_duplicates_efficient(items: List) -> Set:
-        """Find duplicates using set operations - O(n) time."""
-        seen = set()
-        duplicates = set()
-        
-        for item in items:
-            if item in seen:
-                duplicates.add(item)
-            else:
-                seen.add(item)
-        
-        return duplicates
-    
-    @staticmethod
-    def find_duplicates_naive(items: List) -> Set:
-        """Find duplicates using nested loops - O(n²) time."""
-        duplicates = set()
-        
-        for i in range(len(items)):
-            for j in range(i + 1, len(items)):
-                if items[i] == items[j]:
-                    duplicates.add(items[j])
-        
-        return duplicates
-    
-    @staticmethod
-    def batch_process(items: List, batch_size: int = 100):
-        """Process items in batches to manage memory."""
-        for i in range(0, len(items), batch_size):
-            batch = items[i:i + batch_size]
-            yield batch
-
-# Performance comparison
-data = list(range(1000)) + list(range(500))  # Create duplicates
-
-# Efficient algorithm
-start = time.time()
-duplicates_efficient = OptimizedAlgorithms.find_duplicates_efficient(data)
-efficient_time = time.time() - start
-
-# Naive algorithm
-start = time.time()
-duplicates_naive = OptimizedAlgorithms.find_duplicates_naive(data)
-naive_time = time.time() - start
-
-print(f"Efficient: {len(duplicates_efficient)} duplicates in {efficient_time:.4f}s")
-print(f"Naive: {len(duplicates_naive)} duplicates in {naive_time:.4f}s")
-print(f"Speedup: {naive_time / efficient_time:.1f}x")
-
-# Batch processing
-large_data = list(range(10000))
-processor = OptimizedAlgorithms()
-
-for i, batch in enumerate(processor.batch_process(large_data, 500)):
-    print(f"Processing batch {i + 1}: {len(batch)} items")
-    # Process batch here
-    if i >= 2:  # Only show first few batches
-        break
-```
-
-### Exercise 6: Performance Optimization
-
-**Task:** Optimize a slow data processing function using various techniques.
-
-**Requirements:**
-1. Implement caching for expensive operations
-2. Use lazy loading for large datasets
-3. Optimize algorithms where possible
-4. Add performance monitoring
-
-**Starter Code:**
-```python
-import time
-from typing import List, Dict
-
-class DataProcessor:
-    """Data processor to optimize."""
-    
-    def __init__(self):
-        self._cache = {}
-    
-    def slow_operation(self, data: List[int]) -> int:
-        """Expensive operation to optimize."""
-        time.sleep(0.1)  # Simulate slow operation
-        return sum(data)
-    
-    def process_data(self, datasets: List[List[int]]) -> List[int]:
-        """Process multiple datasets."""
-        # TODO: Optimize this method
-    
-    def find_common_items(self, list1: List[int], list2: List[int]) -> List[int]:
-        """Find common items between two lists."""
-        # TODO: Optimize this algorithm
-
-# TODO: Add performance optimizations
-```
+This guide provides a comprehensive overview of the tools and strategies for making your Python code faster and more memory-efficient.
 
 ---
-
-### Profiling and measurement
-
-Before optimizing, measure where time and memory go.
-
-```python
-import timeit
-
-def work():
-    return sum(range(1000))
-
-print(timeit.timeit(work, number=10000))
-```
-
-CPU profiling with cProfile:
-
-```python
-import cProfile, pstats, io
-
-def main():
-    for _ in range(1000):
-        sum(range(1000))
-
-pr = cProfile.Profile()
-pr.enable()
-main()
-pr.disable()
-s = io.StringIO()
-ps = pstats.Stats(pr, stream=s).sort_stats(pstats.SortKey.TIME)
-ps.print_stats(10)
-print(s.getvalue())
-```
-
-Memory tracing with tracemalloc:
-
-```python
-import tracemalloc
-
-tracemalloc.start()
-# ... run workload ...
-snapshot = tracemalloc.take_snapshot()
-for stat in snapshot.statistics('lineno')[:10]:
-    print(stat)
-```
-
-### Performance checklist
-
-- Define a success metric (latency, throughput, memory)
-- Profile first (CPU, memory); optimize the biggest hotspot
-- Prefer algorithmic/data-structure wins over micro-optimizations
-- Bound concurrency and backpressure for I/O-heavy flows
-- Re-measure after each change; add regression micro-benchmarks where it matters
 
 ## Memory Management and Weak References
 
@@ -1646,25 +1424,25 @@ from typing import Optional
 
 class CacheWithWeakRefs:
     """Cache that doesn't prevent garbage collection."""
-    
+
     def __init__(self):
         self._cache = weakref.WeakValueDictionary()
-    
+
     def get(self, key):
         """Get item from cache."""
         return self._cache.get(key)
-    
+
     def put(self, key, value):
         """Put item in cache."""
         self._cache[key] = value
 
 class ExpensiveObject:
     """Object that uses lots of memory."""
-    
+
     def __init__(self, id: int):
         self.id = id
         self.data = list(range(10000))  # Simulate large data
-    
+
     def __str__(self):
         return f"ExpensiveObject(id={self.id})"
 
@@ -1696,25 +1474,25 @@ print(f"obj2 in cache: {cache.get('obj2')}")  # Still available
 ```python
 class ConnectionPool:
     """Connection pool with weak reference cleanup."""
-    
+
     def __init__(self):
         self._connections = set()
         self._refs = []
-    
+
     def add_connection(self, conn):
         """Add connection with weak reference."""
         self._connections.add(conn)
-        
+
         # Create weak reference with callback
         ref = weakref.ref(conn, self._cleanup_connection)
         self._refs.append(ref)
-    
+
     def _cleanup_connection(self, ref):
         """Called when connection is garbage collected."""
         print("Connection garbage collected, cleaning up")
         # Remove from our tracking
         self._refs.remove(ref)
-    
+
     def get_stats(self):
         """Get pool statistics."""
         return {
@@ -1724,11 +1502,11 @@ class ConnectionPool:
 
 class DatabaseConnection:
     """Database connection that can be pooled."""
-    
+
     def __init__(self, conn_string):
         self.conn_string = conn_string
         self.connected = True
-    
+
     def close(self):
         """Close connection."""
         self.connected = False
@@ -1761,18 +1539,18 @@ print("After GC:", pool.get_stats())
 ```python
 class EventSystem:
     """Event system that doesn't cause memory leaks."""
-    
+
     def __init__(self):
         self._listeners = weakref.WeakSet()
-    
+
     def add_listener(self, listener):
         """Add event listener with weak reference."""
         self._listeners.add(listener)
-    
+
     def remove_listener(self, listener):
         """Remove event listener."""
         self._listeners.discard(listener)
-    
+
     def notify(self, event):
         """Notify all listeners."""
         # Create a strong reference to prevent GC during iteration
@@ -1783,10 +1561,10 @@ class EventSystem:
 
 class UIComponent:
     """UI component that listens to events."""
-    
+
     def __init__(self, name):
         self.name = name
-    
+
     def on_event(self, event):
         """Handle event."""
         print(f"{self.name} received event: {event}")
@@ -1821,32 +1599,32 @@ class DataItem:
 
 class DataProcessor:
     """Processor that holds weak references to data."""
-    
+
     def __init__(self):
         self._data_refs = []
-    
+
     def add_data(self, data: DataItem):
         """Add data with weak reference (must be weakref-able)."""
         ref = weakref.ref(data, self._cleanup_data)
         self._data_refs.append(ref)
-    
+
     def _cleanup_data(self, ref):
         """Clean up when data is garbage collected."""
         self._data_refs.remove(ref)
-    
+
     def process_all(self):
         """Process all available data."""
         results = []
         # Clean up dead references
         self._data_refs = [ref for ref in self._data_refs if ref() is not None]
-        
+
         for ref in self._data_refs:
             data = ref()
             if data is not None:
                 results.append(self._process_data(data))
-        
+
         return results
-    
+
     def _process_data(self, data: DataItem):
         """Process individual data item."""
         return f"Processed: {data.value}"
@@ -1885,23 +1663,23 @@ import threading
 
 class WeakReferenceCache:
     """Memory-efficient cache using weak references."""
-    
+
     def __init__(self):
         self._cache = weakref.WeakValueDictionary()
         self._lock = threading.Lock()
-    
+
     def get(self, key: str) -> Any:
         """Get item from cache."""
         # TODO: Implement thread-safe get
-    
+
     def put(self, key: str, value: Any):
         """Put item in cache."""
         # TODO: Implement thread-safe put
-    
+
     def clear(self):
         """Clear cache."""
         # TODO: Implement clear
-    
+
     def stats(self) -> Dict[str, int]:
         """Get cache statistics."""
         # TODO: Implement stats
@@ -1943,10 +1721,10 @@ class AsyncDatabasePool:
         """Get a connection from the pool."""
         if self._closed:
             return None
-        
+
         try:
             conn = await asyncio.wait_for(
-                self.available_connections.get(), 
+                self.available_connections.get(),
                 timeout=5.0
             )
             self.used_connections.add(conn)
@@ -1965,7 +1743,7 @@ class AsyncDatabasePool:
         conn = await self.get_connection()
         if not conn:
             raise RuntimeError("No available connections")
-        
+
         try:
             # Simulate query execution
             await asyncio.sleep(0.01)
@@ -1981,13 +1759,13 @@ class AsyncDatabasePool:
 async def demo_pool():
     pool = AsyncDatabasePool(3)
     await pool.initialize()
-    
+
     # Execute multiple queries concurrently
     tasks = [
         pool.execute_query(f"SELECT * FROM table_{i}")
         for i in range(10)
     ]
-    
+
     results = await asyncio.gather(*tasks)
     for result in results:
         print(result)
@@ -2004,17 +1782,17 @@ import time
 
 class SearchableMixin:
     """Mixin for searchable content."""
-    
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self._search_index = {}
-    
+
     def add_to_search_index(self, field: str, value: str):
         """Add field to search index."""
         if field not in self._search_index:
             self._search_index[field] = []
         self._search_index[field].append(value.lower())
-    
+
     def search(self, query: str) -> bool:
         """Search content."""
         query = query.lower()
@@ -2025,79 +1803,79 @@ class SearchableMixin:
 
 class VersionableMixin:
     """Mixin for version control."""
-    
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self._versions = []
         self._current_version = 0
-    
+
     def save_version(self):
         """Save current state as new version."""
         version_data = self._get_version_data()
         self._versions.append(version_data)
         self._current_version = len(self._versions) - 1
-    
+
     def _get_version_data(self) -> Dict[str, Any]:
         """Get current state for versioning."""
         # This would be overridden in subclasses
         return {}
-    
+
     def restore_version(self, version: int):
         """Restore to specific version."""
         if 0 <= version < len(self._versions):
             version_data = self._versions[version]
             self._restore_from_version_data(version_data)
             self._current_version = version
-    
+
     def _restore_from_version_data(self, data: Dict[str, Any]):
         """Restore state from version data."""
         # This would be overridden in subclasses
         pass
-    
+
     def get_version_history(self) -> List[Dict[str, Any]]:
         """Get version history."""
         return self._versions.copy()
 
 class PublishableMixin:
     """Mixin for publishable content."""
-    
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self._published = False
         self._publish_date = None
-    
+
     def publish(self):
         """Publish the content."""
         self._published = True
         self._publish_date = time.time()
-    
+
     def unpublish(self):
         """Unpublish the content."""
         self._published = False
         self._publish_date = None
-    
+
     def is_published(self) -> bool:
         """Check if content is published."""
         return self._published
-    
+
     def get_publish_date(self) -> float:
         """Get publish timestamp."""
         return self._publish_date
 
 class Content(SearchableMixin, VersionableMixin, PublishableMixin):
     """Content class with multiple mixins."""
-    
+
     def __init__(self, title: str, body: str, author: str, **kwargs):
         super().__init__(**kwargs)
         self.title = title
         self.body = body
         self.author = author
-        
+
         # Initialize search index
         self.add_to_search_index('title', title)
         self.add_to_search_index('body', body)
         self.add_to_search_index('author', author)
-    
+
     def _get_version_data(self) -> Dict[str, Any]:
         """Get current state for versioning."""
         return {
@@ -2105,7 +1883,7 @@ class Content(SearchableMixin, VersionableMixin, PublishableMixin):
             'body': self.body,
             'author': self.author
         }
-    
+
     def _restore_from_version_data(self, data: Dict[str, Any]):
         """Restore state from version data."""
         self.title = data['title']
