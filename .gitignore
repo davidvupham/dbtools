@@ -229,16 +229,4 @@ cert/*.der
 !cert/README.md
 !cert/.gitkeep
 
-# Docs resources: ignore heavy artifacts and copyrighted PDFs,
-# but keep helper scripts and README.
-docs/tutorials/docker/resources/*.pdf
-docs/tutorials/docker/resources/out*.png
-docs/tutorials/docker/resources/out-*.html
-docs/tutorials/docker/resources/*.css
-docs/tutorials/docker/resources/_tmp*.html
-docs/tutorials/docker/resources/_tmp*.png
-docs/tutorials/docker/resources/mastering_docker.md
-docs/tutorials/docker/resources/*.txt
-!docs/tutorials/docker/resources/README.md
-!docs/tutorials/docker/resources/*.sh
-!docs/tutorials/docker/resources/Dockerfile.convert
+# (removed) PDF conversion resources and exceptions no longer used

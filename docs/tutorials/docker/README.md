@@ -636,5 +636,4 @@ docker buildx build --platform linux/amd64,linux/arm64 -t <repo>/<name>:tag --pu
 - Harden the image (non‑root user, minimal base, multi‑stage).
 - Set up CI to build, scan, and push tags on each commit.
 
-If you need to convert PDFs to Markdown for internal notes, see:
-- `docs/tutorials/docker/CONVERT_PDF_TO_MARKDOWN.md` (Dockerized or host‑tool workflows)
+
