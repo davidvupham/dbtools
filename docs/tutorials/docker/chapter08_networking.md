@@ -1,6 +1,16 @@
-# Docker Networking Deep Dive
+# Chapter 8: Docker Networking
 
-This guide expands on the networking section with visual mental models, practical commands, and Compose examples—from simple bridge networks to advanced host/macvlan setups.
+- Modes: none, bridge (default), host (Linux), macvlan (advanced).
+- Prefer user‑defined bridge for isolation and service discovery.
+
+```bash
+# Create and use a user-defined network
+docker network create app-net
+docker run -d --name api --network app-net myorg/api:1.0
+docker run -d --name web --network app-net -p 8080:80 myorg/web:1.0
+```
+
+Examples: `docs/tutorials/docker/examples/networking/`
 
 ---
 
