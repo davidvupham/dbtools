@@ -130,6 +130,91 @@ EXPOSE 8000
 CMD ["python", "-m", "http.server", "8000"]
 ```
 
+### Where Base Images Come From
+
+The `FROM` instruction specifies a base image to start from. Base images are pre-built images that provide the foundation:
+
+- **Official Images**: Maintained by Docker and the community on Docker Hub (e.g., `ubuntu`, `alpine`, `python`, `nginx`)
+- **Distribution Images**: Built by Linux distributions (Ubuntu, Alpine Linux, CentOS, etc.)
+- **Language Runtimes**: Built by language maintainers (Python Software Foundation for `python` images)
+- **Custom Base Images**: You can build your own minimal base images using `FROM scratch` or by extending existing ones
+
+**Who builds them?**
+- **Docker Official Images**: Built and maintained by Docker Inc. and contributors
+- **Docker Hub Community**: Anyone can publish images, but official ones are verified
+- **Organizations**: Companies like Red Hat, Canonical, or cloud providers (AWS, Google) build and maintain their own base images
+- **You**: Can create custom base images for your organization using Dockerfiles
+
+To build a custom base image, start with `FROM scratch` (empty) or a minimal distro, then add only what you need:
+
+```dockerfile
+FROM scratch
+ADD my-minimal-rootfs.tar.gz /
+CMD ["/bin/sh"]
+```
+
+Most users start from existing base images rather than building from scratch, as they're optimized and secure.
+
+### Building a Custom Base Image
+
+For specialized needs, you can create your own base image. Here are two approaches:
+
+**Option 1: From Scratch (Minimal)**
+```dockerfile
+# Start from nothing
+FROM scratch
+
+# Add a minimal root filesystem (you need to create this)
+ADD rootfs.tar.gz /
+
+# Set up basic environment
+ENV PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+CMD ["/bin/sh"]
+```
+
+**Option 2: Extend an Existing Image**
+```dockerfile
+# Start from a minimal base
+FROM alpine:latest
+
+# Install only what you need for your org's standard setup
+RUN apk add --no-cache \
+    ca-certificates \
+    curl \
+    && rm -rf /var/cache/apk/*
+
+# Add your organization's standard configs
+COPY org-configs/ /etc/org/
+
+# Set default user and working dir
+USER appuser
+WORKDIR /app
+
+# Default command
+CMD ["/bin/sh"]
+```
+
+**Steps to Build and Use:**
+```bash
+# 1. Create your Dockerfile
+# 2. Build the base image
+docker build -t myorg/base:v1.0 .
+
+# 3. Push to registry (optional)
+docker tag myorg/base:v1.0 myregistry.com/myorg/base:v1.0
+docker push myregistry.com/myorg/base:v1.0
+
+# 4. Use in other Dockerfiles
+FROM myregistry.com/myorg/base:v1.0
+# ... rest of your app
+```
+
+**When to Build Custom Base Images:**
+- Organization-wide standards (security policies, monitoring agents)
+- Specialized runtime requirements
+- Size optimization for specific workloads
+- Compliance requirements
+
 Create a simple `requirements.txt` (can be empty for this demo). Build and run:
 
 ```bash
