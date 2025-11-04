@@ -1,0 +1,22 @@
+include README.md
+include LICENSE
+include requirements.txt
+include ARCHITECTURE.md
+include DEVELOPER_GUIDE.md
+include DOCKER_E2E_HOWTO.md
+include PACKAGE_INFO.md
+include QUICK_REFERENCE.md
+include TUTORIAL.md
+include SELF_CONTAINED_RESTRUCTURING.md
+recursive-include gds_snmp_receiver *.py
+exclude Dockerfile
+exclude docker-compose.yml
+exclude docker-compose.e2e.yml
+exclude entrypoint.sh
+exclude healthcheck.py
+recursive-exclude tests *
+recursive-exclude tools *
+recursive-exclude __pycache__ *
+global-exclude *.pyc
+global-exclude *.pyo
+global-exclude .DS_Store

@@ -2,9 +2,10 @@
 
 Quick reference for running the end-to-end smoke tester that sends an SNMP trap to `gds-snmp-receiver` and polls RabbitMQ for a published message.
 
-Usage (from repo root):
+Usage (from gds_snmp_receiver directory):
 
 ```bash
+cd gds_snmp_receiver
 docker compose -f docker-compose.e2e.yml run --rm snmp-sender python tools/e2e_send_and_check.py
 ```
 

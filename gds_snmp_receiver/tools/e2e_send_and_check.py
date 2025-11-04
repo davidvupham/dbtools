@@ -53,17 +53,24 @@ def ensure_snmptrap() -> None:
 def wait_for_rabbit(timeout: int = 60) -> bool:
     """Try to connect to RabbitMQ using pika until success or timeout."""
     print("Waiting for RabbitMQ to accept connections...")
-    # Ensure pika is installed in the sender container
+    # Ensure pika is installed in the sender container and import it.
     try:
         import pika  # type: ignore
     except Exception:
         print("pika not present in sender container; installing via pip")
         run("pip install --no-cache-dir pika", check=True)
+        # import via importlib after installing
+        import importlib
+        pika = importlib.import_module("pika")
 
     start = time.time()
+    params = pika.URLParameters(RABBIT_URL)
     while time.time() - start < timeout:
         try:
-            import pika  # type: ignore
+            conn = pika.BlockingConnection(params)
+            conn.close()
+            print("RabbitMQ is reachable")
+            return True
         except Exception as e:
             print("RabbitMQ not ready yet:", e)
             time.sleep(1)
@@ -72,11 +79,7 @@ def wait_for_rabbit(timeout: int = 60) -> bool:
 
 def wait_for_queue(queue: str, timeout: int = 30) -> bool:
     """Wait for queue to be present by checking via pika passive declare."""
-    print(
-        "Waiting up to {}s for queue '{}' to be declared by the receiver".format(
-            timeout, queue
-        )
-    )
+    print(f"Waiting up to {timeout}s for queue {queue!r}")
     import pika
 
     params = pika.URLParameters(RABBIT_URL)
@@ -101,9 +104,12 @@ def send_trap() -> None:
     """Send a simple SNMPv2c trap using snmptrap to the receiver host."""
     # Example OID used: linkDown (1.3.6.1.6.3.1.1.5.3) or use generic
     oid = ".1.3.6.1.6.3.1.1.5.1"
-    # Use host only (snmptrap expects host (or host:port) and then varbinds.
-    # Using just the service name is usually sufficient on the compose network.
-    cmd = f"snmptrap -v 2c -c public {RECEIVER_HOST} '' {oid}"
+    # Use host (or host:port). If a non-standard port is configured include it.
+    if RECEIVER_PORT != 162:
+        target = f"{RECEIVER_HOST}:{RECEIVER_PORT}"
+    else:
+        target = RECEIVER_HOST
+    cmd = f"snmptrap -v 2c -c public {target} '' {oid}"
     print("Sending SNMP trap:", cmd)
     run(cmd, check=True)
 
@@ -118,13 +124,13 @@ def poll_for_message(queue: str, timeout: int = 20) -> Optional[str]:
         try:
             conn = pika.BlockingConnection(params)
             ch = conn.channel()
-            method, props, body = ch.basic_get(queue=queue, auto_ack=True)
+            _, _, body = ch.basic_get(queue=queue, auto_ack=True)
             conn.close()
             if body:
                 print("Message received from queue")
                 return body.decode(errors='ignore')
         except Exception as e:
-                print("pika poll error:", e)
+            print("pika poll error:", e)
         time.sleep(1)
     return None
 
@@ -139,9 +145,7 @@ def main() -> int:
     # Step 2: wait for the receiver to declare the queue
     q_ok = wait_for_queue(QUEUE_NAME, timeout=30)
     if not q_ok:
-            print(
-                "Queue '{}' not present after wait; continuing anyway".format(QUEUE_NAME)
-            )
+        print(f"Queue {QUEUE_NAME!r} not present; continuing")
 
     # Step 3: ensure snmptrap available
     ensure_snmptrap()

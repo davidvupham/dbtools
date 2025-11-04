@@ -3,11 +3,11 @@
 This document captures the containerization approach, build/run commands, the end-to-end (SNMP -> RabbitMQ) test flow, troubleshooting guidance, and recommended next steps. It mirrors the guidance created during the containerization effort and is intended to be stored alongside the repository so contributors can follow exact steps.
 
 ### Summary
-- Purpose: containerize `gds_snmp_receiver` as a package-local image, provide an end-to-end smoke test that sends an SNMP trap and validates message delivery into RabbitMQ, and document commands and troubleshooting.
-- Location: `gds_snmp_receiver/` contains Dockerfile, `requirements.txt`, `entrypoint.sh`, and `healthcheck.py`. The repo also includes `docker-compose.e2e.yml` and `tools/e2e_send_and_check.py` used for the E2E test.
+- Purpose: containerize `gds_snmp_receiver` as a self-contained package with Docker support, provide an end-to-end smoke test that sends an SNMP trap and validates message delivery into RabbitMQ, and document commands and troubleshooting.
+- Location: All files are contained within the `gds_snmp_receiver/` directory including Dockerfile, `requirements.txt`, `entrypoint.sh`, `healthcheck.py`, `docker-compose.e2e.yml`, `docker-compose.yml`, and `tools/` directory with E2E test scripts.
 
 ### Contract
-- Inputs: the repository root with `gds_snmp_receiver/`, `docker-compose.e2e.yml`, and `tools/` present.
+- Inputs: the `gds_snmp_receiver/` directory with all necessary files for containerization and testing.
 - Outputs: a built container image and a deterministic way to exercise SNMP trap -> RabbitMQ publish.
 - Error modes: broker unreachable, queue not declared, SNMP trap not delivered, pysnmp compatibility issues.
 - Success criteria: the E2E helper returns exit code 0 and prints the message consumed from RabbitMQ.
@@ -18,10 +18,11 @@ This document captures the containerization approach, build/run commands, the en
 
 1) Build the package-local image
 
-This builds the image from `gds_snmp_receiver/`.
+This builds the image from the `gds_snmp_receiver/` directory.
 
 ```bash
-docker build -t gds_snmp_receiver:latest gds_snmp_receiver/
+cd gds_snmp_receiver
+docker build -t gds_snmp_receiver:latest .
 ```
 
 2) Run the receiver standalone (non-privileged host port example)
@@ -41,12 +42,13 @@ docker run -d --name gds_snmp_test --cap-add=NET_BIND_SERVICE -p 162:162/udp gds
 3) Start the E2E compose stack (RabbitMQ + receiver + sender)
 
 ```bash
+cd gds_snmp_receiver
 docker compose -f docker-compose.e2e.yml up -d --build
 ```
 
 This will start:
 - `rabbitmq` (rabbitmq:3-management)
-- `gds-snmp-receiver` (built from `gds_snmp_receiver/`)
+- `gds-snmp-receiver` (built from current directory)
 - `snmp-sender` (helper used to run the E2E script)
 
 4) Run the E2E helper script (recommended)
