@@ -120,3 +120,42 @@ verify:
 		-v "$(PWD)":$(WORKDIR) \
 		-w $(WORKDIR) \
 		$(IMAGE) bash -lc "python -V && terraform -version && aws --version && az version && sqlcmd -? | head -n 1"
+
+#############################################
+# PDF → HTML → Markdown conversion helpers  #
+#############################################
+
+RES_DIR := docs/tutorials/docker/resources
+PDF ?= mastering_docker.pdf
+MD ?= mastering_docker.md
+
+.PHONY: pdf2md-build pdf2md pdf2md-host pdf2md-clean
+
+# Build the converter image with poppler-utils and pandoc
+pdf2md-build:
+	docker build -t pdf2md-tool:latest -f $(RES_DIR)/Dockerfile.convert $(RES_DIR)
+
+# Convert a PDF (in RES_DIR) to Markdown using the containerized toolchain
+# Usage: make pdf2md PDF=my_book.pdf MD=my_book.md
+pdf2md: pdf2md-build
+	@if [ ! -f "$(RES_DIR)/$(PDF)" ]; then \
+		echo "Error: $(RES_DIR)/$(PDF) not found. Copy your PDF there or set PDF=..."; \
+		exit 1; \
+	fi
+	docker run --rm \
+		-v "$(PWD)/$(RES_DIR)":/work \
+		pdf2md-tool:latest \
+		"pdftohtml -c -hidden -nomerge -s $(PDF) out && pandoc -f html -t gfm --wrap=none -o $(MD) out-html.html && echo DONE"
+
+# Convert using host-installed tools (poppler-utils, pandoc) via helper script
+# Usage: make pdf2md-host PDF=my_book.pdf MD=my_book.md
+pdf2md-host:
+	@if [ ! -f "$(RES_DIR)/convert_pdf_to_md.sh" ]; then \
+		echo "Error: $(RES_DIR)/convert_pdf_to_md.sh missing"; exit 1; \
+	fi
+	cd $(RES_DIR) && bash convert_pdf_to_md.sh $(PDF) $(MD)
+
+# Remove intermediate HTML/CSS and page images in RES_DIR (keeps PDFs/MD)
+pdf2md-clean:
+	-@rm -f $(RES_DIR)/out-html.html $(RES_DIR)/out-*.html $(RES_DIR)/out*.css
+	-@rm -f $(RES_DIR)/out*.png $(RES_DIR)/_tmp*.html $(RES_DIR)/_tmp*.png

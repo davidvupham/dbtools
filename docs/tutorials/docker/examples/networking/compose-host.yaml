@@ -1,0 +1,6 @@
+services:
+  web:
+    image: nginxdemos/hello:latest
+    network_mode: host
+    # WARNING: Linux only; ensure port 80 is free on the host
+    # No port mapping here; the container binds directly on host interfaces
