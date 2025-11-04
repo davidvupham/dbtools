@@ -2,6 +2,8 @@
 
 Whether you're just getting started or want to harden production images, this guide walks you through Docker from zero to expert—complete with copy‑pasteable commands, example Dockerfiles, and best practices.
 
+> Looking for a structured deep dive? See the multi‑chapter series: `docs/tutorials/docker/mastering/README.md`.
+
 ---
 
 ## What Docker is (and isn’t)

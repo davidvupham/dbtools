@@ -238,6 +238,7 @@ docs/tutorials/docker/resources/*.css
 docs/tutorials/docker/resources/_tmp*.html
 docs/tutorials/docker/resources/_tmp*.png
 docs/tutorials/docker/resources/mastering_docker.md
+docs/tutorials/docker/resources/*.txt
 !docs/tutorials/docker/resources/README.md
 !docs/tutorials/docker/resources/*.sh
 !docs/tutorials/docker/resources/Dockerfile.convert
