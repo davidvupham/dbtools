@@ -1,0 +1,7 @@
+include README.md
+include pyproject.toml
+recursive-include gds_mongodb *.py
+recursive-include gds_mongodb *.typed
+recursive-include examples *.py
+recursive-exclude * __pycache__
+recursive-exclude * *.py[co]

@@ -66,7 +66,7 @@ snowflake/
 │   ├── requirements.txt                     # App dependencies
 │   └── README.md                            # App documentation
 │
-├── tests/                      # 🧪 Shared tests (legacy)
+├── tests/                      # 🧪 Shared tests
 ├── .github/                    # GitHub Actions
 └── snowflake.code-workspace  # VS Code workspace
 ```
@@ -98,8 +98,8 @@ python monitor_snowflake_replication.py myaccount
 from gds_snowflake import SnowflakeConnection, SnowflakeReplication
 
 conn = SnowflakeConnection(
-    account='myaccount', 
-    user='myuser', 
+    account='myaccount',
+    user='myuser',
     vault_secret_path='data/snowflake',
     vault_mount_point='secret'
 )
