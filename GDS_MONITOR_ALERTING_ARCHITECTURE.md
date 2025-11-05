@@ -90,14 +90,7 @@ This document outlines the architecture for `gds_monitor` and `gds_alerting` pac
 6. **gds_alerting** → **gds_notification**: Alerts sent via HTTP API when thresholds exceeded
 7. **gds_notification** → **Recipients**: Emails delivered via SMTP
 
-### Data Flow Summary
-
-1. **Database Systems** → **gds_monitor**: Metrics collected at specified intervals
-2. **gds_monitor** → **File/Kafka**: Metrics output for storage/analysis
-3. **gds_monitor** → **gds_alerting**: Metrics streamed for rule evaluation
-4. **gds_alerting** → **gds_notification**: Alerts sent via HTTP API
-5. **gds_notification** → **Recipients**: Emails delivered via SMTP
-3. **Shared Interfaces**: Common abstractions for extensibility
+Note: Metrics flow through Kafka as the single source of truth. `gds_alerting` consumes Kafka topics; there is no direct tight coupling/stream from `gds_monitor` to `gds_alerting` in the recommended design. This preserves loose coupling and enables replay.
 
 ---
 
@@ -356,9 +349,9 @@ class MonitoringSystemBuilder:
 ### Metric Collection Flow
 
 ```
-Database → Collector → Metric → [Output Handler] → File/Kafka
-                ↓
-           [Evaluator] → Alert → [Notifier] → Email/SMS/Slack
+Database → Collector → Metric → [Output Handler] → Kafka (single source of truth)
+                                    ↓
+                                [Evaluator] → Alert → [Notifier] → Email/SMS/Slack
 ```
 
 ### Detailed Flow
@@ -397,9 +390,9 @@ gds.metrics.{database_type}.{environment}.{instance_id}
 - `gds.metrics.snowflake.production.account123`
 
 #### Partitioning Strategy
-- **By Database Instance**: Ensures metrics from same instance go to same partition
-- **By Time Window**: Optional time-based partitioning for retention policies
-- **Key Design**: `{database_type}.{instance_id}.{metric_type}`
+- **By Database Instance (recommended)**: Ensures metrics from the same instance go to the same partition to preserve per-instance ordering
+- ~~By Time Window~~: Not recommended. Kafka partitions are static; use topic-level time-based retention instead of time-based partitioning
+- **Key Design**: Prefer `{instance_id}` or `{instance_id}:{metric_type}` as the message key. Include `database_type` and `environment` in topic name rather than key.
 
 #### Consumer Groups
 - **Alerting Consumers**: `gds-alerting-{rule_group}` for parallel processing
@@ -421,10 +414,13 @@ gds.metrics.{database_type}.{environment}.{instance_id}
   },
   "metadata": {
     "collection_duration_ms": 150,
-    "version": "1.0"
+        "version": "1.0",
+        "correlation_id": "7f9c1c7e-8b61-4d9d-9a10-9b3a6a7b1234"
   }
 }
 ```
+
+Recommendation: Use a schema registry (e.g., Confluent Schema Registry) with compatibility rules (backward or full) to manage schema evolution safely.
 
 ### Data Warehouse Integration
 
@@ -550,6 +546,11 @@ class AlertEvaluator:
         """Evaluate a single rule against a metric."""
         # Rule evaluation logic
         pass
+
+    def _dedup_key(self, rule: AlertRule, metric: Metric) -> str:
+        """Stable deduplication key combining rule/resource to avoid alert flapping."""
+        resource_id = metric.tags.get("instance_id") or metric.instance_id
+        return f"{rule.id}:{resource_id}:{metric.metric_name}"
 ```
 
 #### AlertNotifier
@@ -586,7 +587,11 @@ class GDSNotificationNotifier(AlertNotifier):
             "db_instance_id": self._extract_db_instance_id(alert),
             "subject": f"Alert: {alert.message[:50]}...",
             "body_text": self._format_alert_body(alert),
-            "message_id": str(alert.id)
+            "message_id": str(alert.id),            # Idempotency key
+            "severity": alert.severity.name,
+            "runbook_url": getattr(alert, "runbook_url", None),
+            "labels": getattr(alert, "labels", {}),
+            "routing_key": getattr(alert, "routing_key", None)
         }
 ```
 
@@ -603,6 +608,8 @@ The `gds_alerting` package integrates with the existing `gds_notification` servi
 3. **Error Handling**: Circuit breaker pattern for API failures
 4. **Idempotency**: Use alert IDs for duplicate prevention
 5. **Fallback Options**: Direct email as fallback if `gds_notification` is unavailable
+6. **Rate Limiting & Backoff**: Apply client-side rate limits and exponential backoff with jitter to prevent thundering herds
+7. **Bulkhead Isolation**: Use separate worker pools per destination (Email, Slack, PagerDuty) within `gds_notification`
 
 ### Loose Coupling Strategy
 
@@ -612,6 +619,7 @@ The packages are designed to work together but remain loosely coupled:
 2. **Event-Driven Architecture**: Metrics and alerts are published as events
 3. **Dependency Injection**: Components are injected rather than imported directly
 4. **Configuration-Driven**: Integration is configured rather than hardcoded
+5. **Dead Letter Queues (DLQ)**: Route repeatedly failing messages to DLQ with retention and a replay process
 
 ### Integration Example
 
@@ -652,7 +660,10 @@ class Alert:
     "db_instance_id": extracted_id,     # From metric tags
     "subject": f"Alert: {message[:50]}",
     "body_text": formatted_body,
-    "message_id": str(alert.id)         # For idempotency
+    "message_id": str(alert.id),        # For idempotency
+    "severity": alert.severity.name,
+    "runbook_url": alert.runbook_url,
+    "labels": alert.labels
 }
 ```
 
@@ -715,6 +726,25 @@ class Alert:
 3. **Avoid Alert Fatigue**: Use appropriate thresholds and cooldown periods
 4. **Test Alerting**: Regularly test that alerts work and reach the right people
 
+#### SLO-Driven Alerting
+
+- Define SLIs and SLOs per service/database (e.g., availability, latency, error rate) and tie paging alerts to SLO burn rates
+- Use the Four Golden Signals (latency, traffic, errors, saturation) and RED/USE methods to guide metric selection
+
+#### Alert Hygiene and Lifecycle
+
+- Use a deterministic deduplication key (rule_id + resource + metric) to avoid flapping
+- Group related alerts and provide correlation IDs to reduce noise
+- Implement alert states: open → acknowledged → resolved; auto-resolve on recovery
+- Provide actionable context in every alert: impact, suspected cause, runbook URL, dashboard links, owner/on-call
+- Support silences/maintenance windows and inhibition rules to prevent cascaded paging
+
+#### Routing and Escalation
+
+- Route by severity, service, environment to the right channel (email, Slack, PagerDuty)
+- Rate-limit notifications per rule/resource to avoid storms, with exponential backoff and jitter
+- Escalate on lack of acknowledgement within defined time windows
+
 ### OOP Best Practices
 
 1. **Composition over Inheritance**: Favor composition for flexibility
@@ -731,6 +761,8 @@ class Alert:
 5. **Consumer Groups**: Use separate groups for different processing needs
 6. **Retention**: Configure appropriate retention based on alerting windows
 7. **Monitoring**: Monitor Kafka lag, throughput, and error rates
+8. **Backpressure & Retries**: Use consumer max-poll intervals and bounded retries; push unrecoverable messages to DLQ and alert on DLQ growth
+9. **Idempotency**: Ensure downstream consumers handle at-least-once delivery semantics via idempotent writes keyed by metric identity and timestamp bucket
 
 ### Security Considerations
 
@@ -738,8 +770,29 @@ class Alert:
 2. **Access Control**: Limit monitoring access to necessary systems
 3. **Audit Logging**: Log all monitoring and alerting activities
 4. **Encryption**: Encrypt sensitive data in transit and at rest
+5. **Transport Security**: Use TLS for Kafka (SASL_SSL), mTLS for service-to-service, and HTTPS for APIs
+6. **AuthN/Z**: Use short-lived tokens/approles for collectors; apply least privilege RBAC on topics and APIs
+7. **Secrets Management**: Store credentials in Vault (with rotation) and avoid secrets in config files or logs
+8. **PII/Data Minimization**: Avoid including PII in metrics/alerts; scrub sensitive fields before publishing
+9. **Compliance & Retention**: Apply environment-specific retention policies and audit trails; document data lineage
+
+### Operability and Resilience
+
+1. **Dead Man’s Switch**: Emit periodic heartbeats and alert if metrics/alerts stop arriving (per collector and per topic)
+2. **Health Checks**: Liveness/readiness for collectors, alerting consumers, and `gds_notification`; include dependency checks
+3. **Capacity Planning**: Track queue/topic lag, throughput, and saturation; alert before breaching SLOs
+4. **Failure Modes**: Implement bounded in-memory buffers with backpressure; retry with exponential backoff; fall back to local spool if Kafka unavailable
+5. **Change Safety**: Feature flags for new rules/collectors; canary deployments; automatic rollback on error budgets burned
+6. **Runbooks**: Maintain concise runbooks for top alerts with verification steps and roll-forward/rollback procedures
 
 ## Is This a Best Practice Architecture?
+
+### Examples and Schemas
+
+- Example alert rules: `examples/monitoring/rules.yaml`
+- Synthetic metrics generator: `examples/monitoring/generate_synthetic_metrics.py`
+- Schema registry stub: `schemas/metrics-value.avsc` with notes in `schemas/README.md`
+- E2E tutorial: `docs/tutorials/monitoring_e2e_synthetic_metrics.md`
 
 ### Industry Standards and Best Practices
 
@@ -895,3 +948,15 @@ class MonitoringSystem:
 6. **Reliability**: Kafka's persistence and replay capabilities ensure no metric loss
 
 The architecture balances separation of concerns with practical integration through Kafka messaging and HTTP APIs, creating a robust, scalable monitoring system that serves both operational alerting and analytical use cases through a unified data pipeline.
+
+---
+
+## References
+
+- Google SRE Book – Monitoring Distributed Systems: https://sre.google/sre-book/monitoring-distributed-systems/
+- Google SRE Workbook – Monitoring: https://sre.google/workbook/monitoring/
+- Prometheus – Alerting Best Practices: https://prometheus.io/docs/practices/alerting/
+- AWS Well-Architected Framework – Reliability: https://docs.aws.amazon.com/wellarchitected/latest/reliability-pillar/welcome.html
+- Azure Monitor – Best Practices: https://learn.microsoft.com/azure/azure-monitor/best-practices
+- Kafka – Design & Reliability Patterns (Confluent Blog): https://www.confluent.io/blog/
+- PagerDuty – Alerting & Incident Response Best Practices: https://response.pagerduty.com/best_practices/

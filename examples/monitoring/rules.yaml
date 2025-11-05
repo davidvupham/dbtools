@@ -1,0 +1,124 @@
+# Example alerting rules for gds_alerting
+# Lightweight, implementation-agnostic. Use as a starting point.
+
+version: 1
+
+# How to route alerts by labels
+routing:
+  default_channel: email
+  channels:
+    email:
+      type: email
+      to: ops@example.com
+    slack:
+      type: slack
+      channel: "#db-alerts"
+    pagerduty:
+      type: pagerduty
+      service: "db-oncall"
+  routes:
+    - match:
+        severity: critical
+        environment: production
+      channel: pagerduty
+    - match:
+        severity: warning
+        environment: production
+      channel: slack
+
+# Global behaviors applied to all rules unless overridden
+policy:
+  cooldown: 10m          # minimum time between repeated notifications of same dedup key
+  silence_labels:
+    - maintenance_window
+  inhibition:
+    - suppress_if:
+        severity: critical
+      suppresses:
+        - severity: warning
+
+# Deterministic deduplication key template
+# Variables: rule.id, metric, tags.instance_id
+alert_key_template: "{{ rule.id }}:{{ tags.instance_id }}:{{ metric }}"
+
+rules:
+  # Threshold example (Golden Signal: saturation)
+  - id: cpu_high_5m
+    description: CPU usage > 85% for 5 minutes
+    metric: cpu_usage_percent
+    filter: tags.environment == "production"
+    threshold:
+      op: ">"
+      value: 85
+      for: 5m
+    severity: warning
+    labels:
+      service: database
+      signal: saturation
+      environment: production
+    runbook_url: https://runbooks.example.com/db/cpu
+    routing_key: db-prod
+
+  # SLO burn-rate paging (fast burn)
+  - id: slo_error_burn_fast
+    description: SLO burn (fast) indicates acute user impact
+    metric: request_error_rate   # errors/requests over the sampling window
+    filter: tags.environment == "production"
+    slo:
+      objective: 99.9           # 0.1% error budget over 30 days
+      window: 30d
+    burn_rate:
+      factor: 14.4              # ~2% of error budget consumed per hour
+      short_window: 5m
+      long_window: 1h
+      trigger_if_both: true     # page only if both windows breached
+    page: true
+    severity: critical
+    labels:
+      service: database
+      signal: errors
+      environment: production
+    runbook_url: https://runbooks.example.com/db/errors
+
+  # SLO burn-rate ticket (slow burn)
+  - id: slo_error_burn_slow
+    description: SLO burn (slow) indicates persistent degradation; create ticket
+    metric: request_error_rate
+    filter: tags.environment == "production"
+    slo:
+      objective: 99.9
+      window: 30d
+    burn_rate:
+      factor: 3                  # ~0.4% of budget/hr; use longer windows to avoid noise
+      short_window: 2h
+      long_window: 24h
+      trigger_if_both: true
+    page: false                  # notify but do not page
+    severity: warning
+    labels:
+      service: database
+      signal: errors
+      environment: production
+    runbook_url: https://runbooks.example.com/db/errors
+
+  # Availability SLI sample using burn-rate
+  - id: availability_burn
+    description: Availability below objective across multiple windows
+    metric: availability        # fraction 0..1
+    filter: tags.environment == "production"
+    slo:
+      objective: 99.95
+      window: 30d
+    burn_rate:
+      factor: 6
+      short_window: 30m
+      long_window: 6h
+      trigger_if_both: true
+    evaluate: "(1 - value)"     # treat unavailability as error fraction
+    page: true
+    severity: critical
+    labels:
+      service: database
+      signal: availability
+      environment: production
+    runbook_url: https://runbooks.example.com/db/availability

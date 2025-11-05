@@ -1,0 +1,27 @@
+{
+  "type": "record",
+  "name": "Metric",
+  "namespace": "gds.metrics",
+  "doc": "Metric event for GDS monitoring pipeline",
+  "fields": [
+    {"name": "timestamp", "type": "string", "doc": "ISO-8601 UTC timestamp"},
+    {"name": "database_type", "type": "string"},
+    {"name": "instance_id", "type": "string"},
+    {"name": "metric_name", "type": "string"},
+    {"name": "value", "type": "double"},
+    {"name": "tags", "type": {"type": "map", "values": "string"}, "default": {}},
+    {
+      "name": "metadata",
+      "type": {
+        "type": "record",
+        "name": "MetricMetadata",
+        "fields": [
+          {"name": "collection_duration_ms", "type": "int", "default": 0},
+          {"name": "version", "type": "string", "default": "1.0"},
+          {"name": "correlation_id", "type": ["null", "string"], "default": null}
+        ]
+      },
+      "default": {"collection_duration_ms": 0, "version": "1.0", "correlation_id": null}
+    }
+  ]
+}
