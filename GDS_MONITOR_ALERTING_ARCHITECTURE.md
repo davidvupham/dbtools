@@ -422,6 +422,424 @@ gds.metrics.{database_type}.{environment}.{instance_id}
 
 Recommendation: Use a schema registry (e.g., Confluent Schema Registry) with compatibility rules (backward or full) to manage schema evolution safely.
 
+#### Schema Evolution Strategy
+
+##### Compatibility Rules
+
+**1. Backward Compatibility** (Recommended for most cases)
+- **Rule**: New schema can read data written with old schema
+- **Use Case**: Adding optional fields, removing fields
+- **Example**: Adding a new optional field to metrics
+
+```json
+// Version 1
+{
+  "timestamp": "2025-01-15T10:30:00Z",
+  "metric_name": "cpu_usage_percent",
+  "value": 85.5
+}
+
+// Version 2 (Backward Compatible)
+{
+  "timestamp": "2025-01-15T10:30:00Z",
+  "metric_name": "cpu_usage_percent",
+  "value": 85.5,
+  "collection_method": "agent"  // New optional field
+}
+```
+
+**2. Forward Compatibility**
+- **Rule**: Old schema can read data written with new schema
+- **Use Case**: Removing fields, adding fields that old code can ignore
+
+**3. Full Compatibility**
+- **Rule**: Both backward and forward compatible
+- **Use Case**: Production systems where old and new code run simultaneously
+
+##### Schema Registry Configuration
+
+```python
+from confluent_kafka.schema_registry import SchemaRegistryClient
+from confluent_kafka.schema_registry.avro import AvroSerializer
+
+class SchemaManager:
+    """Manage schema registration and evolution."""
+
+    def __init__(self, registry_url: str):
+        self.registry_client = SchemaRegistryClient({'url': registry_url})
+        self.schema_cache = {}
+
+    def register_schema(
+        self,
+        subject: str,
+        schema_str: str,
+        compatibility: str = "BACKWARD"
+    ) -> int:
+        """Register new schema version with compatibility check."""
+        # Set compatibility mode
+        self.registry_client.set_compatibility(subject, compatibility)
+
+        # Register schema
+        schema_id = self.registry_client.register_schema(subject, schema_str)
+        logger.info(f"Registered schema {subject} with ID {schema_id}")
+
+        return schema_id
+
+    def get_schema(self, schema_id: int):
+        """Get schema by ID with caching."""
+        if schema_id not in self.schema_cache:
+            schema = self.registry_client.get_schema(schema_id)
+            self.schema_cache[schema_id] = schema
+        return self.schema_cache[schema_id]
+```
+
+##### Schema Version Management
+
+```python
+# Avro schema definition with versioning
+metric_schema_v1 = """
+{
+  "type": "record",
+  "name": "Metric",
+  "namespace": "com.gds.monitoring",
+  "version": "1.0",
+  "fields": [
+    {"name": "timestamp", "type": "string"},
+    {"name": "database_type", "type": "string"},
+    {"name": "instance_id", "type": "string"},
+    {"name": "metric_name", "type": "string"},
+    {"name": "value", "type": "double"},
+    {"name": "tags", "type": {"type": "map", "values": "string"}},
+    {"name": "metadata", "type": {"type": "map", "values": "string"}}
+  ]
+}
+"""
+
+# Version 2: Add optional fields (backward compatible)
+metric_schema_v2 = """
+{
+  "type": "record",
+  "name": "Metric",
+  "namespace": "com.gds.monitoring",
+  "version": "2.0",
+  "fields": [
+    {"name": "timestamp", "type": "string"},
+    {"name": "database_type", "type": "string"},
+    {"name": "instance_id", "type": "string"},
+    {"name": "metric_name", "type": "string"},
+    {"name": "value", "type": "double"},
+    {"name": "tags", "type": {"type": "map", "values": "string"}},
+    {"name": "metadata", "type": {"type": "map", "values": "string"}},
+    {"name": "collection_method", "type": ["null", "string"], "default": null},
+    {"name": "collector_version", "type": ["null", "string"], "default": null}
+  ]
+}
+"""
+```
+
+##### Breaking Change Migration Strategy
+
+When breaking changes are unavoidable:
+
+1. **Dual Write Period**: Write to both old and new topics
+2. **Consumer Migration**: Update consumers to read from new topic
+3. **Deprecation Period**: Maintain old topic for 30 days
+4. **Cleanup**: Remove old topic and legacy code
+
+```python
+class DualWritePublisher:
+    """Publish to both old and new topics during migration."""
+
+    def __init__(self, old_topic: str, new_topic: str):
+        self.old_topic = old_topic
+        self.new_topic = new_topic
+        self.producer = KafkaProducer(...)
+
+    async def publish_metric(self, metric: Metric):
+        """Publish to both topics during migration period."""
+        # Publish to old topic (v1 schema)
+        old_format = self._convert_to_v1(metric)
+        self.producer.send(self.old_topic, value=old_format)
+
+        # Publish to new topic (v2 schema)
+        new_format = self._convert_to_v2(metric)
+        self.producer.send(self.new_topic, value=new_format)
+```
+
+#### Kafka Configuration Best Practices
+
+##### Producer Configuration
+
+```python
+producer_config = {
+    # Reliability settings
+    'acks': 'all',  # Wait for all in-sync replicas to acknowledge
+    'enable.idempotence': True,  # Exactly-once semantics within partition
+    'max.in.flight.requests.per.connection': 5,  # Max unacked requests
+    'retries': 2147483647,  # Retry indefinitely (with timeout)
+    'delivery.timeout.ms': 120000,  # 2 minute total timeout
+    'request.timeout.ms': 30000,  # 30 second per-request timeout
+
+    # Performance settings
+    'compression.type': 'lz4',  # Fast compression (alternatives: snappy, gzip, zstd)
+    'linger.ms': 100,  # Wait up to 100ms to batch messages
+    'batch.size': 16384,  # Batch size in bytes (16KB)
+    'buffer.memory': 33554432,  # 32MB total buffer
+
+    # Connection settings
+    'bootstrap.servers': 'kafka-1:9092,kafka-2:9092,kafka-3:9092',
+    'client.id': 'gds-monitor-producer',
+    'security.protocol': 'SASL_SSL',
+    'sasl.mechanism': 'PLAIN',  # Or SCRAM-SHA-256/SCRAM-SHA-512
+    'ssl.ca.location': '/path/to/ca-cert',
+}
+```
+
+##### Consumer Configuration
+
+```python
+consumer_config = {
+    # Group and offset management
+    'group.id': 'gds-alerting-production',
+    'enable.auto.commit': False,  # Manual commit for reliability
+    'auto.offset.reset': 'earliest',  # Start from beginning for new consumers
+    'isolation.level': 'read_committed',  # Only read committed messages (for transactions)
+
+    # Performance settings
+    'fetch.min.bytes': 1024,  # Wait for at least 1KB
+    'fetch.max.wait.ms': 500,  # Or wait max 500ms
+    'max.partition.fetch.bytes': 1048576,  # 1MB per partition
+    'max.poll.records': 500,  # Process up to 500 records per poll
+    'max.poll.interval.ms': 300000,  # 5 minutes to process batch
+
+    # Session and heartbeat
+    'session.timeout.ms': 30000,  # 30 seconds before rebalance
+    'heartbeat.interval.ms': 10000,  # Heartbeat every 10 seconds
+
+    # Connection settings
+    'bootstrap.servers': 'kafka-1:9092,kafka-2:9092,kafka-3:9092',
+    'client.id': 'gds-alerting-consumer-1',
+    'security.protocol': 'SASL_SSL',
+    'sasl.mechanism': 'PLAIN',
+    'ssl.ca.location': '/path/to/ca-cert',
+}
+```
+
+##### Topic Configuration
+
+```python
+topic_config = {
+    'num.partitions': 12,  # Based on parallelism needs
+    'replication.factor': 3,  # At least 3 for production
+    'min.insync.replicas': 2,  # At least 2 replicas must acknowledge
+    'retention.ms': 604800000,  # 7 days (adjust based on needs)
+    'retention.bytes': 1073741824,  # 1GB per partition (optional)
+    'segment.ms': 3600000,  # 1 hour segments
+    'cleanup.policy': 'delete',  # Or 'compact' for stateful data
+    'compression.type': 'producer',  # Use producer's compression
+}
+```
+
+#### Kafka Offset Management and Exactly-Once Semantics
+
+##### Offset Commit Strategies
+
+**1. Manual Commit After Processing (Recommended for Alerting)**
+
+```python
+from kafka import KafkaConsumer
+import asyncio
+
+class AlertingConsumer:
+    """Consumer with manual offset management for reliable processing."""
+
+    def __init__(self, config: dict):
+        self.consumer = KafkaConsumer(
+            **config,
+            enable_auto_commit=False  # Manual commits only
+        )
+        self.batch_size = 100
+        self.commit_interval = 10  # Commit every 10 seconds
+        self.last_commit_time = time.time()
+
+    async def consume_and_alert(self):
+        """Consume metrics and process alerts with offset management."""
+        batch = []
+
+        try:
+            for message in self.consumer:
+                try:
+                    # Deserialize metric
+                    metric = self._deserialize_metric(message.value)
+
+                    # Evaluate and send alerts
+                    await self._process_metric(metric)
+
+                    # Track for commit
+                    batch.append(message)
+
+                    # Commit periodically or when batch is full
+                    if len(batch) >= self.batch_size or \
+                       time.time() - self.last_commit_time >= self.commit_interval:
+                        await self._commit_batch(batch)
+                        batch = []
+                        self.last_commit_time = time.time()
+
+                except Exception as e:
+                    logger.error(f"Failed to process message: {e}")
+                    # Handle poison pill: send to DLQ
+                    await self._send_to_dlq(message, e)
+                    # Still commit to move past the bad message
+                    self.consumer.commit()
+
+        except KeyboardInterrupt:
+            logger.info("Shutting down consumer...")
+        finally:
+            # Commit any remaining messages
+            if batch:
+                await self._commit_batch(batch)
+            self.consumer.close()
+
+    async def _commit_batch(self, batch: List):
+        """Commit offsets for processed batch."""
+        if not batch:
+            return
+
+        try:
+            # Synchronous commit for reliability
+            self.consumer.commit()
+            logger.info(f"Committed {len(batch)} messages")
+        except Exception as e:
+            logger.error(f"Failed to commit offsets: {e}")
+            # On commit failure, messages will be reprocessed
+            # Ensure idempotent alert handling
+            raise
+```
+
+**2. Idempotent Processing**
+
+```python
+class IdempotentAlertHandler:
+    """Ensure alerts are only sent once even if messages reprocessed."""
+
+    def __init__(self, redis_client):
+        self.redis = redis_client
+        self.dedup_ttl = 3600  # 1 hour deduplication window
+
+    async def send_alert_idempotent(self, alert: Alert) -> bool:
+        """Send alert only if not already sent recently."""
+        # Create idempotency key from alert ID and timestamp bucket
+        idempotency_key = f"alert:sent:{alert.id}"
+
+        # Try to set key (atomic operation)
+        was_set = await self.redis.set(
+            idempotency_key,
+            "1",
+            ex=self.dedup_ttl,
+            nx=True  # Only set if not exists
+        )
+
+        if was_set:
+            # First time seeing this alert, send it
+            await self._send_alert(alert)
+            return True
+        else:
+            # Already sent, skip
+            logger.info(f"Alert {alert.id} already sent, skipping")
+            return False
+```
+
+**3. Exactly-Once Semantics with Transactions**
+
+```python
+from kafka import KafkaProducer
+
+class TransactionalMetricPublisher:
+    """Producer with transactional exactly-once semantics."""
+
+    def __init__(self, config: dict):
+        self.producer = KafkaProducer(
+            **config,
+            transactional_id='gds-monitor-producer-1',  # Unique per instance
+            enable.idempotence=True,
+            acks='all'
+        )
+        self.producer.init_transactions()
+
+    async def publish_metrics_transactional(self, metrics: List[Metric]):
+        """Publish batch of metrics in single transaction."""
+        try:
+            self.producer.begin_transaction()
+
+            for metric in metrics:
+                # Partition by instance_id for ordering
+                key = metric.instance_id.encode('utf-8')
+                value = self._serialize_metric(metric)
+
+                self.producer.send(
+                    topic=self._get_topic(metric),
+                    key=key,
+                    value=value
+                )
+
+            # Commit transaction
+            self.producer.commit_transaction()
+            logger.info(f"Published {len(metrics)} metrics transactionally")
+
+        except Exception as e:
+            logger.error(f"Transaction failed: {e}")
+            self.producer.abort_transaction()
+            raise
+```
+
+##### Dead Letter Queue (DLQ) Pattern
+
+```python
+class DLQHandler:
+    """Handle messages that fail processing repeatedly."""
+
+    def __init__(self, producer_config: dict):
+        self.dlq_topic = "gds.metrics.dlq"
+        self.producer = KafkaProducer(**producer_config)
+        self.max_retries = 3
+        self.retry_tracker = {}  # In production: use Redis/DB
+
+    async def send_to_dlq(
+        self,
+        message: ConsumerRecord,
+        error: Exception,
+        metadata: dict = None
+    ):
+        """Send failed message to DLQ with error context."""
+        dlq_message = {
+            "original_topic": message.topic,
+            "original_partition": message.partition,
+            "original_offset": message.offset,
+            "original_key": message.key,
+            "original_value": message.value,
+            "error": str(error),
+            "error_type": type(error).__name__,
+            "timestamp": datetime.utcnow().isoformat(),
+            "retry_count": self.retry_tracker.get(message.key, 0),
+            "metadata": metadata or {}
+        }
+
+        # Send to DLQ
+        self.producer.send(
+            self.dlq_topic,
+            key=message.key,
+            value=json.dumps(dlq_message).encode('utf-8')
+        )
+
+        # Alert on DLQ growth
+        await self._check_dlq_size()
+
+    async def _check_dlq_size(self):
+        """Alert if DLQ is growing."""
+        # Monitor DLQ lag and alert if exceeds threshold
+        pass
+```
+
 ### Data Warehouse Integration
 
 #### Snowflake Importer Architecture
@@ -495,10 +913,20 @@ class MetricCollector(ABC):
 #### Scheduler
 
 ```python
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.triggers.interval import IntervalTrigger
+import asyncio
+import signal
+
 class MonitoringScheduler:
+    """Async scheduler for monitoring jobs with graceful shutdown."""
+
     def __init__(self):
         self._jobs: Dict[str, ScheduledJob] = {}
-        self._executor = ThreadPoolExecutor(max_workers=10)
+        self._scheduler = AsyncIOScheduler()
+        self._running = False
+        self._shutdown_event = asyncio.Event()
+        self._in_flight_tasks: Set[asyncio.Task] = set()
 
     def schedule_job(
         self,
@@ -510,15 +938,88 @@ class MonitoringScheduler:
         """Schedule a monitoring job."""
         job = ScheduledJob(job_id, collector, interval, outputs)
         self._jobs[job_id] = job
-        # Schedule with APScheduler or similar
+
+        # Schedule async job execution
+        self._scheduler.add_job(
+            self._execute_job,
+            trigger=IntervalTrigger(seconds=interval.total_seconds()),
+            args=[job],
+            id=job_id,
+            replace_existing=True
+        )
+
+    async def _execute_job(self, job: ScheduledJob):
+        """Execute a single monitoring job."""
+        task = asyncio.create_task(self._run_job(job))
+        self._in_flight_tasks.add(task)
+        task.add_done_callback(self._in_flight_tasks.discard)
+
+    async def _run_job(self, job: ScheduledJob):
+        """Run job with error handling."""
+        try:
+            metrics = await job.collector.collect()
+            for output in job.outputs:
+                await output.send(metrics)
+        except Exception as e:
+            logger.error(f"Job {job.job_id} failed: {e}", exc_info=True)
 
     def start(self):
         """Start all scheduled jobs."""
-        pass
+        self._running = True
+        self._scheduler.start()
 
-    def stop(self):
-        """Stop all scheduled jobs."""
-        pass
+        # Set up signal handlers for graceful shutdown
+        for sig in (signal.SIGTERM, signal.SIGINT):
+            signal.signal(sig, lambda s, f: asyncio.create_task(self.shutdown()))
+
+    async def shutdown(self, timeout: int = 30):
+        """Graceful shutdown: stop accepting jobs, wait for in-flight, close connections."""
+        if not self._running:
+            return
+
+        logger.info("Initiating graceful shutdown...")
+        self._running = False
+
+        # Stop scheduler from starting new jobs
+        self._scheduler.shutdown(wait=False)
+
+        # Wait for in-flight jobs with timeout
+        if self._in_flight_tasks:
+            logger.info(f"Waiting for {len(self._in_flight_tasks)} in-flight jobs...")
+            try:
+                await asyncio.wait_for(
+                    asyncio.gather(*self._in_flight_tasks, return_exceptions=True),
+                    timeout=timeout
+                )
+            except asyncio.TimeoutError:
+                logger.warning(f"Shutdown timeout after {timeout}s, cancelling remaining tasks")
+                for task in self._in_flight_tasks:
+                    task.cancel()
+
+        # Flush any buffered metrics to outputs
+        await self._flush_outputs()
+
+        # Close all connections
+        await self._close_connections()
+
+        logger.info("Graceful shutdown complete")
+        self._shutdown_event.set()
+
+    async def _flush_outputs(self):
+        """Flush all output buffers."""
+        for job in self._jobs.values():
+            for output in job.outputs:
+                if hasattr(output, 'flush'):
+                    await output.flush()
+
+    async def _close_connections(self):
+        """Close all collector and output connections."""
+        for job in self._jobs.values():
+            if hasattr(job.collector, 'close'):
+                await job.collector.close()
+            for output in job.outputs:
+                if hasattr(output, 'close'):
+                    await output.close()
 ```
 
 ### Alerting Components
@@ -547,10 +1048,57 @@ class AlertEvaluator:
         # Rule evaluation logic
         pass
 
-    def _dedup_key(self, rule: AlertRule, metric: Metric) -> str:
-        """Stable deduplication key combining rule/resource to avoid alert flapping."""
+    def _dedup_key(self, rule: AlertRule, metric: Metric, window_minutes: int = 15) -> str:
+        """Stable deduplication key with time window to allow re-firing after cooldown."""
         resource_id = metric.tags.get("instance_id") or metric.instance_id
-        return f"{rule.id}:{resource_id}:{metric.metric_name}"
+        # Time bucket to allow alert to re-fire after cooldown period
+        time_bucket = int(metric.timestamp.timestamp() // (window_minutes * 60))
+        return f"{rule.id}:{resource_id}:{metric.metric_name}:{time_bucket}"
+
+    def _should_fire_alert(self, dedup_key: str, alert: Alert) -> bool:
+        """Determine if alert should fire based on state machine."""
+        if dedup_key not in self.active_alerts:
+            return True  # New alert
+
+        existing = self.active_alerts[dedup_key]
+        if existing.state == AlertState.RESOLVED:
+            return True  # Previous alert resolved, can fire again
+
+        if existing.state == AlertState.SILENCED:
+            return False  # Alert is silenced
+
+        # Check for flapping: if alert fired and resolved multiple times in short window
+        if self._is_flapping(dedup_key):
+            logger.warning(f"Alert {dedup_key} is flapping, suppressing")
+            return False
+
+        return False  # Alert already active
+
+class AlertState(Enum):
+    """Alert lifecycle states."""
+    FIRING = "firing"
+    ACKNOWLEDGED = "acknowledged"
+    RESOLVED = "resolved"
+    SILENCED = "silenced"
+
+@dataclass
+class Alert:
+    """Enhanced alert with state management."""
+    id: str
+    rule_id: str
+    severity: AlertSeverity
+    message: str
+    metric: Metric
+    timestamp: datetime
+    state: AlertState = AlertState.FIRING
+    acknowledged_by: Optional[str] = None
+    acknowledged_at: Optional[datetime] = None
+    resolved_at: Optional[datetime] = None
+    fire_count: int = 1  # Track flapping
+    labels: Dict[str, str] = field(default_factory=dict)
+    runbook_url: Optional[str] = None
+    dashboard_url: Optional[str] = None
+    correlation_id: Optional[str] = None
 ```
 
 #### AlertNotifier
@@ -581,18 +1129,210 @@ class GDSNotificationNotifier(AlertNotifier):
             return response.status == 200
 
     def _format_alert_for_api(self, alert: Alert) -> dict:
-        """Format alert for gds_notification API."""
+        """Format alert for gds_notification API with rich context."""
         return {
             "alert_name": alert.rule_id,
             "db_instance_id": self._extract_db_instance_id(alert),
-            "subject": f"Alert: {alert.message[:50]}...",
+            "subject": f"[{alert.severity.name}] {alert.message[:50]}...",
             "body_text": self._format_alert_body(alert),
             "message_id": str(alert.id),            # Idempotency key
             "severity": alert.severity.name,
-            "runbook_url": getattr(alert, "runbook_url", None),
-            "labels": getattr(alert, "labels", {}),
-            "routing_key": getattr(alert, "routing_key", None)
+            "runbook_url": alert.runbook_url,
+            "dashboard_url": alert.dashboard_url,
+            "labels": alert.labels,
+            "routing_key": self._get_routing_key(alert),
+            "correlation_id": alert.correlation_id or str(uuid.uuid4()),
+            "state": alert.state.value,
+            "environment": alert.labels.get("environment", "unknown"),
+            "service_owner": alert.labels.get("owner", "unknown"),
+            "on_call_person": self._get_on_call(alert),
+            "affected_users_count": self._estimate_impact(alert),
+            "related_alerts": self._get_related_alerts(alert),
+            "context": {
+                "metric_value": alert.metric.value,
+                "threshold": self._get_threshold(alert),
+                "instance_name": alert.metric.tags.get("instance_name"),
+                "region": alert.metric.tags.get("region"),
+                "alert_fired_at": alert.timestamp.isoformat(),
+                "fire_count": alert.fire_count
+            }
         }
+
+    def _format_alert_body(self, alert: Alert) -> str:
+        """Format detailed alert body with actionable information."""
+        body = f"""
+Alert: {alert.message}
+
+Severity: {alert.severity.name}
+State: {alert.state.value}
+Environment: {alert.labels.get('environment', 'unknown')}
+
+Metric Details:
+- Name: {alert.metric.metric_name}
+- Value: {alert.metric.value}
+- Instance: {alert.metric.tags.get('instance_id', 'unknown')}
+- Region: {alert.metric.tags.get('region', 'unknown')}
+- Timestamp: {alert.timestamp.isoformat()}
+
+Impact:
+- Estimated affected users: {self._estimate_impact(alert)}
+- Service owner: {alert.labels.get('owner', 'unknown')}
+- On-call: {self._get_on_call(alert)}
+
+Actions:
+- Runbook: {alert.runbook_url or 'N/A'}
+- Dashboard: {alert.dashboard_url or 'N/A'}
+- Correlation ID: {alert.correlation_id or 'N/A'}
+
+Related Alerts:
+{self._format_related_alerts(alert)}
+"""
+        return body.strip()
+```
+
+#### Circuit Breaker Implementation
+
+```python
+from enum import Enum
+import time
+from typing import Callable, TypeVar, Optional
+import asyncio
+
+class CircuitState(Enum):
+    """Circuit breaker states."""
+    CLOSED = "closed"      # Normal operation
+    OPEN = "open"          # Failing, reject requests
+    HALF_OPEN = "half_open"  # Testing if service recovered
+
+T = TypeVar('T')
+
+class CircuitBreaker:
+    """Circuit breaker for external service calls with exponential backoff."""
+
+    def __init__(
+        self,
+        failure_threshold: int = 5,
+        timeout: int = 60,
+        success_threshold: int = 2,
+        half_open_timeout: int = 30
+    ):
+        self.failure_threshold = failure_threshold
+        self.timeout = timeout  # Seconds before trying again
+        self.success_threshold = success_threshold
+        self.half_open_timeout = half_open_timeout
+
+        self.failure_count = 0
+        self.success_count = 0
+        self.state = CircuitState.CLOSED
+        self.last_failure_time: Optional[float] = None
+        self.last_state_change: float = time.time()
+
+    async def call(self, func: Callable[..., T], *args, **kwargs) -> T:
+        """Execute function with circuit breaker protection."""
+        if self.state == CircuitState.OPEN:
+            if time.time() - self.last_failure_time >= self.timeout:
+                logger.info("Circuit breaker transitioning to HALF_OPEN")
+                self._transition_to_half_open()
+            else:
+                raise CircuitOpenError(
+                    f"Circuit breaker is OPEN. "
+                    f"Will retry in {self.timeout - (time.time() - self.last_failure_time):.0f}s"
+                )
+
+        try:
+            result = await func(*args, **kwargs)
+            self._on_success()
+            return result
+        except Exception as e:
+            self._on_failure()
+            raise
+
+    def _on_success(self):
+        """Handle successful call."""
+        self.failure_count = 0
+
+        if self.state == CircuitState.HALF_OPEN:
+            self.success_count += 1
+            if self.success_count >= self.success_threshold:
+                logger.info("Circuit breaker transitioning to CLOSED")
+                self._transition_to_closed()
+        elif self.state == CircuitState.CLOSED:
+            self.success_count += 1
+
+    def _on_failure(self):
+        """Handle failed call."""
+        self.failure_count += 1
+        self.last_failure_time = time.time()
+        self.success_count = 0
+
+        if self.state == CircuitState.HALF_OPEN:
+            logger.warning("Circuit breaker transitioning to OPEN (failure in HALF_OPEN)")
+            self._transition_to_open()
+        elif self.state == CircuitState.CLOSED:
+            if self.failure_count >= self.failure_threshold:
+                logger.error(f"Circuit breaker transitioning to OPEN after {self.failure_count} failures")
+                self._transition_to_open()
+
+    def _transition_to_open(self):
+        """Transition to OPEN state."""
+        self.state = CircuitState.OPEN
+        self.last_state_change = time.time()
+        # Emit metric for monitoring
+        emit_metric("circuit_breaker.state_change", {"state": "open"})
+
+    def _transition_to_half_open(self):
+        """Transition to HALF_OPEN state."""
+        self.state = CircuitState.HALF_OPEN
+        self.last_state_change = time.time()
+        self.success_count = 0
+        emit_metric("circuit_breaker.state_change", {"state": "half_open"})
+
+    def _transition_to_closed(self):
+        """Transition to CLOSED state."""
+        self.state = CircuitState.CLOSED
+        self.last_state_change = time.time()
+        self.failure_count = 0
+        emit_metric("circuit_breaker.state_change", {"state": "closed"})
+
+class CircuitOpenError(Exception):
+    """Exception raised when circuit breaker is open."""
+    pass
+
+# Usage in GDSNotificationNotifier
+class GDSNotificationNotifierWithCircuitBreaker(AlertNotifier):
+    """Notifier with circuit breaker protection."""
+
+    def __init__(self, notification_api_url: str, timeout: int = 30):
+        self.api_url = notification_api_url
+        self.timeout = timeout
+        self.session = aiohttp.ClientSession()
+        self.circuit_breaker = CircuitBreaker(
+            failure_threshold=5,
+            timeout=60,
+            success_threshold=2
+        )
+
+    async def notify(self, alert: Alert) -> bool:
+        """Send alert with circuit breaker protection."""
+        try:
+            return await self.circuit_breaker.call(self._send_alert, alert)
+        except CircuitOpenError as e:
+            logger.error(f"Circuit breaker is open: {e}")
+            # Optionally: queue for retry or use fallback notifier
+            await self._handle_circuit_open(alert)
+            return False
+
+    async def _send_alert(self, alert: Alert) -> bool:
+        """Internal method to send alert."""
+        payload = self._format_alert_for_api(alert)
+        async with self.session.post(
+            f"{self.api_url}/ingest",
+            json=payload,
+            timeout=self.timeout
+        ) as response:
+            if response.status != 200:
+                raise Exception(f"HTTP {response.status}")
+            return True
 ```
 
 ---
@@ -668,6 +1408,572 @@ class Alert:
 ```
 
 ---
+
+### Testing Strategy
+
+#### Unit Testing
+
+```python
+import pytest
+from unittest.mock import Mock, AsyncMock, patch
+import asyncio
+
+class TestMetricCollector:
+    """Unit tests for metric collector."""
+
+    @pytest.fixture
+    def mock_db_connection(self):
+        """Mock database connection."""
+        conn = AsyncMock()
+        conn.fetch.return_value = [
+            {"metric_name": "cpu_usage", "value": 85.5},
+            {"metric_name": "memory_usage", "value": 75.2}
+        ]
+        return conn
+
+    @pytest.mark.asyncio
+    async def test_collect_metrics_success(self, mock_db_connection):
+        """Test successful metric collection."""
+        collector = PostgreSQLCollector(connection_config)
+        collector.pool = Mock()
+        collector.pool.acquire = AsyncMock(return_value=mock_db_connection)
+
+        metrics = await collector.collect()
+
+        assert len(metrics) == 2
+        assert metrics[0].metric_name == "cpu_usage"
+        assert metrics[0].value == 85.5
+
+    @pytest.mark.asyncio
+    async def test_collect_metrics_with_retry(self, mock_db_connection):
+        """Test metric collection with retry on failure."""
+        collector = PostgreSQLCollector(connection_config)
+
+        # Fail first attempt, succeed second
+        mock_db_connection.fetch.side_effect = [
+            Exception("Connection timeout"),
+            [{"metric_name": "cpu_usage", "value": 85.5}]
+        ]
+
+        metrics = await collector.collect()
+
+        assert len(metrics) == 1
+        assert mock_db_connection.fetch.call_count == 2
+
+class TestAlertEvaluator:
+    """Unit tests for alert evaluator."""
+
+    @pytest.fixture
+    def sample_metric(self):
+        """Sample metric for testing."""
+        return Metric(
+            timestamp=datetime.utcnow(),
+            database_type="postgresql",
+            instance_id="prod-db-01",
+            metric_name="cpu_usage_percent",
+            value=95.0,
+            tags={"environment": "production"}
+        )
+
+    def test_threshold_rule_evaluation(self, sample_metric):
+        """Test threshold rule evaluation."""
+        rule = ThresholdRule(
+            metric_name="cpu_usage_percent",
+            operator=">",
+            threshold=80,
+            severity=AlertSeverity.WARNING
+        )
+
+        evaluator = AlertEvaluator([rule])
+        alerts = evaluator.evaluate_metrics([sample_metric])
+
+        assert len(alerts) == 1
+        assert alerts[0].severity == AlertSeverity.WARNING
+
+    def test_alert_deduplication(self, sample_metric):
+        """Test alert deduplication logic."""
+        rule = ThresholdRule(
+            metric_name="cpu_usage_percent",
+            operator=">",
+            threshold=80,
+            severity=AlertSeverity.WARNING
+        )
+
+        evaluator = AlertEvaluator([rule])
+
+        # First evaluation should create alert
+        alerts1 = evaluator.evaluate_metrics([sample_metric])
+        assert len(alerts1) == 1
+
+        # Second evaluation within cooldown should not create duplicate
+        alerts2 = evaluator.evaluate_metrics([sample_metric])
+        assert len(alerts2) == 0
+
+class TestCircuitBreaker:
+    """Unit tests for circuit breaker."""
+
+    @pytest.mark.asyncio
+    async def test_circuit_breaker_opens_after_failures(self):
+        """Test circuit breaker opens after threshold failures."""
+        breaker = CircuitBreaker(failure_threshold=3, timeout=60)
+
+        failing_func = AsyncMock(side_effect=Exception("Service unavailable"))
+
+        # Fail 3 times to trip circuit
+        for i in range(3):
+            with pytest.raises(Exception):
+                await breaker.call(failing_func)
+
+        assert breaker.state == CircuitState.OPEN
+
+        # Next call should fail fast without calling function
+        with pytest.raises(CircuitOpenError):
+            await breaker.call(failing_func)
+
+    @pytest.mark.asyncio
+    async def test_circuit_breaker_half_open_recovery(self):
+        """Test circuit breaker recovery through HALF_OPEN state."""
+        breaker = CircuitBreaker(failure_threshold=2, timeout=1, success_threshold=2)
+
+        # Trip circuit
+        failing_func = AsyncMock(side_effect=Exception("Error"))
+        for i in range(2):
+            with pytest.raises(Exception):
+                await breaker.call(failing_func)
+
+        assert breaker.state == CircuitState.OPEN
+
+        # Wait for timeout
+        await asyncio.sleep(1.1)
+
+        # Success should transition to HALF_OPEN then CLOSED
+        success_func = AsyncMock(return_value="success")
+        await breaker.call(success_func)
+        assert breaker.state == CircuitState.HALF_OPEN
+
+        await breaker.call(success_func)
+        assert breaker.state == CircuitState.CLOSED
+```
+
+#### Integration Testing
+
+```python
+import pytest
+from testcontainers.kafka import KafkaContainer
+from testcontainers.postgres import PostgresContainer
+import asyncio
+
+class TestMonitoringIntegration:
+    """Integration tests with real dependencies."""
+
+    @pytest.fixture(scope="class")
+    def kafka_container(self):
+        """Start Kafka container for testing."""
+        with KafkaContainer() as kafka:
+            yield kafka
+
+    @pytest.fixture(scope="class")
+    def postgres_container(self):
+        """Start PostgreSQL container for testing."""
+        with PostgresContainer("postgres:14") as postgres:
+            yield postgres
+
+    @pytest.mark.asyncio
+    async def test_end_to_end_metric_flow(
+        self,
+        kafka_container,
+        postgres_container
+    ):
+        """Test complete metric flow from collection to Kafka."""
+        # Set up collector
+        collector_config = {
+            "host": postgres_container.get_container_host_ip(),
+            "port": postgres_container.get_exposed_port(5432),
+            "user": "test",
+            "password": "test",
+            "database": "test"
+        }
+
+        collector = PostgreSQLCollector(collector_config)
+        await collector.initialize()
+
+        # Set up Kafka output
+        kafka_config = {
+            "bootstrap_servers": kafka_container.get_bootstrap_server(),
+        }
+        output = KafkaOutput(kafka_config)
+
+        # Collect and publish metrics
+        metrics = await collector.collect()
+        await output.send(metrics)
+
+        # Verify metrics in Kafka
+        consumer = KafkaConsumer(
+            bootstrap_servers=kafka_container.get_bootstrap_server(),
+            auto_offset_reset='earliest'
+        )
+        consumer.subscribe(['gds.metrics.postgresql.test'])
+
+        messages = []
+        for msg in consumer:
+            messages.append(msg)
+            if len(messages) >= len(metrics):
+                break
+
+        assert len(messages) == len(metrics)
+        consumer.close()
+
+#### Performance Testing
+
+```python
+import pytest
+import asyncio
+import time
+from locust import User, task, between
+
+class PerformanceTests:
+    """Performance and load testing."""
+
+    @pytest.mark.asyncio
+    async def test_collector_throughput(self):
+        """Test metric collection throughput."""
+        collector = PostgreSQLCollector(config)
+        await collector.initialize()
+
+        start = time.time()
+        iterations = 100
+        total_metrics = 0
+
+        for i in range(iterations):
+            metrics = await collector.collect()
+            total_metrics += len(metrics)
+
+        duration = time.time() - start
+        throughput = total_metrics / duration
+
+        # Assert minimum throughput
+        assert throughput >= 1000, f"Throughput too low: {throughput} metrics/sec"
+
+    @pytest.mark.asyncio
+    async def test_alert_evaluation_latency(self):
+        """Test alert evaluation latency."""
+        evaluator = AlertEvaluator(rules=[
+            ThresholdRule("cpu_usage", ">", 80, AlertSeverity.WARNING)
+            for _ in range(100)
+        ])
+
+        metrics = [
+            Metric(metric_name="cpu_usage", value=85.0)
+            for _ in range(1000)
+        ]
+
+        start = time.time()
+        alerts = evaluator.evaluate_metrics(metrics)
+        duration = time.time() - start
+
+        # Assert p95 latency requirement
+        assert duration < 1.0, f"Evaluation too slow: {duration}s"
+
+class MonitoringLoadTest(User):
+    """Locust load test for monitoring system."""
+
+    wait_time = between(1, 5)
+
+    @task
+    def collect_and_publish_metrics(self):
+        """Simulate metric collection and publishing."""
+        # Implementation for load testing
+        pass
+```
+
+### Configuration Management
+
+```python
+from dataclasses import dataclass, asdict
+import yaml
+import json
+from typing import Dict, Any
+import os
+from pathlib import Path
+
+@dataclass
+class DatabaseConfig:
+    """Database connection configuration."""
+    host: str
+    port: int
+    user: str
+    password: str
+    database: str
+    type: str  # postgresql, mongodb, mssql
+
+    @classmethod
+    def from_dict(cls, data: dict):
+        """Create from dictionary."""
+        return cls(**data)
+
+@dataclass
+class KafkaConfig:
+    """Kafka configuration."""
+    bootstrap_servers: str
+    security_protocol: str
+    sasl_mechanism: str
+    topic_prefix: str
+
+    @classmethod
+    def from_dict(cls, data: dict):
+        """Create from dictionary."""
+        return cls(**data)
+
+@dataclass
+class MonitoringConfig:
+    """Complete monitoring system configuration."""
+    environment: str
+    databases: Dict[str, DatabaseConfig]
+    kafka: KafkaConfig
+    alert_rules: list
+    collection_interval: int = 60
+
+    @classmethod
+    def from_yaml(cls, file_path: str):
+        """Load configuration from YAML file."""
+        with open(file_path, 'r') as f:
+            data = yaml.safe_load(f)
+
+        # Parse nested configs
+        databases = {
+            name: DatabaseConfig.from_dict(db_config)
+            for name, db_config in data['databases'].items()
+        }
+        kafka = KafkaConfig.from_dict(data['kafka'])
+
+        return cls(
+            environment=data['environment'],
+            databases=databases,
+            kafka=kafka,
+            alert_rules=data['alert_rules'],
+            collection_interval=data.get('collection_interval', 60)
+        )
+
+    def validate(self):
+        """Validate configuration."""
+        assert self.environment in ['production', 'staging', 'development']
+        assert len(self.databases) > 0, "No databases configured"
+        assert self.kafka.bootstrap_servers, "Kafka bootstrap servers required"
+        assert self.collection_interval > 0, "Collection interval must be positive"
+
+class ConfigurationManager:
+    """Manage configuration with hot reload support."""
+
+    def __init__(self, config_path: str):
+        self.config_path = Path(config_path)
+        self.config: MonitoringConfig = None
+        self.last_modified = 0
+        self.callbacks = []
+
+    def load(self):
+        """Load configuration from file."""
+        self.config = MonitoringConfig.from_yaml(self.config_path)
+        self.config.validate()
+        self.last_modified = self.config_path.stat().st_mtime
+        logger.info(f"Configuration loaded from {self.config_path}")
+        return self.config
+
+    def register_reload_callback(self, callback):
+        """Register callback for configuration reloads."""
+        self.callbacks.append(callback)
+
+    async def watch_for_changes(self):
+        """Watch for configuration file changes and reload."""
+        while True:
+            await asyncio.sleep(5)  # Check every 5 seconds
+
+            current_mtime = self.config_path.stat().st_mtime
+            if current_mtime > self.last_modified:
+                logger.info("Configuration file changed, reloading...")
+                try:
+                    old_config = self.config
+                    self.load()
+
+                    # Notify callbacks
+                    for callback in self.callbacks:
+                        await callback(old_config, self.config)
+
+                except Exception as e:
+                    logger.error(f"Failed to reload configuration: {e}")
+
+# Example configuration file (config.yaml)
+"""
+environment: production
+
+databases:
+  prod-db-01:
+    type: postgresql
+    host: prod-db-01.example.com
+    port: 5432
+    user: monitoring
+    password: ${DB_PASSWORD}  # From environment variable
+    database: postgres
+
+  prod-mongo-01:
+    type: mongodb
+    host: prod-mongo-01.example.com
+    port: 27017
+    user: monitoring
+    password: ${MONGO_PASSWORD}
+    database: admin
+
+kafka:
+  bootstrap_servers: kafka-1:9092,kafka-2:9092,kafka-3:9092
+  security_protocol: SASL_SSL
+  sasl_mechanism: PLAIN
+  topic_prefix: gds.metrics
+
+collection_interval: 60
+
+alert_rules:
+  - name: high_cpu_usage
+    metric: cpu_usage_percent
+    operator: ">"
+    threshold: 80
+    severity: WARNING
+    cooldown_minutes: 15
+
+  - name: critical_cpu_usage
+    metric: cpu_usage_percent
+    operator: ">"
+    threshold: 95
+    severity: CRITICAL
+    cooldown_minutes: 5
+"""
+```
+
+### Metric Sampling and Downsampling
+
+```python
+from dataclasses import dataclass
+from typing import List
+import random
+
+class MetricSampler:
+    """Sample high-frequency metrics to reduce volume."""
+
+    def __init__(self, sample_rate: float = 0.1):
+        """
+        Args:
+            sample_rate: Fraction of metrics to keep (0.0 to 1.0)
+        """
+        assert 0 <= sample_rate <= 1.0
+        self.sample_rate = sample_rate
+
+    def should_sample(self, metric: Metric) -> bool:
+        """Determine if metric should be sampled (kept)."""
+        # Always keep critical metrics
+        if self._is_critical_metric(metric):
+            return True
+
+        # Sample others based on rate
+        return random.random() < self.sample_rate
+
+    def _is_critical_metric(self, metric: Metric) -> bool:
+        """Check if metric is critical and should never be dropped."""
+        critical_patterns = [
+            'error_rate',
+            'availability',
+            'critical_alert'
+        ]
+        return any(pattern in metric.metric_name for pattern in critical_patterns)
+
+    async def sample_metrics(self, metrics: List[Metric]) -> List[Metric]:
+        """Sample metrics and add sampling metadata."""
+        sampled = []
+
+        for metric in metrics:
+            if self.should_sample(metric):
+                # Add sampling metadata
+                if metric.metadata is None:
+                    metric.metadata = {}
+                metric.metadata['sampled'] = True
+                metric.metadata['sample_rate'] = self.sample_rate
+                sampled.append(metric)
+
+        return sampled
+
+class MetricDownsampler:
+    """Downsample historical metrics to reduce storage."""
+
+    def __init__(self):
+        self.downsampling_rules = {
+            # Keep 1-minute resolution for 7 days
+            "1min": {"duration_days": 7, "resolution_seconds": 60},
+            # Keep 5-minute resolution for 30 days
+            "5min": {"duration_days": 30, "resolution_seconds": 300},
+            # Keep 1-hour resolution for 90 days
+            "1hour": {"duration_days": 90, "resolution_seconds": 3600},
+            # Keep 1-day resolution forever
+            "1day": {"duration_days": None, "resolution_seconds": 86400},
+        }
+
+    async def downsample_metrics(
+        self,
+        metrics: List[Metric],
+        target_resolution_seconds: int
+    ) -> List[Metric]:
+        """Downsample metrics to target resolution."""
+        # Group metrics by time bucket and tags
+        groups = {}
+
+        for metric in metrics:
+            # Calculate time bucket
+            bucket_timestamp = int(metric.timestamp.timestamp() // target_resolution_seconds) * target_resolution_seconds
+
+            # Group key
+            group_key = (
+                metric.metric_name,
+                bucket_timestamp,
+                frozenset(metric.tags.items()) if metric.tags else frozenset()
+            )
+
+            if group_key not in groups:
+                groups[group_key] = []
+            groups[group_key].append(metric)
+
+        # Aggregate each group
+        downsampled = []
+        for (metric_name, bucket_ts, tags), group_metrics in groups.items():
+            downsampled.append(self._aggregate_group(
+                metric_name,
+                group_metrics,
+                datetime.fromtimestamp(bucket_ts, tz=timezone.utc),
+                dict(tags)
+            ))
+
+        return downsampled
+
+    def _aggregate_group(
+        self,
+        metric_name: str,
+        metrics: List[Metric],
+        bucket_time: datetime,
+        tags: dict
+    ) -> Metric:
+        """Aggregate group of metrics with statistics."""
+        values = [m.value for m in metrics]
+
+        return Metric(
+            timestamp=bucket_time,
+            metric_name=metric_name,
+            value=sum(values) / len(values),  # Average
+            tags=tags,
+            metadata={
+                "downsampled": True,
+                "original_count": len(metrics),
+                "min": min(values),
+                "max": max(values),
+                "p50": sorted(values)[len(values)//2],
+                "p95": sorted(values)[int(len(values)*0.95)]
+            }
+        )
+```
 
 ## Implementation Roadmap
 
@@ -778,12 +2084,1490 @@ class Alert:
 
 ### Operability and Resilience
 
-1. **Dead Man’s Switch**: Emit periodic heartbeats and alert if metrics/alerts stop arriving (per collector and per topic)
+1. **Dead Man's Switch**: Emit periodic heartbeats and alert if metrics/alerts stop arriving (per collector and per topic)
 2. **Health Checks**: Liveness/readiness for collectors, alerting consumers, and `gds_notification`; include dependency checks
 3. **Capacity Planning**: Track queue/topic lag, throughput, and saturation; alert before breaching SLOs
 4. **Failure Modes**: Implement bounded in-memory buffers with backpressure; retry with exponential backoff; fall back to local spool if Kafka unavailable
 5. **Change Safety**: Feature flags for new rules/collectors; canary deployments; automatic rollback on error budgets burned
 6. **Runbooks**: Maintain concise runbooks for top alerts with verification steps and roll-forward/rollback procedures
+
+---
+
+## Advanced Operational Sections
+
+### Database Connection Management
+
+#### Connection Pool Configuration
+
+```python
+from sqlalchemy import create_engine, pool
+import asyncpg
+from motor import motor_asyncio
+
+class DatabaseConnectionManager:
+    """Manage database connections with pooling and retry logic."""
+
+    def __init__(self, db_config: dict):
+        self.db_config = db_config
+        self.db_type = db_config['type']
+        self.pool = None
+        self.circuit_breaker = CircuitBreaker(failure_threshold=3, timeout=60)
+
+    async def initialize(self):
+        """Initialize connection pool."""
+        if self.db_type == 'postgresql':
+            await self._init_postgres_pool()
+        elif self.db_type == 'mongodb':
+            await self._init_mongo_pool()
+        elif self.db_type == 'mssql':
+            await self._init_mssql_pool()
+
+    async def _init_postgres_pool(self):
+        """Initialize PostgreSQL connection pool."""
+        self.pool = await asyncpg.create_pool(
+            host=self.db_config['host'],
+            port=self.db_config['port'],
+            user=self.db_config['user'],
+            password=self.db_config['password'],
+            database=self.db_config['database'],
+
+            # Pool sizing
+            min_size=2,  # Minimum connections
+            max_size=10,  # Maximum connections
+
+            # Timeouts
+            command_timeout=30,  # Query timeout in seconds
+            timeout=10,  # Connection acquisition timeout
+
+            # Connection management
+            max_inactive_connection_lifetime=300,  # 5 minutes
+            max_cached_statement_lifetime=300,  # 5 minutes
+
+            # Retry settings
+            connection_class=asyncpg.Connection,
+        )
+        logger.info(f"PostgreSQL pool initialized: {self.pool.get_size()} connections")
+
+    async def _init_mongo_pool(self):
+        """Initialize MongoDB connection pool."""
+        from pymongo import MongoClient
+
+        connection_string = f"mongodb://{self.db_config['user']}:{self.db_config['password']}@{self.db_config['host']}:{self.db_config['port']}"
+
+        self.pool = motor_asyncio.AsyncIOMotorClient(
+            connection_string,
+            maxPoolSize=10,
+            minPoolSize=2,
+            maxIdleTimeMS=300000,  # 5 minutes
+            serverSelectionTimeoutMS=10000,  # 10 seconds
+            socketTimeoutMS=30000,  # 30 seconds
+            connectTimeoutMS=10000,  # 10 seconds
+            retryWrites=True,
+            retryReads=True
+        )
+
+    async def _init_mssql_pool(self):
+        """Initialize SQL Server connection pool with SQLAlchemy."""
+        connection_string = (
+            f"mssql+pyodbc://{self.db_config['user']}:{self.db_config['password']}"
+            f"@{self.db_config['host']}:{self.db_config['port']}/{self.db_config['database']}"
+            f"?driver=ODBC+Driver+17+for+SQL+Server"
+        )
+
+        self.pool = create_engine(
+            connection_string,
+            poolclass=pool.QueuePool,
+            pool_size=10,
+            max_overflow=5,
+            pool_timeout=10,
+            pool_recycle=3600,  # Recycle connections after 1 hour
+            pool_pre_ping=True,  # Verify connections before using
+            echo=False
+        )
+
+    async def execute_query_with_retry(
+        self,
+        query: str,
+        params: dict = None,
+        max_retries: int = 3
+    ):
+        """Execute query with exponential backoff retry."""
+        for attempt in range(max_retries):
+            try:
+                return await self.circuit_breaker.call(
+                    self._execute_query,
+                    query,
+                    params
+                )
+            except CircuitOpenError:
+                logger.error("Circuit breaker is open, database unavailable")
+                raise
+            except Exception as e:
+                wait_time = min(2 ** attempt, 30)  # Max 30 seconds
+                logger.warning(
+                    f"Query failed (attempt {attempt + 1}/{max_retries}): {e}. "
+                    f"Retrying in {wait_time}s..."
+                )
+                if attempt == max_retries - 1:
+                    raise
+                await asyncio.sleep(wait_time)
+
+    async def _execute_query(self, query: str, params: dict = None):
+        """Internal query execution."""
+        if self.db_type == 'postgresql':
+            async with self.pool.acquire() as conn:
+                return await conn.fetch(query, **(params or {}))
+        elif self.db_type == 'mongodb':
+            # MongoDB query execution
+            db = self.pool[self.db_config['database']]
+            collection = db[params.get('collection', 'default')]
+            return await collection.find(query).to_list(length=100)
+
+    async def health_check(self) -> bool:
+        """Perform health check on database connection."""
+        try:
+            if self.db_type == 'postgresql':
+                async with self.pool.acquire() as conn:
+                    await conn.fetchval('SELECT 1')
+            elif self.db_type == 'mongodb':
+                await self.pool.admin.command('ping')
+            return True
+        except Exception as e:
+            logger.error(f"Database health check failed: {e}")
+            return False
+
+    async def close(self):
+        """Close connection pool gracefully."""
+        if self.pool:
+            if self.db_type == 'postgresql':
+                await self.pool.close()
+            elif self.db_type == 'mongodb':
+                self.pool.close()
+            logger.info("Database connection pool closed")
+```
+
+#### Maintenance Window Handling
+
+```python
+class MaintenanceWindowManager:
+    """Handle database maintenance windows to avoid false alerts."""
+
+    def __init__(self, redis_client):
+        self.redis = redis_client
+
+    async def is_in_maintenance(self, instance_id: str) -> bool:
+        """Check if database instance is in maintenance window."""
+        key = f"maintenance:{instance_id}"
+        return await self.redis.exists(key)
+
+    async def set_maintenance_window(
+        self,
+        instance_id: str,
+        duration_minutes: int,
+        reason: str = ""
+    ):
+        """Set maintenance window for an instance."""
+        key = f"maintenance:{instance_id}"
+        metadata = {
+            "reason": reason,
+            "started_at": datetime.utcnow().isoformat(),
+            "duration_minutes": duration_minutes
+        }
+        await self.redis.setex(
+            key,
+            duration_minutes * 60,
+            json.dumps(metadata)
+        )
+        logger.info(f"Maintenance window set for {instance_id}: {duration_minutes} minutes")
+```
+
+### Time Synchronization and Clock Skew Handling
+
+#### Time Management Best Practices
+
+```python
+from datetime import datetime, timezone
+import time
+
+class TimeManager:
+    """Manage timestamps and handle clock skew."""
+
+    # Always use UTC
+    @staticmethod
+    def now_utc() -> datetime:
+        """Get current time in UTC."""
+        return datetime.now(timezone.utc)
+
+    @staticmethod
+    def to_utc(dt: datetime) -> datetime:
+        """Convert datetime to UTC."""
+        if dt.tzinfo is None:
+            # Assume UTC if naive
+            return dt.replace(tzinfo=timezone.utc)
+        return dt.astimezone(timezone.utc)
+
+    @staticmethod
+    def detect_clock_skew(
+        metric_timestamp: datetime,
+        max_drift_seconds: int = 300
+    ) -> bool:
+        """Detect if metric timestamp indicates clock skew."""
+        now = TimeManager.now_utc()
+        metric_utc = TimeManager.to_utc(metric_timestamp)
+
+        drift = abs((now - metric_utc).total_seconds())
+
+        if drift > max_drift_seconds:
+            logger.warning(
+                f"Clock skew detected: {drift:.0f}s drift. "
+                f"Metric timestamp: {metric_utc}, System time: {now}"
+            )
+            return True
+        return False
+
+    @staticmethod
+    def handle_late_arriving_metrics(
+        metric: Metric,
+        max_lateness_seconds: int = 3600
+    ) -> bool:
+        """Determine if late-arriving metric should be processed."""
+        now = TimeManager.now_utc()
+        metric_time = TimeManager.to_utc(metric.timestamp)
+        lateness = (now - metric_time).total_seconds()
+
+        if lateness > max_lateness_seconds:
+            logger.warning(
+                f"Metric too late ({lateness:.0f}s old), discarding. "
+                f"Metric: {metric.metric_name} from {metric.instance_id}"
+            )
+            return False
+
+        if lateness > 300:  # 5 minutes
+            logger.info(f"Processing late metric ({lateness:.0f}s old)")
+
+        return True
+
+class MetricCollectorWithTimeHandling(MetricCollector):
+    """Collector with proper time handling."""
+
+    async def collect(self) -> List[Metric]:
+        """Collect metrics with collector timestamp."""
+        collection_start = TimeManager.now_utc()
+
+        # Query database for metrics
+        db_metrics = await self._query_database()
+
+        metrics = []
+        for db_metric in db_metrics:
+            # Use database server time if available, else collector time
+            metric_timestamp = db_metric.get('server_time') or collection_start
+
+            # Detect clock skew
+            if TimeManager.detect_clock_skew(metric_timestamp):
+                # Use collector time instead if skew detected
+                metric_timestamp = collection_start
+
+            metric = Metric(
+                timestamp=metric_timestamp,
+                collection_timestamp=collection_start,  # Track collection time
+                # ... other fields
+            )
+
+            # Check if metric is too old
+            if TimeManager.handle_late_arriving_metrics(metric):
+                metrics.append(metric)
+
+        return metrics
+```
+
+#### Handling Event Time vs Processing Time
+
+```python
+@dataclass
+class Metric:
+    """Metric with event time and processing time."""
+    # Event time: when metric was generated at source
+    timestamp: datetime
+
+    # Processing time: when metric was collected
+    collection_timestamp: datetime
+
+    # Ingestion time: when metric entered Kafka
+    ingestion_timestamp: Optional[datetime] = None
+
+    # Processing latency tracking
+    @property
+    def collection_latency_ms(self) -> float:
+        """Latency between event and collection."""
+        return (self.collection_timestamp - self.timestamp).total_seconds() * 1000
+
+    @property
+    def ingestion_latency_ms(self) -> float:
+        """Latency between collection and ingestion."""
+        if self.ingestion_timestamp:
+            return (self.ingestion_timestamp - self.collection_timestamp).total_seconds() * 1000
+        return 0
+```
+
+### Metric Cardinality Management
+
+#### Cardinality Tracking and Limits
+
+```python
+class CardinalityManager:
+    """Manage and limit metric cardinality to prevent explosion."""
+
+    def __init__(self, redis_client):
+        self.redis = redis_client
+        self.cardinality_limits = {
+            'default': 1000,
+            'high_cardinality': 10000,
+            'unlimited': None
+        }
+        self.cardinality_window = 3600  # 1 hour window
+
+    async def check_cardinality(
+        self,
+        metric_name: str,
+        tag_combination: str,
+        limit_profile: str = 'default'
+    ) -> bool:
+        """Check if adding this metric would exceed cardinality limit."""
+        key = f"cardinality:{metric_name}:{self.cardinality_window}"
+
+        # Track unique tag combinations
+        current_cardinality = await self.redis.pfcount(key)
+        limit = self.cardinality_limits.get(limit_profile)
+
+        if limit and current_cardinality >= limit:
+            logger.warning(
+                f"Cardinality limit reached for {metric_name}: "
+                f"{current_cardinality} >= {limit}"
+            )
+            # Emit metric about cardinality violation
+            emit_metric("cardinality.limit_exceeded", {
+                "metric_name": metric_name,
+                "current": current_cardinality,
+                "limit": limit
+            })
+            return False
+
+        # Add to HyperLogLog for tracking
+        await self.redis.pfadd(key, tag_combination)
+        await self.redis.expire(key, self.cardinality_window)
+
+        return True
+
+    async def get_cardinality_report(self) -> Dict[str, int]:
+        """Get cardinality report for all metrics."""
+        pattern = "cardinality:*"
+        keys = await self.redis.keys(pattern)
+
+        report = {}
+        for key in keys:
+            metric_name = key.split(':')[1]
+            cardinality = await self.redis.pfcount(key)
+            report[metric_name] = cardinality
+
+        return report
+
+class TagValidator:
+    """Validate and sanitize metric tags to prevent cardinality explosion."""
+
+    ALLOWED_TAG_KEYS = {
+        'instance_id', 'database_type', 'environment',
+        'region', 'availability_zone', 'cluster_id'
+    }
+
+    TAG_VALUE_PATTERNS = {
+        'instance_id': r'^[a-zA-Z0-9\-_]+$',
+        'environment': r'^(production|staging|development|test)$',
+        'region': r'^[a-z]{2}-[a-z]+-\d+$'
+    }
+
+    @classmethod
+    def validate_tags(cls, tags: Dict[str, str]) -> Dict[str, str]:
+        """Validate and sanitize tags."""
+        validated = {}
+
+        for key, value in tags.items():
+            # Check if tag key is allowed
+            if key not in cls.ALLOWED_TAG_KEYS:
+                logger.warning(f"Dropping disallowed tag: {key}")
+                continue
+
+            # Validate tag value pattern
+            pattern = cls.TAG_VALUE_PATTERNS.get(key)
+            if pattern and not re.match(pattern, value):
+                logger.warning(f"Invalid tag value for {key}: {value}")
+                continue
+
+            # Limit tag value length
+            if len(value) > 128:
+                value = value[:128]
+                logger.warning(f"Truncating long tag value for {key}")
+
+            validated[key] = value
+
+        return validated
+
+# Usage in collector
+class MetricCollectorWithCardinalityControl(MetricCollector):
+    """Collector with cardinality management."""
+
+    def __init__(self, config, cardinality_manager: CardinalityManager):
+        super().__init__(config)
+        self.cardinality_manager = cardinality_manager
+
+    async def collect(self) -> List[Metric]:
+        """Collect metrics with cardinality control."""
+        raw_metrics = await self._query_database()
+
+        filtered_metrics = []
+        for metric_data in raw_metrics:
+            # Validate and sanitize tags
+            tags = TagValidator.validate_tags(metric_data.get('tags', {}))
+
+            # Check cardinality
+            tag_combination = json.dumps(tags, sort_keys=True)
+            if await self.cardinality_manager.check_cardinality(
+                metric_data['metric_name'],
+                tag_combination
+            ):
+                metric = Metric(
+                    metric_name=metric_data['metric_name'],
+                    value=metric_data['value'],
+                    tags=tags,
+                    # ... other fields
+                )
+                filtered_metrics.append(metric)
+
+        return filtered_metrics
+```
+
+#### Aggregation for High-Cardinality Metrics
+
+```python
+class MetricAggregator:
+    """Aggregate high-cardinality metrics to reduce volume."""
+
+    def __init__(self, aggregation_window: int = 60):
+        self.aggregation_window = aggregation_window  # seconds
+        self.buffers: Dict[str, List[Metric]] = {}
+
+    def should_aggregate(self, metric_name: str) -> bool:
+        """Determine if metric should be aggregated."""
+        high_cardinality_patterns = [
+            r'.*\.per_user\..*',
+            r'.*\.per_session\..*',
+            r'.*\.per_request\..*'
+        ]
+        return any(re.match(pattern, metric_name) for pattern in high_cardinality_patterns)
+
+    async def aggregate_metrics(
+        self,
+        metrics: List[Metric]
+    ) -> List[Metric]:
+        """Aggregate metrics by time window and tag combination."""
+        aggregated = []
+
+        # Group by metric name and tags (excluding high-cardinality tags)
+        groups = {}
+        for metric in metrics:
+            # Remove high-cardinality tags
+            agg_tags = {
+                k: v for k, v in metric.tags.items()
+                if k not in ['user_id', 'session_id', 'request_id']
+            }
+
+            key = (metric.metric_name, json.dumps(agg_tags, sort_keys=True))
+            if key not in groups:
+                groups[key] = []
+            groups[key].append(metric)
+
+        # Aggregate each group
+        for (metric_name, tags_json), metric_list in groups.items():
+            tags = json.loads(tags_json)
+            values = [m.value for m in metric_list]
+
+            # Create aggregated metric with statistics
+            aggregated.append(Metric(
+                metric_name=f"{metric_name}.count",
+                value=len(values),
+                tags=tags,
+                timestamp=metric_list[0].timestamp
+            ))
+            aggregated.append(Metric(
+                metric_name=f"{metric_name}.avg",
+                value=sum(values) / len(values),
+                tags=tags,
+                timestamp=metric_list[0].timestamp
+            ))
+            aggregated.append(Metric(
+                metric_name=f"{metric_name}.max",
+                value=max(values),
+                tags=tags,
+                timestamp=metric_list[0].timestamp
+            ))
+            aggregated.append(Metric(
+                metric_name=f"{metric_name}.min",
+                value=min(values),
+                tags=tags,
+                timestamp=metric_list[0].timestamp
+            ))
+
+        return aggregated
+```
+
+### Meta-Monitoring and Dead Man's Switch
+
+#### Monitoring the Monitoring System
+
+```python
+class MetaMonitor:
+    """Monitor the health of the monitoring system itself."""
+
+    def __init__(self, redis_client, alert_notifier):
+        self.redis = redis_client
+        self.alert_notifier = alert_notifier
+        self.heartbeat_interval = 60  # seconds
+        self.heartbeat_timeout = 180  # 3 minutes without heartbeat triggers alert
+
+    async def emit_heartbeat(self, component_name: str, metadata: dict = None):
+        """Emit heartbeat from monitoring component."""
+        key = f"heartbeat:{component_name}"
+        heartbeat_data = {
+            "timestamp": datetime.utcnow().isoformat(),
+            "component": component_name,
+            "status": "healthy",
+            "metadata": metadata or {}
+        }
+
+        # Store with expiration
+        await self.redis.setex(
+            key,
+            self.heartbeat_timeout,
+            json.dumps(heartbeat_data)
+        )
+
+        # Also emit as metric
+        emit_metric("monitoring.heartbeat", {
+            "component": component_name,
+            "status": "healthy"
+        })
+
+    async def check_heartbeats(self):
+        """Check all expected heartbeats and alert if missing."""
+        expected_components = [
+            'gds_monitor_postgresql',
+            'gds_monitor_mongodb',
+            'gds_monitor_mssql',
+            'gds_alerting_consumer_1',
+            'gds_alerting_consumer_2',
+            'kafka_producer',
+        ]
+
+        missing_heartbeats = []
+        for component in expected_components:
+            key = f"heartbeat:{component}"
+            exists = await self.redis.exists(key)
+
+            if not exists:
+                missing_heartbeats.append(component)
+                logger.error(f"Missing heartbeat from {component}")
+
+                # Send alert
+                alert = Alert(
+                    id=str(uuid.uuid4()),
+                    rule_id="meta_monitoring_heartbeat_missing",
+                    severity=AlertSeverity.CRITICAL,
+                    message=f"Monitoring component {component} stopped sending heartbeats",
+                    metric=None,
+                    timestamp=datetime.utcnow(),
+                    labels={
+                        "component": component,
+                        "alert_type": "meta_monitoring"
+                    }
+                )
+                await self.alert_notifier.notify(alert)
+
+        return missing_heartbeats
+
+class DeadMansSwitch:
+    """Ensure metrics are flowing through the pipeline."""
+
+    def __init__(self, redis_client, alert_notifier):
+        self.redis = redis_client
+        self.alert_notifier = alert_notifier
+        self.metric_timeout = 300  # 5 minutes
+
+    async def record_metric_arrival(
+        self,
+        topic: str,
+        partition: int,
+        instance_id: str
+    ):
+        """Record that a metric arrived for this instance."""
+        key = f"metric_arrival:{topic}:{partition}:{instance_id}"
+        await self.redis.setex(key, self.metric_timeout, datetime.utcnow().isoformat())
+
+    async def check_metric_flow(self):
+        """Check that metrics are flowing from all expected sources."""
+        # Get all expected metric sources
+        expected_sources = await self._get_expected_sources()
+
+        missing_metrics = []
+        for source in expected_sources:
+            key = f"metric_arrival:{source['topic']}:{source['partition']}:{source['instance_id']}"
+            exists = await self.redis.exists(key)
+
+            if not exists:
+                missing_metrics.append(source)
+                logger.error(f"No metrics received from {source['instance_id']} in last {self.metric_timeout}s")
+
+                # Alert on missing metrics
+                alert = Alert(
+                    id=str(uuid.uuid4()),
+                    rule_id="dead_mans_switch_no_metrics",
+                    severity=AlertSeverity.CRITICAL,
+                    message=f"No metrics received from {source['instance_id']}",
+                    metric=None,
+                    timestamp=datetime.utcnow(),
+                    labels={
+                        "instance_id": source['instance_id'],
+                        "topic": source['topic'],
+                        "alert_type": "absence_detection"
+                    }
+                )
+                await self.alert_notifier.notify(alert)
+
+        return missing_metrics
+
+    async def _get_expected_sources(self) -> List[dict]:
+        """Get list of expected metric sources from configuration."""
+        # In production: load from database or configuration
+        return [
+            {"topic": "gds.metrics.postgresql.production", "partition": 0, "instance_id": "prod-db-01"},
+            {"topic": "gds.metrics.mongodb.production", "partition": 0, "instance_id": "prod-mongo-01"},
+        ]
+```
+
+#### Kafka Lag Monitoring
+
+```python
+class KafkaLagMonitor:
+    """Monitor Kafka consumer lag to detect processing issues."""
+
+    def __init__(self, kafka_admin_client, alert_notifier):
+        self.admin_client = kafka_admin_client
+        self.alert_notifier = alert_notifier
+        self.lag_warning_threshold = 1000  # messages
+        self.lag_critical_threshold = 10000  # messages
+
+    async def check_consumer_lag(self, consumer_group: str):
+        """Check lag for consumer group."""
+        from kafka import TopicPartition
+
+        # Get consumer group offsets
+        group_offsets = await self._get_group_offsets(consumer_group)
+
+        # Get topic end offsets
+        end_offsets = await self._get_end_offsets(group_offsets.keys())
+
+        lag_by_partition = {}
+        total_lag = 0
+
+        for partition, committed_offset in group_offsets.items():
+            end_offset = end_offsets.get(partition, 0)
+            lag = end_offset - committed_offset
+            lag_by_partition[partition] = lag
+            total_lag += lag
+
+            # Alert on high lag
+            if lag >= self.lag_critical_threshold:
+                await self._alert_high_lag(consumer_group, partition, lag, "CRITICAL")
+            elif lag >= self.lag_warning_threshold:
+                await self._alert_high_lag(consumer_group, partition, lag, "WARNING")
+
+        # Emit lag metrics
+        emit_metric("kafka.consumer.lag", {
+            "consumer_group": consumer_group,
+            "total_lag": total_lag,
+            "max_partition_lag": max(lag_by_partition.values()) if lag_by_partition else 0
+        })
+
+        return total_lag
+
+    async def _alert_high_lag(
+        self,
+        consumer_group: str,
+        partition: TopicPartition,
+        lag: int,
+        severity: str
+    ):
+        """Alert on high consumer lag."""
+        alert = Alert(
+            id=str(uuid.uuid4()),
+            rule_id="kafka_consumer_lag_high",
+            severity=AlertSeverity[severity],
+            message=f"High Kafka lag for {consumer_group}: {lag} messages behind",
+            metric=None,
+            timestamp=datetime.utcnow(),
+            labels={
+                "consumer_group": consumer_group,
+                "topic": partition.topic,
+                "partition": str(partition.partition),
+                "lag": str(lag)
+            }
+        )
+        await self.alert_notifier.notify(alert)
+```
+
+#### Alert Delivery Success Tracking
+
+```python
+class AlertDeliveryMonitor:
+    """Monitor alert delivery success rates."""
+
+    def __init__(self, redis_client):
+        self.redis = redis_client
+        self.window_size = 3600  # 1 hour window
+
+    async def record_alert_attempt(self, alert_id: str, success: bool, notifier: str):
+        """Record alert delivery attempt."""
+        key = f"alert_delivery:{notifier}:{int(time.time() // self.window_size)}"
+
+        # Increment counters
+        if success:
+            await self.redis.hincrby(key, "success", 1)
+        else:
+            await self.redis.hincrby(key, "failure", 1)
+
+        await self.redis.expire(key, self.window_size * 2)
+
+        # Emit metrics
+        emit_metric("alert.delivery", {
+            "notifier": notifier,
+            "success": success
+        })
+
+    async def get_delivery_stats(self, notifier: str) -> dict:
+        """Get alert delivery statistics."""
+        key = f"alert_delivery:{notifier}:{int(time.time() // self.window_size)}"
+
+        stats = await self.redis.hgetall(key)
+        success = int(stats.get(b'success', 0))
+        failure = int(stats.get(b'failure', 0))
+        total = success + failure
+
+        success_rate = (success / total * 100) if total > 0 else 100
+
+        return {
+            "success": success,
+            "failure": failure,
+            "total": total,
+            "success_rate": success_rate
+        }
+```
+
+### Alert Absence Detection
+
+```python
+class AlertAbsenceDetector:
+    """Detect when expected alerts stop firing (indicating monitoring failure)."""
+
+    def __init__(self, redis_client, alert_notifier):
+        self.redis = redis_client
+        self.alert_notifier = alert_notifier
+        self.expected_alert_interval = {}  # rule_id -> expected interval in seconds
+
+    def register_expected_alert(
+        self,
+        rule_id: str,
+        expected_interval_seconds: int,
+        tolerance_multiplier: float = 2.0
+    ):
+        """Register an alert that is expected to fire periodically."""
+        self.expected_alert_interval[rule_id] = {
+            "interval": expected_interval_seconds,
+            "timeout": expected_interval_seconds * tolerance_multiplier
+        }
+
+    async def record_alert_fired(self, rule_id: str):
+        """Record that an alert fired."""
+        key = f"alert_last_fired:{rule_id}"
+        await self.redis.set(key, datetime.utcnow().isoformat())
+        await self.redis.expire(key, self.expected_alert_interval[rule_id]["timeout"])
+
+    async def check_expected_alerts(self):
+        """Check that expected alerts are firing."""
+        missing_alerts = []
+
+        for rule_id, config in self.expected_alert_interval.items():
+            key = f"alert_last_fired:{rule_id}"
+            last_fired = await self.redis.get(key)
+
+            if not last_fired:
+                # Alert never fired or timeout exceeded
+                missing_alerts.append(rule_id)
+                logger.error(f"Expected alert {rule_id} has not fired in {config['timeout']}s")
+
+                # Meta-alert: expected alert is absent
+                meta_alert = Alert(
+                    id=str(uuid.uuid4()),
+                    rule_id="meta_alert_absence_detected",
+                    severity=AlertSeverity.CRITICAL,
+                    message=f"Expected alert '{rule_id}' has stopped firing",
+                    metric=None,
+                    timestamp=datetime.utcnow(),
+                    labels={
+                        "missing_rule_id": rule_id,
+                        "expected_interval": str(config['interval']),
+                        "alert_type": "meta_monitoring"
+                    },
+                    runbook_url=f"https://runbook.example.com/alert-absence/{rule_id}"
+                )
+                await self.alert_notifier.notify(meta_alert)
+
+        return missing_alerts
+
+class MetricAbsenceDetector:
+    """Detect when expected metrics stop arriving."""
+
+    def __init__(self, redis_client, alert_notifier):
+        self.redis = redis_client
+        self.alert_notifier = alert_notifier
+
+    async def record_metric_received(
+        self,
+        instance_id: str,
+        metric_name: str,
+        expected_interval_seconds: int
+    ):
+        """Record metric arrival and set expiration."""
+        key = f"metric_last_seen:{instance_id}:{metric_name}"
+        await self.redis.setex(
+            key,
+            expected_interval_seconds * 3,  # 3x tolerance
+            datetime.utcnow().isoformat()
+        )
+
+    async def check_metric_absence(
+        self,
+        instance_id: str,
+        metric_name: str
+    ) -> bool:
+        """Check if metric is absent (key expired)."""
+        key = f"metric_last_seen:{instance_id}:{metric_name}"
+        exists = await self.redis.exists(key)
+
+        if not exists:
+            logger.warning(f"Metric {metric_name} from {instance_id} is absent")
+
+            # Alert on absence
+            alert = Alert(
+                id=str(uuid.uuid4()),
+                rule_id="metric_absence_detected",
+                severity=AlertSeverity.WARNING,
+                message=f"Metric {metric_name} from {instance_id} has stopped arriving",
+                metric=None,
+                timestamp=datetime.utcnow(),
+                labels={
+                    "instance_id": instance_id,
+                    "metric_name": metric_name,
+                    "alert_type": "absence_detection"
+                }
+            )
+            await self.alert_notifier.notify(alert)
+            return True
+
+        return False
+```
+
+### Data Retention Policy
+
+#### Kafka Retention Configuration
+
+```python
+# Retention policies by environment
+RETENTION_POLICIES = {
+    "production": {
+        "realtime_metrics": {
+            "retention_ms": 604800000,  # 7 days
+            "retention_bytes": 10737418240,  # 10GB per partition
+            "segment_ms": 3600000,  # 1 hour segments
+        },
+        "aggregated_metrics": {
+            "retention_ms": 2592000000,  # 30 days
+            "retention_bytes": 53687091200,  # 50GB per partition
+        },
+        "alerts": {
+            "retention_ms": 7776000000,  # 90 days
+            "retention_bytes": -1,  # Unlimited
+        },
+        "dlq": {
+            "retention_ms": 2592000000,  # 30 days for troubleshooting
+            "retention_bytes": 1073741824,  # 1GB per partition
+        }
+    },
+    "development": {
+        "realtime_metrics": {
+            "retention_ms": 86400000,  # 1 day
+            "retention_bytes": 1073741824,  # 1GB
+        }
+    }
+}
+
+class RetentionPolicyManager:
+    """Manage data retention policies across systems."""
+
+    def __init__(self, kafka_admin_client, snowflake_conn):
+        self.kafka_admin = kafka_admin_client
+        self.snowflake = snowflake_conn
+
+    async def apply_kafka_retention_policy(
+        self,
+        topic: str,
+        environment: str,
+        topic_type: str
+    ):
+        """Apply retention policy to Kafka topic."""
+        policy = RETENTION_POLICIES[environment][topic_type]
+
+        config = {
+            "retention.ms": str(policy["retention_ms"]),
+            "retention.bytes": str(policy["retention_bytes"]),
+            "segment.ms": str(policy.get("segment_ms", 3600000)),
+        }
+
+        # Apply configuration to topic
+        await self.kafka_admin.alter_configs({
+            "topic": topic,
+            "configs": config
+        })
+
+        logger.info(f"Applied retention policy to {topic}: {policy}")
+
+    async def apply_snowflake_retention_policy(
+        self,
+        table_name: str,
+        retention_days: int
+    ):
+        """Apply retention policy to Snowflake table."""
+        # Set time travel retention
+        await self.snowflake.execute(
+            f"ALTER TABLE {table_name} SET DATA_RETENTION_TIME_IN_DAYS = {retention_days}"
+        )
+
+        # Schedule data cleanup for old partitions
+        cutoff_date = datetime.utcnow() - timedelta(days=retention_days)
+        await self.snowflake.execute(
+            f"DELETE FROM {table_name} WHERE timestamp < '{cutoff_date.isoformat()}'"
+        )
+
+        logger.info(f"Applied {retention_days}-day retention to {table_name}")
+```
+
+#### GDPR and Compliance
+
+```python
+class ComplianceManager:
+    """Handle GDPR and compliance requirements."""
+
+    def __init__(self, kafka_producer, snowflake_conn):
+        self.kafka_producer = kafka_producer
+        self.snowflake = snowflake_conn
+
+    async def delete_user_data(self, user_id: str):
+        """Delete all data for a user (GDPR right to be forgotten)."""
+        logger.info(f"Initiating data deletion for user {user_id}")
+
+        # 1. Delete from Kafka (via tombstone messages if using compacted topics)
+        await self._delete_from_kafka(user_id)
+
+        # 2. Delete from Snowflake
+        await self._delete_from_snowflake(user_id)
+
+        # 3. Log deletion for audit trail
+        await self._log_deletion(user_id)
+
+    async def _delete_from_kafka(self, user_id: str):
+        """Send tombstone messages for compacted topics."""
+        # For compacted topics, send null value to delete key
+        self.kafka_producer.send(
+            topic="gds.metrics.user_data",
+            key=user_id.encode('utf-8'),
+            value=None  # Tombstone
+        )
+
+    async def _delete_from_snowflake(self, user_id: str):
+        """Delete user data from Snowflake."""
+        tables = ["metrics_fact", "alerts_history", "user_activity"]
+
+        for table in tables:
+            await self.snowflake.execute(
+                f"DELETE FROM {table} WHERE user_id = ?",
+                (user_id,)
+            )
+
+    async def _log_deletion(self, user_id: str):
+        """Log data deletion for compliance audit."""
+        audit_entry = {
+            "action": "data_deletion",
+            "user_id": user_id,
+            "timestamp": datetime.utcnow().isoformat(),
+            "executed_by": "system"
+        }
+        # Store in audit log
+        await self.kafka_producer.send("audit.log", value=json.dumps(audit_entry))
+```
+
+### Disaster Recovery Plan
+
+#### Multi-Region Architecture
+
+```
+Primary Region (us-east-1)                Secondary Region (us-west-2)
+┌─────────────────────┐                   ┌─────────────────────┐
+│   Kafka Cluster     │◄──Replication────►│   Kafka Cluster     │
+│   (3 brokers)       │                   │   (3 brokers)       │
+└─────────────────────┘                   └─────────────────────┘
+         │                                          │
+         ▼                                          ▼
+┌─────────────────────┐                   ┌─────────────────────┐
+│  gds_monitor        │                   │  gds_monitor        │
+│  gds_alerting       │                   │  gds_alerting       │
+│  (active)           │                   │  (standby)          │
+└─────────────────────┘                   └─────────────────────┘
+```
+
+#### Kafka Multi-DC Replication
+
+```python
+# MirrorMaker 2.0 configuration for cross-region replication
+MIRROR_MAKER_CONFIG = """
+# Source cluster
+clusters = primary, secondary
+primary.bootstrap.servers = kafka-primary-1:9092,kafka-primary-2:9092
+secondary.bootstrap.servers = kafka-secondary-1:9092,kafka-secondary-2:9092
+
+# Replication flows
+primary->secondary.enabled = true
+primary->secondary.topics = gds\\.metrics\\..*
+secondary->primary.enabled = false  # One-way replication
+
+# Replication settings
+replication.factor = 3
+sync.topic.configs.enabled = true
+checkpoints.topic.replication.factor = 3
+"""
+```
+
+#### Failover Procedures
+
+```python
+class DisasterRecoveryManager:
+    """Manage disaster recovery and failover procedures."""
+
+    def __init__(self, primary_region: str, secondary_region: str):
+        self.primary_region = primary_region
+        self.secondary_region = secondary_region
+        self.current_active = primary_region
+
+    async def initiate_failover(self, reason: str):
+        """Initiate failover to secondary region."""
+        logger.critical(f"Initiating failover: {reason}")
+
+        # Step 1: Stop writes to primary
+        await self._stop_primary_writers()
+
+        # Step 2: Verify secondary is caught up
+        if not await self._verify_replication_lag():
+            logger.error("Secondary region lag too high, waiting...")
+            await self._wait_for_sync(timeout=300)
+
+        # Step 3: Promote secondary to active
+        await self._promote_secondary()
+
+        # Step 4: Update DNS/load balancers
+        await self._update_routing()
+
+        # Step 5: Start secondary region services
+        await self._start_secondary_services()
+
+        self.current_active = self.secondary_region
+        logger.info(f"Failover complete. Active region: {self.current_active}")
+
+    async def _verify_replication_lag(self) -> bool:
+        """Check if replication lag is acceptable."""
+        lag = await self._get_replication_lag()
+        max_acceptable_lag = 1000  # messages
+
+        return lag < max_acceptable_lag
+
+    async def initiate_failback(self):
+        """Failback to primary region after recovery."""
+        logger.info("Initiating failback to primary region")
+
+        # Verify primary is healthy
+        if not await self._check_primary_health():
+            raise Exception("Primary region not healthy")
+
+        # Sync data from secondary to primary
+        await self._reverse_replication()
+
+        # Wait for sync
+        await self._wait_for_sync(timeout=600)
+
+        # Failover to primary
+        await self.initiate_failover("Planned failback to primary")
+
+class BackupManager:
+    """Manage backups for disaster recovery."""
+
+    def __init__(self, s3_bucket: str):
+        self.s3_bucket = s3_bucket
+
+    async def backup_kafka_offsets(self, consumer_group: str):
+        """Backup consumer group offsets to S3."""
+        offsets = await self._export_offsets(consumer_group)
+
+        backup_key = f"kafka-offsets/{consumer_group}/{datetime.utcnow().isoformat()}.json"
+        await self._upload_to_s3(backup_key, offsets)
+
+        logger.info(f"Backed up offsets for {consumer_group}")
+
+    async def restore_kafka_offsets(self, consumer_group: str, timestamp: str):
+        """Restore consumer group offsets from backup."""
+        backup_key = f"kafka-offsets/{consumer_group}/{timestamp}.json"
+        offsets = await self._download_from_s3(backup_key)
+
+        await self._import_offsets(consumer_group, offsets)
+        logger.info(f"Restored offsets for {consumer_group}")
+```
+
+#### RTO/RPO Targets
+
+| Component | RTO (Recovery Time Objective) | RPO (Recovery Point Objective) |
+|-----------|-------------------------------|--------------------------------|
+| Monitoring System | < 15 minutes | < 5 minutes |
+| Alerting System | < 5 minutes | < 1 minute |
+| Kafka Data | < 30 minutes | < 1 minute |
+| Snowflake Data | < 1 hour | < 15 minutes |
+| Configuration | < 5 minutes | 0 (stored in Git) |
+
+### Failure Modes and Recovery
+
+#### Common Failure Scenarios
+
+```python
+class FailureScenarioHandler:
+    """Handle common failure scenarios."""
+
+    async def handle_kafka_broker_failure(self, broker_id: int):
+        """Handle Kafka broker failure."""
+        logger.error(f"Kafka broker {broker_id} failed")
+
+        # 1. Verify ISR (In-Sync Replicas) status
+        isr_status = await self._check_isr_status()
+
+        if isr_status['under_replicated']:
+            # Alert on under-replicated partitions
+            await self._alert_under_replication(isr_status['partitions'])
+
+        # 2. Monitor topic availability
+        if not isr_status['available']:
+            # Critical: topics unavailable
+            await self._alert_topic_unavailable()
+
+            # Failover to secondary region if configured
+            if self.dr_enabled:
+                await self.dr_manager.initiate_failover("Kafka broker failure")
+
+        # 3. Auto-recovery: restart broker
+        await self._restart_broker(broker_id)
+
+    async def handle_collector_failure(self, collector_id: str):
+        """Handle metric collector failure."""
+        logger.error(f"Collector {collector_id} failed")
+
+        # 1. Check if backup collector exists
+        if backup_collector := await self._get_backup_collector(collector_id):
+            # Activate backup
+            await backup_collector.start()
+            logger.info(f"Activated backup collector for {collector_id}")
+
+        # 2. Try to restart failed collector
+        await asyncio.sleep(30)  # Wait before restart
+        await self._restart_collector(collector_id)
+
+    async def handle_database_unreachable(self, instance_id: str):
+        """Handle database unreachable scenario."""
+        logger.error(f"Database {instance_id} unreachable")
+
+        # 1. Verify it's not a network issue
+        if await self._check_network_connectivity(instance_id):
+            # Network is fine, database is down
+            await self._alert_database_down(instance_id)
+
+        # 2. Check for read replica
+        if replica := await self._get_read_replica(instance_id):
+            # Switch to replica for monitoring
+            await self._switch_to_replica(instance_id, replica)
+
+        # 3. Enter maintenance mode (suppress false alerts)
+        await self.maintenance_manager.set_maintenance_window(
+            instance_id,
+            duration_minutes=60,
+            reason="Database unreachable"
+        )
+
+    async def handle_alert_delivery_failure(self, alert: Alert):
+        """Handle alert delivery failure."""
+        logger.error(f"Failed to deliver alert {alert.id}")
+
+        # 1. Try backup notification channel
+        if backup_notifier := self._get_backup_notifier():
+            try:
+                await backup_notifier.notify(alert)
+                return
+            except Exception as e:
+                logger.error(f"Backup notifier also failed: {e}")
+
+        # 2. Store in local queue for retry
+        await self._queue_for_retry(alert)
+
+        # 3. If critical alert, escalate through alternative means
+        if alert.severity == AlertSeverity.CRITICAL:
+            await self._escalate_alert(alert)
+```
+
+#### Failure Recovery Patterns
+
+**1. Exponential Backoff with Jitter**
+
+```python
+async def retry_with_backoff(func, max_retries=5, base_delay=1):
+    """Retry with exponential backoff and jitter."""
+    for attempt in range(max_retries):
+        try:
+            return await func()
+        except Exception as e:
+            if attempt == max_retries - 1:
+                raise
+
+            # Calculate delay with exponential backoff and jitter
+            delay = min(base_delay * (2 ** attempt), 60)  # Cap at 60s
+            jitter = random.uniform(0, delay * 0.1)  # Add 10% jitter
+            total_delay = delay + jitter
+
+            logger.warning(f"Attempt {attempt + 1} failed: {e}. Retrying in {total_delay:.2f}s")
+            await asyncio.sleep(total_delay)
+```
+
+**2. Local Spooling for Kafka Unavailability**
+
+```python
+class LocalSpoolManager:
+    """Spool metrics locally when Kafka is unavailable."""
+
+    def __init__(self, spool_dir: str = "/var/spool/gds-monitor"):
+        self.spool_dir = Path(spool_dir)
+        self.spool_dir.mkdir(parents=True, exist_ok=True)
+        self.max_spool_size_gb = 10
+
+    async def spool_metrics(self, metrics: List[Metric]):
+        """Write metrics to local spool."""
+        spool_file = self.spool_dir / f"metrics_{int(time.time())}.json"
+
+        # Check spool size
+        if await self._get_spool_size_gb() >= self.max_spool_size_gb:
+            logger.error("Spool directory full, dropping metrics")
+            return
+
+        with open(spool_file, 'w') as f:
+            json.dump([asdict(m) for m in metrics], f)
+
+        logger.info(f"Spooled {len(metrics)} metrics to {spool_file}")
+
+    async def replay_spooled_metrics(self, kafka_producer):
+        """Replay spooled metrics when Kafka is back online."""
+        spool_files = sorted(self.spool_dir.glob("metrics_*.json"))
+
+        for spool_file in spool_files:
+            try:
+                with open(spool_file, 'r') as f:
+                    metrics_data = json.load(f)
+
+                for metric_dict in metrics_data:
+                    metric = Metric(**metric_dict)
+                    await kafka_producer.send(metric)
+
+                # Delete spool file after successful replay
+                spool_file.unlink()
+                logger.info(f"Replayed and deleted {spool_file}")
+
+            except Exception as e:
+                logger.error(f"Failed to replay {spool_file}: {e}")
+```
+
+### Capacity Planning
+
+```python
+class CapacityPlanner:
+    """Monitor and plan for capacity needs."""
+
+    def __init__(self):
+        self.kafka_capacity_threshold = 0.75  # 75%
+        self.disk_capacity_threshold = 0.80  # 80%
+        self.memory_capacity_threshold = 0.85  # 85%
+
+    async def check_kafka_capacity(self):
+        """Check Kafka cluster capacity."""
+        # Check disk usage per broker
+        for broker in self.kafka_brokers:
+            disk_usage = await self._get_broker_disk_usage(broker)
+
+            if disk_usage > self.kafka_capacity_threshold:
+                await self._alert_kafka_capacity(broker, disk_usage)
+
+                # Calculate time to full
+                growth_rate = await self._calculate_growth_rate(broker)
+                days_to_full = self._estimate_days_to_full(disk_usage, growth_rate)
+
+                logger.warning(
+                    f"Broker {broker} at {disk_usage*100}% capacity. "
+                    f"Estimated {days_to_full} days until full"
+                )
+
+    async def forecast_resource_needs(self, days_ahead: int = 90):
+        """Forecast resource needs based on trends."""
+        # Get historical metrics
+        metrics_history = await self._get_metrics_history(days=30)
+
+        # Calculate growth rates
+        metrics_per_day_growth = self._calculate_metric_volume_growth(metrics_history)
+        kafka_throughput_growth = self._calculate_throughput_growth(metrics_history)
+
+        # Project future needs
+        current_throughput = await self._get_current_throughput()
+        projected_throughput = current_throughput * (1 + kafka_throughput_growth) ** (days_ahead / 30)
+
+        # Calculate required resources
+        required_brokers = math.ceil(projected_throughput / self.broker_capacity)
+        required_storage_gb = projected_throughput * days_ahead * self.bytes_per_metric / 1024**3
+
+        return {
+            "current_throughput_msg_per_sec": current_throughput,
+            "projected_throughput_msg_per_sec": projected_throughput,
+            "required_brokers": required_brokers,
+            "required_storage_gb": required_storage_gb,
+            "recommendation": self._generate_recommendation(required_brokers, required_storage_gb)
+        }
+
+    def _estimate_days_to_full(self, current_usage: float, daily_growth_rate: float) -> int:
+        """Estimate days until capacity is full."""
+        if daily_growth_rate <= 0:
+            return float('inf')
+
+        remaining_capacity = 1.0 - current_usage
+        days = remaining_capacity / daily_growth_rate
+
+        return int(days)
+```
+
+### Performance Benchmarks and SLAs
+
+#### Service Level Objectives (SLOs)
+
+| Service | Metric | Target | Measurement Window |
+|---------|--------|--------|-------------------|
+| Metric Collection | Success Rate | ≥ 99.9% | 30 days |
+| Metric Collection | Latency (p95) | < 5 seconds | 24 hours |
+| Metric Collection | Throughput | ≥ 10,000 metrics/sec | 1 hour |
+| Kafka Publishing | Success Rate | ≥ 99.99% | 30 days |
+| Kafka Publishing | Latency (p95) | < 100 ms | 24 hours |
+| Alert Evaluation | Latency (p95) | < 1 minute | 24 hours |
+| Alert Evaluation | Success Rate | ≥ 99.95% | 30 days |
+| Alert Delivery | Success Rate | ≥ 99.5% | 30 days |
+| Alert Delivery | Latency (p95) | < 2 minutes | 24 hours |
+| System Availability | Uptime | ≥ 99.9% | 30 days |
+| Data Loss | Rate | 0% | Always |
+
+#### Performance Targets
+
+```python
+PERFORMANCE_TARGETS = {
+    "metric_collection": {
+        "throughput_metrics_per_second": 10000,
+        "latency_p50_ms": 1000,
+        "latency_p95_ms": 5000,
+        "latency_p99_ms": 10000,
+        "cpu_usage_percent": 70,
+        "memory_usage_percent": 80,
+    },
+    "kafka_producer": {
+        "throughput_messages_per_second": 50000,
+        "latency_p50_ms": 10,
+        "latency_p95_ms": 100,
+        "latency_p99_ms": 500,
+    },
+    "alert_evaluation": {
+        "throughput_alerts_per_second": 1000,
+        "latency_p50_ms": 100,
+        "latency_p95_ms": 1000,
+        "latency_p99_ms": 5000,
+    },
+    "alert_delivery": {
+        "throughput_alerts_per_second": 500,
+        "latency_p50_ms": 500,
+        "latency_p95_ms": 2000,
+        "latency_p99_ms": 5000,
+    }
+}
+
+class SLOMonitor:
+    """Monitor SLO compliance and error budgets."""
+
+    def __init__(self, prometheus_client):
+        self.prometheus = prometheus_client
+        self.slo_targets = {
+            "metric_collection_success_rate": 0.999,  # 99.9%
+            "alert_delivery_success_rate": 0.995,     # 99.5%
+            "system_availability": 0.999,              # 99.9%
+        }
+
+    async def check_slo_compliance(self, slo_name: str, window_days: int = 30):
+        """Check if SLO is being met."""
+        # Query actual performance from Prometheus
+        actual_value = await self._query_slo_metric(slo_name, window_days)
+        target_value = self.slo_targets[slo_name]
+
+        # Calculate error budget
+        total_budget = 1.0 - target_value
+        consumed_budget = max(0, target_value - actual_value)
+        budget_remaining = max(0, total_budget - consumed_budget)
+        budget_percent = (budget_remaining / total_budget * 100) if total_budget > 0 else 100
+
+        compliant = actual_value >= target_value
+
+        result = {
+            "slo_name": slo_name,
+            "target": target_value,
+            "actual": actual_value,
+            "compliant": compliant,
+            "error_budget_remaining_percent": budget_percent,
+            "window_days": window_days
+        }
+
+        # Alert if SLO violated or error budget low
+        if not compliant:
+            await self._alert_slo_violation(result)
+        elif budget_percent < 10:
+            await self._alert_low_error_budget(result)
+
+        return result
+```
 
 ## Is This a Best Practice Architecture?
 
