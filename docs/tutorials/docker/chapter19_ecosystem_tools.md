@@ -186,12 +186,67 @@ Secure with TLS and auth in production; evaluate Harbor if you need UI, policies
 
 ---
 
+## JFrog Artifactory (Enterprise Registry)
+
+For enterprise environments requiring advanced features, **JFrog Artifactory** provides a universal artifact repository that supports Docker alongside other package formats.
+
+**Key features**:
+- Universal repository (Docker, Maven, npm, PyPI, etc.)
+- Fine-grained access control (RBAC)
+- Repository replication and high availability
+- Vulnerability scanning with JFrog Xray
+- Caching of remote registries (Docker Hub, etc.)
+- Build promotion workflows
+- Comprehensive audit logs
+
+**Quick setup**:
+
+```bash
+# Login to Artifactory
+docker login mycompany.jfrog.io
+
+# Pull from Artifactory (caches Docker Hub)
+docker pull mycompany.jfrog.io/docker/nginx:alpine
+
+# Push your image
+docker tag myapp:1.0 mycompany.jfrog.io/docker-local/myapp:1.0
+docker push mycompany.jfrog.io/docker-local/myapp:1.0
+```
+
+**Repository types in Artifactory**:
+1. **Local**: Your own images (builds)
+2. **Remote**: Cache of external registries (Docker Hub, GHCR, etc.)
+3. **Virtual**: Aggregates local and remote (single endpoint)
+
+**Example virtual repository setup**:
+```
+docker-virtual (developers use this)
+  ├── docker-local (internal images)
+  └── docker-hub-remote (cached external images)
+```
+
+**When pulling `mycompany.jfrog.io/docker/nginx:alpine`**:
+1. Checks `docker-local` (not found)
+2. Checks `docker-hub-remote` (downloads from Docker Hub, caches locally)
+3. Returns image
+4. Next pull is instant (served from cache)
+
+**For comprehensive JFrog Artifactory guide**: See [Chapter 21: JFrog Artifactory as Docker Registry](./chapter21_jfrog_artifactory.md)
+
+---
+
 ## Summary
 
-- Use the right registry for your org (Hub, GHCR, ECR/GCR/ACR, Harbor)
+- Use the right registry for your org (Hub, GHCR, ECR/GCR/ACR, Harbor, Artifactory)
+- For enterprises, consider JFrog Artifactory for universal artifact management
 - Target remote daemons with contexts and speed up builds with remote builders
 - Prefer rootless mode where possible; always run containers as non‑root
 - Scan images continuously and generate SBOMs for traceability
 - For internal needs, a self‑hosted registry can complement cloud registries
 
-Next: “Beyond the Basics” digs into cache performance, reproducible builds, and supply‑chain integrity.
+Next: "Beyond the Basics" digs into cache performance, reproducible builds, and supply‑chain integrity.
+
+---
+
+**Related Chapters**:
+- [Chapter 21: JFrog Artifactory as Docker Registry](./chapter21_jfrog_artifactory.md) - Comprehensive guide to using Artifactory

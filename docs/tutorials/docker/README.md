@@ -1,8 +1,19 @@
 # Mastering Docker (Multi‑Chapter Tutorial)
 
-A structured, from‑first‑principles tutorial that takes you from fundamentals to production‑ready Docker. This series is organized into Parts and Chapters to mirror a traditional book format. All content is original and tailored to practical, runnable examples in this repo.
+A comprehensive, beginner-to-advanced tutorial that takes you from Docker fundamentals to production-ready deployments. This series is structured like a book with 21 chapters covering everything from basic concepts to enterprise registry management with JFrog Artifactory.
 
-Use this as the primary landing page. Each chapter links to runnable examples and deeper references.
+**New to Docker?** Start with our [**Quickstart Guide**](./quickstart.md) (15 minutes) to get hands-on immediately!
+
+All content is original and tailored to practical, runnable examples in this repo.
+
+---
+
+## 🚀 Getting Started
+
+- **Complete Beginner?** → [Quickstart Guide](./quickstart.md) (15 minutes)
+- **Want Deep Understanding?** → Start with [Chapter 1](./chapter01_why_and_how.md)
+- **Looking for Specific Topic?** → Use the Table of Contents below
+- **Enterprise Setup?** → Jump to [JFrog Artifactory (Chapter 21)](./chapter21_jfrog_artifactory.md)
 
 ---
 
@@ -33,6 +44,7 @@ Use this as the primary landing page. Each chapter links to runnable examples an
   - Chapter 18: Troubleshooting & Debugging (logs, events, stats, common issues)
   - Chapter 19: Ecosystem Tools (registries, scanners, rootless, contexts)
   - Chapter 20: Beyond the Basics (performance, content trust, SBOM, next steps)
+  - Chapter 21: JFrog Artifactory as Docker Registry (enterprise registry setup, advanced features)
 
 ---
 
@@ -62,16 +74,44 @@ Use this as the primary landing page. Each chapter links to runnable examples an
 - [Chapter 19: Ecosystem Tools](./chapter19_ecosystem_tools.md) — registries (Hub/GHCR/ECR/ACR/Harbor), contexts and remote builders, rootless mode, scanners (Trivy/Grype/Snyk), and SBOMs (Syft).
 - [Chapter 20: Beyond the Basics](./chapter20_beyond_the_basics.md) — BuildKit cache export/import and mounts, advanced multi‑stage patterns, reproducible builds, provenance/attestations, and signing (cosign/OCI artifacts). See also Buildx example:
   - Examples (Buildx multi‑arch demo): `docs/tutorials/docker/examples/buildx/`
+- [Chapter 21: JFrog Artifactory as Docker Registry](./chapter21_jfrog_artifactory.md) — Enterprise Docker registry with JFrog Artifactory: setup, repository types (local/remote/virtual), authentication, vulnerability scanning with Xray, CI/CD integration, and best practices.
 
 ---
 
 ## How to use this tutorial
 
-- Start at Chapter 1 and progress linearly, or jump to a chapter you need.
-- Most chapters include copy‑paste commands and cross‑links to examples:
-  - Networking examples: `docs/tutorials/docker/examples/networking/`
-  - Buildx multi‑arch example: `docs/tutorials/docker/examples/buildx/`
-- If you’re new to Docker, also see the Quick Start and Cheat Sheet in `docs/tutorials/docker/README.md`.
+### Learning Paths
+
+**Path 1: Complete Beginner (Quickstart First)**
+1. [Quickstart Guide](./quickstart.md) - Get hands-on in 15 minutes
+2. [Chapter 1](./chapter01_why_and_how.md) - Understand the concepts
+3. [Chapter 2-3](./chapter02_setup.md) - Setup and CLI essentials
+4. Continue with Chapters 4-21 as needed
+
+**Path 2: Methodical Learner (Start from Foundations)**
+1. Start at [Chapter 1](./chapter01_why_and_how.md) and progress linearly
+2. Complete hands-on exercises in each chapter
+3. Build example projects as you learn
+
+**Path 3: Targeted Learning (Jump to Topics)**
+- **Building Images?** → Chapters 4-6
+- **Multi-container Apps?** → Chapters 11-12
+- **Production/CI/CD?** → Chapters 15-17
+- **Enterprise Registry?** → Chapter 21 (JFrog Artifactory)
+
+### Recommended Schedule
+
+- **Week 1**: Quickstart + Chapters 1-6 (Foundations and building images)
+- **Week 2**: Chapters 7-10 (Containers, networking, data persistence)
+- **Week 3**: Chapters 11-14 (Compose and orchestration)
+- **Week 4**: Chapters 15-21 (Production, security, enterprise)
+
+### Examples and Practice
+
+- Most chapters include copy‑paste commands and runnable examples
+- Networking examples: `docs/tutorials/docker/examples/networking/`
+- Buildx multi‑arch example: `docs/tutorials/docker/examples/buildx/`
+- Complete hands-on exercises at the end of each chapter
 
 ---
 
@@ -97,3 +137,4 @@ Use this as the primary landing page. Each chapter links to runnable examples an
 - Chapter 18: Troubleshooting & Debugging → `chapter18_troubleshooting.md`
 - Chapter 19: Ecosystem Tools → `chapter19_ecosystem_tools.md`
 - Chapter 20: Beyond the Basics → `chapter20_beyond_the_basics.md`
+- Chapter 21: JFrog Artifactory as Docker Registry → `chapter21_jfrog_artifactory.md`

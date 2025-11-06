@@ -1,731 +1,656 @@
-# Docker: Beginner to Advanced Guide
+# Docker Quickstart Guide for Absolute Beginners
 
-Whether you're just getting started or want to harden production images, this guide walks you through Docker from zero to expert—complete with copy‑pasteable commands, example Dockerfiles, and best practices.
+## Welcome to Docker!
 
-> Looking for a structured deep dive? See the multi‑chapter series: `docs/tutorials/docker/mastering/README.md`.
+This quickstart guide will have you running Docker containers in **under 15 minutes**. No prior knowledge required!
 
----
-
-## What Docker is (and isn’t)
-
-- Docker is:
-  - A platform for building, shipping, and running containers.
-  - Containers = isolated processes with their own filesystem, network, and resources.
-  - Images = immutable templates used to create containers.
-  - Registries (e.g., Docker Hub) = where images are stored and pulled from.
-
-- Docker isn’t:
-  - A full virtual machine. Containers share the host kernel; they’re lighter than VMs.
-  - A configuration management tool (like Ansible/Puppet). It packages environments, not entire infra lifecycles.
-  - A security boundary you can blindly trust. Apply hardening and least privileges.
-  - A silver bullet for stateful prod databases. Use managed services or persistent volumes with care.
+**What you'll do**:
+1. ✅ Install Docker
+2. ✅ Run your first container
+3. ✅ Build a simple application
+4. ✅ Share your image
+5. ✅ Run a multi-container application
 
 ---
 
-## Quick Start (5 minutes)
+## Prerequisites
 
-Try these to confirm your setup:
+- A computer (Windows, Mac, or Linux)
+- Internet connection
+- Basic command-line knowledge (helpful but not required)
+
+---
+
+## Step 1: Install Docker (5 minutes)
+
+### Windows
+
+1. Visit: [https://www.docker.com/products/docker-desktop](https://www.docker.com/products/docker-desktop)
+2. Download **Docker Desktop for Windows**
+3. Run the installer
+4. Restart your computer when prompted
+5. Open Docker Desktop from Start menu
+6. Wait for it to start (whale icon in system tray)
+
+### Mac
+
+1. Visit: [https://www.docker.com/products/docker-desktop](https://www.docker.com/products/docker-desktop)
+2. Download **Docker Desktop for Mac** (choose Intel or Apple Silicon)
+3. Open the `.dmg` file
+4. Drag Docker to Applications
+5. Open Docker from Applications
+6. Wait for it to start (whale icon in menu bar)
+
+### Linux (Ubuntu/Debian)
 
 ```bash
-# Check the engine
+# Quick install script (for testing/learning only)
+curl -fsSL https://get.docker.com -o get-docker.sh
+sudo sh get-docker.sh
+
+# Add your user to docker group
+sudo usermod -aG docker $USER
+
+# Log out and log back in (or run this)
+newgrp docker
+```
+
+### Verify Installation
+
+Open a terminal (Command Prompt on Windows, Terminal on Mac/Linux) and run:
+
+```bash
 docker version
+```
 
-# Run a tiny test container and then exit
-docker run --rm hello-world
+You should see version information for both Client and Server. If you do, **Docker is installed!** 🎉
 
-# Start NGINX on port 8080 (Ctrl+C to stop)
-docker run --rm -p 8080:80 nginx:alpine
+---
 
-# List images and containers
-docker images
+## Step 2: Your First Container (2 minutes)
+
+A **container** is like a lightweight virtual machine that runs an application.
+
+### Hello World
+
+```bash
+docker run hello-world
+```
+
+**What happened?**
+1. Docker looked for an image called `hello-world` on your computer
+2. Didn't find it, so downloaded it from Docker Hub (the Docker "app store")
+3. Created a container from the image
+4. Ran the container (which prints a message)
+5. Container exited
+
+**Congratulations!** You just ran your first container! 🎉
+
+### Run an Interactive Container
+
+Let's run a container you can interact with:
+
+```bash
+docker run -it ubuntu bash
+```
+
+**You're now inside a Linux container!** Try these commands:
+
+```bash
+# See where you are
+pwd
+
+# List files
+ls
+
+# Check the OS
+cat /etc/os-release
+
+# Exit the container
+exit
+```
+
+**What just happened?**
+- `-it` = Interactive Terminal (lets you type commands)
+- `ubuntu` = The image name (a minimal Ubuntu Linux)
+- `bash` = The command to run (a shell)
+
+### Run a Web Server
+
+```bash
+docker run -d -p 8080:80 --name web nginx
+```
+
+Now open your browser and visit: [http://localhost:8080](http://localhost:8080)
+
+**You should see the nginx welcome page!** 🚀
+
+**Command breakdown**:
+- `docker run` = Create and start a container
+- `-d` = Detached mode (runs in background)
+- `-p 8080:80` = Map port 8080 on your computer to port 80 in the container
+- `--name web` = Give the container a friendly name
+- `nginx` = The image name (a web server)
+
+### Check What's Running
+
+```bash
+docker ps
+```
+
+This shows all running containers. You should see your nginx container.
+
+### Stop and Remove
+
+```bash
+# Stop the container
+docker stop web
+
+# Remove the container
+docker rm web
+
+# Verify it's gone
 docker ps -a
 ```
 
-Open http://localhost:8080 in your browser when running the NGINX example.
-
 ---
 
-## Core Concepts in 60 Seconds
+## Step 3: Build Your First Docker Image (5 minutes)
 
-- Image: read-only layers; built from a Dockerfile.
-- Container: a running (or stopped) instance of an image.
-- Registry: remote storage for images (Docker Hub, GHCR, ECR, ACR).
-- Volume: persistent data managed by Docker.
-- Bind mount: map a host directory/file into a container.
-- Network: virtual network to connect containers/services.
+An **image** is the blueprint for containers. Let's create a simple web application.
 
----
+### Create a Simple Python Web App
 
-## Beginner: Running Containers
-
-Run a temporary Alpine shell:
+**1. Create a project directory**:
 
 ```bash
-docker run --rm -it alpine:3.19 sh
+mkdir my-first-docker-app
+cd my-first-docker-app
 ```
 
-Run BusyBox to test simple commands:
+**2. Create a Python application** (`app.py`):
 
-```bash
-docker run --rm busybox:1.36 echo "Hello from BusyBox"
+```python
+# app.py
+from flask import Flask
+
+app = Flask(__name__)
+
+@app.route('/')
+def hello():
+    return '''
+        <h1>Hello from Docker!</h1>
+        <p>This is my first containerized app! 🐳</p>
+    '''
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000)
 ```
 
-Map ports and run NGINX:
+**3. Create requirements file** (`requirements.txt`):
 
-```bash
-# host:container
-docker run --rm -d --name web -p 8080:80 nginx:alpine
-
-# See logs and then stop
-docker logs -f web
-docker stop web
+```
+Flask==3.0.0
 ```
 
-Environment variables and command overrides:
-
-```bash
-# Print env inside container
-docker run --rm -e GREETING=Hi alpine:3.19 sh -c 'echo "$GREETING from $(cat /etc/alpine-release)"'
-```
-
-Volumes and bind mounts:
-
-```bash
-# Named volume persists data between container restarts
-docker volume create mydata
-
-docker run --rm -d --name pg \
-  -e POSTGRES_PASSWORD=secret \
-  -v mydata:/var/lib/postgresql/data \
-  -p 5432:5432 postgres:16-alpine
-
-# Bind mount the current directory into /work
-docker run --rm -it -v "$PWD":/work -w /work alpine:3.19 ls -la
-```
-
-Clean up:
-
-```bash
-docker stop pg
-# Remove unused objects—use with care
-# Review what will be pruned before confirming
-docker system prune
-```
-
----
-
-## Beginner: Images and the Dockerfile
-
-A Dockerfile describes how to build an image. Here’s a minimal Python example:
+**4. Create a Dockerfile** (`Dockerfile`):
 
 ```dockerfile
-# Dockerfile
-FROM python:3.12-slim
+# Start from a Python base image
+FROM python:3.11-slim
+
+# Set working directory
 WORKDIR /app
-COPY requirements.txt ./
+
+# Copy requirements and install dependencies
+COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
-COPY . .
-EXPOSE 8000
-# Run a simple HTTP server
-CMD ["python", "-m", "http.server", "8000"]
+
+# Copy application code
+COPY app.py .
+
+# Expose the port
+EXPOSE 5000
+
+# Run the application
+CMD ["python", "app.py"]
 ```
 
-### Where Base Images Come From
-
-The `FROM` instruction specifies a base image to start from. Base images are pre-built images that provide the foundation:
-
-- **Official Images**: Maintained by Docker and the community on Docker Hub (e.g., `ubuntu`, `alpine`, `python`, `nginx`)
-- **Distribution Images**: Built by Linux distributions (Ubuntu, Alpine Linux, CentOS, etc.)
-- **Language Runtimes**: Built by language maintainers (Python Software Foundation for `python` images)
-- **Custom Base Images**: You can build your own minimal base images using `FROM scratch` or by extending existing ones
-
-**Who builds them?**
-- **Docker Official Images**: Built and maintained by Docker Inc. and contributors
-- **Docker Hub Community**: Anyone can publish images, but official ones are verified
-- **Organizations**: Companies like Red Hat, Canonical, or cloud providers (AWS, Google) build and maintain their own base images
-- **You**: Can create custom base images for your organization using Dockerfiles
-
-To build a custom base image, start with `FROM scratch` (empty) or a minimal distro, then add only what you need:
-
-```dockerfile
-FROM scratch
-ADD my-minimal-rootfs.tar.gz /
-CMD ["/bin/sh"]
-```
-
-Most users start from existing base images rather than building from scratch, as they're optimized and secure.
-
-### Building a Custom Base Image
-
-For specialized needs, you can create your own base image. Here are two approaches:
-
-**Option 1: From Scratch (Minimal)**
-```dockerfile
-# Start from nothing
-FROM scratch
-
-# Add a minimal root filesystem (you need to create this)
-ADD rootfs.tar.gz /
-
-# Set up basic environment
-ENV PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-CMD ["/bin/sh"]
-```
-
-**Option 2: Extend an Existing Image**
-```dockerfile
-# Start from a minimal base
-FROM alpine:latest
-
-# Install only what you need for your org's standard setup
-RUN apk add --no-cache \
-    ca-certificates \
-    curl \
-    && rm -rf /var/cache/apk/*
-
-# Add your organization's standard configs
-COPY org-configs/ /etc/org/
-
-# Set default user and working dir
-USER appuser
-WORKDIR /app
-
-# Default command
-CMD ["/bin/sh"]
-```
-
-**Steps to Build and Use:**
-```bash
-# 1. Create your Dockerfile
-# 2. Build the base image
-docker build -t myorg/base:v1.0 .
-
-# 3. Push to registry (optional)
-docker tag myorg/base:v1.0 myregistry.com/myorg/base:v1.0
-docker push myregistry.com/myorg/base:v1.0
-
-# 4. Use in other Dockerfiles
-FROM myregistry.com/myorg/base:v1.0
-# ... rest of your app
-```
-
-**When to Build Custom Base Images:**
-- Organization-wide standards (security policies, monitoring agents)
-- Specialized runtime requirements
-- Size optimization for specific workloads
-- Compliance requirements
-
-Create a simple `requirements.txt` (can be empty for this demo). Build and run:
+**5. Build the image**:
 
 ```bash
-# Build the image with a tag
-docker build -t my-python-app:dev .
-
-# Run it and map the port
-docker run --rm -d -p 8000:8000 --name py my-python-app:dev
-
-# Verify
-curl -I http://localhost:8000
-
-# Tear down
-docker stop py
+docker build -t my-first-app .
 ```
 
-Don’t forget a `.dockerignore` to keep images small:
+**What happened?**
+- `docker build` = Build an image
+- `-t my-first-app` = Tag (name) the image
+- `.` = Use current directory (where Dockerfile is)
 
+**6. Run your container**:
+
+```bash
+docker run -d -p 5000:5000 --name myapp my-first-app
 ```
-# .dockerignore
-__pycache__/
-*.pyc
-*.pyo
-*.pytest_cache/
-.git/
-.env
-node_modules/
+
+**7. Test it**:
+
+Open your browser: [http://localhost:5000](http://localhost:5000)
+
+**You built and ran your own Docker application!** 🎉🎉🎉
+
+**8. View logs**:
+
+```bash
+docker logs myapp
+```
+
+**9. Stop and remove**:
+
+```bash
+docker stop myapp
+docker rm myapp
 ```
 
 ---
 
-## Intermediate: Docker Compose (Multi‑Container)
+## Step 4: Share Your Image (Optional)
 
-Compose lets you define multi‑container apps. Save this as `compose.yaml`:
+Want to share your image with others or run it on another machine?
+
+### Create a Docker Hub Account
+
+1. Visit: [https://hub.docker.com](https://hub.docker.com)
+2. Sign up for a free account
+3. Remember your username
+
+### Login to Docker Hub
+
+```bash
+docker login
+```
+
+Enter your Docker Hub username and password.
+
+### Tag and Push Your Image
+
+```bash
+# Tag your image (replace YOUR_USERNAME)
+docker tag my-first-app YOUR_USERNAME/my-first-app:1.0
+
+# Push to Docker Hub
+docker push YOUR_USERNAME/my-first-app:1.0
+```
+
+**Your image is now on Docker Hub!** Anyone can now pull and run it:
+
+```bash
+docker pull YOUR_USERNAME/my-first-app:1.0
+docker run -d -p 5000:5000 YOUR_USERNAME/my-first-app:1.0
+```
+
+---
+
+## Step 5: Multi-Container Application with Docker Compose (3 minutes)
+
+Real applications often need multiple containers (web server, database, cache, etc.). **Docker Compose** makes this easy.
+
+### Create a WordPress Site with MySQL
+
+**1. Create a new directory**:
+
+```bash
+mkdir my-wordpress
+cd my-wordpress
+```
+
+**2. Create a `docker-compose.yml` file**:
 
 ```yaml
+version: '3.9'
+
 services:
-  web:
-    image: nginx:alpine
+  # MySQL database
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: secret
+      MYSQL_DATABASE: wordpress
+      MYSQL_USER: wpuser
+      MYSQL_PASSWORD: wppass
+    volumes:
+      - db_data:/var/lib/mysql
+    restart: always
+
+  # WordPress
+  wordpress:
+    image: wordpress:latest
     ports:
       - "8080:80"
-  redis:
-    image: redis:7-alpine
+    environment:
+      WORDPRESS_DB_HOST: db
+      WORDPRESS_DB_USER: wpuser
+      WORDPRESS_DB_PASSWORD: wppass
+      WORDPRESS_DB_NAME: wordpress
+    depends_on:
+      - db
+    restart: always
+
+volumes:
+  db_data:
 ```
 
-Run the app:
+**3. Start the application**:
 
 ```bash
-# Up in the foreground (Ctrl+C to stop)
-docker compose up
-
-# Or run detached
 docker compose up -d
+```
 
-# View logs
-docker compose logs -f
+**What happened?**
+- Downloaded WordPress and MySQL images
+- Created a network for them to communicate
+- Created a volume to persist database data
+- Started both containers
 
-# Stop and remove containers, networks, etc.
+**4. Open WordPress**:
+
+Visit: [http://localhost:8080](http://localhost:8080)
+
+**You have a full WordPress site running!** 🚀
+
+**5. View running containers**:
+
+```bash
+docker compose ps
+```
+
+**6. View logs**:
+
+```bash
+# All services
+docker compose logs
+
+# Just WordPress
+docker compose logs wordpress
+```
+
+**7. Stop everything**:
+
+```bash
 docker compose down
 ```
 
-Networks are created automatically; `web` can reach `redis` by the service name `redis:6379`.
+**To remove everything including data**:
+
+```bash
+docker compose down -v
+```
 
 ---
 
-## Intermediate: Multi‑Stage Builds and Smaller Images
+## Essential Commands Cheat Sheet
 
-Multi‑stage builds let you compile in one image and ship only the runtime in another.
-
-```dockerfile
-# Dockerfile (Go example)
-FROM golang:1.22-alpine AS build
-WORKDIR /src
-COPY . .
-RUN go build -o app ./...
-
-FROM alpine:3.19
-WORKDIR /app
-COPY --from=build /src/app ./app
-# Non‑root user for safety
-RUN adduser -D appuser
-USER appuser
-ENTRYPOINT ["./app"]
-```
-
-Build and run:
+### Images
 
 ```bash
-docker build -t my-go-app:latest .
-docker run --rm my-go-app:latest --help
+docker pull IMAGE                # Download an image
+docker images                    # List images on your computer
+docker rmi IMAGE                 # Remove an image
+docker build -t NAME .           # Build image from Dockerfile
 ```
 
-Benefits: much smaller final images, fewer CVEs, faster pulls.
+### Containers
+
+```bash
+docker run IMAGE                 # Create and start a container
+docker run -d IMAGE              # Run in background (detached)
+docker run -it IMAGE bash        # Run interactively
+docker run -p 8080:80 IMAGE      # Map ports (host:container)
+docker run --name myname IMAGE   # Give container a name
+docker run --rm IMAGE            # Remove container when it stops
+
+docker ps                        # List running containers
+docker ps -a                     # List all containers (including stopped)
+docker stop CONTAINER            # Stop a container
+docker start CONTAINER           # Start a stopped container
+docker restart CONTAINER         # Restart a container
+docker rm CONTAINER              # Remove a container
+docker logs CONTAINER            # View container logs
+docker exec -it CONTAINER bash   # Run command in running container
+```
+
+### Docker Compose
+
+```bash
+docker compose up                # Start all services
+docker compose up -d             # Start in background
+docker compose ps                # List running services
+docker compose logs              # View logs
+docker compose stop              # Stop services
+docker compose down              # Stop and remove containers
+docker compose down -v           # Also remove volumes
+```
+
+### Cleanup
+
+```bash
+docker system prune              # Remove unused containers, networks, images
+docker system prune -a           # Remove ALL unused images
+docker container prune           # Remove stopped containers
+docker image prune               # Remove unused images
+docker volume prune              # Remove unused volumes
+```
 
 ---
 
-## Intermediate: Tagging, Pushing, and Pulling
+## Common Patterns
 
+### Run a Database for Development
+
+**PostgreSQL**:
 ```bash
-# Tag an image for Docker Hub (replace USERNAME)
-docker tag my-python-app:dev USERNAME/my-python-app:dev
+docker run -d \
+  --name dev-postgres \
+  -e POSTGRES_PASSWORD=dev123 \
+  -e POSTGRES_DB=myapp \
+  -p 5432:5432 \
+  postgres:15
 
-# Log in and push
-docker login
-docker push USERNAME/my-python-app:dev
-
-# Anywhere else, pull and run
-docker pull USERNAME/my-python-app:dev
-docker run --rm -p 8000:8000 USERNAME/my-python-app:dev
+# Connect with:
+# psql -h localhost -U postgres -d myapp
 ```
 
-For private registries (GHCR, ECR, ACR), use their login and tag formats.
+**MongoDB**:
+```bash
+docker run -d \
+  --name dev-mongo \
+  -e MONGO_INITDB_ROOT_USERNAME=admin \
+  -e MONGO_INITDB_ROOT_PASSWORD=secret \
+  -p 27017:27017 \
+  mongo:7
+
+# Connect with:
+# mongosh -u admin -p secret
+```
+
+**Redis**:
+```bash
+docker run -d \
+  --name dev-redis \
+  -p 6379:6379 \
+  redis:alpine
+
+# Connect with:
+# redis-cli
+```
+
+### Quick Testing Different Versions
+
+```bash
+# Test Python 3.11
+docker run --rm -it python:3.11 python --version
+
+# Test Node.js 20
+docker run --rm -it node:20 node --version
+
+# Test Go 1.21
+docker run --rm -it golang:1.21 go version
+```
+
+### Serve Static Website
+
+```bash
+# Put your HTML files in current directory
+docker run -d \
+  --name static-site \
+  -p 8080:80 \
+  -v $(pwd):/usr/share/nginx/html:ro \
+  nginx:alpine
+
+# Visit: http://localhost:8080
+```
 
 ---
 
-## Managing Images
+## Troubleshooting
 
-List and inspect images:
+### "Cannot connect to the Docker daemon"
 
+**Windows/Mac**: Ensure Docker Desktop is running (check system tray/menu bar)
+
+**Linux**:
 ```bash
-# List all local images
-docker image ls
-
-# Only dangling (untagged) layers
-docker image ls --filter dangling=true
-
-# Inspect metadata, size, layers, architecture, env, entrypoint
-docker image inspect <image>:<tag>
-
-# See how the image was built (layer commands)
-docker image history <image>:<tag>
+sudo systemctl start docker
 ```
 
-Find images by name, tag, or digest:
+### "Permission denied" (Linux only)
 
+Add your user to the docker group:
 ```bash
-# By tag
-docker pull nginx:alpine
-
-# Show digest (immutable reference)
-docker inspect nginx:alpine --format '{{index .RepoDigests 0}}'
+sudo usermod -aG docker $USER
+newgrp docker
 ```
 
-Remove and prune safely:
+### "Port is already in use"
 
+Use a different port:
 ```bash
-# Remove a specific image (fails if containers use it)
-docker image rm <image>:<tag>
-
-# Force remove (dangerous: also removes by digest); stop/remove dependent containers first
-docker image rm -f <image>:<tag>
-
-# Remove dangling images only
-docker image prune -f
-
-# Remove unused images older than 72h (keeps in-use images)
-docker image prune -f --filter "until=72h"
-
-# Broader cleanup: unused containers, networks, and images (confirm before using -a)
-docker system prune
-# Everything unused, including images without containers
-# WARNING: This will remove a lot. Review before running.
-docker system prune -a
+# Instead of -p 8080:80
+docker run -p 8081:80 nginx:alpine
 ```
 
-Move images between hosts (air-gapped, CI → prod):
+### Container Exits Immediately
 
+View logs to see why:
 ```bash
-# Save to a tarball and load elsewhere
-docker image save -o myimg.tar <image>:<tag>
-# On another machine
-# copy myimg.tar then
-#
-docker image load -i myimg.tar
+docker logs CONTAINER_NAME
 ```
 
-Quick size review and sorting:
+### Out of Disk Space
 
+Clean up unused resources:
 ```bash
-# Human table with sizes
-docker images --format 'table {{.Repository}}\t{{.Tag}}\t{{.ID}}\t{{.Size}}'
-
-# Largest images first (approximate; size strings vary)
-docker images --format '{{.Repository}}:{{.Tag}} {{.Size}}' | sort -h -k2,2
+docker system prune -a --volumes
 ```
 
-Retag and push under a new name (see also the Tagging section above):
+### Forgot Container Name
 
+List all containers:
 ```bash
-# Retag locally
-docker tag <image>:<oldtag> myrepo/<name>:<newtag>
-# Push
-docker push myrepo/<name>:<newtag>
-```
-
-Tip: Use explicit tags and clean up regularly to keep disk usage under control.
-
----
-
-## Which images are “running”? (containers using images)
-
-Images themselves don’t run—containers do. Here’s how to see running containers and the images they’re based on:
-
-```bash
-# Running containers
-docker ps
-
-# All containers (running and stopped)
 docker ps -a
-
-# Show name, image, and status in a tidy table
-docker ps --format 'table {{.Names}}\t{{.Image}}\t{{.Status}}'
 ```
-
-See which images are currently in use by running containers:
-
-```bash
-# Unique image list with counts of running containers using them
-docker ps --format '{{.Image}}' | sort | uniq -c
-```
-
-List containers created from a specific image (by name or ID):
-
-```bash
-# By image name:tag
-docker ps -a --filter ancestor=nginx:alpine
-
-# By image ID
-docker ps -a --filter ancestor=$(docker image inspect --format '{{.Id}}' nginx:alpine)
-```
-
-Map a container to the exact image digest it’s running:
-
-```bash
-# .Config.Image is the repo:tag; .Image is the immutable image ID/digest
-docker inspect -f '{{.Name}} -> {{.Config.Image}} (id: {{.Image}})' <container-name>
-```
-
-Note: You cannot remove an image that has dependent containers.
-
-```bash
-# This will fail if any container (even stopped) depends on the image
-docker rmi <image>:<tag>
-
-# Remove dependent containers first, then remove the image
-docker ps -a --filter ancestor=<image>:<tag>
-# docker rm <container(s)>
-# docker rmi <image>:<tag>
-```
-
----
-
-## Advanced: Security Hardening Essentials
-
-- Run as a non‑root user in the image (`USER` directive).
-- Make the filesystem read‑only if possible: `--read-only` and mount writable dirs explicitly.
-- Drop capabilities and block privilege escalation:
-
-  ```bash
-  docker run --rm \
-    --cap-drop ALL --security-opt no-new-privileges \
-    --read-only -v app-tmp:/tmp \
-    myimage:tag
-  ```
-- Use minimal bases (alpine, distroless) and remove build tools from final image (multi‑stage).
-- Don’t bake secrets into images. Use env vars, Docker secrets, or external secret stores.
-- Scan images for vulnerabilities (e.g., `docker scout quickview` or third‑party tools like Trivy).
-- Keep host and engine patched; prefer rootless Docker where applicable.
-
----
-
-## Advanced: Resource Limits and Scheduling
-
-```bash
-# Limit memory and CPU
-docker run --rm --memory=512m --cpus=1.0 myimage:tag
-
-# Control restarts (useful in Compose)
-docker run --restart=on-failure:3 myimage:tag
-```
-
-Compose example:
-
-```yaml
-services:
-  api:
-    image: myorg/api:1.0
-    deploy:
-      resources:
-        limits:
-          cpus: "1"
-          memory: 512M
-```
-
-Note: `deploy` resources are fully honored by Swarm/K8s; for plain Compose on Docker Desktop, use `mem_limit`/`cpus` or run flags.
-
----
-
-## Observability and Debugging
-
-- Logs: `docker logs -f <name>`
-- Shell into a container: `docker exec -it <name> sh` (or `bash` if available)
-- Inspect everything: `docker inspect <name-or-id>`
-- Stats: `docker stats`
-- Events: `docker events`
-- Port mappings: `docker port <name>`
-
-Common issues:
-
-- Container exits immediately: the main process ended. Use a long‑running command or correct `CMD/ENTRYPOINT`.
-- Port not reachable: check `-p host:container`, firewall, and that app binds to `0.0.0.0`.
-- Permission denied on mounts: check user IDs, SELinux/AppArmor settings, and mount options.
-
-Cleanup helpers:
-
-```bash
-# Stop and remove all containers (careful!)
-docker stop $(docker ps -q)
-docker rm $(docker ps -aq)
-
-# Remove dangling images and unused data
-docker image prune -f
-docker system prune -a
-```
-
----
-
-## Advanced: Topics to Level Up
-
-These practical additions are often used in real projects and pipelines.
-
-### Networking modes and user-defined bridges
-
-- Modes: `none`, `bridge` (default), `host` (Linux), `macvlan` (advanced/L2).
-- Prefer user‑defined bridges for built‑in DNS and isolation:
-
-```bash
-# Create an isolated network and attach containers
-docker network create app-net
-docker run -d --name api --network app-net myorg/api:1.0
-docker run -d --name web --network app-net -p 8080:80 myorg/web:1.0
-
-# Containers resolve each other by name (api:port)
-docker exec web getent hosts api
-```
-
-### Compose profiles (dev/prod variants)
-
-Enable or disable services by profile without changing files:
-
-```yaml
-services:
-  web:
-    image: myorg/web:1.0
-    profiles: ["dev"]
-  redis:
-    image: redis:7-alpine
-    profiles: ["prod"]
-```
-
-```bash
-# Start only dev services
-docker compose --profile dev up -d
-
-# Start only prod services
-docker compose --profile prod up -d
-```
-
-### Rootless mode and user namespaces
-
-- Reduce daemon attack surface by running Docker rootless where possible.
-- Even without rootless, prefer non‑root USER in images (see Security section).
-
-References: Docker docs on Rootless Mode and User Namespaces.
-
-### Secrets management (don’t use env vars in prod)
-
-- Avoid putting secrets in images or plain env vars.
-- Use orchestrator secrets (Docker Swarm/Kubernetes) or external vaults.
-
-Compose example (Swarm‑style secrets):
-
-```yaml
-services:
-  app:
-    image: myorg/app:1.0
-    secrets:
-      - db_password
-secrets:
-  db_password:
-    file: ./secrets/db_password.txt
-```
-
-### CI: Image scanning in the pipeline
-
-Integrate scanners to catch known CVEs before shipping:
-
-```yaml
-# GitHub Actions example (Trivy)
-- name: Scan image with Trivy
-  uses: aquasecurity/trivy-action@master
-  with:
-    image-ref: myorg/app:1.0
-    format: 'sarif'
-    output: 'trivy-results.sarif'
-```
-
-### Buildx/BuildKit and multi‑arch builds
-
-- Use Buildx for multi‑platform images and better caching.
-- Example (GitHub Actions): setup Buildx and `docker/build-push-action`.
-- Local buildx quick start:
-
-```bash
-docker buildx create --use --name mybuilder
-docker buildx build --platform linux/amd64,linux/arm64 -t myorg/app:1.0 --push .
-```
-
-Tip: Consider BuildKit cache mounts to speed up dependency installs.
-
-### Registries beyond Docker Hub
-
-- Private/public registries: GHCR, ECR, GCR, ACR, JFrog Artifactory, self‑hosted registry.
-- Authenticate and tag with the registry’s hostname (e.g., `ghcr.io/owner/image:tag`, `myregistry.jfrog.io/myrepo/image:tag`).
-
-For JFrog Artifactory:
-- Set up a Docker repository in Artifactory.
-- Login: `docker login myregistry.jfrog.io` (use your Artifactory credentials or API key).
-- Tag: `docker tag myimage:latest myregistry.jfrog.io/myrepo/myimage:v1.0`
-- Push: `docker push myregistry.jfrog.io/myrepo/myimage:v1.0`
-- Pull: `docker pull myregistry.jfrog.io/myrepo/myimage:v1.0`
-
-JFrog provides advanced features like artifact management, security scanning, and integration with CI/CD pipelines.
-
-## Best Practices – Do’s and Don’ts
-
-Do:
-
-- Use small, well‑maintained base images; pin versions (e.g., `python:3.12-slim`).
-- Add a `.dockerignore` to reduce context size and improve cache hits.
-- Combine related commands in single `RUN` steps to reduce layers.
-- Switch to non‑root users; set correct ownership/permissions.
-- Leverage multi‑stage builds to ship only runtime dependencies.
-- Explicitly expose/listen on ports; make health checks part of your design.
-- Tag images meaningfully (`1.4.2`, `2025-11-04`, `commit-sha`).
-
-Don’t:
-
-- Don’t bake secrets, SSH keys, or tokens into images or layers.
-- Don’t `apt-get update` in one layer and install in another—do it in a single `RUN`:
-
-  ```dockerfile
-  RUN apt-get update && apt-get install -y --no-install-recommends curl \
-      && rm -rf /var/lib/apt/lists/*
-  ```
-- Don’t run everything as root or grant unnecessary capabilities.
-- Don’t copy the entire repo when only a subdir is needed (use `.dockerignore` and targeted `COPY`).
-- Don’t rely on `latest` tags in production.
-
----
-
-## Cheat Sheet
-
-```bash
-# Images
-docker images
-docker pull <image>:<tag>
-docker build -t <name>:<tag> .
-docker tag <src>:<tag> <repo>/<name>:<tag>
-docker push <repo>/<name>:<tag>
-docker image inspect <image>:<tag>
-docker image history <image>:<tag>
-docker image prune -f
-
-# Containers
-docker run --rm -d --name <n> -p 8080:80 <image>:<tag>
-docker ps -a
-docker logs -f <n>
-docker exec -it <n> sh
-docker stop <n> && docker rm <n>
-
-# Volumes & Networks
-docker volume ls && docker network ls
-
-# Compose
-docker compose up -d
-docker compose logs -f
-docker compose down
-
-# Buildx (multi-arch)
-docker buildx create --use --name mybuilder
-docker buildx build --platform linux/amd64,linux/arm64 -t <repo>/<name>:tag --push .
-```
-
----
-
-## Glossary
-
-- Image: Template for containers.
-- Container: Running instance of an image.
-- Layer: A file system delta; images are composed of layers.
-- Registry: Storage for images.
-- Volume: Persistent data managed by Docker.
-- Bind mount: Maps a host path into a container path.
-- Compose: Declarative tool for multi‑container apps.
 
 ---
 
 ## Next Steps
 
-- Convert a small app you maintain into a container using a Dockerfile.
-- Add Compose to wire it with a cache/DB.
-- Harden the image (non‑root user, minimal base, multi‑stage).
-- Set up CI to build, scan, and push tags on each commit.
+Congratulations on completing the quickstart! 🎉
+
+**You now know how to**:
+- ✅ Run containers
+- ✅ Build images
+- ✅ Push to Docker Hub
+- ✅ Use Docker Compose
+- ✅ Run common development services
+
+### Learn More
+
+**For comprehensive learning**, work through the full tutorial:
+
+1. **Foundations** (Start here if new):
+   - [Chapter 1: Why Docker?](./chapter01_why_and_how.md)
+   - [Chapter 2: Setup](./chapter02_setup.md)
+   - [Chapter 3: CLI Essentials](./chapter03_cli_essentials.md)
+
+2. **Building Images**:
+   - [Chapter 4: Dockerfile Basics](./chapter04_dockerfile_basics.md)
+   - [Chapter 5: Advanced Dockerfile](./chapter05_dockerfile_advanced.md)
+   - [Chapter 6: Image Management](./chapter06_image_management.md)
+
+3. **Advanced Topics**:
+   - [Chapter 8: Networking](./chapter08_networking.md)
+   - [Chapter 9: Volumes and Data](./chapter09_volumes_and_mounts.md)
+   - [Chapter 11: Docker Compose](./chapter11_compose_intro.md)
+
+4. **Production**:
+   - [Chapter 16: CI/CD](./chapter16_cicd.md)
+   - [Chapter 17: Security](./chapter17_security.md)
+   - [Chapter 21: JFrog Artifactory](./chapter21_jfrog_artifactory.md)
+
+### Practice Projects
+
+Try building these applications:
+
+1. **Personal blog** (WordPress + MySQL)
+2. **Todo app** (Node.js + MongoDB)
+3. **API + Database** (Python Flask + PostgreSQL)
+4. **Static site generator** (Hugo/Jekyll + nginx)
+
+### Recommended Learning Path
+
+```
+Week 1: Chapters 1-6  (Foundations and building images)
+Week 2: Chapters 7-10 (Containers, networking, data)
+Week 3: Chapters 11-14 (Compose and orchestration)
+Week 4: Chapters 15-21 (Production, security, enterprise)
+```
+
+---
+
+## Helpful Resources
+
+- **Official Documentation**: [docs.docker.com](https://docs.docker.com)
+- **Docker Hub**: [hub.docker.com](https://hub.docker.com) - Find images
+- **Play with Docker**: [labs.play-with-docker.com](https://labs.play-with-docker.com) - Practice online
+- **Community**: [forums.docker.com](https://forums.docker.com)
+
+---
+
+## Quick Reference Card
+
+Save this for easy reference:
+
+| Task | Command |
+|------|---------|
+| Run container | `docker run IMAGE` |
+| Run interactively | `docker run -it IMAGE bash` |
+| Run in background | `docker run -d IMAGE` |
+| Map port | `docker run -p 8080:80 IMAGE` |
+| Name container | `docker run --name myapp IMAGE` |
+| List running | `docker ps` |
+| List all | `docker ps -a` |
+| Stop container | `docker stop CONTAINER` |
+| Remove container | `docker rm CONTAINER` |
+| View logs | `docker logs CONTAINER` |
+| Execute command | `docker exec -it CONTAINER bash` |
+| Build image | `docker build -t NAME .` |
+| Push image | `docker push NAME` |
+| Start compose | `docker compose up -d` |
+| Stop compose | `docker compose down` |
+| Clean up | `docker system prune` |
+
+---
+
+**Happy Dockering!** 🐳
+
+For questions or issues, refer to the [full tutorial](./README.md) or visit the [Docker forums](https://forums.docker.com).
