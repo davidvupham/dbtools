@@ -442,6 +442,7 @@ Containers provide isolation but share the kernel.
 - Keep images updated
 - Scan for vulnerabilities
 - Use Docker's security features (see Chapter 17)
+ - Use Docker's security features (see Chapter 17)
 
 **For stronger isolation**: Use VMs or container-optimized security tools like gVisor.
 
@@ -556,6 +557,19 @@ docker rmi IMAGE
 # Clean up
 docker system prune  # Remove unused data
 ```
+
+## Where to Go Next
+
+Now that you know why Docker matters and how it works at a high level, jump into the focused chapters:
+
+- Data persistence → [Chapter 9: Volumes and Mounts](./chapter09_volumes_and_mounts.md) and [Chapter 10: Advanced Storage](./chapter10_advanced_storage.md)
+- Networking → [Chapter 8: Docker Networking](./chapter08_networking.md)
+- Multi‑container apps → [Chapter 11: Docker Compose Intro](./chapter11_compose_intro.md) and [Chapter 12: Advanced Compose](./chapter12_compose_advanced.md)
+- Security → [Chapter 17: Security Hardening](./chapter17_security.md)
+- Performance and advanced builds → [Chapter 5](./chapter05_dockerfile_advanced.md) and [Chapter 20: Beyond the Basics](./chapter20_beyond_the_basics.md)
+- Maintenance and housekeeping → [Chapter 6: Managing Images](./chapter06_image_management.md) and [Chapter 7: Container Management](./chapter07_container_management.md)
+- Troubleshooting → [Chapter 18: Troubleshooting & Debugging](./chapter18_troubleshooting.md)
+- CI/CD → [Chapter 16: CI/CD for Containers](./chapter16_cicd.md)
 
 ---
 
