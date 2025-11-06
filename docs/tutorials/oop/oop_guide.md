@@ -3133,6 +3133,16 @@ Optional: Add tests with `pytest` for the above.
 
 Let's look at how OOP concepts are applied in our actual project code, with references to the real implementations.
 
+---
+
+## Appendices
+
+For deeper guidance beyond this guide:
+
+- Appendix A: [OOP Anti‑Patterns and Refactoring](./appendix_oop_antipatterns.md)
+- Appendix B: [Pattern Picker (Problem → Approaches)](./appendix_oop_pattern_picker.md)
+- Appendix C: [Packaging & Public API Design](./appendix_oop_packaging_public_api.md)
+
 ### Database Connection Hierarchy
 
 From `gds_snowflake/gds_snowflake/base.py`:

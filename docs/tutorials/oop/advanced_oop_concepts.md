@@ -38,6 +38,178 @@ If you're new to OOP, **start with [oop_guide.md](./oop_guide.md) first!** This 
 
 This document assumes you’re comfortable with core OOP in Python (classes/objects, encapsulation, inheritance, polymorphism), dataclasses, basic testing, and error handling. If you’re new to these, start with `oop_guide.md` and come back here for deep dives.
 
+---
+
+## Advanced OOP at a Glance (Diagrams • Dos & Don’ts • Pros/Cons)
+
+Use this section as a quick decision aid before choosing an advanced technique.
+
+### Async/Await in Classes
+
+Diagram (resource flow):
+
+```
+Caller ──await──▶ Service.method() ──await──▶ I/O bound API/DB
+                      ▲                          │
+                      │ uses async ctx mgrs      ▼
+                 async __aenter__/__aexit__  pooled sessions
+```
+
+Dos:
+- Prefer explicit async methods over “awaitable properties”.
+- Use async context managers for lifecycle (sessions, pools).
+- Isolate I/O from business logic; keep methods single‑purpose.
+
+Don’ts:
+- Don’t mix blocking I/O inside async methods.
+- Don’t expose partially initialized async state.
+- Don’t hide awaits in descriptors unless there’s clear payoff.
+
+Pros/Cons:
+- Pros: Concurrency for I/O, clearer lifecycles, better throughput.
+- Cons: Steeper mental model, tricky error propagation, testing complexity.
+
+### Multiple Inheritance (MI) and Mixins
+
+Diagram (diamond):
+
+```
+     A
+    / \
+   B   C
+    \ /
+     D    MRO: D → B → C → A
+```
+
+Dos:
+- Design true mixins as small, behavior‑only, no state (or trivial state).
+- Use cooperative `super()` across the hierarchy.
+- Prefer composition if relationships aren’t “is‑a”.
+
+Don’ts:
+- Don’t create wide, stateful mixins that conflict.
+- Don’t manually call parent `__init__` out of MRO order.
+- Don’t use MI to “share code” when a helper/composition suffices.
+
+Pros/Cons:
+- Pros: Reusable behaviors, expressive hierarchies, DRY for cross‑cutting concerns.
+- Cons: MRO surprises, fragile initialization, debugging complexity.
+
+### Monkey Patching
+
+Diagram (temporary override):
+
+```
+obj.method ──▶ original
+   │
+   └─ with Patch(): set to replacement ──▶ restored on exit
+```
+
+Dos:
+- Use for tests and hotfixes guarded by context managers.
+- Document scope and restore originals reliably.
+- Prefer dependency injection over patching in production.
+
+Don’ts:
+- Don’t patch across module boundaries without tests.
+- Don’t rely on patching as a design strategy.
+- Don’t forget to restore, especially in parallel tests.
+
+Pros/Cons:
+- Pros: Powerful for tests, quick isolation, simulates failures.
+- Cons: Brittle, implicit coupling, hard to reason in large codebases.
+
+### Descriptors
+
+Diagram (access flow):
+
+```
+instance.attr ──▶ descriptor.__get__/__set__/__delete__ ──▶ instance.__dict__
+```
+
+Dos:
+- Use to centralize validation, lazy loading, caching.
+- Name via `__set_name__` and store in `instance.__dict__` under private key.
+- Keep behavior predictable; document side effects.
+
+Don’ts:
+- Don’t hide network calls or heavy I/O in `__get__` unexpectedly.
+- Don’t mix descriptor storage with unrelated attributes.
+- Don’t overuse where a property suffices.
+
+Pros/Cons:
+- Pros: Reusable attribute semantics, clean declarative APIs.
+- Cons: Indirection cost, surprises for readers, tricky debugging.
+
+### Metaclasses
+
+Diagram (creation pipeline):
+
+```
+metaclass.__new__/__init__ ──▶ class object ──▶ instance
+```
+
+Dos:
+- Reach for metaclasses when class creation must be controlled (registries, APIs).
+- Keep logic minimal; prefer class decorators if possible.
+- Clearly document the contract injected into classes.
+
+Don’ts:
+- Don’t use metaclasses to perform heavy runtime work.
+- Don’t combine multiple metaclasses without a clear unifying meta.
+- Don’t mutate unrelated globals during class creation.
+
+Pros/Cons:
+- Pros: Enforce invariants, auto‑registration, generate boilerplate.
+- Cons: Cognitive overhead, composition conflicts, harder tooling.
+
+### Serialization (Protocols/JSON/Binary)
+
+Diagram (object graph):
+
+```
+object ──to_dict/json──▶ bytes/storage ──▶ from_dict/json──▶ object
+```
+
+Dos:
+- Define stable schemas; separate model from wire format.
+- Handle custom types (datetime, Decimal) explicitly.
+- Version payloads; validate inputs and fail closed.
+
+Don’ts:
+- Don’t rely on `__dict__` dumping without filtering.
+- Don’t break compatibility unintentionally.
+- Don’t leak internal invariants in public payloads.
+
+Pros/Cons:
+- Pros: Interop, persistence, reproducibility.
+- Cons: Compatibility burden, security risks if unchecked, performance tradeoffs.
+
+### Memory and Weak References
+
+Diagram (lifecycle):
+
+```
+strong refs ── keep alive
+weak refs  ── allow GC ▶ cleanup callbacks
+```
+
+Dos:
+- Use `WeakValueDictionary`/`WeakSet` to avoid leaks in caches/registries.
+- Provide explicit close/cleanup for resource owners.
+- Profile allocations; document ownership semantics.
+
+Don’ts:
+- Don’t store ephemeral objects as weak keys/values you still need.
+- Don’t assume weakrefs are portable to immutables (e.g., ints/strs aren’t weakref‑able).
+- Don’t replace clear lifecycles with weakrefs alone.
+
+Pros/Cons:
+- Pros: Leak prevention, lower memory pressure, safer caches.
+- Cons: Non‑deterministic finalization, requires careful design to avoid surprises.
+
+---
+
 ## Async/Await with Classes
 
 Asynchronous programming allows your code to handle multiple operations concurrently without blocking. When combined with OOP, it enables building responsive, scalable systems.
