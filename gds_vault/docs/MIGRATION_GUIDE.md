@@ -476,6 +476,6 @@ from gds_vault import VaultClient
 
 ---
 
-**Migration Status**: ✅ Backward Compatible  
-**Recommended Timeline**: Adopt new features incrementally as convenient  
+**Migration Status**: ✅ Backward Compatible
+**Recommended Timeline**: Adopt new features incrementally as convenient
 **Risk Level**: 🟢 Low (backward compatible)

@@ -5,7 +5,7 @@
 When connecting to HashiCorp Vault servers with self-signed certificates or custom Certificate Authorities (CAs), you may encounter SSL certificate verification errors like:
 
 ```
-requests.exceptions.SSLError: [SSL: CERTIFICATE_VERIFY_FAILED] 
+requests.exceptions.SSLError: [SSL: CERTIFICATE_VERIFY_FAILED]
 certificate verify failed: unable to get local issuer certificate
 ```
 
@@ -160,10 +160,10 @@ def get_production_client():
     # Use environment variables in production
     vault_addr = os.getenv("VAULT_ADDR")
     cert_path = os.getenv("VAULT_SSL_CERT")
-    
+
     if not vault_addr or not cert_path:
         raise ValueError("VAULT_ADDR and VAULT_SSL_CERT required")
-    
+
     return VaultClient(
         vault_addr=vault_addr,
         ssl_cert_path=cert_path,
@@ -241,7 +241,7 @@ def get_client_for_environment(env: str):
     config = ENVIRONMENTS.get(env)
     if not config:
         raise ValueError(f"Unknown environment: {env}")
-    
+
     return VaultClient(
         vault_addr=config['vault_addr'],
         ssl_cert_path=config['cert_path']
@@ -327,13 +327,13 @@ def test_ssl():
             vault_addr="https://vault.example.com",
             ssl_cert_path="/path/to/vault-ca.crt"
         )
-        
+
         # Test authentication
         client.authenticate()
         print("✅ SSL configuration successful!")
         print(f"✅ Connected to: {client.vault_addr}")
         return 0
-        
+
     except VaultError as e:
         print(f"❌ Failed: {e}")
         return 1
@@ -463,7 +463,7 @@ When certificates are renewed:
 | `VAULT_TOKEN` | Yes** | Direct token | `hvs.CAESIF...` |
 | `VAULT_SSL_CERT` | No | SSL certificate path | `/path/to/vault-ca.crt` |
 
-\* Required for AppRole authentication  
+\* Required for AppRole authentication
 \** Required for Token authentication (alternative to AppRole)
 
 ---
@@ -509,6 +509,6 @@ secret = client.get_secret('secret/data/myapp')
 
 ---
 
-**Version:** 0.2.0+ssl  
-**Last Updated:** October 7, 2025  
+**Version:** 0.2.0+ssl
+**Last Updated:** October 7, 2025
 **Status:** ✅ Production Ready

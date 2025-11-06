@@ -143,12 +143,12 @@ All are vehicles, but each implements the methods differently!
 # base.py
 class SecretProvider(ABC):
     """Defines what ALL secret providers must do."""
-    
+
     @abstractmethod
     def get_secret(self, path: str, **kwargs) -> dict[str, Any]:
         """Every secret provider MUST implement this."""
         pass
-    
+
     @abstractmethod
     def authenticate(self) -> bool:
         """Every secret provider MUST implement this."""
@@ -161,11 +161,11 @@ Then `VaultClient` inherits from `SecretProvider`, so it MUST implement these me
 # client.py
 class VaultClient(SecretProvider):
     """Concrete implementation of SecretProvider."""
-    
+
     def get_secret(self, path: str, **kwargs) -> dict[str, Any]:
         # Implementation for Vault
         ...
-    
+
     def authenticate(self) -> bool:
         # Implementation for Vault
         ...
@@ -313,17 +313,17 @@ class Person:
     def __init__(self, name):
         self._name = name  # Private attribute
         self._age = 0
-    
+
     @property
     def name(self):
         """Get name - looks like an attribute!"""
         return self._name
-    
+
     @property
     def age(self):
         """Get age."""
         return self._age
-    
+
     @age.setter
     def age(self, value):
         """Set age with validation."""
@@ -346,24 +346,24 @@ class VaultClient:
         self._vault_addr = vault_addr
         self._timeout = timeout
         self._token = None
-    
+
     @property
     def vault_addr(self) -> str:
         """Get Vault address (read-only)."""
         return self._vault_addr
-    
+
     @property
     def timeout(self) -> int:
         """Get timeout."""
         return self._timeout
-    
+
     @timeout.setter
     def timeout(self, value: int) -> None:
         """Set timeout with validation."""
         if value <= 0:
             raise ValueError("Timeout must be positive")
         self._timeout = value
-    
+
     @property
     def is_authenticated(self) -> bool:
         """Check if authenticated (computed property)."""
@@ -417,7 +417,7 @@ class VaultClient:
         """Called when entering 'with' block."""
         self.initialize()  # Setup
         return self
-    
+
     def __exit__(self, exc_type, exc_val, exc_tb):
         """Called when exiting 'with' block."""
         self.cleanup()  # Cleanup
@@ -475,10 +475,10 @@ enabling precise error handling and better debugging.
 class VaultError(Exception):
     """
     Base exception for all Vault-related errors.
-    
+
     This is the parent class for all custom exceptions in the package,
     allowing users to catch all package-specific errors with a single handler.
-    
+
     Example:
         try:
             client.get_secret("secret/data/myapp")
@@ -491,12 +491,12 @@ class VaultError(Exception):
 class VaultAuthError(VaultError):
     """
     Exception raised for authentication failures.
-    
+
     Raised when:
     - AppRole credentials are invalid
     - Token has expired or is invalid
     - Authentication endpoint is unreachable
-    
+
     Example:
         try:
             client.authenticate()
@@ -510,12 +510,12 @@ class VaultAuthError(VaultError):
 class VaultConnectionError(VaultError):
     """
     Exception raised for network/connection errors.
-    
+
     Raised when:
     - Vault server is unreachable
     - Network timeout occurs
     - DNS resolution fails
-    
+
     Example:
         try:
             client.get_secret("secret/data/myapp")
@@ -529,12 +529,12 @@ class VaultConnectionError(VaultError):
 class VaultSecretNotFoundError(VaultError):
     """
     Exception raised when a secret is not found.
-    
+
     Raised when:
     - Secret path does not exist
     - Secret has been deleted
     - Wrong secret path specified
-    
+
     Example:
         try:
             secret = client.get_secret("secret/data/nonexistent")
@@ -548,12 +548,12 @@ class VaultSecretNotFoundError(VaultError):
 class VaultPermissionError(VaultError):
     """
     Exception raised for permission/authorization errors.
-    
+
     Raised when:
     - Token lacks required permissions
     - Policy denies access to secret
     - Token has been revoked
-    
+
     Example:
         try:
             client.get_secret("secret/data/restricted")
@@ -567,12 +567,12 @@ class VaultPermissionError(VaultError):
 class VaultConfigurationError(VaultError):
     """
     Exception raised for configuration errors.
-    
+
     Raised when:
     - Required environment variables missing
     - Invalid Vault address format
     - Invalid configuration parameters
-    
+
     Example:
         try:
             client = VaultClient(vault_addr="invalid")
@@ -586,12 +586,12 @@ class VaultConfigurationError(VaultError):
 class VaultCacheError(VaultError):
     """
     Exception raised for cache-related errors.
-    
+
     Raised when:
     - Cache size exceeded
     - Invalid cache operation
     - Cache corruption detected
-    
+
     Example:
         try:
             cache.set("key", "value")
@@ -668,63 +668,63 @@ from typing import Any, Optional, Protocol
 class SecretProvider(ABC):
     """
     Abstract base class for secret providers.
-    
+
     This defines the interface that all secret provider implementations
     must follow, enabling polymorphic usage and easy testing with mocks.
-    
+
     Think of this as a blueprint that says:
     "Any class that provides secrets MUST have these methods."
-    
+
     Example:
         class MySecretProvider(SecretProvider):
             def get_secret(self, path: str, **kwargs) -> dict[str, Any]:
                 # Implementation
                 pass
-            
+
             def authenticate(self) -> bool:
                 # Implementation
                 pass
-            
+
             def is_authenticated(self) -> bool:
                 # Implementation
                 pass
     """
-    
+
     @abstractmethod
     def get_secret(self, path: str, **kwargs) -> dict[str, Any]:
         """
         Retrieve a secret from the provider.
-        
+
         Args:
             path: Path to the secret
             **kwargs: Additional provider-specific options
-        
+
         Returns:
             dict: Secret data as key-value pairs
-        
+
         Raises:
             Exception: If secret retrieval fails
         """
         pass
-    
+
     @abstractmethod
     def authenticate(self) -> bool:
         """
         Authenticate with the secret provider.
-        
+
         Returns:
             bool: True if authentication successful, False otherwise
-        
+
         Raises:
             Exception: If authentication fails
         """
         pass
-    
+
     @abstractmethod
     def is_authenticated(self) -> bool:
         """
         Check if currently authenticated with valid credentials.
-        
+
         Returns:
             bool: True if authenticated with valid credentials
         """
@@ -738,40 +738,40 @@ class SecretProvider(ABC):
 class AuthStrategy(ABC):
     """
     Abstract base class for authentication strategies.
-    
+
     This enables the Strategy pattern for different authentication methods
     (AppRole, Token, Kubernetes, etc.) without modifying the client code.
-    
+
     Why use this pattern?
     - VaultClient doesn't need to know HOW authentication works
     - Easy to add new authentication methods
     - Each strategy is independent and testable
-    
+
     Example:
         class AppRoleAuth(AuthStrategy):
             def __init__(self, role_id: str, secret_id: str):
                 self.role_id = role_id
                 self.secret_id = secret_id
-            
+
             def authenticate(self, vault_addr: str, timeout: int) -> tuple[str, float]:
                 # Implementation returns (token, expiry_time)
                 pass
     """
-    
+
     @abstractmethod
     def authenticate(self, vault_addr: str, timeout: int) -> tuple[str, float]:
         """
         Authenticate and return token with expiry.
-        
+
         Args:
             vault_addr: Vault server address
             timeout: Request timeout in seconds
-        
+
         Returns:
             tuple: (token, expiry_timestamp)
                 - token: Authentication token string
                 - expiry_timestamp: Unix timestamp when token expires
-        
+
         Raises:
             Exception: If authentication fails
         """
@@ -785,41 +785,41 @@ class AuthStrategy(ABC):
 class CacheProtocol(Protocol):
     """
     Protocol for cache implementations.
-    
+
     This uses Python's structural subtyping (Protocol) to define
     what methods a cache must implement without requiring inheritance.
-    
+
     Protocol vs ABC:
     - Protocol: "Duck typing" - if it has these methods, it's a cache
     - ABC: Explicit inheritance required
-    
+
     Example:
         class MyCache:  # No inheritance needed!
             def get(self, key: str) -> Optional[dict]:
                 ...
-            
+
             def set(self, key: str, value: dict) -> None:
                 ...
-            
+
             # As long as it has the right methods, it's a valid cache!
     """
-    
+
     def get(self, key: str) -> Optional[dict[str, Any]]:
         """Get cached value by key."""
         ...
-    
+
     def set(self, key: str, value: dict[str, Any]) -> None:
         """Set cached value for key."""
         ...
-    
+
     def clear(self) -> None:
         """Clear all cached values."""
         ...
-    
+
     def __len__(self) -> int:
         """Return number of cached items."""
         ...
-    
+
     def __contains__(self, key: str) -> bool:
         """Check if key is in cache."""
         ...
@@ -832,73 +832,73 @@ class CacheProtocol(Protocol):
 class ResourceManager(ABC):
     """
     Abstract base class for resource management.
-    
+
     Provides lifecycle management methods for resources that need
     initialization and cleanup (connections, file handles, etc.).
-    
+
     This enables the "with" statement (context manager protocol).
-    
+
     Example:
         class MyResource(ResourceManager):
             def initialize(self) -> None:
                 print("Setting up resource")
                 self.connection = create_connection()
-            
+
             def cleanup(self) -> None:
                 print("Cleaning up resource")
                 self.connection.close()
-        
+
         # Usage
         with MyResource() as resource:
             resource.do_work()
         # Cleanup happens automatically!
     """
-    
+
     @abstractmethod
     def initialize(self) -> None:
         """
         Initialize resources.
-        
+
         Called when entering a context manager or when explicitly called.
         Use this to set up connections, open files, etc.
         """
         pass
-    
+
     @abstractmethod
     def cleanup(self) -> None:
         """
         Clean up resources.
-        
+
         Called when exiting a context manager or when explicitly called.
         Use this to close connections, release locks, etc.
         """
         pass
-    
+
     def __enter__(self):
         """
         Context manager entry.
-        
+
         Called when using "with" statement:
             with VaultClient() as client:  # __enter__ called here
                 ...
         """
         self.initialize()
         return self
-    
+
     def __exit__(self, exc_type, exc_val, exc_tb):
         """
         Context manager exit.
-        
+
         Called when exiting "with" block:
             with VaultClient() as client:
                 ...
             # __exit__ called here (even if exception occurred!)
-        
+
         Args:
             exc_type: Exception type (if exception occurred)
             exc_val: Exception value
             exc_tb: Exception traceback
-        
+
         Returns:
             False: Don't suppress exceptions
         """
@@ -913,55 +913,55 @@ class ResourceManager(ABC):
 class Configurable(ABC):
     """
     Abstract base class for configurable components.
-    
+
     Provides a standard interface for components that can be
     configured via dictionaries or key-value pairs.
-    
+
     Example:
         class MyComponent(Configurable):
             def __init__(self):
                 self._config = {}
-            
+
             def get_config(self, key: str, default: Any = None) -> Any:
                 return self._config.get(key, default)
-            
+
             def set_config(self, key: str, value: Any) -> None:
                 self._config[key] = value
-            
+
             def get_all_config(self) -> dict[str, Any]:
                 return self._config.copy()
     """
-    
+
     @abstractmethod
     def get_config(self, key: str, default: Any = None) -> Any:
         """
         Get configuration value.
-        
+
         Args:
             key: Configuration key
             default: Default value if key not found
-        
+
         Returns:
             Configuration value or default
         """
         pass
-    
+
     @abstractmethod
     def set_config(self, key: str, value: Any) -> None:
         """
         Set configuration value.
-        
+
         Args:
             key: Configuration key
             value: Value to set
         """
         pass
-    
+
     @abstractmethod
     def get_all_config(self) -> dict[str, Any]:
         """
         Get all configuration values.
-        
+
         Returns:
             dict: All configuration key-value pairs
         """
@@ -974,43 +974,43 @@ class Configurable(ABC):
 class VaultClient(SecretProvider, ResourceManager, Configurable):
     """
     VaultClient implements THREE interfaces!
-    
+
     1. SecretProvider: Must implement get_secret(), authenticate(), is_authenticated()
     2. ResourceManager: Must implement initialize(), cleanup()
     3. Configurable: Must implement get_config(), set_config(), get_all_config()
     """
-    
+
     # SecretProvider methods
     def get_secret(self, path: str, **kwargs) -> dict[str, Any]:
         # Implementation
         ...
-    
+
     def authenticate(self) -> bool:
         # Implementation
         ...
-    
+
     def is_authenticated(self) -> bool:
         # Implementation
         ...
-    
+
     # ResourceManager methods
     def initialize(self) -> None:
         # Implementation
         ...
-    
+
     def cleanup(self) -> None:
         # Implementation
         ...
-    
+
     # Configurable methods
     def get_config(self, key: str, default: Any = None) -> Any:
         # Implementation
         ...
-    
+
     def set_config(self, key: str, value: Any) -> None:
         # Implementation
         ...
-    
+
     def get_all_config(self) -> dict[str, Any]:
         # Implementation
         ...
@@ -1063,83 +1063,83 @@ logger = logging.getLogger(__name__)
 class AppRoleAuth(AuthStrategy):
     """
     AppRole authentication strategy for HashiCorp Vault.
-    
+
     AppRole is designed for machine authentication, making it ideal for
     servers, applications, and automation workflows.
-    
+
     How AppRole works:
     1. Admin creates an AppRole with specific permissions
     2. App gets role_id (like username) and secret_id (like password)
     3. App uses these to authenticate and get a token
     4. Token is used for subsequent requests
-    
+
     Args:
         role_id: AppRole role_id (or None to use VAULT_ROLE_ID env var)
         secret_id: AppRole secret_id (or None to use VAULT_SECRET_ID env var)
-    
+
     Example:
         # Explicit credentials
         auth = AppRoleAuth(role_id="my-role-id", secret_id="my-secret-id")
         token, expiry = auth.authenticate("https://vault.example.com", timeout=10)
-        
+
         # From environment
         auth = AppRoleAuth()  # Reads VAULT_ROLE_ID and VAULT_SECRET_ID
         token, expiry = auth.authenticate("https://vault.example.com", timeout=10)
     """
-    
+
     def __init__(self, role_id: Optional[str] = None, secret_id: Optional[str] = None):
         """Initialize AppRole authentication."""
         # Try to get credentials from arguments or environment
         self.role_id = role_id or os.getenv("VAULT_ROLE_ID")
         self.secret_id = secret_id or os.getenv("VAULT_SECRET_ID")
-        
+
         # Validate credentials are provided
         if not self.role_id or not self.secret_id:
             raise VaultAuthError(
                 "AppRole credentials must be provided or set in "
                 "VAULT_ROLE_ID and VAULT_SECRET_ID environment variables"
             )
-    
+
     def authenticate(self, vault_addr: str, timeout: int) -> tuple[str, float]:
         """
         Authenticate with Vault using AppRole.
-        
+
         This method:
         1. Sends role_id and secret_id to Vault's AppRole endpoint
         2. Receives a token if credentials are valid
         3. Calculates when the token will expire
         4. Returns token and expiry timestamp
-        
+
         Args:
             vault_addr: Vault server address (e.g., "https://vault.example.com:8200")
             timeout: Request timeout in seconds
-        
+
         Returns:
             tuple: (token, expiry_timestamp)
                 - token: String token for subsequent requests
                 - expiry_timestamp: Unix timestamp when token expires
-        
+
         Raises:
             VaultAuthError: If authentication fails
         """
         logger.info("Authenticating with Vault using AppRole at %s", vault_addr)
-        
+
         # Construct the AppRole login URL
         login_url = f"{vault_addr}/v1/auth/approle/login"
-        
+
         # Prepare the login payload
         login_payload = {
             "role_id": self.role_id,
             "secret_id": self.secret_id
         }
-        
+
         try:
             # Send authentication request
             resp = requests.post(login_url, json=login_payload, timeout=timeout)
         except requests.RequestException as e:
             logger.error("Network error during AppRole authentication: %s", e)
             raise VaultAuthError(f"Failed to connect to Vault: {e}") from e
-        
+
         # Check if authentication succeeded
         if not resp.ok:
             logger.error(
@@ -1148,38 +1148,38 @@ class AppRoleAuth(AuthStrategy):
                 resp.text
             )
             raise VaultAuthError(f"Vault AppRole login failed: {resp.text}")
-        
+
         # Parse the response
         auth_data = resp.json()["auth"]
         token = auth_data["client_token"]
-        
+
         # Calculate token expiry with 5-minute early refresh buffer
         # Why buffer? Ensures token doesn't expire mid-operation
         lease_duration = auth_data.get("lease_duration", 3600)  # Default 1 hour
         expiry = time.time() + lease_duration - 300  # Subtract 5 minutes
-        
+
         logger.info(
             "Successfully authenticated with AppRole. Token valid for %ss",
             lease_duration
         )
         logger.debug("Token will expire at timestamp: %s", expiry)
-        
+
         return token, expiry
-    
+
     def __repr__(self) -> str:
         """
         Developer-friendly representation.
-        
+
         Used in debugger and for logging.
         Masks sensitive data!
         """
         role_id_masked = f"{self.role_id[:8]}..." if self.role_id else "None"
         return f"AppRoleAuth(role_id='{role_id_masked}')"
-    
+
     def __str__(self) -> str:
         """
         User-friendly representation.
-        
+
         Used in print() and str().
         """
         return "AppRole Authentication"
@@ -1192,54 +1192,54 @@ class AppRoleAuth(AuthStrategy):
 class TokenAuth(AuthStrategy):
     """
     Direct token authentication strategy.
-    
+
     Use this when you already have a Vault token (e.g., from environment
     or a previous authentication). The token is used directly without
     additional authentication.
-    
+
     When to use:
     - Development/testing with a long-lived token
     - Using token from another authentication method
     - CI/CD pipeline with pre-generated token
-    
+
     Args:
         token: Vault token
         ttl: Token time-to-live in seconds (default: 3600)
-    
+
     Example:
         auth = TokenAuth(token="hvs.CAESIF...")
         token, expiry = auth.authenticate("https://vault.example.com", timeout=10)
     """
-    
+
     def __init__(self, token: str, ttl: int = 3600):
         """Initialize token authentication."""
         if not token:
             raise VaultAuthError("Token must be provided")
         self.token = token
         self.ttl = ttl
-    
+
     def authenticate(self, vault_addr: str, timeout: int) -> tuple[str, float]:
         """
         Return the provided token with calculated expiry.
-        
+
         No actual authentication happens - just returns the token!
-        
+
         Args:
             vault_addr: Vault server address (not used)
             timeout: Request timeout (not used)
-        
+
         Returns:
             tuple: (token, expiry_timestamp)
         """
         logger.info("Using direct token authentication")
         expiry = time.time() + self.ttl - 300  # 5-minute early refresh
         return self.token, expiry
-    
+
     def __repr__(self) -> str:
         """Developer-friendly representation."""
         token_masked = f"{self.token[:8]}..." if self.token else "None"
         return f"TokenAuth(token='{token_masked}', ttl={self.ttl})"
-    
+
     def __str__(self) -> str:
         """User-friendly representation."""
         return "Token Authentication"
@@ -1252,35 +1252,35 @@ class TokenAuth(AuthStrategy):
 class EnvironmentAuth(AuthStrategy):
     """
     Environment-based authentication strategy.
-    
+
     Reads authentication details from environment variables:
     - Tries VAULT_TOKEN first
     - Falls back to AppRole (VAULT_ROLE_ID and VAULT_SECRET_ID)
-    
+
     This is the "smart" strategy that figures out what to use
     based on what's available in the environment.
-    
+
     Example:
         # Set environment
         os.environ["VAULT_TOKEN"] = "hvs.ABC123"
-        
+
         # Use environment auth
         auth = EnvironmentAuth()
         token, expiry = auth.authenticate("https://vault.example.com", timeout=10)
     """
-    
+
     def __init__(self):
         """Initialize environment authentication."""
         self._token_auth = None
         self._approle_auth = None
-        
+
         # Check for token first
         vault_token = os.getenv("VAULT_TOKEN")
         if vault_token:
             self._token_auth = TokenAuth(token=vault_token)
             logger.debug("Using VAULT_TOKEN for authentication")
             return
-        
+
         # Try AppRole
         role_id = os.getenv("VAULT_ROLE_ID")
         secret_id = os.getenv("VAULT_SECRET_ID")
@@ -1288,21 +1288,21 @@ class EnvironmentAuth(AuthStrategy):
             self._approle_auth = AppRoleAuth(role_id=role_id, secret_id=secret_id)
             logger.debug("Using AppRole for authentication")
             return
-        
+
         # No credentials found
         raise VaultAuthError(
             "No credentials found in environment. Set either "
             "VAULT_TOKEN or (VAULT_ROLE_ID and VAULT_SECRET_ID)"
         )
-    
+
     def authenticate(self, vault_addr: str, timeout: int) -> tuple[str, float]:
         """
         Authenticate using available environment credentials.
-        
+
         Args:
             vault_addr: Vault server address
             timeout: Request timeout
-        
+
         Returns:
             tuple: (token, expiry_timestamp)
         """
@@ -1312,7 +1312,7 @@ class EnvironmentAuth(AuthStrategy):
             return self._approle_auth.authenticate(vault_addr, timeout)
         else:
             raise VaultAuthError("No authentication strategy available")
-    
+
     def __repr__(self) -> str:
         """Developer-friendly representation."""
         if self._token_auth:
@@ -1320,7 +1320,7 @@ class EnvironmentAuth(AuthStrategy):
         elif self._approle_auth:
             return f"EnvironmentAuth(using AppRoleAuth)"
         return "EnvironmentAuth(no strategy)"
-    
+
     def __str__(self) -> str:
         """User-friendly representation."""
         return "Environment Authentication"
@@ -1368,4 +1368,3 @@ client = VaultClient()  # Uses AppRoleAuth with env vars
 3. **NoOpCache**: No caching (always fetch from Vault)
 
 Let me continue creating this comprehensive guide:
-

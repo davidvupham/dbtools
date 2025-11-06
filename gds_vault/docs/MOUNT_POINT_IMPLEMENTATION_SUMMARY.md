@@ -1,7 +1,7 @@
 # HashiCorp Vault Mount Point Support - Implementation Summary
 
-**Date:** October 7, 2025  
-**Feature:** Vault Mount Point Support  
+**Date:** October 7, 2025
+**Feature:** Vault Mount Point Support
 **Status:** ✅ Complete
 
 ## Overview

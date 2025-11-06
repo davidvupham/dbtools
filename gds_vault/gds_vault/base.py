@@ -93,11 +93,11 @@ class AuthStrategy(ABC):
 
     @abstractmethod
     def authenticate(
-        self, 
-        vault_addr: str, 
+        self,
+        vault_addr: str,
         timeout: int,
         verify_ssl: bool = True,
-        ssl_cert_path: Optional[str] = None
+        ssl_cert_path: Optional[str] = None,
     ) -> tuple[str, float]:
         """
         Authenticate and return token with expiry.
@@ -129,8 +129,8 @@ class CacheProtocol(Protocol):
         """Get cached value by key."""
         ...
 
-    def set(self, key: str, value: dict[str, Any]) -> None:
-        """Set cached value for key."""
+    def set(self, key: str, value: dict[str, Any], **kwargs) -> None:
+        """Set cached value for key. Extra kwargs are allowed for extensions."""
         ...
 
     def clear(self) -> None:

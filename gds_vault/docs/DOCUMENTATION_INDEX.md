@@ -1,3 +1,44 @@
+# gds_vault Documentation Index (Canonical)
+
+This is the canonical index for `gds_vault` documentation. Prefer the guides below for up-to-date information. Some older documents remain for historical context.
+
+## 📌 Start Here
+
+- Main usage and patterns: [`DEVELOPERS_GUIDE.md`](./DEVELOPERS_GUIDE.md)
+- Overview and quick start: [`README.md`](./README.md)
+- Beginner-friendly deep dive: [`BEGINNERS_GUIDE.md`](./BEGINNERS_GUIDE.md)
+- Migration notes: [`MIGRATION_GUIDE.md`](./MIGRATION_GUIDE.md)
+
+## 🔧 Features and How-To Guides
+
+- Rotation-aware caching: [`ROTATION_AWARE_TTL_GUIDE.md`](./ROTATION_AWARE_TTL_GUIDE.md)
+- Logging & retry: [`LOGGING_AND_RETRY_GUIDE.md`](./LOGGING_AND_RETRY_GUIDE.md)
+- Namespaces: [`VAULT_NAMESPACE_GUIDE.md`](./VAULT_NAMESPACE_GUIDE.md)
+- Mount point quick reference: [`MOUNT_POINT_QUICK_REF.md`](./MOUNT_POINT_QUICK_REF.md)
+
+## 🧪 Testing & Production Readiness
+
+- Test documentation: [`TEST_DOCUMENTATION.md`](./TEST_DOCUMENTATION.md)
+- Production readiness assessment: [`PRODUCTION_READINESS_ASSESSMENT_V2.md`](./PRODUCTION_READINESS_ASSESSMENT_V2.md)
+
+## 🗃️ Technical References (Supplementary)
+
+The following documents are technical background and implementation notes. They are accurate but not required for day-to-day usage:
+
+- Rotation-aware implementation: [`ROTATION_AWARE_IMPLEMENTATION_DOCS.md`](./ROTATION_AWARE_IMPLEMENTATION_DOCS.md)
+- Rotation changelog: [`CHANGELOG_ROTATION_AWARE.md`](./CHANGELOG_ROTATION_AWARE.md)
+- SSL configuration and references: [`SSL_CONFIGURATION.md`](./SSL_CONFIGURATION.md), [`SSL_IMPLEMENTATION_SUMMARY.md`](./SSL_IMPLEMENTATION_SUMMARY.md), [`SSL_QUICK_REFERENCE.md`](./SSL_QUICK_REFERENCE.md), [`VAULT_SSL_FIX_GUIDE.md`](./VAULT_SSL_FIX_GUIDE.md)
+- AppRole troubleshooting: [`VAULT_APPROLE_403_TROUBLESHOOTING.md`](./VAULT_APPROLE_403_TROUBLESHOOTING.md), [`VAULT_APPROLE_MOUNT_POINT_CLEANUP.md`](./VAULT_APPROLE_MOUNT_POINT_CLEANUP.md)
+
+## 🗄️ Archived Summaries (Superseded by Guides Above)
+
+These documents are retained for historical context but are superseded by the Developer’s Guide and this index:
+
+- [`GDS_VAULT_DOCUMENTATION_SUMMARY.md`](./archived/GDS_VAULT_DOCUMENTATION_SUMMARY.md)
+- [`GDS_VAULT_DOCUMENTATION_PROJECT_COMPLETE.md`](./archived/GDS_VAULT_DOCUMENTATION_PROJECT_COMPLETE.md)
+
+---
+
 # Rotation-Aware TTL Implementation - Complete Documentation Package
 
 This document serves as the central index for all documentation related to the rotation-aware TTL implementation in the gds-vault package.
@@ -7,8 +48,8 @@ This document serves as the central index for all documentation related to the r
 ### 1. User-Facing Documentation
 
 #### [`ROTATION_AWARE_TTL_GUIDE.md`](./ROTATION_AWARE_TTL_GUIDE.md)
-**Purpose**: Complete user guide for implementing and using rotation-aware caching  
-**Audience**: Developers implementing the feature in their applications  
+**Purpose**: Complete user guide for implementing and using rotation-aware caching
+**Audience**: Developers implementing the feature in their applications
 **Contents**:
 - Feature overview and benefits
 - Usage examples and patterns
@@ -20,8 +61,8 @@ This document serves as the central index for all documentation related to the r
 ### 2. Technical Implementation Documentation
 
 #### [`ROTATION_AWARE_IMPLEMENTATION_DOCS.md`](./ROTATION_AWARE_IMPLEMENTATION_DOCS.md)
-**Purpose**: Detailed technical documentation of the implementation  
-**Audience**: Maintainers, contributors, and advanced users  
+**Purpose**: Detailed technical documentation of the implementation
+**Audience**: Maintainers, contributors, and advanced users
 **Contents**:
 - Architecture changes and new modules
 - Implementation details and algorithms
@@ -33,8 +74,8 @@ This document serves as the central index for all documentation related to the r
 ### 3. Testing Documentation
 
 #### [`TEST_DOCUMENTATION.md`](./TEST_DOCUMENTATION.md)
-**Purpose**: Comprehensive test suite documentation  
-**Audience**: QA engineers, contributors, CI/CD maintainers  
+**Purpose**: Comprehensive test suite documentation
+**Audience**: QA engineers, contributors, CI/CD maintainers
 **Contents**:
 - Test architecture and structure
 - Detailed test specifications by category
@@ -46,8 +87,8 @@ This document serves as the central index for all documentation related to the r
 ### 4. Change Management
 
 #### [`CHANGELOG_ROTATION_AWARE.md`](./CHANGELOG_ROTATION_AWARE.md)
-**Purpose**: Complete changelog for the rotation-aware TTL implementation  
-**Audience**: All stakeholders tracking changes and versions  
+**Purpose**: Complete changelog for the rotation-aware TTL implementation
+**Audience**: All stakeholders tracking changes and versions
 **Contents**:
 - New features and enhancements
 - API changes and additions
@@ -122,7 +163,7 @@ This document serves as the central index for all documentation related to the r
 
 ### Test Categories
 - **Unit Tests**: Core rotation utility functions
-- **Integration Tests**: Cache classes with rotation functionality  
+- **Integration Tests**: Cache classes with rotation functionality
 - **Compatibility Tests**: Backward compatibility validation
 - **End-to-End Tests**: Full workflow from Vault to cache expiration
 - **Performance Tests**: Operation timing and scalability

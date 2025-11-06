@@ -191,7 +191,7 @@ client = VaultClient(cache=cache)
 
 ---
 
-## � Mount Point Support
+## Mount Point Support
 
 HashiCorp Vault allows mounting secrets engines at different paths. The `mount_point` parameter automatically prepends the mount point to all secret paths, making it easy to work with non-default mounts.
 
@@ -263,7 +263,7 @@ secret2 = client.get_secret('kv-v2/data/myapp')    # kv-v2/data/myapp (no duplic
 
 ---
 
-## �🔄 Retry Logic
+## 🔄 Retry Logic
 
 ### Default Retry Policy
 
@@ -485,7 +485,7 @@ with VaultClient() as client:
     secret1 = client.get_secret('secret/data/app1')
     secret2 = client.get_secret('secret/data/app2')
     secret3 = client.get_secret('secret/data/app3')
-    
+
     print(f"Fetched {len(client)} secrets (from cache)")
 ```
 
@@ -589,11 +589,11 @@ pytest tests/test_cache.py -v
 pytest tests/test_retry.py -v
 pytest tests/test_exceptions.py -v
 
-# Run with coverage
+# Run with coverage (HTML report)
 pytest tests/ --cov=gds_vault --cov-report=html
 ```
 
-Test coverage: **100%** for new implementation
+Note: See the coverage HTML report for exact, up-to-date coverage numbers.
 
 ---
 
@@ -698,7 +698,7 @@ with VaultClient(cache=TTLCache(default_ttl=300)) as client:
 
 - **Token Caching**: Reduces authentication requests by ~99%
 - **Secret Caching**: Reduces Vault requests by 50-90% (typical workloads)
-- **Connection Reuse**: Single session for multiple requests
+- **Connection Reuse**: Optional session reuse via `VaultTransport`
 - **Automatic Retry**: Handles transient network failures
 
 ---
@@ -735,8 +735,8 @@ For issues, questions, or contributions, please use the project's issue tracker.
 
 ---
 
-**Version**: 0.2.0  
-**Python**: 3.7+  
+**Version**: 0.2.0
+**Python**: 3.7+
 **Status**: Production Ready ✅
 
 ---
@@ -807,8 +807,7 @@ secret1 = client.get_secret('secret/data/app1')
 secret2 = client.get_secret('secret/data/app2')
 secret3 = client.get_secret('secret/data/app3')
 
-# Check cache info
-print(client.get_cache_info())
+# Tip: use `client.cache_stats` and `len(client)` for cache insights
 ```
 
 ### Context Manager for Automatic Cleanup
@@ -866,9 +865,12 @@ INFO: Successfully fetched KV v2 secret: secret/data/myapp
 
 ## Documentation
 
-- **[LOGGING_AND_RETRY_GUIDE.md](LOGGING_AND_RETRY_GUIDE.md)** - Comprehensive guide to logging and retry features (500+ lines)
-- **[LOGGING_AND_RETRY_IMPLEMENTATION.md](LOGGING_AND_RETRY_IMPLEMENTATION.md)** - Implementation details and technical summary
-- **[examples/logging_retry_example.py](examples/logging_retry_example.py)** - Working examples
+- Start here: **[Developers Guide](./docs/DEVELOPERS_GUIDE.md)**
+- Beginner friendly: **[Beginner's Guide](./docs/BEGINNERS_GUIDE.md)**
+- Rotation-aware caching: **[Rotation-Aware TTL Guide](./docs/ROTATION_AWARE_TTL_GUIDE.md)**
+- Namespace support: **[Vault Namespace Guide](./docs/VAULT_NAMESPACE_GUIDE.md)**
+- Logging and retry: **[Logging and Retry Guide](./docs/LOGGING_AND_RETRY_GUIDE.md)**
+- Examples: **[examples/](./docs/examples/)**
 
 ## Testing
 

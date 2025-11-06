@@ -1,6 +1,10 @@
 include README.md
 include LICENSE
-include COMPARISON.md
-include ENHANCEMENTS.md
-recursive-include gds_hvault *.py
-recursive-include tests *.py
+
+# Exclude documentation from source distribution
+prune docs
+prune gds_vault/docs
+
+# Do not include tests in sdist by default
+# (uncomment if you want tests shipped in sdist)
+# recursive-include tests *.py

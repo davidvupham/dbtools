@@ -100,13 +100,13 @@ client = VaultClient(
 with client:
     # Read secret
     secret = client.read_secret("myapp/db")
-    
+
     # Write secret
     client.write_secret("myapp/api", {"key": "value"})
-    
+
     # List secrets
     secrets = client.list_secrets("myapp/")
-    
+
     # Get specific version (KV v2)
     old_secret = client.read_secret("myapp/db", version=2)
 

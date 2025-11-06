@@ -11,7 +11,7 @@ This document provides comprehensive documentation for the test suite covering t
 ```
 tests/
 ├── test_rotation_aware.py          # Main rotation functionality tests
-├── test_cache.py                   # Enhanced cache tests (existing)  
+├── test_cache.py                   # Enhanced cache tests (existing)
 ├── test_client.py                  # Client integration tests (existing)
 └── fixtures/                      # Test data and fixtures
     ├── rotation_schedules.py       # Sample cron schedules
@@ -43,11 +43,11 @@ Full workflow tests from Vault response to cache expiration.
 def test_cron_parser_daily(self):
     """Test daily cron schedule parsing."""
     cron = CronParser("0 2 * * *")  # Daily at 2 AM
-    
+
     # Test from midnight
     test_time = datetime(2024, 10, 8, 0, 0, 0)
     next_run = cron.next_run_time(test_time)
-    
+
     # Should be 2 AM same day
     expected = datetime(2024, 10, 8, 2, 0, 0)
     self.assertEqual(next_run, expected)
@@ -71,14 +71,14 @@ def test_calculate_rotation_ttl(self):
     """Test TTL calculation based on rotation schedule."""
     current_time = datetime(2024, 10, 8, 15, 0, 0)  # 3 PM
     last_rotation = datetime(2024, 10, 8, 2, 0, 0)   # 2 AM same day
-    
+
     ttl = calculate_rotation_ttl(
         last_rotation.isoformat(),
         "0 2 * * *",  # Daily at 2 AM
         buffer_minutes=10,
         current_time=current_time
     )
-    
+
     # Next rotation is tomorrow at 2 AM (11 hours from 3 PM)
     # Minus 10 minutes buffer = 10h 50m = 39000 seconds
     expected_ttl = (11 * 60 - 10) * 60
@@ -108,14 +108,14 @@ def test_should_refresh_secret_within_buffer(self):
     """Test refresh check when within buffer time."""
     current_time = datetime(2024, 10, 9, 1, 55, 0)  # 1:55 AM
     last_rotation = datetime(2024, 10, 8, 2, 0, 0)   # Yesterday 2 AM
-    
+
     should_refresh = should_refresh_secret(
         last_rotation.isoformat(),
         "0 2 * * *",  # Daily at 2 AM (5 min away)
         buffer_minutes=10,
         current_time=current_time
     )
-    
+
     # Should refresh because we're within 10-minute buffer
     self.assertTrue(should_refresh)
 ```
@@ -146,9 +146,9 @@ def test_parse_vault_rotation_metadata(self):
             }
         }
     }
-    
+
     metadata = parse_vault_rotation_metadata(vault_response)
-    
+
     self.assertIsNotNone(metadata)
     self.assertEqual(metadata["last_rotation"], "2024-10-08T02:00:00Z")
     self.assertEqual(metadata["schedule"], "0 2 * * *")
@@ -206,12 +206,12 @@ def test_cache_without_rotation_metadata(self):
     """Test caching without rotation metadata."""
     cache = RotationAwareCache(fallback_ttl=300)
     secret_data = {"password": "secret123"}
-    
+
     cache.set("test-secret", secret_data)
-    
+
     retrieved = cache.get("test-secret")
     self.assertEqual(retrieved, secret_data)
-    
+
     # Should use fallback TTL
     stats = cache.get_stats()
     self.assertEqual(stats["secrets_with_rotation"], 0)
@@ -235,21 +235,21 @@ def test_cache_with_rotation_metadata(self):
         "last_rotation": "2024-10-08T02:00:00Z",
         "schedule": "0 2 * * *"
     }
-    
+
     cache.set(
-        "test-secret", 
-        secret_data, 
+        "test-secret",
+        secret_data,
         rotation_metadata=rotation_metadata
     )
-    
+
     # Verify caching
     retrieved = cache.get("test-secret")
     self.assertEqual(retrieved, secret_data)
-    
+
     # Verify rotation info storage
     rotation_info = cache.get_rotation_info("test-secret")
     self.assertEqual(rotation_info, rotation_metadata)
-    
+
     # Verify statistics
     stats = cache.get_stats()
     self.assertEqual(stats["secrets_with_rotation"], 1)
@@ -271,23 +271,23 @@ def test_cache_with_rotation_metadata(self):
 def test_force_refresh_check(self):
     """Test force refresh checking."""
     cache = RotationAwareCache(buffer_minutes=15)
-    
+
     # Setup secret that needs refresh soon
     current_time = datetime.now()
-    
+
     # Rotation in 10 minutes (within 15-minute buffer)
     last_rotation = current_time - timedelta(hours=23, minutes=50)
-    
+
     rotation_metadata = {
         "last_rotation": last_rotation.isoformat(),
         "schedule": "0 2 * * *"
     }
-    
+
     cache.set("test-secret", {"key": "value"}, rotation_metadata=rotation_metadata)
-    
+
     # Check refresh status
     needs_refresh = cache.force_refresh_check("test-secret")
-    
+
     # Should indicate refresh needed
     self.assertTrue(needs_refresh)
 ```
@@ -299,19 +299,19 @@ def test_force_refresh_check(self):
 def test_cache_stats(self):
     """Test cache statistics."""
     cache = RotationAwareCache(buffer_minutes=10)
-    
+
     # Add secrets with different metadata
     secrets = [
         ("secret1", {"password": "abc"}, {"last_rotation": "2024-10-08T02:00:00Z", "schedule": "0 2 * * *"}),
         ("secret2", {"api_key": "xyz"}, None),  # No rotation
         ("secret3", {"token": "123"}, {"last_rotation": "2024-10-07T02:00:00Z", "schedule": "0 2 * * *"})
     ]
-    
+
     for key, data, metadata in secrets:
         cache.set(key, data, rotation_metadata=metadata)
-    
+
     stats = cache.get_stats()
-    
+
     # Validate statistics
     self.assertEqual(stats["size"], 3)
     self.assertEqual(stats["secrets_with_rotation"], 2)
@@ -340,14 +340,14 @@ def test_ttl_cache_with_rotation_metadata(self):
         "last_rotation": "2024-10-08T02:00:00Z",
         "schedule": "0 2 * * *"
     }
-    
+
     # Should accept rotation metadata parameter
     cache.set(
-        "test-secret", 
-        secret_data, 
+        "test-secret",
+        secret_data,
         rotation_metadata=rotation_metadata
     )
-    
+
     retrieved = cache.get("test-secret")
     self.assertEqual(retrieved, secret_data)
 ```
@@ -360,10 +360,10 @@ def test_ttl_cache_backward_compatibility(self):
     """Test TTLCache normal operation without rotation metadata."""
     cache = TTLCache(max_size=10, default_ttl=60)
     secret_data = {"password": "secret123"}
-    
+
     # Standard usage should work unchanged
     cache.set("test-secret", secret_data, ttl=120)
-    
+
     retrieved = cache.get("test-secret")
     self.assertEqual(retrieved, secret_data)
 ```
@@ -376,7 +376,7 @@ def test_ttl_cache_backward_compatibility(self):
 # tests/fixtures/rotation_schedules.py
 ROTATION_SCHEDULES = {
     "hourly": "0 * * * *",
-    "every_6_hours": "0 */6 * * *", 
+    "every_6_hours": "0 */6 * * *",
     "daily": "0 2 * * *",
     "weekly": "0 2 * * 0",
     "monthly": "0 2 1 * *",
@@ -387,7 +387,7 @@ ROTATION_SCHEDULES = {
 INVALID_SCHEDULES = [
     "invalid cron",
     "* * * *",           # Too few fields
-    "* * * * * *",       # Too many fields  
+    "* * * * * *",       # Too many fields
     "60 2 * * *",        # Invalid minute
     "0 25 * * *",        # Invalid hour
 ]
@@ -402,7 +402,7 @@ KV_V2_WITH_ROTATION = {
         "data": {"username": "app", "password": "secret"},
         "metadata": {
             "created_time": "2024-10-08T02:00:00Z",
-            "last_rotation": "2024-10-08T02:00:00Z", 
+            "last_rotation": "2024-10-08T02:00:00Z",
             "rotation_schedule": "0 2 * * *",
             "version": 1
         }
@@ -470,23 +470,23 @@ from gds_vault.cache import RotationAwareCache
 def test_rotation_calculation_performance():
     """Test rotation calculation performance."""
     cache = RotationAwareCache()
-    
+
     # Test data
     secret_data = {"key": "value"}
     rotation_metadata = {
         "last_rotation": "2024-10-08T02:00:00Z",
         "schedule": "0 2 * * *"
     }
-    
+
     # Measure performance
     start_time = time.time()
-    
+
     for i in range(1000):
         cache.set(f"secret-{i}", secret_data, rotation_metadata=rotation_metadata)
-    
+
     end_time = time.time()
     avg_time = (end_time - start_time) / 1000
-    
+
     # Should be under 1ms per operation
     assert avg_time < 0.001, f"Average time {avg_time}s exceeds 1ms threshold"
 ```
@@ -496,7 +496,7 @@ def test_rotation_calculation_performance():
 ### Minimum Coverage Targets
 
 - **Rotation Utilities**: 95% line coverage
-- **Cache Classes**: 90% line coverage  
+- **Cache Classes**: 90% line coverage
 - **Client Integration**: 85% line coverage
 - **Overall Package**: 90% line coverage
 
@@ -529,7 +529,7 @@ freezegun>=1.2.0  # For time-based testing
 # Test environment
 export VAULT_ADDR="https://vault-test.example.com"
 export VAULT_ROLE_ID="test-role-id"
-export VAULT_SECRET_ID="test-secret-id" 
+export VAULT_SECRET_ID="test-secret-id"
 export PYTHONPATH="${PYTHONPATH}:$(pwd)"
 ```
 
@@ -568,23 +568,23 @@ def rotation_aware_cache():
 def test_invalid_cron_expression_handling():
     """Test graceful handling of invalid cron expressions."""
     from gds_vault.rotation import CronParser
-    
+
     with pytest.raises(ValueError, match="Invalid cron expression"):
         CronParser("invalid cron expression")
 
 def test_rotation_calculation_error_fallback():
     """Test fallback behavior when rotation calculation fails."""
     cache = RotationAwareCache(fallback_ttl=300)
-    
+
     # Invalid rotation metadata should not crash
     invalid_metadata = {
         "last_rotation": "not-a-date",
         "schedule": "invalid-cron"
     }
-    
+
     # Should use fallback TTL without raising exception
     cache.set("test", {"key": "value"}, rotation_metadata=invalid_metadata)
-    
+
     result = cache.get("test")
     assert result is not None
 ```
@@ -595,14 +595,14 @@ def test_rotation_calculation_error_fallback():
 def test_timezone_edge_cases():
     """Test handling of various timezone formats."""
     from gds_vault.rotation import calculate_rotation_ttl
-    
+
     timezone_formats = [
         "2024-10-08T02:00:00Z",           # UTC
         "2024-10-08T02:00:00+00:00",      # UTC with offset
         "2024-10-08T02:00:00-05:00",      # EST
         "2024-10-08T02:00:00.123Z",       # With microseconds
     ]
-    
+
     for time_format in timezone_formats:
         ttl = calculate_rotation_ttl(time_format, "0 2 * * *")
         assert isinstance(ttl, int)
@@ -612,11 +612,11 @@ def test_leap_year_handling():
     """Test cron parsing during leap year edge cases."""
     from gds_vault.rotation import CronParser
     from datetime import datetime
-    
+
     # February 29th in leap year
     leap_day = datetime(2024, 2, 29, 1, 0, 0)
     cron = CronParser("0 2 * * *")
-    
+
     next_run = cron.next_run_time(leap_day)
     expected = datetime(2024, 2, 29, 2, 0, 0)
     assert next_run == expected
@@ -634,7 +634,7 @@ def test_leap_year_handling():
 ### Test Review Checklist
 
 - [ ] All positive test cases covered
-- [ ] Error conditions tested  
+- [ ] Error conditions tested
 - [ ] Edge cases identified and tested
 - [ ] Performance implications considered
 - [ ] Backward compatibility verified

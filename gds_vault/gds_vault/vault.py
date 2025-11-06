@@ -17,12 +17,17 @@ from typing import Any, Callable, Optional
 
 import requests
 
+from gds_vault.exceptions import (
+    VaultAuthError,
+    VaultConfigurationError,
+    VaultConnectionError,
+    VaultError,
+    VaultPermissionError,
+    VaultSecretNotFoundError,
+)
+
 # Configure module logger
 logger = logging.getLogger(__name__)
-
-
-class VaultError(Exception):
-    """Exception raised for Vault operation errors."""
 
 
 def retry_with_backoff(
@@ -138,7 +143,7 @@ class VaultClient:
         """
         self.vault_addr = vault_addr or os.getenv("VAULT_ADDR")
         if not self.vault_addr:
-            raise VaultError(
+            raise VaultConfigurationError(
                 "Vault address must be provided or set in VAULT_ADDR environment variable"
             )
 
@@ -146,7 +151,8 @@ class VaultClient:
         self.secret_id = secret_id or os.getenv("VAULT_SECRET_ID")
 
         if not self.role_id or not self.secret_id:
-            raise VaultError(
+            # Keep message for test compatibility; raise as configuration error subtype
+            raise VaultConfigurationError(
                 "VAULT_ROLE_ID and VAULT_SECRET_ID must be provided or set in environment"
             )
 
@@ -191,29 +197,29 @@ class VaultClient:
         logger.info("Authenticating with Vault at %s", self.vault_addr)
         if self.namespace:
             logger.debug("Using Vault namespace: %s", self.namespace)
-        
+
         login_url = f"{self.vault_addr}/v1/auth/approle/login"
         login_payload = {"role_id": self.role_id, "secret_id": self.secret_id}
-        
+
         # Add namespace header if configured (required for Vault Enterprise multi-tenancy)
         headers = {}
         if self.namespace:
             headers["X-Vault-Namespace"] = self.namespace
-        
+
         # Configure SSL verification
         verify = self.ssl_cert_path if self.ssl_cert_path else self.verify_ssl
 
         try:
             resp = requests.post(
-                login_url, 
-                json=login_payload, 
+                login_url,
+                json=login_payload,
                 headers=headers,
-                timeout=self.timeout, 
-                verify=verify
+                timeout=self.timeout,
+                verify=verify,
             )
         except requests.RequestException as e:
             logger.error("Network error connecting to Vault: %s", e)
-            raise VaultError(f"Failed to connect to Vault: {e}") from e
+            raise VaultConnectionError(f"Failed to connect to Vault: {e}") from e
 
         if not resp.ok:
             logger.error(
@@ -221,7 +227,7 @@ class VaultClient:
                 resp.status_code,
                 resp.text,
             )
-            raise VaultError(f"Vault AppRole login failed: {resp.text}")
+            raise VaultAuthError(f"Vault AppRole login failed: {resp.text}")
 
         auth_data = resp.json()["auth"]
         self._token = auth_data["client_token"]
@@ -308,24 +314,27 @@ class VaultClient:
         token = self._get_token()
         secret_url = f"{self.vault_addr}/v1/{full_path}"
         headers = {"X-Vault-Token": token}
-        
+
         # Add namespace header if configured
         if self.namespace:
             headers["X-Vault-Namespace"] = self.namespace
-        
+
         params = {"version": version} if version else None
-        
+
         # Configure SSL verification
         verify = self.ssl_cert_path if self.ssl_cert_path else self.verify_ssl
 
         try:
             resp = requests.get(
-                secret_url, headers=headers, params=params, timeout=self.timeout,
-                verify=verify
+                secret_url,
+                headers=headers,
+                params=params,
+                timeout=self.timeout,
+                verify=verify,
             )
         except requests.RequestException as e:
             logger.error("Network error fetching secret %s: %s", secret_path, e)
-            raise VaultError(f"Failed to connect to Vault: {e}") from e
+            raise VaultConnectionError(f"Failed to connect to Vault: {e}") from e
 
         if not resp.ok:
             logger.error(
@@ -334,6 +343,12 @@ class VaultClient:
                 resp.status_code,
                 resp.text,
             )
+            if resp.status_code == 404:
+                raise VaultSecretNotFoundError(
+                    f"Vault secret fetch failed: {resp.text}"
+                )
+            if resp.status_code == 403:
+                raise VaultPermissionError(f"Vault secret fetch failed: {resp.text}")
             raise VaultError(f"Vault secret fetch failed: {resp.text}")
 
         data = resp.json()
@@ -383,18 +398,17 @@ class VaultClient:
         token = self._get_token()
         list_url = f"{self.vault_addr}/v1/{full_path}"
         headers = {"X-Vault-Token": token}
-        
+
         # Add namespace header if configured
         if self.namespace:
             headers["X-Vault-Namespace"] = self.namespace
-        
+
         # Configure SSL verification
         verify = self.ssl_cert_path if self.ssl_cert_path else self.verify_ssl
 
         try:
             resp = requests.request(
-                "LIST", list_url, headers=headers, timeout=self.timeout,
-                verify=verify
+                "LIST", list_url, headers=headers, timeout=self.timeout, verify=verify
             )
         except requests.RequestException as e:
             logger.error("Network error listing secrets at %s: %s", path, e)
@@ -440,7 +454,12 @@ class VaultClient:
 
 
 @retry_with_backoff(max_retries=3, initial_delay=1.0)
-def get_secret_from_vault(secret_path: str, vault_addr: str = None, mount_point: str = None, namespace: str = None) -> dict:
+def get_secret_from_vault(
+    secret_path: str,
+    vault_addr: str = None,
+    mount_point: str = None,
+    namespace: str = None,
+) -> dict:
     """
     Retrieve a secret from HashiCorp Vault using AppRole authentication.
     Expects VAULT_ROLE_ID and VAULT_SECRET_ID in environment variables.
@@ -463,12 +482,14 @@ def get_secret_from_vault(secret_path: str, vault_addr: str = None, mount_point:
     secret_id = os.getenv("VAULT_SECRET_ID")
     if not role_id or not secret_id:
         logger.error("VAULT_ROLE_ID and VAULT_SECRET_ID not found in environment")
-        raise VaultError("VAULT_ROLE_ID and VAULT_SECRET_ID must be set in environment")
+        raise VaultConfigurationError(
+            "VAULT_ROLE_ID and VAULT_SECRET_ID must be set in environment"
+        )
 
     vault_addr = vault_addr or os.getenv("VAULT_ADDR")
     if not vault_addr:
         logger.error("VAULT_ADDR not found in environment")
-        raise VaultError("Vault address must be set in VAULT_ADDR")
+        raise VaultConfigurationError("Vault address must be set in VAULT_ADDR")
 
     # Get namespace from parameter or environment
     namespace = namespace or os.getenv("VAULT_NAMESPACE")
@@ -487,27 +508,33 @@ def get_secret_from_vault(secret_path: str, vault_addr: str = None, mount_point:
     # Configure SSL verification
     ssl_cert_path = os.getenv("VAULT_SSL_CERT")
     verify = ssl_cert_path if ssl_cert_path else True
-    
+
     # Step 1: Login with AppRole
     login_url = f"{vault_addr}/v1/auth/approle/login"
     login_payload = {"role_id": role_id, "secret_id": secret_id}
-    
+
     # Add namespace header if configured
     auth_headers = {}
     if namespace:
         auth_headers["X-Vault-Namespace"] = namespace
 
     try:
-        resp = requests.post(login_url, json=login_payload, headers=auth_headers, timeout=10, verify=verify)
+        resp = requests.post(
+            login_url,
+            json=login_payload,
+            headers=auth_headers,
+            timeout=10,
+            verify=verify,
+        )
     except requests.RequestException as e:
         logger.error("Network error during authentication: %s", e)
-        raise VaultError(f"Failed to connect to Vault: {e}") from e
+        raise VaultConnectionError(f"Failed to connect to Vault: {e}") from e
 
     if not resp.ok:
         logger.error(
             "AppRole login failed (status %s): %s", resp.status_code, resp.text
         )
-        raise VaultError(f"Vault AppRole login failed: {resp.text}")
+        raise VaultAuthError(f"Vault AppRole login failed: {resp.text}")
 
     client_token = resp.json()["auth"]["client_token"]
     logger.debug("Successfully authenticated with Vault")
@@ -515,7 +542,7 @@ def get_secret_from_vault(secret_path: str, vault_addr: str = None, mount_point:
     # Step 2: Read secret
     secret_url = f"{vault_addr}/v1/{full_path}"
     headers = {"X-Vault-Token": client_token}
-    
+
     # Add namespace header if configured
     if namespace:
         headers["X-Vault-Namespace"] = namespace
@@ -524,7 +551,7 @@ def get_secret_from_vault(secret_path: str, vault_addr: str = None, mount_point:
         resp = requests.get(secret_url, headers=headers, timeout=10, verify=verify)
     except requests.RequestException as e:
         logger.error("Network error fetching secret %s: %s", secret_path, e)
-        raise VaultError(f"Failed to connect to Vault: {e}") from e
+        raise VaultConnectionError(f"Failed to connect to Vault: {e}") from e
 
     if not resp.ok:
         logger.error(
@@ -533,6 +560,10 @@ def get_secret_from_vault(secret_path: str, vault_addr: str = None, mount_point:
             resp.status_code,
             resp.text,
         )
+        if resp.status_code == 404:
+            raise VaultSecretNotFoundError(f"Vault secret fetch failed: {resp.text}")
+        if resp.status_code == 403:
+            raise VaultPermissionError(f"Vault secret fetch failed: {resp.text}")
         raise VaultError(f"Vault secret fetch failed: {resp.text}")
 
     data = resp.json()

@@ -15,13 +15,13 @@ A new module containing rotation schedule utilities:
 # Core classes and functions
 class CronParser:
     """Simple cron expression parser for rotation schedules"""
-    
+
 def calculate_rotation_ttl(last_rotation, rotation_schedule, buffer_minutes=10):
     """Calculate TTL based on rotation schedule with safety buffer"""
-    
+
 def should_refresh_secret(last_rotation, rotation_schedule, buffer_minutes=10):
     """Check if secret needs immediate refresh"""
-    
+
 def parse_vault_rotation_metadata(vault_response):
     """Extract rotation metadata from Vault API responses"""
 ```
@@ -41,10 +41,10 @@ def parse_vault_rotation_metadata(vault_response):
 class RotationAwareCache(SecretCache):
     def __init__(self, max_size=100, buffer_minutes=10, fallback_ttl=300):
         # Configurable buffer time and fallback TTL
-        
+
     def set(self, key, value, rotation_metadata=None, ttl=None):
         # Automatic TTL calculation from rotation metadata
-        
+
     def force_refresh_check(self, key):
         # Check if immediate refresh needed due to rotation
 ```
@@ -67,7 +67,7 @@ class TTLCache(SecretCache):
 ```python
 def _extract_rotation_metadata(self, vault_response):
     """Extract rotation info from Vault response"""
-    
+
 # Enhanced cache handling in get_secret()
 if hasattr(self._cache, 'force_refresh_check'):
     if self._cache.force_refresh_check(cache_key):
@@ -109,12 +109,12 @@ The system automatically extracts rotation metadata from various Vault response 
     }
 }
 
-# Auth Response  
+# Auth Response
 {
     "auth": {
         "client_token": "...",
         "metadata": {
-            "last_rotation_time": "2024-10-08T02:00:00Z", 
+            "last_rotation_time": "2024-10-08T02:00:00Z",
             "schedule": "0 2 * * *"
         }
     }
@@ -126,7 +126,7 @@ The system automatically extracts rotation metadata from various Vault response 
 Supported cron formats (5-field standard):
 ```
 ┌───────────── minute (0 - 59)
-│ ┌───────────── hour (0 - 23)  
+│ ┌───────────── hour (0 - 23)
 │ │ ┌───────────── day of month (1 - 31)
 │ │ │ ┌───────────── month (1 - 12)
 │ │ │ │ ┌───────────── day of week (0 - 6) (Sunday=0)
@@ -154,13 +154,13 @@ The testing suite is organized into multiple test classes covering different asp
 class TestRotationUtils(unittest.TestCase):
     def test_cron_parser_daily(self):
         """Test daily cron schedule parsing"""
-        
+
     def test_calculate_rotation_ttl(self):
         """Test TTL calculation based on rotation schedule"""
-        
+
     def test_should_refresh_secret_within_buffer(self):
         """Test refresh check when within buffer time"""
-        
+
     def test_parse_vault_rotation_metadata(self):
         """Test parsing rotation metadata from Vault response"""
 ```
@@ -178,13 +178,13 @@ class TestRotationUtils(unittest.TestCase):
 class TestRotationAwareCache(unittest.TestCase):
     def test_cache_without_rotation_metadata(self):
         """Test fallback behavior without rotation data"""
-        
+
     def test_cache_with_rotation_metadata(self):
         """Test full rotation-aware functionality"""
-        
+
     def test_force_refresh_check(self):
         """Test forced refresh logic"""
-        
+
     def test_cache_stats(self):
         """Test cache statistics and monitoring"""
 ```
@@ -202,7 +202,7 @@ class TestRotationAwareCache(unittest.TestCase):
 class TestTTLCacheRotationSupport(unittest.TestCase):
     def test_ttl_cache_with_rotation_metadata(self):
         """Test enhanced TTLCache with rotation support"""
-        
+
     def test_ttl_cache_without_rotation_metadata(self):
         """Test standard TTLCache operation unchanged"""
 ```
@@ -240,7 +240,7 @@ python -m pytest tests/test_rotation_aware.py --cov=gds_vault.rotation --cov=gds
 
 # Scenario 2: Near rotation (should refresh)
 {
-    "last_rotation": "23 hours ago", 
+    "last_rotation": "23 hours ago",
     "schedule": "0 2 * * *",
     "buffer": 10,
     "expected_behavior": "Immediate refresh"
@@ -287,11 +287,11 @@ from gds_vault.rotation import CronParser, calculate_rotation_ttl
 
 class TestRotationUtils(unittest.TestCase):
     """Comprehensive testing of rotation utilities"""
-    
+
     def setUp(self):
         """Set up test fixtures"""
         self.test_time = datetime(2024, 10, 8, 15, 0, 0)
-        
+
     def test_cron_daily_schedule(self):
         """Test daily rotation schedule"""
         cron = CronParser("0 2 * * *")
@@ -312,7 +312,7 @@ class TestRotationUtils(unittest.TestCase):
 # Demo output example
 Cache Statistics:
   Total secrets: 3
-  With rotation schedules: 2  
+  With rotation schedules: 2
   Needing refresh: 1
   Average TTL remaining: 15420.5 seconds
 ```
@@ -401,8 +401,8 @@ def periodic_cleanup(cache, interval=300):  # 5 minutes
 
 # Start cleanup thread
 cleanup_thread = threading.Thread(
-    target=periodic_cleanup, 
-    args=(cache,), 
+    target=periodic_cleanup,
+    args=(cache,),
     daemon=True
 )
 cleanup_thread.start()
@@ -452,7 +452,7 @@ The rotation-aware TTL implementation provides:
 
 - **Automatic Secret Management**: No manual TTL configuration needed
 - **Improved Security**: Secrets refresh before expiration
-- **Backward Compatibility**: Existing code works unchanged  
+- **Backward Compatibility**: Existing code works unchanged
 - **Comprehensive Testing**: Full test coverage with multiple scenarios
 - **Production Ready**: Error handling, monitoring, and observability
 

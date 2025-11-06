@@ -123,7 +123,7 @@ def calculate_rotation_ttl(
 ) -> int:
     """
     Calculate TTL based on rotation schedule.
-    
+
     Logic:
     1. Parse the cron schedule
     2. Calculate next rotation time from last rotation

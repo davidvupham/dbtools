@@ -14,7 +14,13 @@ from typing import Any, Optional
 import requests
 
 from gds_vault.auth import AppRoleAuth
-from gds_vault.base import Configurable, ResourceManager, SecretProvider
+from gds_vault.base import (
+    AuthStrategy,
+    CacheProtocol,
+    Configurable,
+    ResourceManager,
+    SecretProvider,
+)
 from gds_vault.cache import SecretCache
 from gds_vault.exceptions import (
     VaultAuthError,
@@ -25,6 +31,10 @@ from gds_vault.exceptions import (
     VaultSecretNotFoundError,
 )
 from gds_vault.retry import RetryPolicy
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from gds_vault.transport import VaultTransport
 
 logger = logging.getLogger(__name__)
 
@@ -72,19 +82,19 @@ class VaultClient(SecretProvider, ResourceManager, Configurable):
             auth=TokenAuth(token="hvs.CAESIF..."),
             cache=TTLCache(max_size=50, default_ttl=600),
         )
-        
+
         # With SSL certificate
         client = VaultClient(
             vault_addr="https://vault.example.com",
             ssl_cert_path="/path/to/ca-bundle.crt"
         )
-        
+
         # Disable SSL verification (not recommended for production)
         client = VaultClient(
             vault_addr="https://vault.example.com",
             verify_ssl=False
         )
-        
+
         # With mount point (automatically prepends to secret paths)
         client = VaultClient(mount_point="kv-v2")
         secret = client.get_secret("data/myapp")  # Fetches from kv-v2/data/myapp
@@ -102,6 +112,7 @@ class VaultClient(SecretProvider, ResourceManager, Configurable):
         ssl_cert_path: Optional[str] = None,
         mount_point: Optional[str] = None,
         namespace: Optional[str] = None,
+        transport: Optional["VaultTransport"] = None,
     ):
         """Initialize Vault client with OOP best practices."""
         # Initialize base classes
@@ -112,14 +123,14 @@ class VaultClient(SecretProvider, ResourceManager, Configurable):
         self._config = config or {}
         self._vault_addr = vault_addr or os.getenv("VAULT_ADDR")
         self._timeout = timeout
-        
+
         # SSL Configuration
         self._verify_ssl = verify_ssl
         self._ssl_cert_path = ssl_cert_path or os.getenv("VAULT_SSL_CERT")
-        
+
         # Mount point configuration
         self._mount_point = mount_point or os.getenv("VAULT_MOUNT_POINT")
-        
+
         # Namespace configuration
         self._namespace = namespace or os.getenv("VAULT_NAMESPACE")
 
@@ -127,9 +138,10 @@ class VaultClient(SecretProvider, ResourceManager, Configurable):
         self._validate_configuration()
 
         # Components (composition over inheritance)
-        self._auth = auth or AppRoleAuth()
-        self._cache = cache if cache is not None else SecretCache()
+        self._auth: AuthStrategy = auth or AppRoleAuth()
+        self._cache: CacheProtocol = cache if cache is not None else SecretCache()
         self._retry_policy = retry_policy or RetryPolicy(max_retries=3)
+        self._transport = transport
 
         # State
         self._token: Optional[str] = None
@@ -137,7 +149,9 @@ class VaultClient(SecretProvider, ResourceManager, Configurable):
         self._initialized = False
         self._authenticated = False
 
-        logger.debug("VaultClient initialized with SSL verification: %s", self._verify_ssl)
+        logger.debug(
+            "VaultClient initialized with SSL verification: %s", self._verify_ssl
+        )
 
     def _validate_configuration(self) -> None:
         """Validate client configuration."""
@@ -203,34 +217,34 @@ class VaultClient(SecretProvider, ResourceManager, Configurable):
     def cache_stats(self) -> dict[str, Any]:
         """Cache statistics."""
         return self._cache.get_stats()
-    
+
     @property
     def verify_ssl(self) -> bool:
         """Whether SSL certificate verification is enabled."""
         return self._verify_ssl
-    
+
     @verify_ssl.setter
     def verify_ssl(self, value: bool) -> None:
         """Set SSL verification (use with caution in production)."""
         self._verify_ssl = value
         logger.warning("SSL verification set to: %s", value)
-    
+
     @property
     def ssl_cert_path(self) -> Optional[str]:
         """Path to SSL certificate bundle."""
         return self._ssl_cert_path
-    
+
     @ssl_cert_path.setter
     def ssl_cert_path(self, value: Optional[str]) -> None:
         """Set SSL certificate path."""
         self._ssl_cert_path = value
         logger.info("SSL certificate path set to: %s", value)
-    
+
     @property
     def mount_point(self) -> Optional[str]:
         """Vault mount point (e.g., 'secret', 'kv-v2')."""
         return self._mount_point
-    
+
     @mount_point.setter
     def mount_point(self, value: Optional[str]) -> None:
         """Set Vault mount point."""
@@ -244,17 +258,17 @@ class VaultClient(SecretProvider, ResourceManager, Configurable):
     def _construct_secret_path(self, path: str) -> str:
         """
         Construct the full secret path with mount point if specified.
-        
+
         Args:
             path: Base secret path (e.g., 'data/myapp' or 'secret/data/myapp')
-            
+
         Returns:
             str: Full path with mount point prepended if configured
-            
+
         Example:
             # Without mount point
             _construct_secret_path('secret/data/myapp') -> 'secret/data/myapp'
-            
+
             # With mount point 'kv-v2'
             _construct_secret_path('data/myapp') -> 'kv-v2/data/myapp'
         """
@@ -280,10 +294,10 @@ class VaultClient(SecretProvider, ResourceManager, Configurable):
             def _auth():
                 # Pass SSL configuration to auth strategy
                 return self._auth.authenticate(
-                    self._vault_addr, 
+                    self._vault_addr,
                     self._timeout,
                     verify_ssl=self._verify_ssl,
-                    ssl_cert_path=self._ssl_cert_path
+                    ssl_cert_path=self._ssl_cert_path,
                 )
 
             self._token, self._token_expiry = self._retry_policy.execute(_auth)
@@ -328,9 +342,12 @@ class VaultClient(SecretProvider, ResourceManager, Configurable):
             cached = self._cache.get(cache_key)
             if cached is not None:
                 # For rotation-aware caches, check if immediate refresh is needed
-                if hasattr(self._cache, 'force_refresh_check'):
+                if hasattr(self._cache, "force_refresh_check"):
                     if self._cache.force_refresh_check(cache_key):
-                        logger.info("Rotation schedule requires immediate refresh for: %s", full_path)
+                        logger.info(
+                            "Rotation schedule requires immediate refresh for: %s",
+                            full_path,
+                        )
                         # Remove from cache and fetch fresh
                         self._cache.remove(cache_key)
                     else:
@@ -365,18 +382,24 @@ class VaultClient(SecretProvider, ResourceManager, Configurable):
         if use_cache:
             # Extract rotation metadata from secret data
             rotation_metadata = secret_data.pop("_vault_rotation_metadata", None)
-            
+
             # Pass rotation metadata to rotation-aware caches
-            if hasattr(self._cache, 'set') and rotation_metadata:
+            if hasattr(self._cache, "set") and rotation_metadata:
                 # Check if cache supports rotation metadata
                 import inspect
+
                 set_signature = inspect.signature(self._cache.set)
-                if 'rotation_metadata' in set_signature.parameters:
-                    self._cache.set(cache_key, secret_data, rotation_metadata=rotation_metadata)
+                if "rotation_metadata" in set_signature.parameters:
+                    self._cache.set(
+                        cache_key, secret_data, rotation_metadata=rotation_metadata
+                    )
                     logger.debug("Cached secret with rotation metadata: %s", cache_key)
                 else:
                     self._cache.set(cache_key, secret_data)
-                    logger.debug("Cached secret (cache doesn't support rotation metadata): %s", cache_key)
+                    logger.debug(
+                        "Cached secret (cache doesn't support rotation metadata): %s",
+                        cache_key,
+                    )
             else:
                 self._cache.set(cache_key, secret_data)
                 logger.debug("Cached secret: %s", cache_key)
@@ -406,24 +429,32 @@ class VaultClient(SecretProvider, ResourceManager, Configurable):
 
         secret_url = f"{self._vault_addr}/v1/{secret_path}"
         headers = {"X-Vault-Token": self._token}
-        
+
         # Add namespace header if configured
         if self._namespace:
             headers["X-Vault-Namespace"] = self._namespace
-        
+
         params = {"version": version} if version else None
-        
+
         # Configure SSL verification
         verify = self._ssl_cert_path if self._ssl_cert_path else self._verify_ssl
 
-        resp = requests.get(
-            secret_url, headers=headers, params=params, timeout=self._timeout,
-            verify=verify
-        )
+        if self._transport is not None:
+            resp = self._transport.get(
+                secret_url, headers=headers, params=params, timeout=self._timeout
+            )
+        else:
+            resp = requests.get(
+                secret_url,
+                headers=headers,
+                params=params,
+                timeout=self._timeout,
+                verify=verify,
+            )
         resp.raise_for_status()
 
         data = resp.json()
-        
+
         # Extract rotation metadata from response
         rotation_metadata = self._extract_rotation_metadata(data)
 
@@ -438,26 +469,27 @@ class VaultClient(SecretProvider, ResourceManager, Configurable):
             secret_data = data["data"]
         else:
             raise VaultError(f"Unexpected response format for secret {secret_path}")
-        
+
         # Add rotation metadata to secret data if available
         if rotation_metadata:
             secret_data["_vault_rotation_metadata"] = rotation_metadata
             logger.debug("Found rotation metadata for secret: %s", secret_path)
-        
+
         return secret_data
-    
+
     def _extract_rotation_metadata(self, vault_response: dict) -> Optional[dict]:
         """
         Extract rotation metadata from Vault response.
-        
+
         Args:
             vault_response: Full response from Vault API
-            
+
         Returns:
             dict: Rotation metadata or None if not found
         """
         try:
             from gds_vault.rotation import parse_vault_rotation_metadata
+
             return parse_vault_rotation_metadata(vault_response)
         except ImportError:
             logger.debug("Rotation module not available, skipping metadata extraction")
@@ -494,18 +526,26 @@ class VaultClient(SecretProvider, ResourceManager, Configurable):
 
             list_url = f"{self._vault_addr}/v1/{full_path}"
             headers = {"X-Vault-Token": self._token}
-            
+
             # Add namespace header if configured
             if self._namespace:
                 headers["X-Vault-Namespace"] = self._namespace
-            
+
             # Configure SSL verification
             verify = self._ssl_cert_path if self._ssl_cert_path else self._verify_ssl
 
-            resp = requests.request(
-                "LIST", list_url, headers=headers, timeout=self._timeout,
-                verify=verify
-            )
+            if self._transport is not None:
+                resp = self._transport.request(
+                    "LIST", list_url, headers=headers, timeout=self._timeout
+                )
+            else:
+                resp = requests.request(
+                    "LIST",
+                    list_url,
+                    headers=headers,
+                    timeout=self._timeout,
+                    verify=verify,
+                )
             resp.raise_for_status()
             return resp.json()
 
@@ -515,7 +555,9 @@ class VaultClient(SecretProvider, ResourceManager, Configurable):
             logger.info("Found %d secrets at %s", len(keys), full_path)
             return keys
         except requests.RequestException as e:
-            raise VaultConnectionError(f"Failed to list secrets at {full_path}: {e}") from e
+            raise VaultConnectionError(
+                f"Failed to list secrets at {full_path}: {e}"
+            ) from e
 
     # ========================================================================
     # ResourceManager interface implementation
@@ -726,7 +768,9 @@ class VaultClient(SecretProvider, ResourceManager, Configurable):
 
 
 def get_secret_from_vault(
-    secret_path: str, vault_addr: Optional[str] = None, mount_point: Optional[str] = None
+    secret_path: str,
+    vault_addr: Optional[str] = None,
+    mount_point: Optional[str] = None,
 ) -> dict[str, Any]:
     """
     Retrieve a secret from Vault using AppRole authentication.
@@ -748,7 +792,7 @@ def get_secret_from_vault(
     Example:
         secret = get_secret_from_vault('secret/data/myapp')
         password = secret['password']
-        
+
         # With mount point
         secret = get_secret_from_vault('data/myapp', mount_point='kv-v2')
     """

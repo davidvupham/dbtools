@@ -22,6 +22,7 @@ from gds_vault import (
     TokenAuth,
     TTLCache,
     VaultAuthError,
+    VaultConnectionError,
     VaultClient,
     VaultConfigurationError,
     VaultPermissionError,
@@ -398,6 +399,14 @@ class TestVaultClientSecretRetrieval(unittest.TestCase):
         with self.assertRaises(VaultPermissionError):
             self.client.get_secret("secret/data/restricted")
 
+    @patch("gds_vault.client.requests.get")
+    def test_get_secret_network_error_maps_to_connection_error(self, mock_get):
+        """Test RequestException maps to VaultConnectionError."""
+        mock_get.side_effect = requests.RequestException("net down")
+
+        with self.assertRaises(VaultConnectionError):
+            self.client.get_secret("secret/data/myapp")
+
 
 class TestVaultClientClassMethods(unittest.TestCase):
     """Test VaultClient class methods (alternative constructors)."""
@@ -435,6 +444,60 @@ class TestVaultClientClassMethods(unittest.TestCase):
         client = VaultClient.from_token(token="hvs.CAESIF123")
 
         self.assertIsInstance(client._auth, TokenAuth)
+
+
+class TestVaultClientSSLBehavior(unittest.TestCase):
+    """Test SSL verify propagation in modern client."""
+
+    @patch.dict(
+        os.environ,
+        {
+            "VAULT_ADDR": "https://vault.example.com",
+            "VAULT_ROLE_ID": "r",
+            "VAULT_SECRET_ID": "s",
+        },
+    )
+    @patch("gds_vault.auth.requests.post")
+    @patch("gds_vault.client.requests.get")
+    def test_ssl_cert_path_used_for_verify(self, mock_get, mock_post):
+        """When ssl_cert_path is set, verify should use that path."""
+        mock_post.return_value = Mock(ok=True)
+        mock_post.return_value.json.return_value = {
+            "auth": {"client_token": "token", "lease_duration": 3600}
+        }
+        mock_get.return_value = Mock(ok=True)
+        mock_get.return_value.json.return_value = {"data": {"data": {"k": "v"}}}
+
+        client = VaultClient(ssl_cert_path="/tmp/ca.pem")
+        client.get_secret("secret/data/x", use_cache=False)
+
+        args, kwargs = mock_get.call_args
+        self.assertEqual(kwargs.get("verify"), "/tmp/ca.pem")
+
+    @patch.dict(
+        os.environ,
+        {
+            "VAULT_ADDR": "https://vault.example.com",
+            "VAULT_ROLE_ID": "r",
+            "VAULT_SECRET_ID": "s",
+        },
+    )
+    @patch("gds_vault.auth.requests.post")
+    @patch("gds_vault.client.requests.get")
+    def test_verify_ssl_false_is_propagated(self, mock_get, mock_post):
+        """When verify_ssl is False and no cert path, verify should be False."""
+        mock_post.return_value = Mock(ok=True)
+        mock_post.return_value.json.return_value = {
+            "auth": {"client_token": "token", "lease_duration": 3600}
+        }
+        mock_get.return_value = Mock(ok=True)
+        mock_get.return_value.json.return_value = {"data": {"data": {"k": "v"}}}
+
+        client = VaultClient(verify_ssl=False)
+        client.get_secret("secret/data/x", use_cache=False)
+
+        args, kwargs = mock_get.call_args
+        self.assertFalse(kwargs.get("verify"))
 
 
 class TestVaultClientContextManager(unittest.TestCase):

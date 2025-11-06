@@ -142,7 +142,7 @@ logger.warning("Invalid rotation schedule %s, using fallback", schedule)
 stats = cache.get_stats()
 {
     "size": 5,                          # Total cached secrets
-    "max_size": 100,                    # Cache capacity  
+    "max_size": 100,                    # Cache capacity
     "secrets_with_rotation": 3,         # Secrets with schedules
     "secrets_needing_refresh": 1,       # Secrets requiring refresh
     "avg_remaining_ttl": 1800.5,        # Average TTL in seconds
@@ -156,7 +156,7 @@ stats = cache.get_stats()
 # Force refresh checking
 needs_refresh = cache.force_refresh_check("secret/data/app")
 
-# Manual cleanup of expired secrets  
+# Manual cleanup of expired secrets
 removed_count = cache.cleanup_expired()
 
 # Get rotation information for specific secret
@@ -195,7 +195,7 @@ rotation_info = cache.get_rotation_info("secret/data/app")
 
 #### Fully Compatible Changes
 - All existing cache classes work unchanged
-- Existing API signatures preserved  
+- Existing API signatures preserved
 - Optional parameters for new functionality
 - Graceful fallback for legacy configurations
 

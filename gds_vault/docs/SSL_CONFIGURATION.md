@@ -202,9 +202,9 @@ import os
 
 # Get the absolute path to the certificate
 cert_path = os.path.join(
-    os.path.dirname(__file__), 
-    "gds_vault", 
-    "cert", 
+    os.path.dirname(__file__),
+    "gds_vault",
+    "cert",
     "vault-dev.crt"
 )
 
@@ -255,7 +255,7 @@ steps:
     run: |
       echo "${{ secrets.VAULT_CA_CERT }}" > /etc/ssl/certs/vault-ca.crt
       chmod 600 /etc/ssl/certs/vault-ca.crt
-  
+
   - name: Fetch secrets
     run: python deploy.py
 ```
@@ -308,7 +308,7 @@ docker run -v /path/to/cert:/certs:ro \
 
 **Symptom:**
 ```
-requests.exceptions.SSLError: [SSL: CERTIFICATE_VERIFY_FAILED] 
+requests.exceptions.SSLError: [SSL: CERTIFICATE_VERIFY_FAILED]
 certificate verify failed: unable to get local issuer certificate
 ```
 
@@ -362,7 +362,7 @@ certificate verify failed: unable to get local issuer certificate
 
 **Symptom:**
 ```
-[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: 
+[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed:
 Hostname mismatch, certificate is not valid for 'vault.example.com'
 ```
 
@@ -377,7 +377,7 @@ Hostname mismatch, certificate is not valid for 'vault.example.com'
    ```python
    # Wrong - IP address may not match certificate
    client = VaultClient(vault_addr="https://192.168.1.100:8200")
-   
+
    # Correct - use the hostname from the certificate
    client = VaultClient(vault_addr="https://vault.example.com:8200")
    ```
@@ -469,15 +469,15 @@ from pathlib import Path
 
 def get_vault_client(vault_addr: str, cert_path: str) -> VaultClient:
     """Create Vault client with certificate validation."""
-    
+
     # Validate certificate exists
     if not Path(cert_path).exists():
         raise FileNotFoundError(f"Certificate not found: {cert_path}")
-    
+
     # Validate certificate is readable
     if not os.access(cert_path, os.R_OK):
         raise PermissionError(f"Certificate not readable: {cert_path}")
-    
+
     return VaultClient(
         vault_addr=vault_addr,
         ssl_cert_path=cert_path
@@ -495,15 +495,15 @@ def check_cert_expiry(cert_path: str, warning_days: int = 30):
     """Check if certificate will expire soon."""
     with open(cert_path, 'rb') as f:
         cert = x509.load_pem_x509_certificate(f.read(), default_backend())
-    
+
     expiry = cert.not_valid_after
     days_until_expiry = (expiry - datetime.datetime.now()).days
-    
+
     if days_until_expiry < 0:
         raise ValueError(f"Certificate expired {abs(days_until_expiry)} days ago")
     elif days_until_expiry < warning_days:
         print(f"WARNING: Certificate expires in {days_until_expiry} days")
-    
+
     return days_until_expiry
 ```
 
@@ -642,10 +642,10 @@ def get_prod_client():
     # Use environment variables in production
     vault_addr = os.getenv("VAULT_ADDR")
     cert_path = os.getenv("VAULT_SSL_CERT")
-    
+
     if not vault_addr or not cert_path:
         raise ValueError("VAULT_ADDR and VAULT_SSL_CERT must be set")
-    
+
     return VaultClient(
         vault_addr=vault_addr,
         ssl_cert_path=cert_path,
@@ -675,13 +675,13 @@ def test_ssl_config():
             vault_addr="https://vault.example.com",
             ssl_cert_path="/path/to/vault-ca.crt"
         )
-        
+
         # Try to authenticate
         client.authenticate()
         print("✅ SSL configuration successful!")
         print(f"✅ Connected to {client.vault_addr}")
         return 0
-        
+
     except VaultError as e:
         print(f"❌ SSL configuration failed: {e}")
         return 1

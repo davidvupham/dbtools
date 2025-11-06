@@ -197,7 +197,7 @@ Retry logic automatically retries failed operations, which is essential for hand
 - Brief service outages
 - Transient errors
 
-**Without retry logic:** One transient failure = your application crashes  
+**Without retry logic:** One transient failure = your application crashes
 **With retry logic:** Transient failures are automatically recovered
 
 ### What is Exponential Backoff?
@@ -580,7 +580,7 @@ class SamplingFilter(logging.Filter):
     def __init__(self, rate=0.1):
         super().__init__()
         self.rate = rate  # 10% sampling
-    
+
     def filter(self, record):
         # Always log warnings and errors
         if record.levelno >= logging.WARNING:
@@ -627,16 +627,16 @@ INFO: Cleared cache (removed 3 secrets)
 ## Summary
 
 ### Logging Benefits
-✅ **Observability** - Know what's happening in production  
-✅ **Debugging** - Quickly identify issues  
-✅ **Auditing** - Track all Vault operations  
-✅ **Performance** - Identify slow operations and cache hits  
+✅ **Observability** - Know what's happening in production
+✅ **Debugging** - Quickly identify issues
+✅ **Auditing** - Track all Vault operations
+✅ **Performance** - Identify slow operations and cache hits
 
 ### Retry Logic Benefits
-✅ **Resilience** - Automatically recover from transient failures  
-✅ **Reliability** - Reduce false positives from network glitches  
-✅ **Production-ready** - Handle real-world network conditions  
-✅ **Rate limit handling** - Work with Vault's rate limiting  
+✅ **Resilience** - Automatically recover from transient failures
+✅ **Reliability** - Reduce false positives from network glitches
+✅ **Production-ready** - Handle real-world network conditions
+✅ **Rate limit handling** - Work with Vault's rate limiting
 
 ### Quick Start
 
@@ -665,5 +665,5 @@ secret = client.get_secret('secret/data/myapp')
 
 ---
 
-**Version:** 0.1.0  
+**Version:** 0.1.0
 **Last Updated:** October 3, 2025

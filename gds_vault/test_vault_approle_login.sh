@@ -49,12 +49,12 @@ test_login() {
     local url="$2"
     shift 2
     local headers=("$@")
-    
+
     echo "=========================================="
     echo "Test: ${test_name}"
     echo "=========================================="
     echo "URL: ${url}"
-    
+
     if [ ${#headers[@]} -gt 0 ]; then
         echo "Headers:"
         for header in "${headers[@]}"; do
@@ -64,32 +64,32 @@ test_login() {
         echo "Headers: (none)"
     fi
     echo ""
-    
+
     # Build curl command
     local curl_cmd="curl -k -s -w \"\n\nHTTP Status: %{http_code}\n\" -X POST"
     curl_cmd="${curl_cmd} \"${url}\""
     curl_cmd="${curl_cmd} -H \"Content-Type: application/json\""
-    
+
     # Add custom headers
     for header in "${headers[@]}"; do
         curl_cmd="${curl_cmd} -H \"${header}\""
     done
-    
+
     curl_cmd="${curl_cmd} -d '{\"role_id\":\"${VAULT_ROLE_ID}\",\"secret_id\":\"${VAULT_SECRET_ID}\"}'"
-    
+
     echo "Command:"
     echo "${curl_cmd}"
     echo ""
     echo "Response:"
     echo "------------------------------------------"
-    
+
     # Execute and capture result
     eval "${curl_cmd}" | if command -v jq &> /dev/null; then
         jq '.' 2>/dev/null || cat
     else
         cat
     fi
-    
+
     echo ""
     echo ""
 }
