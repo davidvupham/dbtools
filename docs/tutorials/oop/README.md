@@ -12,8 +12,10 @@ Perfect for beginners! Learn OOP from scratch with simple examples and exercises
 **What you'll learn:**
 - Core OOP: classes, objects, encapsulation, inheritance, polymorphism
 - ABCs, SOLID principles, composition vs inheritance
-- Common design patterns
-- Modern features: dataclasses, protocols, dunder methods
+- Common design patterns (Factory, Singleton, Observer, Decorator, Composite)
+- Modern features: dataclasses, protocols, type hints with generics, dunder methods
+- Context managers and descriptors
+- Class decorators and when to use them vs metaclasses
 - Quick reference section with common patterns and mistakes to avoid
 
 **Includes:**
@@ -21,6 +23,27 @@ Perfect for beginners! Learn OOP from scratch with simple examples and exercises
 - Self-contained, runnable examples
 - Practice exercises throughout
 - Quick reference at the end
+
+### 💪 Intermediate Exercises
+**File:** [oop_intermediate_exercises.md](./oop_intermediate_exercises.md)
+
+**NEW!** Bridge the gap between basics and advanced concepts with 10 practical exercises:
+- Shopping Cart System (Encapsulation, Composition)
+- Plugin System (ABCs, Factory Pattern)
+- Notification Service (Strategy Pattern, DI)
+- Caching Layer (Descriptors, Decorators)
+- Task Queue System (Observer, State Patterns)
+- Configuration Manager (Singleton, Validation)
+- Logging Framework (Class Decorators, Mixins)
+- Data Validation Framework (Descriptors, Type Hints)
+- State Machine (State Pattern, Type Safety)
+- Event System (Observer with Weak References)
+
+**Includes:**
+- Detailed requirements for each exercise
+- Starter code to guide you
+- Complete solutions with explanations
+- Difficulty ratings
 
 ### 🗓️ 30-Day OOP Lesson Plan
 **File:** [oop_30_day_lesson_plan.md](./oop_30_day_lesson_plan.md)

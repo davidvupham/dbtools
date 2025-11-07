@@ -15,16 +15,48 @@ Welcome to the comprehensive guide to Object-Oriented Programming (OOP) in Pytho
 6. [Polymorphism](#polymorphism)
 7. [Abstract Base Classes](#abstract-base-classes)
 8. [SOLID Principles](#solid-principles)
+   - [SOLID at a Glance](#solid-at-a-glance)
+   - [Single Responsibility Principle](#1-single-responsibility-principle-srp)
+   - [Open/Closed Principle](#2-openclosed-principle-ocp)
+   - [Liskov Substitution Principle](#3-liskov-substitution-principle-lsp)
+   - [Interface Segregation Principle](#4-interface-segregation-principle-isp)
+   - [Dependency Inversion Principle](#5-dependency-inversion-principle-dip)
 9. [Composition vs Inheritance](#composition-vs-inheritance)
+   - [Visual Decision Tree](#visual-decision-tree)
+   - [Strategy Pattern with Composition](#strategy-pattern-with-composition)
 10. [Design Patterns](#design-patterns)
+    - [Factory Pattern](#1-factory-pattern)
+    - [Singleton Pattern](#2-singleton-pattern)
+    - [Observer Pattern](#3-observer-pattern)
+    - [Decorator Pattern](#4-decorator-pattern)
+    - [Composite Pattern](#5-composite-pattern)
 11. [Advanced OOP Concepts](#advanced-oop-concepts)
+    - [Context Managers](#context-managers)
+    - [Descriptors](#descriptors)
+    - [Metaclasses](#metaclasses)
+    - [Class Decorators](#class-decorators)
+    - [Thread-safety Basics](#thread-safety-basics)
 12. [Modern Python OOP Features](#modern-python-oop-features)
+    - [Dataclasses](#dataclasses)
+    - [Enum Classes](#enum-classes)
+    - [The Python Data Model (Dunder Methods)](#the-python-data-model-dunder-methods)
+      - [`__call__`, `__getattr__`, `__setattr__`](#making-objects-callable-__call__)
+    - [Type Hints and Protocols](#type-hints-and-protocols)
+      - [Generics and Type Parameters](#generic-classes-type-parameters)
+      - [The `Self` Type](#the-self-type-python-311)
+    - [JSON Serialization](#json-serialization-tips)
 13. [Best Practices Summary](#best-practices-summary)
 14. [Performance Considerations](#performance-considerations)
+    - [OOP-Specific Performance Tips](#oop-specific-performance-tips)
+    - [Performance Comparison Table](#performance-comparison-table)
+    - [When to Optimize](#when-to-optimize)
 15. [Error Handling in OOP](#error-handling-in-oop)
 16. [Testing OOP Code](#testing-oop-code)
 17. [Real-World Examples from Our Codebase](#real-world-examples-from-our-codebase)
-18. [What's Missing?](#whats-missing)
+18. [Practice Exercises](#practice-exercises)
+19. [Appendices](#appendices)
+20. [What's Missing?](#whats-missing)
+21. [Quick Reference for Beginners](#quick-reference-for-beginners)
 
 ---
 
@@ -1113,6 +1145,67 @@ SOLID is an acronym for five important principles that help you write better obj
 
 The SOLID principles are five fundamental design principles that make software designs more understandable, flexible, and maintainable.
 
+### SOLID at a Glance
+
+```
+┌────────────────────────────────────────────────────────────────────┐
+│                      SOLID PRINCIPLES                               │
+├────────────────────────────────────────────────────────────────────┤
+│                                                                     │
+│  S - Single Responsibility Principle                                │
+│      │                                                              │
+│      └──▶ One class = One job = One reason to change               │
+│           "Do one thing and do it well"                             │
+│                                                                     │
+│  O - Open/Closed Principle                                          │
+│      │                                                              │
+│      └──▶ Open for extension, Closed for modification              │
+│           "Add new features without changing existing code"         │
+│                                                                     │
+│  L - Liskov Substitution Principle                                  │
+│      │                                                              │
+│      └──▶ Subclass should work wherever parent works               │
+│           "Don't break parent's promises"                           │
+│                                                                     │
+│  I - Interface Segregation Principle                                │
+│      │                                                              │
+│      └──▶ Many specific interfaces > One general interface         │
+│           "Don't force classes to implement unused methods"         │
+│                                                                     │
+│  D - Dependency Inversion Principle                                 │
+│      │                                                              │
+│      └──▶ Depend on abstractions, not concretions                  │
+│           "Use interfaces/protocols, not concrete classes"          │
+│                                                                     │
+└────────────────────────────────────────────────────────────────────┘
+
+Quick Decision Guide:
+
+  Your class does multiple things? ──────────▶ Violates SRP
+       │
+       └─ Split into multiple classes
+
+
+  Adding feature requires editing existing code? ─▶ Violates OCP
+       │
+       └─ Use inheritance, polymorphism, or composition
+
+
+  Subclass changes parent behavior? ─────────▶ Violates LSP
+       │
+       └─ Redesign hierarchy or use composition
+
+
+  Interface forces unused methods? ──────────▶ Violates ISP
+       │
+       └─ Split into smaller, focused interfaces
+
+
+  High-level depends on low-level details? ──▶ Violates DIP
+       │
+       └─ Introduce abstraction layer (Protocol/ABC)
+```
+
 ### 1. Single Responsibility Principle (SRP)
 
 **Simple version:** Each class should do ONE thing and do it well.
@@ -1380,6 +1473,58 @@ This is a common question: "Should I use inheritance or composition?" Here's a s
 - Think: "Can I say X HAS A Y?"
 
 **Rule of thumb:** If you're unsure, prefer composition! It's more flexible.
+
+### Visual Decision Tree
+
+```
+                    Need to reuse code/behavior?
+                              |
+                              v
+                    ┌─────────┴─────────┐
+                    |                   |
+                    v                   v
+            Does X IS-A Y?       Does X HAS-A Y?
+                    |                   |
+                    v                   v
+                 ┌──┴──┐            ┌───┴───┐
+                 |     |            |       |
+               YES    NO           YES     NO
+                 |     |            |       |
+                 v     v            v       v
+            Inheritance  \    Composition   \
+               ✓          \        ✓         \
+                           \                  \
+                            └──────┬───────────┘
+                                   |
+                                   v
+                          Consider Interfaces/
+                           Protocols instead
+
+
+┌─────────────────────────────────────────────────────────┐
+│  COMPOSITION                   vs.      INHERITANCE      │
+├─────────────────────────────────────────────────────────┤
+│  Flexible                               Rigid            │
+│  Runtime behavior changes               Compile-time     │
+│  Multiple "has-a" relationships         Single parent    │
+│  Loose coupling                         Tight coupling   │
+│  Easy to test (inject deps)             Harder to test   │
+│  Prefer by default                      Use sparingly    │
+└─────────────────────────────────────────────────────────┘
+
+          COMPOSITION                    INHERITANCE
+               │                             │
+               │                             │
+    ┌──────────┴──────────┐       ┌─────────┴────────┐
+    │                     │       │                  │
+    v                     v       v                  v
+  Car                   Person   Dog                Cat
+ ┌───┐                 ┌────┐   └────┬────┘     └────┬────┘
+ │   │──HAS-A──▶Engine │    │           │                │
+ │   │                  │    │           └────IS-A───────┘
+ │   │──HAS-A──▶GPS     │    │──HAS-A──▶Name            │
+ └───┘                  └────┘                         Animal
+```
 
 ### When to Use Inheritance vs Composition
 
@@ -1831,70 +1976,1022 @@ Pitfalls:
 
 ### Context Managers
 
-Use classes as context managers for resource management:
+**Context managers** ensure resources are properly managed (opened, closed, cleaned up) even when errors occur. They're Python's way of handling setup and teardown automatically.
+
+#### Basic Context Manager Protocol
+
+Implement `__enter__` and `__exit__` to create a context manager:
 
 ```python
 class FileManager:
+    """Basic file manager context manager."""
+    
     def __init__(self, filename, mode):
         self.filename = filename
         self.mode = mode
         self.file = None
 
     def __enter__(self):
+        """Called when entering 'with' block."""
         print(f"Opening {self.filename}")
         self.file = open(self.filename, self.mode)
-        return self.file
+        return self.file  # This is what 'as f' receives
 
     def __exit__(self, exc_type, exc_val, exc_tb):
+        """Called when exiting 'with' block (always!)."""
         print(f"Closing {self.filename}")
         if self.file:
             self.file.close()
+        # Return False to propagate exceptions
+        return False
 
 # Usage
 with FileManager("test.txt", "w") as f:
     f.write("Hello, World!")
-# File is automatically closed
+# File is automatically closed, even if an exception occurs!
 ```
+
+#### Understanding `__exit__` Parameters
+
+The `__exit__` method receives information about any exception that occurred:
+
+```python
+class ExceptionHandler:
+    """Demonstrates __exit__ parameters."""
+    
+    def __enter__(self):
+        print("Entering context")
+        return self
+    
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """
+        exc_type: Exception class (e.g., ValueError) or None
+        exc_val: Exception instance or None
+        exc_tb: Traceback object or None
+        """
+        if exc_type is None:
+            print("Exited normally (no exception)")
+        else:
+            print(f"Exception occurred: {exc_type.__name__}: {exc_val}")
+        
+        # Return True to suppress the exception
+        # Return False (or None) to propagate it
+        return False
+
+# Normal exit
+with ExceptionHandler():
+    print("No error")
+
+# Exception exit
+try:
+    with ExceptionHandler():
+        raise ValueError("Something went wrong!")
+except ValueError:
+    print("Exception propagated")
+```
+
+#### Suppressing Exceptions
+
+```python
+class ErrorSuppressor:
+    """Context manager that suppresses specific exceptions."""
+    
+    def __init__(self, *exception_types):
+        self.exception_types = exception_types
+        self.exception_caught = None
+    
+    def __enter__(self):
+        return self
+    
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if exc_type is not None and issubclass(exc_type, self.exception_types):
+            self.exception_caught = exc_val
+            print(f"Suppressed {exc_type.__name__}: {exc_val}")
+            return True  # Suppress the exception
+        return False  # Don't suppress other exceptions
+
+# Usage
+with ErrorSuppressor(ValueError, TypeError) as suppressor:
+    int("not a number")  # ValueError - suppressed
+    print("This line executes!")
+
+print(f"Caught: {suppressor.exception_caught}")
+```
+
+#### Resource Management with Cleanup
+
+```python
+import tempfile
+import os
+
+class TemporaryDirectory:
+    """Create and cleanup a temporary directory."""
+    
+    def __init__(self):
+        self.path = None
+    
+    def __enter__(self):
+        """Create temporary directory."""
+        self.path = tempfile.mkdtemp()
+        print(f"Created temp directory: {self.path}")
+        return self.path
+    
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """Delete temporary directory and all contents."""
+        if self.path and os.path.exists(self.path):
+            # Clean up all files
+            for root, dirs, files in os.walk(self.path, topdown=False):
+                for name in files:
+                    os.remove(os.path.join(root, name))
+                for name in dirs:
+                    os.rmdir(os.path.join(root, name))
+            os.rmdir(self.path)
+            print(f"Cleaned up temp directory: {self.path}")
+        return False
+
+# Usage
+with TemporaryDirectory() as temp_dir:
+    # Create temporary files
+    temp_file = os.path.join(temp_dir, "data.txt")
+    with open(temp_file, "w") as f:
+        f.write("temporary data")
+    print(f"Using {temp_file}")
+# temp_dir is automatically deleted here!
+```
+
+#### Nested Context Managers
+
+```python
+class Timer:
+    """Context manager to time code execution."""
+    
+    def __init__(self, name):
+        self.name = name
+        self.start_time = None
+        self.elapsed = None
+    
+    def __enter__(self):
+        import time
+        self.start_time = time.time()
+        print(f"Starting {self.name}")
+        return self
+    
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        import time
+        self.elapsed = time.time() - self.start_time
+        print(f"{self.name} took {self.elapsed:.4f} seconds")
+        return False
+
+class ResourceLock:
+    """Simulated resource lock."""
+    
+    def __init__(self, resource_name):
+        self.resource_name = resource_name
+    
+    def __enter__(self):
+        print(f"Acquired lock on {self.resource_name}")
+        return self
+    
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        print(f"Released lock on {self.resource_name}")
+        return False
+
+# Multiple context managers in one 'with' statement
+with Timer("Database operation"), ResourceLock("users_table"):
+    print("Doing work...")
+    import time
+    time.sleep(0.1)
+```
+
+#### Using `contextlib` for Simple Context Managers
+
+The `contextlib` module provides utilities for creating context managers:
+
+```python
+from contextlib import contextmanager
+
+@contextmanager
+def file_manager(filename, mode):
+    """Generator-based context manager (simpler!)."""
+    print(f"Opening {filename}")
+    file = open(filename, mode)
+    try:
+        yield file  # Provide file to 'with' block
+    finally:
+        print(f"Closing {filename}")
+        file.close()
+
+# Usage
+with file_manager("test.txt", "w") as f:
+    f.write("Hello from contextlib!")
+```
+
+#### Advanced Example: Database Connection Pool
+
+```python
+import threading
+from contextlib import contextmanager
+
+class ConnectionPool:
+    """Thread-safe database connection pool."""
+    
+    def __init__(self, max_connections=5):
+        self.max_connections = max_connections
+        self.available = []
+        self.in_use = set()
+        self.lock = threading.Lock()
+    
+    def __enter__(self):
+        """Initialize pool when entering context."""
+        for i in range(self.max_connections):
+            self.available.append(f"Connection-{i}")
+        return self
+    
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """Cleanup all connections."""
+        with self.lock:
+            # Close all connections
+            all_conns = self.available + list(self.in_use)
+            for conn in all_conns:
+                print(f"Closing {conn}")
+            self.available.clear()
+            self.in_use.clear()
+        return False
+    
+    @contextmanager
+    def get_connection(self):
+        """Get a connection from the pool (context manager)."""
+        conn = None
+        with self.lock:
+            if not self.available:
+                raise RuntimeError("No available connections")
+            conn = self.available.pop()
+            self.in_use.add(conn)
+        
+        try:
+            print(f"Using {conn}")
+            yield conn
+        finally:
+            with self.lock:
+                self.in_use.remove(conn)
+                self.available.append(conn)
+            print(f"Returned {conn}")
+
+# Usage
+with ConnectionPool(max_connections=2) as pool:
+    # Use connection 1
+    with pool.get_connection() as conn1:
+        print(f"Working with {conn1}")
+    
+    # Use connection 2
+    with pool.get_connection() as conn2:
+        print(f"Working with {conn2}")
+# All connections closed automatically
+```
+
+#### Practical Example: Atomic File Operations
+
+```python
+import os
+import tempfile
+import shutil
+
+class AtomicWrite:
+    """Write to a file atomically (all-or-nothing)."""
+    
+    def __init__(self, filename):
+        self.filename = filename
+        self.temp_file = None
+        self.temp_name = None
+    
+    def __enter__(self):
+        """Create temporary file for writing."""
+        # Create temp file in same directory for atomic rename
+        directory = os.path.dirname(self.filename) or '.'
+        self.temp_file = tempfile.NamedTemporaryFile(
+            mode='w',
+            dir=directory,
+            delete=False
+        )
+        self.temp_name = self.temp_file.name
+        return self.temp_file
+    
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """Close and rename temp file, or delete on error."""
+        self.temp_file.close()
+        
+        if exc_type is None:
+            # Success - atomically replace original file
+            shutil.move(self.temp_name, self.filename)
+            print(f"Atomically wrote to {self.filename}")
+        else:
+            # Error - remove temp file
+            os.unlink(self.temp_name)
+            print(f"Error occurred, temp file removed")
+        
+        return False  # Propagate any exceptions
+
+# Usage
+try:
+    with AtomicWrite("important_data.txt") as f:
+        f.write("Line 1\n")
+        f.write("Line 2\n")
+        # If error occurs here, original file is unchanged!
+        # raise RuntimeError("Oops!")
+        f.write("Line 3\n")
+    print("File written successfully")
+except Exception as e:
+    print(f"Failed to write file: {e}")
+```
+
+#### Common Pitfalls
+
+```python
+# ❌ WRONG: Not returning anything from __exit__
+class BadContextManager:
+    def __enter__(self):
+        return self
+    
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        print("Cleanup")
+        # Implicitly returns None (False), which is correct
+        # But explicit is better than implicit!
+
+# ✅ CORRECT: Explicitly return False or True
+class GoodContextManager:
+    def __enter__(self):
+        return self
+    
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        print("Cleanup")
+        return False  # Explicit!
+
+# ❌ WRONG: Forgetting to handle cleanup in __exit__
+class ForgetsCleanup:
+    def __enter__(self):
+        self.resource = open("file.txt", "w")
+        return self.resource
+    
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        pass  # Oops! File never closed!
+
+# ✅ CORRECT: Always cleanup
+class RemembersCleanup:
+    def __enter__(self):
+        self.resource = open("file.txt", "w")
+        return self.resource
+    
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if self.resource:
+            self.resource.close()  # Always cleanup!
+        return False
+```
+
+**When to use context managers:**
+- File I/O operations
+- Database connections and transactions
+- Network connections (sockets, HTTP sessions)
+- Locks and synchronization primitives
+- Temporary resources (files, directories)
+- Any resource that needs guaranteed cleanup
 
 ### Descriptors
 
-Control attribute access at the class level:
+**Descriptors** are a powerful Python feature that lets you customize attribute access. They're the mechanism behind properties, methods, and many advanced Python features.
+
+#### The Descriptor Protocol
+
+A descriptor is any object that implements at least one of these methods:
+
+- `__get__(self, instance, owner)` - Get attribute value
+- `__set__(self, instance, value)` - Set attribute value  
+- `__delete__(self, instance)` - Delete attribute
+
+```python
+class Descriptor:
+    """Basic descriptor demonstrating all three methods."""
+    
+    def __init__(self, name=None):
+        self.name = name
+    
+    def __set_name__(self, owner, name):
+        """Called automatically when descriptor is assigned to a class attribute."""
+        self.name = name
+    
+    def __get__(self, instance, owner):
+        """
+        instance: The instance accessing the attribute (None if accessed via class)
+        owner: The class that owns this descriptor
+        """
+        if instance is None:
+            return self  # Accessed via class, return descriptor itself
+        print(f"Getting {self.name} from {instance}")
+        return instance.__dict__.get(self.name)
+    
+    def __set__(self, instance, value):
+        """Set the attribute value."""
+        print(f"Setting {self.name} to {value}")
+        instance.__dict__[self.name] = value
+    
+    def __delete__(self, instance):
+        """Delete the attribute."""
+        print(f"Deleting {self.name}")
+        del instance.__dict__[self.name]
+
+class MyClass:
+    attr = Descriptor()  # __set_name__ is called automatically
+    
+    def __init__(self, attr):
+        self.attr = attr  # Calls __set__
+
+# Usage
+obj = MyClass(42)  # "Setting attr to 42"
+print(obj.attr)    # "Getting attr from ...", then prints 42
+del obj.attr       # "Deleting attr"
+```
+
+#### Validation Descriptor
 
 ```python
 class ValidatedAttribute:
+    """Descriptor for validating attribute values."""
+    
     def __init__(self, min_value=None, max_value=None):
         self.min_value = min_value
         self.max_value = max_value
-        self.value = None
-
-    def __get__(self, obj, objtype=None):
-        return self.value
-
-    def __set__(self, obj, value):
+        self.name = None
+    
+    def __set_name__(self, owner, name):
+        self.name = name
+    
+    def __get__(self, instance, owner):
+        if instance is None:
+            return self
+        # Store value in instance.__dict__ with a private name
+        return instance.__dict__.get(f'_{self.name}')
+    
+    def __set__(self, instance, value):
+        # Validate before setting
         if self.min_value is not None and value < self.min_value:
-            raise ValueError(f"Value must be >= {self.min_value}")
+            raise ValueError(f"{self.name} must be >= {self.min_value}")
         if self.max_value is not None and value > self.max_value:
-            raise ValueError(f"Value must be <= {self.max_value}")
-        self.value = value
+            raise ValueError(f"{self.name} must be <= {self.max_value}")
+        instance.__dict__[f'_{self.name}'] = value
 
 class Person:
     age = ValidatedAttribute(min_value=0, max_value=150)
+    height = ValidatedAttribute(min_value=0, max_value=300)  # cm
 
-    def __init__(self, name, age):
+    def __init__(self, name, age, height):
         self.name = name
-        self.age = age  # Uses the descriptor
+        self.age = age      # Calls ValidatedAttribute.__set__
+        self.height = height
 
 # Usage
-person = Person("Alice", 30)
-print(person.age)  # 30
-
-# person.age = -5   # Would raise ValueError
-# person.age = 200  # Would raise ValueError
+person = Person("Alice", 30, 165)
+print(person.age)     # 30
+person.age = 31       # OK
+# person.age = -5     # ValueError: age must be >= 0
+# person.age = 200    # ValueError: age must be <= 150
 ```
+
+#### Type-Checking Descriptor
+
+```python
+class TypedAttribute:
+    """Descriptor that enforces type checking."""
+    
+    def __init__(self, expected_type):
+        self.expected_type = expected_type
+        self.name = None
+    
+    def __set_name__(self, owner, name):
+        self.name = name
+    
+    def __get__(self, instance, owner):
+        if instance is None:
+            return self
+        return instance.__dict__.get(f'_{self.name}')
+    
+    def __set__(self, instance, value):
+        if not isinstance(value, self.expected_type):
+            raise TypeError(
+                f"{self.name} must be {self.expected_type.__name__}, "
+                f"not {type(value).__name__}"
+            )
+        instance.__dict__[f'_{self.name}'] = value
+
+class User:
+    name = TypedAttribute(str)
+    age = TypedAttribute(int)
+    email = TypedAttribute(str)
+    
+    def __init__(self, name, age, email):
+        self.name = name
+        self.age = age
+        self.email = email
+
+# Usage
+user = User("Alice", 30, "alice@example.com")
+user.age = 31  # OK
+# user.age = "thirty"  # TypeError: age must be int, not str
+```
+
+#### Lazy-Loading Descriptor
+
+```python
+class LazyProperty:
+    """Descriptor that computes value only once (lazy loading)."""
+    
+    def __init__(self, func):
+        self.func = func
+        self.name = func.__name__
+    
+    def __get__(self, instance, owner):
+        if instance is None:
+            return self
+        
+        # Check if value already computed
+        if self.name not in instance.__dict__:
+            # Compute and cache the value
+            print(f"Computing {self.name}...")
+            value = self.func(instance)
+            instance.__dict__[self.name] = value
+        
+        return instance.__dict__[self.name]
+
+class DataAnalyzer:
+    def __init__(self, data):
+        self.data = data
+    
+    @LazyProperty
+    def mean(self):
+        """Compute mean (expensive operation)."""
+        return sum(self.data) / len(self.data)
+    
+    @LazyProperty
+    def sorted_data(self):
+        """Sort data (expensive operation)."""
+        return sorted(self.data)
+
+# Usage
+analyzer = DataAnalyzer([5, 2, 8, 1, 9])
+print("Analyzer created")
+print(analyzer.mean)         # "Computing mean...", then 5.0
+print(analyzer.mean)         # 5.0 (no recomputation!)
+print(analyzer.sorted_data)  # "Computing sorted_data...", then [1, 2, 5, 8, 9]
+print(analyzer.sorted_data)  # [1, 2, 5, 8, 9] (cached!)
+```
+
+#### Read-Only Descriptor
+
+```python
+class ReadOnly:
+    """Descriptor for read-only attributes."""
+    
+    def __init__(self, func):
+        self.func = func
+        self.name = func.__name__
+    
+    def __get__(self, instance, owner):
+        if instance is None:
+            return self
+        return self.func(instance)
+    
+    def __set__(self, instance, value):
+        raise AttributeError(f"'{self.name}' is read-only")
+
+class Circle:
+    def __init__(self, radius):
+        self._radius = radius
+    
+    @ReadOnly
+    def diameter(self):
+        """Computed property (read-only)."""
+        return self._radius * 2
+    
+    @ReadOnly
+    def area(self):
+        """Computed property (read-only)."""
+        import math
+        return math.pi * self._radius ** 2
+
+# Usage
+circle = Circle(5)
+print(circle.diameter)  # 10
+print(circle.area)      # 78.53981633974483
+# circle.diameter = 20  # AttributeError: 'diameter' is read-only
+```
+
+#### Descriptor for Caching with Expiration
+
+```python
+import time
+
+class CachedProperty:
+    """Descriptor with time-based cache expiration."""
+    
+    def __init__(self, ttl=60):
+        """
+        ttl: Time to live in seconds
+        """
+        self.ttl = ttl
+        self.func = None
+        self.name = None
+    
+    def __call__(self, func):
+        """Allow using as decorator."""
+        self.func = func
+        self.name = func.__name__
+        return self
+    
+    def __get__(self, instance, owner):
+        if instance is None:
+            return self
+        
+        cache_key = f'_{self.name}_cache'
+        timestamp_key = f'_{self.name}_timestamp'
+        
+        current_time = time.time()
+        cached_time = instance.__dict__.get(timestamp_key, 0)
+        
+        # Check if cache is expired
+        if current_time - cached_time > self.ttl:
+            print(f"Cache expired for {self.name}, recomputing...")
+            value = self.func(instance)
+            instance.__dict__[cache_key] = value
+            instance.__dict__[timestamp_key] = current_time
+        
+        return instance.__dict__[cache_key]
+
+class APIClient:
+    def __init__(self):
+        self.call_count = 0
+    
+    @CachedProperty(ttl=2)  # Cache for 2 seconds
+    def user_count(self):
+        """Expensive API call (simulated)."""
+        self.call_count += 1
+        print(f"Making API call #{self.call_count}...")
+        time.sleep(0.1)  # Simulate network delay
+        return 42
+
+# Usage
+client = APIClient()
+print(client.user_count)  # "Making API call #1...", then 42
+print(client.user_count)  # 42 (cached)
+time.sleep(2.5)
+print(client.user_count)  # "Cache expired...", "Making API call #2...", then 42
+```
+
+#### Descriptors vs Properties
+
+**When to use each:**
+
+```python
+# Use @property for simple, instance-specific logic
+class SimpleClass:
+    def __init__(self, value):
+        self._value = value
+    
+    @property
+    def value(self):
+        """Simple computed property."""
+        return self._value * 2
+
+# Use descriptors for reusable, class-level attribute behavior
+class ReusableValidation:
+    """Can be used across many classes."""
+    positive = ValidatedAttribute(min_value=0)
+    percentage = ValidatedAttribute(min_value=0, max_value=100)
+```
+
+**Key differences:**
+- **Property**: Defined per-class, not reusable
+- **Descriptor**: Defined once, reusable across classes
+- **Property**: Simpler for one-off cases
+- **Descriptor**: Better for repeated patterns
+
+#### Common Use Cases for Descriptors
+
+1. **Validation**: Type checking, range validation, format validation
+2. **Lazy Loading**: Compute expensive values only when needed
+3. **Caching**: Store computed values to avoid recomputation
+4. **Logging**: Track attribute access and modifications
+5. **Type Conversion**: Automatically convert types on assignment
+6. **ORM Fields**: Database column definitions (like Django models)
+7. **API Client**: Lazy connection initialization
+
+#### Real-World Example: ORM-Style Field
+
+```python
+class Field:
+    """Base descriptor for database fields."""
+    
+    def __init__(self, field_type, default=None):
+        self.field_type = field_type
+        self.default = default
+        self.name = None
+    
+    def __set_name__(self, owner, name):
+        self.name = name
+    
+    def __get__(self, instance, owner):
+        if instance is None:
+            return self
+        return instance.__dict__.get(self.name, self.default)
+    
+    def __set__(self, instance, value):
+        if value is not None and not isinstance(value, self.field_type):
+            raise TypeError(f"{self.name} must be {self.field_type.__name__}")
+        instance.__dict__[self.name] = value
+
+class IntegerField(Field):
+    def __init__(self, default=0, min_value=None, max_value=None):
+        super().__init__(int, default)
+        self.min_value = min_value
+        self.max_value = max_value
+    
+    def __set__(self, instance, value):
+        super().__set__(instance, value)
+        if value is not None:
+            if self.min_value is not None and value < self.min_value:
+                raise ValueError(f"{self.name} must be >= {self.min_value}")
+            if self.max_value is not None and value > self.max_value:
+                raise ValueError(f"{self.name} must be <= {self.max_value}")
+
+class StringField(Field):
+    def __init__(self, default="", max_length=None):
+        super().__init__(str, default)
+        self.max_length = max_length
+    
+    def __set__(self, instance, value):
+        super().__set__(instance, value)
+        if value is not None and self.max_length and len(value) > self.max_length:
+            raise ValueError(f"{self.name} must be <= {self.max_length} characters")
+
+class Product:
+    """ORM-style model class."""
+    id = IntegerField(min_value=1)
+    name = StringField(max_length=100)
+    price = IntegerField(min_value=0)
+    quantity = IntegerField(default=0, min_value=0)
+    
+    def __init__(self, id, name, price, quantity=0):
+        self.id = id
+        self.name = name
+        self.price = price
+        self.quantity = quantity
+
+# Usage
+product = Product(1, "Laptop", 1200, 5)
+print(f"{product.name}: ${product.price}")
+# product.price = -100  # ValueError: price must be >= 0
+# product.name = "A" * 200  # ValueError: name must be <= 100 characters
+```
+
+**Key Takeaway:** Descriptors are Python's most powerful attribute access mechanism. Use them when you need reusable attribute behavior across multiple classes.
 
 ### Metaclasses
 
-Metaclasses are “classes of classes” that can control how classes are created or modified (e.g., automatic registration, API generation, singletons, attribute validation). They are powerful but easy to overuse. Prefer decorators, descriptors, or simple registries unless a metaclass is clearly the right tool. For worked examples and best practices, see `advanced_oop_concepts.md` (Advanced Metaclass Usage).
+Metaclasses are "classes of classes" that can control how classes are created or modified (e.g., automatic registration, API generation, singletons, attribute validation). They are powerful but easy to overuse. Prefer decorators, descriptors, or simple registries unless a metaclass is clearly the right tool. For worked examples and best practices, see `advanced_oop_concepts.md` (Advanced Metaclass Usage).
+
+---
+
+### Class Decorators
+
+**Class decorators** are functions that take a class and return a modified class. They're simpler than metaclasses and should be your first choice for class transformation.
+
+#### Basic Class Decorator
+
+```python
+def add_repr(cls):
+    """Decorator that adds a __repr__ method to a class."""
+    def __repr__(self):
+        attrs = ', '.join(f"{k}={v!r}" for k, v in self.__dict__.items())
+        return f"{cls.__name__}({attrs})"
+    
+    cls.__repr__ = __repr__
+    return cls
+
+@add_repr
+class Point:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+
+p = Point(3, 4)
+print(p)  # Point(x=3, y=4)
+```
+
+#### Auto-Registration Pattern
+
+A common use case is automatically registering classes:
+
+```python
+class Registry:
+    """Global registry for plugins."""
+    _plugins = {}
+    
+    @classmethod
+    def register(cls, name):
+        """Decorator to register a plugin class."""
+        def decorator(plugin_class):
+            cls._plugins[name] = plugin_class
+            plugin_class.plugin_name = name  # Add attribute
+            return plugin_class
+        return decorator
+    
+    @classmethod
+    def get_plugin(cls, name):
+        """Get a registered plugin by name."""
+        return cls._plugins.get(name)
+    
+    @classmethod
+    def list_plugins(cls):
+        """List all registered plugins."""
+        return list(cls._plugins.keys())
+
+# Using the decorator
+@Registry.register('email')
+class EmailNotifier:
+    def send(self, message):
+        print(f"Sending email: {message}")
+
+@Registry.register('sms')
+class SMSNotifier:
+    def send(self, message):
+        print(f"Sending SMS: {message}")
+
+# Usage
+print(Registry.list_plugins())  # ['email', 'sms']
+notifier = Registry.get_plugin('email')()
+notifier.send("Hello!")  # "Sending email: Hello!"
+```
+
+#### Validation and Enforcement
+
+```python
+def require_methods(*method_names):
+    """Decorator that ensures a class implements required methods."""
+    def decorator(cls):
+        for method_name in method_names:
+            if not hasattr(cls, method_name):
+                raise TypeError(
+                    f"{cls.__name__} must implement {method_name}() method"
+                )
+            method = getattr(cls, method_name)
+            if not callable(method):
+                raise TypeError(
+                    f"{cls.__name__}.{method_name} must be callable"
+                )
+        return cls
+    return decorator
+
+@require_methods('process', 'validate')
+class DataProcessor:
+    def process(self, data):
+        return data.upper()
+    
+    def validate(self, data):
+        return isinstance(data, str)
+
+# This would raise TypeError: MissingMethod must implement process() method
+# @require_methods('process', 'validate')
+# class MissingMethod:
+#     pass
+```
+
+#### Adding Functionality
+
+```python
+def singleton(cls):
+    """Decorator that makes a class a singleton."""
+    instances = {}
+    
+    def get_instance(*args, **kwargs):
+        if cls not in instances:
+            instances[cls] = cls(*args, **kwargs)
+        return instances[cls]
+    
+    return get_instance
+
+@singleton
+class DatabaseConnection:
+    def __init__(self, host):
+        self.host = host
+        print(f"Creating connection to {host}")
+
+# Both are the same instance!
+db1 = DatabaseConnection("localhost")  # "Creating connection to localhost"
+db2 = DatabaseConnection("localhost")  # No output - reuses existing
+print(db1 is db2)  # True
+```
+
+#### Parametrized Class Decorators
+
+```python
+def add_method(method_name, method_impl):
+    """Decorator that adds a method to a class."""
+    def decorator(cls):
+        setattr(cls, method_name, method_impl)
+        return cls
+    return decorator
+
+def greet(self):
+    return f"Hello, I'm {self.name}"
+
+@add_method('greet', greet)
+class Person:
+    def __init__(self, name):
+        self.name = name
+
+p = Person("Alice")
+print(p.greet())  # "Hello, I'm Alice"
+```
+
+#### Timing and Performance Tracking
+
+```python
+import time
+import functools
+
+def track_calls(cls):
+    """Decorator that tracks method calls and timing."""
+    original_methods = {}
+    
+    for attr_name in dir(cls):
+        attr = getattr(cls, attr_name)
+        if callable(attr) and not attr_name.startswith('_'):
+            original_methods[attr_name] = attr
+    
+    for method_name, method in original_methods.items():
+        @functools.wraps(method)
+        def wrapper(*args, _method=method, _name=method_name, **kwargs):
+            start = time.time()
+            result = _method(*args, **kwargs)
+            elapsed = time.time() - start
+            print(f"{_name} took {elapsed:.4f}s")
+            return result
+        
+        setattr(cls, method_name, wrapper)
+    
+    return cls
+
+@track_calls
+class DataAnalyzer:
+    def process(self, data):
+        time.sleep(0.1)  # Simulate work
+        return len(data)
+    
+    def validate(self, data):
+        time.sleep(0.05)  # Simulate work
+        return isinstance(data, list)
+
+analyzer = DataAnalyzer()
+analyzer.process([1, 2, 3])  # "process took 0.1001s"
+analyzer.validate([1, 2])    # "validate took 0.0501s"
+```
+
+#### When to Use Class Decorators vs Metaclasses
+
+**Use Class Decorators when:**
+- You need to modify or add attributes/methods after class creation
+- You want simple, readable transformations
+- You're registering classes
+- You're adding validation or type checking
+- You want to wrap methods
+
+**Use Metaclasses when:**
+- You need to control class creation itself (before the class exists)
+- You need to modify the class namespace during creation
+- You're building a framework with complex class hierarchies
+- You need to enforce rules across an entire class hierarchy
+
+**Example: Equivalent functionality**
+
+```python
+# With class decorator (simpler!)
+def add_id(cls):
+    cls.class_id = id(cls)
+    return cls
+
+@add_id
+class MyClass:
+    pass
+
+# With metaclass (more complex)
+class AddIdMeta(type):
+    def __new__(cls, name, bases, attrs):
+        new_class = super().__new__(cls, name, bases, attrs)
+        new_class.class_id = id(new_class)
+        return new_class
+
+class MyClass(metaclass=AddIdMeta):
+    pass
+```
+
+**Rule of thumb:** Start with class decorators. Only use metaclasses if decorators can't solve your problem.
 
 ---
 
@@ -2205,20 +3302,170 @@ students.sort()  # Uses __lt__ for sorting
 print(students)  # Sorted by grade
 ```
 
+#### Making Objects Callable: `__call__`
+
+Make your objects behave like functions by implementing `__call__`:
+
+```python
+class Multiplier:
+    """A callable object that multiplies by a factor."""
+    
+    def __init__(self, factor):
+        self.factor = factor
+    
+    def __call__(self, value):
+        """Called when instance is used like a function."""
+        return value * self.factor
+
+# Usage
+times_five = Multiplier(5)
+print(times_five(10))  # 50 - calling the object like a function!
+print(times_five(3))   # 15
+
+# Useful for stateful functions
+class Counter:
+    """Count how many times it's been called."""
+    
+    def __init__(self):
+        self.count = 0
+    
+    def __call__(self):
+        self.count += 1
+        return self.count
+
+counter = Counter()
+print(counter())  # 1
+print(counter())  # 2
+print(counter())  # 3
+```
+
+**Real-world use cases:**
+- Decorators that need to maintain state
+- Function factories
+- Callback objects with state
+- Machine learning models (in frameworks like PyTorch, models are callable)
+
+#### Attribute Access Control: `__getattr__`, `__setattr__`, `__delattr__`
+
+Control what happens when attributes are accessed, set, or deleted:
+
+```python
+class DynamicAttributes:
+    """Object that tracks all attribute access."""
+    
+    def __init__(self):
+        # Use object.__setattr__ to avoid recursion
+        object.__setattr__(self, '_data', {})
+        object.__setattr__(self, '_access_log', [])
+    
+    def __getattr__(self, name):
+        """Called when attribute is NOT found in normal places."""
+        self._access_log.append(f"Getting {name}")
+        if name in self._data:
+            return self._data[name]
+        raise AttributeError(f"{name} not found")
+    
+    def __setattr__(self, name, value):
+        """Called for ALL attribute assignments."""
+        if name.startswith('_'):
+            # Use object.__setattr__ for internal attributes
+            object.__setattr__(self, name, value)
+        else:
+            self._access_log.append(f"Setting {name} = {value}")
+            self._data[name] = value
+    
+    def __delattr__(self, name):
+        """Called when del obj.attr is used."""
+        self._access_log.append(f"Deleting {name}")
+        if name in self._data:
+            del self._data[name]
+
+# Usage
+obj = DynamicAttributes()
+obj.name = "Alice"        # Calls __setattr__
+print(obj.name)           # Calls __getattr__ -> "Alice"
+del obj.name              # Calls __delattr__
+
+print(obj._access_log)
+# ['Setting name = Alice', 'Getting name', 'Deleting name']
+```
+
+**`__getattribute__` vs `__getattr__`:**
+
+```python
+class StrictAccess:
+    """Demonstrates the difference between __getattr__ and __getattribute__."""
+    
+    def __init__(self):
+        self.public = "visible"
+    
+    def __getattribute__(self, name):
+        """Called for EVERY attribute access."""
+        print(f"__getattribute__: Accessing {name}")
+        # Must use object.__getattribute__ to avoid infinite recursion
+        return object.__getattribute__(self, name)
+    
+    def __getattr__(self, name):
+        """Only called if attribute NOT found by __getattribute__."""
+        print(f"__getattr__: {name} not found, returning default")
+        return "default_value"
+
+obj = StrictAccess()
+print(obj.public)     # Calls __getattribute__ only
+print(obj.missing)    # Calls __getattribute__, then __getattr__
+```
+
+**⚠️ Warning:** Be very careful with `__setattr__` and `__getattribute__` - they can easily cause infinite recursion if not implemented correctly!
+
+**Common use cases:**
+- Lazy loading of attributes
+- Proxies and wrappers
+- ORMs (Object-Relational Mappers)
+- Logging and debugging
+- Access control and validation
+
+#### Context Manager Protocol: `__enter__` and `__exit__`
+
+Briefly covered here; see [Context Managers](#context-managers-for-resource-management) for full details.
+
+```python
+class Transaction:
+    """Database transaction context manager."""
+    
+    def __enter__(self):
+        print("Beginning transaction")
+        return self
+    
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if exc_type is None:
+            print("Committing transaction")
+        else:
+            print(f"Rolling back transaction due to {exc_type.__name__}")
+        return False  # Don't suppress exceptions
+
+# Usage
+with Transaction() as tx:
+    print("Doing work...")
+    # Transaction commits automatically
+```
+
 **Other common dunder methods:**
 - **Numeric operators**: `__add__`, `__sub__`, `__mul__`, `__truediv__`, `__floordiv__`, `__mod__`, `__pow__`
 - **Comparison**: `__lt__`, `__le__`, `__gt__`, `__ge__`, `__eq__`, `__ne__`
-- **Context Managers**: `__enter__`, `__exit__` (covered in Advanced OOP Concepts)
+- **Context Managers**: `__enter__`, `__exit__` (see dedicated section below)
 - **Callable**: `__call__` (makes an object callable like a function)
 
 ### Type Hints and Protocols
 
-Define structural typing:
+#### Basic Protocols: Structural Typing
+
+Protocols enable "duck typing" with type checking - if it walks like a duck and quacks like a duck, it's a duck:
 
 ```python
 from typing import Protocol
 
 class Drawable(Protocol):
+    """Anything that can be drawn."""
     def draw(self) -> str:
         ...
 
@@ -2231,11 +3478,291 @@ class Square:
         return "Drawing a square"
 
 def draw_shape(shape: Drawable) -> None:
+    """Works with any object that has a draw() method."""
     print(shape.draw())
 
-# Both Circle and Square satisfy the Drawable protocol
+# Both work without explicit inheritance!
 draw_shape(Circle())  # "Drawing a circle"
 draw_shape(Square())  # "Drawing a square"
+```
+
+**Protocols vs ABCs:**
+- **Protocol**: Structural typing - "has these methods" (duck typing with types)
+- **ABC**: Nominal typing - "declared as this type" (explicit inheritance)
+
+#### Generic Classes: Type Parameters
+
+Make your classes work with different types while maintaining type safety:
+
+```python
+from typing import Generic, TypeVar
+
+T = TypeVar('T')  # Type variable
+
+class Box(Generic[T]):
+    """A box that can hold any type of item."""
+    
+    def __init__(self, item: T):
+        self.item = item
+    
+    def get_item(self) -> T:
+        return self.item
+    
+    def set_item(self, item: T) -> None:
+        self.item = item
+
+# Type checker knows box_int contains int
+box_int: Box[int] = Box(42)
+print(box_int.get_item())  # Type: int
+
+# Type checker knows box_str contains str
+box_str: Box[str] = Box("hello")
+print(box_str.get_item())  # Type: str
+
+# Type error! Can't put str in Box[int]
+# box_int.set_item("wrong")  # Type checker catches this!
+```
+
+#### Multiple Type Variables
+
+```python
+from typing import Generic, TypeVar
+
+K = TypeVar('K')  # Key type
+V = TypeVar('V')  # Value type
+
+class Pair(Generic[K, V]):
+    """A pair of values with different types."""
+    
+    def __init__(self, key: K, value: V):
+        self.key = key
+        self.value = value
+    
+    def get_key(self) -> K:
+        return self.key
+    
+    def get_value(self) -> V:
+        return self.value
+
+# String key, int value
+pair1: Pair[str, int] = Pair("age", 30)
+print(pair1.get_key())    # Type: str
+print(pair1.get_value())  # Type: int
+
+# Int key, list value
+pair2: Pair[int, list[str]] = Pair(1, ["a", "b"])
+print(pair2.get_value())  # Type: list[str]
+```
+
+#### Bounded Type Variables
+
+Restrict what types can be used:
+
+```python
+from typing import TypeVar, Protocol, Generic
+
+class Comparable(Protocol):
+    """Protocol for objects that can be compared."""
+    def __lt__(self, other) -> bool: ...
+
+# T must be a subtype of Comparable
+T = TypeVar('T', bound=Comparable)
+
+class SortedList(Generic[T]):
+    """A list that keeps items sorted."""
+    
+    def __init__(self):
+        self._items: list[T] = []
+    
+    def add(self, item: T) -> None:
+        """Add item in sorted position."""
+        self._items.append(item)
+        self._items.sort()  # Works because T is Comparable
+    
+    def get_items(self) -> list[T]:
+        return self._items.copy()
+
+# Works with int (comparable)
+sorted_nums: SortedList[int] = SortedList()
+sorted_nums.add(5)
+sorted_nums.add(2)
+sorted_nums.add(8)
+print(sorted_nums.get_items())  # [2, 5, 8]
+```
+
+#### The `Self` Type (Python 3.11+)
+
+Use `Self` to refer to the current class type in methods:
+
+```python
+from typing import Self  # Python 3.11+
+
+class Builder:
+    """Fluent builder pattern with proper typing."""
+    
+    def __init__(self):
+        self.value = 0
+    
+    def add(self, n: int) -> Self:
+        """Returns Self, not Builder."""
+        self.value += n
+        return self
+    
+    def multiply(self, n: int) -> Self:
+        """Returns Self for method chaining."""
+        self.value *= n
+        return self
+    
+    def build(self) -> int:
+        return self.value
+
+class ExtendedBuilder(Builder):
+    """Subclass with additional methods."""
+    
+    def subtract(self, n: int) -> Self:
+        """Returns ExtendedBuilder, not Builder!"""
+        self.value -= n
+        return self
+
+# Type checker knows result is ExtendedBuilder, not Builder
+result = ExtendedBuilder().add(10).subtract(3).multiply(2).build()
+print(result)  # 14
+```
+
+**Before Python 3.11:** Use `TypeVar` bound to the class:
+
+```python
+from typing import TypeVar
+
+T = TypeVar('T', bound='Builder')
+
+class Builder:
+    def add(self: T, n: int) -> T:
+        self.value += n
+        return self
+```
+
+#### Generic Protocols
+
+Combine Protocols with Generics:
+
+```python
+from typing import Protocol, TypeVar
+
+T = TypeVar('T')
+
+class Container(Protocol[T]):
+    """Protocol for containers holding type T."""
+    
+    def get(self) -> T: ...
+    def put(self, item: T) -> None: ...
+
+class StringBox:
+    """Implements Container[str] implicitly."""
+    
+    def __init__(self):
+        self._item: str = ""
+    
+    def get(self) -> str:
+        return self._item
+    
+    def put(self, item: str) -> None:
+        self._item = item
+
+def process_container(container: Container[str]) -> str:
+    """Works with any container of strings."""
+    item = container.get()
+    return item.upper()
+
+box = StringBox()
+box.put("hello")
+print(process_container(box))  # "HELLO"
+```
+
+#### Type Narrowing with isinstance
+
+```python
+from typing import Union
+
+class Dog:
+    def bark(self) -> str:
+        return "Woof!"
+
+class Cat:
+    def meow(self) -> str:
+        return "Meow!"
+
+def make_sound(animal: Union[Dog, Cat]) -> str:
+    """Type checker understands isinstance."""
+    if isinstance(animal, Dog):
+        # Type narrowed to Dog here
+        return animal.bark()
+    else:
+        # Type narrowed to Cat here
+        return animal.meow()
+
+print(make_sound(Dog()))  # "Woof!"
+print(make_sound(Cat()))  # "Meow!"
+```
+
+#### Practical Example: Generic Repository
+
+```python
+from typing import Generic, TypeVar, Protocol, Optional
+from abc import ABC, abstractmethod
+
+T = TypeVar('T')
+
+class Entity(Protocol):
+    """Protocol for database entities."""
+    id: int
+
+class Repository(ABC, Generic[T]):
+    """Generic repository for any entity type."""
+    
+    @abstractmethod
+    def get_by_id(self, id: int) -> Optional[T]:
+        """Get entity by ID."""
+        pass
+    
+    @abstractmethod
+    def save(self, entity: T) -> T:
+        """Save entity to database."""
+        pass
+    
+    @abstractmethod
+    def delete(self, id: int) -> bool:
+        """Delete entity by ID."""
+        pass
+
+class User:
+    """User entity."""
+    def __init__(self, id: int, name: str):
+        self.id = id
+        self.name = name
+
+class UserRepository(Repository[User]):
+    """Concrete repository for User entities."""
+    
+    def __init__(self):
+        self._users: dict[int, User] = {}
+    
+    def get_by_id(self, id: int) -> Optional[User]:
+        return self._users.get(id)
+    
+    def save(self, user: User) -> User:
+        self._users[user.id] = user
+        return user
+    
+    def delete(self, id: int) -> bool:
+        if id in self._users:
+            del self._users[id]
+            return True
+        return False
+
+# Type checker knows this returns Optional[User]
+repo: Repository[User] = UserRepository()
+user = repo.get_by_id(1)
 ```
 
 ### JSON serialization tips
@@ -2430,15 +3957,322 @@ with PostgreSQLConnection(config) as db:
 
 ## Performance Considerations
 
-Writing performant code is crucial, but it's important to balance performance with clarity and maintainability. For a deep dive into performance optimization, including profiling, memory management, and advanced techniques, please refer to our dedicated guide:
+Writing performant code is crucial, but it's important to balance performance with clarity and maintainability. **Premature optimization is the root of all evil** - always profile first, then optimize!
+
+### OOP-Specific Performance Tips
+
+#### 1. Use `__slots__` for Memory Efficiency
+
+Normal classes store attributes in a `__dict__`, which uses more memory. `__slots__` uses a fixed list instead:
+
+```python
+import sys
+
+# Without slots
+class Point:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+
+# With slots
+class PointSlots:
+    __slots__ = ('x', 'y')
+    
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+
+# Memory comparison
+p1 = Point(1, 2)
+p2 = PointSlots(1, 2)
+
+print(f"Without slots: {sys.getsizeof(p1)} + {sys.getsizeof(p1.__dict__)} = {sys.getsizeof(p1) + sys.getsizeof(p1.__dict__)} bytes")
+print(f"With slots: {sys.getsizeof(p2)} bytes")
+# Output: Without slots: 48 + 112 = 160 bytes
+#         With slots: 48 bytes
+```
+
+**Benefits of `__slots__`:**
+- ~50% memory reduction
+- Slightly faster attribute access
+- Prevents accidental attribute creation
+
+**Drawbacks:**
+- Can't add new attributes dynamically
+- No `__dict__` (breaks some metaprogramming)
+- Inheritance requires care
+
+#### 2. Property vs Direct Attribute Access
+
+```python
+import timeit
+
+class WithProperty:
+    def __init__(self, value):
+        self._value = value
+    
+    @property
+    def value(self):
+        return self._value
+
+class DirectAccess:
+    def __init__(self, value):
+        self.value = value
+
+# Benchmark
+prop = WithProperty(42)
+direct = DirectAccess(42)
+
+print("Property access:", timeit.timeit(lambda: prop.value, number=1000000))
+print("Direct access:", timeit.timeit(lambda: direct.value, number=1000000))
+# Output: Property access: ~0.05s
+#         Direct access: ~0.03s
+```
+
+**Takeaway:** Properties are ~60% slower. Use them for validation/computation, not for simple attribute access.
+
+#### 3. Method Call Overhead
+
+```python
+import timeit
+
+class Calculator:
+    def add(self, a, b):
+        return a + b
+    
+    @staticmethod
+    def add_static(a, b):
+        return a + b
+
+def add_function(a, b):
+    return a + b
+
+calc = Calculator()
+
+# Benchmark
+print("Instance method:", timeit.timeit(lambda: calc.add(1, 2), number=1000000))
+print("Static method:", timeit.timeit(lambda: Calculator.add_static(1, 2), number=1000000))
+print("Function:", timeit.timeit(lambda: add_function(1, 2), number=1000000))
+# Output: Instance method: ~0.12s
+#         Static method: ~0.08s
+#         Function: ~0.06s
+```
+
+**Takeaway:** Method calls have overhead. For performance-critical code, consider functions.
+
+#### 4. Descriptor vs Property Performance
+
+```python
+import timeit
+
+class DescriptorValidator:
+    def __init__(self, name):
+        self.name = name
+    
+    def __get__(self, instance, owner):
+        if instance is None:
+            return self
+        return instance.__dict__.get(f'_{self.name}')
+    
+    def __set__(self, instance, value):
+        if value < 0:
+            raise ValueError("Must be positive")
+        instance.__dict__[f'_{self.name}'] = value
+
+class WithDescriptor:
+    value = DescriptorValidator('value')
+    
+    def __init__(self, value):
+        self.value = value
+
+class WithProperty:
+    def __init__(self, value):
+        self._value = value
+    
+    @property
+    def value(self):
+        return self._value
+    
+    @value.setter
+    def value(self, val):
+        if val < 0:
+            raise ValueError("Must be positive")
+        self._value = val
+
+# Benchmark reads
+desc = WithDescriptor(42)
+prop = WithProperty(42)
+
+print("Descriptor read:", timeit.timeit(lambda: desc.value, number=1000000))
+print("Property read:", timeit.timeit(lambda: prop.value, number=1000000))
+# Output: Descriptor read: ~0.15s
+#         Property read: ~0.05s
+```
+
+**Takeaway:** Properties are faster than descriptors for single-class use. Use descriptors only when you need reusability.
+
+#### 5. Lazy Initialization
+
+```python
+import timeit
+
+class EagerInit:
+    """Compute everything upfront."""
+    def __init__(self, data):
+        self.data = data
+        self.result = self._expensive_computation()
+    
+    def _expensive_computation(self):
+        return sum(x**2 for x in self.data)
+
+class LazyInit:
+    """Compute only when needed."""
+    def __init__(self, data):
+        self.data = data
+        self._result = None
+    
+    @property
+    def result(self):
+        if self._result is None:
+            self._result = sum(x**2 for x in self.data)
+        return self._result
+
+data = list(range(10000))
+
+# Benchmark creation
+print("Eager init:", timeit.timeit(lambda: EagerInit(data), number=1000))
+print("Lazy init:", timeit.timeit(lambda: LazyInit(data), number=1000))
+# Output: Eager init: ~0.4s (always pays cost)
+#         Lazy init: ~0.001s (defers cost)
+```
+
+**Takeaway:** Use lazy initialization for expensive operations that might not be needed.
+
+#### 6. Inheritance Depth
+
+```python
+import timeit
+
+# Shallow hierarchy
+class A:
+    def method(self):
+        return 1
+
+class B(A):
+    pass
+
+# Deep hierarchy
+class C:
+    def method(self):
+        return 1
+
+class D(C): pass
+class E(D): pass
+class F(E): pass
+class G(F): pass
+
+b = B()
+g = G()
+
+print("Shallow:", timeit.timeit(lambda: b.method(), number=1000000))
+print("Deep:", timeit.timeit(lambda: g.method(), number=1000000))
+# Output: Shallow: ~0.11s
+#         Deep: ~0.13s
+```
+
+**Takeaway:** Deep inheritance hierarchies are slightly slower. Keep hierarchies shallow (max 3-4 levels).
+
+### Performance Comparison Table
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│ Operation                    Relative Speed   Memory Use      │
+├──────────────────────────────────────────────────────────────┤
+│ Direct attribute access      1.0x (fastest)   High (no slots) │
+│ Property access              0.6x             High            │
+│ Descriptor access            0.4x             High            │
+│ Method call                  0.5x             -               │
+│ Deep inheritance            0.9x              -               │
+│                                                                │
+│ With __slots__              1.0x              50% less memory │
+│ Lazy initialization         10x+ faster       Same            │
+│ Caching (memoization)       100x+ faster      More memory     │
+└──────────────────────────────────────────────────────────────┘
+```
+
+### Best Practices for Performance
+
+1. **Profile First**: Use `cProfile` to find bottlenecks
+   ```python
+   import cProfile
+   cProfile.run('your_function()')
+   ```
+
+2. **Use `__slots__` for:**
+   - Classes with many instances
+   - Data-heavy objects
+   - Performance-critical code
+
+3. **Avoid `__slots__` for:**
+   - Classes that need `__dict__`
+   - Complex inheritance hierarchies
+   - Code that needs flexibility
+
+4. **Cache Expensive Operations:**
+   ```python
+   from functools import lru_cache
+   
+   class DataProcessor:
+       @lru_cache(maxsize=128)
+       def expensive_operation(self, data):
+           return compute_result(data)
+   ```
+
+5. **Use Generators for Large Datasets:**
+   ```python
+   class DataStream:
+       def get_items(self):
+           # Bad: Returns everything at once
+           return [process(x) for x in huge_dataset]
+       
+       def get_items_generator(self):
+           # Good: Yields one at a time
+           for x in huge_dataset:
+               yield process(x)
+   ```
+
+### When to Optimize
+
+```
+                Performance Issue?
+                       |
+                       v
+                   Profile it!
+                       |
+                       v
+              Is it a real bottleneck?
+                   /        \
+                 NO          YES
+                 /              \
+                v                v
+          Don't optimize    Is it OOP overhead?
+          (Focus on          /            \
+           readability)    NO              YES
+                          /                  \
+                         v                    v
+                  Optimize           Use __slots__
+                  algorithm          Cache results
+                  or data            Lazy init
+                  structure          Reduce method calls
+```
+
+### Additional Resources
+
+For a deep dive into performance optimization, including profiling, memory management, and advanced techniques, see:
 
 **[Python Performance Optimization Guide](../python/performance_guide.md)**
 
-This guide covers:
-- How to profile your code to find bottlenecks.
-- Strategies for optimizing memory usage, including `__slots__`.
-- Caching techniques to avoid re-computing expensive results.
-- Lazy loading patterns to defer expensive operations.
+**Remember:** "Premature optimization is the root of all evil" - Donald Knuth. Write clear code first, optimize later if needed!
 
 ---
 

@@ -54,8 +54,9 @@ Tip: If you have more time, do the optional stretch at the end of the day.
 
 ### Day 5 — Dataclasses
 - Yesterday recap: Encapsulation
-- Today you’ll learn: `@dataclass`, defaults, `slots`, `frozen`
+- Today you'll learn: `@dataclass`, defaults, `slots`, `frozen`
 - Read: [Modern Python OOP Features → Dataclasses](./oop_guide.md#dataclasses)
+- Optional reading: [Performance Considerations → `__slots__`](./oop_guide.md#1-use-__slots__-for-memory-efficiency) for benchmarks and memory comparisons
 - Exercise: Convert `Book` to a dataclass; add `slots=True`; compare memory using `__sizeof__()`.
 - Quiz: 1) Benefit of `slots`? 2) When use `frozen` dataclasses?
 
@@ -100,8 +101,9 @@ Tip: If you have more time, do the optional stretch at the end of the day.
 
 ### Day 11 — Protocols & type hints
 - Yesterday recap: Composition
-- Today you’ll learn: `typing.Protocol`, structural subtyping
+- Today you'll learn: `typing.Protocol`, structural subtyping, Generic classes
 - Read: [Type Hints and Protocols](./oop_guide.md#type-hints-and-protocols)
+- Optional reading: [Generic Classes](./oop_guide.md#generic-classes-type-parameters), [The `Self` Type](./oop_guide.md#the-self-type-python-311)
 - Exercise: Define `Notifier` protocol; implement `EmailNotifier`, `SMSNotifier`.
 - Quiz: 1) Structural vs nominal typing? 2) Advantage of Protocols?
 
@@ -160,15 +162,17 @@ Tip: If you have more time, do the optional stretch at the end of the day.
 
 ### Day 19 — Dunder methods and containers
 - Yesterday recap: Patterns
-- Today you’ll learn: `__repr__`, equality, ordering, iterables
+- Today you'll learn: `__repr__`, equality, ordering, iterables, callable objects, attribute access control
 - Read: [The Python Data Model (Dunder Methods)](./oop_guide.md#the-python-data-model-dunder-methods)
+- Optional reading: [Making Objects Callable (`__call__`)](./oop_guide.md#making-objects-callable-__call__), [Attribute Access Control (`__getattr__`, `__setattr__`)](./oop_guide.md#attribute-access-control-__getattr__-__setattr__-__delattr__)
 - Exercise: Make `Catalog` iterable; provide meaningful `__repr__` for domain objects.
 - Quiz: 1) When implement `__eq__` + `__hash__`? 2) Why `__repr__` is for devs?
 
 ### Day 20 — Context managers
 - Yesterday recap: Data model
-- Today you’ll learn: `__enter__`/`__exit__` resource safety
-- Read: [Advanced OOP Concepts → Context Managers](./oop_guide.md#advanced-oop-concepts)
+- Today you'll learn: `__enter__`/`__exit__` resource safety, exception handling, nested contexts
+- Read: [Advanced OOP Concepts → Context Managers](./oop_guide.md#context-managers)
+- Note: This section has been significantly expanded with 9 subsections including suppressing exceptions, nested context managers, and atomic operations
 - Exercise: `LoanSession` context manager for borrow/return atomicity.
 - Quiz: 1) Common pitfalls without context managers? 2) Where to place cleanup?
 
@@ -185,16 +189,19 @@ Tip: If you have more time, do the optional stretch at the end of the day.
 
 ### Day 22 — Descriptors
 - Yesterday recap: Review & refactor
-- Today you’ll learn: Reusable attribute semantics
-- Read: [advanced_oop_concepts.md → The Descriptor Protocol](./advanced_oop_concepts.md#the-descriptor-protocol)
+- Today you'll learn: Reusable attribute semantics, validation, lazy loading, caching
+- Read: [oop_guide.md → Descriptors](./oop_guide.md#descriptors) (comprehensive coverage with 8 descriptor types)
+- Alternate reading: [advanced_oop_concepts.md → The Descriptor Protocol](./advanced_oop_concepts.md#the-descriptor-protocol)
 - Exercise: `Validated` descriptor for `isbn` and `email` with type/value checks.
 - Quiz: 1) When prefer descriptor vs property? 2) Where to store backing value?
 
-### Day 23 — Metaclasses (lightweight, pragmatic)
+### Day 23 — Metaclasses & class decorators
 - Yesterday recap: Descriptors
-- Today you’ll learn: Class creation control; registries
-- Read: [advanced_oop_concepts.md → Advanced Metaclass Usage](./advanced_oop_concepts.md#advanced-metaclass-usage)
-- Exercise: Simple registry metaclass for `Item` subclasses → `Item.get_subclass(name)`.
+- Today you'll learn: Class creation control; registries; when to use decorators vs metaclasses
+- Read: [oop_guide.md → Class Decorators](./oop_guide.md#class-decorators)
+- Read: [When to Use Class Decorators vs Metaclasses](./oop_guide.md#when-to-use-class-decorators-vs-metaclasses)
+- Advanced reading: [advanced_oop_concepts.md → Advanced Metaclass Usage](./advanced_oop_concepts.md#advanced-metaclass-usage)
+- Exercise: Implement a registry using BOTH a class decorator AND a metaclass; compare the approaches.
 - Quiz: 1) When a class decorator is sufficient? 2) One metaclass pitfall?
 
 ### Day 24 — Multiple inheritance & MRO; mixin design
@@ -249,12 +256,24 @@ Tip: If you have more time, do the optional stretch at the end of the day.
 ---
 
 ## Stretch and Follow‑Ups
+
+### Practice More
+- Work through [Intermediate Exercises](./oop_intermediate_exercises.md) — 10 practical exercises bridging basics to advanced (Shopping Cart, Plugin System, Notification Service, Caching Layer, Task Queue, Configuration Manager, Logging Framework, Data Validation, State Machine, Event System)
+- Review [Performance Considerations](./oop_guide.md#performance-considerations) when optimizing — includes 6 real benchmarks and best practices
+
+### Expand Your Project
 - Add CLI or minimal web API over the Library services.
 - Add persistence (SQLite) behind `Inventory` via a repository interface (DIP), then swap an in‑memory version for tests.
 - Explore additional patterns: State, Proxy, Visitor (see [Design Patterns](./oop_guide.md#design-patterns)).
+
+### Go Deeper
 - Read Appendix A: [Anti‑Patterns and Refactoring](./appendix_oop_antipatterns.md)
 - Use Appendix B: [Pattern Picker](./appendix_oop_pattern_picker.md) when making design choices.
 - Follow Appendix C: [Packaging & Public API](./appendix_oop_packaging_public_api.md) to structure your project.
+
+### Master Advanced Topics
+- Dive into [advanced_oop_concepts.md](./advanced_oop_concepts.md) for async/await, multiple inheritance, monkey patching, and more
+- Study the visual diagrams: [SOLID at a Glance](./oop_guide.md#solid-at-a-glance), [Composition vs Inheritance Decision Tree](./oop_guide.md#visual-decision-tree)
 
 ## How to Use This Plan
 - Follow day by day; if you miss a day, continue and use review days to catch up.
