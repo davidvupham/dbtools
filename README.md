@@ -1,186 +1,83 @@
-# DBTools Workspace
+# DBTools Monorepo
 
-This workspace contains multiple database tools and packages:
+DBTools is the shared engineering workspace for the GDS team. The repository combines production-grade Python packages, PowerShell automation modules, operational runbooks, and supporting assets for building and operating database-centric solutions across multiple environments.
 
-## 📦 [gds_snowflake/](gds_snowflake/) - Python Package
+## Key Capabilities
+- Database client libraries for Snowflake, PostgreSQL, SQL Server, MongoDB, and Vault
+- Shared abstractions (`gds-database`) that provide consistent connection patterns
+- Operational services such as the Snowflake replication monitor and notification pipelines
+- PowerShell tooling for Active Directory export, logging, and NuGet packaging workflows
+- Comprehensive documentation, architecture notes, and CI/CD automation scripts
 
-A reusable Python package for Snowflake database operations developed by the GDS team.
+## Repository Layout
 
-**Features:**
-- Connection management with auto-reconnection
-- Replication monitoring
-- Failover group management
-- Latency detection
-- Type hints support (PEP 561)
+### Python packages
+- `gds_database/` – Common abstractions and base classes for database connectivity
+- `gds_postgres/` – PostgreSQL implementation on top of `gds-database`
+- `gds_mssql/` – Microsoft SQL Server client with Kerberos and pooling support
+- `gds_mongodb/` – MongoDB client with advanced configuration and CRUD helpers
+- `gds_snowflake/` – Snowflake utilities used by monitoring tools and automation
+- `gds_vault/` – HashiCorp Vault client with pluggable authentication and caching
+- `gds_notification/` – Design docs and stubs for the alert ingestion service
+- `gds_snmp_receiver/` – SNMP trap receiver service with FastAPI and worker pipeline
+- `snowflake_monitoring/` – Application that monitors Snowflake replication health
 
-**Installation:**
-```bash
-cd gds_snowflake
-pip install .
-```
+Each package exposes its own README with full installation, configuration, and API guidance.
 
-**Documentation:** See [gds_snowflake/README.md](gds_snowflake/README.md)
+### PowerShell automation
+- `PowerShell/Modules/GDS.Common` – PSFramework-based logging utilities shared across modules
+- `PowerShell/Modules/GDS.NuGet` – Build, package, and publish helpers for PowerShell modules
+- `PowerShell/Modules/GDS.ActiveDirectory` – Cmdlets for exporting AD users/groups to SQL Server
+- Additional MSSQL and Windows-focused modules live alongside these core components
+- Convenience scripts such as `PowerShell/BuildAllModules.ps1` and `Install-GDSModulesFromJFrog.ps1`
 
-## 🔍 [snowflake_monitoring/](snowflake_monitoring/) - Monitoring Application
+See `PowerShell/README.md` for module usage, build instructions, and CI pipeline details.
 
-A complete application for monitoring Snowflake replication with email notifications.
+### Documentation & supporting assets
+- `docs/` – Tutorials, architecture reviews, deployment guides, dev container walkthroughs, and historical prompts
+- `schemas/` – Avro and JSON schema definitions used by data services
+- `scripts/` and `examples/` – Helper utilities and sample integrations
+- `cert/`, `data/`, and `dist/` – Test fixtures, generated artifacts, and packaged outputs
+- Top-level evaluation reports (e.g., `GDS_ARCHITECTURE_EVALUATION_2025-11-06.md`) capture design history
 
-**Features:**
-- Continuous replication monitoring
-- Failure and latency detection
-- Email alerts
-- Systemd service support
-- Docker-ready
+## Development Quick Start
 
-**Quick Start:**
-```bash
-cd snowflake_monitoring
-pip install -r requirements.txt
-python monitor_snowflake_replication.py myaccount
-```
+### Python workflow
+1. Install Python 3.9+ and create a virtual environment: `python -m venv .venv && source .venv/bin/activate`
+2. Navigate into the target package (for example `cd gds_database`) and install dev extras: `pip install -e .[dev]`
+3. Run tests with `pytest` (most packages provide additional examples under `tests/` or `examples/`)
+4. Lint and format code using `ruff` via the repo helper: `./lint.sh`, `./lint.sh --fix`, or run `ruff check .`
+5. Build distributions when needed with `python -m build` or the package-specific build scripts
 
-**Documentation:** See [snowflake_monitoring/README.md](snowflake_monitoring/README.md)
+### PowerShell workflow
+1. Review `PowerShell/README.md` for prerequisites (PowerShell 7+, PSFramework, SQL/AD modules)
+2. Add `PowerShell/Modules` to `PSModulePath` or import modules directly with `Import-Module GDS.Common`
+3. Use `PowerShell/BuildAllModules.ps1` to run validation, build NuGet packages, and optionally publish
+4. Execute `PowerShell/Install-GDSModulesFromJFrog.ps1` to install modules from Artifactory repositories
+5. Run Pester tests and `Invoke-ScriptAnalyzer` as described in the module documentation
 
-## Project Structure
+### Dev container workflow (VS Code)
+1. Install the VS Code Dev Containers extension and ensure Docker is available locally
+2. Open the repository in VS Code and choose **Dev Containers: Reopen in Container** (or use `code .` from within an existing container)
+3. The dev container boots with Python, PowerShell 7, PSFramework, and other tooling preinstalled for a consistent environment
+4. For first-time setup, tips, and troubleshooting, reference:
+   - `docs/vscode/DEVCONTAINER_BEGINNERS_GUIDE.md`
+   - `docs/vscode/DEVCONTAINER.md`
+   - `docs/vscode/VSCODE_SETUP.md`
 
-```
-dbtools/
-├── gds_snowflake/              # 📦 Python Package
-│   ├── gds_snowflake/          # Package source code
-│   │   ├── __init__.py
-│   │   ├── connection.py
-│   │   ├── replication.py
-│   │   └── py.typed
-│   ├── tests/                  # Package tests
-│   ├── setup.py                # Package setup
-│   ├── pyproject.toml          # Modern Python packaging
-│   ├── README.md               # Package documentation
-│   ├── LICENSE                 # MIT License
-│   └── MANIFEST.in             # Package manifest
-│
-├── snowflake_monitoring/       # 🔍 Monitoring Application
-│   ├── monitor_snowflake_replication.py     # Main script
-│   ├── example_module_usage.py              # Usage examples
-│   ├── config.sh.example                    # Config template
-│   ├── requirements.txt                     # App dependencies
-│   └── README.md                            # App documentation
-│
-├── tests/                      # 🧪 Shared tests (legacy)
-├── .github/                    # GitHub Actions
-└── snowflake-monitor.code-workspace  # VS Code workspace
-```
-
-## Quick Start
-
-### 1. Install the Package
-
-```bash
-cd gds_snowflake
-pip install .
-```
-
-### 2. Run the Monitoring Application
-
-```bash
-cd ../snowflake_monitoring
-
-# Set credentials
-export SNOWFLAKE_USER="your_user"
-
-# Run monitor
-python monitor_snowflake_replication.py myaccount
-```
-
-### 3. Use the Package in Your Code
-
-```python
-from gds_snowflake import SnowflakeConnection, SnowflakeReplication
-
-conn = SnowflakeConnection(
-    account='myaccount', 
-    user='myuser', 
-    vault_secret_path='data/snowflake',
-    vault_mount_point='secret'
-)
-conn.connect()
-
-repl = SnowflakeReplication(conn)
-groups = repl.get_failover_groups()
-
-for group in groups:
-    print(f"{group.name}: {group.type}")
-```
-
-## Development
-
-### Install in Development Mode
-
-```bash
-cd gds_snowflake
-pip install -e ".[dev]"
-```
-
-### Run Tests
-
-```bash
-cd gds_snowflake
-# Option A: unittest runner
-python run_tests.py
-
-# Option B: pytest with coverage (recommended)
-pytest -q --maxfail=1 --disable-warnings --cov=gds_snowflake --cov-report=term-missing
-```
-### Linting and Formatting
-
-Use the repo lint helper script (Ruff):
-
-```bash
-# From repo root
-./lint.sh                 # Check only
-./lint.sh --stats         # Check with statistics
-./lint.sh --fix           # Auto-fix where safe
-./lint.sh --fix --format  # Auto-fix + format code
-```
-
-Notes:
-- The script runs Ruff across the entire repo.
-- Some legacy subpackages may require manual fixes for examples/tests.
-- For iterative work, you can lint a specific file with: `./lint.sh --file path/to/file.py`
-
-
-### VS Code Setup
-
-Open the workspace:
-```bash
-code snowflake-monitor.code-workspace
-```
-
-See [VSCODE_SETUP.md](VSCODE_SETUP.md) for detailed setup instructions.
+## Automation & CI
+- Ruff, Black, and pytest are configured via `pyproject.toml`, `.pre-commit-config.yaml`, and `lint.sh`
+- GitHub Actions workflow `.github/workflows/powershell-modules-jfrog.yml` validates, builds, and publishes PowerShell modules to JFrog Artifactory
+- Documentation under `PowerShell/Modules/GDS.NuGet/` describes the CI/CD pipeline, secrets, and runbook steps
 
 ## Documentation
+- Module and package documentation: see the README within each component directory
+- `PowerShell/FINAL_IMPLEMENTATION_SUMMARY.md` and `PowerShell/MODULE_ORGANIZATION.md` outline the PowerShell architecture
+- Detailed guides in `PowerShell/Modules/GDS.NuGet/` (NuGet build, JFrog publishing) and `PowerShell/Modules/GDS.Common/` (logging)
+- Dev container guides: `docs/vscode/DEVCONTAINER_BEGINNERS_GUIDE.md`, `docs/vscode/DEVCONTAINER.md`, and `docs/vscode/DEVCONTAINER_SQLTOOLS.md`
+- Architecture and implementation reports in the repo root (for example `PACKAGE_CREATION_SUMMARY.md`, `SNOWFLAKE_CONNECTIVITY_TESTING_GUIDE.md`)
 
-- **Package API**: [gds_snowflake/README.md](gds_snowflake/README.md)
-- **Monitoring App**: [snowflake_monitoring/README.md](snowflake_monitoring/README.md)
-- **Python Tutorials**: [docs/tutorials/README.md](docs/tutorials/README.md) - Learn Python through this codebase
-- **OOP Guide**: [docs/tutorials/oop/oop_guide.md](docs/tutorials/oop/oop_guide.md) - Complete OOP tutorial
-- **Advanced OOP**: [docs/tutorials/oop/advanced_oop_concepts.md](docs/tutorials/oop/advanced_oop_concepts.md) - Advanced OOP concepts
-- **VS Code Setup**: [VSCODE_SETUP.md](VSCODE_SETUP.md)
-- **Testing Guide**: [TESTING.md](TESTING.md)
-- **Project History**: [PROMPTS.md](PROMPTS.md)
-
-## License
-
-MIT License - See [gds_snowflake/LICENSE](gds_snowflake/LICENSE)
-
-## Contributing
-
-Contributions welcome! Please see individual component READMEs for specific guidelines.
-
-## Support
-
-- GitHub Issues: https://github.com/davidvupham/dbtools/issues
-- Email: gds@example.com
-
----
-
-**Note:** This workspace was generated using AI-assisted development. See [PROMPTS.md](PROMPTS.md) for the complete generation history.
+## Contributing & Support
+- Use GitHub Issues at https://github.com/davidvupham/dbtools/issues for bug reports and feature requests
+- Follow package-specific contributing guidance where provided (e.g., `docs/DEVELOPER_GUIDE.md` within each package)
+- Contact the GDS engineering team via gds@example.com for internal support or onboarding assistance
