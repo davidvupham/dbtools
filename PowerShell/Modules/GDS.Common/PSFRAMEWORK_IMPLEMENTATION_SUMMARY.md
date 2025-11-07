@@ -145,13 +145,14 @@ Get-PSFMessage -Level Error
 ## Log Locations
 
 ### Default
-- **Path**: `$env:APPDATA\PSFramework\Logs\`
-- **Format**: `{ModuleName}_{yyyyMMdd}.log`
-- **Example**: `C:\Users\Username\AppData\Roaming\PSFramework\Logs\ActiveDirectory_20240115.log`
+- **Path**: `Join-Path $env:GDS_LOG_DIR "{ModuleName}_{yyyyMMdd}.log"`
+- **Example (Windows)**: `C:\Logs\GDS\ActiveDirectory_20240115.log`
+- **Example (Linux)**: `/var/log/gds/ActiveDirectory_20240115.log`
 
 ### Custom
 ```powershell
-Initialize-Logging -ModuleName "ActiveDirectory" -LogPath "C:\Logs\AD.log"
+$env:GDS_LOG_DIR = "/var/log/gds"
+Initialize-Logging -ModuleName "ActiveDirectory" -LogPath (Join-Path $env:GDS_LOG_DIR "AD.log")
 ```
 
 ## Migration Checklist

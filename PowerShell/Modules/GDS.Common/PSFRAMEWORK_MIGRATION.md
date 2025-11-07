@@ -95,13 +95,14 @@ Write-Log -Message "Processing user" -Level Info -Context @{User="jdoe"}
 ## Log Locations
 
 ### Default Location
-- **Path**: `$env:APPDATA\PSFramework\Logs\`
-- **Format**: `{ModuleName}_{yyyyMMdd}.log`
-- **Example**: `C:\Users\Username\AppData\Roaming\PSFramework\Logs\ActiveDirectory_20240115.log`
+- **Path**: `Join-Path $env:GDS_LOG_DIR "{ModuleName}_{yyyyMMdd}.log"`
+- **Example (Windows)**: `C:\Logs\GDS\ActiveDirectory_20240115.log`
+- **Example (Linux)**: `/var/log/gds/ActiveDirectory_20240115.log`
 
 ### Custom Location
 ```powershell
-Initialize-Logging -ModuleName "ActiveDirectory" -LogPath "C:\Logs\AD.log"
+$env:GDS_LOG_DIR = "/var/log/gds"
+Initialize-Logging -ModuleName "ActiveDirectory" -LogPath (Join-Path $env:GDS_LOG_DIR "AD.log")
 ```
 
 ## Features
@@ -206,6 +207,6 @@ Set-PSFConfig -FullName 'PSFramework.Logging.MinimumLevel' -Value 'Debug'
 
 For issues or questions:
 1. Check PSFramework documentation
-2. Review log files in `$env:APPDATA\PSFramework\Logs\`
+2. Review log files in `$env:GDS_LOG_DIR`
 3. Use `Get-PSFMessage` for in-memory debugging
 4. Check PSFramework GitHub issues

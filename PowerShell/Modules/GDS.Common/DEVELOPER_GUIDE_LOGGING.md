@@ -611,14 +611,21 @@ Get-PSFMessage -Level Debug
 ### Find Log Files
 
 ```powershell
+if (-not $env:GDS_LOG_DIR) {
+    throw "GDS_LOG_DIR environment variable is not configured."
+}
+
 # Default log location
-$logPath = Join-Path $env:APPDATA "PSFramework\Logs"
+$logPath = $env:GDS_LOG_DIR
 Get-ChildItem $logPath
 
 # Open log directory
-explorer $logPath  # Windows
-# or
-ls $logPath  # Linux/macOS
+if ($IsWindows) {
+    Start-Process explorer.exe $logPath
+}
+else {
+    ls $logPath
+}
 ```
 
 ### Test Logging

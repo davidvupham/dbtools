@@ -88,6 +88,42 @@ function Write-Log {
         }
     }
 
+    # Determine logging threshold
+    $configName = "GDS.Common.Logging.$ModuleName.MinimumLevel"
+    $minimumConfiguredLevel = (Get-PSFConfigValue -FullName $configName -Fallback 'Info')
+    if ($null -eq $minimumConfiguredLevel) {
+        $minimumConfiguredLevel = 'Info'
+    }
+    else {
+        $minimumConfiguredLevel = $minimumConfiguredLevel.ToString()
+    }
+
+    $levelOrder = [ordered]@{
+        'Debug' = 10
+        'Verbose' = 20
+        'Info' = 30
+        'Warning' = 40
+        'Error' = 50
+        'Critical' = 60
+    }
+
+    $legacyLevelMap = @{
+        'Important' = 'Info'
+    }
+
+    if (-not $levelOrder.Contains($minimumConfiguredLevel)) {
+        if ($legacyLevelMap.ContainsKey($minimumConfiguredLevel)) {
+            $minimumConfiguredLevel = $legacyLevelMap[$minimumConfiguredLevel]
+        }
+        else {
+            $minimumConfiguredLevel = 'Info'
+        }
+    }
+
+    if ($levelOrder[$Level] -lt $levelOrder[$minimumConfiguredLevel]) {
+        return
+    }
+
     # Build tags
     $allTags = @($ModuleName)
     if ($Tag) {

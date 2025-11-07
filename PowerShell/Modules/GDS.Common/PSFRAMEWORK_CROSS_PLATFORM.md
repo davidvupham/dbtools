@@ -55,6 +55,7 @@ These features work identically on all platforms:
    - Automatic rotation
    - Retention policies
    ```powershell
+   $env:GDS_LOG_DIR = "/var/log/gds"  # Required for all platforms
    Set-PSFLoggingProvider -Name 'logfile' -Enabled $true
    ```
 
@@ -122,6 +123,7 @@ The GDS.Common module is designed to work cross-platform:
 Write-Log -Message "Processing data" -Level Info
 
 # Automatically detects platform
+$env:GDS_LOG_DIR = "/var/log/gds"
 Initialize-Logging -ModuleName "MyModule"
 
 # Advanced configuration with platform awareness
@@ -154,32 +156,24 @@ function Set-GDSLoggingCrossPlatform {
 }
 ```
 
-## Log File Locations by Platform
+## Log Directory (All Platforms)
 
-### Windows
-- **PowerShell 5.1**: `C:\Users\{Username}\AppData\Roaming\PSFramework\Logs\`
-- **PowerShell 7+**: `C:\Users\{Username}\AppData\Roaming\PSFramework\Logs\`
-
-### Linux
-- **Default**: `~/.local/share/powershell/PSFramework/Logs/`
-- **Alternative**: `/var/log/powershell/` (if running as root)
-
-### macOS
-- **Default**: `~/Library/Application Support/PowerShell/PSFramework/Logs/`
-
-### Custom Paths (All Platforms)
+- Define the log root using the `GDS_LOG_DIR` environment variable. Every GDS module writes to `<GDS_LOG_DIR>/{ModuleName}_{yyyyMMdd}.log` unless overridden with `-LogPath`.
+- Suggested values:
+  - Windows: `C:\Logs\GDS`
+  - Linux: `/var/log/gds`
+  - macOS: `/usr/local/var/log/gds`
+- The directory is created automatically if it doesn't exist.
 
 ```powershell
-# Specify custom path that works everywhere
-$logPath = if ($IsWindows) {
-    "C:\Logs\MyApp.log"
-} elseif ($IsLinux) {
-    "/var/log/myapp/app.log"
-} elseif ($IsMacOS) {
-    "/var/log/myapp/app.log"
+# Cross-platform setup
+$env:GDS_LOG_DIR = if ($IsWindows) {
+    "C:\\Logs\\GDS"
+} elseif ($IsLinux -or $IsMacOS) {
+    "/var/log/gds"
 }
 
-Initialize-Logging -ModuleName "MyApp" -LogPath $logPath
+Initialize-Logging -ModuleName "MyApp"
 ```
 
 ## Testing Cross-Platform Compatibility

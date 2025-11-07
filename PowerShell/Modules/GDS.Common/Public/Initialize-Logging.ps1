@@ -11,7 +11,7 @@
     Module name for log file naming. If not specified, attempts to detect from calling module.
 
 .PARAMETER LogPath
-    Optional custom log file path. If not specified, uses PSFramework default location.
+    Optional custom log file path. If not specified, the module writes to the directory defined by the GDS_LOG_DIR environment variable.
 
 .PARAMETER LogLevel
     Minimum log level to record. Default is 'Info'. Valid values: Debug, Verbose, Info, Warning, Error, Critical.
@@ -30,7 +30,7 @@
 
 .NOTES
     This function configures PSFramework logging providers. PSFramework automatically:
-    - Creates log files in AppData\PSFramework\Logs by default
+    - Creates log files in the directory specified by GDS_LOG_DIR (or the provided LogPath)
     - Rotates logs when size limit is reached
     - Maintains retention policies
     - Provides structured logging
@@ -76,45 +76,46 @@ function Initialize-Logging {
         }
     }
 
-    # Map log level to PSFramework level
-    $levelMap = @{
-        'Debug' = 'Debug'
-        'Verbose' = 'Verbose'
-        'Info' = 'Important'
-        'Warning' = 'Warning'
-        'Error' = 'Error'
-        'Critical' = 'Critical'
-    }
-    $psfLevel = $levelMap[$LogLevel]
+    # Persist minimum level configuration scoped to module
+    $configName = "GDS.Common.Logging.$ModuleName.MinimumLevel"
+    Set-PSFConfig -FullName $configName -Value $LogLevel -Initialize -Validation 'string' -Description "Minimum log level for $ModuleName module"
 
     # Configure PSFramework logging
     try {
-        # Set minimum log level
-        Set-PSFConfig -FullName 'PSFramework.Logging.MinimumLevel' -Value $psfLevel -Initialize -Validation 'string' -Description "Minimum log level for $ModuleName module"
-
-        # Configure file logging provider
+        # Determine log file path
         if ($LogPath) {
-            # Custom log path
-            $logDir = Split-Path $LogPath -Parent
+            $resolvedLogPath = [Environment]::ExpandEnvironmentVariables($LogPath)
+            if (-not [System.IO.Path]::IsPathRooted($resolvedLogPath)) {
+                $resolvedLogPath = Join-Path -Path (Get-Location) -ChildPath $resolvedLogPath
+            }
+
+            $logDir = Split-Path -Path $resolvedLogPath -Parent
             if (-not (Test-Path $logDir)) {
                 New-Item -ItemType Directory -Path $logDir -Force | Out-Null
             }
 
-            Set-PSFLoggingProvider -Name 'logfile' -InstanceName $ModuleName `
-                -FilePath $LogPath `
-                -Enabled $true `
-                -LogRotationMaxSizeMB $MaxLogSizeMB `
-                -LogRetentionDays $RetentionDays
+            $logFilePath = $resolvedLogPath
         }
         else {
-            # Use PSFramework default location (AppData\PSFramework\Logs)
-            $defaultPath = Join-Path $env:APPDATA "PSFramework\Logs\${ModuleName}_$(Get-Date -Format 'yyyyMMdd').log"
-            Set-PSFLoggingProvider -Name 'logfile' -InstanceName $ModuleName `
-                -FilePath $defaultPath `
-                -Enabled $true `
-                -LogRotationMaxSizeMB $MaxLogSizeMB `
-                -LogRetentionDays $RetentionDays
+            $logDirectory = [Environment]::GetEnvironmentVariable('GDS_LOG_DIR', 'Process')
+            if (-not $logDirectory) {
+                throw "Environment variable 'GDS_LOG_DIR' must be set to a writable directory before calling Initialize-Logging."
+            }
+
+            $logDirectory = [System.IO.Path]::GetFullPath([Environment]::ExpandEnvironmentVariables($logDirectory))
+            if (-not (Test-Path $logDirectory)) {
+                New-Item -ItemType Directory -Path $logDirectory -Force | Out-Null
+            }
+
+            $logFilePath = Join-Path -Path $logDirectory -ChildPath "${ModuleName}_$(Get-Date -Format 'yyyyMMdd').log"
         }
+
+        # Configure file logging provider
+        Set-PSFLoggingProvider -Name 'logfile' -InstanceName $ModuleName `
+            -FilePath $logFilePath `
+            -Enabled $true `
+            -LogRotationMaxSizeMB $MaxLogSizeMB `
+            -LogRetentionDays $RetentionDays
 
         # Enable console output for Info and above
         Set-PSFLoggingProvider -Name 'console' -Enabled $true

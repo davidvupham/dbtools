@@ -36,6 +36,10 @@ This module contains **only truly common utilities** that all GDS modules need:
 ```powershell
 # Install PSFramework (required)
 Install-Module -Name PSFramework -Scope CurrentUser -Force
+
+# Set the shared log directory (required)
+$env:GDS_LOG_DIR = "C:\\Logs\\GDS"      # Example for Windows
+$env:GDS_LOG_DIR = "/var/log/gds"       # Example for Linux/macOS
 ```
 
 ### Install GDS.Common
@@ -53,6 +57,9 @@ Import-Module GDS.Common
 ```powershell
 # Import module
 Import-Module GDS.Common
+
+# Ensure log directory is configured
+$env:GDS_LOG_DIR = "/var/log/gds"  # Example; set per environment
 
 # Initialize logging for your module
 Initialize-Logging -ModuleName "MyModule"
@@ -190,21 +197,16 @@ Set-GDSLogging -ModuleName "MyModule" `
 
 ## Log Locations
 
-### Default Locations
+### Default Location (All Platforms)
 
-**Windows:**
-- `C:\Users\{Username}\AppData\Roaming\PSFramework\Logs\{ModuleName}_{Date}.log`
+- `Join-Path $env:GDS_LOG_DIR "{ModuleName}_{Date}.log"`
 
-**Linux:**
-- `~/.local/share/powershell/PSFramework/Logs/{ModuleName}_{Date}.log`
-
-**macOS:**
-- `~/Library/Application Support/PowerShell/PSFramework/Logs/{ModuleName}_{Date}.log`
+Set `GDS_LOG_DIR` to the root directory where logs should be written. The directory is created automatically if it does not already exist.
 
 ### Custom Location
 
 ```powershell
-Initialize-Logging -ModuleName "MyModule" -LogPath "C:\Logs\MyModule.log"
+Initialize-Logging -ModuleName "MyModule" -LogPath (Join-Path $env:GDS_LOG_DIR "custom.log")
 ```
 
 ## Integration with Other Modules
@@ -268,6 +270,7 @@ GDS.Common works on:
 - [Cross-Platform Support](./PSFRAMEWORK_CROSS_PLATFORM.md) - Platform details
 - [PowerShell Logging Best Practices](./POWERSHELL_LOGGING_BEST_PRACTICES.md) - Best practices analysis
 - [PSFramework Implementation Summary](./PSFRAMEWORK_IMPLEMENTATION_SUMMARY.md) - Implementation details
+- [Testing Guide](./TESTING.md) - Running the module test suite
 
 ### 🔨 NuGet Package Building
 
@@ -302,9 +305,12 @@ Get-PSFMessage -Tag "MyModule"
 ### Check Log Files
 
 ```powershell
-# Find log directory
-$logPath = Join-Path $env:APPDATA "PSFramework\Logs"
-Get-ChildItem $logPath | Sort-Object LastWriteTime -Descending | Select-Object -First 5
+# Find log directory defined by environment variable
+if (-not $env:GDS_LOG_DIR) {
+    throw "GDS_LOG_DIR environment variable is not set."
+}
+
+Get-ChildItem $env:GDS_LOG_DIR | Sort-Object LastWriteTime -Descending | Select-Object -First 5
 ```
 
 ### Enable Debug Logging

@@ -19,7 +19,7 @@
     Enable console output (default: enabled).
 
 .PARAMETER LogPath
-    Custom log file path.
+    Custom log file path. If omitted, the directory specified by the GDS_LOG_DIR environment variable is used.
 
 .PARAMETER MinimumLevel
     Minimum log level to record.
@@ -35,6 +35,7 @@
 
 .NOTES
     This function provides advanced PSFramework logging configuration.
+    Ensure the GDS_LOG_DIR environment variable is set when file logging is enabled.
     See: https://psframework.org/documentation/documents/psframework/logging.html
 #>
 function Set-GDSLogging {
@@ -71,32 +72,37 @@ function Set-GDSLogging {
         Import-Module PSFramework -ErrorAction Stop
     }
 
-    # Map log level
-    $levelMap = @{
-        'Debug' = 'Debug'
-        'Verbose' = 'Verbose'
-        'Info' = 'Important'
-        'Warning' = 'Warning'
-        'Error' = 'Error'
-        'Critical' = 'Critical'
-    }
-    $psfLevel = $levelMap[$MinimumLevel]
+    # Persist minimum level configuration scoped to module
+    $configName = "GDS.Common.Logging.$ModuleName.MinimumLevel"
+    Set-PSFConfig -FullName $configName -Value $MinimumLevel -Initialize -Validation 'string' -Description "Minimum log level for $ModuleName module"
 
     try {
-        # Set minimum log level
-        Set-PSFConfig -FullName 'PSFramework.Logging.MinimumLevel' -Value $psfLevel
-
         # Configure file logging
         if ($EnableFileLog) {
             if ($LogPath) {
-                $logDir = Split-Path $LogPath -Parent
+                $resolvedLogPath = [Environment]::ExpandEnvironmentVariables($LogPath)
+                if (-not [System.IO.Path]::IsPathRooted($resolvedLogPath)) {
+                    $resolvedLogPath = Join-Path -Path (Get-Location) -ChildPath $resolvedLogPath
+                }
+
+                $logDir = Split-Path -Path $resolvedLogPath -Parent
                 if (-not (Test-Path $logDir)) {
                     New-Item -ItemType Directory -Path $logDir -Force | Out-Null
                 }
-                $filePath = $LogPath
+                $filePath = $resolvedLogPath
             }
             else {
-                $filePath = Join-Path $env:APPDATA "PSFramework\Logs\${ModuleName}_$(Get-Date -Format 'yyyyMMdd').log"
+                $logDirectory = [Environment]::GetEnvironmentVariable('GDS_LOG_DIR', 'Process')
+                if (-not $logDirectory) {
+                    throw "Environment variable 'GDS_LOG_DIR' must be set to a writable directory before enabling file logging."
+                }
+
+                $logDirectory = [System.IO.Path]::GetFullPath([Environment]::ExpandEnvironmentVariables($logDirectory))
+                if (-not (Test-Path $logDirectory)) {
+                    New-Item -ItemType Directory -Path $logDirectory -Force | Out-Null
+                }
+
+                $filePath = Join-Path -Path $logDirectory -ChildPath "${ModuleName}_$(Get-Date -Format 'yyyyMMdd').log"
             }
 
             Set-PSFLoggingProvider -Name 'logfile' -InstanceName $ModuleName `
