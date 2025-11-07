@@ -22,18 +22,19 @@ Optional but helpful:
 - Git installed locally
 - Basic terminal access
 
-## What’s inside our container?
+## What's inside our container?
 
-We've designed a streamlined environment focused on Python development with database connectivity. Key highlights:
+We've designed a streamlined environment focused on Python and PowerShell development with database connectivity. Key highlights:
 
-- Python 3.13 via Miniconda, default environment `gds`
-- Essential Python development tools: ruff (linter/formatter), pytest (testing), pytest-cov (coverage), wheel, build
+- **Python 3.13** via Miniconda, default environment `gds`
+- **PowerShell 7+** with database administration modules (dbatools, Pester, PSFramework)
+- Essential Python development tools: ruff (linter/formatter), pytest (testing), pytest-cov (coverage), wheel, build, pyodbc
 - Database connectivity: pyodbc for ODBC connections, unixODBC development libraries
-- VS Code extensions auto-install in the container: Python, Pylance, Jupyter, Ruff, Docker, Windows AI Studio
+- VS Code extensions auto-install in the container: Python, Pylance, Jupyter, Ruff, Docker
 - Docker-in-Docker support for container operations within the dev container
 - SSH key mounting for Git authentication
 - Pre-commit hooks setup (when configured)
-- Local package installation in editable mode (gds_database, gds_postgres, gds_snowflake, gds_vault)
+- Local package installation in editable mode (gds_database, gds_postgres, gds_snowflake, gds_vault, gds_mongodb, gds_mssql, gds_notification, gds_snmp_receiver)
 
 ## File-by-file: How this works
 
@@ -45,17 +46,23 @@ This file defines how to build the image. Major steps:
    - Provides Python via Conda from Microsoft Dev Containers; optimized for development environments.
 2. Install system dependencies
    - `unixodbc-dev` and `ca-certificates` for database connectivity and SSL support.
-3. Create `gds` conda environment with Python 3.13
+   - `wget`, `gnupg` for secure package installation.
+   - PowerShell 7+ from Microsoft's official repository.
+3. Install PowerShell modules
+   - `dbatools`: Comprehensive database administration toolkit for SQL Server, PostgreSQL, MySQL, and more
+   - `Pester`: PowerShell testing framework
+   - `PSFramework`: Logging and configuration framework
+4. Create `gds` conda environment with Python 3.13
    - Ensures consistent Python version across all environments.
-4. Configure shell environment
+5. Configure shell environment
    - Sets up conda activation in `.bashrc` files so all interactive shells use the `gds` environment.
    - Adds a custom colorful prompt for better UX.
-5. Install Python development tools in the conda environment
+6. Install Python development tools in the conda environment
    - `ruff`: Fast Python linter and code formatter
    - `pytest` and `pytest-cov`: Testing framework and coverage reporting
    - `wheel` and `build`: Package building tools
    - `pyodbc`: Python ODBC database connectivity
-6. Set up VS Code server directories
+7. Set up VS Code server directories
    - Pre-creates directories with correct permissions to avoid issues when VS Code attaches.
 
 You don't need to edit this file unless you want to add/remove tools or change the Python version.
@@ -115,9 +122,8 @@ You usually don’t need this because VS Code handles it, but it’s useful to k
 3. Inside, the `gds` env is already active; verify tools:
    ```bash
    python -V
-   terraform -version
-   aws --version
-   sqlcmd -?
+   pwsh -version
+   docker --version
    ```
 
 ## Verifying the environment
@@ -136,6 +142,11 @@ Run these in the container terminal:
   ruff --version
   pytest --version
   ```
+- PowerShell and modules
+  ```bash
+  pwsh -version
+  pwsh -NoProfile -Command "Get-Module -ListAvailable dbatools,Pester,PSFramework | Format-Table Name,Version"
+  ```
 - ODBC connectivity
   ```bash
   python -c "import pyodbc; print('pyodbc version:', pyodbc.version)"
@@ -143,7 +154,7 @@ Run these in the container terminal:
   ```
 - Local packages (installed via postCreate)
   ```bash
-  python -c "import gds_database, gds_postgres, gds_snowflake, gds_vault; print('Local packages OK')"
+  python -c "import gds_database, gds_postgres, gds_snowflake, gds_vault, gds_mongodb, gds_mssql, gds_notification, gds_snmp_receiver; print('Local packages OK')"
   ```
 - Docker-in-Docker
   ```bash
@@ -416,14 +427,23 @@ ARG CONDA_ENV_NAME=gds  // Conda environment name
 // Avoid interactive prompts during package installation
 ENV DEBIAN_FRONTEND=noninteractive
 
-// Install system packages for ODBC support
-RUN apt-get update && apt-get install -y unixodbc-dev ca-certificates && \
+// Install system packages for ODBC support and PowerShell
+RUN apt-get update && \
+    apt-get install -y wget gnupg ca-certificates unixodbc-dev && \
+    wget -q https://packages.microsoft.com/config/debian/12/packages-microsoft-prod.deb && \
+    dpkg -i packages-microsoft-prod.deb && \
+    rm packages-microsoft-prod.deb && \
+    apt-get update && \
+    apt-get install -y powershell && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 // Update conda and create the gds environment with specified Python version
 RUN conda update -n base -c defaults conda -y && \
     conda create -n ${CONDA_ENV_NAME} -c conda-forge python=${PYTHON_VERSION} -y && \
     conda clean -afy
+
+// Install PowerShell modules for database administration
+RUN pwsh -NoLogo -NoProfile -Command "Set-PSRepository -Name PSGallery -InstallationPolicy Trusted; Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force; Install-Module -Name dbatools,Pester,PSFramework -Scope AllUsers -Force"
 
 // Configure shell to use bash with login shell for conda activation
 SHELL ["/bin/bash", "-lc"]
@@ -508,7 +528,7 @@ install_editable() {
 }
 
 // Install local packages in editable mode
-for pkg in gds_database gds_postgres gds_snowflake gds_vault; do
+for pkg in gds_database gds_postgres gds_snowflake gds_vault gds_mongodb gds_mssql gds_notification gds_snmp_receiver; do
   install_editable "$pkg"
 done
 

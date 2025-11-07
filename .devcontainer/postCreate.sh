@@ -35,7 +35,7 @@ install_editable() {
 }
 
 # Install local packages
-for pkg in gds_database gds_postgres gds_snowflake gds_vault; do
+for pkg in gds_database gds_postgres gds_snowflake gds_vault gds_mongodb gds_mssql gds_notification gds_snmp_receiver; do
   install_editable "$pkg"
 done
 

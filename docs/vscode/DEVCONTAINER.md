@@ -7,11 +7,14 @@ This repository includes a VS Code Dev Container to provide a reproducible Minic
 - Base image: Microsoft Dev Containers Miniconda (`mcr.microsoft.com/devcontainers/miniconda:latest`)
 - Conda environment: `gds` with Python 3.13
 - Auto-activation of `gds` for interactive shells
-- Python extensions preinstalled (Python, Pylance, Jupyter, Ruff, Docker, Windows AI Studio)
-- Post-create command installs local editable packages: gds_database, gds_postgres, gds_snowflake, gds_vault
+- **PowerShell 7+** with database administration modules (dbatools, Pester, PSFramework)
+- Python extensions preinstalled (Python, Pylance, Jupyter, Ruff, Docker)
+- Python tools: ruff, pytest, pytest-cov, wheel, build, pyodbc
+- Post-create command installs local editable packages: gds_database, gds_postgres, gds_snowflake, gds_vault, gds_mongodb, gds_mssql, gds_notification, gds_snmp_receiver
 - Docker-in-Docker support for container operations
 - SSH key mounting for Git authentication
 - Pre-commit hooks setup (if configured)
+- ODBC support: unixODBC and development libraries
 
 For a step-by-step beginner's walkthrough (what Docker is, how the Dockerfile and devcontainer.json work, and how to build/run), see:
 - `DEVCONTAINER_BEGINNERS_GUIDE.md`
@@ -26,11 +29,20 @@ For a step-by-step beginner's walkthrough (what Docker is, how the Dockerfile an
 ## Notes
 
 - Default interpreter is `/opt/conda/envs/gds/bin/python`
-- To verify:
+- To verify Python setup:
   ```bash
   python -V
   which python
   conda env list
+  ```
+- To verify PowerShell setup:
+  ```bash
+  pwsh -version
+  pwsh -NoProfile -Command "Get-Module -ListAvailable dbatools,Pester,PSFramework"
+  ```
+- To verify installed packages:
+  ```bash
+  python -c "import gds_database, gds_postgres, gds_snowflake, gds_vault, gds_mongodb, gds_mssql, gds_notification, gds_snmp_receiver; print('All packages OK')"
   ```
 - Update the `postCreateCommand` in `.devcontainer/devcontainer.json` if you want to customize package installs.
 

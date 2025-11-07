@@ -1,7 +1,6 @@
 # syntax=docker/dockerfile:1.4
 
-ARG VARIANT="latest"
-FROM mcr.microsoft.com/devcontainers/miniconda:${VARIANT}
+FROM mcr.microsoft.com/devcontainers/miniconda:latest
 
 # Build args
 ARG PYTHON_VERSION=3.13
