@@ -13,7 +13,7 @@ This is the canonical index for `gds_vault` documentation. Prefer the guides bel
 
 - Rotation-aware caching: [`ROTATION_AWARE_TTL_GUIDE.md`](./ROTATION_AWARE_TTL_GUIDE.md)
 - Logging & retry: [`LOGGING_AND_RETRY_GUIDE.md`](./LOGGING_AND_RETRY_GUIDE.md)
-- Namespaces: [`VAULT_NAMESPACE_GUIDE.md`](./VAULT_NAMESPACE_GUIDE.md)
+- Namespaces: [`VAULT_NAMESPACE_GUIDE.md`](./VAULT_NAMESPACE_GUIDE.md), [`VAULT_NAMESPACE_IMPLEMENTATION_SUMMARY.md`](./VAULT_NAMESPACE_IMPLEMENTATION_SUMMARY.md)
 - Mount point quick reference: [`MOUNT_POINT_QUICK_REF.md`](./MOUNT_POINT_QUICK_REF.md)
 
 ## 🧪 Testing & Production Readiness

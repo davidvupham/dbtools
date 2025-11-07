@@ -44,7 +44,7 @@ Added comprehensive namespace support to all `gds_vault` client implementations 
    - Updated test assertions to expect `headers={}` parameter
 
 ### Documentation (1 file)
-7. **gds_vault/VAULT_NAMESPACE_GUIDE.md** (NEW)
+7. **gds_vault/docs/VAULT_NAMESPACE_GUIDE.md** (NEW)
    - Comprehensive guide on namespace configuration
    - Usage examples for all client types
    - Troubleshooting guide
@@ -135,7 +135,7 @@ The issue wasn't with the credentials or AppRole configuration—it was simply t
 
 ---
 
-**Date:** October 7, 2025  
-**Issue:** Vault AppRole API calls failing with 403 (hvac working)  
-**Solution:** Add X-Vault-Namespace header support  
+**Date:** October 7, 2025
+**Issue:** Vault AppRole API calls failing with 403 (hvac working)
+**Solution:** Add X-Vault-Namespace header support
 **Status:** ✅ Complete - All tests passing, committed, and pushed
