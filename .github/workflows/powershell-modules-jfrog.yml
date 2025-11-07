@@ -1,0 +1,392 @@
+name: Build and Publish PowerShell Modules to JFrog
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+    paths:
+      - 'PowerShell/Modules/**'
+      - '.github/workflows/powershell-modules-jfrog.yml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'PowerShell/Modules/**'
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: 'Publish to JFrog'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'true'
+          - 'false'
+
+env:
+  MODULES_PATH: PowerShell/Modules
+  BUILD_OUTPUT: PowerShell/build/packages
+
+jobs:
+  validate:
+    name: Validate Code Quality
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup PowerShell Environment
+        shell: pwsh
+        run: |
+          Write-Host "PowerShell Version: $($PSVersionTable.PSVersion)" -ForegroundColor Cyan
+          Write-Host "OS: $($PSVersionTable.OS)" -ForegroundColor Cyan
+
+      - name: Install Validation Tools
+        shell: pwsh
+        run: |
+          Write-Host "Installing PSScriptAnalyzer..." -ForegroundColor Yellow
+          Install-Module -Name PSScriptAnalyzer -Force -Scope CurrentUser
+
+          Write-Host "Installing Pester..." -ForegroundColor Yellow
+          Install-Module -Name Pester -Force -Scope CurrentUser -MinimumVersion 5.0.0
+
+          Get-Module -ListAvailable PSScriptAnalyzer, Pester | Format-Table Name, Version
+
+      - name: Run PSScriptAnalyzer
+        shell: pwsh
+        run: |
+          Write-Host "`n=== Running PSScriptAnalyzer ===" -ForegroundColor Cyan
+
+          $analysisResults = Invoke-ScriptAnalyzer `
+            -Path $env:MODULES_PATH `
+            -Recurse `
+            -Severity Error,Warning `
+            -ReportSummary
+
+          if ($analysisResults) {
+            Write-Host "`nIssues Found:" -ForegroundColor Yellow
+            $analysisResults | Format-Table -AutoSize
+
+            $errorCount = ($analysisResults | Where-Object Severity -eq 'Error').Count
+            $warningCount = ($analysisResults | Where-Object Severity -eq 'Warning').Count
+
+            Write-Host "Errors: $errorCount, Warnings: $warningCount" -ForegroundColor $(if ($errorCount -gt 0) {'Red'} else {'Yellow'})
+
+            if ($errorCount -gt 0) {
+              Write-Error "PSScriptAnalyzer found $errorCount error(s)"
+              exit 1
+            }
+          }
+          else {
+            Write-Host "✓ No issues found" -ForegroundColor Green
+          }
+
+      - name: Run Pester Tests
+        shell: pwsh
+        run: |
+          Write-Host "`n=== Running Pester Tests ===" -ForegroundColor Cyan
+
+          # Configure Pester
+          $config = New-PesterConfiguration
+          $config.Run.Path = $env:MODULES_PATH
+          $config.Run.Exit = $true
+          $config.Output.Verbosity = 'Detailed'
+          $config.TestResult.Enabled = $true
+          $config.TestResult.OutputPath = 'test-results.xml'
+          $config.TestResult.OutputFormat = 'JUnitXml'
+          $config.CodeCoverage.Enabled = $true
+          $config.CodeCoverage.Path = "$env:MODULES_PATH/**/*.ps1"
+          $config.CodeCoverage.OutputPath = 'coverage.xml'
+
+          # Run tests
+          $results = Invoke-Pester -Configuration $config
+
+          # Summary
+          Write-Host "`nTest Summary:" -ForegroundColor Cyan
+          Write-Host "  Total: $($results.TotalCount)"
+          Write-Host "  Passed: $($results.PassedCount)" -ForegroundColor Green
+          Write-Host "  Failed: $($results.FailedCount)" -ForegroundColor $(if ($results.FailedCount -gt 0) {'Red'} else {'Green'})
+          Write-Host "  Skipped: $($results.SkippedCount)" -ForegroundColor Yellow
+
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results
+          path: |
+            test-results.xml
+            coverage.xml
+          retention-days: 30
+
+      - name: Publish Test Results
+        uses: EnricoMi/publish-unit-test-result-action/windows@v2
+        if: always()
+        with:
+          files: test-results.xml
+
+  build-packages:
+    name: Build NuGet Packages
+    needs: validate
+    runs-on: windows-latest
+
+    outputs:
+      package-count: ${{ steps.build.outputs.count }}
+      package-list: ${{ steps.build.outputs.list }}
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Install PSFramework
+        shell: pwsh
+        run: |
+          Install-Module -Name PSFramework -Force -Scope CurrentUser
+          Get-Module -ListAvailable PSFramework
+
+      - name: Setup PSModulePath
+        shell: pwsh
+        run: |
+          $modulesPath = Join-Path $env:GITHUB_WORKSPACE $env:MODULES_PATH
+          $env:PSModulePath = "$modulesPath" + [System.IO.Path]::PathSeparator + $env:PSModulePath
+          Write-Host "PSModulePath: $env:PSModulePath"
+          echo "PSModulePath=$env:PSModulePath" >> $env:GITHUB_ENV
+
+      - name: Import GDS.Common
+        shell: pwsh
+        run: |
+          Import-Module GDS.Common -Force -Verbose
+          Get-Command -Module GDS.Common | Format-Table Name, CommandType
+
+      - name: Build NuGet Packages
+        id: build
+        shell: pwsh
+        run: |
+          Write-Host "`n=== Building NuGet Packages ===" -ForegroundColor Cyan
+
+          $results = Build-AllNuGetPackages -Parallel -Verbose
+
+          # Check for failures
+          $failed = $results | Where-Object { -not $_.Success }
+          if ($failed) {
+            Write-Host "`nFailed Builds:" -ForegroundColor Red
+            $failed | ForEach-Object {
+              Write-Host "  ✗ $($_.ModuleName)" -ForegroundColor Red
+              $_.Errors | ForEach-Object { Write-Host "    - $_" -ForegroundColor Red }
+            }
+            exit 1
+          }
+
+          # Output results
+          $successful = $results | Where-Object Success
+          $packageList = ($successful.ModuleName -join ',')
+
+          echo "count=$($successful.Count)" >> $env:GITHUB_OUTPUT
+          echo "list=$packageList" >> $env:GITHUB_OUTPUT
+
+          # Display summary
+          Write-Host "`n=== Build Summary ===" -ForegroundColor Cyan
+          $results | Format-Table ModuleName, Version, Success -AutoSize
+          Write-Host "Packages built: $($successful.Count)" -ForegroundColor Green
+
+      - name: Upload NuGet Packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: nuget-packages-${{ github.run_number }}
+          path: ${{ env.BUILD_OUTPUT }}/*.nupkg
+          retention-days: 90
+
+      - name: Generate Build Report
+        shell: pwsh
+        run: |
+          $packages = Get-ChildItem -Path $env:BUILD_OUTPUT -Filter "*.nupkg"
+
+          $report = "## 📦 Build Report`n`n"
+          $report += "**Build Number:** $env:GITHUB_RUN_NUMBER`n"
+          $report += "**Branch:** $env:GITHUB_REF_NAME`n"
+          $report += "**Commit:** $env:GITHUB_SHA`n`n"
+          $report += "### Packages Built ($($packages.Count))`n`n"
+
+          foreach ($pkg in $packages) {
+            $size = [math]::Round($pkg.Length / 1KB, 2)
+            $report += "- **$($pkg.Name)** ($size KB)`n"
+          }
+
+          $report | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Encoding utf8
+
+  publish-to-jfrog:
+    name: Publish to JFrog Artifactory
+    needs: build-packages
+    runs-on: windows-latest
+    if: |
+      github.event_name == 'release' ||
+      (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.publish == 'true')
+
+    environment:
+      name: production
+      url: ${{ secrets.JFROG_URL }}/ui/repos/tree/General/${{ secrets.JFROG_REPO }}
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Download Build Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: nuget-packages-${{ github.run_number }}
+          path: ${{ env.BUILD_OUTPUT }}
+
+      - name: Install PSFramework
+        shell: pwsh
+        run: |
+          Install-Module -Name PSFramework -Force -Scope CurrentUser
+
+      - name: Setup PSModulePath
+        shell: pwsh
+        run: |
+          $modulesPath = Join-Path $env:GITHUB_WORKSPACE $env:MODULES_PATH
+          $env:PSModulePath = "$modulesPath" + [System.IO.Path]::PathSeparator + $env:PSModulePath
+          echo "PSModulePath=$env:PSModulePath" >> $env:GITHUB_ENV
+
+      - name: Register JFrog Repository
+        shell: pwsh
+        env:
+          JFROG_URL: ${{ secrets.JFROG_URL }}
+          JFROG_REPO: ${{ secrets.JFROG_REPO }}
+        run: |
+          Write-Host "=== Registering JFrog Repository ===" -ForegroundColor Cyan
+
+          $sourceUrl = "$env:JFROG_URL/artifactory/api/nuget/v3/$env:JFROG_REPO"
+          $publishUrl = "$env:JFROG_URL/artifactory/api/nuget/$env:JFROG_REPO"
+
+          Write-Host "Source URL: $sourceUrl" -ForegroundColor Gray
+          Write-Host "Publish URL: $publishUrl" -ForegroundColor Gray
+
+          Register-PSRepository -Name 'JFrog' `
+            -SourceLocation $sourceUrl `
+            -PublishLocation $publishUrl `
+            -InstallationPolicy Trusted `
+            -PackageManagementProvider NuGet `
+            -Verbose
+
+          Get-PSRepository -Name 'JFrog' | Format-List
+
+      - name: Publish Packages to JFrog
+        shell: pwsh
+        env:
+          JFROG_USER: ${{ secrets.JFROG_USER }}
+          JFROG_TOKEN: ${{ secrets.JFROG_TOKEN }}
+        run: |
+          Write-Host "`n=== Publishing to JFrog ===" -ForegroundColor Cyan
+
+          Import-Module GDS.Common -Force
+
+          $packages = Get-ChildItem -Path $env:BUILD_OUTPUT -Filter "*.nupkg"
+          Write-Host "Found $($packages.Count) package(s) to publish" -ForegroundColor Gray
+
+          $published = 0
+          $failed = 0
+
+          foreach ($package in $packages) {
+            $packageName = $package.BaseName -replace '\.\d+\.\d+\.\d+.*$', ''
+            $modulePath = Join-Path $env:GITHUB_WORKSPACE "$env:MODULES_PATH/$packageName"
+
+            Write-Host "`nPublishing: $packageName..." -ForegroundColor Yellow
+
+            if (Test-Path $modulePath) {
+              try {
+                Publish-Module -Path $modulePath `
+                  -Repository 'JFrog' `
+                  -NuGetApiKey "$env:JFROG_USER`:$env:JFROG_TOKEN" `
+                  -Force `
+                  -Verbose
+
+                Write-Host "  ✓ Published: $packageName" -ForegroundColor Green
+                $published++
+              }
+              catch {
+                Write-Host "  ✗ Failed: $packageName" -ForegroundColor Red
+                Write-Host "  Error: $_" -ForegroundColor Red
+                $failed++
+              }
+            }
+            else {
+              Write-Warning "  Module path not found: $modulePath"
+              $failed++
+            }
+          }
+
+          Write-Host "`n=== Publication Summary ===" -ForegroundColor Cyan
+          Write-Host "Published: $published" -ForegroundColor Green
+          Write-Host "Failed: $failed" -ForegroundColor $(if ($failed -gt 0) {'Red'} else {'Gray'})
+
+          if ($failed -gt 0 -and $published -eq 0) {
+            Write-Error "All publications failed"
+            exit 1
+          }
+
+      - name: Verify Publication
+        shell: pwsh
+        env:
+          JFROG_URL: ${{ secrets.JFROG_URL }}
+          JFROG_REPO: ${{ secrets.JFROG_REPO }}
+        run: |
+          Write-Host "`n=== Verifying Published Modules ===" -ForegroundColor Cyan
+
+          Start-Sleep -Seconds 5
+
+          try {
+            $modules = Find-Module -Repository 'JFrog' -Name "GDS.*" -ErrorAction Stop
+
+            Write-Host "Found $($modules.Count) module(s) in JFrog:" -ForegroundColor Green
+            $modules | Format-Table Name, Version, Repository -AutoSize
+          }
+          catch {
+            Write-Warning "Could not verify modules (may need more time to index): $_"
+          }
+
+      - name: Create Publish Summary
+        shell: pwsh
+        run: |
+          $packages = Get-ChildItem -Path $env:BUILD_OUTPUT -Filter "*.nupkg"
+
+          $summary = "## 🚀 Published to JFrog Artifactory`n`n"
+          $summary += "**Repository:** ``${{ secrets.JFROG_REPO }}```n"
+          $summary += "**Build:** #$env:GITHUB_RUN_NUMBER`n"
+          $summary += "**Branch:** ``$env:GITHUB_REF_NAME```n"
+          $summary += "**Commit:** ``$($env:GITHUB_SHA.Substring(0,7))```n`n"
+          $summary += "### 📦 Published Packages`n`n"
+
+          foreach ($pkg in $packages) {
+            $name = $pkg.BaseName -replace '\.\d+\.\d+\.\d+.*$', ''
+            $version = $pkg.BaseName -replace '^.*?(\d+\.\d+\.\d+).*$','$1'
+            $size = [math]::Round($pkg.Length / 1KB, 2)
+            $summary += "- **$name** v$version ($size KB)`n"
+          }
+
+          $summary += "`n### 📥 Installation`n`n"
+          $summary += '```powershell' + "`n"
+          $summary += "# Register JFrog repository`n"
+          $summary += 'Register-PSRepository -Name "JFrog" -SourceLocation "${{ secrets.JFROG_URL }}/artifactory/api/nuget/v3/${{ secrets.JFROG_REPO }}"' + "`n`n"
+          $summary += "# Install modules`n"
+          foreach ($pkg in $packages) {
+            $name = $pkg.BaseName -replace '\.\d+\.\d+\.\d+.*$', ''
+            $summary += "Install-Module -Name $name -Repository JFrog`n"
+          }
+          $summary += '```' + "`n"
+
+          $summary | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Encoding utf8
+
+      - name: Create Release Assets (on release)
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v1
+        with:
+          files: ${{ env.BUILD_OUTPUT }}/*.nupkg
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
