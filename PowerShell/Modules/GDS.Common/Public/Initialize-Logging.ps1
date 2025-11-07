@@ -76,9 +76,11 @@ function Initialize-Logging {
         }
     }
 
-    # Persist minimum level configuration scoped to module
-    $configName = "GDS.Common.Logging.$ModuleName.MinimumLevel"
-    Set-PSFConfig -FullName $configName -Value $LogLevel -Initialize -Validation 'string' -Description "Minimum log level for $ModuleName module"
+    # Persist module scoped configuration
+    $configPrefix = "GDS.Common.Logging.$ModuleName"
+    Set-PSFConfig -FullName "$configPrefix.MinimumLevel" -Value $LogLevel -Initialize -Validation 'string' -Description "Minimum log level for $ModuleName module"
+    Set-PSFConfig -FullName "$configPrefix.MaxLogSizeMB" -Value $MaxLogSizeMB -Initialize -Validation 'integerpositive' -Description "Maximum log file size in MB for $ModuleName"
+    Set-PSFConfig -FullName "$configPrefix.RetentionDays" -Value $RetentionDays -Initialize -Validation 'integerpositive' -Description "Log retention period in days for $ModuleName"
 
     # Configure PSFramework logging
     try {
@@ -97,25 +99,43 @@ function Initialize-Logging {
             $logFilePath = $resolvedLogPath
         }
         else {
-            $logDirectory = [Environment]::GetEnvironmentVariable('GDS_LOG_DIR', 'Process')
-            if (-not $logDirectory) {
+            $logDirectoryValue = $env:GDS_LOG_DIR
+            if ([string]::IsNullOrWhiteSpace($logDirectoryValue)) {
+                $logDirectoryValue = [Environment]::GetEnvironmentVariable('GDS_LOG_DIR', 'Process')
+            }
+            if ([string]::IsNullOrWhiteSpace($logDirectoryValue)) {
                 throw "Environment variable 'GDS_LOG_DIR' must be set to a writable directory before calling Initialize-Logging."
             }
 
-            $logDirectory = [System.IO.Path]::GetFullPath([Environment]::ExpandEnvironmentVariables($logDirectory))
-            if (-not (Test-Path $logDirectory)) {
-                New-Item -ItemType Directory -Path $logDirectory -Force | Out-Null
+            $expandedLogDirectory = [Environment]::ExpandEnvironmentVariables($logDirectoryValue)
+
+            if (-not (Test-Path -LiteralPath $expandedLogDirectory)) {
+                New-Item -ItemType Directory -Path $expandedLogDirectory -Force | Out-Null
             }
 
-            $logFilePath = Join-Path -Path $logDirectory -ChildPath "${ModuleName}_$(Get-Date -Format 'yyyyMMdd').log"
+            $resolvedDirectory = $expandedLogDirectory
+            $resolved = Resolve-Path -Path $expandedLogDirectory -ErrorAction SilentlyContinue
+            if ($resolved) {
+                $resolvedDirectory = $resolved.ProviderPath
+            }
+            elseif (-not [System.IO.Path]::IsPathRooted($expandedLogDirectory)) {
+                $resolvedDirectory = [System.IO.Path]::GetFullPath((Join-Path -Path (Get-Location) -ChildPath $expandedLogDirectory))
+            }
+            else {
+                $resolvedDirectory = [System.IO.Path]::GetFullPath($expandedLogDirectory)
+            }
+
+            if (-not (Test-Path -LiteralPath $resolvedDirectory)) {
+                New-Item -ItemType Directory -Path $resolvedDirectory -Force | Out-Null
+            }
+
+            $logFilePath = Join-Path -Path $resolvedDirectory -ChildPath "${ModuleName}_$(Get-Date -Format 'yyyyMMdd').log"
         }
 
         # Configure file logging provider
         Set-PSFLoggingProvider -Name 'logfile' -InstanceName $ModuleName `
             -FilePath $logFilePath `
-            -Enabled $true `
-            -LogRotationMaxSizeMB $MaxLogSizeMB `
-            -LogRetentionDays $RetentionDays
+            -Enabled $true
 
         # Enable console output for Info and above
         Set-PSFLoggingProvider -Name 'console' -Enabled $true

@@ -10,8 +10,14 @@ ARG CONDA_ENV_NAME=gds
 # Avoid prompts from apt
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install system dependencies for pyodbc
-RUN apt-get update && apt-get install -y unixodbc-dev ca-certificates && \
+# Install system dependencies for pyodbc and PowerShell
+RUN apt-get update && \
+    apt-get install -y wget gnupg ca-certificates unixodbc-dev && \
+    wget -q https://packages.microsoft.com/config/debian/12/packages-microsoft-prod.deb && \
+    dpkg -i packages-microsoft-prod.deb && \
+    rm packages-microsoft-prod.deb && \
+    apt-get update && \
+    apt-get install -y powershell && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Create the conda environment and install base packages
@@ -19,13 +25,16 @@ RUN conda update -n base -c defaults conda -y && \
     conda create -n ${CONDA_ENV_NAME} -c conda-forge python=${PYTHON_VERSION} -y && \
     conda clean -afy
 
+# Install required PowerShell modules
+RUN pwsh -NoLogo -NoProfile -Command "Set-PSRepository -Name PSGallery -InstallationPolicy Trusted; Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force; Install-Module -Name dbatools,Pester,PSFramework -Scope AllUsers -Force"
+
 # Make sure the conda environment is available in interactive shells
 SHELL ["/bin/bash", "-lc"]
 # Source conda.sh before activation so 'conda activate' works in terminals
 RUN for f in /etc/skel/.bashrc /home/vscode/.bashrc /home/vscode/.profile; do \
-            echo 'if [ -f /opt/conda/etc/profile.d/conda.sh ]; then . /opt/conda/etc/profile.d/conda.sh; fi' >> "$f"; \
-            echo "conda activate ${CONDA_ENV_NAME}" >> "$f"; \
-        done
+    echo 'if [ -f /opt/conda/etc/profile.d/conda.sh ]; then . /opt/conda/etc/profile.d/conda.sh; fi' >> "$f"; \
+    echo "conda activate ${CONDA_ENV_NAME}" >> "$f"; \
+    done
 
 # Set a colorful, multi-line prompt for interactive shells in the dev container
 RUN <<'BASH'
