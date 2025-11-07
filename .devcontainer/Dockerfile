@@ -51,7 +51,7 @@ BASH
 
 # Install some common build tooling in the env
 RUN conda run -n ${CONDA_ENV_NAME} python -m pip install --upgrade pip && \
-    conda run -n ${CONDA_ENV_NAME} pip install ruff pytest pytest-cov wheel build pyodbc
+    conda run -n ${CONDA_ENV_NAME} pip install ruff pytest pytest-cov wheel build pyodbc aiohttp
 
 # Set path
 ENV PATH=/opt/conda/envs/${CONDA_ENV_NAME}/bin:$PATH

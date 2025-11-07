@@ -526,6 +526,9 @@ class SnowflakeConnection(DatabaseConnection, ConfigurableComponent, ResourceMan
 Let's examine the inheritance hierarchy:
 
 ```python
+from abc import ABC, abstractmethod
+
+
 # From base.py
 class DatabaseConnection(ABC):
     @abstractmethod
@@ -569,6 +572,9 @@ class SnowflakeConnection(DatabaseConnection, ConfigurableComponent, ResourceMan
 ### Cooperative Multiple Inheritance
 
 ```python
+import logging
+
+
 class LoggerMixin:
     """Mixin for logging functionality."""
 
@@ -1383,11 +1389,20 @@ print(f"Deserialized: {user_copy.to_dict()}")
 
 ```python
 from datetime import datetime
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, List, Type, TypeVar
+import json
 import pickle  # For complex Python objects
+
+TSerializable = TypeVar("TSerializable", bound="SerializableMixin")
+SERIALIZABLE_REGISTRY: Dict[str, Type["SerializableMixin"]] = {}
+
 
 class SerializableMixin:
     """Mixin for serializable objects."""
+
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        SERIALIZABLE_REGISTRY[cls.__name__] = cls
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert object to dictionary."""
@@ -1409,13 +1424,16 @@ class SerializableMixin:
             return [self._serialize_value(item) for item in value]
         elif isinstance(value, dict):
             return {k: self._serialize_value(v) for k, v in value.items()}
-        elif hasattr(value, 'to_dict'):
-            return value.to_dict()
+        elif isinstance(value, SerializableMixin):
+            return {
+                "__serializable__": value.__class__.__name__,
+                "data": value.to_dict(),
+            }
         else:
             return value
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'SerializableMixin':
+    def from_dict(cls: Type[TSerializable], data: Dict[str, Any]) -> TSerializable:
         """Create object from dictionary."""
         # Deserialize special types
         deserialized_data = {}
@@ -1439,6 +1457,12 @@ class SerializableMixin:
         elif isinstance(value, list):
             return [cls._deserialize_value(item) for item in value]
         elif isinstance(value, dict):
+            if "__serializable__" in value:
+                target_name = value["__serializable__"]
+                payload = value.get("data", {})
+                target_cls = SERIALIZABLE_REGISTRY.get(target_name)
+                if target_cls is not None:
+                    return target_cls.from_dict(payload)
             return {k: cls._deserialize_value(v) for k, v in value.items()}
         return value
 

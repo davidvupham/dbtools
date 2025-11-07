@@ -1,4 +1,5 @@
 # Complete Object-Oriented Programming Guide for Python
+
 ## From Basics to Best Practices
 
 Welcome to the comprehensive guide to Object-Oriented Programming (OOP) in Python! This guide will take you from the fundamentals to advanced concepts and best practices used in professional software development.
@@ -71,11 +72,19 @@ Welcome to the comprehensive guide to Object-Oriented Programming (OOP) in Pytho
 Think of OOP like building with LEGO blocks. Each type of block is a **class** (the design), and each actual block you place is an **object** (an instance of that design).
 
 Another example - imagine a **Car** blueprint:
+
 - **Data (Attributes)**: Things the car HAS - color, brand, speed, fuel_level
 - **Actions (Methods)**: Things the car DOES - start(), stop(), accelerate(), brake()
 
 From one blueprint (class), you can create many cars (objects):
+
 ```python
+class Car:
+    def __init__(self, color: str, brand: str):
+        self.color = color
+        self.brand = brand
+
+
 my_car = Car(color="red", brand="Toyota")
 your_car = Car(color="blue", brand="Honda")
 ```
@@ -97,17 +106,20 @@ Each car is independent - when you paint `my_car` red, `your_car` stays blue!
 Most examples in this guide can be run immediately! Here's how:
 
 **To run an example:**
+
 1. Copy the code block
 2. Save it to a file like `example.py`
 3. Run it: `python3 example.py` (Linux/macOS) or `python example.py` (Windows)
 4. Or paste it into a Python REPL: run `python3`, then paste the code
 
 **Important notes:**
+
 - Recommended Python: 3.10+ (examples use type hints and modern features)
 - **Some examples are illustrative only**: Examples labeled "from our codebase" (like Snowflake connections) show real-world patterns but may reference libraries you don't have installed. These are for learning the concepts, not for running.
 - **Most examples are self-contained**: If there's no note saying "from our codebase", you can run the example as-is!
 
 **What if an example doesn't run?**
+
 - Check if it's marked "from our codebase" - those are illustrative
 - Make sure you're using Python 3.10 or later
 - Check if you need to install any libraries (we'll mention if you do)
@@ -178,6 +190,7 @@ print(your_dog.age)  # Output: 3 (Still 3!)
 ```
 
 **Key Points for Beginners:**
+
 - `class Dog:` creates the blueprint (like a cookie cutter)
 - `Dog("Buddy", 5)` creates an actual dog object (like an actual cookie)
 - `self` refers to the specific dog you're working with
@@ -185,6 +198,7 @@ print(your_dog.age)  # Output: 3 (Still 3!)
 - Attributes (like `name` and `age`) are data that objects store
 
 **Try it yourself!** Create a `Cat` class with:
+
 - Attributes: `name` and `color`
 - Methods: `meow()` that prints "{name} says Meow!", and `change_color(new_color)` that changes the cat's color
 - Create two cat objects and test all the methods
@@ -218,6 +232,7 @@ fluffy.change_color("gray")  # "Fluffy changed from white to gray"
 print(fluffy.color)  # "gray"
 print(shadow.color)  # "black" (unchanged!)
 ```
+
 </details>
 
 ### Class vs Instance Variables
@@ -282,6 +297,7 @@ print(f"{dog2.name} is {dog2.age} years old.")
 ```
 
 **When to use which?**
+
 - **Instance Method (`def method(self, ...)`):** The most common type. Needs access to the object's instance data (`self`).
 - **Class Method (`@classmethod def method(cls, ...)`):** Needs access to the class, but not a specific instance. Perfect for factory methods that create instances in alternative ways (e.g., from a file, a dictionary, or a different representation).
 - **Static Method (`@staticmethod def method(...)`):** Doesn't need access to the instance or the class. It's a helper function that lives inside the class's namespace for organizational purposes.
@@ -289,6 +305,7 @@ print(f"{dog2.name} is {dog2.age} years old.")
 ### Example from Our Codebase
 
 From `connection.py`:
+
 ```python
 from typing import Optional
 # Note: This example uses snowflake.connector from our actual codebase
@@ -344,6 +361,7 @@ print(dev_conn.is_connected())   # Still True!
 ```
 
 **Why use a class here?**
+
 - Each connection needs its own account, user, and connection object
 - Methods like `connect()` and `close()` operate on specific connections
 - Encapsulates all connection logic in one place
@@ -388,6 +406,7 @@ print(counter2.get_count())  # Output: 1 (counter2's count)
 ```
 
 **Key Points:**
+
 - `self` is automatically passed to methods - you don't type it when calling methods
 - When you call `counter1.increment()`, Python automatically passes `counter1` as `self`
 - This is why each object has its own separate data
@@ -404,6 +423,7 @@ print(counter2.get_count())  # Output: 1 (counter2's count)
 Think of a car: You don't need to know how the engine works internally. You just need to know how to use the steering wheel, pedals, and gear shift. The complex engine details are "hidden" or "encapsulated".
 
 In programming, encapsulation means:
+
 1. **Hiding internal data** (like a car hiding its engine complexity)
 2. **Providing simple methods to use** (like a car providing a steering wheel)
 3. **Protecting data from being changed incorrectly** (like a car not letting you put water in the gas tank)
@@ -483,6 +503,7 @@ print(account.get_balance())  # 1500
 ```
 
 **Naming Conventions:**
+
 - `name` - Public (anyone can use)
 - `_name` - Private by convention (internal use, but not enforced)
 - `__name` - Really private (Python mangles the name)
@@ -527,6 +548,7 @@ print(temp.celsius)    # 37.77... (converted)
 ```
 
 **Example from Our Code** (`connection.py`):
+
 ```python
 from typing import Optional, Dict, Any
 
@@ -550,9 +572,15 @@ class SnowflakeConnection:
             'user': self.user,
             'connected': (self.connection is not None)
         }
+
+    def execute_query(self, query: str, params: Optional[tuple] = None) -> list:
+        """Run a query and return mock results."""
+        user_id = params[0] if params else 0
+        return [{"id": user_id, "name": "Example", "email": "example@example.com"}]
 ```
 
 **Why this design?**
+
 - Public attributes (`account`, `connection`) are part of the API
 - Private attributes (`_initialized`) are implementation details
 - Properties provide controlled access to internal state
@@ -567,11 +595,13 @@ class SnowflakeConnection:
 **Inheritance** is like family traits. Just as you inherit your parents' traits (like eye color), classes can inherit features from other classes.
 
 Think of it this way:
+
 - You have a general **"Animal"** class with basic features (eating, sleeping, moving)
 - Then you create a **"Dog"** class that inherits from Animal
 - Dog automatically gets all Animal features, PLUS you can add dog-specific things (barking, fetching)
 
 **Why use inheritance?**
+
 - **Avoid repetition**: Don't rewrite the same code for similar things
 - **Organize code**: Group related classes together
 - **Easy to extend**: Add new types without changing existing code
@@ -660,6 +690,7 @@ print(f"Cat energy: {cat.energy}")
 ```
 
 **Key Concepts:**
+
 - `Dog(Animal)` means Dog inherits from Animal
 - `super().__init__()` calls the parent's constructor
 - Dog gets all of Animal's methods automatically
@@ -667,6 +698,7 @@ print(f"Cat energy: {cat.energy}")
 - Dog can add new methods (like `fetch()`)
 
 **Try it yourself!** Create a `Bird` class that inherits from `Animal`:
+
 - Override `speak()` to return "{name} says Tweet!"
 - Add a `fly()` method
 - Create a bird and test all its methods (including inherited ones like `move()`)
@@ -697,6 +729,7 @@ print(tweety.fly())    # "Tweety is flying"
 print(tweety.move())   # "Tweety is moving" (inherited from Animal!)
 print(tweety.energy)   # Energy decreased from both fly() and move()
 ```
+
 </details>
 
 ### Multiple Inheritance and Mixins
@@ -770,6 +803,7 @@ d.method()
 ```
 
 **Key Points:**
+
 - MRO determines which method gets called in multiple inheritance
 - Use `super()` to follow the MRO chain
 - You can check MRO with `ClassName.__mro__`
@@ -777,6 +811,7 @@ d.method()
 ### Example from Our Code
 
 From `base.py` and `connection.py`:
+
 ```python
 # Base class defines the interface
 class DatabaseConnection(ABC):
@@ -833,6 +868,7 @@ class SnowflakeConnection(DatabaseConnection, ConfigurableComponent):
 ```
 
 **Why this design?**
+
 - `DatabaseConnection` defines what ALL database connections must do
 - `SnowflakeConnection` provides Snowflake-specific implementation
 - Could easily add `PostgreSQLConnection`, `MySQLConnection`, etc.
@@ -845,6 +881,7 @@ class SnowflakeConnection(DatabaseConnection, ConfigurableComponent):
 **Polymorphism** is another fancy word for a simple idea: **different things responding to the same command in their own way**.
 
 Think about a "speak" command:
+
 - Tell a dog to speak → "Woof!"
 - Tell a cat to speak → "Meow!"
 - Tell a duck to speak → "Quack!"
@@ -914,23 +951,55 @@ for creature in all_creatures:
 ### Example from Our Code
 
 ```python
+from abc import ABC, abstractmethod
+from typing import Any, Dict, List, Optional
+
+
 class BaseMonitor(ABC):
     """Base class for all monitors."""
+
+    def __init__(self, name: str):
+        self.name = name
 
     @abstractmethod
     def check(self) -> Dict[str, Any]:
         """Perform monitoring check."""
-        pass
+        raise NotImplementedError
+
 
 class SnowflakeMonitor(BaseMonitor):
     """Snowflake-specific monitor."""
+
+    def __init__(self, name: str, account: str, timeout: Optional[int] = None):
+        super().__init__(name)
+        self.account = account
+        self.timeout = timeout
+
     def check(self) -> Dict[str, Any]:
-        return self.monitor_all()
+        return {
+            "monitor": self.name,
+            "type": "snowflake",
+            "account": self.account,
+            "timeout": self.timeout,
+            "status": "ok",
+        }
+
 
 class PostgreSQLMonitor(BaseMonitor):
     """PostgreSQL-specific monitor."""
+
+    def __init__(self, name: str, host: str):
+        super().__init__(name)
+        self.host = host
+
     def check(self) -> Dict[str, Any]:
-        return self.check_postgres()
+        return {
+            "monitor": self.name,
+            "type": "postgres",
+            "host": self.host,
+            "status": "ok",
+        }
+
 
 # Polymorphism in action
 def run_monitoring(monitors: List[BaseMonitor]):
@@ -939,15 +1008,17 @@ def run_monitoring(monitors: List[BaseMonitor]):
         result = monitor.check()  # Works for any monitor!
         print(f"Monitor result: {result}")
 
+
 # All monitors can be used the same way
 monitors = [
-    SnowflakeMonitor(account="prod"),
-    PostgreSQLMonitor(host="localhost")
+    SnowflakeMonitor(name="sf_prod", account="prod_account"),
+    PostgreSQLMonitor(name="pg_local", host="localhost"),
 ]
 run_monitoring(monitors)  # Works with both!
 ```
 
 **Why polymorphism?**
+
 - Write code that works with any type of monitor
 - Add new monitor types without changing existing code
 - Makes code more flexible and maintainable
@@ -961,10 +1032,12 @@ run_monitoring(monitors)  # Works with both!
 An **Abstract Base Class (ABC)** is like a promise or contract. It says: "Any class that inherits from me MUST implement these specific methods."
 
 Think of it like a job description:
+
 - Job Description (ABC): "All employees must be able to: work(), take_breaks(), report_progress()"
 - Actual Employee (Concrete Class): Implements those methods in their specific way
 
 **Why is this useful?**
+
 - **Enforces rules**: Makes sure all similar classes have the same methods
 - **Prevents mistakes**: You get an error immediately if you forget to implement a required method
 - **Clear documentation**: Makes it obvious what methods a class should have
@@ -1087,6 +1160,7 @@ for shape in shapes:
 ### Example from Our Code
 
 From `base.py`:
+
 ```python
 from abc import ABC, abstractmethod
 
@@ -1138,6 +1212,7 @@ class DatabaseConnection(ABC):
 SOLID is an acronym for five important principles that help you write better object-oriented code. Don't worry if they seem complex at first - we'll explain each one with simple examples!
 
 **Why learn SOLID?**
+
 - Your code will be easier to understand
 - Changes will be easier to make
 - You'll have fewer bugs
@@ -1463,11 +1538,13 @@ user_service2 = UserService(postgres_db)
 This is a common question: "Should I use inheritance or composition?" Here's a simple way to decide:
 
 **Inheritance (IS-A relationship):**
+
 - A Dog **IS AN** Animal → Use inheritance
 - A Cat **IS AN** Animal → Use inheritance
 - Think: "Can I say X IS A Y?"
 
 **Composition (HAS-A relationship):**
+
 - A Car **HAS AN** Engine → Use composition
 - A Person **HAS A** Name → Use composition
 - Think: "Can I say X HAS A Y?"
@@ -1529,11 +1606,13 @@ This is a common question: "Should I use inheritance or composition?" Here's a s
 ### When to Use Inheritance vs Composition
 
 **Use Inheritance when:**
+
 - There's a clear "is-a" relationship
 - You want to extend existing functionality
 - The relationship is stable and won't change
 
 **Use Composition when:**
+
 - There's a "has-a" relationship
 - You need more flexibility
 - You want to combine multiple behaviors
@@ -1843,9 +1922,11 @@ root.show()
 ```
 
 When to use:
+
 - Tree structures (files/dirs, UI widgets, organization charts) where you want a uniform API.
 
 Pitfalls:
+
 - Mutability: be careful with shared children; consider making leaves immutable.
 
 ### 6. State Pattern
@@ -1881,9 +1962,11 @@ print(c.send("world"))  # already connected, sends directly
 ```
 
 When to use:
+
 - Objects with clear modes (disconnected/connected, draft/published) where behavior varies by mode.
 
 Pitfalls:
+
 - Too many tiny state classes can add overhead; keep transitions clear and documented.
 
 ### 7. Proxy Pattern
@@ -1912,9 +1995,11 @@ repo.get("logo")  # served from cache
 ```
 
 When to use:
+
 - Remote calls, expensive loads, access control, logging, rate limiting.
 
 Pitfalls:
+
 - Keep proxy responsibilities focused; otherwise it drifts into a God object.
 
 ### 8. Visitor Pattern
@@ -1954,9 +2039,11 @@ print(total)  # 3
 ```
 
 When to use:
+
 - Stable hierarchies where you frequently add new operations over the structure.
 
 Pitfalls:
+
 - Adding new element types requires updating all visitors (trade-off vs adding new operations).
 
 ### Other patterns to explore
@@ -2348,6 +2435,7 @@ class RemembersCleanup:
 ```
 
 **When to use context managers:**
+
 - File I/O operations
 - Database connections and transactions
 - Network connections (sockets, HTTP sessions)
@@ -2667,6 +2755,7 @@ class ReusableValidation:
 ```
 
 **Key differences:**
+
 - **Property**: Defined per-class, not reusable
 - **Descriptor**: Defined once, reusable across classes
 - **Property**: Simpler for one-off cases
@@ -2956,6 +3045,7 @@ analyzer.validate([1, 2])    # "validate took 0.0501s"
 #### When to Use Class Decorators vs Metaclasses
 
 **Use Class Decorators when:**
+
 - You need to modify or add attributes/methods after class creation
 - You want simple, readable transformations
 - You're registering classes
@@ -2963,6 +3053,7 @@ analyzer.validate([1, 2])    # "validate took 0.0501s"
 - You want to wrap methods
 
 **Use Metaclasses when:**
+
 - You need to control class creation itself (before the class exists)
 - You need to modify the class namespace during creation
 - You're building a framework with complex class hierarchies
@@ -3016,6 +3107,7 @@ class Counter:
 ```
 
 Guidelines:
+
 - Avoid exposing partially updated state; use locks or immutable snapshots.
 - Prefer message-passing (queues) for complex coordination.
 - Consider async (`asyncio`) for IO-bound concurrency.
@@ -3340,6 +3432,7 @@ print(counter())  # 3
 ```
 
 **Real-world use cases:**
+
 - Decorators that need to maintain state
 - Function factories
 - Callback objects with state
@@ -3418,6 +3511,7 @@ print(obj.missing)    # Calls __getattribute__, then __getattr__
 **⚠️ Warning:** Be very careful with `__setattr__` and `__getattribute__` - they can easily cause infinite recursion if not implemented correctly!
 
 **Common use cases:**
+
 - Lazy loading of attributes
 - Proxies and wrappers
 - ORMs (Object-Relational Mappers)
@@ -3450,6 +3544,7 @@ with Transaction() as tx:
 ```
 
 **Other common dunder methods:**
+
 - **Numeric operators**: `__add__`, `__sub__`, `__mul__`, `__truediv__`, `__floordiv__`, `__mod__`, `__pow__`
 - **Comparison**: `__lt__`, `__le__`, `__gt__`, `__ge__`, `__eq__`, `__ne__`
 - **Context Managers**: `__enter__`, `__exit__` (see dedicated section below)
@@ -3487,6 +3582,7 @@ draw_shape(Square())  # "Drawing a square"
 ```
 
 **Protocols vs ABCs:**
+
 - **Protocol**: Structural typing - "has these methods" (duck typing with types)
 - **ABC**: Nominal typing - "declared as this type" (explicit inheritance)
 
@@ -3784,6 +3880,7 @@ loaded = User(**json.loads(payload))  # Deserialize
 ```
 
 Notes:
+
 - Non-serializable types (datetime, Decimal) need custom encoding/decoding.
 - For big models with versions, include a `schema_version` field and migration logic.
 
@@ -3839,12 +3936,12 @@ Notes:
 - Keep module size modest; split when files get long or responsibilities diverge.
 - Prefer absolute imports in applications; consider relative imports inside packages when refactoring.
 - Example layout:
-    - `package_name/`
-        - `__init__.py`
-        - `models/` (domain classes)
-        - `services/` (classes orchestrating models)
-        - `adapters/` (DB/API integrations)
-        - `tests/` (mirrors package structure)
+  - `package_name/`
+    - `__init__.py`
+    - `models/` (domain classes)
+    - `services/` (classes orchestrating models)
+    - `adapters/` (DB/API integrations)
+    - `tests/` (mirrors package structure)
 
 ### Example: Well-Designed Class
 
@@ -3897,6 +3994,7 @@ class PostgreSQLConnection(DatabaseConnection):
         """Establish connection to PostgreSQL database."""
         try:
             # Connection logic here
+            self._connection = object()
             self._logger.info(f"Connected to {self._config.host}:{self._config.port}")
             return True
         except Exception as e:
@@ -3906,11 +4004,12 @@ class PostgreSQLConnection(DatabaseConnection):
     def disconnect(self) -> None:
         """Close PostgreSQL connection."""
         if self._connection:
-            self._connection.close()
+            if hasattr(self._connection, "close"):
+                self._connection.close()
             self._connection = None
             self._logger.info("Disconnected from database")
 
-    def execute_query(self, query: str) -> list:
+    def execute_query(self, query: str, params: Optional[tuple] = None) -> list:
         """Execute SQL query and return results."""
         if not self.is_connected:
             raise RuntimeError("Not connected to database")
@@ -3993,11 +4092,13 @@ print(f"With slots: {sys.getsizeof(p2)} bytes")
 ```
 
 **Benefits of `__slots__`:**
+
 - ~50% memory reduction
 - Slightly faster attribute access
 - Prevents accidental attribute creation
 
 **Drawbacks:**
+
 - Can't add new attributes dynamically
 - No `__dict__` (breaks some metaprogramming)
 - Inheritance requires care
@@ -4203,10 +4304,19 @@ print("Deep:", timeit.timeit(lambda: g.method(), number=1000000))
 ### Best Practices for Performance
 
 1. **Profile First**: Use `cProfile` to find bottlenecks
-   ```python
-   import cProfile
-   cProfile.run('your_function()')
-   ```
+
+  ```python
+  import cProfile
+
+
+  def your_function():
+      """Example workload to profile."""
+      return sum(range(1_000))
+
+
+  if __name__ == "__main__":
+      cProfile.runctx("your_function()", globals(), locals())
+  ```
 
 2. **Use `__slots__` for:**
    - Classes with many instances
@@ -4219,6 +4329,7 @@ print("Deep:", timeit.timeit(lambda: g.method(), number=1000000))
    - Code that needs flexibility
 
 4. **Cache Expensive Operations:**
+
    ```python
    from functools import lru_cache
 
@@ -4229,6 +4340,7 @@ print("Deep:", timeit.timeit(lambda: g.method(), number=1000000))
    ```
 
 5. **Use Generators for Large Datasets:**
+
    ```python
    class DataStream:
        def get_items(self):
@@ -4980,6 +5092,7 @@ For deeper guidance beyond this guide:
 ### Database Connection Hierarchy
 
 From `gds_snowflake/gds_snowflake/base.py`:
+
 ```python
 from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional
@@ -5045,6 +5158,7 @@ class ConfigurableComponent(ABC):
 ```
 
 From `gds_snowflake/gds_snowflake/connection.py`:
+
 ```python
 class SnowflakeConnection(DatabaseConnection, ConfigurableComponent):
     """
@@ -5129,6 +5243,7 @@ class SnowflakeConnection(DatabaseConnection, ConfigurableComponent):
 ### Monitor Pattern Implementation
 
 From `gds_snowflake/gds_snowflake/base.py`:
+
 ```python
 class BaseMonitor(ABC):
     """
@@ -5229,7 +5344,11 @@ class BaseMonitor(ABC):
 ### Factory Pattern in Action
 
 From monitoring modules:
+
 ```python
+from typing import Any, Dict, List
+
+
 class MonitorFactory:
     """
     Factory pattern for creating monitor instances.
@@ -5280,6 +5399,17 @@ class MonitorFactory:
 
         return monitors
 
+
+class HealthMonitor(BaseMonitor):
+    """Simple uptime monitor."""
+
+    def __init__(self, name: str):
+        super().__init__(name)
+
+    def check(self) -> Dict[str, Any]:
+        return {"monitor": self.name, "type": "health", "status": "ok"}
+
+
 # Usage example
 factory = MonitorFactory()
 
@@ -5306,7 +5436,12 @@ monitors = factory.create_monitors_from_config(config)
 ### Dependency Injection Example
 
 From service classes:
+
 ```python
+import logging
+from typing import Any, Dict, Optional
+
+
 class DatabaseService:
     """
     Service class demonstrating dependency injection.
@@ -5372,8 +5507,7 @@ def create_user_service(connection_type: str = 'snowflake') -> DatabaseService:
         )
     elif connection_type == 'postgres':
         connection = PostgreSQLConnection(
-            host='localhost',
-            database='myapp'
+            ConnectionConfig(host='localhost', port=5432, database='myapp')
         )
     else:
         raise ValueError(f"Unsupported connection type: {connection_type}")
@@ -5384,6 +5518,7 @@ def create_user_service(connection_type: str = 'snowflake') -> DatabaseService:
 # Usage
 service = create_user_service('snowflake')
 user = service.get_user_by_id(123)
+print(user)
 ```
 
 ---
@@ -5426,6 +5561,11 @@ class ClassName:
 ### Inheritance
 
 ```python
+class ParentClass:
+    def __init__(self, param1):
+        self.attribute1 = param1
+
+
 class ChildClass(ParentClass):
     def __init__(self, param1, param2):
         super().__init__(param1)  # Call parent constructor
@@ -5480,24 +5620,38 @@ def __str__(self):
 ### Common Mistakes to Avoid
 
 1. ❌ Forgetting `self` in methods
+
    ```python
    def method():  # WRONG - no self
        self.value = 5
    ```
+
    ✅ Always include `self` as first parameter
+
    ```python
    def method(self):  # CORRECT
        self.value = 5
    ```
 
 2. ❌ Not calling parent's `__init__`
+
    ```python
+   class Parent:
+       def __init__(self):
+           self.value = 0
+
    class Child(Parent):
        def __init__(self):
            self.child_attr = 1  # WRONG - parent not initialized
    ```
+
    ✅ Call `super().__init__()`
+
    ```python
+   class Parent:
+       def __init__(self):
+           self.value = 0
+
    class Child(Parent):
        def __init__(self):
            super().__init__()  # CORRECT
@@ -5505,24 +5659,30 @@ def __str__(self):
    ```
 
 3. ❌ Mutable default arguments
+
    ```python
    def __init__(self, items=[]):  # WRONG - shared list!
        self.items = items
    ```
+
    ✅ Use None and create new list
+
    ```python
    def __init__(self, items=None):  # CORRECT
        self.items = items if items is not None else []
    ```
 
 4. ❌ Modifying class variables thinking they're instance variables
+
    ```python
    class Counter:
        count = 0  # Class variable
        def increment(self):
            Counter.count += 1  # Modifies for ALL instances
    ```
+
    ✅ Use instance variables for per-object data
+
    ```python
    class Counter:
        def __init__(self):
