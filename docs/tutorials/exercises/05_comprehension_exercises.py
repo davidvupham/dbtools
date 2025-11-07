@@ -21,9 +21,9 @@ squares = None  # [0, 1, 4, 9, 16, 25, 36, 49, 64, 81]
 
 def test_exercise_1():
     """Test Exercise 1"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("EXERCISE 1: Basic List Comprehension")
-    print("="*60)
+    print("=" * 60)
 
     try:
         assert squares is not None
@@ -52,9 +52,9 @@ evens = None  # [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20]
 
 def test_exercise_2():
     """Test Exercise 2"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("EXERCISE 2: Comprehension with Condition")
-    print("="*60)
+    print("=" * 60)
 
     try:
         assert evens is not None
@@ -86,15 +86,15 @@ long_words = None  # ['HELLO', 'WORLD', 'PYTHON']
 
 def test_exercise_3():
     """Test Exercise 3"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("EXERCISE 3: Transform and Filter")
-    print("="*60)
+    print("=" * 60)
 
     try:
         assert long_words is not None
         print(f"✓ Input: {words}")
         print(f"✓ Output: {long_words}")
-        assert long_words == ['HELLO', 'WORLD', 'PYTHON']
+        assert long_words == ["HELLO", "WORLD", "PYTHON"]
         print("✓ Filtered and transformed correctly!")
         # Verify it's a list comprehension (single line)
         print("✓ Used list comprehension!")
@@ -114,28 +114,22 @@ def test_exercise_3():
 #
 # Your code here:
 
-people = {
-    "Alice": 25,
-    "Bob": 17,
-    "Charlie": 30,
-    "David": 16,
-    "Eve": 22
-}
+people = {"Alice": 25, "Bob": 17, "Charlie": 30, "David": 16, "Eve": 22}
 # Create 'adults' using list comprehension
 adults = None  # ['Alice', 'Charlie', 'Eve']
 
 
 def test_exercise_4():
     """Test Exercise 4"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("EXERCISE 4: Working with Dictionaries")
-    print("="*60)
+    print("=" * 60)
 
     try:
         assert adults is not None
         print(f"✓ Input: {people}")
         print(f"✓ Adults: {adults}")
-        assert set(adults) == {'Alice', 'Charlie', 'Eve'}
+        assert set(adults) == {"Alice", "Charlie", "Eve"}
         print("✓ Filtered adults correctly!")
         assert len(adults) == 3
         print("✓ Correct number of adults!")
@@ -154,24 +148,20 @@ def test_exercise_4():
 #
 # Your code here:
 
-matrix = [
-    [1, 2, 3],
-    [4, 5, 6],
-    [7, 8, 9]
-]
+matrix = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
 # Create 'flattened' using nested list comprehension
 flattened = None  # [1, 2, 3, 4, 5, 6, 7, 8, 9]
 
 
 def test_exercise_5():
     """Test Exercise 5"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("EXERCISE 5: Nested List Comprehension")
-    print("="*60)
+    print("=" * 60)
 
     try:
         assert flattened is not None
-        print(f"✓ Input matrix:")
+        print("✓ Input matrix:")
         for row in matrix:
             print(f"  {row}")
         print(f"✓ Flattened: {flattened}")
@@ -200,9 +190,9 @@ cubes = None  # {1: 1, 2: 8, 3: 27, 4: 64, 5: 125}
 
 def test_exercise_6():
     """Test Exercise 6"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("EXERCISE 6: Dictionary Comprehension")
-    print("="*60)
+    print("=" * 60)
 
     try:
         assert cubes is not None
@@ -250,15 +240,15 @@ active_dict = None  # {'task_1': 100, 'task_3': 200, 'task_4': 150}
 
 def test_exercise_7():
     """Test Exercise 7"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("EXERCISE 7: Real-World Example - Data Processing")
-    print("="*60)
+    print("=" * 60)
 
     try:
         # Test Task 1
         assert active_names is not None
         print(f"✓ Active names: {active_names}")
-        assert active_names == ['task_1', 'task_3', 'task_4']
+        assert active_names == ["task_1", "task_3", "task_4"]
         print("✓ Task 1 correct!")
 
         # Test Task 2
@@ -270,7 +260,7 @@ def test_exercise_7():
         # Test Task 3
         assert active_dict is not None
         print(f"✓ Active dict: {active_dict}")
-        assert active_dict == {'task_1': 100, 'task_3': 200, 'task_4': 150}
+        assert active_dict == {"task_1": 100, "task_3": 200, "task_4": 150}
         print("✓ Task 3 correct!")
 
         print("\n✅ Exercise 7 PASSED!")
@@ -285,11 +275,12 @@ def test_exercise_7():
 # Run All Tests
 # ============================================================================
 
+
 def run_all_tests():
     """Run all exercise tests"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("LIST COMPREHENSION EXERCISES - TEST RUNNER")
-    print("="*60)
+    print("=" * 60)
 
     results = [
         test_exercise_1(),
@@ -301,9 +292,9 @@ def run_all_tests():
         test_exercise_7(),
     ]
 
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("SUMMARY")
-    print("="*60)
+    print("=" * 60)
     passed = sum(results)
     total = len(results)
     print(f"Passed: {passed}/{total}")
@@ -322,4 +313,3 @@ def run_all_tests():
 
 if __name__ == "__main__":
     run_all_tests()
-

@@ -15,20 +15,21 @@ Run this file to verify all exercises pass:
 
 fruits = ["apple", "banana", "cherry", "date"]
 
+
 def format_fruits(fruit_list):
     return [f"{i}: {fruit}" for i, fruit in enumerate(fruit_list)]
 
 
 def test_exercise_1():
     """Test Exercise 1"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("EXERCISE 1: Basic enumerate() Usage")
-    print("="*60)
+    print("=" * 60)
 
     try:
         result = format_fruits(fruits)
         print(f"✓ Input: {fruits}")
-        print(f"✓ Output:")
+        print("✓ Output:")
         for item in result:
             print(f"  {item}")
         expected = ["0: apple", "1: banana", "2: cherry", "3: date"]
@@ -46,6 +47,7 @@ def test_exercise_1():
 # EXERCISE 2: Custom Start Index (Easy)
 # ============================================================================
 
+
 def create_numbered_list(items):
     """Create a numbered list starting from 1"""
     return [f"{i}. {item}" for i, item in enumerate(items, start=1)]
@@ -53,14 +55,14 @@ def create_numbered_list(items):
 
 def test_exercise_2():
     """Test Exercise 2"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("EXERCISE 2: Custom Start Index")
-    print("="*60)
+    print("=" * 60)
 
     try:
         tasks = ["Write code", "Test code", "Deploy code"]
         result = create_numbered_list(tasks)
-        print(f"✓ Tasks:")
+        print("✓ Tasks:")
         for item in result:
             print(f"  {item}")
         expected = ["1. Write code", "2. Test code", "3. Deploy code"]
@@ -78,6 +80,7 @@ def test_exercise_2():
 # EXERCISE 3: Find Item Index (Easy-Medium)
 # ============================================================================
 
+
 def find_index(items, target):
     """Find the index of target in items, return -1 if not found"""
     for i, item in enumerate(items):
@@ -88,9 +91,9 @@ def find_index(items, target):
 
 def test_exercise_3():
     """Test Exercise 3"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("EXERCISE 3: Find Item Index")
-    print("="*60)
+    print("=" * 60)
 
     try:
         colors = ["red", "green", "blue", "yellow"]
@@ -116,6 +119,7 @@ def test_exercise_3():
 # EXERCISE 4: Modify List Elements (Medium)
 # ============================================================================
 
+
 def uppercase_even_indices(words):
     """Return new list with even-indexed words in uppercase"""
     return [word.upper() if i % 2 == 0 else word for i, word in enumerate(words)]
@@ -123,9 +127,9 @@ def uppercase_even_indices(words):
 
 def test_exercise_4():
     """Test Exercise 4"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("EXERCISE 4: Modify List Elements")
-    print("="*60)
+    print("=" * 60)
 
     try:
         words = ["hello", "world", "python", "code", "test"]
@@ -147,6 +151,7 @@ def test_exercise_4():
 # EXERCISE 5: Compare Two Lists (Medium)
 # ============================================================================
 
+
 def find_differences(list1, list2):
     """Return list of indices where list1 and list2 differ"""
     return [i for i, (a, b) in enumerate(zip(list1, list2)) if a != b]
@@ -154,9 +159,9 @@ def find_differences(list1, list2):
 
 def test_exercise_5():
     """Test Exercise 5"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("EXERCISE 5: Compare Two Lists")
-    print("="*60)
+    print("=" * 60)
 
     try:
         list1 = [1, 2, 3, 4, 5]
@@ -186,6 +191,7 @@ def test_exercise_5():
 # EXERCISE 6: Real-World Example - Log Processing (Medium-Hard)
 # ============================================================================
 
+
 def find_errors_in_log(log_lines):
     """
     Find ERROR lines in log and return list of tuples: (line_number, message)
@@ -196,9 +202,9 @@ def find_errors_in_log(log_lines):
 
 def test_exercise_6():
     """Test Exercise 6"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("EXERCISE 6: Real-World Example - Log Processing")
-    print("="*60)
+    print("=" * 60)
 
     try:
         log = [
@@ -212,13 +218,13 @@ def test_exercise_6():
 
         errors = find_errors_in_log(log)
         print(f"✓ Log has {len(log)} lines")
-        print(f"✓ Found errors:")
+        print("✓ Found errors:")
         for line_num, message in errors:
             print(f"  Line {line_num}: {message}")
 
         expected = [
             (3, "ERROR: Database connection failed"),
-            (5, "ERROR: Max retries exceeded")
+            (5, "ERROR: Max retries exceeded"),
         ]
         assert errors == expected
         print("✓ Extracted errors with correct line numbers!")
@@ -234,11 +240,12 @@ def test_exercise_6():
 # Run All Tests
 # ============================================================================
 
+
 def run_all_tests():
     """Run all exercise tests"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("ENUMERATE() EXERCISES - TEST RUNNER")
-    print("="*60)
+    print("=" * 60)
 
     results = [
         test_exercise_1(),
@@ -249,9 +256,9 @@ def run_all_tests():
         test_exercise_6(),
     ]
 
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("SUMMARY")
-    print("="*60)
+    print("=" * 60)
     passed = sum(results)
     total = len(results)
     print(f"Passed: {passed}/{total}")
@@ -271,4 +278,3 @@ def run_all_tests():
 
 if __name__ == "__main__":
     run_all_tests()
-

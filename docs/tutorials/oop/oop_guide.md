@@ -1985,7 +1985,7 @@ Implement `__enter__` and `__exit__` to create a context manager:
 ```python
 class FileManager:
     """Basic file manager context manager."""
-    
+
     def __init__(self, filename, mode):
         self.filename = filename
         self.mode = mode
@@ -2018,11 +2018,11 @@ The `__exit__` method receives information about any exception that occurred:
 ```python
 class ExceptionHandler:
     """Demonstrates __exit__ parameters."""
-    
+
     def __enter__(self):
         print("Entering context")
         return self
-    
+
     def __exit__(self, exc_type, exc_val, exc_tb):
         """
         exc_type: Exception class (e.g., ValueError) or None
@@ -2033,7 +2033,7 @@ class ExceptionHandler:
             print("Exited normally (no exception)")
         else:
             print(f"Exception occurred: {exc_type.__name__}: {exc_val}")
-        
+
         # Return True to suppress the exception
         # Return False (or None) to propagate it
         return False
@@ -2055,14 +2055,14 @@ except ValueError:
 ```python
 class ErrorSuppressor:
     """Context manager that suppresses specific exceptions."""
-    
+
     def __init__(self, *exception_types):
         self.exception_types = exception_types
         self.exception_caught = None
-    
+
     def __enter__(self):
         return self
-    
+
     def __exit__(self, exc_type, exc_val, exc_tb):
         if exc_type is not None and issubclass(exc_type, self.exception_types):
             self.exception_caught = exc_val
@@ -2086,16 +2086,16 @@ import os
 
 class TemporaryDirectory:
     """Create and cleanup a temporary directory."""
-    
+
     def __init__(self):
         self.path = None
-    
+
     def __enter__(self):
         """Create temporary directory."""
         self.path = tempfile.mkdtemp()
         print(f"Created temp directory: {self.path}")
         return self.path
-    
+
     def __exit__(self, exc_type, exc_val, exc_tb):
         """Delete temporary directory and all contents."""
         if self.path and os.path.exists(self.path):
@@ -2124,18 +2124,18 @@ with TemporaryDirectory() as temp_dir:
 ```python
 class Timer:
     """Context manager to time code execution."""
-    
+
     def __init__(self, name):
         self.name = name
         self.start_time = None
         self.elapsed = None
-    
+
     def __enter__(self):
         import time
         self.start_time = time.time()
         print(f"Starting {self.name}")
         return self
-    
+
     def __exit__(self, exc_type, exc_val, exc_tb):
         import time
         self.elapsed = time.time() - self.start_time
@@ -2144,14 +2144,14 @@ class Timer:
 
 class ResourceLock:
     """Simulated resource lock."""
-    
+
     def __init__(self, resource_name):
         self.resource_name = resource_name
-    
+
     def __enter__(self):
         print(f"Acquired lock on {self.resource_name}")
         return self
-    
+
     def __exit__(self, exc_type, exc_val, exc_tb):
         print(f"Released lock on {self.resource_name}")
         return False
@@ -2194,19 +2194,19 @@ from contextlib import contextmanager
 
 class ConnectionPool:
     """Thread-safe database connection pool."""
-    
+
     def __init__(self, max_connections=5):
         self.max_connections = max_connections
         self.available = []
         self.in_use = set()
         self.lock = threading.Lock()
-    
+
     def __enter__(self):
         """Initialize pool when entering context."""
         for i in range(self.max_connections):
             self.available.append(f"Connection-{i}")
         return self
-    
+
     def __exit__(self, exc_type, exc_val, exc_tb):
         """Cleanup all connections."""
         with self.lock:
@@ -2217,7 +2217,7 @@ class ConnectionPool:
             self.available.clear()
             self.in_use.clear()
         return False
-    
+
     @contextmanager
     def get_connection(self):
         """Get a connection from the pool (context manager)."""
@@ -2227,7 +2227,7 @@ class ConnectionPool:
                 raise RuntimeError("No available connections")
             conn = self.available.pop()
             self.in_use.add(conn)
-        
+
         try:
             print(f"Using {conn}")
             yield conn
@@ -2242,7 +2242,7 @@ with ConnectionPool(max_connections=2) as pool:
     # Use connection 1
     with pool.get_connection() as conn1:
         print(f"Working with {conn1}")
-    
+
     # Use connection 2
     with pool.get_connection() as conn2:
         print(f"Working with {conn2}")
@@ -2258,12 +2258,12 @@ import shutil
 
 class AtomicWrite:
     """Write to a file atomically (all-or-nothing)."""
-    
+
     def __init__(self, filename):
         self.filename = filename
         self.temp_file = None
         self.temp_name = None
-    
+
     def __enter__(self):
         """Create temporary file for writing."""
         # Create temp file in same directory for atomic rename
@@ -2275,11 +2275,11 @@ class AtomicWrite:
         )
         self.temp_name = self.temp_file.name
         return self.temp_file
-    
+
     def __exit__(self, exc_type, exc_val, exc_tb):
         """Close and rename temp file, or delete on error."""
         self.temp_file.close()
-        
+
         if exc_type is None:
             # Success - atomically replace original file
             shutil.move(self.temp_name, self.filename)
@@ -2288,7 +2288,7 @@ class AtomicWrite:
             # Error - remove temp file
             os.unlink(self.temp_name)
             print(f"Error occurred, temp file removed")
-        
+
         return False  # Propagate any exceptions
 
 # Usage
@@ -2311,7 +2311,7 @@ except Exception as e:
 class BadContextManager:
     def __enter__(self):
         return self
-    
+
     def __exit__(self, exc_type, exc_val, exc_tb):
         print("Cleanup")
         # Implicitly returns None (False), which is correct
@@ -2321,7 +2321,7 @@ class BadContextManager:
 class GoodContextManager:
     def __enter__(self):
         return self
-    
+
     def __exit__(self, exc_type, exc_val, exc_tb):
         print("Cleanup")
         return False  # Explicit!
@@ -2331,7 +2331,7 @@ class ForgetsCleanup:
     def __enter__(self):
         self.resource = open("file.txt", "w")
         return self.resource
-    
+
     def __exit__(self, exc_type, exc_val, exc_tb):
         pass  # Oops! File never closed!
 
@@ -2340,7 +2340,7 @@ class RemembersCleanup:
     def __enter__(self):
         self.resource = open("file.txt", "w")
         return self.resource
-    
+
     def __exit__(self, exc_type, exc_val, exc_tb):
         if self.resource:
             self.resource.close()  # Always cleanup!
@@ -2364,20 +2364,20 @@ class RemembersCleanup:
 A descriptor is any object that implements at least one of these methods:
 
 - `__get__(self, instance, owner)` - Get attribute value
-- `__set__(self, instance, value)` - Set attribute value  
+- `__set__(self, instance, value)` - Set attribute value
 - `__delete__(self, instance)` - Delete attribute
 
 ```python
 class Descriptor:
     """Basic descriptor demonstrating all three methods."""
-    
+
     def __init__(self, name=None):
         self.name = name
-    
+
     def __set_name__(self, owner, name):
         """Called automatically when descriptor is assigned to a class attribute."""
         self.name = name
-    
+
     def __get__(self, instance, owner):
         """
         instance: The instance accessing the attribute (None if accessed via class)
@@ -2387,12 +2387,12 @@ class Descriptor:
             return self  # Accessed via class, return descriptor itself
         print(f"Getting {self.name} from {instance}")
         return instance.__dict__.get(self.name)
-    
+
     def __set__(self, instance, value):
         """Set the attribute value."""
         print(f"Setting {self.name} to {value}")
         instance.__dict__[self.name] = value
-    
+
     def __delete__(self, instance):
         """Delete the attribute."""
         print(f"Deleting {self.name}")
@@ -2400,7 +2400,7 @@ class Descriptor:
 
 class MyClass:
     attr = Descriptor()  # __set_name__ is called automatically
-    
+
     def __init__(self, attr):
         self.attr = attr  # Calls __set__
 
@@ -2415,21 +2415,21 @@ del obj.attr       # "Deleting attr"
 ```python
 class ValidatedAttribute:
     """Descriptor for validating attribute values."""
-    
+
     def __init__(self, min_value=None, max_value=None):
         self.min_value = min_value
         self.max_value = max_value
         self.name = None
-    
+
     def __set_name__(self, owner, name):
         self.name = name
-    
+
     def __get__(self, instance, owner):
         if instance is None:
             return self
         # Store value in instance.__dict__ with a private name
         return instance.__dict__.get(f'_{self.name}')
-    
+
     def __set__(self, instance, value):
         # Validate before setting
         if self.min_value is not None and value < self.min_value:
@@ -2460,19 +2460,19 @@ person.age = 31       # OK
 ```python
 class TypedAttribute:
     """Descriptor that enforces type checking."""
-    
+
     def __init__(self, expected_type):
         self.expected_type = expected_type
         self.name = None
-    
+
     def __set_name__(self, owner, name):
         self.name = name
-    
+
     def __get__(self, instance, owner):
         if instance is None:
             return self
         return instance.__dict__.get(f'_{self.name}')
-    
+
     def __set__(self, instance, value):
         if not isinstance(value, self.expected_type):
             raise TypeError(
@@ -2485,7 +2485,7 @@ class User:
     name = TypedAttribute(str)
     age = TypedAttribute(int)
     email = TypedAttribute(str)
-    
+
     def __init__(self, name, age, email):
         self.name = name
         self.age = age
@@ -2502,33 +2502,33 @@ user.age = 31  # OK
 ```python
 class LazyProperty:
     """Descriptor that computes value only once (lazy loading)."""
-    
+
     def __init__(self, func):
         self.func = func
         self.name = func.__name__
-    
+
     def __get__(self, instance, owner):
         if instance is None:
             return self
-        
+
         # Check if value already computed
         if self.name not in instance.__dict__:
             # Compute and cache the value
             print(f"Computing {self.name}...")
             value = self.func(instance)
             instance.__dict__[self.name] = value
-        
+
         return instance.__dict__[self.name]
 
 class DataAnalyzer:
     def __init__(self, data):
         self.data = data
-    
+
     @LazyProperty
     def mean(self):
         """Compute mean (expensive operation)."""
         return sum(self.data) / len(self.data)
-    
+
     @LazyProperty
     def sorted_data(self):
         """Sort data (expensive operation)."""
@@ -2548,28 +2548,28 @@ print(analyzer.sorted_data)  # [1, 2, 5, 8, 9] (cached!)
 ```python
 class ReadOnly:
     """Descriptor for read-only attributes."""
-    
+
     def __init__(self, func):
         self.func = func
         self.name = func.__name__
-    
+
     def __get__(self, instance, owner):
         if instance is None:
             return self
         return self.func(instance)
-    
+
     def __set__(self, instance, value):
         raise AttributeError(f"'{self.name}' is read-only")
 
 class Circle:
     def __init__(self, radius):
         self._radius = radius
-    
+
     @ReadOnly
     def diameter(self):
         """Computed property (read-only)."""
         return self._radius * 2
-    
+
     @ReadOnly
     def area(self):
         """Computed property (read-only)."""
@@ -2590,7 +2590,7 @@ import time
 
 class CachedProperty:
     """Descriptor with time-based cache expiration."""
-    
+
     def __init__(self, ttl=60):
         """
         ttl: Time to live in seconds
@@ -2598,36 +2598,36 @@ class CachedProperty:
         self.ttl = ttl
         self.func = None
         self.name = None
-    
+
     def __call__(self, func):
         """Allow using as decorator."""
         self.func = func
         self.name = func.__name__
         return self
-    
+
     def __get__(self, instance, owner):
         if instance is None:
             return self
-        
+
         cache_key = f'_{self.name}_cache'
         timestamp_key = f'_{self.name}_timestamp'
-        
+
         current_time = time.time()
         cached_time = instance.__dict__.get(timestamp_key, 0)
-        
+
         # Check if cache is expired
         if current_time - cached_time > self.ttl:
             print(f"Cache expired for {self.name}, recomputing...")
             value = self.func(instance)
             instance.__dict__[cache_key] = value
             instance.__dict__[timestamp_key] = current_time
-        
+
         return instance.__dict__[cache_key]
 
 class APIClient:
     def __init__(self):
         self.call_count = 0
-    
+
     @CachedProperty(ttl=2)  # Cache for 2 seconds
     def user_count(self):
         """Expensive API call (simulated)."""
@@ -2653,7 +2653,7 @@ print(client.user_count)  # "Cache expired...", "Making API call #2...", then 42
 class SimpleClass:
     def __init__(self, value):
         self._value = value
-    
+
     @property
     def value(self):
         """Simple computed property."""
@@ -2687,20 +2687,20 @@ class ReusableValidation:
 ```python
 class Field:
     """Base descriptor for database fields."""
-    
+
     def __init__(self, field_type, default=None):
         self.field_type = field_type
         self.default = default
         self.name = None
-    
+
     def __set_name__(self, owner, name):
         self.name = name
-    
+
     def __get__(self, instance, owner):
         if instance is None:
             return self
         return instance.__dict__.get(self.name, self.default)
-    
+
     def __set__(self, instance, value):
         if value is not None and not isinstance(value, self.field_type):
             raise TypeError(f"{self.name} must be {self.field_type.__name__}")
@@ -2711,7 +2711,7 @@ class IntegerField(Field):
         super().__init__(int, default)
         self.min_value = min_value
         self.max_value = max_value
-    
+
     def __set__(self, instance, value):
         super().__set__(instance, value)
         if value is not None:
@@ -2724,7 +2724,7 @@ class StringField(Field):
     def __init__(self, default="", max_length=None):
         super().__init__(str, default)
         self.max_length = max_length
-    
+
     def __set__(self, instance, value):
         super().__set__(instance, value)
         if value is not None and self.max_length and len(value) > self.max_length:
@@ -2736,7 +2736,7 @@ class Product:
     name = StringField(max_length=100)
     price = IntegerField(min_value=0)
     quantity = IntegerField(default=0, min_value=0)
-    
+
     def __init__(self, id, name, price, quantity=0):
         self.id = id
         self.name = name
@@ -2770,7 +2770,7 @@ def add_repr(cls):
     def __repr__(self):
         attrs = ', '.join(f"{k}={v!r}" for k, v in self.__dict__.items())
         return f"{cls.__name__}({attrs})"
-    
+
     cls.__repr__ = __repr__
     return cls
 
@@ -2792,7 +2792,7 @@ A common use case is automatically registering classes:
 class Registry:
     """Global registry for plugins."""
     _plugins = {}
-    
+
     @classmethod
     def register(cls, name):
         """Decorator to register a plugin class."""
@@ -2801,12 +2801,12 @@ class Registry:
             plugin_class.plugin_name = name  # Add attribute
             return plugin_class
         return decorator
-    
+
     @classmethod
     def get_plugin(cls, name):
         """Get a registered plugin by name."""
         return cls._plugins.get(name)
-    
+
     @classmethod
     def list_plugins(cls):
         """List all registered plugins."""
@@ -2852,7 +2852,7 @@ def require_methods(*method_names):
 class DataProcessor:
     def process(self, data):
         return data.upper()
-    
+
     def validate(self, data):
         return isinstance(data, str)
 
@@ -2868,12 +2868,12 @@ class DataProcessor:
 def singleton(cls):
     """Decorator that makes a class a singleton."""
     instances = {}
-    
+
     def get_instance(*args, **kwargs):
         if cls not in instances:
             instances[cls] = cls(*args, **kwargs)
         return instances[cls]
-    
+
     return get_instance
 
 @singleton
@@ -2919,12 +2919,12 @@ import functools
 def track_calls(cls):
     """Decorator that tracks method calls and timing."""
     original_methods = {}
-    
+
     for attr_name in dir(cls):
         attr = getattr(cls, attr_name)
         if callable(attr) and not attr_name.startswith('_'):
             original_methods[attr_name] = attr
-    
+
     for method_name, method in original_methods.items():
         @functools.wraps(method)
         def wrapper(*args, _method=method, _name=method_name, **kwargs):
@@ -2933,9 +2933,9 @@ def track_calls(cls):
             elapsed = time.time() - start
             print(f"{_name} took {elapsed:.4f}s")
             return result
-        
+
         setattr(cls, method_name, wrapper)
-    
+
     return cls
 
 @track_calls
@@ -2943,7 +2943,7 @@ class DataAnalyzer:
     def process(self, data):
         time.sleep(0.1)  # Simulate work
         return len(data)
-    
+
     def validate(self, data):
         time.sleep(0.05)  # Simulate work
         return isinstance(data, list)
@@ -3309,10 +3309,10 @@ Make your objects behave like functions by implementing `__call__`:
 ```python
 class Multiplier:
     """A callable object that multiplies by a factor."""
-    
+
     def __init__(self, factor):
         self.factor = factor
-    
+
     def __call__(self, value):
         """Called when instance is used like a function."""
         return value * self.factor
@@ -3325,10 +3325,10 @@ print(times_five(3))   # 15
 # Useful for stateful functions
 class Counter:
     """Count how many times it's been called."""
-    
+
     def __init__(self):
         self.count = 0
-    
+
     def __call__(self):
         self.count += 1
         return self.count
@@ -3352,19 +3352,19 @@ Control what happens when attributes are accessed, set, or deleted:
 ```python
 class DynamicAttributes:
     """Object that tracks all attribute access."""
-    
+
     def __init__(self):
         # Use object.__setattr__ to avoid recursion
         object.__setattr__(self, '_data', {})
         object.__setattr__(self, '_access_log', [])
-    
+
     def __getattr__(self, name):
         """Called when attribute is NOT found in normal places."""
         self._access_log.append(f"Getting {name}")
         if name in self._data:
             return self._data[name]
         raise AttributeError(f"{name} not found")
-    
+
     def __setattr__(self, name, value):
         """Called for ALL attribute assignments."""
         if name.startswith('_'):
@@ -3373,7 +3373,7 @@ class DynamicAttributes:
         else:
             self._access_log.append(f"Setting {name} = {value}")
             self._data[name] = value
-    
+
     def __delattr__(self, name):
         """Called when del obj.attr is used."""
         self._access_log.append(f"Deleting {name}")
@@ -3395,16 +3395,16 @@ print(obj._access_log)
 ```python
 class StrictAccess:
     """Demonstrates the difference between __getattr__ and __getattribute__."""
-    
+
     def __init__(self):
         self.public = "visible"
-    
+
     def __getattribute__(self, name):
         """Called for EVERY attribute access."""
         print(f"__getattribute__: Accessing {name}")
         # Must use object.__getattribute__ to avoid infinite recursion
         return object.__getattribute__(self, name)
-    
+
     def __getattr__(self, name):
         """Only called if attribute NOT found by __getattribute__."""
         print(f"__getattr__: {name} not found, returning default")
@@ -3431,11 +3431,11 @@ Briefly covered here; see [Context Managers](#context-managers-for-resource-mana
 ```python
 class Transaction:
     """Database transaction context manager."""
-    
+
     def __enter__(self):
         print("Beginning transaction")
         return self
-    
+
     def __exit__(self, exc_type, exc_val, exc_tb):
         if exc_type is None:
             print("Committing transaction")
@@ -3501,13 +3501,13 @@ T = TypeVar('T')  # Type variable
 
 class Box(Generic[T]):
     """A box that can hold any type of item."""
-    
+
     def __init__(self, item: T):
         self.item = item
-    
+
     def get_item(self) -> T:
         return self.item
-    
+
     def set_item(self, item: T) -> None:
         self.item = item
 
@@ -3533,14 +3533,14 @@ V = TypeVar('V')  # Value type
 
 class Pair(Generic[K, V]):
     """A pair of values with different types."""
-    
+
     def __init__(self, key: K, value: V):
         self.key = key
         self.value = value
-    
+
     def get_key(self) -> K:
         return self.key
-    
+
     def get_value(self) -> V:
         return self.value
 
@@ -3570,15 +3570,15 @@ T = TypeVar('T', bound=Comparable)
 
 class SortedList(Generic[T]):
     """A list that keeps items sorted."""
-    
+
     def __init__(self):
         self._items: list[T] = []
-    
+
     def add(self, item: T) -> None:
         """Add item in sorted position."""
         self._items.append(item)
         self._items.sort()  # Works because T is Comparable
-    
+
     def get_items(self) -> list[T]:
         return self._items.copy()
 
@@ -3599,26 +3599,26 @@ from typing import Self  # Python 3.11+
 
 class Builder:
     """Fluent builder pattern with proper typing."""
-    
+
     def __init__(self):
         self.value = 0
-    
+
     def add(self, n: int) -> Self:
         """Returns Self, not Builder."""
         self.value += n
         return self
-    
+
     def multiply(self, n: int) -> Self:
         """Returns Self for method chaining."""
         self.value *= n
         return self
-    
+
     def build(self) -> int:
         return self.value
 
 class ExtendedBuilder(Builder):
     """Subclass with additional methods."""
-    
+
     def subtract(self, n: int) -> Self:
         """Returns ExtendedBuilder, not Builder!"""
         self.value -= n
@@ -3653,19 +3653,19 @@ T = TypeVar('T')
 
 class Container(Protocol[T]):
     """Protocol for containers holding type T."""
-    
+
     def get(self) -> T: ...
     def put(self, item: T) -> None: ...
 
 class StringBox:
     """Implements Container[str] implicitly."""
-    
+
     def __init__(self):
         self._item: str = ""
-    
+
     def get(self) -> str:
         return self._item
-    
+
     def put(self, item: str) -> None:
         self._item = item
 
@@ -3719,17 +3719,17 @@ class Entity(Protocol):
 
 class Repository(ABC, Generic[T]):
     """Generic repository for any entity type."""
-    
+
     @abstractmethod
     def get_by_id(self, id: int) -> Optional[T]:
         """Get entity by ID."""
         pass
-    
+
     @abstractmethod
     def save(self, entity: T) -> T:
         """Save entity to database."""
         pass
-    
+
     @abstractmethod
     def delete(self, id: int) -> bool:
         """Delete entity by ID."""
@@ -3743,17 +3743,17 @@ class User:
 
 class UserRepository(Repository[User]):
     """Concrete repository for User entities."""
-    
+
     def __init__(self):
         self._users: dict[int, User] = {}
-    
+
     def get_by_id(self, id: int) -> Optional[User]:
         return self._users.get(id)
-    
+
     def save(self, user: User) -> User:
         self._users[user.id] = user
         return user
-    
+
     def delete(self, id: int) -> bool:
         if id in self._users:
             del self._users[id]
@@ -3977,7 +3977,7 @@ class Point:
 # With slots
 class PointSlots:
     __slots__ = ('x', 'y')
-    
+
     def __init__(self, x, y):
         self.x = x
         self.y = y
@@ -4010,7 +4010,7 @@ import timeit
 class WithProperty:
     def __init__(self, value):
         self._value = value
-    
+
     @property
     def value(self):
         return self._value
@@ -4039,7 +4039,7 @@ import timeit
 class Calculator:
     def add(self, a, b):
         return a + b
-    
+
     @staticmethod
     def add_static(a, b):
         return a + b
@@ -4068,12 +4068,12 @@ import timeit
 class DescriptorValidator:
     def __init__(self, name):
         self.name = name
-    
+
     def __get__(self, instance, owner):
         if instance is None:
             return self
         return instance.__dict__.get(f'_{self.name}')
-    
+
     def __set__(self, instance, value):
         if value < 0:
             raise ValueError("Must be positive")
@@ -4081,18 +4081,18 @@ class DescriptorValidator:
 
 class WithDescriptor:
     value = DescriptorValidator('value')
-    
+
     def __init__(self, value):
         self.value = value
 
 class WithProperty:
     def __init__(self, value):
         self._value = value
-    
+
     @property
     def value(self):
         return self._value
-    
+
     @value.setter
     def value(self, val):
         if val < 0:
@@ -4121,7 +4121,7 @@ class EagerInit:
     def __init__(self, data):
         self.data = data
         self.result = self._expensive_computation()
-    
+
     def _expensive_computation(self):
         return sum(x**2 for x in self.data)
 
@@ -4130,7 +4130,7 @@ class LazyInit:
     def __init__(self, data):
         self.data = data
         self._result = None
-    
+
     @property
     def result(self):
         if self._result is None:
@@ -4221,7 +4221,7 @@ print("Deep:", timeit.timeit(lambda: g.method(), number=1000000))
 4. **Cache Expensive Operations:**
    ```python
    from functools import lru_cache
-   
+
    class DataProcessor:
        @lru_cache(maxsize=128)
        def expensive_operation(self, data):
@@ -4234,7 +4234,7 @@ print("Deep:", timeit.timeit(lambda: g.method(), number=1000000))
        def get_items(self):
            # Bad: Returns everything at once
            return [process(x) for x in huge_dataset]
-       
+
        def get_items_generator(self):
            # Good: Yields one at a time
            for x in huge_dataset:

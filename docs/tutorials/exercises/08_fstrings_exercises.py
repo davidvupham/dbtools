@@ -24,9 +24,9 @@ greeting = None
 
 def test_exercise_1():
     """Test Exercise 1"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("EXERCISE 1: Basic F-String Usage")
-    print("="*60)
+    print("=" * 60)
 
     try:
         assert greeting is not None
@@ -56,9 +56,9 @@ message = None
 
 def test_exercise_2():
     """Test Exercise 2"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("EXERCISE 2: Expressions in F-Strings")
-    print("="*60)
+    print("=" * 60)
 
     try:
         assert message is not None
@@ -92,9 +92,9 @@ formatted_num = None
 
 def test_exercise_3():
     """Test Exercise 3"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("EXERCISE 3: Number Formatting")
-    print("="*60)
+    print("=" * 60)
 
     try:
         assert formatted_pi is not None
@@ -123,6 +123,7 @@ def test_exercise_3():
 #
 # Your code here:
 
+
 def format_table_row(name, value):
     """
     Format a table row with:
@@ -136,9 +137,9 @@ def format_table_row(name, value):
 
 def test_exercise_4():
     """Test Exercise 4"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("EXERCISE 4: String Alignment and Padding")
-    print("="*60)
+    print("=" * 60)
 
     try:
         row1 = format_table_row("Product", "$99.99")
@@ -167,6 +168,7 @@ def test_exercise_4():
 #
 # Your code here:
 
+
 def debug_variables(x, y, z):
     """
     Return a string showing variable names and values
@@ -179,9 +181,9 @@ def debug_variables(x, y, z):
 
 def test_exercise_5():
     """Test Exercise 5"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("EXERCISE 5: Debugging with F-Strings")
-    print("="*60)
+    print("=" * 60)
 
     try:
         result = debug_variables(10, 20, 30)
@@ -205,6 +207,7 @@ def test_exercise_5():
 #
 # Your code here:
 
+
 def generate_report(name, transactions, balance):
     """
     Generate a bank statement report with:
@@ -215,7 +218,7 @@ def generate_report(name, transactions, balance):
 
     Example output:
     ==================================================
-                   Account: Alice                    
+                   Account: Alice
     ==================================================
     Transactions: 5
     Balance: $1,234.56
@@ -232,9 +235,9 @@ def generate_report(name, transactions, balance):
 
 def test_exercise_6():
     """Test Exercise 6"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("EXERCISE 6: Real-World Example - Report Generation")
-    print("="*60)
+    print("=" * 60)
 
     try:
         report = generate_report("Alice", 5, 1234.56)
@@ -265,11 +268,12 @@ def test_exercise_6():
 # Run All Tests
 # ============================================================================
 
+
 def run_all_tests():
     """Run all exercise tests"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("F-STRING EXERCISES - TEST RUNNER")
-    print("="*60)
+    print("=" * 60)
 
     results = [
         test_exercise_1(),
@@ -280,9 +284,9 @@ def run_all_tests():
         test_exercise_6(),
     ]
 
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("SUMMARY")
-    print("="*60)
+    print("=" * 60)
     passed = sum(results)
     total = len(results)
     print(f"Passed: {passed}/{total}")
@@ -303,4 +307,3 @@ def run_all_tests():
 
 if __name__ == "__main__":
     run_all_tests()
-

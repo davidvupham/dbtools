@@ -15,6 +15,7 @@ from datetime import datetime
 # EXERCISE 1: Basic super() Usage (Easy)
 # ============================================================================
 
+
 class Vehicle:
     def __init__(self, brand: str, year: int):
         self.brand = brand
@@ -35,9 +36,9 @@ class Car(Vehicle):
 
 def test_exercise_1():
     """Test Exercise 1"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("EXERCISE 1: Basic super() Usage")
-    print("="*60)
+    print("=" * 60)
 
     try:
         # Test Vehicle
@@ -67,6 +68,7 @@ def test_exercise_1():
 # EXERCISE 2: super() with Multiple Methods (Easy-Medium)
 # ============================================================================
 
+
 class Employee:
     def __init__(self, name: str, salary: float):
         self.name = name
@@ -89,9 +91,9 @@ class Manager(Employee):
 
 def test_exercise_2():
     """Test Exercise 2"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("EXERCISE 2: super() with Multiple Methods")
-    print("="*60)
+    print("=" * 60)
 
     try:
         # Test Employee
@@ -122,6 +124,7 @@ def test_exercise_2():
 # EXERCISE 3: Three-Level Inheritance (Medium)
 # ============================================================================
 
+
 class Shape:
     def __init__(self, color: str):
         self.color = color
@@ -147,9 +150,9 @@ class Square(Rectangle):
 
 def test_exercise_3():
     """Test Exercise 3"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("EXERCISE 3: Three-Level Inheritance")
-    print("="*60)
+    print("=" * 60)
 
     try:
         # Test Shape
@@ -181,6 +184,7 @@ def test_exercise_3():
 # ============================================================================
 # EXERCISE 4: Understanding Method Resolution Order (MRO) (Medium)
 # ============================================================================
+
 
 class A:
     def __init__(self, name: str):
@@ -215,9 +219,9 @@ class D(B, C):
 
 def test_exercise_4():
     """Test Exercise 4"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("EXERCISE 4: Understanding Method Resolution Order (MRO)")
-    print("="*60)
+    print("=" * 60)
 
     try:
         # Test A
@@ -254,6 +258,7 @@ def test_exercise_4():
 # EXERCISE 5: Cooperative Inheritance with Mixins (Medium-Hard)
 # ============================================================================
 
+
 class LoggerMixin:
     def log(self, message: str):
         print(f"[{self.__class__.__name__}]: {message}")
@@ -281,9 +286,9 @@ class LoggedTask(LoggerMixin, TimestampMixin, Task):
 
 def test_exercise_5():
     """Test Exercise 5"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("EXERCISE 5: Cooperative Inheritance with Mixins")
-    print("="*60)
+    print("=" * 60)
 
     try:
         # Test Task
@@ -298,12 +303,12 @@ def test_exercise_5():
         print("✓ LoggedTask inherits from Task correctly!")
 
         # Test mixin methods
-        print(f"✓ Logger: ", end="")
+        print("✓ Logger: ", end="")
         lt.log("Testing logger")
         print(f"✓ Timestamp: {lt.get_timestamp()}")
 
         # Test create method
-        print(f"✓ Create method: ", end="")
+        print("✓ Create method: ", end="")
         lt.create()
 
         print("\n✅ Exercise 5 PASSED!")
@@ -316,6 +321,7 @@ def test_exercise_5():
 # ============================================================================
 # EXERCISE 6: Real-World Example - Database Models (Hard)
 # ============================================================================
+
 
 class BaseModel:
     def __init__(self, id: int):
@@ -355,9 +361,9 @@ class User(TimestampModel):
 
 def test_exercise_6():
     """Test Exercise 6"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("EXERCISE 6: Real-World Example - Database Models")
-    print("="*60)
+    print("=" * 60)
 
     try:
         # Test BaseModel
@@ -405,11 +411,12 @@ def test_exercise_6():
 # Run All Tests
 # ============================================================================
 
+
 def run_all_tests():
     """Run all exercise tests"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("SUPER() EXERCISES - TEST RUNNER")
-    print("="*60)
+    print("=" * 60)
 
     results = [
         test_exercise_1(),
@@ -420,9 +427,9 @@ def run_all_tests():
         test_exercise_6(),
     ]
 
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("SUMMARY")
-    print("="*60)
+    print("=" * 60)
     passed = sum(results)
     total = len(results)
     print(f"Passed: {passed}/{total}")
@@ -442,4 +449,3 @@ def run_all_tests():
 
 if __name__ == "__main__":
     run_all_tests()
-

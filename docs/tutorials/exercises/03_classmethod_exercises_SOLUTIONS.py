@@ -10,12 +10,12 @@ Run this file to verify all exercises pass:
 """
 
 from datetime import datetime
-from typing import Optional
 import os
 
 # ============================================================================
 # EXERCISE 1: Create an Alternative Constructor (Easy)
 # ============================================================================
+
 
 class Person:
     def __init__(self, name: str, age: int):
@@ -30,9 +30,9 @@ class Person:
 
 def test_exercise_1():
     """Test Exercise 1"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("EXERCISE 1: Create an Alternative Constructor")
-    print("="*60)
+    print("=" * 60)
 
     try:
         # Test regular constructor
@@ -56,6 +56,7 @@ def test_exercise_1():
 # EXERCISE 2: Parse from String (Easy-Medium)
 # ============================================================================
 
+
 class Product:
     def __init__(self, name: str, price: float, stock: int):
         self.name = name
@@ -64,15 +65,15 @@ class Product:
 
     @classmethod
     def from_string(cls, product_string: str):
-        name, price, stock = product_string.split(',')
+        name, price, stock = product_string.split(",")
         return cls(name, float(price), int(stock))
 
 
 def test_exercise_2():
     """Test Exercise 2"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("EXERCISE 2: Parse from String")
-    print("="*60)
+    print("=" * 60)
 
     try:
         # Test regular constructor
@@ -98,6 +99,7 @@ def test_exercise_2():
 # EXERCISE 3: Factory Method with Validation (Medium)
 # ============================================================================
 
+
 class BankAccount:
     def __init__(self, account_number: str, balance: float):
         if len(account_number) != 8 or not account_number.isdigit():
@@ -116,20 +118,24 @@ class BankAccount:
 
 def test_exercise_3():
     """Test Exercise 3"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("EXERCISE 3: Factory Method with Validation")
-    print("="*60)
+    print("=" * 60)
 
     try:
         # Test create_savings
         savings = BankAccount.create_savings("12345678")
-        print(f"✓ Created savings: {savings.account_number}, balance=${savings.balance}")
+        print(
+            f"✓ Created savings: {savings.account_number}, balance=${savings.balance}"
+        )
         assert savings.balance == 0.0
         print("✓ Savings starts with $0")
 
         # Test create_checking
         checking = BankAccount.create_checking("87654321")
-        print(f"✓ Created checking: {checking.account_number}, balance=${checking.balance}")
+        print(
+            f"✓ Created checking: {checking.account_number}, balance=${checking.balance}"
+        )
         assert checking.balance == 100.0
         print("✓ Checking starts with $100")
 
@@ -152,6 +158,7 @@ def test_exercise_3():
 # EXERCISE 4: Understanding cls vs self (Medium)
 # ============================================================================
 
+
 class Counter:
     total_instances = 0
 
@@ -173,9 +180,9 @@ class Counter:
 
 def test_exercise_4():
     """Test Exercise 4"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("EXERCISE 4: Understanding cls vs self")
-    print("="*60)
+    print("=" * 60)
 
     try:
         # Reset before testing
@@ -185,7 +192,7 @@ def test_exercise_4():
         c1 = Counter()
         c2 = Counter()
         c3 = Counter()
-        print(f"✓ Created 3 counters")
+        print("✓ Created 3 counters")
         assert Counter.get_total_instances() == 3
         print(f"✓ Total instances: {Counter.get_total_instances()}")
 
@@ -215,6 +222,7 @@ def test_exercise_4():
 # EXERCISE 5: @classmethod with Inheritance (Medium-Hard)
 # ============================================================================
 
+
 class Animal:
     def __init__(self, name: str, species: str):
         self.name = name
@@ -239,9 +247,9 @@ class Dog(Animal):
 
 def test_exercise_5():
     """Test Exercise 5"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("EXERCISE 5: @classmethod with Inheritance")
-    print("="*60)
+    print("=" * 60)
 
     try:
         # Test Animal.create
@@ -269,6 +277,7 @@ def test_exercise_5():
 # EXERCISE 6: Real-World Example - Configuration Loader (Hard)
 # ============================================================================
 
+
 class DatabaseConfig:
     def __init__(self, host: str, port: int, username: str, password: str):
         self.host = host
@@ -287,10 +296,7 @@ class DatabaseConfig:
     @classmethod
     def from_dict(cls, config: dict):
         return cls(
-            config["host"],
-            config["port"],
-            config["username"],
-            config["password"]
+            config["host"], config["port"], config["username"], config["password"]
         )
 
     @classmethod
@@ -307,9 +313,9 @@ class DatabaseConfig:
 
 def test_exercise_6():
     """Test Exercise 6"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("EXERCISE 6: Real-World Example - Configuration Loader")
-    print("="*60)
+    print("=" * 60)
 
     try:
         # Test development config
@@ -329,7 +335,7 @@ def test_exercise_6():
             "host": "test.db.com",
             "port": 3306,
             "username": "test_user",
-            "password": "test_pass"
+            "password": "test_pass",
         }
         test_config = DatabaseConfig.from_dict(config_dict)
         print(f"✓ Created from dict: {test_config.host}:{test_config.port}")
@@ -359,11 +365,12 @@ def test_exercise_6():
 # Run All Tests
 # ============================================================================
 
+
 def run_all_tests():
     """Run all exercise tests"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("CLASSMETHOD EXERCISES - TEST RUNNER")
-    print("="*60)
+    print("=" * 60)
 
     results = [
         test_exercise_1(),
@@ -374,9 +381,9 @@ def run_all_tests():
         test_exercise_6(),
     ]
 
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("SUMMARY")
-    print("="*60)
+    print("=" * 60)
     passed = sum(results)
     total = len(results)
     print(f"Passed: {passed}/{total}")
@@ -389,4 +396,3 @@ def run_all_tests():
 
 if __name__ == "__main__":
     run_all_tests()
-

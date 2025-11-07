@@ -17,11 +17,6 @@ Run this file to test your solutions:
     python 09_oop_comprehensive.py
 """
 
-from dataclasses import dataclass, field
-from enum import Enum
-from abc import ABC, abstractmethod
-from typing import List, Optional
-from datetime import datetime
 
 # ============================================================================
 # EXERCISE 1: Build a Task Management System (Medium)
@@ -50,9 +45,9 @@ from datetime import datetime
 
 def test_exercise_1():
     """Test Exercise 1"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("EXERCISE 1: Build a Task Management System")
-    print("="*60)
+    print("=" * 60)
 
     try:
         manager = TaskManager()
@@ -62,7 +57,7 @@ def test_exercise_1():
         task1 = manager.add_task("Write documentation")
         task2 = manager.add_task("Write tests")
         task3 = manager.add_task("Deploy code")
-        print(f"✓ Added 3 tasks")
+        print("✓ Added 3 tasks")
 
         # Check initial status
         assert task1.status == TaskStatus.PENDING
@@ -89,6 +84,7 @@ def test_exercise_1():
     except Exception as e:
         print(f"\n❌ Exercise 1 FAILED: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 
@@ -108,7 +104,6 @@ def test_exercise_1():
 #
 # Your code here:
 
-import math
 
 # class Shape(ABC):
 #     pass
@@ -125,9 +120,9 @@ import math
 
 def test_exercise_2():
     """Test Exercise 2"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("EXERCISE 2: Inheritance with Shapes")
-    print("="*60)
+    print("=" * 60)
 
     try:
         # Test Rectangle
@@ -163,6 +158,7 @@ def test_exercise_2():
     except Exception as e:
         print(f"\n❌ Exercise 2 FAILED: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 
@@ -193,9 +189,9 @@ def test_exercise_2():
 
 def test_exercise_3():
     """Test Exercise 3"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("EXERCISE 3: Alternative Constructors and Validation")
-    print("="*60)
+    print("=" * 60)
 
     try:
         # Test regular constructor
@@ -206,7 +202,7 @@ def test_exercise_3():
         user_data = {
             "username": "jane_smith",
             "email": "jane@example.com",
-            "role": UserRole.ADMIN
+            "role": UserRole.ADMIN,
         }
         user2 = User.from_dict(user_data)
         assert user2.username == "jane_smith"
@@ -223,7 +219,7 @@ def test_exercise_3():
         assert guest.username == "guest"
         assert guest.role == UserRole.GUEST
         assert guest.email is None
-        print(f"✓ Created guest user")
+        print("✓ Created guest user")
 
         # Test validation - short username
         try:
@@ -246,6 +242,7 @@ def test_exercise_3():
     except Exception as e:
         print(f"\n❌ Exercise 3 FAILED: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 
@@ -281,9 +278,9 @@ def test_exercise_3():
 
 def test_exercise_4():
     """Test Exercise 4"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("EXERCISE 4: Composition and Aggregation")
-    print("="*60)
+    print("=" * 60)
 
     try:
         library = Library()
@@ -338,6 +335,7 @@ def test_exercise_4():
     except Exception as e:
         print(f"\n❌ Exercise 4 FAILED: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 
@@ -376,9 +374,9 @@ def test_exercise_4():
 
 def test_exercise_5():
     """Test Exercise 5"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("EXERCISE 5: Bringing It All Together")
-    print("="*60)
+    print("=" * 60)
 
     try:
         # Create products
@@ -426,6 +424,7 @@ def test_exercise_5():
     except Exception as e:
         print(f"\n❌ Exercise 5 FAILED: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 
@@ -434,11 +433,12 @@ def test_exercise_5():
 # Run All Tests
 # ============================================================================
 
+
 def run_all_tests():
     """Run all exercise tests"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("OOP COMPREHENSIVE EXERCISES - TEST RUNNER")
-    print("="*60)
+    print("=" * 60)
 
     results = [
         test_exercise_1(),
@@ -448,9 +448,9 @@ def run_all_tests():
         test_exercise_5(),
     ]
 
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("SUMMARY")
-    print("="*60)
+    print("=" * 60)
     passed = sum(results)
     total = len(results)
     print(f"Passed: {passed}/{total}")
@@ -472,4 +472,3 @@ def run_all_tests():
 
 if __name__ == "__main__":
     run_all_tests()
-

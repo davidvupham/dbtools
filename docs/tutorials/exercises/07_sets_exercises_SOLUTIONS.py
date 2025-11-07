@@ -21,9 +21,9 @@ unique_numbers = set(numbers)
 
 def test_exercise_1():
     """Test Exercise 1"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("EXERCISE 1: Create and Manipulate Sets")
-    print("="*60)
+    print("=" * 60)
 
     try:
         assert unique_numbers is not None
@@ -52,9 +52,9 @@ all_items = set_a | set_b  # or set_a.union(set_b)
 
 def test_exercise_2():
     """Test Exercise 2"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("EXERCISE 2: Set Operations - Union")
-    print("="*60)
+    print("=" * 60)
 
     try:
         assert all_items is not None
@@ -82,9 +82,9 @@ common_users = users_a & users_b  # or users_a.intersection(users_b)
 
 def test_exercise_3():
     """Test Exercise 3"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("EXERCISE 3: Set Operations - Intersection")
-    print("="*60)
+    print("=" * 60)
 
     try:
         assert common_users is not None
@@ -107,14 +107,16 @@ def test_exercise_3():
 
 completed_tasks = {"task1", "task2", "task3", "task4", "task5"}
 pending_tasks = {"task3", "task4", "task6", "task7"}
-truly_completed = completed_tasks - pending_tasks  # or completed_tasks.difference(pending_tasks)
+truly_completed = (
+    completed_tasks - pending_tasks
+)  # or completed_tasks.difference(pending_tasks)
 
 
 def test_exercise_4():
     """Test Exercise 4"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("EXERCISE 4: Set Operations - Difference")
-    print("="*60)
+    print("=" * 60)
 
     try:
         assert truly_completed is not None
@@ -135,6 +137,7 @@ def test_exercise_4():
 # EXERCISE 5: Fast Membership Testing (Medium)
 # ============================================================================
 
+
 def is_user_active(username, active_users_set):
     """Check if username is in active_users_set (should be O(1))"""
     return username in active_users_set
@@ -142,9 +145,9 @@ def is_user_active(username, active_users_set):
 
 def test_exercise_5():
     """Test Exercise 5"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("EXERCISE 5: Fast Membership Testing")
-    print("="*60)
+    print("=" * 60)
 
     try:
         # Create large set for performance
@@ -177,6 +180,7 @@ def test_exercise_5():
 # EXERCISE 6: Real-World Example - Data Analysis (Medium-Hard)
 # ============================================================================
 
+
 def analyze_user_activity(day1_users, day2_users):
     """
     Analyze user activity across two days.
@@ -195,13 +199,13 @@ def analyze_user_activity(day1_users, day2_users):
 
 def test_exercise_6():
     """Test Exercise 6"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("EXERCISE 6: Real-World Example - Data Analysis")
-    print("="*60)
+    print("=" * 60)
 
     try:
         day1 = [101, 102, 103, 104, 105, 103, 101]  # Has duplicates
-        day2 = [103, 104, 106, 107, 108, 106]       # Has duplicates
+        day2 = [103, 104, 106, 107, 108, 106]  # Has duplicates
 
         both, only1, only2, total = analyze_user_activity(day1, day2)
 
@@ -229,11 +233,12 @@ def test_exercise_6():
 # Run All Tests
 # ============================================================================
 
+
 def run_all_tests():
     """Run all exercise tests"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("SETS EXERCISES - TEST RUNNER")
-    print("="*60)
+    print("=" * 60)
 
     results = [
         test_exercise_1(),
@@ -244,9 +249,9 @@ def run_all_tests():
         test_exercise_6(),
     ]
 
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("SUMMARY")
-    print("="*60)
+    print("=" * 60)
     passed = sum(results)
     total = len(results)
     print(f"Passed: {passed}/{total}")
@@ -266,4 +271,3 @@ def run_all_tests():
 
 if __name__ == "__main__":
     run_all_tests()
-

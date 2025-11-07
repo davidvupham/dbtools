@@ -20,6 +20,7 @@ import math
 # EXERCISE 1: Build a Task Management System (Medium)
 # ============================================================================
 
+
 class TaskStatus(Enum):
     PENDING = "pending"
     IN_PROGRESS = "in_progress"
@@ -64,9 +65,9 @@ class TaskManager:
 
 def test_exercise_1():
     """Test Exercise 1"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("EXERCISE 1: Build a Task Management System")
-    print("="*60)
+    print("=" * 60)
 
     try:
         manager = TaskManager()
@@ -76,7 +77,7 @@ def test_exercise_1():
         task1 = manager.add_task("Write documentation")
         task2 = manager.add_task("Write tests")
         task3 = manager.add_task("Deploy code")
-        print(f"✓ Added 3 tasks")
+        print("✓ Added 3 tasks")
 
         # Check initial status
         assert task1.status == TaskStatus.PENDING
@@ -103,6 +104,7 @@ def test_exercise_1():
     except Exception as e:
         print(f"\n❌ Exercise 1 FAILED: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 
@@ -110,6 +112,7 @@ def test_exercise_1():
 # ============================================================================
 # EXERCISE 2: Inheritance with Shapes (Medium)
 # ============================================================================
+
 
 class Shape(ABC):
     @abstractmethod
@@ -138,7 +141,7 @@ class Circle(Shape):
         self.radius = radius
 
     def area(self) -> float:
-        return math.pi * self.radius ** 2
+        return math.pi * self.radius**2
 
     def perimeter(self) -> float:
         return 2 * math.pi * self.radius
@@ -151,9 +154,9 @@ class Square(Rectangle):
 
 def test_exercise_2():
     """Test Exercise 2"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("EXERCISE 2: Inheritance with Shapes")
-    print("="*60)
+    print("=" * 60)
 
     try:
         # Test Rectangle
@@ -189,6 +192,7 @@ def test_exercise_2():
     except Exception as e:
         print(f"\n❌ Exercise 2 FAILED: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 
@@ -196,6 +200,7 @@ def test_exercise_2():
 # ============================================================================
 # EXERCISE 3: Alternative Constructors and Validation (Medium-Hard)
 # ============================================================================
+
 
 class UserRole(Enum):
     GUEST = "guest"
@@ -216,16 +221,12 @@ class User:
             raise ValueError("Username must be 3-20 characters")
 
         # Validate email (if provided)
-        if self.email is not None and '@' not in self.email:
+        if self.email is not None and "@" not in self.email:
             raise ValueError("Email must contain '@'")
 
     @classmethod
     def from_dict(cls, data: dict):
-        return cls(
-            username=data["username"],
-            email=data["email"],
-            role=data["role"]
-        )
+        return cls(username=data["username"], email=data["email"], role=data["role"])
 
     @classmethod
     def create_admin(cls, username: str, email: str):
@@ -238,9 +239,9 @@ class User:
 
 def test_exercise_3():
     """Test Exercise 3"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("EXERCISE 3: Alternative Constructors and Validation")
-    print("="*60)
+    print("=" * 60)
 
     try:
         # Test regular constructor
@@ -251,7 +252,7 @@ def test_exercise_3():
         user_data = {
             "username": "jane_smith",
             "email": "jane@example.com",
-            "role": UserRole.ADMIN
+            "role": UserRole.ADMIN,
         }
         user2 = User.from_dict(user_data)
         assert user2.username == "jane_smith"
@@ -268,7 +269,7 @@ def test_exercise_3():
         assert guest.username == "guest"
         assert guest.role == UserRole.GUEST
         assert guest.email is None
-        print(f"✓ Created guest user")
+        print("✓ Created guest user")
 
         # Test validation - short username
         try:
@@ -291,6 +292,7 @@ def test_exercise_3():
     except Exception as e:
         print(f"\n❌ Exercise 3 FAILED: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 
@@ -298,6 +300,7 @@ def test_exercise_3():
 # ============================================================================
 # EXERCISE 4: Composition and Aggregation (Hard)
 # ============================================================================
+
 
 @dataclass
 class Book:
@@ -365,9 +368,9 @@ class Library:
 
 def test_exercise_4():
     """Test Exercise 4"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("EXERCISE 4: Composition and Aggregation")
-    print("="*60)
+    print("=" * 60)
 
     try:
         library = Library()
@@ -422,6 +425,7 @@ def test_exercise_4():
     except Exception as e:
         print(f"\n❌ Exercise 4 FAILED: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 
@@ -429,6 +433,7 @@ def test_exercise_4():
 # ============================================================================
 # EXERCISE 5: Bringing It All Together (Hard)
 # ============================================================================
+
 
 class OrderStatus(Enum):
     PENDING = "pending"
@@ -472,11 +477,14 @@ class Order:
     @classmethod
     def from_cart(cls, customer_name: str, cart_items: List[OrderItem]):
         import uuid
+
         order_id = str(uuid.uuid4())[:8]
         return cls(id=order_id, customer_name=customer_name, items=cart_items)
 
     def __str__(self):
-        items_str = "\n".join(f"  - {item.product.name} x{item.quantity}" for item in self.items)
+        items_str = "\n".join(
+            f"  - {item.product.name} x{item.quantity}" for item in self.items
+        )
         return f"""Order #{self.id}
 Customer: {self.customer_name}
 Status: {self.status.value}
@@ -487,9 +495,9 @@ Total: ${self.calculate_total():.2f}"""
 
 def test_exercise_5():
     """Test Exercise 5"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("EXERCISE 5: Bringing It All Together")
-    print("="*60)
+    print("=" * 60)
 
     try:
         # Create products
@@ -537,6 +545,7 @@ def test_exercise_5():
     except Exception as e:
         print(f"\n❌ Exercise 5 FAILED: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 
@@ -545,11 +554,12 @@ def test_exercise_5():
 # Run All Tests
 # ============================================================================
 
+
 def run_all_tests():
     """Run all exercise tests"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("OOP COMPREHENSIVE EXERCISES - TEST RUNNER")
-    print("="*60)
+    print("=" * 60)
 
     results = [
         test_exercise_1(),
@@ -559,9 +569,9 @@ def run_all_tests():
         test_exercise_5(),
     ]
 
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("SUMMARY")
-    print("="*60)
+    print("=" * 60)
     passed = sum(results)
     total = len(results)
     print(f"Passed: {passed}/{total}")
@@ -583,4 +593,3 @@ def run_all_tests():
 
 if __name__ == "__main__":
     run_all_tests()
-

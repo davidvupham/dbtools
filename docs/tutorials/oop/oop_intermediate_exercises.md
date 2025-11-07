@@ -70,16 +70,16 @@ if __name__ == "__main__":
     # Create products
     laptop = Product("Laptop", 1200.00, stock=5)
     mouse = Product("Mouse", 25.00, stock=10)
-    
+
     # Create cart and add items
     cart = ShoppingCart()
     cart.add_item(laptop, 1)
     cart.add_item(mouse, 2)
-    
+
     print(f"Subtotal: ${cart.subtotal:.2f}")
     print(f"Tax: ${cart.tax:.2f}")
     print(f"Total: ${cart.total:.2f}")
-    
+
     # Try to add too many items
     try:
         cart.add_item(laptop, 10)  # Should fail - insufficient stock
@@ -144,7 +144,7 @@ class JSONExporter(Plugin):
 if __name__ == "__main__":
     manager = PluginManager()
     print("Available plugins:", manager.list_plugins())
-    
+
     plugin = manager.get_plugin("csv_exporter")
     result = plugin.execute({"data": [1, 2, 3]})
     print(result)
@@ -202,7 +202,7 @@ class NotificationService:
 if __name__ == "__main__":
     email = EmailNotifier()
     sms = SMSNotifier()
-    
+
     service = NotificationService([email, sms])
     service.notify("Hello!", "user@example.com")
 ```
@@ -253,13 +253,13 @@ def cached(ttl: int = 60):
 # Test
 if __name__ == "__main__":
     cache = Cache(max_size=100, default_ttl=5)
-    
+
     cache.set("key1", "value1")
     print(cache.get("key1"))  # "value1"
-    
+
     time.sleep(6)
     print(cache.get("key1"))  # None (expired)
-    
+
     print(cache.stats())  # {hits: 1, misses: 1, ...}
 ```
 
@@ -319,13 +319,13 @@ class TaskQueue:
 # Test
 if __name__ == "__main__":
     queue = TaskQueue()
-    
+
     task1 = Task("task1", lambda: print("Task 1"), priority=5)
     task2 = Task("task2", lambda: print("Task 2"), priority=10)
-    
+
     queue.add(task1)
     queue.add(task2)
-    
+
     queue.process_all()  # Should process task2 first (higher priority)
 ```
 
@@ -378,10 +378,10 @@ if __name__ == "__main__":
         },
         "debug": True
     })
-    
+
     print(config.get("database.host"))  # "localhost"
     print(config.get("database.port"))  # 5432
-    
+
     with config.temporary_set("debug", False):
         print(config.get("debug"))  # False
     print(config.get("debug"))  # True (restored)
@@ -444,7 +444,7 @@ class LoggableMixin:
 if __name__ == "__main__":
     logger = Logger("myapp")
     logger.add_handler(ConsoleHandler())
-    
+
     logger.info("Application started")
     logger.error("An error occurred!")
 ```
@@ -505,7 +505,7 @@ class User:
     name = String(min_length=2, max_length=50)
     age = Integer(min_value=0, max_value=150)
     email = Email()
-    
+
     def __init__(self, name, age, email):
         self.name = name
         self.age = age
@@ -574,13 +574,13 @@ class Order:
 if __name__ == "__main__":
     order = Order("ORDER123")
     print(order.status)  # CREATED
-    
+
     order.pay()
     print(order.status)  # PAID
-    
+
     order.ship()
     print(order.status)  # SHIPPED
-    
+
     try:
         order.pay()  # Should fail - already paid
     except ValueError as e:
@@ -633,10 +633,10 @@ class EventBus:
 # Test
 if __name__ == "__main__":
     bus = EventBus()
-    
+
     def on_user_created(event):
         print(f"User created: {event.data}")
-    
+
     bus.subscribe("user_created", on_user_created)
     bus.publish("user_created", {"name": "Alice"})
 ```
@@ -656,66 +656,66 @@ if __name__ == "__main__":
 ```python
 class Product:
     """Represents a product in the store."""
-    
+
     def __init__(self, name: str, price: float, stock: int):
         self._name = name
         self._price = price
         self._stock = stock
-    
+
     @property
     def name(self) -> str:
         return self._name
-    
+
     @property
     def price(self) -> float:
         return self._price
-    
+
     @property
     def stock(self) -> int:
         return self._stock
-    
+
     def reduce_stock(self, quantity: int) -> None:
         if quantity > self._stock:
             raise ValueError(f"Insufficient stock. Available: {self._stock}")
         self._stock -= quantity
-    
+
     def increase_stock(self, quantity: int) -> None:
         self._stock += quantity
 
 class CartItem:
     """Represents an item in the cart."""
-    
+
     def __init__(self, product: Product, quantity: int):
         if quantity <= 0:
             raise ValueError("Quantity must be positive")
         self._product = product
         self._quantity = quantity
-    
+
     @property
     def product(self) -> Product:
         return self._product
-    
+
     @property
     def quantity(self) -> int:
         return self._quantity
-    
+
     @quantity.setter
     def quantity(self, value: int):
         if value <= 0:
             raise ValueError("Quantity must be positive")
         self._quantity = value
-    
+
     @property
     def subtotal(self) -> float:
         return self._product.price * self._quantity
 
 class ShoppingCart:
     """Shopping cart that holds items."""
-    
+
     def __init__(self):
         self._items: List[CartItem] = []
         self._tax_rate = 0.08  # 8% tax
-    
+
     def add_item(self, product: Product, quantity: int) -> None:
         """Add product to cart."""
         if quantity > product.stock:
@@ -723,26 +723,26 @@ class ShoppingCart:
                 f"Cannot add {quantity} of {product.name}. "
                 f"Only {product.stock} available."
             )
-        
+
         # Check if product already in cart
         for item in self._items:
             if item.product is product:
                 item.quantity += quantity
                 return
-        
+
         # Add new item
         self._items.append(CartItem(product, quantity))
-    
+
     def remove_item(self, product: Product) -> None:
         """Remove product from cart."""
         self._items = [item for item in self._items if item.product is not product]
-    
+
     def update_quantity(self, product: Product, quantity: int) -> None:
         """Update quantity of a product in cart."""
         if quantity <= 0:
             self.remove_item(product)
             return
-        
+
         for item in self._items:
             if item.product is product:
                 if quantity > product.stock:
@@ -750,26 +750,26 @@ class ShoppingCart:
                 item.quantity = quantity
                 return
         raise ValueError(f"{product.name} not in cart")
-    
+
     @property
     def subtotal(self) -> float:
         """Calculate subtotal before tax."""
         return sum(item.subtotal for item in self._items)
-    
+
     @property
     def tax(self) -> float:
         """Calculate tax amount."""
         return self.subtotal * self._tax_rate
-    
+
     @property
     def total(self) -> float:
         """Calculate total including tax."""
         return self.subtotal + self.tax
-    
+
     def clear(self) -> None:
         """Clear all items from cart."""
         self._items.clear()
-    
+
     def __len__(self) -> int:
         return len(self._items)
 ```
@@ -785,17 +785,17 @@ _plugin_registry: Dict[str, Type['Plugin']] = {}
 
 class Plugin(ABC):
     """Base class for all plugins."""
-    
+
     @property
     @abstractmethod
     def name(self) -> str:
         pass
-    
+
     @property
     @abstractmethod
     def version(self) -> str:
         pass
-    
+
     @abstractmethod
     def execute(self, data: Any) -> Any:
         pass
@@ -809,18 +809,18 @@ def register_plugin(plugin_name: str):
 
 class PluginManager:
     """Manages plugin lifecycle."""
-    
+
     def list_plugins(self) -> list[str]:
         """List all registered plugin names."""
         return list(_plugin_registry.keys())
-    
+
     def get_plugin(self, name: str) -> Plugin:
         """Get a plugin instance by name."""
         plugin_class = _plugin_registry.get(name)
         if not plugin_class:
             raise ValueError(f"Plugin '{name}' not found")
         return plugin_class()
-    
+
     def execute_plugin(self, name: str, data: Any) -> Any:
         """Execute a plugin by name."""
         plugin = self.get_plugin(name)
@@ -831,11 +831,11 @@ class CSVExporter(Plugin):
     @property
     def name(self) -> str:
         return "CSV Exporter"
-    
+
     @property
     def version(self) -> str:
         return "1.0.0"
-    
+
     def execute(self, data: Any) -> str:
         """Export data as CSV."""
         if isinstance(data, dict) and "data" in data:
@@ -848,11 +848,11 @@ class JSONExporter(Plugin):
     @property
     def name(self) -> str:
         return "JSON Exporter"
-    
+
     @property
     def version(self) -> str:
         return "1.0.0"
-    
+
     def execute(self, data: Any) -> str:
         """Export data as JSON."""
         import json
@@ -888,4 +888,3 @@ After completing these exercises:
 4. Build your own project applying these concepts
 
 **Remember:** The goal isn't just to make code work, but to make it well-designed, maintainable, and extensible!
-

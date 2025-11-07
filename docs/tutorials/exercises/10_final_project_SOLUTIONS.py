@@ -9,16 +9,17 @@ Run this file to verify the solution passes all tests:
     python 10_final_project_SOLUTIONS.py
 """
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import Enum
 from abc import ABC, abstractmethod
 from typing import List, Optional, Dict
-from datetime import datetime, timedelta
+from datetime import datetime
 import random
 
 # ============================================================================
 # Enums
 # ============================================================================
+
 
 class MonitorStatus(Enum):
     HEALTHY = "healthy"
@@ -44,6 +45,7 @@ class AlertLevel(Enum):
 # ============================================================================
 # Dataclasses
 # ============================================================================
+
 
 @dataclass
 class Metric:
@@ -72,6 +74,7 @@ class DatabaseConfig:
 # Abstract Base Class
 # ============================================================================
 
+
 class Monitor(ABC):
     def __init__(self, config: DatabaseConfig):
         self.config = config
@@ -96,6 +99,7 @@ class Monitor(ABC):
 # Concrete Monitor Classes
 # ============================================================================
 
+
 class ConnectionMonitor(Monitor):
     def __init__(self, config: DatabaseConfig):
         super().__init__(config)
@@ -110,8 +114,10 @@ class ConnectionMonitor(Monitor):
     def get_metrics(self) -> List[Metric]:
         now = datetime.now()
         return [
-            Metric("connection_status", 1.0 if self.is_connected else 0.0, now, "boolean"),
-            Metric("response_time", random.uniform(5, 50), now, "ms")
+            Metric(
+                "connection_status", 1.0 if self.is_connected else 0.0, now, "boolean"
+            ),
+            Metric("response_time", random.uniform(5, 50), now, "ms"),
         ]
 
     def get_name(self) -> str:
@@ -137,7 +143,7 @@ class PerformanceMonitor(Monitor):
         return [
             Metric("query_latency", self.query_time, now, "ms"),
             Metric("throughput", random.uniform(100, 1000), now, "queries/sec"),
-            Metric("cpu_usage", random.uniform(20, 90), now, "%")
+            Metric("cpu_usage", random.uniform(20, 90), now, "%"),
         ]
 
     def get_name(self) -> str:
@@ -165,7 +171,7 @@ class StorageMonitor(Monitor):
         return [
             Metric("disk_usage", self.current_usage, now, "%"),
             Metric("disk_used", used_gb, now, "GB"),
-            Metric("disk_total", total_gb, now, "GB")
+            Metric("disk_total", total_gb, now, "GB"),
         ]
 
     def get_name(self) -> str:
@@ -175,6 +181,7 @@ class StorageMonitor(Monitor):
 # ============================================================================
 # Main Monitoring System
 # ============================================================================
+
 
 class MonitoringSystem:
     def __init__(self):
@@ -242,17 +249,21 @@ class MonitoringSystem:
                 MonitorStatus.HEALTHY: "✓",
                 MonitorStatus.WARNING: "⚠",
                 MonitorStatus.CRITICAL: "✗",
-                MonitorStatus.UNKNOWN: "?"
+                MonitorStatus.UNKNOWN: "?",
             }.get(status, "?")
 
-            report_lines.append(f"{status_symbol} {name:<50} {status.value.upper():>15}")
+            report_lines.append(
+                f"{status_symbol} {name:<50} {status.value.upper():>15}"
+            )
 
         # Add metrics summary
-        report_lines.extend([
-            "",
-            "Metrics Summary:".upper(),
-            "-" * 70,
-        ])
+        report_lines.extend(
+            [
+                "",
+                "Metrics Summary:".upper(),
+                "-" * 70,
+            ]
+        )
 
         metrics_by_type = {}
         for metric in self.get_all_metrics():
@@ -271,26 +282,30 @@ class MonitoringSystem:
 
         # Add alerts
         if self.alerts:
-            report_lines.extend([
-                "",
-                "Active Alerts:".upper(),
-                "-" * 70,
-            ])
+            report_lines.extend(
+                [
+                    "",
+                    "Active Alerts:".upper(),
+                    "-" * 70,
+                ]
+            )
             for alert in self.alerts:
                 alert_symbol = {
                     AlertLevel.CRITICAL: "🔴",
                     AlertLevel.ERROR: "🟠",
                     AlertLevel.WARNING: "🟡",
-                    AlertLevel.INFO: "ℹ️"
+                    AlertLevel.INFO: "ℹ️",
                 }.get(alert.level, "•")
                 report_lines.append(
                     f"{alert_symbol} [{alert.level.value.upper()}] {alert.message}"
                 )
         else:
-            report_lines.extend([
-                "",
-                "✓ No active alerts".center(70),
-            ])
+            report_lines.extend(
+                [
+                    "",
+                    "✓ No active alerts".center(70),
+                ]
+            )
 
         report_lines.append(separator)
         return "\n".join(report_lines)
@@ -300,11 +315,12 @@ class MonitoringSystem:
 # Test Suite
 # ============================================================================
 
+
 def test_basic_functionality():
     """Test basic functionality of all components"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("TEST 1: Basic Functionality")
-    print("="*60)
+    print("=" * 60)
 
     try:
         # Test enums
@@ -313,7 +329,9 @@ def test_basic_functionality():
         print("✓ Enums work")
 
         # Test dataclasses
-        config = DatabaseConfig("prod_db", DatabaseType.SNOWFLAKE, "db.example.com", 5432)
+        config = DatabaseConfig(
+            "prod_db", DatabaseType.SNOWFLAKE, "db.example.com", 5432
+        )
         assert config.name == "prod_db"
         print("✓ DatabaseConfig dataclass works")
 
@@ -330,15 +348,16 @@ def test_basic_functionality():
     except Exception as e:
         print(f"\n❌ TEST 1 FAILED: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 
 
 def test_monitor_inheritance():
     """Test monitor inheritance and abstract methods"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("TEST 2: Monitor Inheritance")
-    print("="*60)
+    print("=" * 60)
 
     try:
         config = DatabaseConfig("test_db", DatabaseType.POSTGRES, "localhost", 5432)
@@ -380,15 +399,16 @@ def test_monitor_inheritance():
     except Exception as e:
         print(f"\n❌ TEST 2 FAILED: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 
 
 def test_monitoring_system():
     """Test the complete monitoring system"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("TEST 3: Monitoring System")
-    print("="*60)
+    print("=" * 60)
 
     try:
         # Create system
@@ -429,15 +449,16 @@ def test_monitoring_system():
     except Exception as e:
         print(f"\n❌ TEST 3 FAILED: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 
 
 def test_report_generation():
     """Test report generation with formatting"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("TEST 4: Report Generation")
-    print("="*60)
+    print("=" * 60)
 
     try:
         # Create system with monitors
@@ -457,41 +478,49 @@ def test_report_generation():
         print("✓ Generated report")
 
         # Verify report contains key information
-        assert "Database Monitoring Report" in report or "MONITORING REPORT" in report.upper()
+        assert (
+            "Database Monitoring Report" in report
+            or "MONITORING REPORT" in report.upper()
+        )
         assert "prod_db" in report
         assert "Monitor" in report
         print("✓ Report contains required information")
 
         # Print sample report
-        print("\n" + "-"*60)
+        print("\n" + "-" * 60)
         print("SAMPLE REPORT:")
-        print("-"*60)
+        print("-" * 60)
         print(report)
-        print("-"*60)
+        print("-" * 60)
 
         print("\n✅ TEST 4 PASSED!")
         return True
     except Exception as e:
         print(f"\n❌ TEST 4 FAILED: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 
 
 def test_real_world_scenario():
     """Test a complete real-world scenario"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("TEST 5: Real-World Scenario")
-    print("="*60)
+    print("=" * 60)
 
     try:
         # Setup: Multiple databases being monitored
         system = MonitoringSystem()
 
         databases = [
-            DatabaseConfig("analytics_db", DatabaseType.SNOWFLAKE, "analytics.example.com", 5432),
+            DatabaseConfig(
+                "analytics_db", DatabaseType.SNOWFLAKE, "analytics.example.com", 5432
+            ),
             DatabaseConfig("api_db", DatabaseType.POSTGRES, "api.example.com", 5433),
-            DatabaseConfig("cache_db", DatabaseType.MONGODB, "cache.example.com", 27017),
+            DatabaseConfig(
+                "cache_db", DatabaseType.MONGODB, "cache.example.com", 27017
+            ),
         ]
 
         for db_config in databases:
@@ -507,8 +536,11 @@ def test_real_world_scenario():
         print(f"✓ Completed {len(results)} health checks")
 
         # Scenario: Check for unhealthy systems
-        unhealthy = [name for name, status in results.items()
-                     if status in [MonitorStatus.WARNING, MonitorStatus.CRITICAL]]
+        unhealthy = [
+            name
+            for name, status in results.items()
+            if status in [MonitorStatus.WARNING, MonitorStatus.CRITICAL]
+        ]
         print(f"✓ Found {len(unhealthy)} monitors needing attention")
 
         # Scenario: Collect all metrics for analysis
@@ -519,7 +551,9 @@ def test_real_world_scenario():
         # Scenario: Get critical alerts for immediate action
         critical_alerts = system.get_alerts(AlertLevel.CRITICAL)
         if critical_alerts:
-            print(f"⚠ {len(critical_alerts)} critical alerts require immediate attention!")
+            print(
+                f"⚠ {len(critical_alerts)} critical alerts require immediate attention!"
+            )
         else:
             print("✓ No critical alerts")
 
@@ -531,7 +565,11 @@ def test_real_world_scenario():
         print("✓ Generated comprehensive report for all databases")
 
         # Scenario: Find performance bottlenecks
-        perf_metrics = [m for m in all_metrics if "query" in m.name.lower() or "latency" in m.name.lower()]
+        perf_metrics = [
+            m
+            for m in all_metrics
+            if "query" in m.name.lower() or "latency" in m.name.lower()
+        ]
         slow_queries = [m for m in perf_metrics if m.value > 150]
         print(f"✓ Identified {len(slow_queries)} slow queries")
 
@@ -541,6 +579,7 @@ def test_real_world_scenario():
     except Exception as e:
         print(f"\n❌ TEST 5 FAILED: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 
@@ -549,11 +588,12 @@ def test_real_world_scenario():
 # Run All Tests
 # ============================================================================
 
+
 def run_all_tests():
     """Run complete test suite"""
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("FINAL PROJECT: DATABASE MONITORING SYSTEM - TEST SUITE")
-    print("="*70)
+    print("=" * 70)
 
     results = [
         test_basic_functionality(),
@@ -563,17 +603,17 @@ def run_all_tests():
         test_real_world_scenario(),
     ]
 
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("FINAL RESULTS")
-    print("="*70)
+    print("=" * 70)
     passed = sum(results)
     total = len(results)
     print(f"Tests Passed: {passed}/{total}")
 
     if passed == total:
-        print("\n" + "🎉"*35)
+        print("\n" + "🎉" * 35)
         print("\n✅ ALL TESTS PASSED! ✅")
-        print("\n🎉"*35)
+        print("\n🎉" * 35)
         print("\n🏆 CONGRATULATIONS! 🏆")
         print("\nYou have successfully completed the Python OOP exercises!")
         print("\nYou've demonstrated mastery of:")
@@ -603,4 +643,3 @@ def run_all_tests():
 
 if __name__ == "__main__":
     run_all_tests()
-
