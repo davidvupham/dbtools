@@ -1,0 +1,16 @@
+services:
+  vault:
+    build:
+      context: /workspaces/dbtools
+      dockerfile: docker/hvault/Dockerfile
+    container_name: hvault
+    ports:
+      - "8200:8200"
+    cap_add:
+      - IPC_LOCK
+    environment:
+      VAULT_ADDR: http://0.0.0.0:8200
+    volumes:
+      - ./hvault/config:/vault/config:ro
+      - ./hvault/data:/vault/file
+    restart: unless-stopped
