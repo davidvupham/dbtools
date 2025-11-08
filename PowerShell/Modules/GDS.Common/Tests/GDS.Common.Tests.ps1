@@ -22,6 +22,8 @@ InModuleScope 'GDS.Common' {
 
     Describe 'Initialize-Logging' {
         BeforeEach {
+            Push-Location $TestDrive
+
             $script:configStore = @{}
             $script:loggedMessages = @()
             $script:logProviders = @()
@@ -94,13 +96,15 @@ InModuleScope 'GDS.Common' {
 
             Mock -CommandName Get-PSCallStack -MockWith {
                 @(
-                    [pscustomobject]@{ ScriptName = 'GDS.Test\TestModule.ps1'; FunctionName = 'Invoke-Test' },
+                    [pscustomobject]@{ ScriptName = 'C:\Modules\GDS.TestModule\Public\Invoke-Test.ps1'; FunctionName = 'Invoke-Test' },
                     [pscustomobject]@{ ScriptName = 'TestHarness.ps1'; FunctionName = 'Invoke-Harness' }
                 )
             }
         }
 
         AfterEach {
+            Pop-Location
+
             if (-not [string]::IsNullOrWhiteSpace($env:GDS_LOG_DIR)) {
                 Remove-Item -Path $env:GDS_LOG_DIR -Recurse -Force -ErrorAction SilentlyContinue
             }
@@ -135,12 +139,43 @@ InModuleScope 'GDS.Common' {
             $logProvider = $script:logProviders | Where-Object { $_.Name -eq 'logfile' -and $_.InstanceName -eq 'TestModule' }
             $logProvider.FilePath | Should -Be ([System.IO.Path]::GetFullPath($customPath))
         }
+
+        It 'resolves module name from the call stack when not provided' {
+            Mock -CommandName Get-PSCallStack -MockWith {
+                @(
+                    [pscustomobject]@{ ScriptName = 'C:\Modules\GDS.My-Module\Public\Start-Workflow.ps1'; FunctionName = 'Start-Workflow' },
+                    [pscustomobject]@{ ScriptName = 'TestHarness.ps1'; FunctionName = 'Invoke-Harness' }
+                )
+            }
+
+            Initialize-Logging
+
+            $logProvider = $script:logProviders | Where-Object { $_.Name -eq 'logfile' }
+            $logProvider.InstanceName | Should -Be 'My-Module'
+
+            $configName = 'GDS.Common.Logging.My-Module.MinimumLevel'
+            $script:configStore.ContainsKey($configName) | Should -BeTrue
+        }
+
+        It 'expands relative log paths to absolute paths' {
+            $relativePath = Join-Path 'relative' 'custom.log'
+            Initialize-Logging -ModuleName 'RelativeModule' -LogPath $relativePath
+
+            $logProvider = $script:logProviders | Where-Object { $_.Name -eq 'logfile' -and $_.InstanceName -eq 'RelativeModule' }
+
+            $expectedPath = [System.IO.Path]::GetFullPath((Join-Path -Path (Get-Location).ProviderPath -ChildPath $relativePath))
+            $logProvider.FilePath | Should -Be $expectedPath
+            Test-Path (Split-Path -Path $expectedPath -Parent) | Should -BeTrue
+        }
     }
 
     Describe 'Set-GDSLogging' {
         BeforeEach {
+            Push-Location $TestDrive
+
             $script:configStore = @{}
             $script:logProviders = @()
+            $script:messages = @()
 
             $env:GDS_LOG_DIR = Join-Path $TestDrive 'logs'
 
@@ -174,8 +209,8 @@ InModuleScope 'GDS.Common' {
                     [string]$InstanceName,
                     [string]$FilePath,
                     [bool]$Enabled,
-                    [int]$MinLevel,
-                    [int]$MaxLevel
+                    [Parameter(ValueFromRemainingArguments = $true)]
+                    [object[]]$RemainingArguments
                 )
 
                 $script:logProviders += [pscustomobject]@{
@@ -186,14 +221,31 @@ InModuleScope 'GDS.Common' {
                 }
             }
 
-            Mock -CommandName Write-PSFMessage -MockWith { }
+            Mock -CommandName Write-PSFMessage -MockWith {
+                param(
+                    [string]$Level,
+                    [string]$Message,
+                    [string[]]$Tag
+                )
+
+                $script:messages += [pscustomobject]@{
+                    Level   = $Level
+                    Message = $Message
+                    Tag     = $Tag
+                }
+            }
             Mock -CommandName Get-PSCallStack -MockWith { @() }
         }
 
         AfterEach {
-            Remove-Item -Path $env:GDS_LOG_DIR -Recurse -Force -ErrorAction SilentlyContinue
+            Pop-Location
+
+            if (-not [string]::IsNullOrWhiteSpace($env:GDS_LOG_DIR)) {
+                Remove-Item -Path $env:GDS_LOG_DIR -Recurse -Force -ErrorAction SilentlyContinue
+            }
             Remove-Variable -Name configStore -Scope Script -ErrorAction SilentlyContinue
             Remove-Variable -Name logProviders -Scope Script -ErrorAction SilentlyContinue
+            Remove-Variable -Name messages -Scope Script -ErrorAction SilentlyContinue
             Remove-Item Env:GDS_LOG_DIR -ErrorAction SilentlyContinue
         }
 
@@ -213,6 +265,37 @@ InModuleScope 'GDS.Common' {
             $logProvider | Should -Not -BeNullOrEmpty
             $expectedDirectory = [System.IO.Path]::GetFullPath($env:GDS_LOG_DIR)
             (Split-Path -Parent $logProvider.FilePath) | Should -Be $expectedDirectory
+        }
+
+        It 'disables file logging when requested' {
+            Set-GDSLogging -ModuleName 'TestModule' -EnableFileLog:$false
+
+            $logProvider = $script:logProviders | Where-Object { $_.Name -eq 'logfile' -and $_.InstanceName -eq 'TestModule' }
+            $logProvider.Enabled | Should -BeFalse
+        }
+
+        It 'honors console logging toggle' {
+            Set-GDSLogging -ModuleName 'TestModule' -EnableConsoleLog:$false
+
+            $consoleProvider = $script:logProviders | Where-Object { $_.Name -eq 'console' }
+            $consoleProvider | Should -Not -BeNullOrEmpty
+            $consoleProvider.Enabled | Should -BeFalse
+        }
+
+        It 'expands relative paths when configuring file logging' {
+            $relativePath = Join-Path 'logs' 'module.log'
+            Set-GDSLogging -ModuleName 'TestModule' -LogPath $relativePath
+
+            $logProvider = $script:logProviders | Where-Object { $_.Name -eq 'logfile' -and $_.InstanceName -eq 'TestModule' }
+
+            $expectedPath = [System.IO.Path]::GetFullPath((Join-Path -Path (Get-Location).ProviderPath -ChildPath $relativePath))
+            $logProvider.FilePath | Should -Be $expectedPath
+        }
+
+        It 'allows disabling file logging without requiring GDS_LOG_DIR' {
+            Remove-Item Env:GDS_LOG_DIR -ErrorAction SilentlyContinue
+
+            { Set-GDSLogging -ModuleName 'TestModule' -EnableFileLog:$false } | Should -Not -Throw
         }
     }
 
@@ -273,7 +356,7 @@ InModuleScope 'GDS.Common' {
 
             Mock -CommandName Get-PSCallStack -MockWith {
                 @(
-                    [pscustomobject]@{ ScriptName = 'GDS.Test\TestModule.ps1'; FunctionName = 'Invoke-Test' },
+                    [pscustomobject]@{ ScriptName = 'C:\Modules\GDS.TestModule\Public\Invoke-Test.ps1'; FunctionName = 'Invoke-Test' },
                     [pscustomobject]@{ ScriptName = 'TestHarness.ps1'; FunctionName = 'Invoke-Harness' }
                 )
             }
@@ -299,6 +382,20 @@ InModuleScope 'GDS.Common' {
 
             $script:messages.Count | Should -Be 1
             $script:messages[0].Level | Should -Be 'Warning'
+        }
+
+        It 'includes inferred module name in tags when not specified' {
+            Mock -CommandName Get-PSCallStack -MockWith {
+                @(
+                    [pscustomobject]@{ ScriptName = 'C:\Modules\GDS.My-Module\Public\Invoke-Test.ps1'; FunctionName = 'Invoke-Test' },
+                    [pscustomobject]@{ ScriptName = 'TestHarness.ps1'; FunctionName = 'Invoke-Harness' }
+                )
+            }
+
+            Write-Log -Message 'warning message' -Level Warning
+
+            $script:messages.Count | Should -Be 1
+            $script:messages[0].Tag | Should -Contain 'My-Module'
         }
     }
 

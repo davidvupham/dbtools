@@ -16,12 +16,6 @@
 .PARAMETER LogLevel
     Minimum log level to record. Default is 'Info'. Valid values: Debug, Verbose, Info, Warning, Error, Critical.
 
-.PARAMETER MaxLogSizeMB
-    Maximum log file size in MB before rotation. Default is 10MB.
-
-.PARAMETER RetentionDays
-    Number of days to retain log files. Default is 30 days.
-
 .EXAMPLE
     Initialize-Logging -ModuleName "ActiveDirectory"
 
@@ -48,13 +42,7 @@ function Initialize-Logging {
 
         [Parameter(Mandatory = $false)]
         [ValidateSet('Debug', 'Verbose', 'Info', 'Warning', 'Error', 'Critical')]
-        [string]$LogLevel = 'Info',
-
-        [Parameter(Mandatory = $false)]
-        [int]$MaxLogSizeMB = 10,
-
-        [Parameter(Mandatory = $false)]
-        [int]$RetentionDays = 30
+        [string]$LogLevel = 'Info'
     )
 
     # Ensure PSFramework is loaded
@@ -63,24 +51,12 @@ function Initialize-Logging {
     }
 
     # Detect module name from call stack if not provided
-    if (-not $ModuleName) {
-        $callStack = Get-PSCallStack
-        foreach ($frame in $callStack) {
-            if ($frame.ScriptName -and $frame.ScriptName -match 'GDS\.(\w+)') {
-                $ModuleName = $Matches[1]
-                break
-            }
-        }
-        if (-not $ModuleName) {
-            $ModuleName = "GDS.Common"
-        }
-    }
+    $callStack = Get-PSCallStack
+    $ModuleName = Resolve-GDSModuleName -ExplicitName $ModuleName -CallStack $callStack
 
     # Persist module scoped configuration
     $configPrefix = "GDS.Common.Logging.$ModuleName"
     Set-PSFConfig -FullName "$configPrefix.MinimumLevel" -Value $LogLevel -Initialize -Validation 'string' -Description "Minimum log level for $ModuleName module"
-    Set-PSFConfig -FullName "$configPrefix.MaxLogSizeMB" -Value $MaxLogSizeMB -Initialize -Validation 'integerpositive' -Description "Maximum log file size in MB for $ModuleName"
-    Set-PSFConfig -FullName "$configPrefix.RetentionDays" -Value $RetentionDays -Initialize -Validation 'integerpositive' -Description "Log retention period in days for $ModuleName"
 
     # Configure PSFramework logging
     try {
@@ -90,6 +66,8 @@ function Initialize-Logging {
             if (-not [System.IO.Path]::IsPathRooted($resolvedLogPath)) {
                 $resolvedLogPath = Join-Path -Path (Get-Location) -ChildPath $resolvedLogPath
             }
+
+            $resolvedLogPath = [System.IO.Path]::GetFullPath($resolvedLogPath)
 
             $logDir = Split-Path -Path $resolvedLogPath -Parent
             if (-not (Test-Path $logDir)) {

@@ -24,9 +24,16 @@ This guide shows developers how to use PSFramework logging through the GDS.Commo
 # In your module's .psm1 file or function
 Import-Module GDS.Common
 
+# Configure the shared log directory (required)
+if (-not $env:GDS_LOG_DIR) {
+    $env:GDS_LOG_DIR = "/var/log/gds"   # Use a writable path for your environment
+}
+
 # Initialize logging once at module start
 Initialize-Logging -ModuleName "YourModule"
 ```
+
+> Tip: Use a location such as `C:\Logs\GDS` on Windows or `/var/log/gds` on Linux/macOS. The directory is created automatically if it doesn't exist.
 
 ### Basic Logging
 
@@ -142,10 +149,10 @@ Get-PSFMessage -Tag "Sync"
 Set-GDSLogging -ModuleName "MyModule" `
     -MinimumLevel "Debug" `
     -LogPath "C:\Logs\MyModule.log" `
-    -MaxLogSizeMB 50 `
-    -RetentionDays 60 `
     -EnableEventLog:$IsWindows
 ```
+
+> PSFramework handles log rotation and retention for the file provider. To customise those behaviours, set the appropriate `PSFramework.Logging.FileSystem.*` configuration keys with `Set-PSFConfig` (see the PSFramework logging documentation for the full list).
 
 ### 2. Query Log Messages
 
@@ -466,6 +473,27 @@ function Start-Workflow {
 ```
 
 ---
+
+## Alternative Logging Options
+
+PSFramework covers the vast majority of GDS scenarios, but there are cases where other logging patterns may be preferred. The table below highlights the primary alternatives, their strengths, and trade-offs.
+
+| Option | Pros | Cons | Ideal When |
+| --- | --- | --- | --- |
+| Built-in PowerShell streams (`Write-Information`, `Write-Verbose`, `Write-Warning`, `Write-Error`) | Native behaviour; no extra dependencies; respects preference variables | Ephemeral output; no rotation/retention; limited structure | Short-lived scripts, local tooling, or CI jobs where console output is captured externally |
+| Custom logging implementation | Tailored to bespoke requirements; org-specific formatting; minimal dependencies | Requires ongoing maintenance; rotation/retention must be hand-built; easy to introduce inconsistencies | Highly regulated environments that forbid third-party modules or demand strict formatting rules |
+| Windows Event Log (`Write-EventLog`) | Native Windows experience; integrates with Event Viewer, SIEM, and existing monitoring; built-in retention policies | Windows-only; needs source registration (often elevation); limited structured payloads | Windows services, scheduled tasks, or compliance workloads that mandate Event Viewer visibility |
+| Serilog / PSSerilog | Rich structured logging; huge ecosystem of sinks (Seq, Elasticsearch, Datadog, Splunk, etc.); aligns with .NET application logging | Additional dependency; heavier configuration; some sinks require .NET runtime on host | Hybrid solutions that combine PowerShell with .NET services or where a Serilog-based observability pipeline already exists |
+| Log4Posh / NLog wrappers | Familiar for teams using Log4j/NLog; flexible configuration; supports multiple appenders | Smaller communities; slower release cadence; more manual setup than PSFramework | When existing infrastructure standardises on these frameworks or migration effort must be minimised |
+| Cloud-native cmdlets (Azure Monitor, AWS CloudWatch, Google Cloud Logging) | Direct integration with managed logging platforms; simplifies forwarding | Cloud-platform specific; often incurs additional costs; limited offline capability | Cloud automation that must emit logs straight into the provider’s monitoring stack |
+
+### When to choose an alternative
+
+- **Minimal scripts**: Use the built-in streams when persistence is unnecessary and output is consumed immediately by operators or CI logs.
+- **Strict dependency policies**: Implement a custom logger (or reuse an existing internal one) when external modules such as PSFramework cannot be deployed.
+- **Windows compliance workloads**: Write to the Windows Event Log so operations and security teams can rely on familiar tooling.
+- **Unified observability**: Adopt Serilog, Log4Posh, or cloud-native sinks when PowerShell is only one part of a larger system that already uses those formats.
+- **Hybrid approach**: Combine PSFramework with other outputs (e.g., PSFramework for file + console, plus `Write-EventLog` for critical events) when multiple stakeholders need the data in different systems.
 
 ## Best Practices
 

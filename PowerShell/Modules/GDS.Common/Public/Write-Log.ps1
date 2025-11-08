@@ -74,19 +74,8 @@ function Write-Log {
         Import-Module PSFramework -ErrorAction Stop
     }
 
-    # Detect module name from call stack if not provided
-    if (-not $ModuleName) {
-        $callStack = Get-PSCallStack
-        foreach ($frame in $callStack) {
-            if ($frame.ScriptName -and $frame.ScriptName -match 'GDS\.(\w+)') {
-                $ModuleName = $Matches[1]
-                break
-            }
-        }
-        if (-not $ModuleName) {
-            $ModuleName = "GDS.Common"
-        }
-    }
+    $callStack = Get-PSCallStack
+    $ModuleName = Resolve-GDSModuleName -ExplicitName $ModuleName -CallStack $callStack
 
     # Determine logging threshold
     $configName = "GDS.Common.Logging.$ModuleName.MinimumLevel"
@@ -165,7 +154,6 @@ function Write-Log {
         }
 
         # Add function name if available
-        $callStack = Get-PSCallStack
         if ($callStack.Count -gt 1) {
             $params['FunctionName'] = $callStack[1].FunctionName
         }

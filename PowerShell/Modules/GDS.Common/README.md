@@ -23,7 +23,7 @@ This module contains **only truly common utilities** that all GDS modules need:
 - Industry-standard logging using PSFramework (de facto standard)
 - Multiple output targets (file, console, Event Log, Splunk, Azure)
 - Structured logging with JSON format
-- Automatic log rotation and retention
+- PSFramework-managed log rotation and retention policies
 - Log levels: Debug, Verbose, Info, Warning, Error, Critical
 - Context and exception support
 - Asynchronous, non-blocking operations
@@ -101,8 +101,6 @@ Initialize-Logging -ModuleName "MyModule" -LogLevel "Debug"
 - `ModuleName` (optional) - Module name (auto-detected)
 - `LogPath` (optional) - Custom log file path
 - `LogLevel` (optional) - Minimum log level (default: Info)
-- `MaxLogSizeMB` (optional) - Max log size before rotation (default: 10)
-- `RetentionDays` (optional) - Days to retain logs (default: 30)
 
 ### Set-GDSLogging
 Configures advanced PSFramework logging settings.
@@ -118,8 +116,6 @@ Set-GDSLogging -ModuleName "MyModule" -EnableEventLog -MinimumLevel "Debug"
 - `EnableConsoleLog` (optional) - Enable console output (default: true)
 - `LogPath` (optional) - Custom log file path
 - `MinimumLevel` (optional) - Minimum log level (default: Info)
-- `MaxLogSizeMB` (optional) - Max log size (default: 10MB)
-- `RetentionDays` (optional) - Retention period (default: 30 days)
 
 ## Usage Examples
 
@@ -190,9 +186,7 @@ Set-GDSLogging -ModuleName "MyModule" `
     -EnableEventLog:$IsWindows `
     -EnableFileLog `
     -LogPath "C:\Logs\MyModule.log" `
-    -MinimumLevel "Debug" `
-    -MaxLogSizeMB 50 `
-    -RetentionDays 60
+    -MinimumLevel "Debug"
 ```
 
 ## Log Locations
@@ -208,6 +202,20 @@ Set `GDS_LOG_DIR` to the root directory where logs should be written. The direct
 ```powershell
 Initialize-Logging -ModuleName "MyModule" -LogPath (Join-Path $env:GDS_LOG_DIR "custom.log")
 ```
+
+## Other Logging Options
+
+PSFramework is the recommended default for GDS modules because it is feature-rich, battle-tested, and already a dependency. If requirements differ, consider the alternatives below.
+
+| Option | Pros | Cons | When to Use |
+| --- | --- | --- | --- |
+| Built-in streams (`Write-Information`, `Write-Verbose`, `Write-Warning`, `Write-Error`) | No extra dependencies; honors `$InformationPreference` and other native switches; works everywhere | No rotation or persistence; limited structure; harder to aggregate | One-off scripts or tooling that runs in controlled sessions where transient output is sufficient |
+| Custom file logger | Fully tailored behavior; can enforce org-specific formatting; minimal dependencies | Must build/maintain rotation, retention, concurrency; harder to share improvements | Highly regulated environments that forbid external modules or require bespoke formats |
+| Windows Event Log (`Write-EventLog`) | Native Windows monitoring integration; centralized retention and ACLs | Windows-only; requires source registration/elevation; limited structured data | Windows services, scheduled tasks, or compliance workloads needing Event Viewer integration |
+| Serilog / PSSerilog | Rich structured logging with extensive sinks (Seq, Elasticsearch, Splunk, etc.); consistent with .NET apps | Additional dependency; heavier configuration; some sinks Windows-only | When integrating PowerShell with existing Serilog-based observability pipelines or needing advanced sinks |
+| Log4Posh / NLog / other .NET wrappers | Familiar configuration for teams used to Log4j/NLog; flexible appenders | Smaller communities; slower updates; more manual setup than PSFramework | When teams already standardize on these frameworks or need compatibility with existing configs |
+
+> Tip: You can mix approaches—for example, keep PSFramework for file + console logging, but also raise critical events through `Write-EventLog` or forward summaries to Serilog.
 
 ## Integration with Other Modules
 

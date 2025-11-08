@@ -29,9 +29,9 @@ This guide explains how to execute the Pester test suite for the `GDS.Common` Po
 
 ## What the Tests Cover
 
-- `Initialize-Logging` respects `GDS_LOG_DIR` and validates required configuration
-- `Set-GDSLogging` stores module-scoped configuration and uses the shared log directory
-- `Write-Log` enforces the configured minimum log level before forwarding to `PSFramework`
+- `Initialize-Logging` respects `GDS_LOG_DIR`, expands relative paths, and auto-detects calling modules (including hyphenated names)
+- `Set-GDSLogging` stores module-scoped configuration, honours provider toggles, and resolves relative paths
+- `Write-Log` enforces the configured minimum log level, infers module names from the call stack, and preserves context when forwarding to PSFramework
 
 ## Troubleshooting
 

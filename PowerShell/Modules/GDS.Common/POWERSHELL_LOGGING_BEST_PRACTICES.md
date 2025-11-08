@@ -494,8 +494,6 @@ function Write-Log {
 ```powershell
 function Set-LoggingConfiguration {
     param(
-        [int]$MaxLogSizeMB = 10,
-        [int]$RetentionDays = 30,
         [string]$LogDirectory,
         [string]$MinimumLogLevel = 'Info',
         [switch]$EnableEventLog,
@@ -505,6 +503,8 @@ function Set-LoggingConfiguration {
 ```
 
 **Impact:** Medium - Improves flexibility
+
+> With PSFramework, size and retention policies are controlled through the provider’s configuration keys (`PSFramework.Logging.FileSystem.*`), so custom parameters are typically unnecessary.
 
 ### Priority 2: Important Enhancements
 

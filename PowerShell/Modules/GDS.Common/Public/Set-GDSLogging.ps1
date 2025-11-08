@@ -24,12 +24,6 @@
 .PARAMETER MinimumLevel
     Minimum log level to record.
 
-.PARAMETER MaxLogSizeMB
-    Maximum log file size before rotation.
-
-.PARAMETER RetentionDays
-    Number of days to retain logs.
-
 .EXAMPLE
     Set-GDSLogging -ModuleName "ActiveDirectory" -EnableEventLog -MinimumLevel "Debug"
 
@@ -58,13 +52,7 @@ function Set-GDSLogging {
 
         [Parameter(Mandatory = $false)]
         [ValidateSet('Debug', 'Verbose', 'Info', 'Warning', 'Error', 'Critical')]
-        [string]$MinimumLevel = 'Info',
-
-        [Parameter(Mandatory = $false)]
-        [int]$MaxLogSizeMB = 10,
-
-        [Parameter(Mandatory = $false)]
-        [int]$RetentionDays = 30
+        [string]$MinimumLevel = 'Info'
     )
 
     # Ensure PSFramework is loaded
@@ -75,8 +63,6 @@ function Set-GDSLogging {
     # Persist module scoped configuration
     $configPrefix = "GDS.Common.Logging.$ModuleName"
     Set-PSFConfig -FullName "$configPrefix.MinimumLevel" -Value $MinimumLevel -Initialize -Validation 'string' -Description "Minimum log level for $ModuleName module"
-    Set-PSFConfig -FullName "$configPrefix.MaxLogSizeMB" -Value $MaxLogSizeMB -Initialize -Validation 'integerpositive' -Description "Maximum log file size in MB for $ModuleName"
-    Set-PSFConfig -FullName "$configPrefix.RetentionDays" -Value $RetentionDays -Initialize -Validation 'integerpositive' -Description "Log retention period in days for $ModuleName"
 
     try {
         # Configure file logging
@@ -86,6 +72,8 @@ function Set-GDSLogging {
                 if (-not [System.IO.Path]::IsPathRooted($resolvedLogPath)) {
                     $resolvedLogPath = Join-Path -Path (Get-Location) -ChildPath $resolvedLogPath
                 }
+
+                $resolvedLogPath = [System.IO.Path]::GetFullPath($resolvedLogPath)
 
                 $logDir = Split-Path -Path $resolvedLogPath -Parent
                 if (-not (Test-Path $logDir)) {

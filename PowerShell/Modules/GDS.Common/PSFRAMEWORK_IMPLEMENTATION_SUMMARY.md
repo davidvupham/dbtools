@@ -51,8 +51,7 @@ Set-GDSLogging -ModuleName "ActiveDirectory" -EnableEventLog
 ```powershell
 Set-GDSLogging -ModuleName "ActiveDirectory" `
     -MinimumLevel "Debug" `
-    -MaxLogSizeMB 50 `
-    -RetentionDays 60
+    -LogPath "C:\Logs\AD.log"
 ```
 
 **Direct PSFramework Access:**

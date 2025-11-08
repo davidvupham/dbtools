@@ -51,9 +51,7 @@ Write-Log -Message "Operation completed" -Level Info -Context @{Count=100; Durat
 Set-GDSLogging -ModuleName "ActiveDirectory" `
     -EnableEventLog `
     -MinimumLevel "Debug" `
-    -LogPath "C:\Logs\AD.log" `
-    -MaxLogSizeMB 50 `
-    -RetentionDays 60
+    -LogPath "C:\Logs\AD.log"
 ```
 
 ### Direct PSFramework Usage
@@ -108,9 +106,8 @@ Initialize-Logging -ModuleName "ActiveDirectory" -LogPath (Join-Path $env:GDS_LO
 ## Features
 
 ### 1. Automatic Log Rotation
-- Rotates when file size exceeds limit (default: 10MB)
-- Maintains retention policy (default: 30 days)
-- Configurable via `MaxLogSizeMB` and `RetentionDays`
+- The PSFramework file provider handles size-based rotation and retention by default
+- Adjust behaviour with PSFramework configuration keys under `PSFramework.Logging.FileSystem.*`
 
 ### 2. Multiple Output Targets
 - **File**: Structured file logging
@@ -195,7 +192,7 @@ Set-PSFConfig -FullName 'PSFramework.Logging.MinimumLevel' -Value 'Debug'
 ### Performance Issues
 - PSFramework uses asynchronous logging by default
 - If issues persist, check log file size and rotation settings
-- Consider adjusting `MaxLogSizeMB` and `RetentionDays`
+- Consider tuning file-provider settings via `Set-PSFConfig` (`PSFramework.Logging.FileSystem.*`)
 
 ## References
 
