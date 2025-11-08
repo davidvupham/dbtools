@@ -1,3 +1,11 @@
+## Documentation Index
+
+- [Database Instance OO Design](./database-instance-oo-design.md)
+- [Database Instance Refactor Plan](./database-instance-refactor-plan.md)
+
+### Viewing diagrams
+- GitHub renders Mermaid diagrams in Markdown natively. Open the files above in the GitHub UI to see class and sequence diagrams.
+- In local editors without Mermaid preview, consider exporting SVGs via Mermaid CLI or simply rely on GitHub for viewing.
 # Project Documentation
 
 This directory contains all project documentation organized by category.
