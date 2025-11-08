@@ -1,4 +1,4 @@
-# GDS Monitor and Alerting Architecture Document
+# Enterprise Observability and Notification Data Pipeline Architecture
 
 ## Table of Contents
 
@@ -18,29 +18,33 @@
 
 ## Executive Summary
 
-This document outlines the architecture for `gds_monitor` and `gds_alerting` packages designed to provide comprehensive monitoring and alerting capabilities for database systems. The architecture follows object-oriented programming best practices and industry standards for monitoring systems.
+This document defines the Enterprise Observability and Notification Data Pipeline Architecture—a unified telemetry, analytics, and notification platform for database systems. The architecture follows object-oriented programming best practices and modern observability standards to deliver actionable intelligence across the organization.
 
-### Integration with Existing gds_notification Service
+At its core, the platform implements an event-driven streaming pipeline (Kappa-style architecture) with Kafka as the durable backbone. The telemetry collector acts as the telemetry producer, the alert evaluation service and analytical services are decoupled consumers, and downstream notification, storage, and visualization layers reuse the same canonical stream for replay, enrichment, and historical insight.
 
-**Important Context**: This architecture integrates with the existing `gds_notification` service, which provides:
+### Integration with Enterprise Notification Service
 
-- **HTTP API**: FastAPI service for alert ingestion (`POST /ingest`)
-- **Message Queue**: RabbitMQ-based asynchronous processing
-- **Email Delivery**: SMTP-based email forwarding to recipients
-- **Recipient Resolution**: SQL Server stored procedure integration for determining alert recipients
+**Important Context**: This architecture integrates with an enterprise-grade notification service that provides:
+
+- **HTTP API**: REST endpoint (e.g., `POST /alerts`) where alert payloads are submitted for processing and delivery
+- **Message Queue**: Asynchronous processing and delivery buffering
+- **Delivery Channels**: SMTP, SMS, chat, and other downstream transports
+- **Recipient Resolution**: Directory or workflow integration for recipient targeting
+- **Blackout Windows**: Scheduled suppression of notifications during maintenance or approved quiet periods
 
 **Key Integration Points**:
-- `gds_alerting` evaluates conditions and generates alerts
-- `gds_alerting` formats alerts for `gds_notification` API
-- `gds_notification` handles queuing, recipient lookup, and delivery
+
+- Alert evaluation service evaluates conditions and generates alerts
+- Alert evaluation service formats alerts for the notification service API
+- The notification service handles queuing, recipient lookup, delivery, and blackout-window enforcement
 - Loose coupling through HTTP API and message queues
 
 ### High-Level Requirements
 
-- Collect monitoring metrics at specified intervals from database systems
+- Collect monitoring metrics at specified intervals from database systems and underlying operating systems (CPU utilization, memory usage, disk I/O, network throughput)
 - Publish metrics to Kafka topics for real-time processing and analysis
 - Consume metrics from Kafka and evaluate against configurable alert thresholds
-- Send alerts via HTTP API to gds_notification service when thresholds exceeded
+- Send alerts via HTTP API to the notification service when thresholds exceeded
 - Support for different database types (PostgreSQL, MongoDB, MSSQL, Snowflake)
 - Configurable alerting rules and escalation policies
 
@@ -52,9 +56,9 @@ This document outlines the architecture for `gds_monitor` and `gds_alerting` pac
 
 ```
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   Database      │    │   gds_monitor   │    │     Kafka      │
-│   Systems       │───►│   (Collection)  │───►│   (Message     │
-│                 │    │                 │    │    Bus)        │
+│ Database & OS   │    │ Telemetry       │    │     Kafka      │
+│ Systems         │───►│ Collector       │───►│   (Message     │
+│                 │    │   Service       │    │    Bus)        │
 └─────────────────┘    └─────────────────┘    └─────────────────┘
                                                          │
                                                          │
@@ -62,15 +66,15 @@ This document outlines the architecture for `gds_monitor` and `gds_alerting` pac
                     │                                    │                                    │
                     ▼                                    ▼                                    ▼
          ┌─────────────────┐                  ┌─────────────────┐                  ┌─────────────────┐
-         │  gds_alerting   │                  │   Data Warehouse │                  │   Analytics     │
-         │  (Evaluation)   │                  │   Importer       │                  │   Dashboard     │
+         │ Alert Evaluation│                  │   Data Warehouse │                  │   Analytics     │
+         │    Service      │                  │   Importer       │                  │   Dashboard     │
          │                 │                  │   (Snowflake)     │                  │                 │
          └─────────────────┘                  └─────────────────┘                  └─────────────────┘
                     │                                    │                                    │
                     ▼                                    ▼                                    ▼
          ┌─────────────────┐                  ┌─────────────────┐                  ┌─────────────────┐
-         │ gds_notification│                  │   Long-term     │                  │   Real-time     │
-         │   (Delivery)    │                  │   Storage       │                  │   Insights      │
+         │ Notification    │                  │   Long-term     │                  │   Real-time     │
+         │   Service       │                  │   Storage       │                  │   Insights      │
          └─────────────────┘                  └─────────────────┘                  └─────────────────┘
                     │                                    │                                    │
                     ▼                                    ▼                                    ▼
@@ -80,17 +84,17 @@ This document outlines the architecture for `gds_monitor` and `gds_alerting` pac
          └─────────────────┘                  └─────────────────┘                  └─────────────────┘
 ```
 
-### Data Flow Summary
+### Data Flow Summary (Event-Driven Streaming Pipeline)
 
-1. **Database Systems** → **gds_monitor**: Metrics collected at specified intervals
-2. **gds_monitor** → **Kafka**: Metrics published to topics for real-time processing
-3. **gds_alerting** ← **Kafka**: Consumes metrics and evaluates against alert rules
+1. **Database & OS Systems** → **Telemetry Collector Service**: Metrics collected at specified intervals
+2. **Telemetry Collector Service** → **Kafka**: Metrics (database and infrastructure) published to topics for real-time processing
+3. **Alert Evaluation Service** ← **Kafka**: Consumes metrics and evaluates against alert rules
 4. **Data Warehouse Importer** ← **Kafka**: Loads metrics into Snowflake for long-term storage
 5. **Analytics Dashboard** ← **Kafka**: Provides real-time monitoring insights
-6. **gds_alerting** → **gds_notification**: Alerts sent via HTTP API when thresholds exceeded
-7. **gds_notification** → **Recipients**: Emails delivered via SMTP
+6. **Alert Evaluation Service** → **Notification Service**: Alerts sent via HTTP API when thresholds exceeded
+7. **Notification Service** → **Recipients**: Emails delivered via SMTP
 
-Note: Metrics flow through Kafka as the single source of truth. `gds_alerting` consumes Kafka topics; there is no direct tight coupling/stream from `gds_monitor` to `gds_alerting` in the recommended design. This preserves loose coupling and enables replay.
+Note: Metrics flow through Kafka as the single source of truth. The alert evaluation service consumes Kafka topics; there is no direct tight coupling/stream from the telemetry collector to the alert evaluation service in the recommended design. This preserves loose coupling, enables replay, and keeps the data pipeline unified across telemetry, analytics, and alerting use cases.
 
 ---
 
@@ -103,8 +107,8 @@ After researching monitoring system architectures and analyzing existing impleme
 #### Arguments for Separation
 
 1. **Single Responsibility Principle**: Each package has one clear purpose
-   - `gds_monitor`: Collect and report metrics
-   - `gds_alerting`: Evaluate conditions and notify stakeholders
+   - Telemetry collector service: Collect and report metrics
+   - Alert evaluation service: Evaluate conditions and notify stakeholders
 
 2. **Independent Deployment**: Can update monitoring without affecting alerting logic
 
@@ -122,9 +126,10 @@ After researching monitoring system architectures and analyzing existing impleme
 
 #### Decision: Separate Packages with Close Integration
 
-**Recommendation**: Create separate `gds_monitor` and `gds_alerting` packages that work together through well-defined interfaces. This provides the benefits of separation while maintaining ease of use.
+**Recommendation**: Create separate telemetry collection and alert evaluation services that work together through well-defined interfaces. This provides the benefits of separation while maintaining ease of use.
 
 **Integration Strategy**:
+
 - Shared abstract interfaces in a common module
 - Event-driven communication between packages
 - Optional coupling through dependency injection
@@ -160,10 +165,10 @@ After researching monitoring system architectures and analyzing existing impleme
 
 ## Package Architecture
 
-### gds_monitor Package Structure
+### Telemetry Collector Service Structure
 
 ```
-gds_monitor/
+telemetry_collector/
 ├── __init__.py
 ├── base.py              # Abstract base classes and interfaces
 ├── scheduler.py         # Monitoring scheduler
@@ -182,10 +187,10 @@ gds_monitor/
 └── exceptions.py        # Custom exceptions
 ```
 
-### gds_alerting Package Structure
+### Alert Evaluation Service Structure
 
 ```
-gds_alerting/
+alert_evaluation/
 ├── __init__.py
 ├── base.py              # Abstract base classes and interfaces
 ├── evaluator.py         # Alert evaluation engine
@@ -195,10 +200,10 @@ gds_alerting/
 │   ├── threshold.py
 │   ├── anomaly.py
 │   └── custom.py
-├── notifiers/           # Integration with gds_notification service
+├── notifiers/           # Integration with enterprise notification service
 │   ├── __init__.py
 │   ├── base.py
-│   ├── gds_notification.py  # HTTP client for gds_notification API
+│   ├── notification_service.py  # HTTP client for notification service API
 │   └── direct_email.py      # Fallback direct email (optional)
 ├── escalation.py        # Alert escalation policies
 ├── config.py            # Configuration management
@@ -208,7 +213,7 @@ gds_alerting/
 ### Shared Interfaces
 
 ```
-gds_monitor_alerting_interfaces/
+observability_interfaces/
 ├── __init__.py
 ├── metrics.py           # Metric data structures
 ├── alerts.py            # Alert data structures
@@ -357,9 +362,10 @@ Database → Collector → Metric → [Output Handler] → Kafka (single source 
 ### Detailed Flow
 
 1. **Collection Phase**:
-   - Scheduler triggers collection at specified intervals
-   - Collector connects to database and gathers metrics
-   - Metrics are validated and enriched with metadata
+
+- Scheduler triggers collection at specified intervals
+- Collectors connect to database and operating systems to gather metrics
+- Metrics are validated and enriched with metadata
 
 2. **Publishing Phase**:
    - Metrics are published to Kafka topics with appropriate partitioning
@@ -367,40 +373,45 @@ Database → Collector → Metric → [Output Handler] → Kafka (single source 
    - Enables real-time processing and multiple downstream consumers
 
 3. **Consumption Phase**:
-   - `gds_alerting` consumes metrics from Kafka topics
+   - Alert evaluation service consumes metrics from Kafka topics
    - Rules engine evaluates metrics against configured thresholds
    - Alert generation when conditions are met
 
 4. **Notification Phase**:
-   - Alerts are formatted for `gds_notification` API
-   - HTTP requests sent to `gds_notification` service
-   - `gds_notification` handles queuing and email delivery
+   - Alerts are formatted for the notification service API
+   - HTTP requests sent to the notification service endpoint
+   - The notification service handles queuing and delivery
 
 ### Kafka Topic Design and Partitioning
 
 #### Topic Structure
+
 ```
 gds.metrics.{database_type}.{environment}
 gds.metrics.{database_type}.{environment}.{instance_id}
 ```
 
 **Examples**:
+
 - `gds.metrics.postgresql.production`
 - `gds.metrics.mongodb.staging`
 - `gds.metrics.snowflake.production.account123`
 
 #### Partitioning Strategy
+
 - **By Database Instance (recommended)**: Ensures metrics from the same instance go to the same partition to preserve per-instance ordering
 - ~~By Time Window~~: Not recommended. Kafka partitions are static; use topic-level time-based retention instead of time-based partitioning
 - **Key Design**: Prefer `{instance_id}` or `{instance_id}:{metric_type}` as the message key. Include `database_type` and `environment` in topic name rather than key.
 
 #### Consumer Groups
+
 - **Alerting Consumers**: `gds-alerting-{rule_group}` for parallel processing
 - **Data Warehouse Consumers**: `gds-dw-importer` for batch loading to Snowflake
 - **Analytics Consumers**: `gds-analytics` for real-time dashboards and reporting
 - **Monitoring Consumers**: `gds-health-check` for system monitoring
 
 #### Message Schema
+
 ```json
 {
   "timestamp": "2025-01-15T10:30:00Z",
@@ -427,6 +438,7 @@ Recommendation: Use a schema registry (e.g., Confluent Schema Registry) with com
 ##### Compatibility Rules
 
 **1. Backward Compatibility** (Recommended for most cases)
+
 - **Rule**: New schema can read data written with old schema
 - **Use Case**: Adding optional fields, removing fields
 - **Example**: Adding a new optional field to metrics
@@ -449,10 +461,12 @@ Recommendation: Use a schema registry (e.g., Confluent Schema Registry) with com
 ```
 
 **2. Forward Compatibility**
+
 - **Rule**: Old schema can read data written with new schema
 - **Use Case**: Removing fields, adding fields that old code can ignore
 
 **3. Full Compatibility**
+
 - **Rule**: Both backward and forward compatible
 - **Use Case**: Production systems where old and new code run simultaneously
 
@@ -843,6 +857,7 @@ class DLQHandler:
 ### Data Warehouse Integration
 
 #### Snowflake Importer Architecture
+
 - **Consumer Group**: `gds-dw-importer`
 - **Batch Processing**: Accumulates metrics and loads in optimized batches
 - **Schema Design**: Star schema with metrics fact table and dimension tables
@@ -850,6 +865,7 @@ class DLQHandler:
 - **Compression**: Uses Snowflake's native compression for cost optimization
 
 #### Analytics Use Cases
+
 - **Historical Trending**: Long-term performance analysis and capacity planning
 - **Anomaly Detection**: ML-based anomaly detection on historical patterns
 - **Predictive Analytics**: Forecast resource usage and identify trends
@@ -857,6 +873,7 @@ class DLQHandler:
 - **Cost Optimization**: Identify underutilized resources and optimization opportunities
 
 #### Real-time Dashboards
+
 - **Live Monitoring**: Real-time views of system health across all databases
 - **Alert Correlation**: Visualize alert patterns and system-wide impacts
 - **Performance Metrics**: Response times, throughput, and error rates
@@ -865,6 +882,7 @@ class DLQHandler:
 ### Business Value
 
 #### Unified Data Pipeline Benefits
+
 - **Single Source of Truth**: All metrics flow through one pipeline, ensuring consistency
 - **Cost Efficiency**: One collection system serves multiple business needs
 - **Faster Insights**: Real-time alerting combined with historical trend analysis
@@ -872,6 +890,7 @@ class DLQHandler:
 - **Compliance & Audit**: Complete audit trail from collection to long-term storage
 
 #### Use Case Examples
+
 - **Operations Team**: Real-time alerts for immediate response
 - **Engineering Team**: Historical analysis for performance optimization
 - **Business Intelligence**: Usage patterns for capacity planning
@@ -1110,8 +1129,8 @@ class AlertNotifier(ABC):
         """Send notification for alert."""
         pass
 
-class GDSNotificationNotifier(AlertNotifier):
-    """Notifier that integrates with gds_notification service."""
+class NotificationServiceNotifier(AlertNotifier):
+    """Notifier that integrates with the enterprise notification service."""
 
     def __init__(self, notification_api_url: str, timeout: int = 30):
         self.api_url = notification_api_url
@@ -1119,7 +1138,7 @@ class GDSNotificationNotifier(AlertNotifier):
         self.session = aiohttp.ClientSession()
 
     async def notify(self, alert: Alert) -> bool:
-        """Send alert to gds_notification service."""
+        """Send alert to the notification service."""
         payload = self._format_alert_for_api(alert)
         async with self.session.post(
             f"{self.api_url}/ingest",
@@ -1129,7 +1148,7 @@ class GDSNotificationNotifier(AlertNotifier):
             return response.status == 200
 
     def _format_alert_for_api(self, alert: Alert) -> dict:
-        """Format alert for gds_notification API with rich context."""
+        """Format alert for the notification service API with rich context."""
         return {
             "alert_name": alert.rule_id,
             "db_instance_id": self._extract_db_instance_id(alert),
@@ -1298,8 +1317,8 @@ class CircuitOpenError(Exception):
     """Exception raised when circuit breaker is open."""
     pass
 
-# Usage in GDSNotificationNotifier
-class GDSNotificationNotifierWithCircuitBreaker(AlertNotifier):
+# Usage in NotificationServiceNotifier
+class NotificationServiceNotifierWithCircuitBreaker(AlertNotifier):
     """Notifier with circuit breaker protection."""
 
     def __init__(self, notification_api_url: str, timeout: int = 30):
@@ -1339,23 +1358,23 @@ class GDSNotificationNotifierWithCircuitBreaker(AlertNotifier):
 
 ## Integration Patterns
 
-### HTTP API Integration with gds_notification
+### HTTP API Integration with Notification Service
 
-The `gds_alerting` package integrates with the existing `gds_notification` service through HTTP API calls:
+The alert evaluation service integrates with the enterprise notification service through HTTP API calls:
 
-1. **Alert Formatting**: Convert internal Alert objects to `gds_notification` API format
+1. **Alert Formatting**: Convert internal Alert objects to the notification service API format
 2. **HTTP Client**: Async HTTP client for reliable API communication
 3. **Error Handling**: Circuit breaker pattern for API failures
 4. **Idempotency**: Use alert IDs for duplicate prevention
-5. **Fallback Options**: Direct email as fallback if `gds_notification` is unavailable
+5. **Fallback Options**: Direct email as fallback if the notification service is unavailable
 6. **Rate Limiting & Backoff**: Apply client-side rate limits and exponential backoff with jitter to prevent thundering herds
-7. **Bulkhead Isolation**: Use separate worker pools per destination (Email, Slack, PagerDuty) within `gds_notification`
+7. **Bulkhead Isolation**: Use separate worker pools per destination (Email, Slack, PagerDuty) within the notification service
 
 ### Loose Coupling Strategy
 
-The packages are designed to work together but remain loosely coupled:
+The services are designed to work together but remain loosely coupled:
 
-1. **Interface-Based Communication**: Both packages implement common interfaces
+1. **Interface-Based Communication**: Both services implement common interfaces
 2. **Event-Driven Architecture**: Metrics and alerts are published as events
 3. **Dependency Injection**: Components are injected rather than imported directly
 4. **Configuration-Driven**: Integration is configured rather than hardcoded
@@ -1373,8 +1392,8 @@ monitor.add_output(KafkaOutput(kafka_config))  # Exclusive output
 alerter = AlertingSystem(kafka_consumer_config)
 alerter.add_rule(ThresholdRule("cpu_usage", ">", 80, AlertSeverity.WARNING))
 
-# Configure gds_notification integration
-alerter.add_notifier(GDSNotificationNotifier(notification_config))
+# Configure notification service integration
+alerter.add_notifier(NotificationServiceNotifier(notification_config))
 
 # Start systems independently
 monitor.start()  # Publishes to Kafka
@@ -1394,7 +1413,7 @@ class Alert:
     metric: Metric
     timestamp: datetime
 
-# Maps to gds_notification API format
+# Maps to notification service API format
 {
     "alert_name": alert.rule_id,        # Maps to rule_id
     "db_instance_id": extracted_id,     # From metric tags
@@ -1995,7 +2014,7 @@ class MetricDownsampler:
 ### Phase 3: Alerting System (Week 5-6)
 
 1. Implement alert rules and evaluation engine
-2. Create `gds_notification` API client and notifier
+2. Create notification service API client and notifier
 3. Add alert escalation policies
 4. Implement alert lifecycle management (creation, resolution, history)
 5. Add fallback notification options
@@ -2085,7 +2104,7 @@ class MetricDownsampler:
 ### Operability and Resilience
 
 1. **Dead Man's Switch**: Emit periodic heartbeats and alert if metrics/alerts stop arriving (per collector and per topic)
-2. **Health Checks**: Liveness/readiness for collectors, alerting consumers, and `gds_notification`; include dependency checks
+2. **Health Checks**: Liveness/readiness for collectors, alerting consumers, and the notification service; include dependency checks
 3. **Capacity Planning**: Track queue/topic lag, throughput, and saturation; alert before breaching SLOs
 4. **Failure Modes**: Implement bounded in-memory buffers with backpressure; retry with exponential backoff; fall back to local spool if Kafka unavailable
 5. **Change Safety**: Feature flags for new rules/collectors; canary deployments; automatic rollback on error budgets burned
@@ -2659,11 +2678,11 @@ class MetaMonitor:
     async def check_heartbeats(self):
         """Check all expected heartbeats and alert if missing."""
         expected_components = [
-            'gds_monitor_postgresql',
-            'gds_monitor_mongodb',
-            'gds_monitor_mssql',
-            'gds_alerting_consumer_1',
-            'gds_alerting_consumer_2',
+            'telemetry_collector_postgresql',
+            'telemetry_collector_mongodb',
+            'telemetry_collector_mssql',
+            'alert_evaluation_consumer_1',
+            'alert_evaluation_consumer_2',
             'kafka_producer',
         ]
 
@@ -3135,9 +3154,9 @@ Primary Region (us-east-1)                Secondary Region (us-west-2)
          │                                          │
          ▼                                          ▼
 ┌─────────────────────┐                   ┌─────────────────────┐
-│  gds_monitor        │                   │  gds_monitor        │
-│  gds_alerting       │                   │  gds_alerting       │
-│  (active)           │                   │  (standby)          │
+│ Telemetry Collector │                   │ Telemetry Collector │
+│ Alert Evaluation    │                   │ Alert Evaluation    │
+│ (active)            │                   │ (standby)           │
 └─────────────────────┘                   └─────────────────────┘
 ```
 
@@ -3608,12 +3627,14 @@ class SLOMonitor:
 #### Theoretical Foundation
 
 **Event-Driven Architecture Principles**:
+
 - **Loose Coupling**: Producers and consumers don't know about each other
 - **Scalability**: Horizontal scaling of producers and consumers independently
 - **Reliability**: Message persistence ensures no data loss
 - **Extensibility**: New consumers can be added without affecting producers
 
 **Data Mesh Principles**:
+
 - **Domain Ownership**: Each component owns its data and logic
 - **Data as Product**: Metrics are a product consumed by multiple teams
 - **Self-Serve Platform**: Easy to build new consumers and analytics
@@ -3621,24 +3642,28 @@ class SLOMonitor:
 ### Enhanced Architecture Benefits
 
 #### 1. **Unified Data Pipeline**
+
 - **Single Source of Truth**: All metrics flow through one pipeline
 - **Data Consistency**: Same data serves alerting, analytics, and compliance
 - **Cost Efficiency**: One collection system, multiple consumers
 - **Maintenance**: Single point for data quality and schema evolution
 
 #### 2. **Real-time + Historical Processing**
+
 - **Immediate Response**: Real-time alerting for operational issues
 - **Trend Analysis**: Historical data for capacity planning and optimization
 - **Predictive Analytics**: ML models trained on historical patterns
 - **Compliance**: Complete audit trails and reporting
 
 #### 3. **Enterprise Scalability**
+
 - **Horizontal Scaling**: Add more consumers as needs grow
 - **Fault Tolerance**: Components can fail independently
 - **Performance Isolation**: Slow consumers don't affect fast ones
 - **Resource Optimization**: Scale each component based on its workload
 
 #### 4. **Business Value Maximization**
+
 - **Multiple Stakeholders**: Operations, engineering, business intelligence, finance
 - **ROI Optimization**: Single investment serves multiple business needs
 - **Innovation Enablement**: Easy to experiment with new analytics use cases
@@ -3647,27 +3672,32 @@ class SLOMonitor:
 ### Benefits of This Architecture
 
 #### 1. **Scalability**
+
 - **Monitoring**: May need high-frequency collection (every 30 seconds)
 - **Alerting**: Rule evaluation can be less frequent but needs low latency
 - **Notification**: Can be asynchronous with queuing
 - Each can scale independently based on load patterns
 
 #### 2. **Maintainability**
+
 - **Independent Updates**: Fix monitoring bugs without touching alerting logic
 - **Technology Evolution**: Upgrade notification system without affecting monitoring
 - **Team Autonomy**: Different teams can own different components
 
 #### 3. **Reliability**
+
 - **Failure Isolation**: Monitoring failure doesn't break alerting
 - **Circuit Breakers**: Alerting can continue if notification service is down
 - **Graceful Degradation**: Fallback mechanisms for each component
 
 #### 4. **Flexibility**
+
 - **Multiple Notification Channels**: Easy to add SMS, Slack, PagerDuty
 - **Different Alerting Strategies**: Threshold, anomaly detection, correlation
 - **Pluggable Components**: Swap implementations without changing interfaces
 
 #### 5. **Testability**
+
 - **Unit Testing**: Test each component in isolation
 - **Integration Testing**: Test component interactions
 - **Mock Dependencies**: Easy to mock external services
@@ -3675,18 +3705,22 @@ class SLOMonitor:
 ### Potential Drawbacks and Mitigations
 
 #### 1. **Increased Complexity**
+
 - **Mitigation**: Well-defined interfaces and comprehensive documentation
 - **Benefit**: Complexity is managed through clear boundaries
 
 #### 2. **Network Latency**
+
 - **Mitigation**: Async communication, batching, local caching
 - **Context**: In monitoring systems, sub-second latency is usually acceptable
 
 #### 3. **Deployment Complexity**
+
 - **Mitigation**: Container orchestration, infrastructure as code
 - **Benefit**: Each service can be deployed independently
 
 #### 4. **Debugging Challenges**
+
 - **Mitigation**: Comprehensive logging, distributed tracing, correlation IDs
 - **Tools**: Use monitoring to monitor the monitoring system itself
 
@@ -3703,20 +3737,24 @@ This separation is particularly beneficial when:
 ### Alternative Approaches Considered
 
 #### 1. **Monolithic Approach**
+
 ```python
 class MonitoringSystem:
     def collect_metrics(self): pass
     def evaluate_alerts(self): pass
     def send_notifications(self): pass
 ```
+
 **Pros**: Simple, fast development
 **Cons**: Tight coupling, hard to scale, difficult to test
 
 #### 2. **Two-Tier Approach** (Monitor + Alert/Notify)
+
 **Pros**: Simpler than three-tier
 **Cons**: Alerting and notification scaling together, mixed responsibilities
 
 #### 3. **Microservices Extreme**
+
 **Pros**: Maximum flexibility
 **Cons**: Over-engineering for smaller systems
 
@@ -3725,7 +3763,7 @@ class MonitoringSystem:
 **YES, this is a best practice architecture** for the following reasons:
 
 1. **Event-Driven Design**: Kafka as central message bus enables real-time processing
-2. **Existing Infrastructure**: Leverages your `gds_notification` service effectively
+2. **Existing Infrastructure**: Integrates cleanly with enterprise notification platforms
 3. **Scalability**: Each component can scale independently with Kafka's partitioning
 4. **Industry Alignment**: Follows modern event-driven patterns used by major platforms
 5. **Future-Proofing**: Easy to add new consumers (analytics, dashboards, etc.)
@@ -3737,10 +3775,10 @@ The architecture balances separation of concerns with practical integration thro
 
 ## References
 
-- Google SRE Book – Monitoring Distributed Systems: https://sre.google/sre-book/monitoring-distributed-systems/
-- Google SRE Workbook – Monitoring: https://sre.google/workbook/monitoring/
-- Prometheus – Alerting Best Practices: https://prometheus.io/docs/practices/alerting/
-- AWS Well-Architected Framework – Reliability: https://docs.aws.amazon.com/wellarchitected/latest/reliability-pillar/welcome.html
-- Azure Monitor – Best Practices: https://learn.microsoft.com/azure/azure-monitor/best-practices
-- Kafka – Design & Reliability Patterns (Confluent Blog): https://www.confluent.io/blog/
-- PagerDuty – Alerting & Incident Response Best Practices: https://response.pagerduty.com/best_practices/
+- Google SRE Book – Monitoring Distributed Systems: <https://sre.google/sre-book/monitoring-distributed-systems/>
+- Google SRE Workbook – Monitoring: <https://sre.google/workbook/monitoring/>
+- Prometheus – Alerting Best Practices: <https://prometheus.io/docs/practices/alerting/>
+- AWS Well-Architected Framework – Reliability: <https://docs.aws.amazon.com/wellarchitected/latest/reliability-pillar/welcome.html>
+- Azure Monitor – Best Practices: <https://learn.microsoft.com/azure/azure-monitor/best-practices>
+- Kafka – Design & Reliability Patterns (Confluent Blog): <https://www.confluent.io/blog/>
+- PagerDuty – Alerting & Incident Response Best Practices: <https://response.pagerduty.com/best_practices/>
