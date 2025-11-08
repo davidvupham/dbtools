@@ -1,0 +1,180 @@
+{
+  "name": "dbtools - Ubuntu Miniconda (Py3.13)",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": "..",
+    "args": {
+      "PYTHON_VERSION": "3.13",
+      "CONDA_ENV_NAME": "gds"
+    }
+  },
+  "remoteUser": "vscode",
+  "features": {
+    "ghcr.io/devcontainers/features/common-utils:2": {
+      "installZsh": false,
+      "username": "vscode",
+      "userUid": "1000",
+      "userGid": "1000"
+    },
+    "ghcr.io/devcontainers/features/git:1": {},
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {
+      "version": "latest"
+    }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        // Python Development
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "ms-python.debugpy",
+        "charliermarsh.ruff",
+        // PowerShell
+        "ms-vscode.powershell",
+        // Testing
+        "littlefoxteam.vscode-python-test-adapter",
+        "ryanluker.vscode-coverage-gutters",
+        // Database Tools
+        "mtxr.sqltools",
+        "mtxr.sqltools-driver-pg",
+        "mtxr.sqltools-driver-mssql",
+        // Jupyter
+        "ms-toolsai.jupyter",
+        "ms-toolsai.jupyter-keymap",
+        // Docker
+        "ms-azuretools.vscode-docker",
+        // Git
+        "eamodio.gitlens",
+        // Code Quality
+        "editorconfig.editorconfig",
+        "davidanson.vscode-markdownlint",
+        // Utilities
+        "visualstudioexptteam.vscodeintellicode",
+        "streetsidesoftware.code-spell-checker",
+        "redhat.vscode-yaml",
+        "tamasfe.even-better-toml"
+      ],
+      "settings": {
+        // Python Configuration
+        "python.defaultInterpreterPath": "/opt/conda/envs/gds/bin/python",
+        "python.terminal.activateEnvironment": true,
+        "python.analysis.autoImportCompletions": true,
+        "python.analysis.typeCheckingMode": "basic",
+        // Testing Configuration
+        "python.testing.pytestEnabled": true,
+        "python.testing.unittestEnabled": false,
+        "python.testing.pytestArgs": [
+          ".",
+          "-v",
+          "--tb=short"
+        ],
+        "python.testing.autoTestDiscoverOnSaveEnabled": true,
+        // Formatting and Linting
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+          "source.organizeImports": "explicit"
+        },
+        "ruff.enable": true,
+        "ruff.organizeImports": true,
+        "ruff.fixAll": true,
+        // PowerShell
+        "powershell.integratedConsole.showOnStartup": false,
+        // Editor Settings
+        "editor.rulers": [
+          88,
+          120
+        ],
+        "editor.tabSize": 4,
+        "editor.insertSpaces": true,
+        "files.trimTrailingWhitespace": true,
+        "files.insertFinalNewline": true,
+        // File Associations
+        "files.associations": {
+          "*.sql": "sql",
+          "*.psql": "sql",
+          "Dockerfile*": "dockerfile"
+        },
+        // Search Exclusions
+        "search.exclude": {
+          "**/__pycache__": true,
+          "**/.pytest_cache": true,
+          "**/*.pyc": true,
+          "**/htmlcov": true,
+          "**/.coverage": true,
+          "**/dist": true,
+          "**/*.egg-info": true
+        },
+        // File Watcher Exclusions
+        "files.watcherExclude": {
+          "**/__pycache__/**": true,
+          "**/.pytest_cache/**": true,
+          "**/htmlcov/**": true,
+          "**/.git/objects/**": true,
+          "**/.git/subtree-cache/**": true,
+          "**/dist/**": true,
+          "**/*.egg-info/**": true
+        },
+        // Git
+        "git.autofetch": true,
+        "git.confirmSync": false,
+        // Terminal
+        "terminal.integrated.defaultProfile.linux": "bash",
+        "terminal.integrated.profiles.linux": {
+          "bash": {
+            "path": "/bin/bash",
+            "args": [
+              "-l"
+            ]
+          },
+          "pwsh": {
+            "path": "/usr/bin/pwsh",
+            "args": [
+              "-NoLogo"
+            ]
+          }
+        }
+      }
+    }
+  },
+  "workspaceFolder": "/workspaces/dbtools",
+  "forwardPorts": [
+    5432,
+    1433,
+    27017,
+    3000,
+    5000,
+    8000
+  ],
+  "portsAttributes": {
+    "5432": {
+      "label": "PostgreSQL",
+      "onAutoForward": "notify"
+    },
+    "1433": {
+      "label": "SQL Server",
+      "onAutoForward": "notify"
+    },
+    "27017": {
+      "label": "MongoDB",
+      "onAutoForward": "notify"
+    },
+    "8000": {
+      "label": "Dev Server",
+      "onAutoForward": "notify"
+    }
+  },
+  "runArgs": [
+    "--env",
+    "PYTHONUNBUFFERED=1",
+    "--mount",
+    "type=volume,source=vscode-server-cache,target=/home/vscode/.vscode-server,consistency=cached"
+  ],
+  "postCreateCommand": "bash .devcontainer/postCreate.sh",
+  "postStartCommand": "bash -lc 'mkdir -p ~/.vscode-server/extensions ~/.vscode-server/extensionsCache && chmod -R 775 ~/.vscode-server && chown -R vscode:vscode ~/.vscode-server || true'",
+  "containerEnv": {
+    "PIP_DISABLE_PIP_VERSION_CHECK": "1"
+  },
+  "mounts": [
+    "source=${localEnv:HOME}/.ssh,target=/home/vscode/.ssh,type=bind,consistency=cached,readonly"
+  ]
+}
