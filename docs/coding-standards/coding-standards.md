@@ -1,8 +1,6 @@
 # Coding Standards
 
-> Purpose: Index of language-specific coding standards for code generated or refactored by GPT-5 Codex
->
-> Author: GPT-5 Codex
+> Purpose: Index of language-specific coding standards
 >
 > Last Updated: 2025-11-07
 
