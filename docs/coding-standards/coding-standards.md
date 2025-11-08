@@ -6,12 +6,17 @@
 
 ## Overview
 
-This repository maintains language-specific coding standards to ensure consistency, quality, and maintainability across all code generated or refactored by GPT-5 Codex.
+This repository maintains language-agnostic and language-specific coding standards to ensure consistency, quality, and maintainability across all code.
 
 ## Language-Specific Standards
 
 - **[Python Coding Standards](python-coding-standards.md)** — Style, typing, error handling, testing, security, and documentation practices for Python code.
 - **[PowerShell Coding Standards](powershell-coding-standards.md)** — Style, parameters, error handling, testing, security, and documentation practices for PowerShell code.
+
+## Language-Agnostic Standards
+
+- **[Language-Agnostic Coding Standards](language-agnostic-coding-standards.md)** — Baseline principles that apply to all languages: readability, structure, error handling, logging, testing, security, performance, and CI/CD expectations.
+- **[Systems Design Best Practices](systems-design-best-practices.md)** — Technology-agnostic guidance for resilient, scalable, secure, and observable system architectures.
 
 ## General Expectations
 
@@ -31,6 +36,6 @@ All code, regardless of language, should:
 
 ## Version History
 
-- 2025-11-07 — Initial publication by GPT-5 Codex.
+- 2025-11-07 — Initial publication.
 - 2025-11-07 — Split into language-specific documents for Python and PowerShell.
 <!-- End of document -->

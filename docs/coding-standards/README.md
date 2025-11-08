@@ -18,6 +18,10 @@ This repository maintains comprehensive, beginner-friendly coding standards to e
 
 - **[PowerShell Coding Standards](powershell-coding-standards.md)** — Complete guide covering style, naming conventions, parameters, error handling, testing, security, and documentation. Includes detailed explanations and examples for beginners.
 
+- **[Language-Agnostic Coding Standards](language-agnostic-coding-standards.md)** — Baseline principles and expectations that apply to all languages: clarity, structure, error handling, logging, testing, security, performance, and CI/CD.
+
+- **[Systems Design Best Practices](systems-design-best-practices.md)** — Technology-agnostic guidance for designing reliable, scalable, secure, and observable systems; includes resilience, data modeling, API contracts, caching, async, deployment, and operational readiness checklists.
+
 ### Enforcement Guide
 
 - **[Enforcement Guide](enforcement-guide.md)** — Practical guide for enforcing coding standards through automation, tooling, pre-commit hooks, CI/CD pipelines, and IDE integration. Includes complete configuration examples for all tools.
