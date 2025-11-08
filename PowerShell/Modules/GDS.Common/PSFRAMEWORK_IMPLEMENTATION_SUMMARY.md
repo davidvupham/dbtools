@@ -7,12 +7,14 @@ GDS modules have been successfully migrated to use **PSFramework** for logging, 
 ## What Changed
 
 ### Before
+
 - Custom `Write-Log` function with JSON file logging
 - Manual log rotation
 - Single output target (file)
 - Custom implementation to maintain
 
 ### After
+
 - PSFramework-based logging with wrapper function
 - Automatic log rotation and retention
 - Multiple output targets (file, console, event log, Splunk, Azure)
@@ -23,10 +25,12 @@ GDS modules have been successfully migrated to use **PSFramework** for logging, 
 ### 1. GDS.Common Module Updates
 
 **Module Manifest (`GDS.Common.psd1`)**
+
 - Added PSFramework as required module
 - Version requirement: 1.7.0 or later
 
 **Functions Updated:**
+
 - `Write-Log.ps1`: Now wraps `Write-PSFMessage`
 - `Initialize-Logging.ps1`: Configures PSFramework providers
 - `Set-GDSLogging.ps1`: New function for advanced configuration
@@ -43,11 +47,13 @@ Write-Log -Message "Processing" -Level Info -Context @{User="jdoe"}
 ### 3. New Features Available
 
 **Multiple Output Targets:**
+
 ```powershell
 Set-GDSLogging -ModuleName "ActiveDirectory" -EnableEventLog
 ```
 
 **Advanced Configuration:**
+
 ```powershell
 Set-GDSLogging -ModuleName "ActiveDirectory" `
     -MinimumLevel "Debug" `
@@ -55,6 +61,7 @@ Set-GDSLogging -ModuleName "ActiveDirectory" `
 ```
 
 **Direct PSFramework Access:**
+
 ```powershell
 # Can also use PSFramework directly
 Write-PSFMessage -Level Important -Message "Processing" -Tag "ActiveDirectory"
@@ -63,22 +70,26 @@ Write-PSFMessage -Level Important -Message "Processing" -Tag "ActiveDirectory"
 ## Benefits
 
 ### 1. Industry Standard ✅
+
 - Widely adopted in PowerShell community
 - Well-documented and maintained
 - Community support
 
 ### 2. Feature Rich ✅
+
 - Multiple output targets
 - Structured logging
 - Rich metadata support
 - Exception handling
 
 ### 3. Performance ✅
+
 - Asynchronous logging (non-blocking)
 - Runspace-safe (concurrent operations)
 - Minimal performance impact
 
 ### 4. Integration ✅
+
 - Windows Event Log
 - Splunk
 - Azure Log Analytics
@@ -86,6 +97,7 @@ Write-PSFMessage -Level Important -Message "Processing" -Tag "ActiveDirectory"
 - Custom providers
 
 ### 5. Maintenance ✅
+
 - No custom code to maintain
 - Active development
 - Bug fixes and improvements from community
@@ -93,12 +105,14 @@ Write-PSFMessage -Level Important -Message "Processing" -Tag "ActiveDirectory"
 ## Installation
 
 ### Prerequisites
+
 ```powershell
 # Install PSFramework
 Install-Module -Name PSFramework -Scope CurrentUser -Force
 ```
 
 ### Verify
+
 ```powershell
 Get-Module -ListAvailable -Name PSFramework
 Import-Module PSFramework
@@ -108,6 +122,7 @@ Get-Command -Module PSFramework | Where-Object { $_.Name -like '*Log*' }
 ## Usage Examples
 
 ### Basic Usage
+
 ```powershell
 # Import module (automatically loads PSFramework)
 Import-Module GDS.Common
@@ -121,6 +136,7 @@ Write-Log -Message "Error occurred" -Level Error -Exception $_.Exception
 ```
 
 ### Advanced Configuration
+
 ```powershell
 # Configure with Event Log support
 Set-GDSLogging -ModuleName "ActiveDirectory" `
@@ -130,6 +146,7 @@ Set-GDSLogging -ModuleName "ActiveDirectory" `
 ```
 
 ### Query Logs
+
 ```powershell
 # Get recent messages from memory
 Get-PSFMessage
@@ -144,15 +161,25 @@ Get-PSFMessage -Level Error
 ## Log Locations
 
 ### Default
+
 - **Path**: `Join-Path $env:GDS_LOG_DIR "{ModuleName}_{yyyyMMdd}.log"`
-- **Example (Windows)**: `C:\Logs\GDS\ActiveDirectory_20240115.log`
+- **Example (Windows)**: `M:\GDS\Logs\ActiveDirectory_20240115.log`
 - **Example (Linux)**: `/var/log/gds/ActiveDirectory_20240115.log`
 
+> When `ModuleName` is omitted, the log owner defaults to the calling script so downstream modules share the same log file.
+
 ### Custom
+
 ```powershell
 $env:GDS_LOG_DIR = "/var/log/gds"
 Initialize-Logging -ModuleName "ActiveDirectory" -LogPath (Join-Path $env:GDS_LOG_DIR "AD.log")
 ```
+
+> If `GDS_LOG_DIR` is not defined the module chooses a platform-specific default in this order:
+>
+> - Windows: `M:\GDS\Logs`, then `%ALLUSERSPROFILE%\GDS\Logs`
+> - Linux/macOS: `/gds/logs`, then `/var/log/gds`
+> Set the environment variable if you need a different location.
 
 ## Migration Checklist
 
@@ -173,11 +200,13 @@ Initialize-Logging -ModuleName "ActiveDirectory" -LogPath (Join-Path $env:GDS_LO
 ## Support
 
 ### PSFramework Resources
+
 - [Documentation](https://psframework.org/documentation/documents/psframework/logging.html)
 - [GitHub](https://github.com/PowershellFrameworkCollective/psframework)
 - [PowerShell Gallery](https://www.powershellgallery.com/packages/PSFramework)
 
 ### Troubleshooting
+
 - Check PSFramework installation: `Get-Module -ListAvailable -Name PSFramework`
 - View log configuration: `Get-PSFLoggingProvider`
 - Check minimum log level: `Get-PSFConfig -FullName 'PSFramework.Logging.MinimumLevel'`
@@ -186,6 +215,7 @@ Initialize-Logging -ModuleName "ActiveDirectory" -LogPath (Join-Path $env:GDS_LO
 ## Conclusion
 
 The migration to PSFramework provides:
+
 - ✅ Industry-standard logging
 - ✅ Better features and performance
 - ✅ Multiple integration options

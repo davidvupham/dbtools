@@ -24,7 +24,7 @@
     Optional tags for categorizing log entries (e.g., 'Initialization', 'Processing', 'Error').
 
 .PARAMETER ModuleName
-    Optional module name. If not specified, attempts to detect from calling module.
+    Optional log owner name (aliases: LogOwner, LogFileName). Defaults to the invoking script; tags automatically include the emitting module. Also scopes PSFramework configuration when used with `Set-GDSLogging`.
 
 .EXAMPLE
     Write-Log -Message "Processing user" -Level Info -Context @{User="jdoe"}
@@ -37,6 +37,7 @@
 
 .NOTES
     This function wraps PSFramework's Write-PSFMessage for consistency across GDS modules.
+    Log entries are tagged with both the log owner (script) and the emitting module to simplify troubleshooting.
     PSFramework provides:
     - Multiple output targets (file, event log, Splunk, Azure, etc.)
     - Asynchronous logging (no performance impact)
@@ -65,6 +66,7 @@ function Write-Log {
         [Parameter(Mandatory = $false)]
         [string[]]$Tag,
 
+        [Alias('LogOwner', 'LogFileName')]
         [Parameter(Mandatory = $false)]
         [string]$ModuleName
     )
@@ -76,6 +78,10 @@ function Write-Log {
 
     $callStack = Get-PSCallStack
     $ModuleName = Resolve-GDSModuleName -ExplicitName $ModuleName -CallStack $callStack
+    $moduleTag = Resolve-GDSModuleTag -CallStack $callStack
+    if ([string]::IsNullOrWhiteSpace($moduleTag)) {
+        $moduleTag = $ModuleName
+    }
 
     # Determine logging threshold
     $configName = "GDS.Common.Logging.$ModuleName.MinimumLevel"
@@ -115,6 +121,9 @@ function Write-Log {
 
     # Build tags
     $allTags = @($ModuleName)
+    if ($moduleTag -and ($allTags -notcontains $moduleTag)) {
+        $allTags += $moduleTag
+    }
     if ($Tag) {
         $allTags += $Tag
     }
@@ -159,18 +168,21 @@ function Write-Log {
         }
 
         # Add target data for structured logging
-        if ($Context -or $Exception) {
-            $targetData = @{}
-            if ($Context) {
-                $targetData['Context'] = $Context
+        $targetData = @{}
+        if ($Context) {
+            $targetData['Context'] = $Context
+        }
+        if ($Exception) {
+            $targetData['Exception'] = @{
+                Type = $Exception.GetType().FullName
+                Message = $Exception.Message
+                StackTrace = $Exception.StackTrace
             }
-            if ($Exception) {
-                $targetData['Exception'] = @{
-                    Type = $Exception.GetType().FullName
-                    Message = $Exception.Message
-                    StackTrace = $Exception.StackTrace
-                }
-            }
+        }
+        if ($moduleTag) {
+            $targetData['Module'] = $moduleTag
+        }
+        if ($targetData.Count -gt 0) {
             $params['Target'] = $targetData
         }
 

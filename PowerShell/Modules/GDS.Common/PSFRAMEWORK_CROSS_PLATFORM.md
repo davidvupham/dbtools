@@ -54,14 +54,16 @@ These features work identically on all platforms:
    - Structured file logging
    - Automatic rotation
    - Retention policies
+
    ```powershell
-   $env:GDS_LOG_DIR = "/var/log/gds"  # Required for all platforms
+   $env:GDS_LOG_DIR = "/var/log/gds"  # Required on non-Windows platforms (Windows defaults to M:\GDS\Logs or %ALLUSERSPROFILE%\GDS\Logs)
    Set-PSFLoggingProvider -Name 'logfile' -Enabled $true
    ```
 
 2. **Console Logging**
    - Console output with color
    - Multiple log levels
+
    ```powershell
    Set-PSFLoggingProvider -Name 'console' -Enabled $true
    ```
@@ -69,6 +71,7 @@ These features work identically on all platforms:
 3. **In-Memory Debug Log**
    - Memory-based logging
    - Query recent messages
+
    ```powershell
    Get-PSFMessage
    ```
@@ -89,6 +92,7 @@ These features work identically on all platforms:
 1. **Event Log Provider**
    - Windows Event Log integration
    - **NOT available on Linux/macOS**
+
    ```powershell
    # This will fail on Linux
    Set-PSFLoggingProvider -Name 'eventlog' -Enabled $true
@@ -158,19 +162,19 @@ function Set-GDSLoggingCrossPlatform {
 
 ## Log Directory (All Platforms)
 
-- Define the log root using the `GDS_LOG_DIR` environment variable. Every GDS module writes to `<GDS_LOG_DIR>/{ModuleName}_{yyyyMMdd}.log` unless overridden with `-LogPath`.
-- Suggested values:
-  - Windows: `C:\Logs\GDS`
-  - Linux: `/var/log/gds`
-  - macOS: `/usr/local/var/log/gds`
+- Define the log root using the `GDS_LOG_DIR` environment variable. Each log owner writes to `<GDS_LOG_DIR>/{ModuleName}_{yyyyMMdd}.log`; when `ModuleName` is omitted, the owner defaults to the calling script so downstream modules share the same file.
+- Fallback order when `GDS_LOG_DIR` is not set:
+  1. Windows: `M:\GDS\Logs`, then `%ALLUSERSPROFILE%\GDS\Logs`
+  2. Linux/macOS: `/gds/logs`, then `/var/log/gds`
+- macOS users can symlink `/usr/local/var/log/gds` to whichever directory is required.
 - The directory is created automatically if it doesn't exist.
 
 ```powershell
 # Cross-platform setup
 $env:GDS_LOG_DIR = if ($IsWindows) {
-    "C:\\Logs\\GDS"
+    "M:\\GDS\\Logs"
 } elseif ($IsLinux -or $IsMacOS) {
-    "/var/log/gds"
+    if (Test-Path '/gds/logs') { '/gds/logs' } else { '/var/log/gds' }
 }
 
 Initialize-Logging -ModuleName "MyApp"
@@ -301,18 +305,22 @@ docker run --rm gds-common-test
 ## Known Issues and Limitations
 
 ### 1. Event Log Provider (Linux/macOS)
+
 - **Issue**: Not available on non-Windows platforms
 - **Workaround**: Use syslog provider or file logging
 
 ### 2. Path Separators
+
 - **Issue**: Different on Windows (`\`) vs Linux/macOS (`/`)
 - **Solution**: Use `Join-Path` or `[System.IO.Path]::Combine()`
 
 ### 3. Case Sensitivity
+
 - **Issue**: Linux filesystem is case-sensitive
 - **Solution**: Use consistent casing in file names and paths
 
 ### 4. Permissions
+
 - **Issue**: Different permission models
 - **Solution**: Test permissions before writing logs
 

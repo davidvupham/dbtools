@@ -19,13 +19,52 @@ function Resolve-GDSModuleName {
         $CallStack = @()
     }
 
-    $skipFunctions = @('Resolve-GDSModuleName', 'Initialize-Logging', 'Set-GDSLogging', 'Write-Log')
+    $frames = @($CallStack)
+    if ($frames.Count -gt 0) {
+        for ($index = $frames.Count - 1; $index -ge 0; $index--) {
+            $frame = $frames[$index]
+            if (-not $frame) { continue }
+
+            $scriptPath = $frame | Select-Object -ExpandProperty ScriptName -ErrorAction SilentlyContinue
+            if ([string]::IsNullOrWhiteSpace($scriptPath)) { continue }
+
+            if ($scriptPath -like '*.ps1') {
+                $scriptName = [System.IO.Path]::GetFileNameWithoutExtension($scriptPath)
+                if (-not [string]::IsNullOrWhiteSpace($scriptName)) {
+                    return $scriptName
+                }
+            }
+        }
+
+        foreach ($frame in $frames) {
+            if (-not $frame) { continue }
+
+            $scriptPath = $frame | Select-Object -ExpandProperty ScriptName -ErrorAction SilentlyContinue
+            if ([string]::IsNullOrWhiteSpace($scriptPath)) { continue }
+
+            $candidate = Get-GDSModuleNameFromPath -Path $scriptPath
+            if (-not [string]::IsNullOrWhiteSpace($candidate)) {
+                return $candidate
+            }
+        }
+    }
+
+    return $DefaultName
+}
+
+function Resolve-GDSModuleTag {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $false)]
+        [object[]]$CallStack
+    )
+
+    if (-not $CallStack) {
+        return $null
+    }
 
     foreach ($frame in $CallStack) {
         if (-not $frame) { continue }
-
-        $functionName = $frame | Select-Object -ExpandProperty FunctionName -ErrorAction SilentlyContinue
-        if ($functionName -and $skipFunctions -contains $functionName) { continue }
 
         $scriptPath = $frame | Select-Object -ExpandProperty ScriptName -ErrorAction SilentlyContinue
         if ([string]::IsNullOrWhiteSpace($scriptPath)) { continue }
@@ -36,7 +75,7 @@ function Resolve-GDSModuleName {
         }
     }
 
-    return $DefaultName
+    return $null
 }
 
 function Get-GDSModuleNameFromPath {

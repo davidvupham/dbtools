@@ -7,7 +7,7 @@
     multiple output targets, log levels, and integration with external systems.
 
 .PARAMETER ModuleName
-    Module name to configure logging for.
+    Log owner name (aliases: LogOwner, LogFileName) to configure logging for. The same value scopes PSFramework configuration.
 
 .PARAMETER EnableEventLog
     Enable Windows Event Log output.
@@ -30,11 +30,13 @@
 .NOTES
     This function provides advanced PSFramework logging configuration.
     Ensure the GDS_LOG_DIR environment variable is set when file logging is enabled.
+    Log entries retain module tags even when multiple modules write to the same log owner.
     See: https://psframework.org/documentation/documents/psframework/logging.html
 #>
 function Set-GDSLogging {
     [CmdletBinding()]
     param(
+        [Alias('LogOwner', 'LogFileName')]
         [Parameter(Mandatory = $true)]
         [string]$ModuleName,
 
@@ -82,10 +84,7 @@ function Set-GDSLogging {
                 $filePath = $resolvedLogPath
             }
             else {
-                $logDirectoryValue = $env:GDS_LOG_DIR
-                if ([string]::IsNullOrWhiteSpace($logDirectoryValue)) {
-                    $logDirectoryValue = [Environment]::GetEnvironmentVariable('GDS_LOG_DIR', 'Process')
-                }
+                $logDirectoryValue = Get-GDSLogRoot
                 if ([string]::IsNullOrWhiteSpace($logDirectoryValue)) {
                     throw "Environment variable 'GDS_LOG_DIR' must be set to a writable directory before enabling file logging."
                 }

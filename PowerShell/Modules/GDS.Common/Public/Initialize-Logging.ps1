@@ -8,7 +8,7 @@
     logging and provides comprehensive features.
 
 .PARAMETER ModuleName
-    Module name for log file naming. If not specified, attempts to detect from calling module.
+    Optional log owner name (aliases: LogOwner, LogFileName). Defaults to the invoking script name; provide a value to override or share log files across scripts. The same value is used for PSFramework configuration scoping.
 
 .PARAMETER LogPath
     Optional custom log file path. If not specified, the module writes to the directory defined by the GDS_LOG_DIR environment variable.
@@ -28,12 +28,14 @@
     - Rotates logs when size limit is reached
     - Maintains retention policies
     - Provides structured logging
+    - Tags each entry with both the log owner (script) and the emitting module
 
     See: https://psframework.org/documentation/documents/psframework/logging.html
 #>
 function Initialize-Logging {
     [CmdletBinding()]
     param(
+        [Alias('LogOwner', 'LogFileName')]
         [Parameter(Mandatory = $false)]
         [string]$ModuleName,
 
@@ -77,10 +79,7 @@ function Initialize-Logging {
             $logFilePath = $resolvedLogPath
         }
         else {
-            $logDirectoryValue = $env:GDS_LOG_DIR
-            if ([string]::IsNullOrWhiteSpace($logDirectoryValue)) {
-                $logDirectoryValue = [Environment]::GetEnvironmentVariable('GDS_LOG_DIR', 'Process')
-            }
+            $logDirectoryValue = Get-GDSLogRoot
             if ([string]::IsNullOrWhiteSpace($logDirectoryValue)) {
                 throw "Environment variable 'GDS_LOG_DIR' must be set to a writable directory before calling Initialize-Logging."
             }

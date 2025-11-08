@@ -12,7 +12,7 @@ This guide explains how to execute the Pester test suite for the `GDS.Common` Po
 
 ## Running the Tests
 
-1. Ensure the `GDS_LOG_DIR` environment variable is defined. The tests use `TestDrive:` automatically, so any placeholder value is acceptable.
+1. Ensure the `GDS_LOG_DIR` environment variable is defined. The tests use `TestDrive:` automatically, so any placeholder value is acceptable (Windows hosts will otherwise fall back to `M:\GDS\Logs` or `%ALLUSERSPROFILE%\GDS\Logs`).
 
     ```powershell
     pwsh
@@ -29,9 +29,9 @@ This guide explains how to execute the Pester test suite for the `GDS.Common` Po
 
 ## What the Tests Cover
 
-- `Initialize-Logging` respects `GDS_LOG_DIR`, expands relative paths, and auto-detects calling modules (including hyphenated names)
+- `Initialize-Logging` respects `GDS_LOG_DIR`, expands relative paths, and defaults the log owner to the invoking script (while handling hyphenated names)
 - `Set-GDSLogging` stores module-scoped configuration, honours provider toggles, and resolves relative paths
-- `Write-Log` enforces the configured minimum log level, infers module names from the call stack, and preserves context when forwarding to PSFramework
+- `Write-Log` enforces the configured minimum log level, infers both log owner and emitting module from the call stack, and preserves context when forwarding to PSFramework
 
 ## Troubleshooting
 

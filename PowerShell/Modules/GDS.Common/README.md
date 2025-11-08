@@ -5,12 +5,14 @@ Common utilities shared across all GDS PowerShell modules.
 ## Overview
 
 GDS.Common provides **logging functionality** that is used by all GDS modules:
+
 - **PSFramework Logging** - Industry-standard logging with multiple output targets
 - **Cross-Platform Support** - Works on Windows, Linux, and macOS
 
 ## Purpose
 
 This module contains **only truly common utilities** that all GDS modules need:
+
 - ✅ Logging (Write-Log, Initialize-Logging, Set-GDSLogging)
 - ✅ Cross-platform utilities (future)
 - ✅ Shared helper functions (future)
@@ -20,6 +22,7 @@ This module contains **only truly common utilities** that all GDS modules need:
 ## Features
 
 ### 🔍 PSFramework Logging
+
 - Industry-standard logging using PSFramework (de facto standard)
 - Multiple output targets (file, console, Event Log, Splunk, Azure)
 - Structured logging with JSON format
@@ -37,8 +40,8 @@ This module contains **only truly common utilities** that all GDS modules need:
 # Install PSFramework (required)
 Install-Module -Name PSFramework -Scope CurrentUser -Force
 
-# Set the shared log directory (required)
-$env:GDS_LOG_DIR = "C:\\Logs\\GDS"      # Example for Windows
+# Set the shared log directory (optional on Windows, required elsewhere)
+$env:GDS_LOG_DIR = "C:\\Logs\\GDS"
 $env:GDS_LOG_DIR = "/var/log/gds"       # Example for Linux/macOS
 ```
 
@@ -58,7 +61,7 @@ Import-Module GDS.Common
 # Import module
 Import-Module GDS.Common
 
-# Ensure log directory is configured
+# Ensure log directory is configured (Windows falls back to M:\GDS\Logs or %ALLUSERSPROFILE%\GDS\Logs)
 $env:GDS_LOG_DIR = "/var/log/gds"  # Example; set per environment
 
 # Initialize logging for your module
@@ -73,9 +76,12 @@ Write-Log -Message "Operation completed" -Level Info -Context @{Count=100}
 Set-GDSLogging -ModuleName "MyModule" -EnableEventLog:$IsWindows -MinimumLevel "Debug"
 ```
 
+> Tip: `-ModuleName` is optional. If you omit it, the log owner defaults to the calling script so every module invoked from that script writes to the same log file.
+
 ## Functions
 
 ### Write-Log
+
 Writes log entries using PSFramework logging.
 
 ```powershell
@@ -83,14 +89,16 @@ Write-Log -Message "Processing data" -Level Info -Context @{User="jdoe"} -Tag "P
 ```
 
 **Parameters:**
+
 - `Message` (required) - Log message
 - `Level` (optional) - Debug, Verbose, Info, Warning, Error, Critical (default: Info)
 - `Exception` (optional) - Exception object to include
 - `Context` (optional) - Hashtable with additional context
 - `Tag` (optional) - Tags for categorization
-- `ModuleName` (optional) - Module name (auto-detected)
+- `ModuleName` (optional, aliases: `LogOwner`, `LogFileName`) - Log owner (defaults to calling script; emitting modules are tagged automatically and scope configuration)
 
 ### Initialize-Logging
+
 Initializes PSFramework logging for a module.
 
 ```powershell
@@ -98,11 +106,13 @@ Initialize-Logging -ModuleName "MyModule" -LogLevel "Debug"
 ```
 
 **Parameters:**
-- `ModuleName` (optional) - Module name (auto-detected)
+
+- `ModuleName` (optional, aliases: `LogOwner`, `LogFileName`) - Log owner (defaults to calling script and scopes configuration)
 - `LogPath` (optional) - Custom log file path
 - `LogLevel` (optional) - Minimum log level (default: Info)
 
 ### Set-GDSLogging
+
 Configures advanced PSFramework logging settings.
 
 ```powershell
@@ -110,7 +120,8 @@ Set-GDSLogging -ModuleName "MyModule" -EnableEventLog -MinimumLevel "Debug"
 ```
 
 **Parameters:**
-- `ModuleName` (required) - Module name
+
+- `ModuleName` (required, aliases: `LogOwner`, `LogFileName`) - Log owner/script name (also the PSFramework configuration scope)
 - `EnableEventLog` (optional) - Enable Windows Event Log (Windows only)
 - `EnableFileLog` (optional) - Enable file logging (default: true)
 - `EnableConsoleLog` (optional) - Enable console output (default: true)
@@ -195,7 +206,12 @@ Set-GDSLogging -ModuleName "MyModule" `
 
 - `Join-Path $env:GDS_LOG_DIR "{ModuleName}_{Date}.log"`
 
-Set `GDS_LOG_DIR` to the root directory where logs should be written. The directory is created automatically if it does not already exist.
+Set `GDS_LOG_DIR` to the root directory where logs should be written. When `ModuleName` is omitted, the log owner defaults to the calling script name so all modules invoked by that script share a single file. If `GDS_LOG_DIR` is not defined:
+
+- Windows: `M:\GDS\Logs` (when the M: drive is present) or `%ALLUSERSPROFILE%\GDS\Logs`
+- Linux/macOS: `/gds/logs` (when the directory exists) otherwise `/var/log/gds`
+
+The directory is created automatically if it does not already exist.
 
 ### Custom Location
 
@@ -264,6 +280,7 @@ Write-Log -Message "Starting AD export" -Level Info
 ## Cross-Platform Support
 
 GDS.Common works on:
+
 - ✅ Windows (PowerShell 5.1, PowerShell 7+)
 - ✅ Linux (PowerShell 7+)
 - ✅ macOS (PowerShell 7+)
@@ -273,6 +290,7 @@ GDS.Common works on:
 ## Documentation
 
 ### 📚 Logging Guides
+
 - **[DEVELOPER_GUIDE_LOGGING.md](./DEVELOPER_GUIDE_LOGGING.md)** - Complete guide with examples
 - [PSFramework Migration Guide](./PSFRAMEWORK_MIGRATION.md) - Migration from custom logging
 - [Cross-Platform Support](./PSFRAMEWORK_CROSS_PLATFORM.md) - Platform details
@@ -283,6 +301,7 @@ GDS.Common works on:
 ### 🔨 NuGet Package Building
 
 **Looking for build functions?** See the **GDS.NuGet** module:
+
 - [GDS.NuGet README](../GDS.NuGet/README.md)
 - [NuGet Build How-To](../GDS.NuGet/NUGET_BUILD_HOWTO.md)
 - [JFrog CI/CD Guide](../GDS.NuGet/JFROG_CICD_GUIDE.md)

@@ -31,6 +31,7 @@ InModuleScope 'GDS.Common' {
             $env:GDS_LOG_DIR = Join-Path $TestDrive 'logs'
 
             Mock -CommandName Get-Module -MockWith { [pscustomobject]@{ Name = 'PSFramework' } }
+            Mock -CommandName Get-GDSLogRoot -MockWith { $env:GDS_LOG_DIR }
 
             Mock -CommandName Set-PSFConfig -MockWith {
                 param(
@@ -129,6 +130,8 @@ InModuleScope 'GDS.Common' {
         It 'throws when GDS_LOG_DIR is not set' {
             Remove-Item Env:GDS_LOG_DIR
 
+            Mock -CommandName Get-GDSLogRoot -MockWith { $null }
+
             { Initialize-Logging -ModuleName 'TestModule' } | Should -Throw -ErrorId *
         }
 
@@ -140,7 +143,7 @@ InModuleScope 'GDS.Common' {
             $logProvider.FilePath | Should -Be ([System.IO.Path]::GetFullPath($customPath))
         }
 
-        It 'resolves module name from the call stack when not provided' {
+        It 'defaults log owner to the calling script when module name is not provided' {
             Mock -CommandName Get-PSCallStack -MockWith {
                 @(
                     [pscustomobject]@{ ScriptName = 'C:\Modules\GDS.My-Module\Public\Start-Workflow.ps1'; FunctionName = 'Start-Workflow' },
@@ -151,9 +154,9 @@ InModuleScope 'GDS.Common' {
             Initialize-Logging
 
             $logProvider = $script:logProviders | Where-Object { $_.Name -eq 'logfile' }
-            $logProvider.InstanceName | Should -Be 'My-Module'
+            $logProvider.InstanceName | Should -Be 'TestHarness'
 
-            $configName = 'GDS.Common.Logging.My-Module.MinimumLevel'
+            $configName = 'GDS.Common.Logging.TestHarness.MinimumLevel'
             $script:configStore.ContainsKey($configName) | Should -BeTrue
         }
 
@@ -166,6 +169,18 @@ InModuleScope 'GDS.Common' {
             $expectedPath = [System.IO.Path]::GetFullPath((Join-Path -Path (Get-Location).ProviderPath -ChildPath $relativePath))
             $logProvider.FilePath | Should -Be $expectedPath
             Test-Path (Split-Path -Path $expectedPath -Parent) | Should -BeTrue
+        }
+
+        It 'uses default Windows log directory when GDS_LOG_DIR is not defined' {
+            Remove-Item Env:GDS_LOG_DIR -ErrorAction SilentlyContinue
+            Mock -CommandName Get-GDSLogRoot -MockWith { 'M:\GDS\Logs' }
+            Mock -CommandName Test-Path -MockWith { $true }
+
+            Initialize-Logging -ModuleName 'DefaultModule'
+
+            $logProvider = $script:logProviders | Where-Object { $_.Name -eq 'logfile' -and $_.InstanceName -eq 'DefaultModule' }
+            $logProvider | Should -Not -BeNullOrEmpty
+            $logProvider.FilePath | Should -Match 'M:(\\|/)GDS(\\|/)Logs'
         }
     }
 
@@ -180,6 +195,7 @@ InModuleScope 'GDS.Common' {
             $env:GDS_LOG_DIR = Join-Path $TestDrive 'logs'
 
             Mock -CommandName Get-Module -MockWith { [pscustomobject]@{ Name = 'PSFramework' } }
+            Mock -CommandName Get-GDSLogRoot -MockWith { $env:GDS_LOG_DIR }
 
             Mock -CommandName Set-PSFConfig -MockWith {
                 param(
@@ -295,7 +311,21 @@ InModuleScope 'GDS.Common' {
         It 'allows disabling file logging without requiring GDS_LOG_DIR' {
             Remove-Item Env:GDS_LOG_DIR -ErrorAction SilentlyContinue
 
+            Mock -CommandName Get-GDSLogRoot -MockWith { $null }
+
             { Set-GDSLogging -ModuleName 'TestModule' -EnableFileLog:$false } | Should -Not -Throw
+        }
+
+        It 'uses default Windows log directory when none is configured' {
+            Remove-Item Env:GDS_LOG_DIR -ErrorAction SilentlyContinue
+            Mock -CommandName Get-GDSLogRoot -MockWith { 'M:\GDS\Logs' }
+            Mock -CommandName Test-Path -MockWith { $true }
+
+            Set-GDSLogging -ModuleName 'TestModule'
+
+            $logProvider = $script:logProviders | Where-Object { $_.Name -eq 'logfile' -and $_.InstanceName -eq 'TestModule' }
+            $logProvider | Should -Not -BeNullOrEmpty
+            $logProvider.FilePath | Should -Match 'M:(\\|/)GDS(\\|/)Logs'
         }
     }
 
@@ -396,6 +426,8 @@ InModuleScope 'GDS.Common' {
 
             $script:messages.Count | Should -Be 1
             $script:messages[0].Tag | Should -Contain 'My-Module'
+            $script:messages[0].Tag | Should -Contain 'TestHarness'
+            $script:messages[0].Target['Module'] | Should -Be 'My-Module'
         }
     }
 

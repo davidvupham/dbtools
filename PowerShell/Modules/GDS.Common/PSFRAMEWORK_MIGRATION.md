@@ -15,12 +15,14 @@ GDS modules have been migrated from custom `Write-Log` implementation to **PSFra
 ## Installation
 
 ### Prerequisites
+
 ```powershell
 # Install PSFramework from PowerShell Gallery
 Install-Module -Name PSFramework -Scope CurrentUser -Force
 ```
 
 ### Verify Installation
+
 ```powershell
 Get-Module -ListAvailable -Name PSFramework
 Import-Module PSFramework
@@ -67,11 +69,13 @@ Write-PSFMessage -Level Error -Message "Error occurred" -Exception $_.Exception
 ## Migration from Custom Write-Log
 
 ### Before (Custom Implementation)
+
 ```powershell
 Write-Log -Message "Processing user" -Level Info -Context @{User="jdoe"}
 ```
 
 ### After (PSFramework)
+
 ```powershell
 # Same syntax - backward compatible!
 Write-Log -Message "Processing user" -Level Info -Context @{User="jdoe"}
@@ -93,23 +97,34 @@ Write-Log -Message "Processing user" -Level Info -Context @{User="jdoe"}
 ## Log Locations
 
 ### Default Location
+
 - **Path**: `Join-Path $env:GDS_LOG_DIR "{ModuleName}_{yyyyMMdd}.log"`
-- **Example (Windows)**: `C:\Logs\GDS\ActiveDirectory_20240115.log`
+- **Example (Windows)**: `M:\GDS\Logs\ActiveDirectory_20240115.log`
 - **Example (Linux)**: `/var/log/gds/ActiveDirectory_20240115.log`
 
+> When `ModuleName` is omitted, the log owner defaults to the calling script so modules invoked by that script share the same log file.
+
 ### Custom Location
+
 ```powershell
 $env:GDS_LOG_DIR = "/var/log/gds"
 Initialize-Logging -ModuleName "ActiveDirectory" -LogPath (Join-Path $env:GDS_LOG_DIR "AD.log")
 ```
 
+> If `GDS_LOG_DIR` is not defined the module chooses a platform-specific default in this order:
+> - Windows: `M:\GDS\Logs`, then `%ALLUSERSPROFILE%\GDS\Logs`
+> - Linux/macOS: `/gds/logs`, then `/var/log/gds`
+> Explicitly set the environment variable when a different location is required.
+>
 ## Features
 
 ### 1. Automatic Log Rotation
+
 - The PSFramework file provider handles size-based rotation and retention by default
 - Adjust behaviour with PSFramework configuration keys under `PSFramework.Logging.FileSystem.*`
 
 ### 2. Multiple Output Targets
+
 - **File**: Structured file logging
 - **Console**: Console output
 - **Event Log**: Windows Event Log integration
@@ -117,16 +132,19 @@ Initialize-Logging -ModuleName "ActiveDirectory" -LogPath (Join-Path $env:GDS_LO
 - **Azure**: Azure Log Analytics (via provider)
 
 ### 3. Structured Logging
+
 - JSON format support
 - Rich metadata (tags, function names, context)
 - Exception details with stack traces
 
 ### 4. Performance
+
 - Asynchronous logging (no blocking)
 - Runspace-safe (concurrent operations)
 - Minimal performance impact
 
 ### 5. Query and Analysis
+
 ```powershell
 # Get recent log messages from memory
 Get-PSFMessage
@@ -141,6 +159,7 @@ Get-PSFMessage -Level Error
 ## Configuration
 
 ### Module-Level Configuration
+
 ```powershell
 # In module manifest (GDS.Common.psd1)
 RequiredModules = @(
@@ -149,6 +168,7 @@ RequiredModules = @(
 ```
 
 ### Runtime Configuration
+
 ```powershell
 # Set minimum log level globally
 Set-PSFConfig -FullName 'PSFramework.Logging.MinimumLevel' -Value 'Important'
@@ -169,6 +189,7 @@ Set-PSFLoggingProvider -Name 'logfile' -InstanceName 'MyModule' -Enabled $true
 ## Troubleshooting
 
 ### PSFramework Not Found
+
 ```powershell
 # Install PSFramework
 Install-Module -Name PSFramework -Scope CurrentUser -Force
@@ -178,6 +199,7 @@ Get-Module -ListAvailable -Name PSFramework
 ```
 
 ### Logs Not Appearing
+
 ```powershell
 # Check logging configuration
 Get-PSFLoggingProvider
@@ -190,6 +212,7 @@ Set-PSFConfig -FullName 'PSFramework.Logging.MinimumLevel' -Value 'Debug'
 ```
 
 ### Performance Issues
+
 - PSFramework uses asynchronous logging by default
 - If issues persist, check log file size and rotation settings
 - Consider tuning file-provider settings via `Set-PSFConfig` (`PSFramework.Logging.FileSystem.*`)
@@ -203,6 +226,7 @@ Set-PSFConfig -FullName 'PSFramework.Logging.MinimumLevel' -Value 'Debug'
 ## Support
 
 For issues or questions:
+
 1. Check PSFramework documentation
 2. Review log files in `$env:GDS_LOG_DIR`
 3. Use `Get-PSFMessage` for in-memory debugging
