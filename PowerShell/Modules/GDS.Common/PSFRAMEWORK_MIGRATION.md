@@ -113,7 +113,7 @@ Initialize-Logging -ModuleName "ActiveDirectory" -LogPath (Join-Path $env:GDS_LO
 
 > If `GDS_LOG_DIR` is not defined the module chooses a platform-specific default in this order:
 > - Windows: `M:\GDS\Logs`, then `%ALLUSERSPROFILE%\GDS\Logs`
-> - Linux/macOS: `/gds/logs`, then `/var/log/gds`
+> - Linux/macOS: `/gds/log`, then `/var/log/gds`
 > Explicitly set the environment variable when a different location is required.
 >
 ## Features

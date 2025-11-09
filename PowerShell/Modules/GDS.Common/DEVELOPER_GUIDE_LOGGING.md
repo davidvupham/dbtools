@@ -33,12 +33,12 @@ if (-not $env:GDS_LOG_DIR) {
 Initialize-Logging -ModuleName "YourModule"
 ```
 
-> Tip: On Windows use `M:\GDS\Logs` (or `%ALLUSERSPROFILE%\GDS\Logs` when the M: drive is unavailable); on Linux/macOS use `/gds/logs` (falling back to `/var/log/gds`). The directory is created automatically if it doesn't exist.
+> Tip: On Windows use `M:\GDS\Logs` (or `%ALLUSERSPROFILE%\GDS\Logs` when the M: drive is unavailable); on Linux/macOS use `/gds/log` (falling back to `/var/log/gds`). The directory is created automatically if it doesn't exist.
 
 > Note: If you omit `-ModuleName`, the log owner defaults to the calling script name so every module invoked by that script writes to the same log file. Specify a custom name only when you need to override that behaviour. When `GDS_LOG_DIR` is unset, the module chooses a platform-specific default in this order:
 >
 > 1. Windows: `M:\GDS\Logs`, then `%ALLUSERSPROFILE%\GDS\Logs`
-> 2. Linux/macOS: `/gds/logs`, then `/var/log/gds`
+> 2. Linux/macOS: `/gds/log`, then `/var/log/gds`
 >
 > The `-ModuleName` parameter (aliases: `-LogOwner`, `-LogFileName`) controls both the log file name and the PSFramework configuration prefix (`GDS.Common.Logging.<ModuleName>`).
 

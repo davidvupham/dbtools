@@ -209,7 +209,7 @@ Set-GDSLogging -ModuleName "MyModule" `
 Set `GDS_LOG_DIR` to the root directory where logs should be written. When `ModuleName` is omitted, the log owner defaults to the calling script name so all modules invoked by that script share a single file. If `GDS_LOG_DIR` is not defined:
 
 - Windows: `M:\GDS\Logs` (when the M: drive is present) or `%ALLUSERSPROFILE%\GDS\Logs`
-- Linux/macOS: `/gds/logs` (when the directory exists) otherwise `/var/log/gds`
+- Linux/macOS: `/gds/log` (when the directory exists) otherwise `/var/log/gds`
 
 The directory is created automatically if it does not already exist.
 

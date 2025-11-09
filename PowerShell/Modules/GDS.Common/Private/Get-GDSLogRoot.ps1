@@ -22,8 +22,8 @@ function Get-GDSLogRoot {
     if (-not $isWindows) {
         $linuxPath = $null
 
-        if (Test-Path -LiteralPath '/gds/logs') {
-            $linuxPath = '/gds/logs'
+        if (Test-Path -LiteralPath '/gds/log') {
+            $linuxPath = '/gds/log'
         }
         else {
             $linuxPath = '/var/log/gds'

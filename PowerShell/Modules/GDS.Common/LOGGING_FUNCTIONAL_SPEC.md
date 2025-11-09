@@ -26,7 +26,7 @@ Provide a shared, PSFramework-based logging layer for all GDS PowerShell scripts
 4. **Cross-platform storage**
    - `GDS_LOG_DIR` environment variable defines the root log directory.
    - Windows fallback: `GDS_LOG_DIR` → `M:\GDS\Logs` (if drive exists) → `%ALLUSERSPROFILE%\GDS\Logs`; the directory is created when missing.
-   - Linux/macOS fallback: `GDS_LOG_DIR` → `/gds/logs` (if the directory exists) → `/var/log/gds`.
+   - Linux/macOS fallback: `GDS_LOG_DIR` → `/gds/log` (if the directory exists) → `/var/log/gds`.
 
 ## 4. Component Responsibilities
 
@@ -96,7 +96,7 @@ Provide a shared, PSFramework-based logging layer for all GDS PowerShell scripts
   - Uses `M:\GDS\Logs` when `M:` exists.
   - Otherwise `%ALLUSERSPROFILE%\GDS\Logs` (falls back to `C:\ProgramData` if unset).
 - If undefined and on Linux/macOS:
-  - Uses `/gds/logs` when the directory exists.
+  - Uses `/gds/log` when the directory exists.
   - Otherwise `/var/log/gds`.
 - Creates the directory if missing and sets `GDS_LOG_DIR` for the session.
 - Non-Windows without a writable fallback throws when creation fails.

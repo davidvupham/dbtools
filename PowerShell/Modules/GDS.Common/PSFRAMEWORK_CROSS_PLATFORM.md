@@ -165,7 +165,7 @@ function Set-GDSLoggingCrossPlatform {
 - Define the log root using the `GDS_LOG_DIR` environment variable. Each log owner writes to `<GDS_LOG_DIR>/{ModuleName}_{yyyyMMdd}.log`; when `ModuleName` is omitted, the owner defaults to the calling script so downstream modules share the same file.
 - Fallback order when `GDS_LOG_DIR` is not set:
   1. Windows: `M:\GDS\Logs`, then `%ALLUSERSPROFILE%\GDS\Logs`
-  2. Linux/macOS: `/gds/logs`, then `/var/log/gds`
+  2. Linux/macOS: `/gds/log`, then `/var/log/gds`
 - macOS users can symlink `/usr/local/var/log/gds` to whichever directory is required.
 - The directory is created automatically if it doesn't exist.
 
@@ -174,7 +174,7 @@ function Set-GDSLoggingCrossPlatform {
 $env:GDS_LOG_DIR = if ($IsWindows) {
     "M:\\GDS\\Logs"
 } elseif ($IsLinux -or $IsMacOS) {
-    if (Test-Path '/gds/logs') { '/gds/logs' } else { '/var/log/gds' }
+    if (Test-Path '/gds/log') { '/gds/log' } else { '/var/log/gds' }
 }
 
 Initialize-Logging -ModuleName "MyApp"
