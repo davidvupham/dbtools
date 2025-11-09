@@ -120,6 +120,38 @@ PROMPT
 done
 BASH
 
+RUN <<'BASH'
+set -euo pipefail
+
+profile_dir="${DEVCONTAINER_HOME}/.config/powershell"
+profile_file="${profile_dir}/profile.ps1"
+
+mkdir -p "$profile_dir"
+
+cat <<'PROFILE' > "$profile_file"
+$customModulePath = '/workspaces/dbtools/PowerShell/Modules'
+$separator = [System.IO.Path]::PathSeparator
+
+if (Test-Path -LiteralPath $customModulePath) {
+    $currentPaths = @()
+    if (-not [string]::IsNullOrWhiteSpace($env:PSModulePath)) {
+        $currentPaths = $env:PSModulePath -split [regex]::Escape($separator)
+    }
+
+    if ($currentPaths -notcontains $customModulePath) {
+        if ([string]::IsNullOrWhiteSpace($env:PSModulePath)) {
+            $env:PSModulePath = $customModulePath
+        }
+        else {
+            $env:PSModulePath = "$customModulePath$separator$env:PSModulePath"
+        }
+    }
+}
+PROFILE
+
+chown -R ${DEVCONTAINER_USER}:${DEVCONTAINER_GROUP} "$profile_dir"
+BASH
+
 RUN mkdir -p /opt/conda/envs/${CONDA_ENV_NAME}
 ENV PATH=/opt/conda/envs/${CONDA_ENV_NAME}/bin:${PATH}
 
