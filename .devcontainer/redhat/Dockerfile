@@ -4,10 +4,19 @@ FROM registry.access.redhat.com/ubi9/ubi:latest
 
 ARG PYTHON_VERSION=3.13
 ARG CONDA_ENV_NAME=gds
+ARG DEVCONTAINER_USER=gds
+ARG DEVCONTAINER_GROUP=gds
+ARG DEVCONTAINER_UID=1000
+ARG DEVCONTAINER_GID=1000
 ENV CONDA_DIR=/opt/conda
 ENV PATH=${CONDA_DIR}/bin:${PATH}
 ENV LANG=en_US.UTF-8
 ENV LC_ALL=en_US.UTF-8
+ENV DEVCONTAINER_USER=${DEVCONTAINER_USER} \
+    DEVCONTAINER_GROUP=${DEVCONTAINER_GROUP} \
+    DEVCONTAINER_UID=${DEVCONTAINER_UID} \
+    DEVCONTAINER_GID=${DEVCONTAINER_GID} \
+    DEVCONTAINER_HOME=/home/${DEVCONTAINER_USER}
 
 RUN dnf -y update && \
     dnf -y install \
@@ -63,21 +72,43 @@ RUN pwsh -NoLogo -NoProfile -Command "Set-PSRepository -Name PSGallery -Installa
 RUN ${CONDA_DIR}/bin/conda run -n ${CONDA_ENV_NAME} python -m pip install --upgrade pip && \
     ${CONDA_DIR}/bin/conda run -n ${CONDA_ENV_NAME} pip install ruff pytest pytest-cov wheel build pyodbc aiohttp
 
-RUN groupadd --gid 1000 vscode && \
-    useradd --uid 1000 --gid 1000 -m vscode && \
-    mkdir -p /etc/sudoers.d && \
-    echo "vscode ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/vscode && \
-    chmod 0440 /etc/sudoers.d/vscode
+RUN <<'BASH'
+set -euo pipefail
+
+if getent group "${DEVCONTAINER_GROUP}" >/dev/null 2>&1; then
+    groupmod -g "${DEVCONTAINER_GID}" "${DEVCONTAINER_GROUP}"
+else
+    groupadd --gid "${DEVCONTAINER_GID}" "${DEVCONTAINER_GROUP}"
+fi
+
+if getent passwd "${DEVCONTAINER_USER}" >/dev/null 2>&1; then
+    usermod -d "${DEVCONTAINER_HOME}" -m "${DEVCONTAINER_USER}"
+    usermod -g "${DEVCONTAINER_GROUP}" "${DEVCONTAINER_USER}"
+    usermod -u "${DEVCONTAINER_UID}" "${DEVCONTAINER_USER}"
+else
+    useradd --uid "${DEVCONTAINER_UID}" --gid "${DEVCONTAINER_GID}" -m -s /bin/bash "${DEVCONTAINER_USER}"
+fi
+
+mkdir -p "${DEVCONTAINER_HOME}"
+chown -R "${DEVCONTAINER_USER}:${DEVCONTAINER_GROUP}" "${DEVCONTAINER_HOME}"
+
+mkdir -p /etc/sudoers.d
+echo "${DEVCONTAINER_USER} ALL=(ALL) NOPASSWD:ALL" > "/etc/sudoers.d/${DEVCONTAINER_USER}"
+chmod 0440 "/etc/sudoers.d/${DEVCONTAINER_USER}"
+
+mkdir -p /gds/data /gds/log
+chown -R "${DEVCONTAINER_USER}:${DEVCONTAINER_GROUP}" /gds
+BASH
 
 SHELL ["/bin/bash", "-lc"]
-RUN for f in /etc/skel/.bashrc /home/vscode/.bashrc /home/vscode/.profile; do \
+RUN for f in /etc/skel/.bashrc ${DEVCONTAINER_HOME}/.bashrc ${DEVCONTAINER_HOME}/.profile; do \
     echo 'if [ -f /opt/conda/etc/profile.d/conda.sh ]; then . /opt/conda/etc/profile.d/conda.sh; fi' >> "$f"; \
     echo "conda activate ${CONDA_ENV_NAME}" >> "$f"; \
     done
 
 RUN <<'BASH'
 set -euo pipefail
-for f in /etc/skel/.bashrc /home/vscode/.bashrc /home/vscode/.profile; do
+for f in /etc/skel/.bashrc ${DEVCONTAINER_HOME}/.bashrc ${DEVCONTAINER_HOME}/.profile; do
     cat >> "$f" <<'PROMPT'
 # dbtools devcontainer prompt
 if [[ $- == *i* ]]; then
@@ -92,11 +123,11 @@ BASH
 RUN mkdir -p /opt/conda/envs/${CONDA_ENV_NAME}
 ENV PATH=/opt/conda/envs/${CONDA_ENV_NAME}/bin:${PATH}
 
-USER vscode
+USER ${DEVCONTAINER_USER}
 WORKDIR /workspaces/dbtools
 
 USER root
-RUN mkdir -p /home/vscode/.vscode-server/extensions /home/vscode/.vscode-server/extensionsCache && \
-    chown -R vscode:vscode /home/vscode/.vscode-server
+RUN mkdir -p ${DEVCONTAINER_HOME}/.vscode-server/extensions ${DEVCONTAINER_HOME}/.vscode-server/extensionsCache && \
+    chown -R ${DEVCONTAINER_USER}:${DEVCONTAINER_GROUP} ${DEVCONTAINER_HOME}/.vscode-server
 
-USER vscode
+USER ${DEVCONTAINER_USER}

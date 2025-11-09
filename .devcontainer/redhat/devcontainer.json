@@ -8,11 +8,11 @@
       "CONDA_ENV_NAME": "gds"
     }
   },
-  "remoteUser": "vscode",
+  "remoteUser": "gds",
   "features": {
     "ghcr.io/devcontainers/features/common-utils:2": {
       "installZsh": false,
-      "username": "vscode",
+      "username": "gds",
       "userUid": "1000",
       "userGid": "1000"
     },
@@ -167,14 +167,14 @@
     "--env",
     "PYTHONUNBUFFERED=1",
     "--mount",
-    "type=volume,source=vscode-server-cache,target=/home/vscode/.vscode-server,consistency=cached"
+    "type=volume,source=vscode-server-cache,target=/home/gds/.vscode-server,consistency=cached"
   ],
   "postCreateCommand": "bash .devcontainer/postCreate.sh",
-  "postStartCommand": "bash -lc 'mkdir -p ~/.vscode-server/extensions ~/.vscode-server/extensionsCache && chmod -R 775 ~/.vscode-server && chown -R vscode:vscode ~/.vscode-server || true'",
+  "postStartCommand": "bash -lc 'mkdir -p ~/.vscode-server/extensions ~/.vscode-server/extensionsCache && chmod -R 775 ~/.vscode-server && chown -R gds:gds ~/.vscode-server || true'",
   "containerEnv": {
     "PIP_DISABLE_PIP_VERSION_CHECK": "1"
   },
   "mounts": [
-    "source=${localEnv:HOME}/.ssh,target=/home/vscode/.ssh,type=bind,consistency=cached,readonly"
+    "source=${localEnv:HOME}/.ssh,target=/home/gds/.ssh,type=bind,consistency=cached,readonly"
   ]
 }
