@@ -481,6 +481,120 @@ function Start-Workflow {
 
 ---
 
+## Working with Third-Party Modules
+
+Modules such as `dbatools` emit pipeline output and standard PowerShell streams. They do not automatically write to the PSFramework log configured via `GDS.Common`. Wrap their calls and log the results yourself so every action lands in the same file.
+
+### 1. Initialize a Shared Log Owner
+
+```powershell
+Import-Module GDS.Common, dbatools
+
+if (-not $env:GDS_LOG_DIR) {
+    $env:GDS_LOG_DIR = "/var/log/gds"
+}
+
+Initialize-Logging -ModuleName "DatabaseMaintenance"
+```
+
+### 2. Wrap External Calls and Log Outcomes
+
+```powershell
+function Invoke-LoggedQuery {
+    param(
+        [string]$SqlInstance,
+        [string]$Database,
+        [string]$Query
+    )
+
+    $start = Get-Date
+
+    try {
+        $result = Invoke-DbaQuery -SqlInstance $SqlInstance -Database $Database -Query $Query
+
+        Write-Log -Level Info -Message "Invoke-DbaQuery completed" -Context @{
+            SqlInstance = $SqlInstance
+            Database    = $Database
+            Rows        = $result.Count
+            DurationMs  = ((Get-Date) - $start).TotalMilliseconds
+        } -Tag "dbatools", "Success"
+
+        return $result
+    }
+    catch {
+        Write-Log -Level Error -Message "Invoke-DbaQuery failed" -Exception $_.Exception -Context @{
+            SqlInstance = $SqlInstance
+            Database    = $Database
+            DurationMs  = ((Get-Date) - $start).TotalMilliseconds
+        } -Tag "dbatools", "Error"
+
+        throw
+    }
+}
+```
+
+### 3. Capture Verbose, Warning, or Information Streams
+
+- **Manual capture.**
+
+    ```powershell
+    $verbose = Invoke-Command {
+        $VerbosePreference = 'Continue'
+        Invoke-DbaDbUpgrade -SqlInstance $SqlInstance -Database $Database 4>&1
+    }
+
+    if ($verbose) {
+        Write-Log -Level Verbose -Message "dbatools verbose output" -Context @{
+            Lines = ($verbose | Out-String).Trim()
+        } -Tag "dbatools", "Verbose"
+    }
+    ```
+
+- **PSFramework message proxies.**
+
+    ```powershell
+    Register-PSFMessageProxy -InformationTarget PSFramework
+    Register-PSFMessageProxy -VerboseTarget    PSFramework
+    Register-PSFMessageProxy -WarningTarget    PSFramework
+    ```
+
+    Once registered, built-in stream output is forwarded to `Write-PSFMessage`, so it is routed to the same providers configured through `GDS.Common`.
+
+### 4. Standardise Context Metadata
+
+Agree on core fields—`OperationId`, `SqlInstance`, `Database`, etc.—and reuse them for every log entry (your code and third-party wrappers alike).
+
+```powershell
+$commonContext = @{
+    OperationId = $operationId
+    SqlInstance = $SqlInstance
+    Database    = $Database
+}
+
+Write-Log -Level Verbose -Message "Starting maintenance step" -Context $commonContext -Tag "Maintenance", "Start"
+```
+
+### 5. Transcript for Full Fidelity (Optional)
+
+Use transcripts when you need every character captured. Still log the transcript location so operators can find it alongside the structured log.
+
+```powershell
+$transcriptPath = Join-Path $env:GDS_LOG_DIR "DatabaseMaintenance-$(Get-Date -Format yyyyMMdd_HHmmss).txt"
+Start-Transcript -Path $transcriptPath -Force
+
+try {
+    Invoke-LoggedQuery @params
+}
+finally {
+    Stop-Transcript | Out-Null
+    Write-Log -Level Info -Message "Transcript captured" -Context @{ Path = $transcriptPath } -Tag "Transcript"
+}
+```
+
+These practices ensure that your code, third-party modules, and optional transcripts stay aligned in a single PSFramework-managed log file.
+
+---
+
 ## Alternative Logging Options
 
 PSFramework covers the vast majority of GDS scenarios, but there are cases where other logging patterns may be preferred. The table below highlights the primary alternatives, their strengths, and trade-offs.
