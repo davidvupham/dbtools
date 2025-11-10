@@ -1426,6 +1426,101 @@ class Alert:
 }
 ```
 
+### OpenTelemetry Integration
+
+This platform SHOULD adopt OpenTelemetry (OTel) across services for end-to-end correlation and standardized telemetry delivery. See `docs/architecture/observability/OPENTELEMETRY_ARCHITECTURE.md` for the comprehensive OTel design. This section summarizes required integration points for this pipeline.
+
+- Signals: traces, metrics, logs via OTLP to an OpenTelemetry Collector (agent + gateway pattern).
+- Context propagation: W3C Trace Context (`traceparent`) across HTTP and Kafka headers; include `correlation_id` as span attribute.
+- Exemplars: attach trace exemplars to key metrics to enable metric-to-trace pivots in dashboards.
+- Collector: use processors for batching, resource detection, Kubernetes attributes, attributes redaction, tail-based sampling; exporters to Kafka (optional), Prometheus, Tempo/Jaeger, and Loki.
+- Structured logs: JSON logs enriched with `trace_id`, `span_id`, `service.name`, `deployment.environment`.
+
+Minimal requirements:
+- All outbound HTTP calls (e.g., to Notification Service) inject trace context.
+- Kafka producers/consumers inject/extract trace context in message headers.
+- Emit span(s) around alert evaluation, enrichment, remediation, and notification for full lifecycle traceability.
+
+References:
+- `OPENTELEMETRY_ARCHITECTURE.md` (collection pipelines, semantic conventions, example configs)
+
+---
+
+## Alert Enrichment and Auto-Remediation
+
+After alert rule evaluation determines an alert should fire, the system performs automated triage and safe remediation before notifying stakeholders. The workflow is orchestrated with strict guardrails, idempotency, and full auditing.
+
+### Workflow Phases
+
+1) Evaluate (existing): rules, deduplication, cooldown, inhibition.
+2) Enrichment (automated info gathering, timeboxed):
+   - Recent logs for the resource (±5–10 minutes), host metrics (CPU/mem/IO), DB health (connections, locks, replication lag), dependency health, Kafka lag, recent deploys/changes, related alerts.
+   - Normalize artifacts, store durable links (logs/traces/dashboards/snapshots) for inclusion in the alert.
+   - Cache frequent lookups with short TTL to reduce load.
+3) Auto-Remediation (policy-driven, guarded):
+   - Preconditions: maintenance windows, change windows, blast radius checks, environment allowlists.
+   - Allowed actions (examples): restart collector agent, recycle DB connection pool, restart alert consumer, switch to read replica.
+   - Idempotent execution with rate limits and concurrency locks; verify success; rollback on failure; bounded retries with backoff/jitter.
+4) Notification:
+   - Always send alert to Notification Service with enrichment artifacts and remediation results, including verification outcome and whether alert was auto-resolved or requires action.
+
+### Governance and Safety Guardrails
+
+- Action allowlist per environment; high‑risk actions require explicit approval policy.
+- Per-resource rate limits; exponential backoff and jitter.
+- Maintenance/silence/change window awareness.
+- Idempotency keys and distributed locks to prevent duplicate concurrent actions.
+- Full audit trail of inputs, actions, outputs, verification, and rollbacks.
+
+### Extended Alert Schema (additions)
+
+```json
+{
+  "enrichment_artifacts": [
+    {"type": "logs", "url": "https://..."},
+    {"type": "trace", "trace_id": "abc...", "url": "https://..."},
+    {"type": "dashboard", "url": "https://..."},
+    {"type": "snapshot", "url": "s3://..."}
+  ],
+  "remediation_attempted": true,
+  "remediation_steps": [
+    {
+      "name": "recycle_db_pool",
+      "started_at": "2025-11-10T10:22:03Z",
+      "ended_at": "2025-11-10T10:22:08Z",
+      "status": "SUCCESS",
+      "output_ref": "s3://.../logs.txt"
+    }
+  ],
+  "verification": {
+    "checks": [
+      {"type": "metric_threshold_ok", "status": "PASS"},
+      {"type": "error_rate_normalized", "status": "PASS"}
+    ]
+  },
+  "auto_resolved": true,
+  "residual_risk": "low"
+}
+```
+
+### KPIs to Track
+
+- Auto-remediation success rate, rollback rate, time-to-mitigate, false-positive remediation rate, human escalation rate, enrichment latency, enrichment cache hit rate.
+
+---
+
+## Cross-Pillar Correlation
+
+- Require `trace_id` and `span_id` in logs; add exemplars from metrics to traces.
+- Include pivot links in notifications: “Open trace,” “Open logs (±5m),” “Open dashboard (scoped).”
+- Standardize labels using OTel semantic conventions (e.g., `db.system`, `db.instance`, `deployment.environment`, `host.name`, `region`).
+
+---
+
+## Stateful Stream Alerting (Optional)
+
+For complex stateful rules (windows, joins, rates), consider Kafka Streams or Flink with tumbling/sliding windows and windowed aggregation. This offloads heavy state from the evaluator and scales horizontally while preserving ordering per key (e.g., `{instance_id}`).
+
 ---
 
 ### Testing Strategy

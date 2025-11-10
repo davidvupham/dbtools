@@ -221,6 +221,78 @@ OpenTelemetry supports all three pillars of observability:
                    └──────────────────┘
 ```
 
+### Exemplars and Metrics-to-Trace Linking
+
+To enable fast pivots from metrics to relevant traces, attach exemplars with `trace_id` when recording histograms/counters. Backends like Prometheus/Grafana support exemplars for this use case.
+
+```python
+from opentelemetry import trace, metrics
+
+meter = metrics.get_meter(__name__)
+latency = meter.create_histogram("db.query.duration", unit="ms")
+
+with tracer.start_as_current_span("db_query") as span:
+    start_ms = time.time() * 1000
+    result = run_db_query()
+    duration = (time.time() * 1000) - start_ms
+    # Record with trace context so backend can attach exemplars
+    latency.record(duration, {
+        "db.system": "postgresql",
+        "db.operation": "SELECT",
+        "trace_id": format(span.get_span_context().trace_id, '032x')
+    })
+```
+
+Collector/exporter configuration should preserve exemplar data paths to your metrics backend.
+
+### Recommended Collector Processors
+
+Use the following processors for production-grade pipelines (names may vary in distributions):
+
+- `batch`: batch telemetry for throughput/latency optimization.
+- `resource`: inject resource attributes (`service.name`, `service.version`, `deployment.environment`).
+- `resourcedetection`: auto-detect environment/host/cloud attributes.
+- `k8sattributes`: enrich with Kubernetes metadata (namespace, pod, node).
+- `attributes`: redaction, hashing, or normalization of sensitive attributes.
+- `transform`/`filter`: drop/rename attributes or metrics, enforce naming.
+- `tail_sampling`: keep error/latency outliers at higher rates, probabilistically sample healthy traffic.
+
+Example:
+
+```yaml
+processors:
+  batch:
+    timeout: 10s
+    send_batch_size: 1000
+  resource:
+    attributes:
+      - key: deployment.environment
+        action: upsert
+        value: production
+  resourcedetection/system:
+    detectors: [env, system, host]
+  k8sattributes:
+    passthrough: false
+  attributes/redact:
+    actions:
+      - key: password
+        action: delete
+      - key: api_key
+        action: delete
+  tail_sampling:
+    policies:
+      - name: errors
+        type: status_code
+        status_code:
+          status_codes: [ERROR]
+      - name: probabilistic
+        type: probabilistic
+        probabilistic:
+          sampling_percentage: 10
+```
+
+Include these processors in the `service.pipelines` for `traces`, `metrics`, and `logs` as appropriate.
+
 ### Data Flow
 
 1. **Instrumentation**: Application code uses OpenTelemetry SDK to create spans, record metrics, emit logs
