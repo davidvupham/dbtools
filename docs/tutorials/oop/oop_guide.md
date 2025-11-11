@@ -4050,8 +4050,6 @@ with PostgreSQLConnection(config) as db:
 7. **Learn Patterns**: Study common design patterns
 8. **Practice**: The more you use OOP, the better you'll get
 
-```
-
 ---
 
 ## Performance Considerations
