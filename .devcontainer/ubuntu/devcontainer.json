@@ -43,12 +43,19 @@
   // "args": Build-time variables passed to the Dockerfile
   //   - PYTHON_VERSION: Python version to install (3.13)
   //   - CONDA_ENV_NAME: Name of the conda environment (gds)
+  //   - DEVCONTAINER_USER: Username to create in container (defaults to host user)
+  //   - DEVCONTAINER_UID: User ID (defaults to host user ID)
+  //   - DEVCONTAINER_GID: Group ID (defaults to host group ID)
   "build": {
     "dockerfile": "Dockerfile",
     "context": "..",
     "args": {
       "PYTHON_VERSION": "3.13",
-      "CONDA_ENV_NAME": "gds"
+      "CONDA_ENV_NAME": "gds",
+      "DEVCONTAINER_USER": "${localEnv:USER}",
+      "DEVCONTAINER_GROUP": "${localEnv:USER}",
+      "DEVCONTAINER_UID": "1000",
+      "DEVCONTAINER_GID": "1000"
     }
   },
   // ---------------------------------------------------------------------------
@@ -56,9 +63,9 @@
   // ---------------------------------------------------------------------------
   // "remoteUser": User account to use inside the container
   // - All VS Code operations run as this user
-  // - Matches the user created in Dockerfile (UID 1000, GID 1000)
+  // - Matches the user created in Dockerfile (uses host user)
   // - Files created will be owned by this user
-  "remoteUser": "gds",
+  "remoteUser": "${localEnv:USER}",
   // ---------------------------------------------------------------------------
   // Features (Pre-built Capabilities)
   // ---------------------------------------------------------------------------
@@ -70,9 +77,9 @@
     // common-utils: Basic development utilities (curl, git, etc.)
     "ghcr.io/devcontainers/features/common-utils:2": {
       "installZsh": false, // Don't install Zsh (we use Bash)
-      "username": "gds", // User to configure
-      "userUid": "1000", // User ID (matches host user)
-      "userGid": "1000" // Group ID (matches host user)
+      "username": "${localEnv:USER}", // User to configure (from host)
+      "userUid": "1000", // User ID
+      "userGid": "1000" // Group ID
     },
     // git: Git version control (already in base image, ensures it's configured)
     "ghcr.io/devcontainers/features/git:1": {},
@@ -276,7 +283,7 @@
     // Mount a Docker volume for VS Code server cache
     // Speeds up dev container rebuilds by preserving VS Code's files
     "--mount",
-    "type=volume,source=vscode-server-cache,target=/home/gds/.vscode-server,consistency=cached",
+    "type=volume,source=vscode-server-cache,target=/home/${localEnv:USER}/.vscode-server,consistency=cached",
     // =========================================================================
     // PORT PUBLISHING: Dev Container → WSL Host
     // =========================================================================
@@ -318,7 +325,7 @@
   "postCreateCommand": "bash .devcontainer/postCreate.sh",
   // "postStartCommand": Runs EVERY TIME the container starts
   // Used for recurring setup: ensure directories exist, fix permissions
-  "postStartCommand": "bash -lc 'mkdir -p ~/.vscode-server/extensions ~/.vscode-server/extensionsCache && chmod -R 775 ~/.vscode-server && chown -R gds:gds ~/.vscode-server || true'",
+  "postStartCommand": "bash -lc 'mkdir -p ~/.vscode-server/extensions ~/.vscode-server/extensionsCache && chmod -R 775 ~/.vscode-server && chown -R ${USER}:${USER} ~/.vscode-server || true'",
   // ---------------------------------------------------------------------------
   // Container Environment Variables
   // ---------------------------------------------------------------------------
@@ -341,7 +348,7 @@
     // Maps your WSL/host SSH keys into the container
     // Enables: git operations, SSH connections to remote servers
     // Read-only for security (container can't modify your SSH keys)
-    "source=${localEnv:HOME}/.ssh,target=/home/gds/.ssh,type=bind,consistency=cached,readonly",
+    "source=${localEnv:HOME}/.ssh,target=/home/${localEnv:USER}/.ssh,type=bind,consistency=cached,readonly",
     // /gds Persistent Storage Mount
     // Maps /gds from WSL host to /gds in dev container
     // This is WHERE ALL PERSISTENT DATA LIVES:

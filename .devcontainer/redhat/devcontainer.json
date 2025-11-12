@@ -5,14 +5,18 @@
     "context": "..",
     "args": {
       "PYTHON_VERSION": "3.13",
-      "CONDA_ENV_NAME": "gds"
+      "CONDA_ENV_NAME": "gds",
+      "DEVCONTAINER_USER": "${localEnv:USER}",
+      "DEVCONTAINER_GROUP": "${localEnv:USER}",
+      "DEVCONTAINER_UID": "1000",
+      "DEVCONTAINER_GID": "1000"
     }
   },
-  "remoteUser": "gds",
+  "remoteUser": "${localEnv:USER}",
   "features": {
     "ghcr.io/devcontainers/features/common-utils:2": {
       "installZsh": false,
-      "username": "gds",
+      "username": "${localEnv:USER}",
       "userUid": "1000",
       "userGid": "1000"
     },
@@ -167,14 +171,14 @@
     "--env",
     "PYTHONUNBUFFERED=1",
     "--mount",
-    "type=volume,source=vscode-server-cache,target=/home/gds/.vscode-server,consistency=cached"
+    "type=volume,source=vscode-server-cache,target=/home/${localEnv:USER}/.vscode-server,consistency=cached"
   ],
   "postCreateCommand": "bash .devcontainer/postCreate.sh",
-  "postStartCommand": "bash -lc 'mkdir -p ~/.vscode-server/extensions ~/.vscode-server/extensionsCache && chmod -R 775 ~/.vscode-server && chown -R gds:gds ~/.vscode-server || true'",
+  "postStartCommand": "bash -lc 'mkdir -p ~/.vscode-server/extensions ~/.vscode-server/extensionsCache && chmod -R 775 ~/.vscode-server && chown -R ${USER}:${USER} ~/.vscode-server || true'",
   "containerEnv": {
     "PIP_DISABLE_PIP_VERSION_CHECK": "1"
   },
   "mounts": [
-    "source=${localEnv:HOME}/.ssh,target=/home/gds/.ssh,type=bind,consistency=cached,readonly"
+    "source=${localEnv:HOME}/.ssh,target=/home/${localEnv:USER}/.ssh,type=bind,consistency=cached,readonly"
   ]
 }
