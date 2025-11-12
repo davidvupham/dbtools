@@ -179,6 +179,36 @@
     "PIP_DISABLE_PIP_VERSION_CHECK": "1"
   },
   "mounts": [
-    "source=${localEnv:HOME}/.ssh,target=/home/${localEnv:USER}/.ssh,type=bind,consistency=cached,readonly"
+    "source=${localEnv:HOME}/.ssh,target=/home/${localEnv:USER}/.ssh,type=bind,consistency=cached,readonly",
+    // /data Persistent Storage Mount
+    // Maps /data from host to /data in dev container
+    // This is WHERE ALL PERSISTENT DATA LIVES:
+    //   - /data/mssql/mssql1 → SQL Server databases
+    //   - /data/mongodb → MongoDB replica set data
+    //
+    // WHY THIS IS CRITICAL:
+    // 1. Database containers run INSIDE dev container
+    // 2. They write to /data paths INSIDE dev container
+    // 3. This mount ensures those writes go to host /data
+    // 4. Data survives dev container rebuilds and deletions
+    // 5. Data is accessible from host directly
+    //
+    // EXAMPLE FLOW:
+    // SQL Server writes to /var/opt/mssql (inside mssql1 container)
+    //   → Mapped to /data/mssql/mssql1 (in dev container)
+    //   → This mount maps to /data/mssql/mssql1 (on host)
+    //   → Result: Database files persist on host filesystem
+    "source=/data,target=/data,type=bind,consistency=cached",
+    // /logs Persistent Storage Mount
+    // Maps /logs from host to /logs in dev container
+    // This is WHERE ALL PERSISTENT LOGS LIVE:
+    //   - /logs → Database logs and application logs
+    //
+    // EXAMPLE FLOW:
+    // Database writes to logs (inside database container)
+    //   → Mapped to /logs (in dev container)
+    //   → This mount maps to /logs (on host)
+    //   → Result: Log files persist on host filesystem
+    "source=/logs,target=/logs,type=bind,consistency=cached"
   ]
 }

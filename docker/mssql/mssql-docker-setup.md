@@ -19,8 +19,8 @@ This guide provides step-by-step instructions for setting up Microsoft SQL Serve
 
 This setup creates a SQL Server 2022 Developer Edition instance with:
 
-- Persistent data storage in `/gds/data/mssql/mssql1`
-- Persistent logs in `/gds/log/mssql`
+- Persistent data storage in `/data/mssql/mssql1`
+- Persistent logs in `/logs/mssql`
 - Port 1433 exposed for database connections
 - Integration with VS Code dev containers
 - Access from both dev container and WSL host
@@ -30,7 +30,7 @@ This setup creates a SQL Server 2022 Developer Edition instance with:
 - Docker installed and running
 - WSL2 (if on Windows)
 - VS Code with Dev Containers extension (for dev container setup)
-- `/gds` directory structure on your host system
+- `/data` and `/logs` directory structure on your host system
 
 ## Directory Structure
 
@@ -38,13 +38,13 @@ Before starting, ensure these directories exist on your WSL host:
 
 ```bash
 # Create the directory structure on WSL host
-sudo mkdir -p /gds/data/mssql/mssql1
-sudo mkdir -p /gds/log/mssql
+sudo mkdir -p /data/mssql/mssql1
+sudo mkdir -p /logs/mssql
 
 # Set ownership for SQL Server
 # SQL Server runs as UID 10001
-sudo chown -R 10001:0 /gds/data/mssql
-sudo chown -R 10001:0 /gds/log/mssql
+sudo chown -R 10001:0 /data/mssql
+sudo chown -R 10001:0 /logs/mssql
 ```
 
 The project structure looks like this:
@@ -83,7 +83,7 @@ docker build -t gds-mssql:latest .
  => => transferring dockerfile: 1.23kB
  => [internal] load .dockerignore
  => [1/2] FROM mcr.microsoft.com/mssql/server:2022-latest
- => [2/2] RUN mkdir -p /gds/data/mssql /gds/log/mssql && chown -R mssql:0 /gds
+ => [2/2] RUN mkdir -p /data/mssql /logs/mssql && chown -R mssql:0 /data /logs
  => exporting to image
  => => naming to docker.io/library/gds-mssql:latest
 ```
@@ -131,9 +131,9 @@ docker run -d \
   -e MSSQL_PID=Developer \
   -e MSSQL_SA_PASSWORD='YourStrong!Passw0rd' \
   -p 1433:1433 \
-  -v /gds/data/mssql:/gds/data/mssql \
-  -v /gds/log/mssql:/gds/log/mssql \
-  -v /gds/data/mssql/mssql1:/var/opt/mssql \
+  -v /data/mssql:/data/mssql \
+  -v /logs/mssql:/logs/mssql \
+  -v /data/mssql/mssql1:/var/opt/mssql \
   --restart unless-stopped \
   gds-mssql:latest
 ```
@@ -405,7 +405,7 @@ docker pull mcr.microsoft.com/mssql/server:2022-latest
 ### Data and Cleanup
 
 ```bash
-# Stop and remove container (data persists in /gds volumes)
+# Stop and remove container (data persists in /data and /logs volumes)
 docker-compose down
 
 # Stop and remove container with volumes (DELETES ALL DATA!)
@@ -430,10 +430,10 @@ docker logs mssql1
 
 **Common issues:**
 
-- **Permission denied on /.system**: Ensure `/gds/data/mssql/mssql1` is owned by UID 10001
+- **Permission denied on /.system**: Ensure `/data/mssql/mssql1` is owned by UID 10001
 
   ```bash
-  sudo chown -R 10001:0 /gds/data/mssql/mssql1
+  sudo chown -R 10001:0 /data/mssql/mssql1
   ```
 
 - **Password doesn't meet requirements**: SA password must be at least 8 characters with uppercase, lowercase, numbers, and special characters
@@ -505,7 +505,7 @@ docker inspect mssql1 | grep -A 10 Mounts
 **Check directory ownership:**
 
 ```bash
-ls -ld /gds/data/mssql/mssql1
+ls -ld /data/mssql/mssql1
 ```
 
 Should show: `drwxr-xr-x 10001 root`

@@ -14,9 +14,9 @@ services:
       - "1433:1433"
     volumes:
       # Bind-mount host paths into the container and map instance data to SQL's data directory
-      - /gds/data/mssql:/gds/data/mssql
-      - /gds/log/mssql:/gds/log/mssql
-      - /gds/data/mssql/mssql1:/var/opt/mssql
+      - /data/mssql:/data/mssql
+      - /logs/mssql:/logs/mssql
+      - /data/mssql/mssql1:/var/opt/mssql
     restart: unless-stopped
     networks:
       - mssql-network

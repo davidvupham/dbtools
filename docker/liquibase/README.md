@@ -127,7 +127,7 @@ You can pair the custom Liquibase image with the local Microsoft SQL Server and 
 
 ```bash
 docker build -t mssql-local:latest docker/mssql
-docker build -t postgres-local:latest docker/postgres
+docker build -t postgres-local:latest docker/postgresql
 ```
 
 Or use upstream images directly:

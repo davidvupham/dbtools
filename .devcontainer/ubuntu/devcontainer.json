@@ -349,26 +349,36 @@
     // Enables: git operations, SSH connections to remote servers
     // Read-only for security (container can't modify your SSH keys)
     "source=${localEnv:HOME}/.ssh,target=/home/${localEnv:USER}/.ssh,type=bind,consistency=cached,readonly",
-    // /gds Persistent Storage Mount
-    // Maps /gds from WSL host to /gds in dev container
+    // /data Persistent Storage Mount
+    // Maps /data from host to /data in dev container
     // This is WHERE ALL PERSISTENT DATA LIVES:
-    //   - /gds/data/mssql/mssql1 → SQL Server databases
-    //   - /gds/data/mongodb → MongoDB replica set data
-    //   - /gds/log → Database logs
+    //   - /data/mssql/mssql1 → SQL Server databases
+    //   - /data/mongodb → MongoDB replica set data
     //
     // WHY THIS IS CRITICAL:
     // 1. Database containers run INSIDE dev container
-    // 2. They write to /gds paths INSIDE dev container
-    // 3. This mount ensures those writes go to WSL host /gds
+    // 2. They write to /data paths INSIDE dev container
+    // 3. This mount ensures those writes go to host /data
     // 4. Data survives dev container rebuilds and deletions
-    // 5. Data is accessible from WSL host directly
+    // 5. Data is accessible from host directly
     //
     // EXAMPLE FLOW:
     // SQL Server writes to /var/opt/mssql (inside mssql1 container)
-    //   → Mapped to /gds/data/mssql/mssql1 (in dev container)
-    //   → This mount maps to /gds/data/mssql/mssql1 (on WSL host)
-    //   → Result: Database files persist on WSL host filesystem
-    "source=/gds,target=/gds,type=bind,consistency=cached"
+    //   → Mapped to /data/mssql/mssql1 (in dev container)
+    //   → This mount maps to /data/mssql/mssql1 (on host)
+    //   → Result: Database files persist on host filesystem
+    "source=/data,target=/data,type=bind,consistency=cached",
+    // /logs Persistent Storage Mount
+    // Maps /logs from host to /logs in dev container
+    // This is WHERE ALL PERSISTENT LOGS LIVE:
+    //   - /logs → Database logs and application logs
+    //
+    // EXAMPLE FLOW:
+    // Database writes to logs (inside database container)
+    //   → Mapped to /logs (in dev container)
+    //   → This mount maps to /logs (on host)
+    //   → Result: Log files persist on host filesystem
+    "source=/logs,target=/logs,type=bind,consistency=cached"
   ]
   // ===========================================================================
   // REBUILD INSTRUCTIONS:

@@ -1,0 +1,50 @@
+version: "3.8"
+
+services:
+  psql1:
+    build: .
+    image: gds-postgresql:latest
+    container_name: psql1
+    environment:
+      # PostgreSQL superuser password
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-YourStrong!Passw0rd}
+      # Optional: set default database and user
+      - POSTGRES_DB=${POSTGRES_DB:-postgres}
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+    ports:
+      - "5432:5432"
+    volumes:
+      # Bind-mount host paths into the container
+      - /data/postgresql:/data/postgresql
+      - /logs/postgresql:/logs/postgresql
+      # PostgreSQL data directory - mount to /var/lib/postgresql (not /var/lib/postgresql/data)
+      - /data/postgresql/psql1:/var/lib/postgresql
+    restart: unless-stopped
+    networks:
+      - postgresql-network
+
+  psql2:
+    build: .
+    image: gds-postgresql:latest
+    container_name: psql2
+    environment:
+      # PostgreSQL superuser password
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-YourStrong!Passw0rd}
+      # Optional: set default database and user
+      - POSTGRES_DB=${POSTGRES_DB:-postgres}
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+    ports:
+      - "5433:5432"
+    volumes:
+      # Bind-mount host paths into the container
+      - /data/postgresql:/data/postgresql
+      - /logs/postgresql:/logs/postgresql
+      # PostgreSQL data directory - mount to /var/lib/postgresql (not /var/lib/postgresql/data)
+      - /data/postgresql/psql2:/var/lib/postgresql
+    restart: unless-stopped
+    networks:
+      - postgresql-network
+
+networks:
+  postgresql-network:
+    driver: bridge

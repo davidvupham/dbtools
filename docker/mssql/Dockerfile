@@ -69,28 +69,28 @@ USER root
 # ------------------------------------------------------------------------------
 # RUN: Executes commands during image build (creates new layer in image)
 #
-# mkdir -p /gds/data/mssql /gds/log/mssql:
+# mkdir -p /data/mssql /logs/mssql:
 #   - Creates directories for persistent storage
 #   - -p flag creates parent directories if they don't exist
-#   - /gds/data/mssql = SQL Server database files (.mdf, .ldf)
-#   - /gds/log/mssql = SQL Server error logs and transaction logs
+#   - /data/mssql = SQL Server database files (.mdf, .ldf)
+#   - /logs/mssql = SQL Server error logs and transaction logs
 #
-# chown -R mssql:0 /gds:
+# chown -R mssql:0 /data /logs:
 #   - Changes ownership recursively (-R)
 #   - mssql = user (UID 10001, created in base image)
 #   - 0 = group (root group, GID 0)
 #   - WHY: SQL Server runs as 'mssql' user and needs write access
 #   - WHY GROUP 0: OpenShift compatibility (uses arbitrary UIDs with GID 0)
 #
-# chmod -R g+rwx /gds:
+# chmod -R g+rwx /data /logs:
 #   - Changes permissions recursively
 #   - g+rwx = Give group read, write, execute permissions
 #   - WHY: Allows group (GID 0) full access to directories
 #   - Security: Only owner (mssql) and group (0) can access, not others
 #
-RUN mkdir -p /gds/data/mssql /gds/log/mssql && \
-    chown -R mssql:0 /gds && \
-    chmod -R g+rwx /gds
+RUN mkdir -p /data/mssql /logs/mssql && \
+    chown -R mssql:0 /data /logs && \
+    chmod -R g+rwx /data /logs
 
 # ------------------------------------------------------------------------------
 # Volume Declaration
@@ -105,14 +105,14 @@ RUN mkdir -p /gds/data/mssql /gds/log/mssql && \
 # HOW IT WORKS:
 #   - If not mapped at runtime, Docker creates anonymous volumes
 #   - Best practice: map to host directories (bind mounts) in docker-compose.yml
-#   - Example: /gds/data/mssql on host → /gds/data/mssql in container
+#   - Example: /data/mssql on host → /data/mssql in container
 #
 # DATA STORED HERE:
-#   - /gds/data/mssql: System databases (master, model, msdb, tempdb)
-#   - /gds/data/mssql: User databases
-#   - /gds/log/mssql: Error logs, agent logs, system logs
+#   - /data/mssql: System databases (master, model, msdb, tempdb)
+#   - /data/mssql: User databases
+#   - /logs/mssql: Error logs, agent logs, system logs
 #
-VOLUME ["/gds/data/mssql", "/gds/log/mssql"]
+VOLUME ["/data/mssql", "/logs/mssql"]
 
 # ------------------------------------------------------------------------------
 # Port Exposure
@@ -143,7 +143,7 @@ EXPOSE 1433
 #   - Never run applications as root in production
 #   - Limits damage if container is compromised
 #   - 'mssql' user (UID 10001) has only necessary permissions
-#   - Can write to /gds directories (we set ownership above)
+#   - Can write to /data and /logs directories (we set ownership above)
 #   - Cannot modify system files or other users' data
 #
 USER mssql
@@ -191,7 +191,7 @@ CMD ["/opt/mssql/bin/sqlservr"]
 #     --name mssql1 \
 #     -e MSSQL_SA_PASSWORD='YourStrong!Passw0rd' \
 #     -p 1433:1433 \
-#     -v /gds/data/mssql/mssql1:/var/opt/mssql \
+#     -v /data/mssql/mssql1:/var/opt/mssql \
 #     gds-mssql:latest
 #
 # ==============================================================================

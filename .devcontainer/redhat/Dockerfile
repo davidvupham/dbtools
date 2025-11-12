@@ -99,8 +99,8 @@ mkdir -p /etc/sudoers.d
 echo "${DEVCONTAINER_USER} ALL=(ALL) NOPASSWD:ALL" > "/etc/sudoers.d/${DEVCONTAINER_USER}"
 chmod 0440 "/etc/sudoers.d/${DEVCONTAINER_USER}"
 
-mkdir -p /gds/data /gds/log
-chown -R "${DEVCONTAINER_USER}:${DEVCONTAINER_GROUP}" /gds
+mkdir -p /data /logs
+chown -R "${DEVCONTAINER_USER}:${DEVCONTAINER_GROUP}" /data /logs
 BASH
 
 SHELL ["/bin/bash", "-lc"]

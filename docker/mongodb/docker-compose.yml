@@ -2,6 +2,9 @@ version: "3.8"
 
 services:
   mongodb1:
+    build:
+      context: .
+      dockerfile: Dockerfile
     image: gds-mongodb:latest
     container_name: mongodb1
     environment:
@@ -9,13 +12,20 @@ services:
     ports:
       - "27017:27017"
     volumes:
-      - /gds/data/mongodb:/gds/data/mongodb
-      - /gds/log/mongodb:/gds/log/mongodb
+      # Mount instance-specific data directory
+      - /data/mongodb/mongodb1:/data/mongodb/mongodb1
+      # Mount instance-specific log directory
+      - /logs/mongodb/mongodb1:/logs/mongodb/mongodb1
+      # Mount shared keyfile directory
+      - /data/mongodb:/data/mongodb
     restart: unless-stopped
     networks:
       - mongodb-network
 
   mongodb2:
+    build:
+      context: .
+      dockerfile: Dockerfile
     image: gds-mongodb:latest
     container_name: mongodb2
     environment:
@@ -23,13 +33,20 @@ services:
     ports:
       - "27018:27017"
     volumes:
-      - /gds/data/mongodb:/gds/data/mongodb
-      - /gds/log/mongodb:/gds/log/mongodb
+      # Mount instance-specific data directory
+      - /data/mongodb/mongodb2:/data/mongodb/mongodb2
+      # Mount instance-specific log directory
+      - /logs/mongodb/mongodb2:/logs/mongodb/mongodb2
+      # Mount shared keyfile directory
+      - /data/mongodb:/data/mongodb
     restart: unless-stopped
     networks:
       - mongodb-network
 
   mongodb3:
+    build:
+      context: .
+      dockerfile: Dockerfile
     image: gds-mongodb:latest
     container_name: mongodb3
     environment:
@@ -37,8 +54,12 @@ services:
     ports:
       - "27019:27017"
     volumes:
-      - /gds/data/mongodb:/gds/data/mongodb
-      - /gds/log/mongodb:/gds/log/mongodb
+      # Mount instance-specific data directory
+      - /data/mongodb/mongodb3:/data/mongodb/mongodb3
+      # Mount instance-specific log directory
+      - /logs/mongodb/mongodb3:/logs/mongodb/mongodb3
+      # Mount shared keyfile directory
+      - /data/mongodb:/data/mongodb
     restart: unless-stopped
     networks:
       - mongodb-network

@@ -5,11 +5,11 @@ set -e
 MONGO_INSTANCE="${MONGO_INSTANCE:-instance1}"
 
 # Create instance-specific directories
-INSTANCE_DATA_DIR="/gds/data/mongodb/${MONGO_INSTANCE}/data"
-INSTANCE_LOG_DIR="/gds/log/mongodb/${MONGO_INSTANCE}"
+INSTANCE_DATA_DIR="/data/mongodb/${MONGO_INSTANCE}/data"
+INSTANCE_LOG_DIR="/logs/mongodb/${MONGO_INSTANCE}"
 
 # Keyfile location (shared across all instances)
-KEYFILE_PATH="/gds/data/mongodb/mongodb-keyfile"
+KEYFILE_PATH="/data/mongodb/mongodb-keyfile"
 
 # Copy keyfile from template if it doesn't exist in the volume
 if [ ! -f "${KEYFILE_PATH}" ] && [ -f "/tmp/mongodb-keyfile.template" ]; then
@@ -26,7 +26,7 @@ else
     CONFIG_NAME="${MONGO_INSTANCE}.conf"
 fi
 
-INSTANCE_CONFIG="/gds/data/mongodb/${MONGO_INSTANCE}/${CONFIG_NAME}"
+INSTANCE_CONFIG="/data/mongodb/${MONGO_INSTANCE}/${CONFIG_NAME}"
 
 mkdir -p "${INSTANCE_DATA_DIR}"
 mkdir -p "${INSTANCE_LOG_DIR}"
@@ -67,8 +67,8 @@ EOF
 fi
 
 # Set proper ownership
-chown -R mongodb:mongodb /gds/data/mongodb/${MONGO_INSTANCE}
-chown -R mongodb:mongodb /gds/log/mongodb/${MONGO_INSTANCE}
+chown -R mongodb:mongodb /data/mongodb/${MONGO_INSTANCE}
+chown -R mongodb:mongodb /logs/mongodb/${MONGO_INSTANCE}
 
 # If the command is mongod, run it with the instance config
 if [ "$1" = 'mongod' ]; then

@@ -1,14 +1,14 @@
 FROM mongo:latest
 
 # Create directories for persistent volumes
-RUN mkdir -p /gds/data/mongodb /gds/log/mongodb && \
-    chown -R mongodb:mongodb /gds
+RUN mkdir -p /data/mongodb /logs/mongodb && \
+    chown -R mongodb:mongodb /data /logs
 
 # Copy keyfile to a temporary location (will be moved to persistent volume on first run)
 COPY mongodb-keyfile /tmp/mongodb-keyfile.template
 
 # Define volumes for persistent storage
-VOLUME ["/gds/data/mongodb", "/gds/log/mongodb"]
+VOLUME ["/data/mongodb", "/logs/mongodb"]
 
 EXPOSE 27017
 

@@ -14,7 +14,8 @@ This guide explains how to set up and run a 3-node MongoDB replica set using Doc
 Each MongoDB instance has its own persistent directories:
 
 ```
-/gds/data/mongodb/
+/data/mongodb/
+├── mongodb-keyfile        # Shared authentication keyfile
 ├── mongodb1/
 │   ├── mdb1.conf          # Configuration file
 │   └── data/              # Database files
@@ -25,7 +26,7 @@ Each MongoDB instance has its own persistent directories:
     ├── mdb3.conf          # Configuration file
     └── data/              # Database files
 
-/gds/log/mongodb/
+/logs/mongodb/
 ├── mongodb1/
 │   └── mongod.log         # Log file
 ├── mongodb2/
@@ -34,12 +35,60 @@ Each MongoDB instance has its own persistent directories:
     └── mongod.log         # Log file
 ```
 
+## Quick Start
+
+### Build and Start All Instances
+
+```bash
+cd /workspaces/dbtools/docker/mongodb
+docker-compose build
+docker-compose up -d
+```
+
+### Stop All Instances
+
+```bash
+docker-compose down
+```
+
+### Restart All Instances
+
+```bash
+docker-compose restart
+```
+
+## Individual Instance Management
+
+### Start a Single Instance
+
+```bash
+docker-compose up -d mongodb1    # Start mongodb1
+docker-compose up -d mongodb2    # Start mongodb2
+docker-compose up -d mongodb3    # Start mongodb3
+```
+
+### Stop a Single Instance
+
+```bash
+docker-compose stop mongodb1     # Stop mongodb1
+docker-compose stop mongodb2     # Stop mongodb2
+docker-compose stop mongodb3     # Stop mongodb3
+```
+
+### Restart a Single Instance
+
+```bash
+docker-compose restart mongodb1  # Restart mongodb1
+docker-compose restart mongodb2  # Restart mongodb2
+docker-compose restart mongodb3  # Restart mongodb3
+```
+
 ## Configuration Files
 
 Each instance is configured with:
 
-- Data path: `/gds/data/mongodb/mongodb{N}/data`
-- Log path: `/gds/log/mongodb/mongodb{N}/mongod.log`
+- Data path: `/data/mongodb/mongodb{N}/data`
+- Log path: `/logs/mongodb/mongodb{N}/mongod.log`
 - Replica set: `mdbreplset1`
 - Bind IP: `0.0.0.0` (all interfaces)
 - Port: `27017` (internal, mapped to different host ports)
@@ -48,6 +97,12 @@ Each instance is configured with:
 
 ```bash
 cd /workspaces/dbtools/docker/mongodb
+docker-compose build
+```
+
+Or build manually:
+
+```bash
 docker build -t gds-mongodb:latest .
 ```
 
@@ -56,36 +111,7 @@ docker build -t gds-mongodb:latest .
 Using Docker Compose:
 
 ```bash
-cd /workspaces/dbtools/docker/mongodb
 docker-compose up -d
-```
-
-Or start manually:
-
-```bash
-# Instance 1
-docker run -d --name mongodb1 -p 27017:27017 \
-  -e MONGO_INSTANCE=mongodb1 \
-  -v gds-mongodb-data:/gds/data/mongodb \
-  -v gds-mongodb-log:/gds/log/mongodb \
-  --network mongodb-network \
-  gds-mongodb:latest
-
-# Instance 2
-docker run -d --name mongodb2 -p 27018:27017 \
-  -e MONGO_INSTANCE=mongodb2 \
-  -v gds-mongodb-data:/gds/data/mongodb \
-  -v gds-mongodb-log:/gds/log/mongodb \
-  --network mongodb-network \
-  gds-mongodb:latest
-
-# Instance 3
-docker run -d --name mongodb3 -p 27019:27017 \
-  -e MONGO_INSTANCE=mongodb3 \
-  -v gds-mongodb-data:/gds/data/mongodb \
-  -v gds-mongodb-log:/gds/log/mongodb \
-  --network mongodb-network \
-  gds-mongodb:latest
 ```
 
 ## Step 3: Verify Instances are Running
@@ -108,7 +134,7 @@ docker logs mongodb2
 docker logs mongodb3
 
 # Or check log files directly
-docker exec mongodb1 tail -f /gds/log/mongodb/mongodb1/mongod.log
+docker exec mongodb1 tail -f /logs/mongodb/mongodb1/mongod.log
 ```
 
 ## Step 5: Initialize the Replica Set
@@ -241,9 +267,9 @@ docker-compose down -v
 ### View Configuration Files
 
 ```bash
-docker exec mongodb1 cat /gds/data/mongodb/mongodb1/mdb1.conf
-docker exec mongodb2 cat /gds/data/mongodb/mongodb2/mdb2.conf
-docker exec mongodb3 cat /gds/data/mongodb/mongodb3/mdb3.conf
+docker exec mongodb1 cat /data/mongodb/mongodb1/mdb1.conf
+docker exec mongodb2 cat /data/mongodb/mongodb2/mdb2.conf
+docker exec mongodb3 cat /data/mongodb/mongodb3/mdb3.conf
 ```
 
 ### Add Authentication (Optional)
@@ -262,7 +288,7 @@ chmod 400 mongodb-keyfile
 ```yaml
 security:
   authorization: enabled
-  keyFile: /gds/data/mongodb/mongodb-keyfile
+  keyFile: /data/mongodb/mongodb-keyfile
 ```
 
 3. Create an admin user on the primary:
@@ -295,7 +321,7 @@ rs.status().members.forEach(function(member) {
 ### View Recent Errors
 
 ```bash
-docker exec mongodb1 tail -100 /gds/log/mongodb/mongodb1/mongod.log
+docker exec mongodb1 tail -100 /logs/mongodb/mongodb1/mongod.log
 ```
 
 ### Re-initialize Replica Set
@@ -338,11 +364,11 @@ To backup the replica set:
 
 ```bash
 # Using mongodump
-docker exec mongodb1 mongodump --out /gds/data/mongodb/backup
+docker exec mongodb1 mongodump --out /data/mongodb/backup
 
 # Or copy the data directory (while MongoDB is stopped)
 docker-compose stop
-sudo cp -r /var/lib/docker/volumes/gds-mongodb-data/_data /backup/location
+sudo cp -r /data/mongodb /backup/location
 docker-compose start
 ```
 

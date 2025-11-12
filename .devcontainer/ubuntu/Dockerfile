@@ -67,8 +67,8 @@ fi
 
 mkdir -p "${DEVCONTAINER_HOME}"
 chown -R "${DEVCONTAINER_USER}:${DEVCONTAINER_GROUP}" "${DEVCONTAINER_HOME}"
-mkdir -p /gds/data /gds/log
-chown -R "${DEVCONTAINER_USER}:${DEVCONTAINER_GROUP}" /gds
+mkdir -p /data /logs
+chown -R "${DEVCONTAINER_USER}:${DEVCONTAINER_GROUP}" /data /logs
 BASH
 
 # Make sure the conda environment is available in interactive shells
