@@ -1,0 +1,33 @@
+version: "3.8"
+
+services:
+  rabbitmq1:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: gds-rabbitmq:latest
+    container_name: rabbitmq1
+    environment:
+      # Override via .env or shell exports for non-development credentials
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:-devuser}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:-devpassword}
+      RABBITMQ_DEFAULT_VHOST: ${RABBITMQ_DEFAULT_VHOST:-/}
+    ports:
+      - "5672:5672"   # AMQP client connections
+      - "15672:15672" # Management UI / HTTP API
+      - "15692:15692" # Prometheus metrics endpoint
+    volumes:
+      - /data/rabbitmq:/data/rabbitmq
+      - /logs/rabbitmq:/logs/rabbitmq
+    healthcheck:
+      test: ["CMD-SHELL", "rabbitmq-diagnostics -q ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - rabbitmq-network
+
+networks:
+  rabbitmq-network:
+    driver: bridge
