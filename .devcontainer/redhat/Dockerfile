@@ -68,7 +68,9 @@ RUN curl -fsSLo /tmp/miniconda.sh https://repo.anaconda.com/miniconda/Miniconda3
 RUN ${CONDA_DIR}/bin/conda create -n ${CONDA_ENV_NAME} -c conda-forge python=${PYTHON_VERSION} -y && \
     ${CONDA_DIR}/bin/conda clean -afy
 
-RUN pwsh -NoLogo -NoProfile -Command "Set-PSRepository -Name PSGallery -InstallationPolicy Trusted; Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force; Install-Module -Name dbatools,Pester,PSFramework -Scope AllUsers -Force"
+RUN pwsh -NoLogo -NoProfile -Command "\
+    Set-PSRepository -Name PSGallery -InstallationPolicy Trusted; \
+    Install-Module -Name dbatools,Pester,PSFramework -Scope AllUsers -Force -SkipPublisherCheck"
 
 RUN ${CONDA_DIR}/bin/conda run -n ${CONDA_ENV_NAME} python -m pip install --upgrade pip && \
     ${CONDA_DIR}/bin/conda run -n ${CONDA_ENV_NAME} pip install ruff pytest pytest-cov wheel build pyodbc aiohttp

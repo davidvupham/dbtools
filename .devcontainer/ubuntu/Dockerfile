@@ -39,7 +39,9 @@ RUN conda config --system --remove-key channels || true && \
     conda clean -afy
 
 # Install required PowerShell modules
-RUN pwsh -NoLogo -NoProfile -Command "Set-PSRepository -Name PSGallery -InstallationPolicy Trusted; Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force; Install-Module -Name dbatools,Pester,PSFramework -Scope AllUsers -Force"
+RUN pwsh -NoLogo -NoProfile -Command "\
+    Set-PSRepository -Name PSGallery -InstallationPolicy Trusted; \
+    Install-Module -Name dbatools,Pester,PSFramework -Scope AllUsers -Force -SkipPublisherCheck"
 
 RUN bash <<'BASH'
 set -euo pipefail
