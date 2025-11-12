@@ -1,5 +1,48 @@
 {
+  // ===========================================================================
+  // VS Code Dev Container Configuration
+  // ===========================================================================
+  //
+  // PURPOSE:
+  // This file configures a development container (dev container) for VS Code.
+  // A dev container is a Docker container that serves as a fully-featured
+  // development environment with all tools, dependencies, and extensions
+  // pre-installed and configured.
+  //
+  // BENEFITS:
+  // 1. Consistent development environment across all developers
+  // 2. No need to install Python, databases, or tools on your local machine
+  // 3. Isolated from your host system (won't affect other projects)
+  // 4. Can run Docker containers inside this dev container (Docker-in-Docker)
+  // 5. Automatic VS Code extension installation
+  //
+  // HOW IT WORKS:
+  // When you open this project in VS Code and have the "Dev Containers"
+  // extension installed, VS Code will:
+  // 1. Build a Docker image from .devcontainer/Dockerfile
+  // 2. Start a container from that image
+  // 3. Install VS Code extensions inside the container
+  // 4. Connect your VS Code window to the running container
+  // 5. All terminal commands, file edits, and debugging happen inside container
+  //
+  // ===========================================================================
+  // ---------------------------------------------------------------------------
+  // Container Identity
+  // ---------------------------------------------------------------------------
+  // "name": Display name shown in VS Code UI
+  // This helps identify which dev container you're working in
   "name": "dbtools - Ubuntu Miniconda (Py3.13)",
+  // ---------------------------------------------------------------------------
+  // Build Configuration
+  // ---------------------------------------------------------------------------
+  // Tells VS Code how to build the Docker image for this dev container
+  //
+  // "dockerfile": Path to Dockerfile (relative to this .devcontainer directory)
+  // "context": Build context directory (parent of .devcontainer)
+  //   - This allows Dockerfile to access files in the project root
+  // "args": Build-time variables passed to the Dockerfile
+  //   - PYTHON_VERSION: Python version to install (3.13)
+  //   - CONDA_ENV_NAME: Name of the conda environment (gds)
   "build": {
     "dockerfile": "Dockerfile",
     "context": "..",
@@ -8,52 +51,85 @@
       "CONDA_ENV_NAME": "gds"
     }
   },
+  // ---------------------------------------------------------------------------
+  // User Configuration
+  // ---------------------------------------------------------------------------
+  // "remoteUser": User account to use inside the container
+  // - All VS Code operations run as this user
+  // - Matches the user created in Dockerfile (UID 1000, GID 1000)
+  // - Files created will be owned by this user
   "remoteUser": "gds",
+  // ---------------------------------------------------------------------------
+  // Features (Pre-built Capabilities)
+  // ---------------------------------------------------------------------------
+  // Features are reusable components that add functionality to dev containers
+  // They're maintained by Microsoft and the community
+  //
+  // Available features: https://containers.dev/features
   "features": {
+    // common-utils: Basic development utilities (curl, git, etc.)
     "ghcr.io/devcontainers/features/common-utils:2": {
-      "installZsh": false,
-      "username": "gds",
-      "userUid": "1000",
-      "userGid": "1000"
+      "installZsh": false, // Don't install Zsh (we use Bash)
+      "username": "gds", // User to configure
+      "userUid": "1000", // User ID (matches host user)
+      "userGid": "1000" // Group ID (matches host user)
     },
+    // git: Git version control (already in base image, ensures it's configured)
     "ghcr.io/devcontainers/features/git:1": {},
+    // docker-in-docker: Run Docker inside the dev container
+    // This is CRITICAL for our setup - allows us to run database containers
+    // inside this dev container
+    //
+    // HOW IT WORKS:
+    // - Installs Docker CLI in the dev container
+    // - Mounts host's Docker socket OR starts a Docker daemon in the container
+    // - Containers started inside appear as siblings to this dev container
+    // - Allows us to run mssql1, mongodb1, etc. from within this environment
     "ghcr.io/devcontainers/features/docker-in-docker:2": {
       "version": "latest"
     }
   },
+  // ---------------------------------------------------------------------------
+  // VS Code Customizations
+  // ---------------------------------------------------------------------------
+  // Configure VS Code extensions and settings for this dev container
   "customizations": {
     "vscode": {
+      // Extensions to install automatically when dev container starts
+      // Users don't need to manually install these - they're pre-configured
       "extensions": [
         // Python Development
-        "ms-python.python",
-        "ms-python.vscode-pylance",
-        "ms-python.debugpy",
-        "charliermarsh.ruff",
+        "ms-python.python", // Python language support
+        "ms-python.vscode-pylance", // Fast Python language server
+        "ms-python.debugpy", // Python debugger
+        "charliermarsh.ruff", // Fast Python linter/formatter
         // PowerShell
-        "ms-vscode.powershell",
+        "ms-vscode.powershell", // PowerShell language support
         // Testing
-        "littlefoxteam.vscode-python-test-adapter",
-        "ryanluker.vscode-coverage-gutters",
+        "littlefoxteam.vscode-python-test-adapter", // Test explorer
+        "ryanluker.vscode-coverage-gutters", // Show code coverage
         // Database Tools
-        "mtxr.sqltools",
-        "mtxr.sqltools-driver-pg",
-        "mtxr.sqltools-driver-mssql",
+        "mtxr.sqltools", // Universal database client
+        "mtxr.sqltools-driver-pg", // PostgreSQL driver for SQLTools
+        "mtxr.sqltools-driver-mssql", // SQL Server driver for SQLTools
         // Jupyter
-        "ms-toolsai.jupyter",
-        "ms-toolsai.jupyter-keymap",
+        "ms-toolsai.jupyter", // Jupyter notebook support
+        "ms-toolsai.jupyter-keymap", // Jupyter keyboard shortcuts
         // Docker
-        "ms-azuretools.vscode-docker",
+        "ms-azuretools.vscode-docker", // Docker management in VS Code
         // Git
-        "eamodio.gitlens",
+        "eamodio.gitlens", // Enhanced Git capabilities
         // Code Quality
-        "editorconfig.editorconfig",
-        "davidanson.vscode-markdownlint",
+        "editorconfig.editorconfig", // EditorConfig support
+        "davidanson.vscode-markdownlint", // Markdown linting
         // Utilities
-        "visualstudioexptteam.vscodeintellicode",
-        "streetsidesoftware.code-spell-checker",
-        "redhat.vscode-yaml",
-        "tamasfe.even-better-toml"
+        "visualstudioexptteam.vscodeintellicode", // AI-assisted coding
+        "streetsidesoftware.code-spell-checker", // Spell checker
+        "redhat.vscode-yaml", // YAML language support
+        "tamasfe.even-better-toml" // TOML language support
       ],
+      // Settings applied to VS Code when running in this dev container
+      // These override user settings and ensure consistency
       "settings": {
         // Python Configuration
         "python.defaultInterpreterPath": "/opt/conda/envs/gds/bin/python",
@@ -136,19 +212,39 @@
       }
     }
   },
+  // ---------------------------------------------------------------------------
+  // Workspace Configuration
+  // ---------------------------------------------------------------------------
+  // "workspaceFolder": Where the project is mounted inside the container
+  // Your local project directory gets mapped to this path
   "workspaceFolder": "/workspaces/dbtools",
+  // ---------------------------------------------------------------------------
+  // Port Forwarding (VS Code Feature)
+  // ---------------------------------------------------------------------------
+  // "forwardPorts": Ports that VS Code should automatically forward
+  //
+  // IMPORTANT: This is for VS Code's port forwarding feature (for web apps)
+  // NOT the same as publishing Docker ports to WSL host
+  // See "runArgs" below for actual Docker port publishing
+  //
+  // When a service listens on these ports inside the dev container,
+  // VS Code will:
+  // 1. Detect it
+  // 2. Show a notification
+  // 3. Make the port accessible from your browser
   "forwardPorts": [
-    5432,
-    1433,
-    27017,
-    3000,
-    5000,
-    8000
+    5432, // PostgreSQL (if running)
+    1433, // SQL Server (if running)
+    27017, // MongoDB (if running)
+    3000, // Common web dev port
+    5000, // Common API port
+    8000 // Common dev server port
   ],
+  // "portsAttributes": Configure how forwarded ports behave
   "portsAttributes": {
     "5432": {
       "label": "PostgreSQL",
-      "onAutoForward": "notify"
+      "onAutoForward": "notify" // Show notification when port is forwarded
     },
     "1433": {
       "label": "SQL Server",
@@ -163,18 +259,126 @@
       "onAutoForward": "notify"
     }
   },
+  // ---------------------------------------------------------------------------
+  // Container Runtime Arguments
+  // ---------------------------------------------------------------------------
+  // "runArgs": Arguments passed to 'docker run' when starting the container
+  // These are Docker-level configurations that affect the container itself
+  //
+  // CRITICAL FOR DATABASE CONNECTIVITY:
+  // The -p flags here publish ports from the dev container to the WSL host
+  // This enables connecting to databases from outside VS Code
   "runArgs": [
+    // Environment variable to prevent Python output buffering
+    // Makes print() statements appear immediately in terminal
     "--env",
     "PYTHONUNBUFFERED=1",
+    // Mount a Docker volume for VS Code server cache
+    // Speeds up dev container rebuilds by preserving VS Code's files
     "--mount",
-    "type=volume,source=vscode-server-cache,target=/home/gds/.vscode-server,consistency=cached"
+    "type=volume,source=vscode-server-cache,target=/home/gds/.vscode-server,consistency=cached",
+    // =========================================================================
+    // PORT PUBLISHING: Dev Container → WSL Host
+    // =========================================================================
+    // These -p flags publish ports from the dev container to the WSL host
+    // Format: -p <host-port>:<container-port>
+    //
+    // HOW IT WORKS:
+    // 1. Database containers (mssql1, mongodb1, etc.) run INSIDE dev container
+    // 2. They expose ports to the dev container's network (e.g., 1433)
+    // 3. These -p flags forward those ports to the WSL host
+    // 4. You can then connect from WSL using: sqlcmd -S localhost,1433
+    //
+    // FLOW DIAGRAM:
+    // WSL Host:1433 → Dev Container:1433 → mssql1 container:1433 → SQL Server
+    //
+    // WITHOUT THESE FLAGS:
+    // - Databases only accessible from inside VS Code / dev container
+    // - Cannot connect from WSL terminal or other tools on host
+    //
+    // WITH THESE FLAGS:
+    // - Databases accessible from VS Code, dev container, AND WSL host
+    // - Can use host tools: sqlcmd, mongosh, psql from WSL terminal
+    // =========================================================================
+    "-p",
+    "1433:1433", // SQL Server (mssql1)
+    "-p",
+    "27017:27017", // MongoDB instance 1 (mongodb1)
+    "-p",
+    "27018:27018", // MongoDB instance 2 (mongodb2)
+    "-p",
+    "27019:27019" // MongoDB instance 3 (mongodb3)
   ],
+  // ---------------------------------------------------------------------------
+  // Lifecycle Commands
+  // ---------------------------------------------------------------------------
+  // These commands run at different stages of the dev container lifecycle
+  // "postCreateCommand": Runs ONCE after the container is first created
+  // Used for one-time setup: install dependencies, configure environment
   "postCreateCommand": "bash .devcontainer/postCreate.sh",
+  // "postStartCommand": Runs EVERY TIME the container starts
+  // Used for recurring setup: ensure directories exist, fix permissions
   "postStartCommand": "bash -lc 'mkdir -p ~/.vscode-server/extensions ~/.vscode-server/extensionsCache && chmod -R 775 ~/.vscode-server && chown -R gds:gds ~/.vscode-server || true'",
+  // ---------------------------------------------------------------------------
+  // Container Environment Variables
+  // ---------------------------------------------------------------------------
+  // "containerEnv": Environment variables set in the container
+  // Available to all processes running inside the dev container
   "containerEnv": {
+    // Prevents pip from checking for newer versions on every command
+    // Speeds up pip operations slightly
     "PIP_DISABLE_PIP_VERSION_CHECK": "1"
   },
+  // ---------------------------------------------------------------------------
+  // Volume Mounts
+  // ---------------------------------------------------------------------------
+  // "mounts": Bind mount directories from host to container
+  // Format: "source=<host-path>,target=<container-path>,type=bind,..."
+  //
+  // THESE ARE CRITICAL FOR PERSISTENCE AND FUNCTIONALITY
   "mounts": [
-    "source=${localEnv:HOME}/.ssh,target=/home/gds/.ssh,type=bind,consistency=cached,readonly"
+    // SSH Keys Mount (Read-only)
+    // Maps your WSL/host SSH keys into the container
+    // Enables: git operations, SSH connections to remote servers
+    // Read-only for security (container can't modify your SSH keys)
+    "source=${localEnv:HOME}/.ssh,target=/home/gds/.ssh,type=bind,consistency=cached,readonly",
+    // /gds Persistent Storage Mount
+    // Maps /gds from WSL host to /gds in dev container
+    // This is WHERE ALL PERSISTENT DATA LIVES:
+    //   - /gds/data/mssql/mssql1 → SQL Server databases
+    //   - /gds/data/mongodb → MongoDB replica set data
+    //   - /gds/log → Database logs
+    //
+    // WHY THIS IS CRITICAL:
+    // 1. Database containers run INSIDE dev container
+    // 2. They write to /gds paths INSIDE dev container
+    // 3. This mount ensures those writes go to WSL host /gds
+    // 4. Data survives dev container rebuilds and deletions
+    // 5. Data is accessible from WSL host directly
+    //
+    // EXAMPLE FLOW:
+    // SQL Server writes to /var/opt/mssql (inside mssql1 container)
+    //   → Mapped to /gds/data/mssql/mssql1 (in dev container)
+    //   → This mount maps to /gds/data/mssql/mssql1 (on WSL host)
+    //   → Result: Database files persist on WSL host filesystem
+    "source=/gds,target=/gds,type=bind,consistency=cached"
   ]
+  // ===========================================================================
+  // REBUILD INSTRUCTIONS:
+  // ===========================================================================
+  // After modifying this file, rebuild the dev container:
+  // 1. Press F1 or Ctrl+Shift+P
+  // 2. Type "Dev Containers: Rebuild Container"
+  // 3. Select it and wait for rebuild
+  //
+  // Changes requiring rebuild:
+  // - build.args modifications
+  // - features additions/changes
+  // - runArgs changes (like port publishing)
+  // - mounts changes
+  //
+  // Changes NOT requiring rebuild (just reload window):
+  // - customizations.vscode.settings changes
+  // - forwardPorts changes
+  // ===========================================================================
 }

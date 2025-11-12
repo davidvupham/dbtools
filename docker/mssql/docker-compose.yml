@@ -1,0 +1,26 @@
+version: "3.8"
+
+services:
+  mssql1:
+    build: .
+    image: gds-mssql:latest
+    container_name: mssql1
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_PID=Developer
+      # Set via environment or replace the default below for local dev only
+      - MSSQL_SA_PASSWORD=${MSSQL_SA_PASSWORD:-YourStrong!Passw0rd}
+    ports:
+      - "1433:1433"
+    volumes:
+      # Bind-mount host paths into the container and map instance data to SQL's data directory
+      - /gds/data/mssql:/gds/data/mssql
+      - /gds/log/mssql:/gds/log/mssql
+      - /gds/data/mssql/mssql1:/var/opt/mssql
+    restart: unless-stopped
+    networks:
+      - mssql-network
+
+networks:
+  mssql-network:
+    driver: bridge

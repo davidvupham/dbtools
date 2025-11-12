@@ -1,0 +1,48 @@
+version: "3.8"
+
+services:
+  mongodb1:
+    image: gds-mongodb:latest
+    container_name: mongodb1
+    environment:
+      - MONGO_INSTANCE=mongodb1
+    ports:
+      - "27017:27017"
+    volumes:
+      - /gds/data/mongodb:/gds/data/mongodb
+      - /gds/log/mongodb:/gds/log/mongodb
+    restart: unless-stopped
+    networks:
+      - mongodb-network
+
+  mongodb2:
+    image: gds-mongodb:latest
+    container_name: mongodb2
+    environment:
+      - MONGO_INSTANCE=mongodb2
+    ports:
+      - "27018:27017"
+    volumes:
+      - /gds/data/mongodb:/gds/data/mongodb
+      - /gds/log/mongodb:/gds/log/mongodb
+    restart: unless-stopped
+    networks:
+      - mongodb-network
+
+  mongodb3:
+    image: gds-mongodb:latest
+    container_name: mongodb3
+    environment:
+      - MONGO_INSTANCE=mongodb3
+    ports:
+      - "27019:27017"
+    volumes:
+      - /gds/data/mongodb:/gds/data/mongodb
+      - /gds/log/mongodb:/gds/log/mongodb
+    restart: unless-stopped
+    networks:
+      - mongodb-network
+
+networks:
+  mongodb-network:
+    driver: bridge

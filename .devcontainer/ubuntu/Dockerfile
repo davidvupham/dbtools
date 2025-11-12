@@ -12,6 +12,7 @@ ARG DEVCONTAINER_GID=1000
 
 # Avoid prompts from apt
 ENV DEBIAN_FRONTEND=noninteractive
+ENV ACCEPT_EULA=Y
 ENV DEVCONTAINER_USER=${DEVCONTAINER_USER} \
     DEVCONTAINER_GROUP=${DEVCONTAINER_GROUP} \
     DEVCONTAINER_UID=${DEVCONTAINER_UID} \
@@ -25,7 +26,7 @@ RUN apt-get update && \
     dpkg -i packages-microsoft-prod.deb && \
     rm packages-microsoft-prod.deb && \
     apt-get update && \
-    apt-get install -y powershell && \
+    apt-get install -y powershell msodbcsql18 mssql-tools18 && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Create the conda environment and install base packages
@@ -127,7 +128,7 @@ RUN conda run -n ${CONDA_ENV_NAME} python -m pip install --upgrade pip && \
     conda run -n ${CONDA_ENV_NAME} pip install ruff pytest pytest-cov wheel build pyodbc aiohttp
 
 # Set path
-ENV PATH=/opt/conda/envs/${CONDA_ENV_NAME}/bin:$PATH
+ENV PATH=/opt/conda/envs/${CONDA_ENV_NAME}/bin:/opt/mssql-tools18/bin:/opt/mssql-tools/bin:$PATH
 
 USER ${DEVCONTAINER_USER}
 WORKDIR /workspaces/dbtools

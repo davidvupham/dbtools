@@ -12,7 +12,8 @@ ENV CONDA_DIR=/opt/conda
 ENV PATH=${CONDA_DIR}/bin:${PATH}
 ENV LANG=en_US.UTF-8
 ENV LC_ALL=en_US.UTF-8
-ENV DEVCONTAINER_USER=${DEVCONTAINER_USER} \
+ENV ACCEPT_EULA=Y \
+    DEVCONTAINER_USER=${DEVCONTAINER_USER} \
     DEVCONTAINER_GROUP=${DEVCONTAINER_GROUP} \
     DEVCONTAINER_UID=${DEVCONTAINER_UID} \
     DEVCONTAINER_GID=${DEVCONTAINER_GID} \
@@ -50,7 +51,7 @@ RUN curl -sSL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor 
     install -o root -g root -m 644 /tmp/microsoft.gpg /etc/pki/rpm-gpg/microsoft.gpg && \
     rm -f /tmp/microsoft.gpg && \
     curl -sSL -o /etc/yum.repos.d/microsoft.repo https://packages.microsoft.com/config/rhel/9/prod.repo && \
-    dnf -y install powershell && \
+    dnf -y install powershell msodbcsql18 mssql-tools18 && \
     dnf clean all && \
     rm -rf /var/cache/dnf || true
 
@@ -153,7 +154,7 @@ chown -R ${DEVCONTAINER_USER}:${DEVCONTAINER_GROUP} "$profile_dir"
 BASH
 
 RUN mkdir -p /opt/conda/envs/${CONDA_ENV_NAME}
-ENV PATH=/opt/conda/envs/${CONDA_ENV_NAME}/bin:${PATH}
+ENV PATH=/opt/conda/envs/${CONDA_ENV_NAME}/bin:/opt/mssql-tools18/bin:/opt/mssql-tools/bin:${PATH}
 
 USER ${DEVCONTAINER_USER}
 WORKDIR /workspaces/dbtools
