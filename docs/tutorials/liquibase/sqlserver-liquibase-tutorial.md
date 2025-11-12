@@ -2,6 +2,53 @@
 
 This tutorial walks you from zero to running Liquibase changes against Microsoft SQL Server. You'll learn how to structure a project, baseline existing databases, create and modify tables, views, procedures, functions, and triggers, and safely deploy changes locally, via Docker, and in GitHub Actions.
 
+## Table of Contents
+
+- [What is Liquibase (and why use it)?](#what-is-liquibase-and-why-use-it)
+- [Prerequisites](#prerequisites)
+- [Quickstart project layout](#quickstart-project-layout)
+- [Baselining an Existing Database](#baselining-an-existing-database)
+  - [Step 1: Generate the Baseline from Existing Database](#step-1-generate-the-baseline-from-existing-database)
+  - [Step 2: Review and Clean the Baseline](#step-2-review-and-clean-the-baseline)
+  - [Step 3: Create Master Changelog Including Baseline](#step-3-create-master-changelog-including-baseline)
+  - [Step 4: Sync the Baseline to Source Database](#step-4-sync-the-baseline-to-source-database)
+  - [Step 5: Apply Baseline to Target Database](#step-5-apply-baseline-to-target-database)
+  - [Step 6: Verify Baseline Application](#step-6-verify-baseline-application)
+  - [Baseline Best Practices](#baseline-best-practices)
+- [Making Changes After Baseline](#making-changes-after-baseline)
+  - [Change 1: Add a New Table](#change-1-add-a-new-table)
+  - [Change 2: Modify Data Type of a Column](#change-2-modify-data-type-of-a-column)
+  - [Change 3: Modify NULL Constraint of a Column](#change-3-modify-null-constraint-of-a-column)
+  - [Change 4: Modify a Stored Procedure](#change-4-modify-a-stored-procedure)
+  - [Change 5: Modify a View](#change-5-modify-a-view)
+  - [Applying All Changes](#applying-all-changes)
+- [Configure Liquibase](#configure-liquibase)
+- [Create a master changelog](#create-a-master-changelog)
+- [First change: schema and a table](#first-change-schema-and-a-table)
+- [Apply the change](#apply-the-change)
+- [Preview without running (dry run)](#preview-without-running-dry-run)
+- [Evolve the schema (add a column)](#evolve-the-schema-add-a-column)
+- [Add views, procedures, functions, and triggers](#add-views-procedures-functions-and-triggers)
+- [Rollbacks and tags](#rollbacks-and-tags)
+- [Contexts and labels (targeted changes)](#contexts-and-labels-targeted-changes)
+- [Multiple environments (properties files)](#multiple-environments-properties-files)
+- [GitHub Actions (quick example)](#github-actions-quick-example)
+- [Common troubleshooting](#common-troubleshooting)
+  - [Docker Volume Mount Issues](#docker-volume-mount-issues)
+  - [JDBC Driver Issues](#jdbc-driver-issues)
+  - [Connection Issues](#connection-issues)
+  - [Bash History Expansion Issues](#bash-history-expansion-issues)
+  - [Empty Baseline Generation](#empty-baseline-generation)
+  - [General Issues](#general-issues)
+- [Best practices](#best-practices)
+- [ChangeSet cheat sheet: common SQL Server operations](#changeset-cheat-sheet-common-sql-server-operations)
+  - [Quick Reference: Add a Column](#quick-reference-add-a-column)
+  - [Quick Reference: Delete a Column](#quick-reference-delete-a-column)
+  - [Quick Reference: Drop a Table](#quick-reference-drop-a-table)
+- [How Liquibase integrates with GitHub for CI/CD](#how-liquibase-integrates-with-github-for-cicd)
+- [Next steps](#next-steps)
+- [References](#references)
+
 ## What is Liquibase (and why use it)?
 
 Liquibase is a database change management tool. You store database changes (DDL/DML) as versioned "changeSets" in source control. Liquibase keeps a ledger (the DATABASECHANGELOG table) of what ran, so each environment progresses deterministically and safely.
@@ -51,6 +98,15 @@ liquibase/
 
 If you're adopting Liquibase for a database that already has schema, tables, views, and stored procedures, you need to create a **baseline**. This captures the current state so Liquibase can track future changes.
 
+**Prerequisites:**
+
+Before generating a baseline, ensure your target database exists:
+
+```bash
+# Create the database if it doesn't exist
+docker exec mssql1 /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U SA -P 'YourStrong!Passw0rd' -Q "CREATE DATABASE testdb;"
+```
+
 ### Step 1: Generate the Baseline from Existing Database
 
 Use Liquibase's `generateChangeLog` command to capture the current database state:
@@ -59,40 +115,43 @@ Use Liquibase's `generateChangeLog` command to capture the current database stat
 
 ```bash
 # Create project directory structure
-mkdir -p /home/gds/liquibase/database/changelog/baseline
-cd /home/gds/liquibase
+mkdir -p /data/liquibase/database/changelog/baseline
+cd /data/liquibase
 ```
 
 **CLI (local Java):**
 
 ```bash
 liquibase generateChangeLog \
-  --changelog-file=database/changelog/baseline/V0000__baseline.xml
+  --changelog-file=database/changelog/baseline/V0000__baseline.xml \
+  --schemas=app
 ```
 
 **Docker (recommended):**
 
 ```bash
-# From /home/gds/liquibase directory
+# From /data/liquibase directory
 docker run --rm \
   --network=host \
-  -v /home/gds/liquibase:/workspace \
+  -v /data/liquibase:/workspace \
   liquibase-custom:5.0.1 \
   --url="jdbc:sqlserver://localhost:1433;databaseName=testdb;encrypt=true;trustServerCertificate=true" \
   --username="sa" \
   --password='YourStrong!Passw0rd' \
   --changelog-file=/workspace/database/changelog/baseline/V0000__baseline.xml \
+  --schemas=app \
   generateChangeLog
 ```
 
 **Important Notes:**
 
-- Mount your project directory (`/home/gds/liquibase`) to `/workspace` to avoid overwriting the container's Liquibase installation
+- Mount your project directory (`/data/liquibase`) to `/workspace` to avoid overwriting the container's Liquibase installation
 - Use the custom Liquibase image (`liquibase-custom:5.0.1`) built from `/workspaces/dbtools/docker/liquibase` which includes SQL Server JDBC drivers
 - Use `--network=host` to connect to SQL Server running in the dev container
+- **Use `--schemas=app`** to specify which schema(s) to capture (without this, you may get "no changesets to write")
 - The official `liquibase/liquibase` image does NOT include SQL Server drivers by default
 
-This creates an XML file containing all existing database objects (tables, views, stored procedures, functions, triggers, indexes, constraints, etc.).
+This creates an XML file containing existing database objects (tables, views, indexes, constraints). **Note:** Liquibase's `generateChangeLog` has limitations and may not capture all object types (stored procedures, functions, and triggers often require manual addition).
 
 **Troubleshooting: "No changesets to write" message**
 
@@ -170,11 +229,11 @@ SELECT 'Objects created successfully' AS Result;
 # Verify objects were created
 docker exec mssql1 /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U SA -P 'YourStrong!Passw0rd' -Q "USE testdb; SELECT SCHEMA_NAME(schema_id) AS SchemaName, name AS ObjectName, type_desc FROM sys.objects WHERE schema_id = SCHEMA_ID('app') ORDER BY type_desc, name"
 
-# Now run generateChangeLog again (from /home/gds/liquibase directory)
-cd /home/gds/liquibase
+# Now run generateChangeLog again (from /data/liquibase directory)
+cd /data/liquibase
 docker run --rm \
   --network=host \
-  -v /home/gds/liquibase:/workspace \
+  -v /data/liquibase:/workspace \
   liquibase-custom:5.0.1 \
   --url="jdbc:sqlserver://localhost:1433;databaseName=testdb;encrypt=true;trustServerCertificate=true" \
   --username="sa" \
@@ -185,13 +244,88 @@ docker run --rm \
 
 ### Step 2: Review and Clean the Baseline
 
-The generated baseline may include system objects or unnecessary details. Review `V0000__baseline.xml` and remove:
+The generated baseline may include system objects or unnecessary details, and may be missing some object types. Review `V0000__baseline.xml` and make these adjustments:
+
+**Remove unwanted objects:**
 
 - System tables or objects you don't want tracked
 - Unnecessary metadata (Liquibase adds its own tracking tables)
 - Objects not owned by your application
 
-**Example cleaned baseline structure:**
+**Add missing objects:**
+
+- **Stored procedures and functions** - `generateChangeLog` often doesn't capture these
+- **Schema creation** - Add a changeset to create the schema if not present
+- **schemaName attributes** - Ensure all objects have `schemaName="app"` specified
+
+**Common issues to fix:**
+
+- Missing `schemaName` attribute on tables and views
+- Stored procedures and functions not included (must be added manually)
+- Schema creation not included (add as first changeset)
+
+**What the generated baseline typically looks like:**
+
+```xml
+<!-- Generated by Liquibase - often incomplete -->
+<changeSet author="root (generated)" id="1762927023071-1">
+    <createTable tableName="customer">  <!-- Missing schemaName="app" -->
+        <column autoIncrement="true" name="customer_id" type="int">
+            <constraints nullable="false" primaryKey="true"/>
+        </column>
+        <!-- ... more columns ... -->
+    </createTable>
+</changeSet>
+<changeSet author="root (generated)" id="1762927023071-2">
+    <createView viewName="v_customer_basic">  <!-- Missing schemaName="app" -->
+        SELECT customer_id, full_name, email, created_at FROM app.customer;
+    </createView>
+</changeSet>
+<!-- NOTE: Stored procedures and functions are NOT generated! -->
+```
+
+**What you need to manually fix/add:**
+
+1. Add schema creation as the first changeset
+2. Add `schemaName="app"` to all table and view definitions
+3. Manually add stored procedures and functions using `<sql>` blocks
+4. Use descriptive changeset IDs instead of generated timestamps
+
+**Option 1: Automated Fix (Recommended)**
+
+Use the provided Python script to automatically fix common issues:
+
+```bash
+# Install dependencies if needed
+pip install pyodbc
+
+# Fix baseline with database objects (extracts stored procs and functions)
+python3 scripts/fix-liquibase-baseline.py \
+  --baseline-file /data/liquibase/database/changelog/baseline/V0000__baseline.xml \
+  --schema app \
+  --add-db-objects \
+  --database testdb \
+  --password 'YourStrong!Passw0rd' \
+  --backup
+
+# Or fix baseline without database connection (just adds schema and schemaName attributes)
+python3 scripts/fix-liquibase-baseline.py \
+  --baseline-file /data/liquibase/database/changelog/baseline/V0000__baseline.xml \
+  --schema app \
+  --backup
+```
+
+The script automatically:
+
+- ✅ Adds `schemaName="app"` to all tables and views
+- ✅ Creates schema creation changeset
+- ✅ Extracts and adds stored procedures from database (with `--add-db-objects`)
+- ✅ Extracts and adds functions from database (with `--add-db-objects`)
+- ✅ Creates backup of original file (with `--backup`)
+
+**Option 2: Manual Fix**
+
+**Example cleaned and enhanced baseline structure:**
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -295,9 +429,26 @@ Update `database/changelog/changelog.xml` to include the baseline:
 
 For the **source database** (where you generated the baseline), you need to mark the baseline as already applied without actually running it:
 
+**CLI (local Java):**
+
 ```bash
-# Mark baseline changesets as executed (don't actually run them)
 liquibase changelogSync
+```
+
+**Docker (recommended):**
+
+```bash
+cd /data/liquibase
+docker run --rm \
+  --network=host \
+  -v /data/liquibase:/workspace \
+  liquibase-custom:5.0.1 \
+  --url="jdbc:sqlserver://localhost:1433;databaseName=testdb;encrypt=true;trustServerCertificate=true" \
+  --username="sa" \
+  --password='YourStrong!Passw0rd' \
+  --changelog-file=database/changelog/changelog.xml \
+  --search-path=/workspace \
+  changelogSync
 ```
 
 This updates the DATABASECHANGELOG table to record that all baseline changesets have been applied, without actually executing them (since the objects already exist).
@@ -306,9 +457,27 @@ This updates the DATABASECHANGELOG table to record that all baseline changesets 
 
 For **target databases** (test, staging, production) that don't have the schema yet:
 
+**CLI (local Java):**
+
 ```bash
 # Apply baseline to create all objects
 liquibase update
+```
+
+**Docker (recommended):**
+
+```bash
+cd /data/liquibase
+docker run --rm \
+  --network=host \
+  -v /data/liquibase:/workspace \
+  liquibase-custom:5.0.1 \
+  --url="jdbc:sqlserver://localhost:1433;databaseName=targetdb;encrypt=true;trustServerCertificate=true" \
+  --username="sa" \
+  --password='YourStrong!Passw0rd' \
+  --changelog-file=database/changelog/changelog.xml \
+  --search-path=/workspace \
+  update
 ```
 
 This will execute all baseline changesets to create the schema, tables, views, stored procedures, and functions.
@@ -955,10 +1124,10 @@ This occurs when mounting to `/liquibase` which overwrites the container's Liqui
 
 ```bash
 # Wrong - overwrites /liquibase in container
-docker run --rm -v /home/gds/liquibase:/liquibase liquibase/liquibase:latest ...
+docker run --rm -v /data/liquibase:/liquibase liquibase/liquibase:latest ...
 
 # Correct - mount to /workspace
-docker run --rm -v /home/gds/liquibase:/workspace liquibase-custom:5.0.1 \
+docker run --rm -v /data/liquibase:/workspace liquibase-custom:5.0.1 \
   --changelog-file=/workspace/database/changelog/changelog.xml ...
 ```
 
@@ -975,11 +1144,11 @@ The official `liquibase/liquibase` image doesn't include SQL Server JDBC drivers
 cd /workspaces/dbtools/docker/liquibase
 docker build -t liquibase-custom:5.0.1 .
 
-# Use the custom image (from /home/gds/liquibase directory)
-cd /home/gds/liquibase
+# Use the custom image (from /data/liquibase directory)
+cd /data/liquibase
 docker run --rm \
   --network=host \
-  -v /home/gds/liquibase:/workspace \
+  -v /data/liquibase:/workspace \
   liquibase-custom:5.0.1 \
   --url="jdbc:sqlserver://localhost:1433;databaseName=testdb;encrypt=true;trustServerCertificate=true" \
   --username="sa" \
@@ -1000,7 +1169,7 @@ When running Liquibase in Docker, `localhost` refers to the container, not your 
 
    ```bash
    docker run --rm --network=host \
-     -v /home/gds/liquibase:/workspace \
+     -v /data/liquibase:/workspace \
      liquibase-custom:5.0.1 \
      --url="jdbc:sqlserver://localhost:1433;databaseName=testdb..." ...
    ```
@@ -1009,7 +1178,7 @@ When running Liquibase in Docker, `localhost` refers to the container, not your 
 
    ```bash
    docker run --rm --network container:mssql1 \
-     -v /home/gds/liquibase:/workspace \
+     -v /data/liquibase:/workspace \
      liquibase-custom:5.0.1 ...
    ```
 
@@ -1017,7 +1186,7 @@ When running Liquibase in Docker, `localhost` refers to the container, not your 
 
    ```bash
    docker run --rm \
-     -v /home/gds/liquibase:/workspace \
+     -v /data/liquibase:/workspace \
      liquibase-custom:5.0.1 \
      --url="jdbc:sqlserver://host.docker.internal:1433;databaseName=testdb..." ...
    ```
