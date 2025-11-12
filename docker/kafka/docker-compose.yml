@@ -1,0 +1,314 @@
+version: "3.8"
+
+# ==============================================================================
+# Kafka Docker Compose Configuration
+# ==============================================================================
+#
+# This docker-compose file sets up a complete Kafka environment including:
+# 1. Zookeeper - Manages Kafka cluster coordination (will be replaced by KRaft)
+# 2. Kafka Broker - Message broker for event streaming
+#
+# LEARNING OBJECTIVES:
+# - Understanding multi-container orchestration
+# - Service dependencies and startup ordering
+# - Volume management for persistent data
+# - Network configuration for inter-service communication
+# - Environment-based configuration
+#
+# ==============================================================================
+
+services:
+  # ----------------------------------------------------------------------------
+  # Zookeeper Service
+  # ----------------------------------------------------------------------------
+  # PURPOSE:
+  #   - Manages Kafka cluster metadata and coordination
+  #   - Handles controller election and partition leadership
+  #   - Stores broker registry and topic configurations
+  #
+  # NOTE: Apache Kafka is moving to KRaft mode (Kafka Raft), which eliminates
+  #       the need for Zookeeper. However, many production systems still use
+  #       Zookeeper, so we include it here for compatibility.
+  #
+  zookeeper:
+    # Image: Official Confluent Zookeeper image
+    # - Version 7.6.0 matches our Kafka version
+    # - Provides stable, production-ready Zookeeper
+    image: confluentinc/cp-zookeeper:7.6.0
+
+    # Container name for easy reference
+    # - Use 'docker logs zookeeper' to view logs
+    # - Use 'docker exec -it zookeeper bash' to access shell
+    container_name: zookeeper
+
+    # Environment variables configure Zookeeper behavior
+    environment:
+      # ZOOKEEPER_CLIENT_PORT:
+      #   - Port that Kafka brokers connect to
+      #   - Default Zookeeper port is 2181
+      #   - Must match KAFKA_ZOOKEEPER_CONNECT in Kafka service
+      ZOOKEEPER_CLIENT_PORT: 2181
+
+      # ZOOKEEPER_TICK_TIME:
+      #   - Basic time unit in milliseconds for Zookeeper
+      #   - Used for heartbeats and session timeouts
+      #   - 2000ms = 2 seconds (standard value)
+      #   - Session timeout = tickTime × minSessionTimeout
+      ZOOKEEPER_TICK_TIME: 2000
+
+      # ZOOKEEPER_SERVER_ID:
+      #   - Unique identifier for this Zookeeper instance
+      #   - Required for Zookeeper ensemble (multi-node setup)
+      #   - Single node = just needs a unique ID
+      ZOOKEEPER_SERVER_ID: 1
+
+    # Port mapping: host:container
+    # - Exposes Zookeeper to host machine
+    # - Useful for monitoring and debugging
+    # - Format: "<host-port>:<container-port>"
+    ports:
+      - "2181:2181"
+
+    # Persistent volumes for Zookeeper data
+    # - Preserves data across container restarts
+    volumes:
+      # Zookeeper data directory
+      #   - Stores snapshots and transaction logs
+      #   - Contains cluster state and metadata
+      - /data/zookeeper/data:/var/lib/zookeeper/data
+
+      # Zookeeper transaction logs
+      #   - Separate volume for better I/O performance
+      #   - Contains write-ahead logs
+      - /data/zookeeper/logs:/var/lib/zookeeper/log
+
+    # Restart policy
+    # - 'unless-stopped': Always restart unless explicitly stopped
+    # - Ensures Zookeeper is available after system reboots
+    # - Other options: 'no', 'always', 'on-failure'
+    restart: unless-stopped
+
+    # Network configuration
+    # - Connects to kafka-network for inter-service communication
+    # - Kafka can reach Zookeeper using service name 'zookeeper'
+    networks:
+      - kafka-network
+
+    # Health check to monitor Zookeeper status
+    # - Docker can restart service if unhealthy
+    # - Useful for automated recovery
+    healthcheck:
+      # Command to check Zookeeper health
+      #   - 'ruok' = Zookeeper's health check command
+      #   - Returns 'imok' if healthy
+      test: ["CMD", "bash", "-c", "echo ruok | nc localhost 2181 | grep imok"]
+
+      # Time to wait before first health check
+      interval: 10s
+
+      # Time to wait for health check response
+      timeout: 5s
+
+      # Number of consecutive failures before marking unhealthy
+      retries: 5
+
+  # ----------------------------------------------------------------------------
+  # Kafka Broker Service
+  # ----------------------------------------------------------------------------
+  # PURPOSE:
+  #   - Handles message production and consumption
+  #   - Manages topic partitions and replication
+  #   - Provides distributed event streaming platform
+  #
+  kafka:
+    # Build configuration
+    # - Builds image from local Dockerfile
+    # - Context: current directory (contains Dockerfile)
+    # - Allows customization of Kafka image
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    # Image name after building
+    # - Tagged as gds-kafka:latest
+    # - Can be pushed to registry for sharing
+    image: gds-kafka:latest
+
+    # Container name for easy reference
+    container_name: kafka1
+
+    # Service dependencies
+    # - Kafka requires Zookeeper to be running first
+    # - Docker Compose starts Zookeeper before Kafka
+    # - NOTE: depends_on doesn't wait for Zookeeper to be "ready"
+    #   just that the container is started
+    depends_on:
+      - zookeeper
+
+    # Environment variables configure Kafka behavior
+    # - Override Dockerfile ENV values if needed
+    # - Can use ${VAR:-default} syntax for flexibility
+    environment:
+      # Broker identification
+      KAFKA_BROKER_ID: 1
+
+      # Zookeeper connection string
+      #   - 'zookeeper' = service name in Docker network
+      #   - Docker's DNS resolves service names automatically
+      #   - 2181 = Zookeeper client port
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+
+      # Listener configuration
+      #   - INTERNAL: For communication within Docker network
+      #   - EXTERNAL: For clients outside Docker (localhost)
+      #   - Multiple listeners allow flexible connectivity
+      KAFKA_LISTENERS: INTERNAL://0.0.0.0:29092,EXTERNAL://0.0.0.0:9092
+
+      # Advertised listeners
+      #   - Tells clients where to connect
+      #   - INTERNAL: Other Docker services use kafka:29092
+      #   - EXTERNAL: Host machine uses localhost:9092
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:29092,EXTERNAL://localhost:9092
+
+      # Security protocol mapping
+      #   - Maps listener names to security protocols
+      #   - PLAINTEXT = no encryption (development only)
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+
+      # Inter-broker communication
+      #   - Brokers communicate using INTERNAL listener
+      #   - More secure than exposing external port
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+
+      # Topic and partition configuration
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_DELETE_TOPIC_ENABLE: "true"
+      KAFKA_NUM_PARTITIONS: 3
+
+      # Replication configuration (single broker = 1)
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 1
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+
+      # Log configuration
+      KAFKA_LOG_DIRS: /data/kafka/logs
+      KAFKA_LOG_RETENTION_HOURS: 168
+      KAFKA_LOG_SEGMENT_BYTES: 1073741824
+
+      # Performance tuning
+      #   - Allows Kafka to start faster in development
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+
+    # Port mapping
+    # - 9092: External client access (producers, consumers)
+    # - 29092: Internal Docker network access (not exposed to host)
+    ports:
+      - "9092:9092"
+
+    # Persistent volumes for Kafka data
+    # - Critical for preserving messages and state
+    volumes:
+      # Kafka log segments (message data)
+      #   - Contains all topic partitions
+      #   - Preserves messages across restarts
+      - /data/kafka/logs:/data/kafka/logs
+
+      # Kafka operational logs
+      #   - Server logs, error logs, controller logs
+      #   - Useful for debugging and monitoring
+      - /logs/kafka:/logs/kafka
+
+    # Restart policy
+    restart: unless-stopped
+
+    # Network configuration
+    networks:
+      - kafka-network
+
+    # Health check to monitor Kafka status
+    healthcheck:
+      # Check if Kafka is responding
+      #   - kafka-broker-api-versions: Lists API versions
+      #   - If this succeeds, broker is accepting connections
+      test:
+        [
+          "CMD",
+          "kafka-broker-api-versions",
+          "--bootstrap-server",
+          "localhost:9092",
+        ]
+
+      # Wait for Kafka to fully start
+      #   - Kafka takes longer to start than Zookeeper
+      start_period: 30s
+
+      interval: 10s
+      timeout: 10s
+      retries: 5
+
+# ==============================================================================
+# Network Configuration
+# ==============================================================================
+# PURPOSE:
+#   - Creates isolated network for Kafka services
+#   - Enables service discovery by name (zookeeper, kafka)
+#   - Provides network isolation from other containers
+#
+networks:
+  kafka-network:
+    # Bridge driver: Default Docker network mode
+    #   - Services can communicate using service names
+    #   - DNS resolution built-in
+    #   - Isolated from host network by default
+    driver: bridge
+# ==============================================================================
+# USAGE INSTRUCTIONS
+# ==============================================================================
+#
+# BUILD AND START SERVICES:
+#   docker-compose up -d
+#
+#   - Builds Kafka image if not already built
+#   - Starts Zookeeper first, then Kafka
+#   - Runs in detached mode (background)
+#
+# VIEW LOGS:
+#   docker-compose logs -f
+#   docker-compose logs -f kafka      # Kafka only
+#   docker-compose logs -f zookeeper  # Zookeeper only
+#
+# STOP SERVICES:
+#   docker-compose stop
+#
+#   - Stops containers but preserves data
+#   - Containers can be restarted with 'docker-compose start'
+#
+# START STOPPED SERVICES:
+#   docker-compose start
+#
+# STOP AND REMOVE CONTAINERS:
+#   docker-compose down
+#
+#   - Stops and removes containers
+#   - Preserves volumes (data persists)
+#   - Network is also removed
+#
+# STOP AND REMOVE EVERYTHING (INCLUDING VOLUMES):
+#   docker-compose down -v
+#
+#   - ⚠️  WARNING: Deletes all Kafka and Zookeeper data!
+#   - Use only when you want a fresh start
+#
+# REBUILD AFTER DOCKERFILE CHANGES:
+#   docker-compose build
+#   docker-compose up -d
+#
+# VIEW SERVICE STATUS:
+#   docker-compose ps
+#
+# EXECUTE COMMANDS IN RUNNING CONTAINERS:
+#   docker-compose exec kafka bash
+#   docker-compose exec zookeeper bash
+#
+# ==============================================================================
