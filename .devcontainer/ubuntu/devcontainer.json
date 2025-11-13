@@ -110,6 +110,9 @@
         "ms-python.vscode-pylance", // Fast Python language server
         "ms-python.debugpy", // Python debugger
         "charliermarsh.ruff", // Fast Python linter/formatter
+        // GitHub Copilot
+        "GitHub.copilot", // Copilot core extension (remote)
+        "GitHub.copilot-chat", // Copilot Chat UI (remote)
         // PowerShell
         "ms-vscode.powershell", // PowerShell language support
         // Testing
