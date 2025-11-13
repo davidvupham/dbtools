@@ -18,8 +18,8 @@ cd /workspaces/dbtools || {
 echo "[postCreate] Python: $(python -V)"
 echo "[postCreate] Pip: $(python -m pip -V)"
 
-echo "[postCreate] Upgrading pip and wheel..."
-python -m pip install --upgrade pip wheel >/dev/null
+#echo "[postCreate] Upgrading pip and wheel..."
+#python -m pip install --upgrade pip wheel >/dev/null
 
 install_editable() {
   local pkg_dir="$1"
