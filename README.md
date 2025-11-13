@@ -65,6 +65,31 @@ See `PowerShell/README.md` for module usage, build instructions, and CI pipeline
    - `docs/vscode/DEVCONTAINER.md`
    - `docs/vscode/VSCODE_SETUP.md`
 
+## Copilot in Dev Containers
+
+- Remote extensions: The dev containers install `GitHub.copilot` and `GitHub.copilot-chat` automatically. After pulling updates, run “Dev Containers: Rebuild Container” to ensure they are installed in the remote host.
+- Sign in: In the Dev Container window (green corner status), open Accounts → GitHub → Sign in. Approve the sign-in request for the remote window when prompted.
+- Quick checks if sign-in fails:
+   - Connectivity and proxy variables from inside the container:
+
+```bash
+curl -I https://api.github.com
+nslookup github.com || getent hosts github.com
+env | grep -iE 'http_proxy|https_proxy|no_proxy'
+```
+
+- Corporate proxy/CA configuration (if applicable):
+   - VS Code setting: set `http.proxy` in the Dev Container window and reload.
+   - System trust: add your corporate root CA and refresh trust store, then expose to Node-based extensions:
+
+```bash
+sudo cp /path/to/corp-root-ca.crt /usr/local/share/ca-certificates/corp.crt
+sudo update-ca-certificates
+echo 'export NODE_EXTRA_CA_CERTS=/usr/local/share/ca-certificates/corp.crt' | sudo tee -a /etc/profile.d/node-extra-ca.sh >/dev/null
+```
+
+   - Environment variables (set in container if required): `HTTPS_PROXY`, `HTTP_PROXY`, `NO_PROXY`.
+
 ## Automation & CI
 - Ruff, Black, and pytest are configured via `pyproject.toml`, `.pre-commit-config.yaml`, and `lint.sh`
 - GitHub Actions workflow `.github/workflows/powershell-modules-jfrog.yml` validates, builds, and publishes PowerShell modules to JFrog Artifactory

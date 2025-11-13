@@ -230,4 +230,7 @@ cert/*.der
 !cert/README.md
 !cert/.gitkeep
 
+# ignore liquibase project files
+liquibase/
+
 # (removed) PDF conversion resources and exceptions no longer used

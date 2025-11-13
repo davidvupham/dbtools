@@ -78,6 +78,29 @@ Both variants leverage the shared `.devcontainer/postCreate.sh` script, so any t
 
 ## Troubleshooting & Notes
 
+### Copilot in Dev Containers
+- Remote extensions: The dev containers install `GitHub.copilot` and `GitHub.copilot-chat`. If they don’t appear after a pull, run “Dev Containers: Rebuild Container”.
+- Sign in: In the Dev Container window (green corner status), use Accounts → GitHub → Sign in and approve the remote sign-in prompt.
+- Quick checks if sign-in fails:
+
+```bash
+curl -I https://api.github.com
+nslookup github.com || getent hosts github.com
+env | grep -iE 'http_proxy|https_proxy|no_proxy'
+```
+
+- Corporate proxy/CA:
+  - Set VS Code `http.proxy` in the Dev Container window and reload.
+  - Trust your corporate root CA and expose to Node-based extensions:
+
+```bash
+sudo cp /path/to/corp-root-ca.crt /usr/local/share/ca-certificates/corp.crt
+sudo update-ca-certificates
+echo 'export NODE_EXTRA_CA_CERTS=/usr/local/share/ca-certificates/corp.crt' | sudo tee -a /etc/profile.d/node-extra-ca.sh >/dev/null
+```
+
+  - Optionally set `HTTPS_PROXY`, `HTTP_PROXY`, `NO_PROXY` in the container environment.
+
 ### Red Hat build failure: Anaconda Terms of Service (TOS)
 If you previously saw a build error like `CondaToSNonInteractiveError: Terms of Service have not been accepted...`, it was due to the Red Hat image using the default Anaconda channels in a non-interactive build. The Red Hat `Dockerfile` has been updated to:
 

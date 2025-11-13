@@ -1,181 +1,254 @@
-### Beginner's Tutorial: Manage SQL Server database objects with Liquibase
+# Beginner's Tutorial: Database Change Management with Liquibase and SQL Server
 
-This tutorial walks you from zero to running Liquibase changes against Microsoft SQL Server. You'll learn how to structure a project, baseline existing databases, create and modify tables, views, procedures, functions, and triggers, and safely deploy changes locally, via Docker, and in GitHub Actions.
+## Introduction
+
+This tutorial teaches you **database change management** from the ground up using Liquibase and Microsoft SQL Server. You'll learn what CI/CD means for databases, why it matters, and how to safely deploy schema changes across multiple environments.
+
+**What you'll learn:**
+
+- Core concepts: CI/CD, change management, environment promotion
+- How to track and version database changes with Liquibase
+- Safe deployment patterns: dev → stage → prod
+- Baselining existing databases and managing incremental changes
+- Real-world workflows with tables, views, stored procedures, and functions
+
+**What you'll build:**
+
+A complete Liquibase project that manages a customer database across three environments (dev, stage, prod) running on the same SQL Server instance.
 
 ## Table of Contents
 
-- [What is Liquibase (and why use it)?](#what-is-liquibase-and-why-use-it)
+- [Understanding CI/CD for Databases](#understanding-cicd-for-databases)
 - [Prerequisites](#prerequisites)
-- [Quickstart project layout](#quickstart-project-layout)
-- [Baselining an Existing Database](#baselining-an-existing-database)
-  - [Step 1: Generate the Baseline from Existing Database](#step-1-generate-the-baseline-from-existing-database)
-  - [Step 2: Review and Clean the Baseline](#step-2-review-and-clean-the-baseline)
-  - [Step 3: Create Master Changelog Including Baseline](#step-3-create-master-changelog-including-baseline)
-  - [Step 4: Sync the Baseline to Source Database](#step-4-sync-the-baseline-to-source-database)
-  - [Step 5: Apply Baseline to Target Database](#step-5-apply-baseline-to-target-database)
-  - [Step 6: Verify Baseline Application](#step-6-verify-baseline-application)
-  - [Baseline Best Practices](#baseline-best-practices)
-- [Making Changes After Baseline](#making-changes-after-baseline)
-  - [Change 1: Add a New Table](#change-1-add-a-new-table)
-  - [Change 2: Modify Data Type of a Column](#change-2-modify-data-type-of-a-column)
-  - [Change 3: Modify NULL Constraint of a Column](#change-3-modify-null-constraint-of-a-column)
-  - [Change 4: Modify a Stored Procedure](#change-4-modify-a-stored-procedure)
-  - [Change 5: Modify a View](#change-5-modify-a-view)
-  - [Applying All Changes](#applying-all-changes)
-- [Configure Liquibase](#configure-liquibase)
-- [Create a master changelog](#create-a-master-changelog)
-- [First change: schema and a table](#first-change-schema-and-a-table)
-- [Apply the change](#apply-the-change)
-- [Preview without running (dry run)](#preview-without-running-dry-run)
-- [Evolve the schema (add a column)](#evolve-the-schema-add-a-column)
-- [Add views, procedures, functions, and triggers](#add-views-procedures-functions-and-triggers)
-- [Rollbacks and tags](#rollbacks-and-tags)
-- [Contexts and labels (targeted changes)](#contexts-and-labels-targeted-changes)
-- [Multiple environments (properties files)](#multiple-environments-properties-files)
-- [GitHub Actions (quick example)](#github-actions-quick-example)
-- [Common troubleshooting](#common-troubleshooting)
-  - [Docker Volume Mount Issues](#docker-volume-mount-issues)
-  - [JDBC Driver Issues](#jdbc-driver-issues)
-  - [Connection Issues](#connection-issues)
-  - [Bash History Expansion Issues](#bash-history-expansion-issues)
-  - [Empty Baseline Generation](#empty-baseline-generation)
-  - [General Issues](#general-issues)
-- [Best practices](#best-practices)
-- [ChangeSet cheat sheet: common SQL Server operations](#changeset-cheat-sheet-common-sql-server-operations)
-  - [Quick Reference: Add a Column](#quick-reference-add-a-column)
-  - [Quick Reference: Delete a Column](#quick-reference-delete-a-column)
-  - [Quick Reference: Drop a Table](#quick-reference-drop-a-table)
-- [How Liquibase integrates with GitHub for CI/CD](#how-liquibase-integrates-with-github-for-cicd)
-- [Next steps](#next-steps)
-- [References](#references)
+- [Environment Setup](#environment-setup)
+- [Project Structure](#project-structure)
+- [Step 1: Create Three Database Environments](#step-1-create-three-database-environments)
+- [Step 2: Populate Development with Existing Objects](#step-2-populate-development-with-existing-objects)
+- [Step 3: Configure Liquibase for Each Environment](#step-3-configure-liquibase-for-each-environment)
+- [Step 4: Generate Baseline from Development](#step-4-generate-baseline-from-development)
+- [Step 5: Review and Fix the Baseline](#step-5-review-and-fix-the-baseline)
+- [Step 6: Deploy Baseline Across Environments](#step-6-deploy-baseline-across-environments)
+- [Step 7: Making Your First Change](#step-7-making-your-first-change)
+- [Step 8: Deploy Change Across Environments](#step-8-deploy-change-across-environments)
+- [Step 9: More Database Changes](#step-9-more-database-changes)
+- [Step 10: Rollbacks and Tags](#step-10-rollbacks-and-tags)
+- [Understanding the Deployment Pipeline](#understanding-the-deployment-pipeline)
+- [Common Troubleshooting](#common-troubleshooting)
+- [Best Practices](#best-practices)
+- [Next Steps](#next-steps)
 
-## What is Liquibase (and why use it)?
+## Understanding CI/CD for Databases
 
-Liquibase is a database change management tool. You store database changes (DDL/DML) as versioned "changeSets" in source control. Liquibase keeps a ledger (the DATABASECHANGELOG table) of what ran, so each environment progresses deterministically and safely.
+### What is CI/CD?
 
-Key benefits:
+**CI/CD** stands for **Continuous Integration** and **Continuous Deployment**:
 
-- Version-controlled changes that run once per environment
-- Simple commands to apply, preview, and roll back changes
-- Works with SQL Server, plus many other databases
-- Baseline existing databases and track changes going forward
+- **Continuous Integration (CI)**: Automatically testing and validating changes when developers commit code
+- **Continuous Deployment (CD)**: Automatically deploying validated changes through environments to production
+
+### Why does it matter for databases?
+
+Without CI/CD, database changes are often:
+
+- **Manual**: Someone runs SQL scripts by hand
+- **Error-prone**: Easy to run wrong script, skip steps, or apply to wrong environment
+- **Untraceable**: Hard to know what ran where and when
+- **Risky**: Production failures from untested changes
+
+With CI/CD for databases, you get:
+
+- **Version control**: Every change is tracked in Git
+- **Repeatability**: Same change deploys identically across all environments
+- **Safety**: Test in dev and stage before production
+- **Auditability**: Complete history of what changed and when
+- **Rollback capability**: Undo changes if problems occur
+
+### What is Environment Promotion?
+
+**Environment promotion** means deploying changes through a series of environments in order:
+
+```
+Development (dev) → Staging (stage) → Production (prod)
+```
+
+**Why this order?**
+
+1. **Development (testdbdev)**: Where you create and test changes first
+   - Break things here, it's okay!
+   - Rapid iteration and experimentation
+   - May have test/sample data
+
+2. **Staging (testdbstg)**: Pre-production environment that mimics production
+   - Same structure as production
+   - Test the exact deployment process
+   - Catch integration issues before prod
+
+3. **Production (testdbprd)**: Real environment with real users and data
+   - Only deploy after dev and stage succeed
+   - Minimize risk, maximize stability
+   - Apply same changes that worked in stage
+
+### What is a Baseline?
+
+A **baseline** is a snapshot of your database's current state when you start using Liquibase.
+
+**Why do you need it?**
+
+- You have existing tables, views, stored procedures already in production
+- Liquibase needs to know "this is the starting point"
+- Future changes build on top of the baseline
+
+**Analogy**: Think of it like joining a conversation midway. The baseline is "everything said so far" so you can track "everything said from now on."
 
 ## Prerequisites
 
-- A SQL Server you can connect to (local, container, or remote)
-  - You need a login with permissions to create/alter objects
-- One of:
-  - Java 17+ and Liquibase CLI installed, plus the Microsoft SQL Server JDBC driver
-  - OR Docker, to run Liquibase as a container (no local Java/driver needed)
-- Git (recommended) to track changes
+**Required:**
 
-Links:
+- SQL Server instance you can connect to (we'll use a dev container with SQL Server)
+- Docker installed (to run Liquibase without installing Java locally)
 
-- Liquibase install: `https://docs.liquibase.com/start/install/home.html`
-- MSSQL JDBC driver: `https://learn.microsoft.com/sql/connect/jdbc/download-microsoft-jdbc-driver-for-sql-server`
+**What we'll use:**
 
-## Quickstart project layout
+- SQL Server running in a dev container (accessible at `localhost:1433`)
+- Docker to run Liquibase commands
+- Three databases on the same server: `testdbdev`, `testdbstg`, `testdbprd`
 
-Create a folder and use this structure:
+**No need to install:**
 
-```text
-liquibase/
-  database/
-    changelog/
-      changelog.xml
-      baseline/
-        V0000__baseline.xml      # Baseline for existing databases
-      changes/
-        V0001__create_schema_and_basics.sql
-        V0002__add_email_column.sql
-        V0003__views_procs_functions_triggers.sql
-  liquibase.properties
-  drivers/
-    mssql-jdbc-<version>.jar   # Needed only for local CLI (not for Docker)
-```
+- Java (Docker handles it)
+- Liquibase CLI (Docker handles it)
+- JDBC drivers (included in custom Docker image)
 
-## Baselining an Existing Database
+## Environment Setup
 
-If you're adopting Liquibase for a database that already has schema, tables, views, and stored procedures, you need to create a **baseline**. This captures the current state so Liquibase can track future changes.
+### Check SQL Server is Running
 
-**Prerequisites:**
-
-Before generating a baseline, ensure your target database exists:
+First, verify you can connect to SQL Server:
 
 ```bash
-# Create the database if it doesn't exist
-docker exec mssql1 /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U SA -P 'YourStrong!Passw0rd' -Q "CREATE DATABASE testdb;"
+# Test connection (should show server name and date)
+docker exec mssql1 /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U SA -P 'YourStrong!Passw0rd' -Q "SELECT @@SERVERNAME AS ServerName, GETDATE() AS CurrentTime"
 ```
 
-### Step 1: Generate the Baseline from Existing Database
+**Expected output:**
 
-Use Liquibase's `generateChangeLog` command to capture the current database state:
+```
+ServerName    CurrentTime
+------------- -----------------------
+6609bb8b43cc  2025-11-13 20:00:00.000
+```
 
-**Working Directory Setup:**
+### Build Custom Liquibase Docker Image
+
+The official Liquibase image doesn't include SQL Server drivers. Build a custom image:
 
 ```bash
-# Create project directory structure
-mkdir -p /data/liquibase/database/changelog/baseline
-cd /data/liquibase
+# Navigate to Liquibase Dockerfile location
+cd /workspaces/dbtools/docker/liquibase
+
+# Build custom image with SQL Server JDBC drivers
+docker build -t liquibase-custom:5.0.1 .
+
+# Verify image was created
+docker images | grep liquibase-custom
 ```
 
-**CLI (local Java):**
+## Project Structure
+
+Create a clear directory structure for your Liquibase project:
 
 ```bash
-liquibase generateChangeLog \
-  --changelog-file=database/changelog/baseline/V0000__baseline.xml \
-  --schemas=app
+# Create project directory
+mkdir -p /data/liquibase-tutorial
+cd /data/liquibase-tutorial
+
+# Create folder structure
+mkdir -p database/changelog/baseline
+mkdir -p database/changelog/changes
+mkdir -p env
 ```
 
-**Docker (recommended):**
+**What each folder means:**
+
+```
+/data/liquibase-tutorial/
+├── database/
+│   └── changelog/
+│       ├── changelog.xml           # Master file listing all changes in order
+│       ├── baseline/               # Initial database snapshot
+│       │   └── V0000__baseline.xml
+│       └── changes/                # Incremental changes after baseline
+│           ├── V0001__add_orders_table.sql
+│           ├── V0002__modify_customer_email.sql
+│           └── V0003__update_stored_procedure.sql
+└── env/
+    ├── liquibase.dev.properties    # Development database connection
+    ├── liquibase.stage.properties  # Staging database connection
+    └── liquibase.prod.properties   # Production database connection
+```
+
+## Step 1: Create Three Database Environments
+
+Create three databases on the same SQL Server to represent dev, stage, and prod:
 
 ```bash
-# From /data/liquibase directory
-docker run --rm \
-  --network=host \
-  -v /data/liquibase:/workspace \
-  liquibase-custom:5.0.1 \
-  --url="jdbc:sqlserver://localhost:1433;databaseName=testdb;encrypt=true;trustServerCertificate=true" \
-  --username="sa" \
-  --password='YourStrong!Passw0rd' \
-  --changelog-file=/workspace/database/changelog/baseline/V0000__baseline.xml \
-  --schemas=app \
-  generateChangeLog
-```
-
-**Important Notes:**
-
-- Mount your project directory (`/data/liquibase`) to `/workspace` to avoid overwriting the container's Liquibase installation
-- Use the custom Liquibase image (`liquibase-custom:5.0.1`) built from `/workspaces/dbtools/docker/liquibase` which includes SQL Server JDBC drivers
-- Use `--network=host` to connect to SQL Server running in the dev container
-- **Use `--schemas=app`** to specify which schema(s) to capture (without this, you may get "no changesets to write")
-- The official `liquibase/liquibase` image does NOT include SQL Server drivers by default
-
-This creates an XML file containing existing database objects (tables, views, indexes, constraints). **Note:** Liquibase's `generateChangeLog` has limitations and may not capture all object types (stored procedures, functions, and triggers often require manual addition).
-
-**Troubleshooting: "No changesets to write" message**
-
-If you see this message:
-
-```
-changelog not generated. There are no changesets to write to /workspace/database/changelog/baseline/V0000__baseline.xml changelog
-```
-
-This means the database is **empty** (no tables, views, procedures, etc.). To verify and create sample objects:
-
-```bash
-# Check what objects exist in the database
-docker exec mssql1 /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U SA -P 'YourStrong!Passw0rd' -Q "USE testdb; SELECT SCHEMA_NAME(schema_id) AS SchemaName, name AS ObjectName, type_desc FROM sys.objects WHERE type IN ('U','V','P','FN','IF','TF') ORDER BY type_desc, name"
-
-# Create sample objects for testing baseline generation
+# Create development database
 docker exec mssql1 /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U SA -P 'YourStrong!Passw0rd' -Q "
-USE testdb;
+IF NOT EXISTS (SELECT 1 FROM sys.databases WHERE name = 'testdbdev')
+CREATE DATABASE testdbdev;
+"
 
--- Create schema
+# Create staging database
+docker exec mssql1 /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U SA -P 'YourStrong!Passw0rd' -Q "
+IF NOT EXISTS (SELECT 1 FROM sys.databases WHERE name = 'testdbstg')
+CREATE DATABASE testdbstg;
+"
+
+# Create production database
+docker exec mssql1 /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U SA -P 'YourStrong!Passw0rd' -Q "
+IF NOT EXISTS (SELECT 1 FROM sys.databases WHERE name = 'testdbprd')
+CREATE DATABASE testdbprd;
+"
+
+# Verify all three databases exist
+docker exec mssql1 /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U SA -P 'YourStrong!Passw0rd' -Q "
+SELECT name, database_id, create_date
+FROM sys.databases
+WHERE name IN ('testdbdev', 'testdbstg', 'testdbprd')
+ORDER BY name
+"
+```
+
+**Expected output:**
+
+```
+name        database_id  create_date
+----------- ------------ -----------------------
+testdbdev   5            2025-11-13 20:00:00.000
+testdbprd   7            2025-11-13 20:00:01.000
+testdbstg   6            2025-11-13 20:00:00.500
+```
+
+**What did we just do?**
+
+- Created three empty databases
+- All on the same SQL Server instance (simulating separate environments)
+- In real production, these would be on different servers/clouds
+
+## Step 2: Populate Development with Existing Objects
+
+Now create some database objects in **development only**. This simulates an existing database you want to start managing with Liquibase.
+
+```bash
+# Create schema, tables, views, procedures, and functions in DEVELOPMENT
+docker exec mssql1 /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U SA -P 'YourStrong!Passw0rd' -Q "
+USE testdbdev;
+
+-- Step 1: Create schema
 IF NOT EXISTS (SELECT 1 FROM sys.schemas WHERE name = 'app')
     EXEC('CREATE SCHEMA app');
 
--- Create table
+-- Step 2: Create customer table
 IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID(N'[app].[customer]') AND type = 'U')
 BEGIN
     CREATE TABLE app.customer (
@@ -185,19 +258,22 @@ BEGIN
         phone_number NVARCHAR(20) NULL,
         created_at DATETIME2(3) NOT NULL CONSTRAINT DF_customer_created_at DEFAULT (SYSUTCDATETIME())
     );
+    PRINT 'Created table app.customer';
 END
 
--- Create view
+-- Step 3: Create view
 IF OBJECT_ID(N'app.v_customer_basic', N'V') IS NOT NULL
     DROP VIEW app.v_customer_basic;
 
 CREATE VIEW app.v_customer_basic AS
 SELECT customer_id, full_name, email, created_at
 FROM app.customer;
+PRINT 'Created view app.v_customer_basic';
 
--- Create stored procedure
+-- Step 4: Create stored procedure
 IF OBJECT_ID(N'app.usp_add_customer', N'P') IS NOT NULL
     DROP PROCEDURE app.usp_add_customer;
+GO
 
 CREATE PROCEDURE app.usp_add_customer
     @full_name NVARCHAR(200),
@@ -208,10 +284,13 @@ BEGIN
     INSERT INTO app.customer (full_name, email) VALUES (@full_name, @email);
     SELECT SCOPE_IDENTITY() AS customer_id;
 END;
+GO
+PRINT 'Created procedure app.usp_add_customer';
 
--- Create function
+-- Step 5: Create function
 IF OBJECT_ID(N'app.fn_mask_email', N'FN') IS NOT NULL
     DROP FUNCTION app.fn_mask_email;
+GO
 
 CREATE FUNCTION app.fn_mask_email (@email NVARCHAR(320))
 RETURNS NVARCHAR(320)
@@ -222,119 +301,179 @@ BEGIN
     IF @at <= 1 RETURN @email;
     RETURN CONCAT(LEFT(@email, 1), '***', SUBSTRING(@email, @at, LEN(@email)));
 END;
+GO
+PRINT 'Created function app.fn_mask_email';
 
-SELECT 'Objects created successfully' AS Result;
+-- Step 6: Insert sample data
+INSERT INTO app.customer (full_name, email, phone_number)
+VALUES
+    (N'Alice Anderson', N'alice@example.com', N'555-0001'),
+    (N'Bob Brown', N'bob@example.com', N'555-0002'),
+    (N'Carol Chen', N'carol@example.com', NULL);
+
+SELECT 'Setup complete. Created schema, table, view, procedure, function, and sample data.' AS Result;
 "
-
-# Verify objects were created
-docker exec mssql1 /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U SA -P 'YourStrong!Passw0rd' -Q "USE testdb; SELECT SCHEMA_NAME(schema_id) AS SchemaName, name AS ObjectName, type_desc FROM sys.objects WHERE schema_id = SCHEMA_ID('app') ORDER BY type_desc, name"
-
-# Now run generateChangeLog again (from /data/liquibase directory)
-cd /data/liquibase
-docker run --rm \
-  --network=host \
-  -v /data/liquibase:/workspace \
-  liquibase-custom:5.0.1 \
-  --url="jdbc:sqlserver://localhost:1433;databaseName=testdb;encrypt=true;trustServerCertificate=true" \
-  --username="sa" \
-  --password='YourStrong!Passw0rd' \
-  --changelog-file=/workspace/database/changelog/baseline/V0000__baseline.xml \
-  generateChangeLog
 ```
 
-### Step 2: Review and Clean the Baseline
-
-The generated baseline may include system objects or unnecessary details, and may be missing some object types. Review `V0000__baseline.xml` and make these adjustments:
-
-**Remove unwanted objects:**
-
-- System tables or objects you don't want tracked
-- Unnecessary metadata (Liquibase adds its own tracking tables)
-- Objects not owned by your application
-
-**Add missing objects:**
-
-- **Stored procedures and functions** - `generateChangeLog` often doesn't capture these
-- **Schema creation** - Add a changeset to create the schema if not present
-- **schemaName attributes** - Ensure all objects have `schemaName="app"` specified
-
-**Common issues to fix:**
-
-- Missing `schemaName` attribute on tables and views
-- Stored procedures and functions not included (must be added manually)
-- Schema creation not included (add as first changeset)
-
-**What the generated baseline typically looks like:**
-
-```xml
-<!-- Generated by Liquibase - often incomplete -->
-<changeSet author="root (generated)" id="1762927023071-1">
-    <createTable tableName="customer">  <!-- Missing schemaName="app" -->
-        <column autoIncrement="true" name="customer_id" type="int">
-            <constraints nullable="false" primaryKey="true"/>
-        </column>
-        <!-- ... more columns ... -->
-    </createTable>
-</changeSet>
-<changeSet author="root (generated)" id="1762927023071-2">
-    <createView viewName="v_customer_basic">  <!-- Missing schemaName="app" -->
-        SELECT customer_id, full_name, email, created_at FROM app.customer;
-    </createView>
-</changeSet>
-<!-- NOTE: Stored procedures and functions are NOT generated! -->
-```
-
-**What you need to manually fix/add:**
-
-1. Add schema creation as the first changeset
-2. Add `schemaName="app"` to all table and view definitions
-3. Manually add stored procedures and functions using `<sql>` blocks
-4. Use descriptive changeset IDs instead of generated timestamps
-
-**Option 1: Automated Fix (Recommended)**
-
-Use the provided Python script to automatically fix common issues:
+**Verify objects were created in development:**
 
 ```bash
-# Install dependencies if needed
+# List all objects in app schema (development only)
+docker exec mssql1 /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U SA -P 'YourStrong!Passw0rd' -Q "
+USE testdbdev;
+SELECT
+    SCHEMA_NAME(schema_id) AS SchemaName,
+    name AS ObjectName,
+    type_desc AS ObjectType
+FROM sys.objects
+WHERE schema_id = SCHEMA_ID('app')
+ORDER BY type_desc, name;
+"
+
+# Check sample data
+docker exec mssql1 /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U SA -P 'YourStrong!Passw0rd' -Q "
+USE testdbdev;
+SELECT customer_id, full_name, email FROM app.customer;
+"
+```
+
+**What did we just do?**
+
+- Created a complete working database in development
+- Schema, table, view, stored procedure, function
+- Added sample data
+- Staging and production are still empty (we'll deploy to them next)
+
+**Why only in dev?**
+
+- This represents your "existing production database" scenario
+- In real life, you'd generate baseline from production
+- For this tutorial, we're using dev as our "existing" database
+
+## Step 3: Configure Liquibase for Each Environment
+
+Create properties files to connect Liquibase to each environment:
+
+```bash
+# Development properties
+cat > /data/liquibase-tutorial/env/liquibase.dev.properties << 'EOF'
+# Development Environment Connection
+url=jdbc:sqlserver://localhost:1433;databaseName=testdbdev;encrypt=true;trustServerCertificate=true
+username=sa
+password=YourStrong!Passw0rd
+changelog-file=database/changelog/changelog.xml
+search-path=/workspace
+logLevel=info
+EOF
+
+# Staging properties
+cat > /data/liquibase-tutorial/env/liquibase.stage.properties << 'EOF'
+# Staging Environment Connection
+url=jdbc:sqlserver://localhost:1433;databaseName=testdbstg;encrypt=true;trustServerCertificate=true
+username=sa
+password=YourStrong!Passw0rd
+changelog-file=database/changelog/changelog.xml
+search-path=/workspace
+logLevel=info
+EOF
+
+# Production properties
+cat > /data/liquibase-tutorial/env/liquibase.prod.properties << 'EOF'
+# Production Environment Connection
+url=jdbc:sqlserver://localhost:1433;databaseName=testdbprd;encrypt=true;trustServerCertificate=true
+username=sa
+password=YourStrong!Passw0rd
+changelog-file=database/changelog/changelog.xml
+search-path=/workspace
+logLevel=info
+EOF
+
+# Verify files were created
+ls -la /data/liquibase-tutorial/env/
+```
+
+**What each property means:**
+
+- `url`: JDBC connection string (notice `databaseName` differs per environment)
+- `username/password`: SQL Server credentials (in real life, use secrets!)
+- `changelog-file`: Master file that lists all changes
+- `search-path`: Where Liquibase looks for files inside Docker container
+- `logLevel`: How much detail to show (info is good for learning)
+
+**Security note**: Never commit real passwords to Git! In production, use:
+
+- Environment variables: `password=${DB_PASSWORD}`
+- Secret management: Azure Key Vault, AWS Secrets Manager, etc.
+- CI/CD platform secrets: GitHub Secrets, GitLab CI/CD variables
+
+## Step 4: Generate Baseline from Development
+
+Now use Liquibase to capture the current state of development as a **baseline**:
+
+```bash
+# Change to project directory
+cd /data/liquibase-tutorial
+
+# Generate baseline from development database
+docker run --rm \
+  --network=host \
+  -v /data/liquibase-tutorial:/workspace \
+  liquibase-custom:5.0.1 \
+  --defaults-file=/workspace/env/liquibase.dev.properties \
+  --changelog-file=/workspace/database/changelog/baseline/V0000__baseline.xml \
+  generateChangeLog
+
+# Check the generated file
+cat database/changelog/baseline/V0000__baseline.xml
+```
+
+**What happened?**
+
+- Liquibase connected to `testdbdev`
+- Scanned all database objects (tables, views, indexes, constraints)
+- Generated XML representing the current state
+- Saved it as `V0000__baseline.xml`
+
+**Important limitations:**
+
+- `generateChangeLog` captures tables and views well
+- Often misses stored procedures and functions (we'll add manually)
+- May not include `schemaName` attribute (we'll fix)
+
+## Step 5: Review and Fix the Baseline
+
+The generated baseline needs manual fixes. Let's use the automated script:
+
+```bash
+# Install Python dependency if needed
 pip install pyodbc
 
-# Fix baseline with database objects (extracts stored procs and functions)
-python3 scripts/fix-liquibase-baseline.py \
-  --baseline-file /data/liquibase/database/changelog/baseline/V0000__baseline.xml \
+# Fix baseline automatically
+python3 /workspaces/dbtools/scripts/fix-liquibase-baseline.py \
+  --baseline-file /data/liquibase-tutorial/database/changelog/baseline/V0000__baseline.xml \
   --schema app \
   --add-db-objects \
-  --database testdb \
+  --database testdbdev \
   --password 'YourStrong!Passw0rd' \
   --backup
 
-# Or fix baseline without database connection (just adds schema and schemaName attributes)
-python3 scripts/fix-liquibase-baseline.py \
-  --baseline-file /data/liquibase/database/changelog/baseline/V0000__baseline.xml \
-  --schema app \
-  --backup
+# Review the fixed baseline
+cat /data/liquibase-tutorial/database/changelog/baseline/V0000__baseline.xml
 ```
 
-The script automatically:
+**The script automatically:**
 
 - ✅ Adds `schemaName="app"` to all tables and views
-- ✅ Creates schema creation changeset
-- ✅ Extracts and adds stored procedures from database (with `--add-db-objects`)
-- ✅ Extracts and adds functions from database (with `--add-db-objects`)
-- ✅ Creates backup of original file (with `--backup`)
+- ✅ Creates schema creation changeset at the beginning
+- ✅ Extracts stored procedures from database
+- ✅ Extracts functions from database
+- ✅ Creates backup of original file
 
-**Option 2: Manual Fix**
-
-**Example cleaned and enhanced baseline structure:**
+**The fixed baseline should look like:**
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
-<databaseChangeLog
-    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
-                        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
-
+<databaseChangeLog ...>
     <!-- Schema -->
     <changeSet id="baseline-schema" author="system">
         <sql>
@@ -351,63 +490,24 @@ The script automatically:
             <column name="customer_id" type="int" autoIncrement="true">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
-            <column name="full_name" type="nvarchar(200)">
-                <constraints nullable="false"/>
-            </column>
-            <column name="email" type="nvarchar(320)">
-                <constraints nullable="true"/>
-            </column>
-            <column name="created_at" type="datetime2(3)" defaultValueComputed="SYSUTCDATETIME()">
-                <constraints nullable="false"/>
-            </column>
+            ...
         </createTable>
     </changeSet>
 
-    <!-- Views -->
-    <changeSet id="baseline-view-customer-basic" author="system">
-        <createView viewName="v_customer_basic" schemaName="app">
-            SELECT customer_id, full_name, created_at, email
-            FROM app.customer
-        </createView>
-    </changeSet>
-
-    <!-- Stored Procedures -->
-    <changeSet id="baseline-proc-add-customer" author="system" runOnChange="true">
-        <sql splitStatements="false">
-            CREATE OR ALTER PROCEDURE app.usp_add_customer
-                @full_name NVARCHAR(200),
-                @email NVARCHAR(320) = NULL
-            AS
-            BEGIN
-                SET NOCOUNT ON;
-                INSERT INTO app.customer (full_name, email) VALUES (@full_name, @email);
-            END
-        </sql>
-    </changeSet>
-
-    <!-- Functions -->
-    <changeSet id="baseline-func-mask-email" author="system" runOnChange="true">
-        <sql splitStatements="false">
-            CREATE OR ALTER FUNCTION app.fn_mask_email (@email NVARCHAR(320))
-            RETURNS NVARCHAR(320)
-            AS
-            BEGIN
-                IF @email IS NULL RETURN NULL;
-                DECLARE @at INT = CHARINDEX('@', @email);
-                IF @at <= 1 RETURN @email;
-                RETURN CONCAT(LEFT(@email, 1), '***', SUBSTRING(@email, @at, LEN(@email)));
-            END
-        </sql>
-    </changeSet>
-
+    <!-- Views, Procedures, Functions -->
+    ...
 </databaseChangeLog>
 ```
 
-### Step 3: Create Master Changelog Including Baseline
+## Step 6: Deploy Baseline Across Environments
 
-Update `database/changelog/changelog.xml` to include the baseline:
+Now create the master changelog and deploy the baseline to each environment:
 
-```xml
+### Create Master Changelog
+
+```bash
+# Create master changelog that includes baseline
+cat > /data/liquibase-tutorial/database/changelog/changelog.xml << 'EOF'
 <?xml version="1.0" encoding="UTF-8"?>
 <databaseChangeLog
     xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
@@ -415,117 +515,172 @@ Update `database/changelog/changelog.xml` to include the baseline:
     xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
                         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
 
-    <!-- Baseline: existing database objects -->
+    <!-- Baseline: initial database state -->
     <include file="baseline/V0000__baseline.xml" relativeToChangelogFile="true"/>
 
-    <!-- Future changes -->
-    <include file="changes/V0001__add_orders_table.sql" relativeToChangelogFile="true"/>
-    <include file="changes/V0002__modify_customer_email.sql" relativeToChangelogFile="true"/>
-    <include file="changes/V0003__update_stored_procedure.sql" relativeToChangelogFile="true"/>
+    <!-- Future changes will be added here -->
+
 </databaseChangeLog>
+EOF
 ```
 
-### Step 4: Sync the Baseline to Source Database
+### Deploy to Development (Sync Only)
 
-For the **source database** (where you generated the baseline), you need to mark the baseline as already applied without actually running it:
-
-**CLI (local Java):**
+Development already has these objects, so we **sync** the baseline (mark as executed without running):
 
 ```bash
-liquibase changelogSync
-```
+cd /data/liquibase-tutorial
 
-**Docker (recommended):**
-
-```bash
-cd /data/liquibase
+# Sync baseline to development (don't actually run DDL)
 docker run --rm \
   --network=host \
-  -v /data/liquibase:/workspace \
+  -v /data/liquibase-tutorial:/workspace \
   liquibase-custom:5.0.1 \
-  --url="jdbc:sqlserver://localhost:1433;databaseName=testdb;encrypt=true;trustServerCertificate=true" \
-  --username="sa" \
-  --password='YourStrong!Passw0rd' \
-  --changelog-file=database/changelog/changelog.xml \
-  --search-path=/workspace \
+  --defaults-file=/workspace/env/liquibase.dev.properties \
   changelogSync
-```
 
-This updates the DATABASECHANGELOG table to record that all baseline changesets have been applied, without actually executing them (since the objects already exist).
-
-### Step 5: Apply Baseline to Target Database
-
-For **target databases** (test, staging, production) that don't have the schema yet:
-
-**CLI (local Java):**
-
-```bash
-# Apply baseline to create all objects
-liquibase update
-```
-
-**Docker (recommended):**
-
-```bash
-cd /data/liquibase
+# Tag the baseline
 docker run --rm \
   --network=host \
-  -v /data/liquibase:/workspace \
+  -v /data/liquibase-tutorial:/workspace \
   liquibase-custom:5.0.1 \
-  --url="jdbc:sqlserver://localhost:1433;databaseName=targetdb;encrypt=true;trustServerCertificate=true" \
-  --username="sa" \
-  --password='YourStrong!Passw0rd' \
-  --changelog-file=database/changelog/changelog.xml \
-  --search-path=/workspace \
-  update
+  --defaults-file=/workspace/env/liquibase.dev.properties \
+  tag baseline
 ```
 
-This will execute all baseline changesets to create the schema, tables, views, stored procedures, and functions.
+**What is changelogSync?**
 
-### Step 6: Verify Baseline Application
+- Tells Liquibase "these changes already ran"
+- Updates `DATABASECHANGELOG` table without executing SQL
+- Used for existing databases when you generate a baseline
 
-Check that Liquibase tracking tables exist and baseline is recorded:
+**Verify sync worked:**
 
-```sql
--- Check DATABASECHANGELOG table
-SELECT ID, AUTHOR, FILENAME, DATEEXECUTED, ORDEREXECUTED, EXECTYPE
+```bash
+# Check DATABASECHANGELOG table
+docker exec mssql1 /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U SA -P 'YourStrong!Passw0rd' -Q "
+USE testdbdev;
+SELECT ID, AUTHOR, FILENAME, DATEEXECUTED, TAG
 FROM DATABASECHANGELOG
 ORDER BY DATEEXECUTED;
+"
+```
 
--- Verify objects exist
-SELECT SCHEMA_NAME(schema_id) AS SchemaName, name AS ObjectName, type_desc
+### Deploy to Staging (Full Deployment)
+
+Staging is empty, so we **deploy** the baseline (actually run all DDL):
+
+```bash
+cd /data/liquibase-tutorial
+
+# Preview what will run
+docker run --rm \
+  --network=host \
+  -v /data/liquibase-tutorial:/workspace \
+  liquibase-custom:5.0.1 \
+  --defaults-file=/workspace/env/liquibase.stage.properties \
+  updateSQL
+
+# Deploy to staging
+docker run --rm \
+  --network=host \
+  -v /data/liquibase-tutorial:/workspace \
+  liquibase-custom:5.0.1 \
+  --defaults-file=/workspace/env/liquibase.stage.properties \
+  update
+
+# Tag the baseline
+docker run --rm \
+  --network=host \
+  -v /data/liquibase-tutorial:/workspace \
+  liquibase-custom:5.0.1 \
+  --defaults-file=/workspace/env/liquibase.stage.properties \
+  tag baseline
+```
+
+**Verify deployment:**
+
+```bash
+# Check objects exist in staging
+docker exec mssql1 /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U SA -P 'YourStrong!Passw0rd' -Q "
+USE testdbstg;
+SELECT
+    SCHEMA_NAME(schema_id) AS SchemaName,
+    name AS ObjectName,
+    type_desc AS ObjectType
 FROM sys.objects
 WHERE schema_id = SCHEMA_ID('app')
 ORDER BY type_desc, name;
+"
 ```
 
-### Baseline Best Practices
+### Deploy to Production (Full Deployment)
 
-✅ **DO:**
+Production is also empty, so we deploy the baseline:
 
-- Generate baseline from your most complete environment (usually production)
-- Review and clean the generated baseline before committing
-- Use `changelogSync` on the source database to avoid re-running existing objects
-- Test baseline application on a fresh database before applying to targets
-- Tag the baseline: `liquibase tag baseline-2025-11-11`
+```bash
+cd /data/liquibase-tutorial
 
-❌ **DON'T:**
+# Preview what will run
+docker run --rm \
+  --network=host \
+  -v /data/liquibase-tutorial:/workspace \
+  liquibase-custom:5.0.1 \
+  --defaults-file=/workspace/env/liquibase.prod.properties \
+  updateSQL
 
-- Run `update` on the source database after generating baseline (use `changelogSync` instead)
-- Include Liquibase tracking tables (DATABASECHANGELOG, DATABASECHANGELOGLOCK) in baseline
-- Include environment-specific data in baseline (use separate seed data changesets)
-- Modify baseline changesets after they've been applied to any environment
+# Deploy to production
+docker run --rm \
+  --network=host \
+  -v /data/liquibase-tutorial:/workspace \
+  liquibase-custom:5.0.1 \
+  --defaults-file=/workspace/env/liquibase.prod.properties \
+  update
 
-## Making Changes After Baseline
+# Tag the baseline
+docker run --rm \
+  --network=host \
+  -v /data/liquibase-tutorial:/workspace \
+  liquibase-custom:5.0.1 \
+  --defaults-file=/workspace/env/liquibase.prod.properties \
+  tag baseline
+```
 
-Once the baseline is established, all future changes go in new changeset files. Here are common scenarios with step-by-step examples.
+**Verify deployment:**
 
-### Change 1: Add a New Table
+```bash
+# Check objects exist in production
+docker exec mssql1 /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U SA -P 'YourStrong!Passw0rd' -Q "
+USE testdbprd;
+SELECT
+    SCHEMA_NAME(schema_id) AS SchemaName,
+    name AS ObjectName,
+    type_desc AS ObjectType
+FROM sys.objects
+WHERE schema_id = SCHEMA_ID('app')
+ORDER BY type_desc, name;
+"
+```
 
-Create `database/changelog/changes/V0001__add_orders_table.sql`:
+**What did we accomplish?**
 
-```sql
---changeset yourname:V0001-add-orders-table
+✅ All three environments now have identical schemas
+✅ Liquibase is tracking what ran where
+✅ We can now deploy future changes safely
+
+## Step 7: Making Your First Change
+
+Now let's make a new database change: add an `orders` table.
+
+### Create the Change File
+
+```bash
+# Create the change file
+cat > /data/liquibase-tutorial/database/changelog/changes/V0001__add_orders_table.sql << 'EOF'
+--changeset tutorial:V0001-add-orders-table
+-- Purpose: Add orders table to track customer purchases
+-- This change adds a new table with foreign key to customer table
+
 IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID(N'[app].[orders]') AND type = 'U')
 BEGIN
     CREATE TABLE app.orders (
@@ -538,37 +693,218 @@ BEGIN
             REFERENCES app.customer(customer_id)
     );
 
+    -- Index for lookups by customer
     CREATE NONCLUSTERED INDEX IX_orders_customer
         ON app.orders(customer_id);
 
+    -- Index for date-based queries
     CREATE NONCLUSTERED INDEX IX_orders_date
         ON app.orders(order_date DESC);
+
+    PRINT 'Created app.orders table with indexes';
 END
+ELSE
+BEGIN
+    PRINT 'Table app.orders already exists';
+END
+
 --rollback IF OBJECT_ID(N'app.orders', N'U') IS NOT NULL DROP TABLE app.orders;
+EOF
 ```
 
-**Apply the change:**
+**Understanding the change file:**
+
+- `--changeset tutorial:V0001-add-orders-table`: Unique identifier
+- `IF NOT EXISTS`: Makes it safe to re-run (idempotent)
+- Foreign key links orders to customers
+- Indexes for performance
+- `--rollback`: SQL to undo this change
+
+### Update Master Changelog
 
 ```bash
-# Preview the SQL
-liquibase updateSQL
+# Update changelog.xml to include the new change
+cat > /data/liquibase-tutorial/database/changelog/changelog.xml << 'EOF'
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
 
-# Apply the change
-liquibase update
+    <!-- Baseline -->
+    <include file="baseline/V0000__baseline.xml" relativeToChangelogFile="true"/>
 
-# Tag the release
-liquibase tag add-orders-table-v1.1
+    <!-- Changes -->
+    <include file="changes/V0001__add_orders_table.sql" relativeToChangelogFile="true"/>
+
+</databaseChangeLog>
+EOF
 ```
 
-### Change 2: Modify Data Type of a Column
+## Step 8: Deploy Change Across Environments
 
-Scenario: Change `app.customer.email` from `NVARCHAR(320)` to `NVARCHAR(500)` to support longer emails.
+Now deploy this change through dev → stage → prod:
 
-Create `database/changelog/changes/V0002__modify_customer_email_length.sql`:
+### Deploy to Development
 
-```sql
---changeset yourname:V0002-modify-email-length
--- Increase email column length from 320 to 500
+```bash
+cd /data/liquibase-tutorial
+
+# Check what will be deployed (should show V0001 only)
+docker run --rm \
+  --network=host \
+  -v /data/liquibase-tutorial:/workspace \
+  liquibase-custom:5.0.1 \
+  --defaults-file=/workspace/env/liquibase.dev.properties \
+  status --verbose
+
+# Preview the SQL
+docker run --rm \
+  --network=host \
+  -v /data/liquibase-tutorial:/workspace \
+  liquibase-custom:5.0.1 \
+  --defaults-file=/workspace/env/liquibase.dev.properties \
+  updateSQL
+
+# Deploy to development
+docker run --rm \
+  --network=host \
+  -v /data/liquibase-tutorial:/workspace \
+  liquibase-custom:5.0.1 \
+  --defaults-file=/workspace/env/liquibase.dev.properties \
+  update
+
+# Tag this release
+docker run --rm \
+  --network=host \
+  -v /data/liquibase-tutorial:/workspace \
+  liquibase-custom:5.0.1 \
+  --defaults-file=/workspace/env/liquibase.dev.properties \
+  tag release-v1.1
+```
+
+**Verify in development:**
+
+```bash
+docker exec mssql1 /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U SA -P 'YourStrong!Passw0rd' -Q "
+USE testdbdev;
+
+-- Check table exists
+SELECT name, type_desc FROM sys.objects WHERE name = 'orders' AND schema_id = SCHEMA_ID('app');
+
+-- Check indexes
+SELECT i.name AS IndexName, i.type_desc
+FROM sys.indexes i
+JOIN sys.objects o ON i.object_id = o.object_id
+WHERE o.name = 'orders' AND SCHEMA_NAME(o.schema_id) = 'app';
+"
+```
+
+### Deploy to Staging
+
+After testing in dev, promote to staging:
+
+```bash
+cd /data/liquibase-tutorial
+
+# Preview (should be identical to what ran in dev)
+docker run --rm \
+  --network=host \
+  -v /data/liquibase-tutorial:/workspace \
+  liquibase-custom:5.0.1 \
+  --defaults-file=/workspace/env/liquibase.stage.properties \
+  updateSQL
+
+# Deploy to staging
+docker run --rm \
+  --network=host \
+  -v /data/liquibase-tutorial:/workspace \
+  liquibase-custom:5.0.1 \
+  --defaults-file=/workspace/env/liquibase.stage.properties \
+  update
+
+# Tag this release
+docker run --rm \
+  --network=host \
+  -v /data/liquibase-tutorial:/workspace \
+  liquibase-custom:5.0.1 \
+  --defaults-file=/workspace/env/liquibase.stage.properties \
+  tag release-v1.1
+```
+
+**Verify in staging:**
+
+```bash
+docker exec mssql1 /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U SA -P 'YourStrong!Passw0rd' -Q "
+USE testdbstg;
+SELECT name, type_desc FROM sys.objects WHERE name = 'orders' AND schema_id = SCHEMA_ID('app');
+"
+```
+
+### Deploy to Production
+
+After staging succeeds, deploy to production:
+
+```bash
+cd /data/liquibase-tutorial
+
+# Preview (should be identical to dev and stage)
+docker run --rm \
+  --network=host \
+  -v /data/liquibase-tutorial:/workspace \
+  liquibase-custom:5.0.1 \
+  --defaults-file=/workspace/env/liquibase.prod.properties \
+  updateSQL
+
+# Deploy to production
+docker run --rm \
+  --network=host \
+  -v /data/liquibase-tutorial:/workspace \
+  liquibase-custom:5.0.1 \
+  --defaults-file=/workspace/env/liquibase.prod.properties \
+  update
+
+# Tag this release
+docker run --rm \
+  --network=host \
+  -v /data/liquibase-tutorial:/workspace \
+  liquibase-custom:5.0.1 \
+  --defaults-file=/workspace/env/liquibase.prod.properties \
+  tag release-v1.1
+```
+
+**Verify in production:**
+
+```bash
+docker exec mssql1 /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U SA -P 'YourStrong!Passw0rd' -Q "
+USE testdbprd;
+SELECT name, type_desc FROM sys.objects WHERE name = 'orders' AND schema_id = SCHEMA_ID('app');
+"
+```
+
+**What did we just do?**
+
+✅ Created a new change (add orders table)
+✅ Deployed to dev first and tested
+✅ Promoted to staging
+✅ Promoted to production
+✅ All three environments now have identical schemas
+✅ Complete audit trail in DATABASECHANGELOG
+
+## Step 9: More Database Changes
+
+Let's make several more changes to demonstrate common scenarios:
+
+### Change 2: Modify Column Length
+
+Increase email field from 320 to 500 characters:
+
+```bash
+cat > /data/liquibase-tutorial/database/changelog/changes/V0002__increase_email_length.sql << 'EOF'
+--changeset tutorial:V0002-increase-email-length
+-- Purpose: Increase email column to support longer email addresses
+
 IF EXISTS (
     SELECT 1
     FROM sys.columns c
@@ -577,109 +913,30 @@ IF EXISTS (
     WHERE SCHEMA_NAME(o.schema_id) = 'app'
       AND o.name = 'customer'
       AND c.name = 'email'
-      AND t.name = 'nvarchar'
       AND c.max_length < 1000  -- 500 * 2 bytes for NVARCHAR
 )
 BEGIN
     ALTER TABLE app.customer ALTER COLUMN email NVARCHAR(500) NULL;
-    PRINT 'Modified email column to NVARCHAR(500)';
+    PRINT 'Increased email column to NVARCHAR(500)';
 END
 ELSE
 BEGIN
     PRINT 'Email column already NVARCHAR(500) or larger';
 END
+
 --rollback ALTER TABLE app.customer ALTER COLUMN email NVARCHAR(320) NULL;
+EOF
 ```
 
-**For complex data type conversions** (e.g., `VARCHAR` to `INT`), use the expand-contract pattern:
+### Change 3: Update Stored Procedure
 
-```sql
---changeset yourname:V0002-convert-phone-to-bigint-step1
--- Step 1: Add new column with correct data type
-IF COL_LENGTH('app.customer', 'phone_number_new') IS NULL
-BEGIN
-    ALTER TABLE app.customer ADD phone_number_new BIGINT NULL;
-END
+Add phone number parameter to the customer creation procedure:
 
--- Step 2: Migrate data with conversion
-UPDATE app.customer
-SET phone_number_new = TRY_CONVERT(BIGINT, REPLACE(REPLACE(phone_number, '-', ''), ' ', ''))
-WHERE phone_number IS NOT NULL;
+```bash
+cat > /data/liquibase-tutorial/database/changelog/changes/V0003__update_add_customer_proc.sql << 'EOF'
+--changeset tutorial:V0003-update-add-customer-proc runOnChange:true
+-- Purpose: Add phone_number parameter to customer creation procedure
 
--- Step 3: Drop old column and rename new column (deploy in next release after verifying)
--- IF COL_LENGTH('app.customer', 'phone_number') IS NOT NULL
--- BEGIN
---     ALTER TABLE app.customer DROP COLUMN phone_number;
---     EXEC sp_rename 'app.customer.phone_number_new', 'phone_number', 'COLUMN';
--- END
---rollback ALTER TABLE app.customer DROP COLUMN phone_number_new;
-```
-
-### Change 3: Modify NULL Constraint of a Column
-
-Scenario: Make `app.customer.email` required (NOT NULL).
-
-**Important:** Before making a column NOT NULL, ensure all existing rows have values.
-
-Create `database/changelog/changes/V0003__make_email_required.sql`:
-
-```sql
---changeset yourname:V0003-make-email-not-null
--- Step 1: Fill any NULL values with default
-UPDATE app.customer
-SET email = 'noemail@example.com'
-WHERE email IS NULL;
-
--- Step 2: Alter column to NOT NULL
-IF EXISTS (
-    SELECT 1
-    FROM sys.columns c
-    JOIN sys.objects o ON o.object_id = c.object_id AND o.type = 'U'
-    WHERE SCHEMA_NAME(o.schema_id) = 'app'
-      AND o.name = 'customer'
-      AND c.name = 'email'
-      AND c.is_nullable = 1  -- Currently allows NULL
-)
-BEGIN
-    ALTER TABLE app.customer ALTER COLUMN email NVARCHAR(500) NOT NULL;
-    PRINT 'Email column is now NOT NULL';
-END
-ELSE
-BEGIN
-    PRINT 'Email column already NOT NULL';
-END
---rollback ALTER TABLE app.customer ALTER COLUMN email NVARCHAR(500) NULL;
-```
-
-**To make a NOT NULL column nullable:**
-
-```sql
---changeset yourname:V0004-make-phone-nullable
-IF EXISTS (
-    SELECT 1
-    FROM sys.columns c
-    JOIN sys.objects o ON o.object_id = c.object_id AND o.type = 'U'
-    WHERE SCHEMA_NAME(o.schema_id) = 'app'
-      AND o.name = 'customer'
-      AND c.name = 'phone_number'
-      AND c.is_nullable = 0  -- Currently NOT NULL
-)
-BEGIN
-    ALTER TABLE app.customer ALTER COLUMN phone_number NVARCHAR(20) NULL;
-    PRINT 'Phone number column is now nullable';
-END
---rollback ALTER TABLE app.customer ALTER COLUMN phone_number NVARCHAR(20) NOT NULL;
-```
-
-### Change 4: Modify a Stored Procedure
-
-Scenario: Update `app.usp_add_customer` to include phone number parameter.
-
-Create `database/changelog/changes/V0005__update_add_customer_proc.sql`:
-
-```sql
---changeset yourname:V0005-update-add-customer-proc runOnChange:true
--- Update stored procedure to include phone number
 IF OBJECT_ID(N'app.usp_add_customer', N'P') IS NOT NULL
     DROP PROCEDURE app.usp_add_customer;
 GO
@@ -692,7 +949,7 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    -- Validate inputs
+    -- Validate name is provided
     IF @full_name IS NULL OR LTRIM(RTRIM(@full_name)) = ''
     BEGIN
         THROW 50001, 'Customer name is required', 1;
@@ -706,50 +963,20 @@ BEGIN
     SELECT SCOPE_IDENTITY() AS customer_id;
 END
 GO
+
 --rollback DROP PROCEDURE IF EXISTS app.usp_add_customer;
+EOF
 ```
 
-**Key points for stored procedure changes:**
+### Change 4: Update View
 
-- Use `runOnChange:true` in the changeset header so Liquibase re-runs it when the file changes
-- Always use `DROP ... IF EXISTS` then `CREATE`, or `CREATE OR ALTER` (SQL Server 2016+)
-- Include `GO` statements to separate batches
-- Test procedures thoroughly before deploying
+Add phone number and order statistics to customer view:
 
-**Alternative using CREATE OR ALTER (SQL Server 2016+):**
+```bash
+cat > /data/liquibase-tutorial/database/changelog/changes/V0004__update_customer_view.sql << 'EOF'
+--changeset tutorial:V0004-update-customer-view runOnChange:true
+-- Purpose: Enhance customer view with phone number and order statistics
 
-```sql
---changeset yourname:V0005-update-add-customer-proc runOnChange:true
-CREATE OR ALTER PROCEDURE app.usp_add_customer
-    @full_name NVARCHAR(200),
-    @email NVARCHAR(500) = NULL,
-    @phone_number NVARCHAR(20) = NULL
-AS
-BEGIN
-    SET NOCOUNT ON;
-
-    IF @full_name IS NULL OR LTRIM(RTRIM(@full_name)) = ''
-    BEGIN
-        THROW 50001, 'Customer name is required', 1;
-    END
-
-    INSERT INTO app.customer (full_name, email, phone_number)
-    VALUES (@full_name, @email, @phone_number);
-
-    SELECT SCOPE_IDENTITY() AS customer_id;
-END
---rollback DROP PROCEDURE IF EXISTS app.usp_add_customer;
-```
-
-### Change 5: Modify a View
-
-Scenario: Update `app.v_customer_basic` to include phone number and order count.
-
-Create `database/changelog/changes/V0006__update_customer_view.sql`:
-
-```sql
---changeset yourname:V0006-update-customer-view runOnChange:true
--- Update customer view to include phone and order count
 IF OBJECT_ID(N'app.v_customer_basic', N'V') IS NOT NULL
     DROP VIEW app.v_customer_basic;
 GO
@@ -772,45 +999,15 @@ GROUP BY
     c.phone_number,
     c.created_at;
 GO
+
 --rollback DROP VIEW IF EXISTS app.v_customer_basic;
+EOF
 ```
 
-**Best practices for view changes:**
+### Update Master Changelog with All Changes
 
-- Use `runOnChange:true` so the view is recreated when the definition changes
-- Always drop then create (or use `CREATE OR ALTER` for SQL Server 2016+)
-- Test views with sample data before deploying
-- Document view dependencies (if view A depends on view B, ensure proper order)
-
-**Alternative with CREATE OR ALTER:**
-
-```sql
---changeset yourname:V0006-update-customer-view runOnChange:true
-CREATE OR ALTER VIEW app.v_customer_basic AS
-SELECT
-    c.customer_id,
-    c.full_name,
-    c.email,
-    c.phone_number,
-    c.created_at,
-    COUNT(o.order_id) AS order_count,
-    ISNULL(SUM(o.order_total), 0) AS total_spent
-FROM app.customer c
-LEFT JOIN app.orders o ON o.customer_id = c.customer_id
-GROUP BY
-    c.customer_id,
-    c.full_name,
-    c.email,
-    c.phone_number,
-    c.created_at;
---rollback DROP VIEW IF EXISTS app.v_customer_basic;
-```
-
-### Applying All Changes
-
-After creating all the changeset files, update your master changelog:
-
-```xml
+```bash
+cat > /data/liquibase-tutorial/database/changelog/changelog.xml << 'EOF'
 <?xml version="1.0" encoding="UTF-8"?>
 <databaseChangeLog
     xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
@@ -823,555 +1020,474 @@ After creating all the changeset files, update your master changelog:
 
     <!-- Changes -->
     <include file="changes/V0001__add_orders_table.sql" relativeToChangelogFile="true"/>
-    <include file="changes/V0002__modify_customer_email_length.sql" relativeToChangelogFile="true"/>
-    <include file="changes/V0003__make_email_required.sql" relativeToChangelogFile="true"/>
-    <include file="changes/V0005__update_add_customer_proc.sql" relativeToChangelogFile="true"/>
-    <include file="changes/V0006__update_customer_view.sql" relativeToChangelogFile="true"/>
+    <include file="changes/V0002__increase_email_length.sql" relativeToChangelogFile="true"/>
+    <include file="changes/V0003__update_add_customer_proc.sql" relativeToChangelogFile="true"/>
+    <include file="changes/V0004__update_customer_view.sql" relativeToChangelogFile="true"/>
+
 </databaseChangeLog>
+EOF
 ```
 
-**Deployment workflow:**
+### Deploy All Changes to Development
 
 ```bash
-# 1. Check what will be applied
-liquibase status --verbose
+cd /data/liquibase-tutorial
 
-# 2. Preview SQL (dry run)
-liquibase updateSQL > deployment-preview.sql
+# Check what will deploy (should show V0002, V0003, V0004)
+docker run --rm \
+  --network=host \
+  -v /data/liquibase-tutorial:/workspace \
+  liquibase-custom:5.0.1 \
+  --defaults-file=/workspace/env/liquibase.dev.properties \
+  status --verbose
 
-# 3. Review the preview
-cat deployment-preview.sql
+# Deploy to development
+docker run --rm \
+  --network=host \
+  -v /data/liquibase-tutorial:/workspace \
+  liquibase-custom:5.0.1 \
+  --defaults-file=/workspace/env/liquibase.dev.properties \
+  update
 
-# 4. Apply changes
-liquibase update
-
-# 5. Verify changes
-liquibase status
-
-# 6. Tag the release
-liquibase tag release-2025-11-11
+# Tag the release
+docker run --rm \
+  --network=host \
+  -v /data/liquibase-tutorial:/workspace \
+  liquibase-custom:5.0.1 \
+  --defaults-file=/workspace/env/liquibase.dev.properties \
+  tag release-v1.2
 ```
 
-## Configure Liquibase
-
-Create `liquibase.properties` at the project root:
-
-```properties
-url=jdbc:sqlserver://<HOST>:<PORT>;databaseName=<DB>
-username=<USER>
-password=<PASS>
-changelog-file=database/changelog/changelog.xml
-
-# Optional: for local CLI only (path to JDBC driver)
-classpath=drivers
-```
-
-Tip: Don’t commit real passwords. In CI, pass values via environment variables or secrets.
-
-## Create a master changelog
-
-`database/changelog/changelog.xml` includes ordered change files:
-
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<databaseChangeLog
-    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
-                        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
-
-    <include file="changes/V0001__create_schema_and_basics.sql" relativeToChangelogFile="true"/>
-    <include file="changes/V0002__add_email_column.sql" relativeToChangelogFile="true"/>
-    <include file="changes/V0003__views_procs_functions_triggers.sql" relativeToChangelogFile="true"/>
-</databaseChangeLog>
-```
-
-Liquibase accepts XML, YAML, JSON, or pure SQL. This tutorial uses SQL change files for clarity.
-
-## First change: schema and a table
-
-Create `database/changelog/changes/V0001__create_schema_and_basics.sql`:
-
-```sql
---changeset yourname:V0001 runOnChange:false
-IF NOT EXISTS (SELECT 1 FROM sys.schemas WHERE name = 'app')
-BEGIN
-    EXEC('CREATE SCHEMA app')
-END
-
-IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID(N'[app].[customer]') AND type in (N'U'))
-BEGIN
-    CREATE TABLE app.customer (
-        customer_id INT IDENTITY(1,1) CONSTRAINT PK_customer PRIMARY KEY,
-        full_name NVARCHAR(200) NOT NULL,
-        created_at DATETIME2(3) NOT NULL CONSTRAINT DF_customer_created_at DEFAULT (SYSUTCDATETIME())
-    );
-END
-```
-
-Notes:
-
-- The `--changeset` header uniquely identifies the change. Use a stable author (you) and ID.
-- Guards (`IF NOT EXISTS`) help idempotency and clearer error messages.
-
-## Apply the change
-
-CLI (local Java):
+### Deploy to Staging
 
 ```bash
-liquibase update
+cd /data/liquibase-tutorial
+
+docker run --rm \
+  --network=host \
+  -v /data/liquibase-tutorial:/workspace \
+  liquibase-custom:5.0.1 \
+  --defaults-file=/workspace/env/liquibase.stage.properties \
+  update
+
+docker run --rm \
+  --network=host \
+  -v /data/liquibase-tutorial:/workspace \
+  liquibase-custom:5.0.1 \
+  --defaults-file=/workspace/env/liquibase.stage.properties \
+  tag release-v1.2
 ```
 
-Docker (no Java/driver needed):
+### Deploy to Production
 
 ```bash
-docker run --rm -v "$PWD":/liquibase liquibase/liquibase:latest \
-  --changelog-file=database/changelog/changelog.xml \
-  --url="jdbc:sqlserver://<HOST>:<PORT>;databaseName=<DB>" \
-  --username="<USER>" \
-  --password="<PASS>" \
+cd /data/liquibase-tutorial
+
+docker run --rm \
+  --network=host \
+  -v /data/liquibase-tutorial:/workspace \
+  liquibase-custom:5.0.1 \
+  --defaults-file=/workspace/env/liquibase.prod.properties \
+  update
+
+docker run --rm \
+  --network=host \
+  -v /data/liquibase-tutorial:/workspace \
+  liquibase-custom:5.0.1 \
+  --defaults-file=/workspace/env/liquibase.prod.properties \
+  tag release-v1.2
+```
+
+**Verify all changes applied:**
+
+```bash
+# Check email column length in production
+docker exec mssql1 /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U SA -P 'YourStrong!Passw0rd' -Q "
+USE testdbprd;
+
+-- Check email column length
+SELECT c.name AS ColumnName, t.name AS DataType, c.max_length AS MaxLength
+FROM sys.columns c
+JOIN sys.types t ON c.user_type_id = t.user_type_id
+JOIN sys.objects o ON c.object_id = o.object_id
+WHERE SCHEMA_NAME(o.schema_id) = 'app'
+  AND o.name = 'customer'
+  AND c.name = 'email';
+
+-- Check procedure parameters
+SELECT p.name AS ProcedureName, pm.name AS ParameterName, t.name AS DataType
+FROM sys.procedures p
+JOIN sys.parameters pm ON p.object_id = pm.object_id
+JOIN sys.types t ON pm.user_type_id = t.user_type_id
+WHERE SCHEMA_NAME(p.schema_id) = 'app'
+  AND p.name = 'usp_add_customer'
+ORDER BY pm.parameter_id;
+
+-- Check view definition
+EXEC sp_helptext 'app.v_customer_basic';
+"
+```
+
+## Step 10: Rollbacks and Tags
+
+### Understanding Rollbacks
+
+Rollbacks let you undo changes if something goes wrong. Tags mark specific points you can roll back to.
+
+**View your tags:**
+
+```bash
+# List tags in development
+docker exec mssql1 /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U SA -P 'YourStrong!Passw0rd' -Q "
+USE testdbdev;
+SELECT ID, TAG, DATEEXECUTED
+FROM DATABASECHANGELOG
+WHERE TAG IS NOT NULL
+ORDER BY DATEEXECUTED;
+"
+```
+
+### Rollback to a Specific Tag
+
+```bash
+cd /data/liquibase-tutorial
+
+# Rollback development to release-v1.1 (undo changes V0002-V0004)
+docker run --rm \
+  --network=host \
+  -v /data/liquibase-tutorial:/workspace \
+  liquibase-custom:5.0.1 \
+  --defaults-file=/workspace/env/liquibase.dev.properties \
+  rollback release-v1.1
+
+# Verify rollback worked
+docker exec mssql1 /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U SA -P 'YourStrong!Passw0rd' -Q "
+USE testdbdev;
+SELECT ID, AUTHOR, FILENAME, DATEEXECUTED, TAG
+FROM DATABASECHANGELOG
+ORDER BY DATEEXECUTED DESC;
+"
+```
+
+### Re-apply After Rollback
+
+```bash
+# Re-apply changes to get back to latest
+docker run --rm \
+  --network=host \
+  -v /data/liquibase-tutorial:/workspace \
+  liquibase-custom:5.0.1 \
+  --defaults-file=/workspace/env/liquibase.dev.properties \
   update
 ```
 
-Liquibase will create two tables in your database: `DATABASECHANGELOG` and `DATABASECHANGELOGLOCK`, then run your change.
-
-## Preview without running (dry run)
+### Rollback by Count
 
 ```bash
-liquibase updateSQL > deploy.sql
+# Roll back last 2 changesets
+docker run --rm \
+  --network=host \
+  -v /data/liquibase-tutorial:/workspace \
+  liquibase-custom:5.0.1 \
+  --defaults-file=/workspace/env/liquibase.dev.properties \
+  rollbackCount 2
 ```
 
-This prints the SQL Liquibase would execute, without applying it.
+## Understanding the Deployment Pipeline
 
-## Evolve the schema (add a column)
+### The Complete Workflow
 
-Create `database/changelog/changes/V0002__add_email_column.sql`:
+Here's how a typical change flows from idea to production:
 
-```sql
---changeset yourname:V0002
-IF COL_LENGTH('app.customer', 'email') IS NULL
-BEGIN
-    ALTER TABLE app.customer ADD email NVARCHAR(320) NULL;
-END
+```
+1. Developer writes change in SQL file
+   ↓
+2. Add to changelog.xml
+   ↓
+3. Deploy to testdbdev (development)
+   ↓
+4. Test and verify in dev
+   ↓
+5. Deploy to testdbstg (staging)
+   ↓
+6. Integration testing in staging
+   ↓
+7. Deploy to testdbprd (production)
+   ↓
+8. Monitor production, tag release
 ```
 
-Apply:
+### Key Principles
 
-```bash
-liquibase update
-```
+**Same SQL, different databases:**
 
-## Add views, procedures, functions, and triggers
+- The EXACT same changelog.xml deploys to all environments
+- Only connection strings differ (via properties files)
+- This ensures consistency and reduces errors
 
-Create `database/changelog/changes/V0003__views_procs_functions_triggers.sql`:
+**Progressive deployment:**
 
-```sql
---changeset yourname:V0003
--- View
-IF OBJECT_ID(N'app.v_customer_basic', N'V') IS NOT NULL
-    DROP VIEW app.v_customer_basic;
-GO
-CREATE VIEW app.v_customer_basic AS
-SELECT customer_id, full_name, created_at, email
-FROM app.customer;
-GO
+- Never skip environments
+- Always go dev → stage → prod
+- Test thoroughly at each step
 
--- Scalar function
-IF OBJECT_ID(N'app.fn_mask_email', N'FN') IS NOT NULL
-    DROP FUNCTION app.fn_mask_email;
-GO
-CREATE FUNCTION app.fn_mask_email (@email NVARCHAR(320))
-RETURNS NVARCHAR(320)
-AS
-BEGIN
-    IF @email IS NULL RETURN NULL;
-    DECLARE @at INT = CHARINDEX('@', @email);
-    IF @at <= 1 RETURN @email;
-    RETURN CONCAT(LEFT(@email, 1), '***', SUBSTRING(@email, @at, LEN(@email)));
-END;
-GO
+**Idempotent changes:**
 
--- Stored procedure
-IF OBJECT_ID(N'app.usp_add_customer', N'P') IS NOT NULL
-    DROP PROCEDURE app.usp_add_customer;
-GO
-CREATE PROCEDURE app.usp_add_customer
-    @full_name NVARCHAR(200),
-    @email NVARCHAR(320) = NULL
-AS
-BEGIN
-    SET NOCOUNT ON;
-    INSERT INTO app.customer (full_name, email) VALUES (@full_name, @email);
-END;
-GO
+- Changes should be safe to re-run
+- Use `IF EXISTS` / `IF NOT EXISTS`
+- Liquibase tracks what ran, but guards prevent errors
 
--- Trigger
-IF OBJECT_ID(N'app.tr_customer_audit', N'TR') IS NOT NULL
-    DROP TRIGGER app.tr_customer_audit;
-GO
-CREATE TRIGGER app.tr_customer_audit
-ON app.customer
-AFTER INSERT, UPDATE
-AS
-BEGIN
-    SET NOCOUNT ON;
-    -- example audit hook (replace with your audit table/logic)
-    -- SELECT * FROM inserted;
-END;
-GO
-```
+**Tagging for safety:**
 
-Apply:
+- Tag after each successful deployment
+- Tags enable precise rollbacks
+- Naming convention: `release-v1.x` or date-based `release-2025-11-13`
 
-```bash
-liquibase update
-```
+**Audit trail:**
 
-## Rollbacks and tags
+- `DATABASECHANGELOG` table records everything
+- Who made the change (`AUTHOR`)
+- When it ran (`DATEEXECUTED`)
+- Checksum to detect tampering
 
-Liquibase rollbacks are easiest when you deploy with tags.
+### Automation with CI/CD
 
-Tag after a successful deployment:
-
-```bash
-liquibase tag --tag=release_2025_11_11
-```
-
-Roll back to a prior tag:
-
-```bash
-liquibase rollback --tag=release_2025_10_31
-```
-
-Or roll back N changeSets:
-
-```bash
-liquibase rollbackCount 1
-```
-
-If you change a SQL file post-deploy, Liquibase will detect a checksum mismatch. If you intentionally edited a change that already ran (generally avoid this), you may need:
-
-```bash
-liquibase clearCheckSums
-```
-
-## Contexts and labels (targeted changes)
-
-You can mark a changeSet for specific environments:
-
-```sql
---changeset yourname:seed_demo context:dev,test
-INSERT INTO app.customer (full_name, email) VALUES (N'Demo User', N'demo@example.com');
-```
-
-Run with contexts:
-
-```bash
-liquibase --contexts=dev update
-```
-
-## Multiple environments (properties files)
-
-Create `liquibase.dev.properties` and `liquibase.prod.properties` with different JDBC URLs and credentials. Then run:
-
-```bash
-liquibase --defaultsFile=liquibase.dev.properties update
-liquibase --defaultsFile=liquibase.prod.properties updateSQL > prod_deploy_preview.sql
-```
-
-Never hardcode prod secrets; use environment variables or secret stores.
-
-## GitHub Actions (quick example)
-
-Create `.github/workflows/liquibase-update.yml`:
+In production, you'd automate this with GitHub Actions:
 
 ```yaml
-name: liquibase-update
-on: [workflow_dispatch]
+# Simplified example workflow
+on:
+  push:
+    branches: [main]
 
 jobs:
-  update:
+  deploy-dev:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Deploy to Dev
+        run: liquibase update --defaults-file=env/liquibase.dev.properties
 
-      - uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '17'
+  deploy-stage:
+    needs: deploy-dev
+    environment: staging  # Requires approval
+    steps:
+      - name: Deploy to Stage
+        run: liquibase update --defaults-file=env/liquibase.stage.properties
 
-      - name: Liquibase update
-        uses: liquibase/liquibase-github-action@v4
-        with:
-          operation: update
-          changelogFile: database/changelog/changelog.xml
-          url: ${{ secrets.DB_URL }}           # e.g. jdbc:sqlserver://...;databaseName=...
-          username: ${{ secrets.DB_USER }}
-          password: ${{ secrets.DB_PASS }}
+  deploy-prod:
+    needs: deploy-stage
+    environment: production  # Requires approval
+    steps:
+      - name: Deploy to Prod
+        run: liquibase update --defaults-file=env/liquibase.prod.properties
 ```
 
-Store `DB_URL`, `DB_USER`, and `DB_PASS` in repository/environment secrets. Protect production with environment approvals.
-
-## Common troubleshooting
+## Common Troubleshooting
 
 ### Docker Volume Mount Issues
 
-**Error: "exec: `/liquibase/docker-entrypoint.sh`: no such file or directory"**
+**Error**: `exec: /liquibase/docker-entrypoint.sh: no such file or directory`
 
-This occurs when mounting to `/liquibase` which overwrites the container's Liquibase installation.
+**Cause**: Mounting to `/liquibase` overwrites the container's Liquibase installation
 
-**Solution:** Mount to a different path like `/workspace`:
+**Fix**: Mount to `/workspace` instead:
 
 ```bash
-# Wrong - overwrites /liquibase in container
-docker run --rm -v /data/liquibase:/liquibase liquibase/liquibase:latest ...
+# Wrong
+-v /data/liquibase-tutorial:/liquibase
 
-# Correct - mount to /workspace
-docker run --rm -v /data/liquibase:/workspace liquibase-custom:5.0.1 \
-  --changelog-file=/workspace/database/changelog/changelog.xml ...
+# Correct
+-v /data/liquibase-tutorial:/workspace
 ```
 
-### JDBC Driver Issues
+### JDBC Driver Not Found
 
-**Error: "Cannot find database driver: com.microsoft.sqlserver.jdbc.SQLServerDriver"**
+**Error**: `Cannot find database driver: com.microsoft.sqlserver.jdbc.SQLServerDriver`
 
-The official `liquibase/liquibase` image doesn't include SQL Server JDBC drivers.
+**Cause**: Official Liquibase image doesn't include SQL Server drivers
 
-**Solution:** Build and use the custom Liquibase image from this repository:
+**Fix**: Use the custom image you built:
 
 ```bash
-# Build custom image with SQL Server driver (from dev container)
-cd /workspaces/dbtools/docker/liquibase
-docker build -t liquibase-custom:5.0.1 .
+# Wrong
+liquibase/liquibase:latest
 
-# Use the custom image (from /data/liquibase directory)
-cd /data/liquibase
-docker run --rm \
-  --network=host \
-  -v /data/liquibase:/workspace \
-  liquibase-custom:5.0.1 \
-  --url="jdbc:sqlserver://localhost:1433;databaseName=testdb;encrypt=true;trustServerCertificate=true" \
-  --username="sa" \
-  --password='YourStrong!Passw0rd' \
-  --changelog-file=/workspace/database/changelog/changelog.xml \
-  update
+# Correct
+liquibase-custom:5.0.1
 ```
 
-### Connection Issues
+### Connection Refused
 
-**Error: "The TCP/IP connection to the host localhost, port 1433 has failed"**
+**Error**: `Connection refused` or `timeout`
 
-When running Liquibase in Docker, `localhost` refers to the container, not your host machine.
+**Cause**: Liquibase container can't reach SQL Server
 
-**Solutions:**
-
-1. **Use `--network=host` (Linux - recommended for this setup):**
-
-   ```bash
-   docker run --rm --network=host \
-     -v /data/liquibase:/workspace \
-     liquibase-custom:5.0.1 \
-     --url="jdbc:sqlserver://localhost:1433;databaseName=testdb..." ...
-   ```
-
-2. **Use `--network container:mssql1` (if SQL Server is in a container named mssql1):**
-
-   ```bash
-   docker run --rm --network container:mssql1 \
-     -v /data/liquibase:/workspace \
-     liquibase-custom:5.0.1 ...
-   ```
-
-3. **Use `host.docker.internal` (Docker Desktop on Mac/Windows):**
-
-   ```bash
-   docker run --rm \
-     -v /data/liquibase:/workspace \
-     liquibase-custom:5.0.1 \
-     --url="jdbc:sqlserver://host.docker.internal:1433;databaseName=testdb..." ...
-   ```
-
-### Bash History Expansion Issues
-
-**Error: "bash: !Passw0rd: event not found"**
-
-Bash tries to expand `!` in passwords when using double quotes.
-
-**Solution:** Use single quotes around passwords:
+**Fix**: Use `--network=host`:
 
 ```bash
-# Wrong - bash expands !
+docker run --rm --network=host ...
+```
+
+### Password with Special Characters
+
+**Error**: `bash: !Passw0rd: event not found`
+
+**Cause**: Bash interprets `!` in double quotes
+
+**Fix**: Use single quotes:
+
+```bash
+# Wrong
 --password="YourStrong!Passw0rd"
 
-# Correct - single quotes prevent expansion
+# Correct
 --password='YourStrong!Passw0rd'
 ```
 
-### Empty Baseline Generation
+### Checksum Mismatch
 
-**Message: "changelog not generated. There are no changesets to write"**
+**Error**: `Validation Failed: changesets have checksum mismatch`
 
-This means the database has no objects (tables, views, procedures) to baseline.
+**Cause**: You edited a changeset that already ran
 
-**Solution:** See the [Troubleshooting section in Step 1](#step-1-generate-the-baseline-from-existing-database) for how to verify database contents and create sample objects.
+**Prevention**: Never edit deployed changesets! Create new ones
 
-### General Issues
+**Recovery** (if you must):
 
-- **Driver not found (CLI):** ensure `drivers/mssql-jdbc-<version>.jar` exists and `classpath=drivers` is set, or use Docker.
-- **Login failed:** confirm SQL auth is enabled and the login has rights to create/alter objects.
-- **Locking/timeouts:** run during a maintenance window; keep changeSets small; prefer online/index-friendly operations.
-- **Checksum mismatch:** avoid editing previously deployed changeSets. If necessary, use `clearCheckSums` after understanding impact.
-- **"Object exists" errors:** add `IF EXISTS/IF NOT EXISTS` guards for idempotency.
-
-## Best practices
-
-- One logical change per changeSet; name files clearly (`V0004__add_order_table.sql`)
-- Use expand/contract for backward-compatible changes (add, backfill, switch reads, then drop)
-- Tag releases; preview with `updateSQL` for risky deployments
-- Keep secrets out of source; use env vars or secret stores
-- Add tests: consider tSQLt for unit testing stored procedures and functions
-
-## ChangeSet cheat sheet: common SQL Server operations
-
-For comprehensive step-by-step examples of common database changes, see the **[Making Changes After Baseline](#making-changes-after-baseline)** section, which includes detailed examples for:
-
-1. **Add a table** - See [Change 1: Add a New Table](#change-1-add-a-new-table)
-2. **Modify data type of column** - See [Change 2: Modify Data Type of a Column](#change-2-modify-data-type-of-a-column)
-3. **Modify NULL constraint** - See [Change 3: Modify NULL Constraint of a Column](#change-3-modify-null-constraint-of-a-column)
-4. **Modify stored procedure** - See [Change 4: Modify a Stored Procedure](#change-4-modify-a-stored-procedure)
-5. **Modify view** - See [Change 5: Modify a View](#change-5-modify-a-view)
-
-### Quick Reference: Add a Column
-
-```sql
---changeset yourname:add-customer-phone
-IF COL_LENGTH('app.customer', 'phone_number') IS NULL
-BEGIN
-    ALTER TABLE app.customer ADD phone_number NVARCHAR(20) NULL;
-END
---rollback ALTER TABLE app.customer DROP COLUMN phone_number;
+```bash
+docker run --rm --network=host \
+  -v /data/liquibase-tutorial:/workspace \
+  liquibase-custom:5.0.1 \
+  --defaults-file=/workspace/env/liquibase.dev.properties \
+  clearCheckSums
 ```
 
-### Quick Reference: Delete a Column
+## Best Practices
 
-Note: Deleting columns is destructive. Prefer expand/contract: stop writes/reads first, then drop later.
+### Changeset Design
 
-```sql
---changeset yourname:drop-customer-legacy-col
-IF COL_LENGTH('app.customer', 'legacy_code') IS NOT NULL
-BEGIN
-    ALTER TABLE app.customer DROP COLUMN legacy_code;
-END
---rollback ALTER TABLE app.customer ADD legacy_code NVARCHAR(100) NULL;
+✅ **One logical change per file**
+
+- Add one table, modify one column, update one procedure
+- Makes rollbacks easier
+- Easier to review and understand
+
+✅ **Use descriptive names**
+
+- `V0001__add_orders_table.sql` ✓
+- `V0001.sql` ✗
+
+✅ **Include purpose comments**
+
+- Explain WHY not just WHAT
+- Future you will thank you
+
+✅ **Always include rollback**
+
+- Even if it's just `DROP TABLE`
+- Enables safe rollback
+
+✅ **Make changes idempotent**
+
+- Use `IF EXISTS` / `IF NOT EXISTS`
+- Safe to re-run
+
+### Deployment Workflow
+
+✅ **Always preview before applying**
+
+```bash
+liquibase updateSQL > preview.sql
+cat preview.sql  # Review before running
+liquibase update
 ```
 
-### Quick Reference: Drop a Table
+✅ **Tag every release**
 
-Destructive. Ensure the table is no longer needed.
-
-```sql
---changeset yourname:drop-temp-table
-IF OBJECT_ID(N'app.temp_processing', N'U') IS NOT NULL
-BEGIN
-    DROP TABLE app.temp_processing;
-END
---rollback CREATE TABLE app.temp_processing (id INT PRIMARY KEY, data NVARCHAR(MAX));
+```bash
+liquibase tag release-v1.2
 ```
 
-## How Liquibase integrates with GitHub for CI/CD
+✅ **Test in dev, promote to stage, then prod**
 
-- Keep your SQL change logs in the GitHub repo (e.g., `database/changelog/changelog.xml` and `changes/*.sql`). The workflow checks out the repo and runs Liquibase against those files.
-- Use GitHub “environments” (dev/test/prod) with secrets for JDBC URLs and credentials; protect prod with required reviewers.
-- On pull requests: run `updateSQL` (dry run) to preview and validate scripts without changing the database.
-- On merges or manual triggers: run `update` to apply changes environment-by-environment.
+- Never skip environments
+- Same SQL everywhere
 
-Example workflow (validation + dev deploy + protected prod deploy):
+✅ **Use source control (Git)**
 
-```yaml
-name: liquibase-pipeline
-on:
-  pull_request:
-    branches: [ main ]
-  push:
-    branches: [ main ]
-  workflow_dispatch:
+- Commit changelog files
+- Track changes over time
+- Enable collaboration
 
-env:
-  CHANGELOG: database/changelog/changelog.xml
+### Security
 
-jobs:
-  validate:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '17'
-      - name: Liquibase validate and dry run
-        uses: liquibase/liquibase-github-action@v4
-        with:
-          operation: updateSQL
-          changelogFile: ${{ env.CHANGELOG }}
-          url: ${{ secrets.DEV_DB_URL }}
-          username: ${{ secrets.DEV_DB_USER }}
-          password: ${{ secrets.DEV_DB_PASS }}
+✅ **Never commit passwords to Git**
 
-  deploy-dev:
-    if: github.event_name == 'push'
-    needs: validate
-    runs-on: ubuntu-latest
-    environment: dev
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '17'
-      - name: Liquibase update (Dev)
-        uses: liquibase/liquibase-github-action@v4
-        with:
-          operation: update
-          changelogFile: ${{ env.CHANGELOG }}
-          url: ${{ secrets.DEV_DB_URL }}
-          username: ${{ secrets.DEV_DB_USER }}
-          password: ${{ secrets.DEV_DB_PASS }}
+- Use environment variables
+- Use secret management tools
+- Template `.properties` files, gitignore actual files
 
-  deploy-prod:
-    if: github.event_name == 'workflow_dispatch'
-    needs: deploy-dev
-    runs-on: ubuntu-latest
-    environment:
-      name: prod
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '17'
-      - name: Liquibase update (Prod)
-        uses: liquibase/liquibase-github-action@v4
-        with:
-          operation: update
-          changelogFile: ${{ env.CHANGELOG }}
-          url: ${{ secrets.PROD_DB_URL }}
-          username: ${{ secrets.PROD_DB_USER }}
-          password: ${{ secrets.PROD_DB_PASS }}
-```
+✅ **Use least-privilege accounts**
 
-Notes:
+- Don't use `sa` in production
+- Create dedicated Liquibase user
+- Grant only necessary permissions
 
-- For Docker-based execution, replace the action step with a `docker run liquibase/liquibase` invocation mounting the repo (`-v "$GITHUB_WORKSPACE":/liquibase`).
-- Use contexts/labels in changeSets to apply environment-specific data or operations.
+✅ **Audit who makes changes**
 
-## Next steps
+- Use real names in `author` field
+- Review changes in pull requests
+- Require approvals for production
 
-- Add CI linting (SQLFluff) and unit tests (tSQLt) to your pipeline
-- Introduce contexts/labels for seed data and environment-specific operations
-- Implement approvals for staging/production
+### Large Changes
+
+✅ **Use expand-contract pattern**
+
+For breaking changes (e.g., rename column):
+
+1. **Expand**: Add new column
+2. **Migrate**: Dual-write to both columns
+3. **Contract**: Remove old column (later release)
+
+✅ **Break into multiple releases**
+
+- Don't try to do everything at once
+- Allows rollback to intermediate states
+
+## Next Steps
+
+**Level up your skills:**
+
+1. **Add GitHub Actions**: Automate deployments
+2. **Implement approval gates**: Require manual approval for prod
+3. **Add database unit tests**: Use tSQLt framework
+4. **Monitor deployments**: Track success/failure rates
+5. **Implement blue-green deployments**: Zero-downtime releases
+
+**Learn more:**
+
+- [Liquibase Official Docs](https://docs.liquibase.com/)
+- [SQL Server Best Practices](https://learn.microsoft.com/sql/relational-databases/)
+- [Database Refactoring](https://databaserefactoring.com/)
+- [CI/CD for Databases](https://www.liquibase.org/get-started/best-practices)
+
+**Try these exercises:**
+
+1. Add a new `products` table with foreign keys to orders
+2. Create a stored procedure to calculate customer lifetime value
+3. Add indexes to optimize common queries
+4. Implement soft deletes (add `deleted_at` column)
+5. Create an audit trigger to log changes
 
 ## References
 
-- Liquibase docs: `https://docs.liquibase.com/`
-- SQL Server JDBC driver: `https://learn.microsoft.com/sql/connect/jdbc/`
-- GitHub Action: `https://github.com/liquibase/liquibase-github-action`
+- Liquibase Documentation: <https://docs.liquibase.com/>
+- SQL Server JDBC Driver: <https://learn.microsoft.com/sql/connect/jdbc/>
+- GitHub Actions: <https://github.com/liquibase/liquibase-github-action>
+- Database DevOps: <https://www.liquibase.org/blog>
+- This repository structure guide: `/docs/architecture/liquibase-directory-structure.md`
+
+---
+
+**Congratulations!** You now understand database change management, CI/CD principles, and how to safely deploy changes across environments using Liquibase. Keep practicing, and remember: always test in dev, verify in stage, then carefully deploy to production.
