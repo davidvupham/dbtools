@@ -20,7 +20,7 @@ services:
       - /data/mongodb:/data/mongodb
     restart: unless-stopped
     networks:
-      - mongodb-network
+      - tool-library-network
 
   mongodb2:
     build:
@@ -41,7 +41,7 @@ services:
       - /data/mongodb:/data/mongodb
     restart: unless-stopped
     networks:
-      - mongodb-network
+      - tool-library-network
 
   mongodb3:
     build:
@@ -62,8 +62,8 @@ services:
       - /data/mongodb:/data/mongodb
     restart: unless-stopped
     networks:
-      - mongodb-network
+      - tool-library-network
 
 networks:
-  mongodb-network:
+  tool-library-network:
     driver: bridge

@@ -61,7 +61,7 @@ services:
     # Network Configuration
     # Allows Liquibase to connect to database containers
     networks:
-      - dbtools-network
+      - tool-library-network
 
     # Environment Variables
     # These can be referenced in your liquibase.properties or changelogs
@@ -97,7 +97,7 @@ services:
 # ------------------------------------------------------------------------------
 # Connect to existing database network or create a new one
 networks:
-  dbtools-network:
+  tool-library-network:
     # Use external network if databases are in a separate docker-compose
     # Uncomment if your databases are in another compose file
     # external: true

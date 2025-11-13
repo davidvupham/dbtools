@@ -89,10 +89,10 @@ services:
     restart: unless-stopped
 
     # Network configuration
-    # - Connects to kafka-network for inter-service communication
+    # - Connects to tool-library-network for inter-service communication
     # - Kafka can reach Zookeeper using service name 'zookeeper'
     networks:
-      - kafka-network
+      - tool-library-network
 
     # Health check to monitor Zookeeper status
     # - Docker can restart service if unhealthy
@@ -224,7 +224,7 @@ services:
 
     # Network configuration
     networks:
-      - kafka-network
+      - tool-library-network
 
     # Health check to monitor Kafka status
     healthcheck:
@@ -251,12 +251,12 @@ services:
 # Network Configuration
 # ==============================================================================
 # PURPOSE:
-#   - Creates isolated network for Kafka services
-#   - Enables service discovery by name (zookeeper, kafka)
+#   - Creates unified network for all database and messaging services
+#   - Enables service discovery by name (zookeeper, kafka, mssql1, etc.)
 #   - Provides network isolation from other containers
 #
 networks:
-  kafka-network:
+  tool-library-network:
     # Bridge driver: Default Docker network mode
     #   - Services can communicate using service names
     #   - DNS resolution built-in

@@ -19,8 +19,8 @@ services:
       - /data/mssql/mssql1:/var/opt/mssql
     restart: unless-stopped
     networks:
-      - mssql-network
+      - tool-library-network
 
 networks:
-  mssql-network:
+  tool-library-network:
     driver: bridge

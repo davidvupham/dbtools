@@ -14,3 +14,9 @@ services:
       - ./hvault/config:/vault/config:ro
       - ./hvault/data:/vault/file
     restart: unless-stopped
+    networks:
+      - tool-library-network
+
+networks:
+  tool-library-network:
+    driver: bridge

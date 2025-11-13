@@ -13,7 +13,7 @@ services:
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:-devpassword}
       RABBITMQ_DEFAULT_VHOST: ${RABBITMQ_DEFAULT_VHOST:-/}
     ports:
-      - "5672:5672"   # AMQP client connections
+      - "5672:5672" # AMQP client connections
       - "15672:15672" # Management UI / HTTP API
       - "15692:15692" # Prometheus metrics endpoint
     volumes:
@@ -26,8 +26,8 @@ services:
       retries: 5
     restart: unless-stopped
     networks:
-      - rabbitmq-network
+      - tool-library-network
 
 networks:
-  rabbitmq-network:
+  tool-library-network:
     driver: bridge

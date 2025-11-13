@@ -21,7 +21,7 @@ services:
       - /data/postgresql/psql1:/var/lib/postgresql
     restart: unless-stopped
     networks:
-      - postgresql-network
+      - tool-library-network
 
   psql2:
     build: .
@@ -43,8 +43,8 @@ services:
       - /data/postgresql/psql2:/var/lib/postgresql
     restart: unless-stopped
     networks:
-      - postgresql-network
+      - tool-library-network
 
 networks:
-  postgresql-network:
+  tool-library-network:
     driver: bridge
