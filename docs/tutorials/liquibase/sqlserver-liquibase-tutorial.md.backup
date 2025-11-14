@@ -350,15 +350,14 @@ When you start using Liquibase:
 
 **Required:**
 
-- Docker installed (to run SQL Server and Liquibase)
+- SQL Server instance you can connect to (we'll use a dev container with SQL Server)
+- Docker installed (to run Liquibase without installing Java locally)
 - Python with `pyodbc` package (for running the baseline fix script)
-- Environment variable `MSSQL_LIQUIBASE_TUTORIAL_PWD` set with SQL Server SA password
 
 **What we'll use:**
 
-- Dedicated SQL Server container for this tutorial (accessible at `localhost:1433`)
-  - **Container name**: `mssql_liquibase_tutorial`
-  - **Why dedicated?** This tutorial uses a separate SQL Server instance that can be safely removed after completion
+- SQL Server running in a dev container (accessible at `localhost:1433`)
+  - **What's a dev container?** A pre-configured development environment running in Docker that has all the tools you need already set up
 - Docker to run Liquibase commands
   - **What's Docker?** A tool that packages software in "containers" - think of it as a lightweight virtual machine that runs programs in isolation
 - Three databases on the same server: `testdbdev`, `testdbstg`, `testdbprd`
@@ -372,38 +371,12 @@ When you start using Liquibase:
   - **Why Java?** Liquibase is written in Java, but you don't need to install Java because the Docker container includes it
 - Liquibase CLI (Docker handles it)
   - **What's CLI?** Command Line Interface - the text-based way to run Liquibase commands
-- JDBC drivers (included in Liquibase Docker image)
+- JDBC drivers (included in custom Docker image)
   - **What's JDBC?** Java Database Connectivity - the driver that lets Java programs (like Liquibase) talk to SQL Server
-
-### Set Up Environment Variable
-
-**IMPORTANT**: Before starting, set the SQL Server SA password as an environment variable.
-
-```bash
-# Set the SQL Server SA password (required for tutorial)
-export MSSQL_LIQUIBASE_TUTORIAL_PWD='YourStrong!Passw0rd'
-
-# Verify it's set
-echo $MSSQL_LIQUIBASE_TUTORIAL_PWD
-```
-
-**Password requirements:**
-- At least 8 characters
-- Contains uppercase and lowercase letters
-- Contains numbers
-- Contains special characters
-
-**Why use an environment variable?**
-- Keeps passwords out of command history
-- Makes it easy to change the password in one place
-- Better security practice than hardcoding passwords
 
 **Verify prerequisites:**
 
 ```bash
-# Verify Docker is installed
-docker --version
-
 # Verify Python is installed
 python3 --version
 
@@ -416,56 +389,59 @@ pip install --user pyodbc
 
 **Expected output:**
 ```
-Docker version 24.x.x
 Python 3.13.x
 pyodbc version: 5.x.x
 ```
 
 ## Environment Setup
 
-### Step 0: Start the Tutorial SQL Server Container
+### Step 0: Verify and Start Required Containers
 
-This tutorial uses a dedicated SQL Server container that can be safely removed after completion.
+Before starting the tutorial, we need to ensure both the SQL Server (mssql) and Liquibase containers are built and running.
 
-#### Build and start SQL Server container
+#### Check if containers are running
 
 ```bash
-# Navigate to the tutorial docker directory
-cd /workspaces/dbtools/docs/tutorials/liquibase/docker
+# Check if mssql1 container is running
+docker ps | grep mssql1
 
-# Start the SQL Server container
-docker compose up -d
+# Check if liquibase container exists
+docker ps -a | grep liquibase
+```
+
+**Expected output if running:**
+```
+mssql1      gds-mssql:latest    Up X minutes    0.0.0.0:1433->1433/tcp
+```
+
+If you see no output, the containers are not running and need to be built/started.
+
+#### Build and start MSSQL container
+
+```bash
+# Navigate to the mssql docker directory
+cd /workspaces/dbtools/docker/mssql
+
+# Build and start the MSSQL container
+docker compose up -d --build
 
 # Verify it's running
-docker ps | grep mssql_liquibase_tutorial
-```
-
-**Expected output:**
-```
-mssql_liquibase_tutorial   mcr.microsoft.com/mssql/server:2022-latest   Up X seconds (healthy)   0.0.0.0:1433->1433/tcp
+docker ps | grep mssql1
 ```
 
 **What this does:**
-- Downloads SQL Server 2022 image (if not already downloaded)
-- Creates a container named `mssql_liquibase_tutorial`
-- Starts SQL Server on port `1433`
-- Uses the password from `$MSSQL_LIQUIBASE_TUTORIAL_PWD`
-- Includes a health check to verify SQL Server is ready
+- `docker compose up` - Starts services defined in docker-compose.yml
+- `-d` - Runs in detached mode (background)
+- `--build` - Builds the image if it doesn't exist or has changed
+- The container will be named `mssql1` and accessible at `localhost:1433`
+- Default SA password: `YourStrong!Passw0rd` (set in docker-compose.yml)
 
 **Wait for SQL Server to be ready:**
 
-The container has a built-in health check. Wait until the status shows `(healthy)`:
-
+SQL Server takes 10-30 seconds to initialize on first start. Wait for the message:
 ```bash
-# Watch the container status (Ctrl+C to exit)
-watch -n 2 'docker ps | grep mssql_liquibase_tutorial'
-```
-
-Look for: `Up X seconds (healthy)`
-
-Alternatively, check the logs:
-```bash
-docker logs mssql_liquibase_tutorial --tail 20
+# Check the logs to see when SQL Server is ready
+docker logs mssql1 --tail 20
 ```
 
 Look for: `SQL Server is now ready for client connections`
@@ -497,22 +473,17 @@ liquibase       latest    abc123def456   Just now   500MB
 Now verify you can connect to SQL Server. This test ensures your database is accessible before we start.
 
 ```bash
-### Check SQL Server is Running
-
-Now verify you can connect to SQL Server. This test ensures your database is accessible before we start.
-
-```bash
 # Test connection (should show server name and date)
-docker exec mssql_liquibase_tutorial /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U SA -P "$MSSQL_LIQUIBASE_TUTORIAL_PWD" -Q "SELECT @@SERVERNAME AS ServerName, GETDATE() AS CurrentTime"
+docker exec mssql1 /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U SA -P 'YourStrong!Passw0rd' -Q "SELECT @@SERVERNAME AS ServerName, GETDATE() AS CurrentTime"
 ```
 
 **What this command does:**
-- `docker exec mssql_liquibase_tutorial` - Run a command inside the tutorial SQL Server container
+- `docker exec mssql1` - Run a command inside the `mssql1` container
 - `/opt/mssql-tools18/bin/sqlcmd` - SQL Server command-line tool
 - `-C` - Trust server certificate (skip SSL validation for local development)
 - `-S localhost` - Connect to server at localhost
 - `-U SA` - Username (SA = System Administrator, the default admin account)
-- `-P "$MSSQL_LIQUIBASE_TUTORIAL_PWD"` - Password from environment variable
+- `-P 'YourStrong!Passw0rd'` - Password (note the single quotes to handle special characters)
 - `-Q "..."` - Query to execute
 - `@@SERVERNAME` - SQL Server built-in variable for the server name
 - `GETDATE()` - SQL Server function that returns current date/time
@@ -520,14 +491,14 @@ docker exec mssql_liquibase_tutorial /opt/mssql-tools18/bin/sqlcmd -C -S localho
 **Expected output:**
 
 ```
-ServerName               CurrentTime
------------------------- -----------------------
-mssql_liquibase_tutorial 2025-11-14 20:00:00.000
+ServerName    CurrentTime
+------------- -----------------------
+6609bb8b43cc  2025-11-13 20:00:00.000
 ```
 
 **Troubleshooting:**
-- **Connection refused**: SQL Server might not be running. Check with `docker ps | grep mssql_liquibase_tutorial`
-- **Login failed**: Password might be wrong. Verify `$MSSQL_LIQUIBASE_TUTORIAL_PWD` is set correctly
+- **Connection refused**: SQL Server might not be running. Check with `docker ps | grep mssql`
+- **Login failed**: Password might be wrong. Verify password in your dev container setup
 - **Command not found**: Make sure Docker is installed and running
 
 ## Project Structure
@@ -566,23 +537,34 @@ mkdir -p env
 
 ## Step 1: Create Three Database Environments
 
-Create three databases on the same SQL Server to represent dev, stage, and prod.
-
-We've provided a SQL script that creates all three databases. Navigate to the tutorial scripts directory and run it:
+Create three databases on the same SQL Server to represent dev, stage, and prod:
 
 ```bash
-# Change to the scripts directory
-cd /workspaces/dbtools/docs/tutorials/liquibase/scripts
+# Create development database
+docker exec mssql1 /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U SA -P 'YourStrong!Passw0rd' -Q "
+IF NOT EXISTS (SELECT 1 FROM sys.databases WHERE name = 'testdbdev')
+CREATE DATABASE testdbdev;
+"
 
-# Create development, staging, and production databases
-docker exec -i mssql_liquibase_tutorial /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U SA -P "$MSSQL_LIQUIBASE_TUTORIAL_PWD" < 01_create_databases.sql
-```
+# Create staging database
+docker exec mssql1 /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U SA -P 'YourStrong!Passw0rd' -Q "
+IF NOT EXISTS (SELECT 1 FROM sys.databases WHERE name = 'testdbstg')
+CREATE DATABASE testdbstg;
+"
 
-**Verify all three databases exist:**
+# Create production database
+docker exec mssql1 /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U SA -P 'YourStrong!Passw0rd' -Q "
+IF NOT EXISTS (SELECT 1 FROM sys.databases WHERE name = 'testdbprd')
+CREATE DATABASE testdbprd;
+"
 
-```bash
-# Run the verification script
-docker exec -i mssql_liquibase_tutorial /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U SA -P "$MSSQL_LIQUIBASE_TUTORIAL_PWD" < 02_verify_databases.sql
+# Verify all three databases exist
+docker exec mssql1 /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U SA -P 'YourStrong!Passw0rd' -Q "
+SELECT name, database_id, create_date
+FROM sys.databases
+WHERE name IN ('testdbdev', 'testdbstg', 'testdbprd')
+ORDER BY name
+"
 ```
 
 **Expected output:**
@@ -590,45 +572,124 @@ docker exec -i mssql_liquibase_tutorial /opt/mssql-tools18/bin/sqlcmd -C -S loca
 ```
 name        database_id  create_date
 ----------- ------------ -----------------------
-testdbdev   5            2025-11-14 20:00:00.000
-testdbprd   7            2025-11-14 20:00:01.000
-testdbstg   6            2025-11-14 20:00:00.500
+testdbdev   5            2025-11-13 20:00:00.000
+testdbprd   7            2025-11-13 20:00:01.000
+testdbstg   6            2025-11-13 20:00:00.500
 ```
 
 **What did we just do?**
 
-- Created three empty databases using `01_create_databases.sql`
+- Created three empty databases
 - All on the same SQL Server instance (simulating separate environments)
 - In real production, these would be on different servers/clouds
-- Verified creation with `02_verify_databases.sql`
 
 ## Step 2: Populate Development with Existing Objects
 
 Now create some database objects in **development only**. This simulates an existing database you want to start managing with Liquibase.
 
-We've provided a SQL script that creates a complete working schema in the development database:
-
 ```bash
-# Create schema, tables, views, procedures, functions, and sample data in DEVELOPMENT
-docker exec -i mssql_liquibase_tutorial /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U SA -P "$MSSQL_LIQUIBASE_TUTORIAL_PWD" < 03_populate_dev_database.sql
+# Create schema, tables, views, procedures, and functions in DEVELOPMENT
+docker exec mssql1 /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U SA -P 'YourStrong!Passw0rd' -Q "
+USE testdbdev;
+
+-- Step 1: Create schema
+IF NOT EXISTS (SELECT 1 FROM sys.schemas WHERE name = 'app')
+    EXEC('CREATE SCHEMA app');
+
+-- Step 2: Create customer table
+IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID(N'[app].[customer]') AND type = 'U')
+BEGIN
+    CREATE TABLE app.customer (
+        customer_id INT IDENTITY(1,1) CONSTRAINT PK_customer PRIMARY KEY,
+        full_name NVARCHAR(200) NOT NULL,
+        email NVARCHAR(320) NULL,
+        phone_number NVARCHAR(20) NULL,
+        created_at DATETIME2(3) NOT NULL CONSTRAINT DF_customer_created_at DEFAULT (SYSUTCDATETIME())
+    );
+    PRINT 'Created table app.customer';
+END
+
+-- Step 3: Create view
+IF OBJECT_ID(N'app.v_customer_basic', N'V') IS NOT NULL
+    DROP VIEW app.v_customer_basic;
+
+CREATE VIEW app.v_customer_basic AS
+SELECT customer_id, full_name, email, created_at
+FROM app.customer;
+PRINT 'Created view app.v_customer_basic';
+
+-- Step 4: Create stored procedure
+IF OBJECT_ID(N'app.usp_add_customer', N'P') IS NOT NULL
+    DROP PROCEDURE app.usp_add_customer;
+GO
+
+CREATE PROCEDURE app.usp_add_customer
+    @full_name NVARCHAR(200),
+    @email NVARCHAR(320) = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+    INSERT INTO app.customer (full_name, email) VALUES (@full_name, @email);
+    SELECT SCOPE_IDENTITY() AS customer_id;
+END;
+GO
+PRINT 'Created procedure app.usp_add_customer';
+
+-- Step 5: Create function
+IF OBJECT_ID(N'app.fn_mask_email', N'FN') IS NOT NULL
+    DROP FUNCTION app.fn_mask_email;
+GO
+
+CREATE FUNCTION app.fn_mask_email (@email NVARCHAR(320))
+RETURNS NVARCHAR(320)
+AS
+BEGIN
+    IF @email IS NULL RETURN NULL;
+    DECLARE @at INT = CHARINDEX('@', @email);
+    IF @at <= 1 RETURN @email;
+    RETURN CONCAT(LEFT(@email, 1), '***', SUBSTRING(@email, @at, LEN(@email)));
+END;
+GO
+PRINT 'Created function app.fn_mask_email';
+
+-- Step 6: Insert sample data
+INSERT INTO app.customer (full_name, email, phone_number)
+VALUES
+    (N'Alice Anderson', N'alice@example.com', N'555-0001'),
+    (N'Bob Brown', N'bob@example.com', N'555-0002'),
+    (N'Carol Chen', N'carol@example.com', NULL);
+
+SELECT 'Setup complete. Created schema, table, view, procedure, function, and sample data.' AS Result;
+"
 ```
 
 **Verify objects were created in development:**
 
 ```bash
 # List all objects in app schema (development only)
-docker exec -i mssql_liquibase_tutorial /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U SA -P "$MSSQL_LIQUIBASE_TUTORIAL_PWD" < 04_verify_dev_objects.sql
+docker exec mssql1 /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U SA -P 'YourStrong!Passw0rd' -Q "
+USE testdbdev;
+SELECT
+    SCHEMA_NAME(schema_id) AS SchemaName,
+    name AS ObjectName,
+    type_desc AS ObjectType
+FROM sys.objects
+WHERE schema_id = SCHEMA_ID('app')
+ORDER BY type_desc, name;
+"
 
 # Check sample data
-docker exec -i mssql_liquibase_tutorial /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U SA -P "$MSSQL_LIQUIBASE_TUTORIAL_PWD" < 05_verify_dev_data.sql
+docker exec mssql1 /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U SA -P 'YourStrong!Passw0rd' -Q "
+USE testdbdev;
+SELECT customer_id, full_name, email FROM app.customer;
+"
 ```
 
 **What did we just do?**
 
-- Created a complete working database in development using `03_populate_dev_database.sql`
-- Schema `app`, table `customer`, view `v_customer_basic`, stored procedure `usp_add_customer`, function `fn_mask_email`
-- Added sample data (3 customer records)
-- Verified with `04_verify_dev_objects.sql` and `05_verify_dev_data.sql`
+- Created a complete working database in development
+- Schema, table, view, stored procedure, function
+- Added sample data
 - Staging and production are still empty (we'll deploy to them next)
 
 **Why only in dev?**
@@ -645,9 +706,9 @@ Create properties files to connect Liquibase to each environment:
 # Development properties
 cat > /data/liquibase-tutorial/env/liquibase.dev.properties << 'EOF'
 # Development Environment Connection
-url=jdbc:sqlserver://mssql_liquibase_tutorial:1433;databaseName=testdbdev;encrypt=true;trustServerCertificate=true
+url=jdbc:sqlserver://localhost:1433;databaseName=testdbdev;encrypt=true;trustServerCertificate=true
 username=sa
-password=${MSSQL_LIQUIBASE_TUTORIAL_PWD}
+password=YourStrong!Passw0rd
 changelog-file=database/changelog/changelog.xml
 search-path=/workspace
 logLevel=info
@@ -656,9 +717,9 @@ EOF
 # Staging properties
 cat > /data/liquibase-tutorial/env/liquibase.stage.properties << 'EOF'
 # Staging Environment Connection
-url=jdbc:sqlserver://mssql_liquibase_tutorial:1433;databaseName=testdbstg;encrypt=true;trustServerCertificate=true
+url=jdbc:sqlserver://localhost:1433;databaseName=testdbstg;encrypt=true;trustServerCertificate=true
 username=sa
-password=${MSSQL_LIQUIBASE_TUTORIAL_PWD}
+password=YourStrong!Passw0rd
 changelog-file=database/changelog/changelog.xml
 search-path=/workspace
 logLevel=info
@@ -667,9 +728,9 @@ EOF
 # Production properties
 cat > /data/liquibase-tutorial/env/liquibase.prod.properties << 'EOF'
 # Production Environment Connection
-url=jdbc:sqlserver://mssql_liquibase_tutorial:1433;databaseName=testdbprd;encrypt=true;trustServerCertificate=true
+url=jdbc:sqlserver://localhost:1433;databaseName=testdbprd;encrypt=true;trustServerCertificate=true
 username=sa
-password=${MSSQL_LIQUIBASE_TUTORIAL_PWD}
+password=YourStrong!Passw0rd
 changelog-file=database/changelog/changelog.xml
 search-path=/workspace
 logLevel=info
@@ -683,15 +744,14 @@ ls -la /data/liquibase-tutorial/env/
 
 - `url`: JDBC connection string (notice `databaseName` differs per environment)
   - `jdbc:sqlserver://` - Protocol for SQL Server connections
-  - `mssql_liquibase_tutorial:1433` - Server hostname (container name) and port (1433 is SQL Server's default port)
+  - `localhost:1433` - Server address and port (1433 is SQL Server's default port)
   - `databaseName=testdbdev` - Which database to connect to (this changes per environment)
   - `encrypt=true` - Use encrypted connection
   - `trustServerCertificate=true` - Trust the server's SSL certificate (for local dev only; in production use proper certificates)
 
 - `username/password`: SQL Server credentials
   - `sa` = System Administrator (default SQL Server admin account)
-  - `${MSSQL_LIQUIBASE_TUTORIAL_PWD}` - Environment variable containing the password (set in prerequisites)
-  - **SECURITY NOTE**: In real production environments, NEVER use sa account! Create dedicated service accounts with minimal permissions.
+  - **SECURITY WARNING**: In real production environments, NEVER use sa account or hardcode passwords!
 
 - `changelog-file`: Master file that lists all changes
   - This is the "table of contents" for your database changes
@@ -707,7 +767,13 @@ ls -la /data/liquibase-tutorial/env/
   - `fine` - Detailed debugging information
   - `debug` - Very detailed debugging
 
-**Security note**: This tutorial uses environment variables for the password, which is better than hardcoding. In production, use:
+**Security note**: Never commit real passwords to Git! In production, use:
+
+- **Environment variables**: `password=${DB_PASSWORD}` (reads from environment)
+  ```properties
+  password=${DB_PASSWORD}
+  ```
+  Then set the variable: `export DB_PASSWORD=SecretPassword123`
 
 - **Secret management**: Azure Key Vault, AWS Secrets Manager, HashiCorp Vault
   - Centralized, encrypted storage for secrets
@@ -920,7 +986,7 @@ docker run --rm \
 
 ```bash
 # Check DATABASECHANGELOG table
-docker exec mssql_liquibase_tutorial /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U SA -P "$MSSQL_LIQUIBASE_TUTORIAL_PWD" -Q "
+docker exec mssql1 /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U SA -P 'YourStrong!Passw0rd' -Q "
 USE testdbdev;
 SELECT ID, AUTHOR, FILENAME, DATEEXECUTED, TAG
 FROM DATABASECHANGELOG
@@ -964,7 +1030,7 @@ docker run --rm \
 
 ```bash
 # Check objects exist in staging
-docker exec mssql_liquibase_tutorial /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U SA -P "$MSSQL_LIQUIBASE_TUTORIAL_PWD" -Q "
+docker exec mssql1 /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U SA -P 'YourStrong!Passw0rd' -Q "
 USE testdbstg;
 SELECT
     SCHEMA_NAME(schema_id) AS SchemaName,
@@ -1012,7 +1078,7 @@ docker run --rm \
 
 ```bash
 # Check objects exist in production
-docker exec mssql_liquibase_tutorial /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U SA -P "$MSSQL_LIQUIBASE_TUTORIAL_PWD" -Q "
+docker exec mssql1 /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U SA -P 'YourStrong!Passw0rd' -Q "
 USE testdbprd;
 SELECT
     SCHEMA_NAME(schema_id) AS SchemaName,
@@ -1191,7 +1257,7 @@ docker run --rm \
 **Verify in development:**
 
 ```bash
-docker exec mssql_liquibase_tutorial /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U SA -P "$MSSQL_LIQUIBASE_TUTORIAL_PWD" -Q "
+docker exec mssql1 /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U SA -P 'YourStrong!Passw0rd' -Q "
 USE testdbdev;
 
 -- Check table exists
@@ -1240,7 +1306,7 @@ docker run --rm \
 **Verify in staging:**
 
 ```bash
-docker exec mssql_liquibase_tutorial /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U SA -P "$MSSQL_LIQUIBASE_TUTORIAL_PWD" -Q "
+docker exec mssql1 /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U SA -P 'YourStrong!Passw0rd' -Q "
 USE testdbstg;
 SELECT name, type_desc FROM sys.objects WHERE name = 'orders' AND schema_id = SCHEMA_ID('app');
 "
@@ -1281,7 +1347,7 @@ docker run --rm \
 **Verify in production:**
 
 ```bash
-docker exec mssql_liquibase_tutorial /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U SA -P "$MSSQL_LIQUIBASE_TUTORIAL_PWD" -Q "
+docker exec mssql1 /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U SA -P 'YourStrong!Passw0rd' -Q "
 USE testdbprd;
 SELECT name, type_desc FROM sys.objects WHERE name = 'orders' AND schema_id = SCHEMA_ID('app');
 "
@@ -1528,7 +1594,7 @@ docker run --rm \
 
 ```bash
 # Check email column length in production
-docker exec mssql_liquibase_tutorial /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U SA -P "$MSSQL_LIQUIBASE_TUTORIAL_PWD" -Q "
+docker exec mssql1 /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U SA -P 'YourStrong!Passw0rd' -Q "
 USE testdbprd;
 
 -- Check email column length
@@ -1564,7 +1630,7 @@ Rollbacks let you undo changes if something goes wrong. Tags mark specific point
 
 ```bash
 # List tags in development
-docker exec mssql_liquibase_tutorial /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U SA -P "$MSSQL_LIQUIBASE_TUTORIAL_PWD" -Q "
+docker exec mssql1 /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U SA -P 'YourStrong!Passw0rd' -Q "
 USE testdbdev;
 SELECT ID, TAG, DATEEXECUTED
 FROM DATABASECHANGELOG
@@ -1587,7 +1653,7 @@ docker run --rm \
   rollback release-v1.1
 
 # Verify rollback worked
-docker exec mssql_liquibase_tutorial /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U SA -P "$MSSQL_LIQUIBASE_TUTORIAL_PWD" -Q "
+docker exec mssql1 /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U SA -P 'YourStrong!Passw0rd' -Q "
 USE testdbdev;
 SELECT ID, AUTHOR, FILENAME, DATEEXECUTED, TAG
 FROM DATABASECHANGELOG
@@ -1727,7 +1793,7 @@ ALTER TABLE app.orders ADD order_total DECIMAL(18,2);
 
 ```bash
 # See all executed changesets in development
-docker exec mssql_liquibase_tutorial /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U SA -P "$MSSQL_LIQUIBASE_TUTORIAL_PWD" -Q "
+docker exec mssql1 /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U SA -P 'YourStrong!Passw0rd' -Q "
 USE testdbdev;
 SELECT
     ORDEREXECUTED,
@@ -2337,7 +2403,7 @@ docker run --rm --network=host \
 **Verify lock status first:**
 
 ```bash
-docker exec mssql_liquibase_tutorial /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U SA -P "$MSSQL_LIQUIBASE_TUTORIAL_PWD" -Q "
+docker exec mssql1 /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U SA -P 'YourStrong!Passw0rd' -Q "
 USE testdbdev;
 SELECT * FROM DATABASECHANGELOGLOCK;
 "
@@ -2546,7 +2612,7 @@ DB="testdb${ENV}"
 echo "Verifying deployment to ${DB}..."
 
 # Check last 5 executed changesets
-docker exec mssql_liquibase_tutorial /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U SA -P "$MSSQL_LIQUIBASE_TUTORIAL_PWD" -Q "
+docker exec mssql1 /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U SA -P 'YourStrong!Passw0rd' -Q "
 USE ${DB};
 SELECT TOP 5 ID, AUTHOR, DATEEXECUTED, TAG
 FROM DATABASECHANGELOG
@@ -2554,7 +2620,7 @@ ORDER BY DATEEXECUTED DESC;
 "
 
 # Verify expected objects exist
-docker exec mssql_liquibase_tutorial /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U SA -P "$MSSQL_LIQUIBASE_TUTORIAL_PWD" -Q "
+docker exec mssql1 /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U SA -P 'YourStrong!Passw0rd' -Q "
 USE ${DB};
 SELECT COUNT(*) AS TableCount FROM sys.tables WHERE schema_id = SCHEMA_ID('app');
 SELECT COUNT(*) AS ViewCount FROM sys.views WHERE schema_id = SCHEMA_ID('app');
@@ -3109,23 +3175,23 @@ docker rm $(docker ps -a -q --filter "name=liquibase")
 **To see the images:**
 
 ```bash
-docker images | grep -E "liquibase|mssql_liquibase_tutorial"
+docker images | grep -E "liquibase|mssql"
 ```
 
 **Expected output:**
 ```
-liquibase                    latest          abc123def456   X hours ago    500MB
-mssql_liquibase_tutorial     latest          def789ghi012   X hours ago    1.5GB
+liquibase       latest          abc123def456   X hours ago    500MB
+gds-mssql       latest          def789ghi012   X hours ago    1.5GB
 ```
 
 **If you want to remove the images as well (optional):**
 
 ```bash
-# Remove the liquibase image (only if not used by other projects)
+# Remove the liquibase image
 docker rmi liquibase:latest
 
-# Remove the tutorial SQL Server image
-docker rmi mssql_liquibase_tutorial:latest
+# Remove the mssql image
+docker rmi gds-mssql:latest
 ```
 
 **Warning:** Only remove images if you're certain you won't need them again. You'll need to rebuild them (which takes time) if you want to run the tutorial again.
@@ -3141,7 +3207,8 @@ rm -rf /data/liquibase-tutorial
 
 **Summary:**
 - Containers: Stopped and removed with `docker compose down`
-- Images: Remain on your system (can be manually removed with commands above)
+- Images: Remain on your system (can be manually removed if desired)
+- Data: Persists in `/data/mssql` unless manually deleted
 - Tutorial files: Can be manually deleted from `/data/liquibase-tutorial`
 
 ## References

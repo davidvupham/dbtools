@@ -1,0 +1,38 @@
+# SQL Server Docker Container for Liquibase Tutorial
+# This container is dedicated to the Liquibase tutorial and can be safely removed after completing the tutorial
+
+services:
+  mssql_liquibase_tutorial:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: mssql_liquibase_tutorial
+    hostname: mssql_liquibase_tutorial
+
+    ports:
+      - "1433:1433"
+
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=${MSSQL_LIQUIBASE_TUTORIAL_PWD}
+      - MSSQL_PID=Developer
+
+    volumes:
+      - mssql_liquibase_tutorial_data:/var/opt/mssql
+
+    healthcheck:
+      test: /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P "$${MSSQL_SA_PASSWORD}" -Q "SELECT 1" -b -o /dev/null
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+
+    networks:
+      - liquibase_tutorial
+
+volumes:
+  mssql_liquibase_tutorial_data:
+    name: mssql_liquibase_tutorial_data
+
+networks:
+  liquibase_tutorial:
+    name: liquibase_tutorial
+    driver: bridge

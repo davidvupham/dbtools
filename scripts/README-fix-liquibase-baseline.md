@@ -152,7 +152,7 @@ cd /data/liquibase
 # Generate baseline
 docker run --rm --network=host \
   -v /data/liquibase:/workspace \
-  liquibase-custom:5.0.1 \
+  liquibase:latest \
   --url="jdbc:sqlserver://localhost:1433;databaseName=testdb;encrypt=true;trustServerCertificate=true" \
   --username="sa" \
   --password='YourStrong!Passw0rd' \

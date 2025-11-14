@@ -33,7 +33,7 @@ services:
         LIQUIBASE_MONGODB_VERSION: 5.0.1
 
     # Image name after build
-    image: liquibase:5.0.1
+    image: liquibase:latest
 
     # Container name (easier to reference than auto-generated name)
     container_name: liquibase

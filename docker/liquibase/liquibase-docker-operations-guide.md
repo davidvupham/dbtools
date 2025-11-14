@@ -68,7 +68,7 @@ cd /workspaces/dbtools/docker/liquibase
 docker-compose build
 
 # Verify build
-docker run --rm liquibase:5.0.1 --version
+docker run --rm liquibase:latest --version
 ```
 
 For custom version builds and troubleshooting build issues, refer to the Quick Start Guide.
@@ -710,7 +710,7 @@ docker network inspect dbtools-network
 
 ```bash
 # Verify driver exists in image
-docker run --rm liquibase:5.0.1 ls -l /opt/liquibase/lib/
+docker run --rm liquibase:latest ls -l /opt/liquibase/lib/
 
 # If missing, rebuild image or add driver manually
 docker-compose build --no-cache
@@ -778,7 +778,7 @@ docker-compose down
 
 # Clean up everything
 docker-compose down -v
-docker rmi liquibase:5.0.1
+docker rmi liquibase:latest
 ```
 
 ### Database-Specific Connection Examples

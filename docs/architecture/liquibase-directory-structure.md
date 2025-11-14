@@ -708,7 +708,7 @@ Run Liquibase in Docker while keeping paths consistent by mounting host `/data/l
 docker run --rm \
   --network tool-library-network \
   -v /data/liquibase:/data/liquibase:ro \
-  liquibase:5.0.1 \
+  liquibase:latest \
   --defaults-file /data/liquibase/env/liquibase.dev.properties \
   --changelog-file /data/liquibase/platforms/postgres/databases/app/db.changelog-master.yaml \
   update
@@ -721,7 +721,7 @@ With Docker Compose, ensure the volume mount points to `/data/liquibase`:
 ```yaml
 services:
   liquibase:
-    image: liquibase:5.0.1
+    image: liquibase:latest
     volumes:
       - /data/liquibase:/data/liquibase:ro
     working_dir: /data/liquibase

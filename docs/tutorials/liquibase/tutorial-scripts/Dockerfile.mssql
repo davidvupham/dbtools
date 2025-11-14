@@ -1,0 +1,11 @@
+FROM mcr.microsoft.com/mssql/server:2022-latest
+
+# Set environment variables
+ENV ACCEPT_EULA=Y
+ENV MSSQL_PID=Developer
+
+# Expose SQL Server port
+EXPOSE 1433
+
+# Use the password from environment variable
+# This will be set when running the container

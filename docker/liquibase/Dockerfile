@@ -223,7 +223,7 @@ RUN apt-get update \
     # Download Liquibase MongoDB extension
     # Adds MongoDB-specific functionality to Liquibase
     # Extensions go in lib/ext/ (not lib/)
-    # Downloads to: /opt/liquibase/lib/ext/liquibase-mongodb-5.0.1.jar
+    # Downloads to: /opt/liquibase/lib/ext/liquibase-mongodb-${LIQUIBASE_MONGODB_VERSION}.jar
     # ----------------------------------------------------------------------
     && ln -s ${LIQUIBASE_HOME}/liquibase /usr/local/bin/liquibase
 # ----------------------------------------------------------------------
@@ -299,7 +299,7 @@ CMD ["--help"]
 # ==============================================================================
 # From /workspaces/dbtools/docker/liquibase directory:
 #
-#   docker build -t liquibase:5.0.1 .
+#   docker build -t liquibase:latest .
 #
 # To customize versions:
 #   docker build \

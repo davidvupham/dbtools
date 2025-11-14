@@ -1,0 +1,19 @@
+services:
+  mssql_liquibase_tutorial:
+    build:
+      context: .
+      dockerfile: Dockerfile.mssql
+    container_name: mssql_liquibase_tutorial
+    image: mssql_liquibase_tutorial:latest
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=${MSSQL_LIQUIBASE_TUTORIAL_PWD}
+      - MSSQL_PID=Developer
+    ports:
+      - "1433:1433"
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U SA -P \"$$MSSQL_SA_PASSWORD\" -Q 'SELECT 1' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
