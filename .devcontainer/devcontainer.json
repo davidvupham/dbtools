@@ -336,7 +336,7 @@
   "postCreateCommand": "bash .devcontainer/postCreate.sh",
   // "postStartCommand": Runs EVERY TIME the container starts
   // Used for recurring setup: ensure directories exist, fix permissions
-  "postStartCommand": "bash -lc 'mkdir -p ~/.vscode-server/extensions ~/.vscode-server/extensionsCache && chmod -R 775 ~/.vscode-server && chown -R ${USER}:${USER} ~/.vscode-server || true'",
+  "postStartCommand": "bash -lc 'mkdir -p ~/.vscode-server/extensions ~/.vscode-server/extensionsCache && chmod -R 775 ~/.vscode-server && chown -R ${USER}:${USER} ~/.vscode-server || true; PY=\"$(command -v python || true)\"; if [ \"$PY\" != \"/opt/conda/envs/gds/bin/python\" ]; then echo \"[postStart] WARNING: default python is $PY; expected /opt/conda/envs/gds/bin/python. New terminals will auto-activate gds; for current shell run: source /opt/conda/etc/profile.d/conda.sh && conda activate gds\"; fi'",
   // ---------------------------------------------------------------------------
   // Container Environment Variables
   // ---------------------------------------------------------------------------
