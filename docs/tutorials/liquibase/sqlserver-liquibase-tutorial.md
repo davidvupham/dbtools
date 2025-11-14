@@ -4,20 +4,27 @@
 
 This tutorial teaches you **database change management** from the ground up using Liquibase and Microsoft SQL Server. You'll learn what CI/CD means for databases, why it matters, and how to safely deploy schema changes across multiple environments.
 
+**No prior knowledge required!** This guide is designed for developers who may be familiar with databases but new to:
+- Database change management tools (like Liquibase)
+- CI/CD (Continuous Integration/Continuous Deployment) practices
+- DevOps workflows for databases
+- Automated deployment pipelines
+
 **What you'll learn:**
 
-- Core concepts: CI/CD, change management, environment promotion
-- How to track and version database changes with Liquibase
-- Safe deployment patterns: dev → stage → prod
+- Core concepts: CI/CD, change management, environment promotion (all explained in plain language)
+- How to track and version database changes with Liquibase (like Git, but for your database)
+- Safe deployment patterns: dev → stage → prod (test first, deploy carefully)
 - Baselining existing databases and managing incremental changes
 - Real-world workflows with tables, views, stored procedures, and functions
 
 **What you'll build:**
 
-A complete Liquibase project that manages a customer database across three environments (dev, stage, prod) running on the same SQL Server instance.
+A complete Liquibase project that manages a customer database across three environments (dev, stage, prod) running on the same SQL Server instance. By the end, you'll have a working system that safely tracks and deploys database changes automatically.
 
 ## Table of Contents
 
+- [Glossary of Terms](#glossary-of-terms)
 - [Understanding CI/CD for Databases](#understanding-cicd-for-databases)
 - [Prerequisites](#prerequisites)
 - [Environment Setup](#environment-setup)
@@ -37,68 +44,307 @@ A complete Liquibase project that manages a customer database across three envir
 - [Best Practices](#best-practices)
 - [Next Steps](#next-steps)
 
-## Understanding CI/CD for Databases
+## Glossary of Terms
+
+**New to databases, DevOps, or CI/CD?** This glossary explains all the technical terms you'll encounter in this tutorial.
+
+### What is Liquibase?
+
+**Liquibase** is an open-source database change management tool. Think of it as **"version control for databases"** - like Git, but for your database schema instead of code files.
+
+**The problem Liquibase solves:**
+
+Without Liquibase, database changes are chaotic:
+- Developer creates SQL script: `add-loyalty-column.sql`
+- Emails it to team or saves on shared drive
+- Someone manually runs it in dev... or do they? Hard to tell
+- Another person runs it in staging (maybe)
+- DBA runs it in production (hopefully the same script!)
+- Six months later: "Did we add that column to production? I can't remember!"
+
+**With Liquibase:**
+- Changes are tracked in files, committed to Git
+- Each environment has a log of exactly what ran
+- Can't accidentally run the same change twice
+- Can rollback if something breaks
+- Complete audit trail of who changed what and when
+
+**Simple analogy**:
+- **Without Liquibase**: Like moving houses by randomly packing boxes and hoping you remember what went where
+- **With Liquibase**: Like using a detailed inventory list that tracks every item, which box it's in, and where it goes in the new house
+
+**How it works in 30 seconds:**
+
+1. You write a database change in a "changeset" (SQL or YAML file)
+2. Add it to a "changelog" (master list of all changes)
+3. Run `liquibase update`
+4. Liquibase:
+   - Checks what changes already ran (stored in DATABASECHANGELOG table)
+   - Runs only new changes
+   - Records what it did
+5. Repeat for each environment (dev, stage, prod)
+
+**What makes Liquibase special:**
+
+- **Database-agnostic**: Works with SQL Server, PostgreSQL, MySQL, Oracle, and 30+ other databases
+- **Safe**: Prevents running changes twice, validates checksums, supports rollbacks
+- **Auditable**: Complete history of every change in DATABASECHANGELOG table
+- **Flexible**: Write changes in SQL, XML, YAML, or JSON format
+- **Free**: Open-source with enterprise support available
+
+### Database Terms
+
+- **Schema**: A container/namespace for database objects like tables, views, procedures. Think of it as a folder organizing related database objects. Example: `app.customer` means the `customer` table in the `app` schema.
+
+- **DDL (Data Definition Language)**: SQL commands that define database structure (CREATE TABLE, ALTER TABLE, DROP TABLE, CREATE VIEW, etc.). These change the schema, not the data.
+
+- **DML (Data Manipulation Language)**: SQL commands that work with data (INSERT, UPDATE, DELETE, SELECT). These change the data, not the schema.
+
+- **Stored Procedure**: Pre-written SQL code stored in the database that you can call repeatedly. Like a function in programming. Example: `usp_add_customer` creates a new customer.
+
+- **Function**: Similar to stored procedure but returns a value and can be used in SELECT statements. Example: `fn_mask_email` masks email addresses.
+
+- **View**: A saved query that looks like a table. Doesn't store data itself, just retrieves it. Useful for simplifying complex queries or hiding sensitive columns.
+
+- **Index**: A data structure that speeds up queries, like an index in a book. Without it, the database scans every row. With it, lookups are fast.
+
+- **Foreign Key**: A link between two tables. Ensures data consistency. Example: `orders.customer_id` references `customer.customer_id` (you can't create an order for a non-existent customer).
+
+- **Primary Key**: Unique identifier for each row in a table. Like a Social Security Number - each person has exactly one, and no two people share the same one.
+
+- **Constraint**: A rule enforced by the database (e.g., "email cannot be null", "customer_id must be unique", "order_total must be positive").
+
+### Liquibase Terms
+
+- **Liquibase**: An open-source tool for database change management. Tracks what changes have been applied to which databases.
+
+- **Changeset**: A single database change (add table, modify column, create view). The fundamental unit of change in Liquibase. Each changeset has a unique ID.
+
+- **Changelog**: An XML, YAML, or SQL file that lists changesets in order. Like a recipe - step 1, step 2, step 3.
+
+- **Master Changelog**: The main changelog file that includes other changelog files. Acts as a table of contents.
+
+- **Baseline**: A snapshot of your database's existing structure when you start using Liquibase. Represents "everything that exists before we started tracking changes."
+
+- **DATABASECHANGELOG**: A table Liquibase creates to track which changesets have been executed. Like a logbook recording what changes ran when.
+
+- **DATABASECHANGELOGLOCK**: A table Liquibase uses to prevent multiple deployments from running simultaneously. Prevents conflicts.
+
+- **Checksum**: A calculated hash of a changeset's content. If the content changes, the checksum changes. Liquibase uses this to detect if someone modified an already-deployed changeset.
+
+- **Tag**: A named marker in the changelog history. Like a bookmark. Allows you to rollback to specific points. Example: tag `release-v1.0` marks your first production release.
+
+- **Rollback**: Undo changes by running reverse SQL. Example: if you created a table, rollback drops it.
+
+- **Precondition**: A check that runs before a changeset executes. Example: "only create this index if it doesn't already exist."
+
+- **Context**: A label that controls when a changeset runs. Example: changesets with `context:dev` only run in development, not production.
+
+### CI/CD Terms
+
+- **CI (Continuous Integration)**: Automatically testing changes when code is committed. Catches bugs early.
+
+- **CD (Continuous Deployment)**: Automatically deploying code changes through environments to production after tests pass.
+
+- **Pipeline**: An automated sequence of steps (build, test, deploy). Changes flow through the pipeline like an assembly line.
+
+- **Environment**: A separate instance of your application/database. Common environments: dev (development), test, stage (staging), prod (production).
+
+- **Deployment**: The process of applying changes to an environment. Moving code/database changes from version control to a running system.
+
+- **Rollback**: Reversing a deployment to a previous version. Like an "undo" button for production changes.
+
+- **Promotion**: Moving a change from one environment to the next (dev → stage → prod). Only promote after testing succeeds.
+
+- **Idempotent**: A change that can be run multiple times safely with the same result. Example: "CREATE TABLE IF NOT EXISTS" is idempotent; "CREATE TABLE" (without IF NOT EXISTS) is not.
+
+### Docker Terms
+
+- **Docker**: A platform for running applications in isolated containers. Packages software with all its dependencies.
+
+- **Container**: A lightweight, isolated environment for running applications. Like a virtual machine but faster and smaller.
+
+- **Image**: A template for creating containers. Like a blueprint or a snapshot you can spin up multiple times.
+
+- **Volume Mount**: Sharing a folder between your computer and a Docker container. Changes in one appear in the other. Example: `-v /data/liquibase-tutorial:/workspace`
+
+- **Network**: How Docker containers communicate. `--network=host` makes the container use your computer's network (easier for local dev).
+
+### DevOps Terms
+
+- **Version Control**: Tracking changes to files over time (usually with Git). Like "track changes" in Word, but much more powerful.
+
+- **Git**: A version control system. Tracks who changed what and when. Enables collaboration and rollback.
+
+- **Commit**: Saving your changes to version control with a message describing what you changed.
+
+- **Repository (Repo)**: A collection of files tracked by version control. Contains your code, database changes, documentation, etc.
+
+- **Pull Request (PR)**: A request to merge your changes into the main codebase. Team reviews your changes before accepting.
+
+- **Branch**: A parallel version of your code. Like a sandbox where you can experiment without affecting the main codebase.
+
+- **Secrets Management**: Securely storing sensitive information (passwords, API keys). Never put passwords in code!
+
+- **Audit Trail**: A complete history of what changed, when, and who changed it. Essential for compliance and debugging.
+
+### Miscellaneous Terms
+
+- **JDBC (Java Database Connectivity)**: The Java standard for connecting to databases. Liquibase uses JDBC to talk to SQL Server, PostgreSQL, Oracle, etc.
+
+- **CLI (Command Line Interface)**: Text-based way to interact with software (opposite of GUI - Graphical User Interface). Example: `liquibase update`
+
+- **SA (System Administrator)**: The default admin account in SQL Server. Has full permissions. Don't use in production (security risk).
+
+- **SSL/TLS Certificate**: Encryption certificate for secure connections. `trustServerCertificate=true` skips certificate validation (OK for local dev, not for production).
+
+- **Port**: A network endpoint for connections. SQL Server's default port is 1433. Like apartment numbers - the server is the building, the port is the specific apartment.
+
+**Pro tip**: Bookmark this glossary! Refer back to it whenever you encounter an unfamiliar term.
+
+
 
 ### What is CI/CD?
 
-**CI/CD** stands for **Continuous Integration** and **Continuous Deployment**:
+**CI/CD** stands for **Continuous Integration** and **Continuous Deployment**. These are software development practices that help teams deliver changes faster and more safely.
+
+**Breaking it down:**
 
 - **Continuous Integration (CI)**: Automatically testing and validating changes when developers commit code
+  - Think of it as an automatic quality checker
+  - Every time you make a change, automated tests verify it works
+  - Catches problems early, before they reach production
+
 - **Continuous Deployment (CD)**: Automatically deploying validated changes through environments to production
+  - Once changes pass tests, they move through environments automatically
+  - Reduces manual errors and speeds up releases
+  - Ensures consistent deployment process every time
+
+**Simple analogy**: Imagine baking bread in a factory. CI is like the quality inspector checking each batch of dough before baking. CD is the automated conveyor belt that moves good batches through the oven, cooling, and packaging stages. Without automation, someone might accidentally skip a step or use the wrong temperature.
 
 ### Why does it matter for databases?
 
-Without CI/CD, database changes are often:
+**The old way (manual database changes):**
 
-- **Manual**: Someone runs SQL scripts by hand
-- **Error-prone**: Easy to run wrong script, skip steps, or apply to wrong environment
-- **Untraceable**: Hard to know what ran where and when
-- **Risky**: Production failures from untested changes
+Imagine you need to add a new column to a table. Without CI/CD, you might:
+1. Write SQL script in a text file
+2. Email it to someone or save on shared drive
+3. Manually connect to database
+4. Copy-paste the SQL and run it
+5. Hope you ran it on the right environment
+6. Try to remember if you already ran it in staging
+7. Forget to run it in production (production breaks!)
 
-With CI/CD for databases, you get:
+**Problems with manual approach:**
 
-- **Version control**: Every change is tracked in Git
-- **Repeatability**: Same change deploys identically across all environments
-- **Safety**: Test in dev and stage before production
-- **Auditability**: Complete history of what changed and when
-- **Rollback capability**: Undo changes if problems occur
+- **Manual**: Someone runs SQL scripts by hand (error-prone, time-consuming)
+- **Inconsistent**: Different process each time, easy to make mistakes
+- **Untraceable**: Hard to know what ran where and when ("Did we add that column to production?")
+- **Risky**: Production failures from untested changes or wrong scripts
+- **No rollback**: If something breaks, hard to undo changes
+- **Team confusion**: Multiple people making changes without coordination
+
+**The new way (with CI/CD for databases):**
+
+With Liquibase and CI/CD, the same scenario becomes:
+1. Write SQL change in a version-controlled file
+2. Commit to Git (version control system)
+3. Automated pipeline runs the change in dev first
+4. Tests verify it works
+5. Change automatically deploys to staging
+6. After approval, automatically deploys to production
+7. Complete history of what ran where
+
+**Benefits with CI/CD for databases:**
+
+- **Version control**: Every change is tracked in Git (like tracking document history in Google Docs)
+- **Repeatability**: Same change deploys identically across all environments (no "it works on my machine" problems)
+- **Safety**: Test in dev and stage before production (catch issues early)
+- **Auditability**: Complete history of what changed, when, and who made the change
+- **Rollback capability**: Undo changes if problems occur (like "undo" button for databases)
+- **Team collaboration**: Everyone sees the same changes, no surprises
+- **Automation**: Less manual work, fewer mistakes
 
 ### What is Environment Promotion?
 
-**Environment promotion** means deploying changes through a series of environments in order:
+**Environment promotion** means deploying changes through a series of environments in order, testing at each stage before moving forward.
 
+**The standard path:**
 ```
 Development (dev) → Staging (stage) → Production (prod)
 ```
 
-**Why this order?**
+**Why this order? Think of it like testing a new recipe:**
 
-1. **Development (testdbdev)**: Where you create and test changes first
-   - Break things here, it's okay!
+1. **Development (testdbdev)**: Your kitchen at home where you experiment
+   - Break things here, it's okay! This is your learning space
    - Rapid iteration and experimentation
-   - May have test/sample data
+   - May have test/sample data (fake customers, test orders)
+   - If you mess up, only you are affected
+   - **Example**: You're testing if adding a new "loyalty_points" column works correctly
 
-2. **Staging (testdbstg)**: Pre-production environment that mimics production
-   - Same structure as production
-   - Test the exact deployment process
-   - Catch integration issues before prod
+2. **Staging (testdbstg)**: A practice kitchen identical to the restaurant
+   - Same structure as production (simulates real environment)
+   - Test the exact deployment process you'll use in production
+   - Catch integration issues before prod (does it work with real-world data volumes?)
+   - Last chance to find problems
+   - **Example**: You verify the loyalty_points column works with realistic customer data and doesn't slow down queries
 
-3. **Production (testdbprd)**: Real environment with real users and data
+3. **Production (testdbprd)**: The actual restaurant serving real customers
    - Only deploy after dev and stage succeed
    - Minimize risk, maximize stability
-   - Apply same changes that worked in stage
+   - Apply the exact same changes that worked in stage
+   - Real users, real data, no room for error
+   - **Example**: Your actual customers now have loyalty_points tracking their purchases
+
+**Why not skip to production?**
+
+- **Risk**: No testing means high chance of breaking production
+- **No safety net**: If it fails, real users are affected immediately
+- **Debugging nightmare**: Hard to diagnose issues under pressure
+- **Rollback complexity**: Harder to safely undo changes
+
+**The golden rule**: If it doesn't work in dev, don't promote it. If it doesn't work in stage, definitely don't deploy to production!
 
 ### What is a Baseline?
 
-A **baseline** is a snapshot of your database's current state when you start using Liquibase.
+A **baseline** is a snapshot of your database's current state when you start using Liquibase. It's your starting point for tracking changes.
 
 **Why do you need it?**
 
+Most real-world scenarios involve existing databases:
 - You have existing tables, views, stored procedures already in production
-- Liquibase needs to know "this is the starting point"
-- Future changes build on top of the baseline
+- These objects were created before you started using Liquibase
+- Liquibase needs to know "this is the starting point" so it can track "everything from now on"
+- Without a baseline, Liquibase would try to create objects that already exist (causing errors)
 
-**Analogy**: Think of it like joining a conversation midway. The baseline is "everything said so far" so you can track "everything said from now on."
+**Analogy**: Think of it like joining a book club midway through the year:
+- The baseline is like getting a summary of "all books discussed so far this year"
+- Now you can track "all books discussed from this point forward"
+- Without the baseline, you might try to discuss a book the club already finished
+
+**Real example:**
+
+Your production database already has:
+- `customer` table (created 2 years ago)
+- `orders` table (created 1 year ago)
+- `v_customer_orders` view (created 6 months ago)
+- `usp_create_order` stored procedure (created 3 months ago)
+
+When you start using Liquibase:
+1. **Generate baseline**: Liquibase scans production, creates a snapshot of all these objects
+2. **Mark as executed**: Tells Liquibase "I know these exist, don't try to recreate them"
+3. **Future changes**: From now on, Liquibase tracks new changes (new tables, modifications, etc.)
+
+**Without a baseline:**
+- Liquibase tries to create `customer` table → Error! Table already exists
+- Deployment fails, production breaks
+- Team panics
+
+**With a baseline:**
+- Liquibase knows these objects exist
+- Only applies new changes
+- Smooth deployment
 
 ## Prerequisites
 
@@ -110,25 +356,42 @@ A **baseline** is a snapshot of your database's current state when you start usi
 **What we'll use:**
 
 - SQL Server running in a dev container (accessible at `localhost:1433`)
+  - **What's a dev container?** A pre-configured development environment running in Docker that has all the tools you need already set up
 - Docker to run Liquibase commands
+  - **What's Docker?** A tool that packages software in "containers" - think of it as a lightweight virtual machine that runs programs in isolation
 - Three databases on the same server: `testdbdev`, `testdbstg`, `testdbprd`
+  - **Why three on same server?** For this tutorial, we simulate three separate environments on one server to keep it simple. In real production, these would be on separate servers/cloud instances
 
 **No need to install:**
 
 - Java (Docker handles it)
+  - **Why Java?** Liquibase is written in Java, but you don't need to install Java because the Docker container includes it
 - Liquibase CLI (Docker handles it)
+  - **What's CLI?** Command Line Interface - the text-based way to run Liquibase commands
 - JDBC drivers (included in custom Docker image)
+  - **What's JDBC?** Java Database Connectivity - the driver that lets Java programs (like Liquibase) talk to SQL Server
 
 ## Environment Setup
 
 ### Check SQL Server is Running
 
-First, verify you can connect to SQL Server:
+First, verify you can connect to SQL Server. This test ensures your database is accessible before we start.
 
 ```bash
 # Test connection (should show server name and date)
 docker exec mssql1 /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U SA -P 'YourStrong!Passw0rd' -Q "SELECT @@SERVERNAME AS ServerName, GETDATE() AS CurrentTime"
 ```
+
+**What this command does:**
+- `docker exec mssql1` - Run a command inside the `mssql1` container
+- `/opt/mssql-tools18/bin/sqlcmd` - SQL Server command-line tool
+- `-C` - Trust server certificate (skip SSL validation for local development)
+- `-S localhost` - Connect to server at localhost
+- `-U SA` - Username (SA = System Administrator, the default admin account)
+- `-P 'YourStrong!Passw0rd'` - Password (note the single quotes to handle special characters)
+- `-Q "..."` - Query to execute
+- `@@SERVERNAME` - SQL Server built-in variable for the server name
+- `GETDATE()` - SQL Server function that returns current date/time
 
 **Expected output:**
 
@@ -138,19 +401,53 @@ ServerName    CurrentTime
 6609bb8b43cc  2025-11-13 20:00:00.000
 ```
 
+**Troubleshooting:**
+- **Connection refused**: SQL Server might not be running. Check with `docker ps | grep mssql`
+- **Login failed**: Password might be wrong. Verify password in your dev container setup
+- **Command not found**: Make sure Docker is installed and running
+
 ### Build Custom Liquibase Docker Image
 
-The official Liquibase image doesn't include SQL Server drivers. Build a custom image:
+The official Liquibase Docker image doesn't include SQL Server drivers by default (it's designed to be database-agnostic). We need to build a custom image that includes the Microsoft JDBC driver for SQL Server.
+
+**Why do we need this?**
+- Liquibase is Java-based and uses JDBC (Java Database Connectivity) to talk to databases
+- Each database type needs its own JDBC driver (Oracle needs Oracle driver, SQL Server needs SQL Server driver, etc.)
+- The official image only includes drivers for common open-source databases
+- We must add the SQL Server driver ourselves
 
 ```bash
 # Navigate to Liquibase Dockerfile location
 cd /workspaces/dbtools/docker/liquibase
 
 # Build custom image with SQL Server JDBC drivers
+# This creates a new Docker image based on official Liquibase, plus SQL Server driver
 docker build -t liquibase-custom:5.0.1 .
 
 # Verify image was created
 docker images | grep liquibase-custom
+```
+
+**What this does:**
+- `docker build` - Creates a new Docker image from a Dockerfile
+- `-t liquibase-custom:5.0.1` - Tags (names) the image as "liquibase-custom" version "5.0.1"
+- `.` - Use the Dockerfile in the current directory
+- The Dockerfile downloads the Microsoft JDBC driver and adds it to the Liquibase image
+
+**Expected output:**
+```
+liquibase-custom   5.0.1   a1b2c3d4e5f6   2 minutes ago   500MB
+```
+
+**What's in the Dockerfile?**
+```dockerfile
+# Starts with official Liquibase image
+FROM liquibase/liquibase:5.0.1
+
+# Download Microsoft JDBC driver for SQL Server
+# This driver enables Java programs to connect to SQL Server
+ADD https://repo1.maven.org/maven2/com/microsoft/sqlserver/mssql-jdbc/12.4.2.jre11/mssql-jdbc-12.4.2.jre11.jar \
+    /liquibase/lib/mssql-jdbc.jar
 ```
 
 ## Project Structure
@@ -395,16 +692,47 @@ ls -la /data/liquibase-tutorial/env/
 **What each property means:**
 
 - `url`: JDBC connection string (notice `databaseName` differs per environment)
-- `username/password`: SQL Server credentials (in real life, use secrets!)
+  - `jdbc:sqlserver://` - Protocol for SQL Server connections
+  - `localhost:1433` - Server address and port (1433 is SQL Server's default port)
+  - `databaseName=testdbdev` - Which database to connect to (this changes per environment)
+  - `encrypt=true` - Use encrypted connection
+  - `trustServerCertificate=true` - Trust the server's SSL certificate (for local dev only; in production use proper certificates)
+
+- `username/password`: SQL Server credentials
+  - `sa` = System Administrator (default SQL Server admin account)
+  - **SECURITY WARNING**: In real production environments, NEVER use sa account or hardcode passwords!
+
 - `changelog-file`: Master file that lists all changes
+  - This is the "table of contents" for your database changes
+  - Points to the XML file that includes all your changesets
+
 - `search-path`: Where Liquibase looks for files inside Docker container
+  - When we mount `/data/liquibase-tutorial` to `/workspace`, this tells Liquibase to look in `/workspace`
+
 - `logLevel`: How much detail to show (info is good for learning)
+  - `severe` - Only critical errors
+  - `warning` - Warnings and errors
+  - `info` - General information (recommended for learning)
+  - `fine` - Detailed debugging information
+  - `debug` - Very detailed debugging
 
 **Security note**: Never commit real passwords to Git! In production, use:
 
-- Environment variables: `password=${DB_PASSWORD}`
-- Secret management: Azure Key Vault, AWS Secrets Manager, etc.
-- CI/CD platform secrets: GitHub Secrets, GitLab CI/CD variables
+- **Environment variables**: `password=${DB_PASSWORD}` (reads from environment)
+  ```properties
+  password=${DB_PASSWORD}
+  ```
+  Then set the variable: `export DB_PASSWORD=SecretPassword123`
+
+- **Secret management**: Azure Key Vault, AWS Secrets Manager, HashiCorp Vault
+  - Centralized, encrypted storage for secrets
+  - Automatic rotation of passwords
+  - Audit logs of who accessed secrets
+
+- **CI/CD platform secrets**: GitHub Secrets, GitLab CI/CD variables
+  - Encrypted secrets stored in CI/CD platform
+  - Automatically injected during pipeline execution
+  - Never visible in logs or code
 
 ## Step 4: Generate Baseline from Development
 
@@ -429,19 +757,34 @@ cat database/changelog/baseline/V0000__baseline.xml
 
 **What happened?**
 
-- Liquibase connected to `testdbdev`
-- Scanned all database objects (tables, views, indexes, constraints)
-- Generated XML representing the current state
-- Saved it as `V0000__baseline.xml`
+- Liquibase connected to `testdbdev` database
+- Scanned all database objects (tables, views, indexes, constraints, schemas)
+- Generated XML file representing the current state
+- Saved it as `V0000__baseline.xml` in the baseline folder
 
-**Important limitations:**
+**What gets captured:**
+- ✅ Tables and columns
+- ✅ Primary keys and foreign keys
+- ✅ Indexes
+- ✅ Views (usually)
+- ✅ Unique constraints
+- ✅ Default values
 
-- `generateChangeLog` captures tables and views well
-- Often misses stored procedures and functions (we'll add manually)
-- May not include `schemaName` attribute (we'll fix)
-- May not capture all constraints correctly (review carefully)
-- Doesn't capture database users, roles, or permissions
-- Triggers are often missed or incorrectly generated
+**Important limitations of generateChangeLog:**
+
+- ❌ Often misses stored procedures and functions (we'll add manually with the fix script)
+- ❌ May not include `schemaName` attribute on all objects (causes them to be created in default schema)
+- ❌ May not capture all constraints correctly (review carefully)
+- ❌ Doesn't capture database users, roles, or permissions (security objects)
+- ❌ Triggers are often missed or incorrectly generated
+- ❌ Computed columns may be captured incorrectly
+- ❌ Extended properties and descriptions are not captured
+
+**Why these limitations exist:**
+- Liquibase is database-agnostic (works with many database types)
+- Each database has unique features that are hard to represent generically
+- Stored procedures/functions have database-specific syntax
+- Some metadata isn't exposed through standard JDBC interfaces
 
 **What to check in the generated baseline:**
 
@@ -537,12 +880,23 @@ EOF
 
 ### Deploy to Development (Sync Only)
 
-Development already has these objects, so we **sync** the baseline (mark as executed without running):
+Development already has these objects (we created them in Step 2), so we **sync** the baseline instead of deploying it. Syncing tells Liquibase "these changes already ran, don't execute them again."
+
+**What is changelogSync?**
+
+- **Regular update**: Executes SQL statements to create/modify database objects
+- **changelogSync**: Records changes as executed WITHOUT running the SQL
+- **When to use sync**: When the database already has the objects (like our dev database)
+- **When to use update**: When the database is empty or missing objects (like our stage/prod databases)
+
+**Think of it like checking items off a to-do list:**
+- `update` = Do the task AND check it off
+- `changelogSync` = Just check it off (task was already done)
 
 ```bash
 cd /data/liquibase-tutorial
 
-# Sync baseline to development (don't actually run DDL)
+# Sync baseline to development (don't actually run DDL, just record as executed)
 docker run --rm \
   --network=host \
   -v /data/liquibase-tutorial:/workspace \
@@ -550,7 +904,7 @@ docker run --rm \
   --defaults-file=/workspace/env/liquibase.dev.properties \
   changelogSync
 
-# Tag the baseline
+# Tag the baseline (create a named checkpoint for rollback purposes)
 docker run --rm \
   --network=host \
   -v /data/liquibase-tutorial:/workspace \
@@ -559,11 +913,18 @@ docker run --rm \
   tag baseline
 ```
 
-**What is changelogSync?**
+**What does tag do?**
 
-- Tells Liquibase "these changes already ran"
-- Updates `DATABASECHANGELOG` table without executing SQL
-- Used for existing databases when you generate a baseline
+- Creates a named marker in the change history
+- Like bookmarking a page in a book
+- Allows you to rollback to this specific point later
+- Example: `liquibase rollback baseline` would undo all changes after this tag
+
+**Why tag the baseline?**
+
+- If future changes cause problems, you can rollback to the baseline
+- Documents the "before Liquibase" state
+- Useful for audit and compliance
 
 **Verify sync worked:**
 
@@ -1236,45 +1597,107 @@ docker run --rm \
 
 ## Understanding Liquibase's Tracking Mechanism
 
-Before diving into the deployment pipeline, let's understand how Liquibase tracks changes.
+Before diving into the deployment pipeline, let's understand how Liquibase tracks changes. This is the "magic" that makes automated deployments work.
+
+### How Liquibase Knows What to Run
+
+**The core problem**: When you deploy database changes, how does Liquibase know:
+- What has already been applied?
+- What still needs to run?
+- Whether a changeset was modified after deployment?
+
+**The solution**: Two special tracking tables that Liquibase creates automatically.
 
 ### The DATABASECHANGELOG Table
 
-When Liquibase first runs, it creates two tables:
-
-1. **DATABASECHANGELOG**: Records every changeset executed
-2. **DATABASECHANGELOGLOCK**: Prevents concurrent deployments
+When Liquibase first runs against a database, it creates a table called `DATABASECHANGELOG`. This table is like a logbook recording every change ever applied to the database.
 
 **DATABASECHANGELOG structure:**
 
 ```sql
+-- View the change history
 SELECT * FROM DATABASECHANGELOG;
 ```
 
-| Column | Purpose |
-|--------|----------|
-| ID | Unique identifier from `--changeset` comment |
-| AUTHOR | Who created the change |
-| FILENAME | Path to changelog file |
-| DATEEXECUTED | When it ran |
-| ORDEREXECUTED | Sequence number (1, 2, 3...) |
-| EXECTYPE | Type: EXECUTED, RERAN, SKIPPED |
-| MD5SUM | Checksum to detect changes |
-| TAG | Optional label for rollback points |
+**What each column means:**
 
-**How Liquibase decides what to run:**
+| Column | Purpose | Example |
+|--------|---------|---------|
+| **ID** | Unique identifier from `--changeset` comment | `V0001-add-orders-table` |
+| **AUTHOR** | Who created the change | `tutorial` |
+| **FILENAME** | Path to changelog file | `changes/V0001__add_orders_table.sql` |
+| **DATEEXECUTED** | When it ran | `2025-11-13 14:30:00` |
+| **ORDEREXECUTED** | Sequence number (1, 2, 3...) | `5` |
+| **EXECTYPE** | How it ran: EXECUTED, RERAN, SKIPPED | `EXECUTED` |
+| **MD5SUM** | Checksum to detect modifications | `8:d41d8cd98f00b204e980` |
+| **DESCRIPTION** | What changed | `createTable tableName=orders` |
+| **TAG** | Optional label for rollback points | `release-v1.0` |
+| **LIQUIBASE** | Liquibase version that ran it | `5.0.1` |
 
-1. Reads `changelog.xml` to get list of changesets
-2. Queries `DATABASECHANGELOG` to see what already ran
-3. Compares MD5 checksums to detect modifications
-4. Runs only new changesets (not in DATABASECHANGELOG)
-5. Records execution in DATABASECHANGELOG
+**How Liquibase decides what to run (step by step):**
+
+1. **Read the master changelog** (`changelog.xml`) to get the complete list of changesets
+   - Example: baseline, V0001, V0002, V0003
+
+2. **Query DATABASECHANGELOG** to see what already ran in this database
+   - Example: baseline and V0001 exist in the table
+
+3. **Compare checksums** to detect if deployed changesets were modified
+   - Calculates MD5 hash of changeset content
+   - Compares to stored MD5SUM in DATABASECHANGELOG
+   - If different → ERROR! Someone modified a deployed changeset
+
+4. **Calculate what needs to run**: Changes in changelog but NOT in DATABASECHANGELOG
+   - Example: V0002 and V0003 need to run
+
+5. **Execute new changesets** in order
+   - Runs V0002 first, then V0003
+   - Records each execution in DATABASECHANGELOG
+
+6. **Update tracking table** after each successful changeset
+   - Inserts row with ID, AUTHOR, DATEEXECUTED, MD5SUM, etc.
 
 **Why checksums matter:**
 
-- Prevents accidental changes to deployed changesets
-- If you edit a deployed changeset, Liquibase throws an error
-- This protects consistency across environments
+Checksums protect against dangerous modifications:
+
+```sql
+-- Original changeset (already deployed)
+--changeset tutorial:V0001-add-orders-table
+CREATE TABLE app.orders (
+    order_id INT PRIMARY KEY,
+    customer_id INT
+);
+```
+
+If someone later edits it:
+
+```sql
+-- Modified changeset (DANGEROUS!)
+--changeset tutorial:V0001-add-orders-table
+CREATE TABLE app.orders (
+    order_id INT PRIMARY KEY,
+    customer_id INT,
+    order_total DECIMAL(18,2)  -- Added this line
+);
+```
+
+**What happens:**
+1. Liquibase recalculates checksum → different from stored value
+2. Throws error: "Validation Failed: changesets have checksum mismatch"
+3. Deployment stops before causing problems
+
+**Why this matters:**
+- Dev already has the table without `order_total` column
+- Stage might have it (if you ran the modified version there)
+- Prod definitely doesn't have it
+- Now your environments are inconsistent (disaster!)
+
+**The right way**: Create a new changeset:
+```sql
+--changeset tutorial:V0002-add-order-total
+ALTER TABLE app.orders ADD order_total DECIMAL(18,2);
+```
 
 **Viewing your change history:**
 
@@ -1294,49 +1717,270 @@ ORDER BY ORDEREXECUTED;
 "
 ```
 
+**Example output:**
+```
+ORDEREXECUTED  ID                           AUTHOR    FILENAME                              DATEEXECUTED         TAG
+1              baseline-schema              system    baseline/V0000__baseline.xml          2025-11-13 10:00:00  baseline
+2              baseline-table-customer      system    baseline/V0000__baseline.xml          2025-11-13 10:00:01  baseline
+3              V0001-add-orders-table       tutorial  changes/V0001__add_orders_table.sql   2025-11-13 11:30:00  release-v1.1
+```
+
+### The DATABASECHANGELOGLOCK Table
+
+The second table Liquibase creates is `DATABASECHANGELOGLOCK`. This table prevents two deployments from running simultaneously.
+
+**Why do we need a lock?**
+
+Imagine two scenarios without locking:
+- **Scenario 1**: Two developers deploy at the same time → Both try to create the same table → Error!
+- **Scenario 2**: Automated pipeline and manual deployment run simultaneously → Changes apply in wrong order → Database corruption!
+
+**How the lock works:**
+
+1. Before any deployment, Liquibase tries to acquire the lock
+   - Sets `LOCKED = 1` in DATABASECHANGELOGLOCK table
+   - Records who acquired it (LOCKEDBY) and when (LOCKGRANTED)
+
+2. If lock is already held, Liquibase waits
+   - Checks every few seconds if lock is released
+   - Times out after a few minutes (prevents infinite waiting)
+
+3. After deployment completes, Liquibase releases the lock
+   - Sets `LOCKED = 0`
+   - Clears LOCKEDBY and LOCKGRANTED
+
+**View lock status:**
+```sql
+SELECT * FROM DATABASECHANGELOGLOCK;
+```
+
+**Normal state (unlocked):**
+```
+ID  LOCKED  LOCKGRANTED  LOCKEDBY
+1   0       NULL         NULL
+```
+
+**Locked state (deployment in progress):**
+```
+ID  LOCKED  LOCKGRANTED              LOCKEDBY
+1   1       2025-11-13 14:30:00.000  mycomputer (192.168.1.100)
+```
+
+**When locks get stuck:**
+
+Sometimes deployments fail (server crash, network disconnect, Ctrl+C) and the lock doesn't get released.
+
+**Symptoms:**
+- Liquibase shows: "Waiting for changelog lock..."
+- Hangs indefinitely
+
+**Fix:**
+```bash
+# Force release the lock
+docker run --rm --network=host \
+  -v /data/liquibase-tutorial:/workspace \
+  liquibase-custom:5.0.1 \
+  --defaults-file=/workspace/env/liquibase.dev.properties \
+  releaseLocks
+```
+
+**Manual fix (emergency only):**
+```sql
+UPDATE DATABASECHANGELOGLOCK
+SET LOCKED = 0, LOCKGRANTED = NULL, LOCKEDBY = NULL
+WHERE ID = 1;
+```
+
+**Important**: Only force-release if you're CERTAIN no deployment is actually running!
+
 ## Understanding the Deployment Pipeline
 
 ### The Complete Workflow
 
-Here's how a typical change flows from idea to production:
+Here's how a typical change flows from idea to production. Understanding this workflow is essential for safe, professional database change management.
+
+**The journey of a database change:**
 
 ```
-1. Developer writes change in SQL file
-   ↓
-2. Add to changelog.xml
-   ↓
-3. Deploy to testdbdev (development)
-   ↓
-4. Test and verify in dev
-   ↓
-5. Deploy to testdbstg (staging)
-   ↓
-6. Integration testing in staging
-   ↓
-7. Deploy to testdbprd (production)
-   ↓
-8. Monitor production, tag release
+┌─────────────────────────────────────────────────────────────────┐
+│ Step 1: Developer writes change                                │
+│ - Create SQL file: V0005__add_loyalty_points.sql               │
+│ - Write DDL: ALTER TABLE customer ADD loyalty_points INT       │
+│ - Write rollback: ALTER TABLE customer DROP COLUMN ...         │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│ Step 2: Add to master changelog                                │
+│ - Edit changelog.xml                                            │
+│ - Include new file: <include file="changes/V0005__..."/>       │
+│ - Commit to Git version control                                │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│ Step 3: Deploy to Development (testdbdev)                      │
+│ - Run: liquibase --defaults-file=dev.properties update         │
+│ - Adds loyalty_points column to dev database                   │
+│ - Records change in DATABASECHANGELOG                          │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│ Step 4: Test and verify in dev                                 │
+│ - Run queries to check column exists                           │
+│ - Test application with new column                             │
+│ - Insert test data with loyalty points                         │
+│ - Fix any issues, repeat steps 1-4 if needed                   │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│ Step 5: Deploy to Staging (testdbstg)                          │
+│ - Run: liquibase --defaults-file=stage.properties update       │
+│ - EXACT SAME SQL runs in staging as ran in dev                 │
+│ - Staging now has loyalty_points column                        │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│ Step 6: Integration testing in staging                         │
+│ - Test with realistic data volumes                             │
+│ - Check query performance                                      │
+│ - Verify application integration                               │
+│ - Run full test suite                                          │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│ Step 7: Get approval for production (if required)              │
+│ - Team lead reviews changes                                    │
+│ - Security team approves                                       │
+│ - Schedule deployment window                                   │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│ Step 8: Deploy to Production (testdbprd)                       │
+│ - Run: liquibase --defaults-file=prod.properties update        │
+│ - EXACT SAME SQL runs in production                            │
+│ - Production now has loyalty_points column                     │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│ Step 9: Monitor and tag release                                │
+│ - Monitor application for errors                               │
+│ - Check database performance metrics                           │
+│ - Tag release: liquibase tag release-v1.5                      │
+│ - Document deployment in change log                            │
+│ - Notify team of successful deployment                         │
+└─────────────────────────────────────────────────────────────────┘
 ```
+
+**What if something goes wrong?**
+
+At any step, if problems are detected:
+- **In dev**: Fix the issue, create new changeset, redeploy
+- **In staging**: Rollback, fix issue, redeploy from dev
+- **In production**: Rollback immediately using tagged release
 
 ### Key Principles
 
-**Same SQL, different databases:**
+Understanding these principles will help you avoid common pitfalls and deploy changes safely.
 
-- The EXACT same changelog.xml deploys to all environments
-- Only connection strings differ (via properties files)
-- This ensures consistency and reduces errors
+#### 1. Same SQL, Different Databases
 
-**Progressive deployment:**
+**The golden rule**: The EXACT same `changelog.xml` file deploys to all environments. Only connection strings differ (via properties files).
 
-- Never skip environments
-- Always go dev → stage → prod
-- Test thoroughly at each step
+**Why this matters:**
+```
+WRONG APPROACH:
+- changelog-dev.xml (different file for dev)
+- changelog-stage.xml (different file for stage)
+- changelog-prod.xml (different file for prod)
+→ Results: Environments drift apart, inconsistencies, bugs
 
-**Idempotent changes:**
+CORRECT APPROACH:
+- changelog.xml (ONE file for all environments)
+- liquibase.dev.properties (different connection)
+- liquibase.stage.properties (different connection)
+- liquibase.prod.properties (different connection)
+→ Results: Environments stay identical, consistent behavior
+```
 
-- Changes should be safe to re-run
-- Use `IF EXISTS` / `IF NOT EXISTS`
-- Liquibase tracks what ran, but guards prevent errors
+**Real example of why this matters:**
+
+Developer creates a table in dev:
+```sql
+CREATE TABLE app.orders (order_id INT, total DECIMAL(10,2));
+```
+
+If you manually type this into staging, you might make a typo:
+```sql
+CREATE TABLE app.orders (order_id INT, total DECIMAL(18,2));  -- Oops! Different precision!
+```
+
+Now dev and staging have different schemas. Queries that work in dev might fail in staging. Production might get either version (chaos!).
+
+With Liquibase, the same file deploys everywhere → guaranteed consistency.
+
+#### 2. Progressive Deployment (Never Skip Environments)
+
+**Always follow the path**: dev → stage → prod
+
+**Why each step matters:**
+
+| Environment | Purpose | What You Catch |
+|-------------|---------|----------------|
+| **Development** | Rapid iteration | Syntax errors, basic logic bugs, schema conflicts |
+| **Staging** | Production simulation | Performance issues, data volume problems, integration bugs |
+| **Production** | Real users | Nothing! You caught everything in dev and stage |
+
+**Real story of what happens when you skip:**
+
+Team is under pressure, decides to skip staging "just this once":
+1. Change works perfectly in dev (small dataset, 100 rows)
+2. Deploy directly to production
+3. Production has 10 million rows
+4. Query takes 5 minutes instead of 1 second (missing index!)
+5. Application times out, customers can't place orders
+6. Revenue lost, team works all night fixing it
+
+**The fix**: If they'd deployed to staging (with production-like data volume), they would have caught the performance issue before customers were affected.
+
+#### 3. Idempotent Changes (Safe to Re-run)
+
+**Idempotent** means "can be run multiple times with the same result."
+
+**Not idempotent (dangerous):**
+```sql
+--changeset tutorial:V0005-add-column
+ALTER TABLE app.customer ADD loyalty_points INT;
+```
+
+**What happens if run twice:**
+1. First run: Creates column → Success ✓
+2. Second run: Error! Column already exists → Deployment fails ✗
+
+**Idempotent (safe):**
+```sql
+--changeset tutorial:V0005-add-column
+IF NOT EXISTS (
+    SELECT 1 FROM sys.columns
+    WHERE object_id = OBJECT_ID('app.customer')
+    AND name = 'loyalty_points'
+)
+BEGIN
+    ALTER TABLE app.customer ADD loyalty_points INT;
+    PRINT 'Added loyalty_points column';
+END
+ELSE
+BEGIN
+    PRINT 'Column loyalty_points already exists';
+END
+```
+
+**What happens if run twice:**
+1. First run: Creates column → Success ✓
+2. Second run: Skips creation (column exists) → Success ✓
+
+**Why idempotency matters:**
+- Network failure might cause partial deployment → safe to retry
+- Manual testing might run changeset → production deployment still works
+- Rollback and re-apply scenarios → no errors
 
 **Tagging for safety:**
 
