@@ -19,20 +19,15 @@ ENV DEVCONTAINER_USER=${DEVCONTAINER_USER} \
     DEVCONTAINER_GID=${DEVCONTAINER_GID} \
     DEVCONTAINER_HOME=/home/${DEVCONTAINER_USER}
 
-# Install system dependencies for pyodbc and PowerShell
+# Install system dependencies for pyodbc, PowerShell, Docker CLI, and netcat
 RUN apt-get update && \
-    apt-get install -y wget gnupg ca-certificates unixodbc-dev curl iputils-ping && \
+    apt-get install -y wget gnupg ca-certificates unixodbc-dev curl iputils-ping docker.io netcat-openbsd && \
     wget -q https://packages.microsoft.com/config/debian/12/packages-microsoft-prod.deb && \
     dpkg -i packages-microsoft-prod.deb && \
     rm packages-microsoft-prod.deb && \
     apt-get update && \
     apt-get install -y powershell msodbcsql18 mssql-tools18 && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
-
-# Install Docker CLI
-RUN curl -fsSL https://get.docker.com -o /tmp/get-docker.sh && \
-    sh /tmp/get-docker.sh && \
-    rm /tmp/get-docker.sh
 
 # Create the conda environment and install base packages
 # Configure conda-forge as the sole channel to avoid Anaconda TOS prompts and ensure reproducible resolution.
@@ -148,3 +143,6 @@ USER root
 RUN mkdir -p ${DEVCONTAINER_HOME}/.vscode-server/extensions ${DEVCONTAINER_HOME}/.vscode-server/extensionsCache \
     && chown -R ${DEVCONTAINER_USER}:${DEVCONTAINER_GROUP} ${DEVCONTAINER_HOME}/.vscode-server
 USER ${DEVCONTAINER_USER}
+
+# Keep container running - VS Code will attach to this
+CMD ["sleep", "infinity"]
