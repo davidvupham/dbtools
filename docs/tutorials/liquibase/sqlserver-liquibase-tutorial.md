@@ -352,12 +352,13 @@ When you start using Liquibase:
 
 - Docker installed (to run SQL Server and Liquibase)
 - Python with `pyodbc` package (for running the baseline fix script)
-- Environment variable `MSSQL_LIQUIBASE_TUTORIAL_PWD` set with SQL Server SA password
+- Environment variable `MSSQL_LIQUIBASE_TUTORIAL_PWD` set with SQL Server SA password (use a password WITHOUT exclamation marks to avoid shell issues)
 
 **What we'll use:**
 
-- Dedicated SQL Server container for this tutorial (accessible at `localhost:1433`)
+- Dedicated SQL Server container for this tutorial (accessible at `localhost:14333`)
   - **Container name**: `mssql_liquibase_tutorial`
+  - **Port**: 14333 (different from default 1433 to avoid conflicts with other SQL Server instances)
   - **Why dedicated?** This tutorial uses a separate SQL Server instance that can be safely removed after completion
 - Docker to run Liquibase commands
   - **What's Docker?** A tool that packages software in "containers" - think of it as a lightweight virtual machine that runs programs in isolation
@@ -381,7 +382,8 @@ When you start using Liquibase:
 
 ```bash
 # Set the SQL Server SA password (required for tutorial)
-export MSSQL_LIQUIBASE_TUTORIAL_PWD='YourStrong!Passw0rd'
+# IMPORTANT: Use a password WITHOUT exclamation marks (!) to avoid shell interpolation issues
+export MSSQL_LIQUIBASE_TUTORIAL_PWD='YourStrong@Passw0rd'
 
 # Verify it's set
 echo $MSSQL_LIQUIBASE_TUTORIAL_PWD
@@ -391,7 +393,7 @@ echo $MSSQL_LIQUIBASE_TUTORIAL_PWD
 - At least 8 characters
 - Contains uppercase and lowercase letters
 - Contains numbers
-- Contains special characters
+- Contains special characters (avoid exclamation marks for shell compatibility)
 
 **Why use an environment variable?**
 - Keeps passwords out of command history
@@ -442,7 +444,7 @@ docker ps | grep mssql_liquibase_tutorial
 
 **Expected output:**
 ```
-mssql_liquibase_tutorial   mcr.microsoft.com/mssql/server:2022-latest   Up X seconds (healthy)   0.0.0.0:1433->1433/tcp
+mssql_liquibase_tutorial   mcr.microsoft.com/mssql/server:2022-latest   Up X seconds (healthy)   0.0.0.0:14333->1433/tcp
 ```
 
 **What this does:**
@@ -491,6 +493,27 @@ liquibase       latest    abc123def456   Just now   500MB
 ```
 
 **Note:** The Liquibase container is not meant to stay running - it executes commands and exits. We'll use `docker run` to execute Liquibase commands throughout this tutorial.
+
+### Important Note About Docker Commands
+
+Throughout this tutorial, all `docker run` commands for Liquibase follow this pattern:
+
+```bash
+docker run --rm \
+  --network=liquibase_tutorial \
+  -v /data/liquibase-tutorial:/workspace \
+  liquibase:latest \
+  --defaults-file=/workspace/env/liquibase.<ENV>.properties \
+  --password="${MSSQL_LIQUIBASE_TUTORIAL_PWD}" \
+  <LIQUIBASE_COMMAND>
+```
+
+**Critical points:**
+- `--network=liquibase_tutorial` - Use the dedicated Docker network (NOT `--network=host`)
+- `--password="${MSSQL_LIQUIBASE_TUTORIAL_PWD}"` - Pass password on command line (environment variable substitution doesn't work in properties files)
+- The password parameter must come AFTER the properties file but BEFORE the Liquibase command
+
+**If you see connection errors**, verify you're using the correct network and passing the password parameter.
 
 ### Check SQL Server is Running
 
@@ -683,7 +706,7 @@ ls -la /data/liquibase-tutorial/env/
 
 - `url`: JDBC connection string (notice `databaseName` differs per environment)
   - `jdbc:sqlserver://` - Protocol for SQL Server connections
-  - `mssql_liquibase_tutorial:1433` - Server hostname (container name) and port (1433 is SQL Server's default port)
+  - `mssql_liquibase_tutorial:1433` - Server hostname (container name) and port (note: internally container uses 1433, but exposed as 14333 on host)
   - `databaseName=testdbdev` - Which database to connect to (this changes per environment)
   - `encrypt=true` - Use encrypted connection
   - `trustServerCertificate=true` - Trust the server's SSL certificate (for local dev only; in production use proper certificates)
@@ -729,11 +752,14 @@ cd /data/liquibase-tutorial
 
 # Generate baseline from development database
 # IMPORTANT: Use --schemas=app to capture objects in the app schema
+# IMPORTANT: Use --network=liquibase_tutorial (not --network=host)
+# IMPORTANT: Pass password on command line since env var substitution doesn't work in properties file
 docker run --rm \
-  --network=host \
+  --network=liquibase_tutorial \
   -v /data/liquibase-tutorial:/workspace \
   liquibase:latest \
   --defaults-file=/workspace/env/liquibase.dev.properties \
+  --password="${MSSQL_LIQUIBASE_TUTORIAL_PWD}" \
   --changelog-file=/workspace/database/changelog/baseline/V0000__baseline.xml \
   --schemas=app \
   generateChangeLog
@@ -888,18 +914,20 @@ cd /data/liquibase-tutorial
 
 # Sync baseline to development (don't actually run DDL, just record as executed)
 docker run --rm \
-  --network=host \
+  --network=liquibase_tutorial \
   -v /data/liquibase-tutorial:/workspace \
   liquibase:latest \
   --defaults-file=/workspace/env/liquibase.dev.properties \
+  --password="${MSSQL_LIQUIBASE_TUTORIAL_PWD}" \
   changelogSync
 
 # Tag the baseline (create a named checkpoint for rollback purposes)
 docker run --rm \
-  --network=host \
+  --network=liquibase_tutorial \
   -v /data/liquibase-tutorial:/workspace \
   liquibase:latest \
   --defaults-file=/workspace/env/liquibase.dev.properties \
+  --password="${MSSQL_LIQUIBASE_TUTORIAL_PWD}" \
   tag baseline
 ```
 
@@ -937,26 +965,29 @@ cd /data/liquibase-tutorial
 
 # Preview what will run
 docker run --rm \
-  --network=host \
+  --network=liquibase_tutorial \
   -v /data/liquibase-tutorial:/workspace \
   liquibase:latest \
   --defaults-file=/workspace/env/liquibase.stage.properties \
+  --password="${MSSQL_LIQUIBASE_TUTORIAL_PWD}" \
   updateSQL
 
 # Deploy to staging
 docker run --rm \
-  --network=host \
+  --network=liquibase_tutorial \
   -v /data/liquibase-tutorial:/workspace \
   liquibase:latest \
   --defaults-file=/workspace/env/liquibase.stage.properties \
+  --password="${MSSQL_LIQUIBASE_TUTORIAL_PWD}" \
   update
 
 # Tag the baseline
 docker run --rm \
-  --network=host \
+  --network=liquibase_tutorial \
   -v /data/liquibase-tutorial:/workspace \
   liquibase:latest \
   --defaults-file=/workspace/env/liquibase.stage.properties \
+  --password="${MSSQL_LIQUIBASE_TUTORIAL_PWD}" \
   tag baseline
 ```
 
@@ -985,26 +1016,29 @@ cd /data/liquibase-tutorial
 
 # Preview what will run
 docker run --rm \
-  --network=host \
+  --network=liquibase_tutorial \
   -v /data/liquibase-tutorial:/workspace \
   liquibase:latest \
   --defaults-file=/workspace/env/liquibase.prod.properties \
+  --password="${MSSQL_LIQUIBASE_TUTORIAL_PWD}" \
   updateSQL
 
 # Deploy to production
 docker run --rm \
-  --network=host \
+  --network=liquibase_tutorial \
   -v /data/liquibase-tutorial:/workspace \
   liquibase:latest \
   --defaults-file=/workspace/env/liquibase.prod.properties \
+  --password="${MSSQL_LIQUIBASE_TUTORIAL_PWD}" \
   update
 
 # Tag the baseline
 docker run --rm \
-  --network=host \
+  --network=liquibase_tutorial \
   -v /data/liquibase-tutorial:/workspace \
   liquibase:latest \
   --defaults-file=/workspace/env/liquibase.prod.properties \
+  --password="${MSSQL_LIQUIBASE_TUTORIAL_PWD}" \
   tag baseline
 ```
 
@@ -1157,7 +1191,7 @@ cd /data/liquibase-tutorial
 
 # Check what will be deployed (should show V0001 only)
 docker run --rm \
-  --network=host \
+  --network=liquibase_tutorial \
   -v /data/liquibase-tutorial:/workspace \
   liquibase:latest \
   --defaults-file=/workspace/env/liquibase.dev.properties \
@@ -1165,7 +1199,7 @@ docker run --rm \
 
 # Preview the SQL
 docker run --rm \
-  --network=host \
+  --network=liquibase_tutorial \
   -v /data/liquibase-tutorial:/workspace \
   liquibase:latest \
   --defaults-file=/workspace/env/liquibase.dev.properties \
@@ -1173,7 +1207,7 @@ docker run --rm \
 
 # Deploy to development
 docker run --rm \
-  --network=host \
+  --network=liquibase_tutorial \
   -v /data/liquibase-tutorial:/workspace \
   liquibase:latest \
   --defaults-file=/workspace/env/liquibase.dev.properties \
@@ -1181,7 +1215,7 @@ docker run --rm \
 
 # Tag this release
 docker run --rm \
-  --network=host \
+  --network=liquibase_tutorial \
   -v /data/liquibase-tutorial:/workspace \
   liquibase:latest \
   --defaults-file=/workspace/env/liquibase.dev.properties \
@@ -1214,7 +1248,7 @@ cd /data/liquibase-tutorial
 
 # Preview (should be identical to what ran in dev)
 docker run --rm \
-  --network=host \
+  --network=liquibase_tutorial \
   -v /data/liquibase-tutorial:/workspace \
   liquibase:latest \
   --defaults-file=/workspace/env/liquibase.stage.properties \
@@ -1222,7 +1256,7 @@ docker run --rm \
 
 # Deploy to staging
 docker run --rm \
-  --network=host \
+  --network=liquibase_tutorial \
   -v /data/liquibase-tutorial:/workspace \
   liquibase:latest \
   --defaults-file=/workspace/env/liquibase.stage.properties \
@@ -1230,7 +1264,7 @@ docker run --rm \
 
 # Tag this release
 docker run --rm \
-  --network=host \
+  --network=liquibase_tutorial \
   -v /data/liquibase-tutorial:/workspace \
   liquibase:latest \
   --defaults-file=/workspace/env/liquibase.stage.properties \
@@ -1255,7 +1289,7 @@ cd /data/liquibase-tutorial
 
 # Preview (should be identical to dev and stage)
 docker run --rm \
-  --network=host \
+  --network=liquibase_tutorial \
   -v /data/liquibase-tutorial:/workspace \
   liquibase:latest \
   --defaults-file=/workspace/env/liquibase.prod.properties \
@@ -1263,7 +1297,7 @@ docker run --rm \
 
 # Deploy to production
 docker run --rm \
-  --network=host \
+  --network=liquibase_tutorial \
   -v /data/liquibase-tutorial:/workspace \
   liquibase:latest \
   --defaults-file=/workspace/env/liquibase.prod.properties \
@@ -1271,7 +1305,7 @@ docker run --rm \
 
 # Tag this release
 docker run --rm \
-  --network=host \
+  --network=liquibase_tutorial \
   -v /data/liquibase-tutorial:/workspace \
   liquibase:latest \
   --defaults-file=/workspace/env/liquibase.prod.properties \
@@ -1461,7 +1495,7 @@ cd /data/liquibase-tutorial
 
 # Check what will deploy (should show V0002, V0003, V0004)
 docker run --rm \
-  --network=host \
+  --network=liquibase_tutorial \
   -v /data/liquibase-tutorial:/workspace \
   liquibase:latest \
   --defaults-file=/workspace/env/liquibase.dev.properties \
@@ -1469,7 +1503,7 @@ docker run --rm \
 
 # Deploy to development
 docker run --rm \
-  --network=host \
+  --network=liquibase_tutorial \
   -v /data/liquibase-tutorial:/workspace \
   liquibase:latest \
   --defaults-file=/workspace/env/liquibase.dev.properties \
@@ -1477,7 +1511,7 @@ docker run --rm \
 
 # Tag the release
 docker run --rm \
-  --network=host \
+  --network=liquibase_tutorial \
   -v /data/liquibase-tutorial:/workspace \
   liquibase:latest \
   --defaults-file=/workspace/env/liquibase.dev.properties \
@@ -1490,14 +1524,14 @@ docker run --rm \
 cd /data/liquibase-tutorial
 
 docker run --rm \
-  --network=host \
+  --network=liquibase_tutorial \
   -v /data/liquibase-tutorial:/workspace \
   liquibase:latest \
   --defaults-file=/workspace/env/liquibase.stage.properties \
   update
 
 docker run --rm \
-  --network=host \
+  --network=liquibase_tutorial \
   -v /data/liquibase-tutorial:/workspace \
   liquibase:latest \
   --defaults-file=/workspace/env/liquibase.stage.properties \
@@ -1510,14 +1544,14 @@ docker run --rm \
 cd /data/liquibase-tutorial
 
 docker run --rm \
-  --network=host \
+  --network=liquibase_tutorial \
   -v /data/liquibase-tutorial:/workspace \
   liquibase:latest \
   --defaults-file=/workspace/env/liquibase.prod.properties \
   update
 
 docker run --rm \
-  --network=host \
+  --network=liquibase_tutorial \
   -v /data/liquibase-tutorial:/workspace \
   liquibase:latest \
   --defaults-file=/workspace/env/liquibase.prod.properties \
@@ -1580,7 +1614,7 @@ cd /data/liquibase-tutorial
 
 # Rollback development to release-v1.1 (undo changes V0002-V0004)
 docker run --rm \
-  --network=host \
+  --network=liquibase_tutorial \
   -v /data/liquibase-tutorial:/workspace \
   liquibase:latest \
   --defaults-file=/workspace/env/liquibase.dev.properties \
@@ -1600,7 +1634,7 @@ ORDER BY DATEEXECUTED DESC;
 ```bash
 # Re-apply changes to get back to latest
 docker run --rm \
-  --network=host \
+  --network=liquibase_tutorial \
   -v /data/liquibase-tutorial:/workspace \
   liquibase:latest \
   --defaults-file=/workspace/env/liquibase.dev.properties \
@@ -1612,7 +1646,7 @@ docker run --rm \
 ```bash
 # Roll back last 2 changesets
 docker run --rm \
-  --network=host \
+  --network=liquibase_tutorial \
   -v /data/liquibase-tutorial:/workspace \
   liquibase:latest \
   --defaults-file=/workspace/env/liquibase.dev.properties \
@@ -1801,7 +1835,7 @@ Sometimes deployments fail (server crash, network disconnect, Ctrl+C) and the lo
 **Fix:**
 ```bash
 # Force release the lock
-docker run --rm --network=host \
+docker run --rm --network=liquibase_tutorial \
   -v /data/liquibase-tutorial:/workspace \
   liquibase:latest \
   --defaults-file=/workspace/env/liquibase.dev.properties \
@@ -2065,7 +2099,7 @@ jobs:
         env:
           DB_PASSWORD: ${{ secrets.DEV_DB_PASSWORD }}
         run: |
-          docker run --rm --network=host \
+          docker run --rm --network=liquibase_tutorial \
             -v ${{ github.workspace }}:/workspace \
             -e DB_PASSWORD \
             liquibase:latest \
@@ -2090,7 +2124,7 @@ jobs:
         env:
           DB_PASSWORD: ${{ secrets.STAGE_DB_PASSWORD }}
         run: |
-          docker run --rm --network=host \
+          docker run --rm --network=liquibase_tutorial \
             -v ${{ github.workspace }}:/workspace \
             -e DB_PASSWORD \
             liquibase:latest \
@@ -2102,7 +2136,7 @@ jobs:
         env:
           DB_PASSWORD: ${{ secrets.STAGE_DB_PASSWORD }}
         run: |
-          docker run --rm --network=host \
+          docker run --rm --network=liquibase_tutorial \
             -v ${{ github.workspace }}:/workspace \
             -e DB_PASSWORD \
             liquibase:latest \
@@ -2115,7 +2149,7 @@ jobs:
           DB_PASSWORD: ${{ secrets.STAGE_DB_PASSWORD }}
         run: |
           RELEASE_TAG="release-$(date +%Y%m%d-%H%M%S)"
-          docker run --rm --network=host \
+          docker run --rm --network=liquibase_tutorial \
             -v ${{ github.workspace }}:/workspace \
             -e DB_PASSWORD \
             liquibase:latest \
@@ -2137,7 +2171,7 @@ jobs:
           DB_PASSWORD: ${{ secrets.PROD_DB_PASSWORD }}
         run: |
           # Generate rollback SQL before deployment
-          docker run --rm --network=host \
+          docker run --rm --network=liquibase_tutorial \
             -v ${{ github.workspace }}:/workspace \
             -e DB_PASSWORD \
             liquibase:latest \
@@ -2155,7 +2189,7 @@ jobs:
         env:
           DB_PASSWORD: ${{ secrets.PROD_DB_PASSWORD }}
         run: |
-          docker run --rm --network=host \
+          docker run --rm --network=liquibase_tutorial \
             -v ${{ github.workspace }}:/workspace \
             -e DB_PASSWORD \
             liquibase:latest \
@@ -2172,7 +2206,7 @@ jobs:
           DB_PASSWORD: ${{ secrets.PROD_DB_PASSWORD }}
         run: |
           RELEASE_TAG="prod-release-$(date +%Y%m%d-%H%M%S)"
-          docker run --rm --network=host \
+          docker run --rm --network=liquibase_tutorial \
             -v ${{ github.workspace }}:/workspace \
             -e DB_PASSWORD \
             liquibase:latest \
@@ -2277,7 +2311,7 @@ docker run --rm --network=host ...
 **Recovery** (if you must):
 
 ```bash
-docker run --rm --network=host \
+docker run --rm --network=liquibase_tutorial \
   -v /data/liquibase-tutorial:/workspace \
   liquibase:latest \
   --defaults-file=/workspace/env/liquibase.dev.properties \
@@ -2327,7 +2361,7 @@ docker run --rm --network=host \
 **Fix**: Force release the lock:
 
 ```bash
-docker run --rm --network=host \
+docker run --rm --network=liquibase_tutorial \
   -v /data/liquibase-tutorial:/workspace \
   liquibase:latest \
   --defaults-file=/workspace/env/liquibase.dev.properties \
@@ -2957,7 +2991,7 @@ logLevel=info
 **Basic Liquibase command:**
 
 ```bash
-docker run --rm --network=host \
+docker run --rm --network=liquibase_tutorial \
   -v /path/to/project:/workspace \
   liquibase:latest \
   --defaults-file=/workspace/env/liquibase.dev.properties \
@@ -2967,7 +3001,7 @@ docker run --rm --network=host \
 **With environment variables:**
 
 ```bash
-docker run --rm --network=host \
+docker run --rm --network=liquibase_tutorial \
   -v /path/to/project:/workspace \
   -e DB_PASSWORD='SecurePass123!' \
   liquibase:latest \
@@ -2979,7 +3013,7 @@ docker run --rm --network=host \
 **Interactive mode for debugging:**
 
 ```bash
-docker run -it --rm --network=host \
+docker run -it --rm --network=liquibase_tutorial \
   -v /path/to/project:/workspace \
   liquibase:latest \
   bash
@@ -3072,34 +3106,62 @@ ORDER BY type_desc;
 
 ## Cleanup After Tutorial
 
-When you've completed the tutorial and want to clean up the containers and databases:
+When you've completed the tutorial and want to clean up the containers and databases, we've provided a convenient cleanup script.
 
-### Stop and Remove MSSQL Container
+### Quick Cleanup (Recommended)
 
 ```bash
-# Navigate to the mssql docker directory
-cd /workspaces/dbtools/docker/mssql
+# Run the automated cleanup script
+/workspaces/dbtools/docs/tutorials/liquibase/scripts/cleanup_liquibase_tutorial.sh
+```
 
-# Stop and remove the MSSQL container
+**What the script does:**
+- Stops and removes the `mssql_liquibase_tutorial` container
+- Removes the `mssql_liquibase_tutorial_data` volume
+- Removes the `liquibase_tutorial` network
+- Optionally removes the `/data/liquibase-tutorial` directory (with confirmation)
+- Provides a summary of what was cleaned up
+
+### Manual Cleanup (Alternative)
+
+If you prefer to clean up manually:
+
+#### Stop and Remove MSSQL Container
+
+```bash
+# Navigate to the tutorial docker directory
+cd /workspaces/dbtools/docs/tutorials/liquibase/docker
+
+# Stop and remove the SQL Server container using docker compose
 docker compose down
 
 # Verify the container is stopped and removed
-docker ps -a | grep mssql1
+docker ps -a | grep mssql_liquibase_tutorial
 ```
 
 **What this does:**
-- `docker compose down` - Stops and removes containers defined in docker-compose.yml
-- The container `mssql1` will be removed
-- **Important:** The data in `/data/mssql` will persist on your host system unless you manually delete it
+- `docker compose down` - Stops and removes containers, networks, and optionally volumes
+- The container `mssql_liquibase_tutorial` will be removed
+- **Important:** Use `docker compose down -v` to also remove the volume (deletes all database data)
 
-### Remove Liquibase Container (if running)
+#### Remove Liquibase Container (if running)
 
 Since Liquibase is a run-once tool, it typically doesn't leave containers running. However, if any exist:
 
 ```bash
 # Remove any stopped liquibase containers
 docker ps -a | grep liquibase
-docker rm $(docker ps -a -q --filter "name=liquibase")
+docker rm $(docker ps -a -q --filter "ancestor=liquibase:latest")
+```
+
+#### Remove Docker Volumes and Networks
+
+```bash
+# Remove the tutorial volume
+docker volume rm mssql_liquibase_tutorial_data
+
+# Remove the tutorial network
+docker network rm liquibase_tutorial
 ```
 
 ### About Docker Images
