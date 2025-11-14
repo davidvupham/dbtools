@@ -230,7 +230,10 @@ cert/*.der
 !cert/README.md
 !cert/.gitkeep
 
-# ignore liquibase project files
-liquibase/
+# ignore liquibase project files (only at root level)
+/liquibase/
+
+# Allow docs/tutorials/liquibase (documentation)
+!docs/tutorials/liquibase/
 
 # (removed) PDF conversion resources and exceptions no longer used
