@@ -439,6 +439,17 @@ cat database/changelog/baseline/V0000__baseline.xml
 - `generateChangeLog` captures tables and views well
 - Often misses stored procedures and functions (we'll add manually)
 - May not include `schemaName` attribute (we'll fix)
+- May not capture all constraints correctly (review carefully)
+- Doesn't capture database users, roles, or permissions
+- Triggers are often missed or incorrectly generated
+
+**What to check in the generated baseline:**
+
+1. **Schema references**: Ensure all objects have `schemaName="app"` attribute
+2. **Data types**: Verify column types match exactly (especially NVARCHAR vs VARCHAR)
+3. **Constraints**: Check primary keys, foreign keys, unique constraints, and defaults
+4. **Missing objects**: Compare with database to find missing procedures, functions, triggers
+5. **Ordering**: Ensure foreign key tables come after their referenced tables
 
 ## Step 5: Review and Fix the Baseline
 
@@ -673,6 +684,14 @@ ORDER BY type_desc, name;
 Now let's make a new database change: add an `orders` table.
 
 ### Create the Change File
+
+**Choosing between SQL and YAML format:**
+
+- **SQL format**: Best for complex queries, stored procedures, functions, views
+- **YAML/XML format**: Best for tables, indexes, constraints (database-agnostic)
+- You can mix both formats in the same project
+
+For this tutorial, we'll use **SQL format** for simplicity and readability.
 
 ```bash
 # Create the change file
@@ -936,6 +955,7 @@ Add phone number parameter to the customer creation procedure:
 cat > /data/liquibase-tutorial/database/changelog/changes/V0003__update_add_customer_proc.sql << 'EOF'
 --changeset tutorial:V0003-update-add-customer-proc runOnChange:true
 -- Purpose: Add phone_number parameter to customer creation procedure
+-- Note: runOnChange:true means this will re-execute if the changeset content changes
 
 IF OBJECT_ID(N'app.usp_add_customer', N'P') IS NOT NULL
     DROP PROCEDURE app.usp_add_customer;
@@ -967,6 +987,27 @@ GO
 --rollback DROP PROCEDURE IF EXISTS app.usp_add_customer;
 EOF
 ```
+
+**Understanding `runOnChange`:**
+
+The `runOnChange:true` attribute is crucial for managing views, stored procedures, and functions:
+
+- **Without `runOnChange`**: Changeset runs once, never again (normal behavior)
+- **With `runOnChange:true`**: Liquibase recalculates the MD5 checksum
+  - If content changed: Re-executes the changeset
+  - If content unchanged: Skips execution
+
+**When to use `runOnChange`:**
+
+✅ Views (definition changes)
+✅ Stored procedures (parameter or logic changes)
+✅ Functions (signature or implementation changes)
+✅ Configuration data that may need updates
+
+❌ Tables (use ALTER TABLE in new changesets instead)
+❌ One-time data migrations
+
+**Best practice**: Always use `DROP IF EXISTS` then `CREATE` pattern for objects with `runOnChange:true`.
 
 ### Change 4: Update View
 
@@ -1193,6 +1234,66 @@ docker run --rm \
   rollbackCount 2
 ```
 
+## Understanding Liquibase's Tracking Mechanism
+
+Before diving into the deployment pipeline, let's understand how Liquibase tracks changes.
+
+### The DATABASECHANGELOG Table
+
+When Liquibase first runs, it creates two tables:
+
+1. **DATABASECHANGELOG**: Records every changeset executed
+2. **DATABASECHANGELOGLOCK**: Prevents concurrent deployments
+
+**DATABASECHANGELOG structure:**
+
+```sql
+SELECT * FROM DATABASECHANGELOG;
+```
+
+| Column | Purpose |
+|--------|----------|
+| ID | Unique identifier from `--changeset` comment |
+| AUTHOR | Who created the change |
+| FILENAME | Path to changelog file |
+| DATEEXECUTED | When it ran |
+| ORDEREXECUTED | Sequence number (1, 2, 3...) |
+| EXECTYPE | Type: EXECUTED, RERAN, SKIPPED |
+| MD5SUM | Checksum to detect changes |
+| TAG | Optional label for rollback points |
+
+**How Liquibase decides what to run:**
+
+1. Reads `changelog.xml` to get list of changesets
+2. Queries `DATABASECHANGELOG` to see what already ran
+3. Compares MD5 checksums to detect modifications
+4. Runs only new changesets (not in DATABASECHANGELOG)
+5. Records execution in DATABASECHANGELOG
+
+**Why checksums matter:**
+
+- Prevents accidental changes to deployed changesets
+- If you edit a deployed changeset, Liquibase throws an error
+- This protects consistency across environments
+
+**Viewing your change history:**
+
+```bash
+# See all executed changesets in development
+docker exec mssql1 /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U SA -P 'YourStrong!Passw0rd' -Q "
+USE testdbdev;
+SELECT
+    ORDEREXECUTED,
+    ID,
+    AUTHOR,
+    FILENAME,
+    DATEEXECUTED,
+    TAG
+FROM DATABASECHANGELOG
+ORDER BY ORDEREXECUTED;
+"
+```
+
 ## Understanding the Deployment Pipeline
 
 ### The Complete Workflow
@@ -1252,36 +1353,188 @@ Here's how a typical change flows from idea to production:
 
 ### Automation with CI/CD
 
-In production, you'd automate this with GitHub Actions:
+In production, you'd automate this with GitHub Actions. Here's a realistic workflow:
 
 ```yaml
-# Simplified example workflow
+# .github/workflows/liquibase-deploy.yml
+name: Database Deployment Pipeline
+
 on:
   push:
     branches: [main]
+    paths:
+      - 'database/**'
+      - 'env/**'
+  workflow_dispatch:  # Manual trigger
+
+env:
+  LIQUIBASE_VERSION: '4.20.0'
 
 jobs:
-  deploy-dev:
+  # Validate changesets before deploying
+  validate:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Deploy to Dev
-        run: liquibase update --defaults-file=env/liquibase.dev.properties
 
+      - name: Validate Changelog
+        run: |
+          docker run --rm \
+            -v ${{ github.workspace }}:/workspace \
+            liquibase/liquibase:${LIQUIBASE_VERSION} \
+            --changelog-file=/workspace/database/changelog/changelog.xml \
+            validate
+
+  # Deploy to development (automatic)
+  deploy-dev:
+    needs: validate
+    runs-on: ubuntu-latest
+    environment: development
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy to Development
+        env:
+          DB_PASSWORD: ${{ secrets.DEV_DB_PASSWORD }}
+        run: |
+          docker run --rm --network=host \
+            -v ${{ github.workspace }}:/workspace \
+            -e DB_PASSWORD \
+            liquibase-custom:5.0.1 \
+            --defaults-file=/workspace/env/liquibase.dev.properties \
+            --password="${DB_PASSWORD}" \
+            update
+
+      - name: Verify Deployment
+        run: |
+          # Run verification queries
+          ./scripts/verify-deployment.sh dev
+
+  # Deploy to staging (requires approval)
   deploy-stage:
     needs: deploy-dev
-    environment: staging  # Requires approval
+    runs-on: ubuntu-latest
+    environment: staging  # GitHub environment with required reviewers
     steps:
-      - name: Deploy to Stage
-        run: liquibase update --defaults-file=env/liquibase.stage.properties
+      - uses: actions/checkout@v4
 
+      - name: Preview Changes
+        env:
+          DB_PASSWORD: ${{ secrets.STAGE_DB_PASSWORD }}
+        run: |
+          docker run --rm --network=host \
+            -v ${{ github.workspace }}:/workspace \
+            -e DB_PASSWORD \
+            liquibase-custom:5.0.1 \
+            --defaults-file=/workspace/env/liquibase.stage.properties \
+            --password="${DB_PASSWORD}" \
+            status --verbose
+
+      - name: Deploy to Staging
+        env:
+          DB_PASSWORD: ${{ secrets.STAGE_DB_PASSWORD }}
+        run: |
+          docker run --rm --network=host \
+            -v ${{ github.workspace }}:/workspace \
+            -e DB_PASSWORD \
+            liquibase-custom:5.0.1 \
+            --defaults-file=/workspace/env/liquibase.stage.properties \
+            --password="${DB_PASSWORD}" \
+            update
+
+      - name: Tag Release
+        env:
+          DB_PASSWORD: ${{ secrets.STAGE_DB_PASSWORD }}
+        run: |
+          RELEASE_TAG="release-$(date +%Y%m%d-%H%M%S)"
+          docker run --rm --network=host \
+            -v ${{ github.workspace }}:/workspace \
+            -e DB_PASSWORD \
+            liquibase-custom:5.0.1 \
+            --defaults-file=/workspace/env/liquibase.stage.properties \
+            --password="${DB_PASSWORD}" \
+            tag "${RELEASE_TAG}"
+
+  # Deploy to production (requires approval + manual trigger)
   deploy-prod:
     needs: deploy-stage
-    environment: production  # Requires approval
+    runs-on: ubuntu-latest
+    environment: production  # Requires multiple approvers
+    if: github.event_name == 'workflow_dispatch'  # Only manual
     steps:
-      - name: Deploy to Prod
-        run: liquibase update --defaults-file=env/liquibase.prod.properties
+      - uses: actions/checkout@v4
+
+      - name: Create Rollback Script
+        env:
+          DB_PASSWORD: ${{ secrets.PROD_DB_PASSWORD }}
+        run: |
+          # Generate rollback SQL before deployment
+          docker run --rm --network=host \
+            -v ${{ github.workspace }}:/workspace \
+            -e DB_PASSWORD \
+            liquibase-custom:5.0.1 \
+            --defaults-file=/workspace/env/liquibase.prod.properties \
+            --password="${DB_PASSWORD}" \
+            futureRollbackSQL > rollback-$(date +%Y%m%d).sql
+
+      - name: Upload Rollback Script
+        uses: actions/upload-artifact@v3
+        with:
+          name: rollback-script
+          path: rollback-*.sql
+
+      - name: Deploy to Production
+        env:
+          DB_PASSWORD: ${{ secrets.PROD_DB_PASSWORD }}
+        run: |
+          docker run --rm --network=host \
+            -v ${{ github.workspace }}:/workspace \
+            -e DB_PASSWORD \
+            liquibase-custom:5.0.1 \
+            --defaults-file=/workspace/env/liquibase.prod.properties \
+            --password="${DB_PASSWORD}" \
+            update
+
+      - name: Verify Production Deployment
+        run: |
+          ./scripts/verify-deployment.sh prod
+
+      - name: Tag Production Release
+        env:
+          DB_PASSWORD: ${{ secrets.PROD_DB_PASSWORD }}
+        run: |
+          RELEASE_TAG="prod-release-$(date +%Y%m%d-%H%M%S)"
+          docker run --rm --network=host \
+            -v ${{ github.workspace }}:/workspace \
+            -e DB_PASSWORD \
+            liquibase-custom:5.0.1 \
+            --defaults-file=/workspace/env/liquibase.prod.properties \
+            --password="${DB_PASSWORD}" \
+            tag "${RELEASE_TAG}"
+
+      - name: Notify Team
+        if: always()
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '✅ Production deployment completed successfully!'
+            })
 ```
+
+**Key CI/CD features:**
+
+- ✅ Automatic validation before deployment
+- ✅ Preview changes with `status --verbose`
+- ✅ Environment-based secrets (no passwords in code)
+- ✅ Required approvals for stage and prod
+- ✅ Automatic rollback script generation
+- ✅ Verification after each deployment
+- ✅ Timestamped tags for audit trail
+- ✅ Team notifications
 
 ## Common Troubleshooting
 
@@ -1363,7 +1616,127 @@ docker run --rm --network=host \
   clearCheckSums
 ```
 
+### Changeset Already Exists Error
+
+**Error**: `Changeset <id> has already been executed`
+
+**Cause**: Two changesets have the same ID
+
+**Fix**: Ensure every changeset has a unique ID. Use timestamp-based IDs:
+
+```sql
+-- Good: Timestamp + sequence + description
+--changeset tutorial:20251113-01-add-orders-table
+
+-- Bad: Generic ID that might conflict
+--changeset tutorial:001-add-table
+```
+
+### Foreign Key Constraint Failure
+
+**Error**: `FK_orders_customer could not be created because the referenced table does not exist`
+
+**Cause**: Changesets running out of order
+
+**Fix**: Check your changelog includes files in correct order:
+
+```xml
+<!-- Wrong: orders before customer -->
+<include file="changes/V0001__add_orders_table.sql"/>
+<include file="baseline/V0000__baseline.xml"/>
+
+<!-- Correct: baseline (with customer) before orders -->
+<include file="baseline/V0000__baseline.xml"/>
+<include file="changes/V0001__add_orders_table.sql"/>
+```
+
+### Locks Not Released
+
+**Error**: `Waiting for changelog lock...`
+
+**Cause**: Previous run didn't complete (crash, Ctrl+C, connection loss)
+
+**Fix**: Force release the lock:
+
+```bash
+docker run --rm --network=host \
+  -v /data/liquibase-tutorial:/workspace \
+  liquibase-custom:5.0.1 \
+  --defaults-file=/workspace/env/liquibase.dev.properties \
+  releaseLocks
+```
+
+**Verify lock status first:**
+
+```bash
+docker exec mssql1 /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U SA -P 'YourStrong!Passw0rd' -Q "
+USE testdbdev;
+SELECT * FROM DATABASECHANGELOGLOCK;
+"
+```
+
+### Rollback SQL Not Defined
+
+**Error**: `No rollback statement defined for changeset`
+
+**Cause**: Trying to rollback a changeset without `--rollback` comment
+
+**Prevention**: Always include rollback in SQL changesets:
+
+```sql
+--changeset author:id
+CREATE TABLE app.products (...)
+
+-- Required for rollback to work:
+--rollback DROP TABLE app.products;
+```
+
+**Alternative**: Use `rollbackSQL` to manually specify:
+
+```bash
+liquibase rollbackSQL --tag=v1.0 > rollback-v1.0.sql
+cat rollback-v1.0.sql  # Review before running
+```
+
 ## Best Practices
+
+### Use Preconditions for Safety
+
+Preconditions validate assumptions before running changesets:
+
+```yaml
+databaseChangeLog:
+  - changeSet:
+      id: add-email-index
+      author: team
+      preConditions:
+        - onFail: MARK_RAN  # Skip if condition fails
+        - not:
+            - indexExists:
+                tableName: customer
+                indexName: IX_customer_email
+      changes:
+        - createIndex:
+            tableName: customer
+            indexName: IX_customer_email
+            columns:
+              - column:
+                  name: email
+```
+
+**Common precondition checks:**
+
+- `tableExists`: Ensure table exists before modifying
+- `columnExists`: Check column exists before altering
+- `indexExists`: Prevent duplicate index creation
+- `dbms`: Run only on specific database types
+- `runningAs`: Verify correct database user
+
+**onFail options:**
+
+- `HALT`: Stop deployment (default, safest)
+- `MARK_RAN`: Mark as executed but skip (for optional changes)
+- `WARN`: Log warning and continue
 
 ### Changeset Design
 
@@ -1392,6 +1765,37 @@ docker run --rm --network=host \
 
 - Use `IF EXISTS` / `IF NOT EXISTS`
 - Safe to re-run
+
+### Using Contexts for Conditional Deployment
+
+Contexts let you selectively run changesets based on environment:
+
+```sql
+--changeset tutorial:V0005-add-test-data context:dev,test
+-- This only runs in dev and test environments, never in production
+INSERT INTO app.customer (full_name, email)
+VALUES ('Test User', 'test@example.com');
+```
+
+**Running with contexts:**
+
+```bash
+# Development: runs changesets with context:dev
+liquibase update --contexts=dev
+
+# Production: skip test data by not specifying dev context
+liquibase update --contexts=prod
+```
+
+**Common context patterns:**
+
+- `dev`: Test data, debug features
+- `test`: Test data for automated tests
+- `prod`: Production-only changes (alerts, monitoring)
+- `migration`: One-time data migrations
+- `!prod`: Everything except production
+
+**Best practice**: Use contexts sparingly. Most changesets should run everywhere.
 
 ### Deployment Workflow
 
@@ -1434,11 +1838,82 @@ liquibase tag release-v1.2
 - Create dedicated Liquibase user
 - Grant only necessary permissions
 
+**Example: Create dedicated Liquibase user**
+
+```sql
+-- Create Liquibase service account
+CREATE LOGIN liquibase_svc WITH PASSWORD = 'SecurePassword123!';
+CREATE USER liquibase_svc FOR LOGIN liquibase_svc;
+
+-- Grant minimum necessary permissions
+ALTER ROLE db_ddladmin ADD MEMBER liquibase_svc;  -- DDL operations
+ALTER ROLE db_datareader ADD MEMBER liquibase_svc;  -- Read data
+ALTER ROLE db_datawriter ADD MEMBER liquibase_svc;  -- Write to tracking tables
+
+-- Grant explicit permissions if needed
+GRANT CREATE TABLE TO liquibase_svc;
+GRANT CREATE PROCEDURE TO liquibase_svc;
+GRANT CREATE VIEW TO liquibase_svc;
+```
+
 ✅ **Audit who makes changes**
 
 - Use real names in `author` field
 - Review changes in pull requests
 - Require approvals for production
+
+### Monitoring and Validation
+
+✅ **Always verify after deployment**
+
+Create a verification script to run after each deployment:
+
+```bash
+#!/bin/bash
+# verify-deployment.sh
+
+ENV=$1  # dev, stage, or prod
+DB="testdb${ENV}"
+
+echo "Verifying deployment to ${DB}..."
+
+# Check last 5 executed changesets
+docker exec mssql1 /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U SA -P 'YourStrong!Passw0rd' -Q "
+USE ${DB};
+SELECT TOP 5 ID, AUTHOR, DATEEXECUTED, TAG
+FROM DATABASECHANGELOG
+ORDER BY DATEEXECUTED DESC;
+"
+
+# Verify expected objects exist
+docker exec mssql1 /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U SA -P 'YourStrong!Passw0rd' -Q "
+USE ${DB};
+SELECT COUNT(*) AS TableCount FROM sys.tables WHERE schema_id = SCHEMA_ID('app');
+SELECT COUNT(*) AS ViewCount FROM sys.views WHERE schema_id = SCHEMA_ID('app');
+SELECT COUNT(*) AS ProcCount FROM sys.procedures WHERE schema_id = SCHEMA_ID('app');
+"
+
+echo "Verification complete!"
+```
+
+✅ **Monitor deployment metrics**
+
+Track these metrics over time:
+
+- Number of changesets per release
+- Deployment duration
+- Rollback frequency
+- Failed deployment rate
+- Time between environments (dev → stage → prod)
+
+✅ **Set up alerts**
+
+Configure alerts for:
+
+- Deployment failures
+- Checksum validation failures
+- Rollbacks in production
+- Lock timeout issues
 
 ### Large Changes
 
@@ -1454,6 +1929,167 @@ For breaking changes (e.g., rename column):
 
 - Don't try to do everything at once
 - Allows rollback to intermediate states
+
+### Data Migrations
+
+When migrating data as part of schema changes, follow these patterns:
+
+✅ **Pattern 1: Separate schema and data changes**
+
+```xml
+<!-- Release 1.5 changelog -->
+<databaseChangeLog>
+  <!-- Step 1: Add new column -->
+  <include file="001-add-new-column.sql"/>
+
+  <!-- Step 2: Migrate data (separate changeset) -->
+  <include file="002-migrate-data.sql"/>
+
+  <!-- Step 3: Drop old column (in next release after verification) -->
+  <!-- DO NOT include in same release -->
+</databaseChangeLog>
+```
+
+✅ **Pattern 2: Use transactions for data safety**
+
+```sql
+--changeset tutorial:V0010-migrate-phone-format
+--rollback UPDATE app.customer SET phone_number = old_phone WHERE old_phone IS NOT NULL;
+
+BEGIN TRANSACTION;
+
+-- Add temporary column
+IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('app.customer') AND name = 'old_phone')
+    ALTER TABLE app.customer ADD old_phone NVARCHAR(20) NULL;
+
+-- Backup existing data
+UPDATE app.customer
+SET old_phone = phone_number
+WHERE old_phone IS NULL;
+
+-- Transform data (remove dashes from phone numbers)
+UPDATE app.customer
+SET phone_number = REPLACE(REPLACE(phone_number, '-', ''), ' ', '')
+WHERE phone_number IS NOT NULL;
+
+COMMIT TRANSACTION;
+
+PRINT 'Migrated phone numbers to new format';
+```
+
+✅ **Pattern 3: Validate data after migration**
+
+```sql
+--changeset tutorial:V0011-validate-migration
+
+-- Count records that need migration
+DECLARE @invalid_count INT;
+SELECT @invalid_count = COUNT(*)
+FROM app.customer
+WHERE phone_number LIKE '%-%' OR phone_number LIKE '% %';
+
+-- Fail if any invalid data found
+IF @invalid_count > 0
+BEGIN
+    DECLARE @msg NVARCHAR(200) = CONCAT('Found ', @invalid_count, ' records with invalid phone format');
+    THROW 50000, @msg, 1;
+END
+
+PRINT 'Data validation passed: all phone numbers in correct format';
+```
+
+✅ **Pattern 4: Use loadData for reference data**
+
+For loading reference data from CSV files:
+
+```yaml
+databaseChangeLog:
+  - changeSet:
+      id: load-countries-reference-data
+      author: tutorial
+      changes:
+        - loadData:
+            file: data/countries.csv
+            tableName: countries
+            schemaName: app
+            columns:
+              - column:
+                  name: country_code
+                  type: STRING
+              - column:
+                  name: country_name
+                  type: STRING
+      rollback:
+        - sql: DELETE FROM app.countries WHERE country_code IN ('US', 'CA', 'MX');
+```
+
+**CSV file (`data/countries.csv`):**
+
+```csv
+country_code,country_name
+US,United States
+CA,Canada
+MX,Mexico
+```
+
+### Common Anti-Patterns to Avoid
+
+❌ **Don't modify deployed changesets**
+
+```sql
+-- WRONG: Editing an already-deployed changeset
+--changeset tutorial:V0001-add-orders-table
+CREATE TABLE app.orders (
+    order_id INT,
+    customer_id INT,
+    order_total DECIMAL(18,2),
+    status NVARCHAR(50)  -- Added this line after deployment - BREAKS CHECKSUM!
+);
+```
+
+Instead, create a new changeset:
+
+```sql
+-- CORRECT: New changeset for additional column
+--changeset tutorial:V0005-add-order-status
+ALTER TABLE app.orders ADD status NVARCHAR(50) NULL;
+```
+
+❌ **Don't use environment-specific logic in changesets**
+
+```sql
+-- WRONG: Environment checks in SQL
+IF @@SERVERNAME = 'prod-server'
+    -- Do something different in prod
+```
+
+Instead, use contexts:
+
+```sql
+--changeset tutorial:V0006-add-sample-data context:dev,test
+-- This only runs in dev and test
+INSERT INTO app.customer VALUES (...);
+```
+
+❌ **Don't skip environments**
+
+```
+WRONG: dev → prod (skipping stage)
+CORRECT: dev → stage → prod
+```
+
+❌ **Don't use SELECT * in views**
+
+```sql
+-- WRONG: Fragile view that breaks when columns added
+CREATE VIEW app.v_customer_list AS
+SELECT * FROM app.customer;
+
+-- CORRECT: Explicit columns
+CREATE VIEW app.v_customer_list AS
+SELECT customer_id, full_name, email, created_at
+FROM app.customer;
+```
 
 ## Next Steps
 
@@ -1479,6 +2115,292 @@ For breaking changes (e.g., rename column):
 3. Add indexes to optimize common queries
 4. Implement soft deletes (add `deleted_at` column)
 5. Create an audit trigger to log changes
+6. Migrate existing data from one format to another
+7. Set up a GitHub Actions workflow for automated deployments
+8. Practice rolling back to different tags
+9. Add preconditions to prevent unsafe changes
+10. Create a view that joins customers, orders, and products
+
+## Quick Reference Guide
+
+### Essential Liquibase Commands
+
+**Check what will be deployed:**
+
+```bash
+liquibase status --verbose
+```
+
+**Preview SQL before running:**
+
+```bash
+liquibase updateSQL > preview.sql
+```
+
+**Deploy changes:**
+
+```bash
+liquibase update
+```
+
+**Deploy specific count of changesets:**
+
+```bash
+liquibase updateCount 3
+```
+
+**Deploy to specific tag:**
+
+```bash
+liquibase updateToTag v1.5
+```
+
+**Tag current state:**
+
+```bash
+liquibase tag release-v1.0
+```
+
+**Rollback to tag:**
+
+```bash
+liquibase rollback release-v1.0
+```
+
+**Rollback last N changes:**
+
+```bash
+liquibase rollbackCount 2
+```
+
+**Rollback to specific date:**
+
+```bash
+liquibase rollbackToDate 2025-11-13
+```
+
+**Generate rollback SQL (preview):**
+
+```bash
+liquibase rollbackSQL release-v1.0 > rollback.sql
+```
+
+**Generate future rollback script:**
+
+```bash
+liquibase futureRollbackSQL > future-rollback.sql
+```
+
+**Validate changelog:**
+
+```bash
+liquibase validate
+```
+
+**Generate baseline from existing database:**
+
+```bash
+liquibase generateChangeLog --changelog-file=baseline.xml
+```
+
+**Sync changelog (mark as executed without running):**
+
+```bash
+liquibase changelogSync
+```
+
+**Clear checksums (use with caution):**
+
+```bash
+liquibase clearCheckSums
+```
+
+**Release database lock:**
+
+```bash
+liquibase releaseLocks
+```
+
+**View change history:**
+
+```bash
+liquibase history
+```
+
+**Calculate checksum for changeset:**
+
+```bash
+liquibase calculateCheckSum <changeset-id>
+```
+
+### Common File Patterns
+
+**SQL changeset format:**
+
+```sql
+--changeset author:unique-id
+-- Description of change
+
+SQL STATEMENTS HERE
+
+--rollback ROLLBACK SQL HERE
+```
+
+**SQL changeset with attributes:**
+
+```sql
+--changeset author:unique-id runOnChange:true context:dev,test
+-- Attributes: runOnChange, context, labels, dbms, etc.
+
+SQL STATEMENTS HERE
+
+--rollback ROLLBACK SQL HERE
+```
+
+**Master changelog (XML):**
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <include file="baseline/baseline.xml" relativeToChangelogFile="true"/>
+    <include file="changes/V0001__change.sql" relativeToChangelogFile="true"/>
+
+</databaseChangeLog>
+```
+
+**Properties file:**
+
+```properties
+url=jdbc:sqlserver://localhost:1433;databaseName=mydb;encrypt=true;trustServerCertificate=true
+username=sa
+password=${DB_PASSWORD}
+changelog-file=database/changelog/changelog.xml
+search-path=/workspace
+logLevel=info
+```
+
+### Docker Command Patterns
+
+**Basic Liquibase command:**
+
+```bash
+docker run --rm --network=host \
+  -v /path/to/project:/workspace \
+  liquibase-custom:5.0.1 \
+  --defaults-file=/workspace/env/liquibase.dev.properties \
+  update
+```
+
+**With environment variables:**
+
+```bash
+docker run --rm --network=host \
+  -v /path/to/project:/workspace \
+  -e DB_PASSWORD='SecurePass123!' \
+  liquibase-custom:5.0.1 \
+  --defaults-file=/workspace/env/liquibase.dev.properties \
+  --password="${DB_PASSWORD}" \
+  update
+```
+
+**Interactive mode for debugging:**
+
+```bash
+docker run -it --rm --network=host \
+  -v /path/to/project:/workspace \
+  liquibase-custom:5.0.1 \
+  bash
+```
+
+### SQL Server Verification Queries
+
+**Check executed changesets:**
+
+```sql
+SELECT
+    ORDEREXECUTED,
+    ID,
+    AUTHOR,
+    FILENAME,
+    DATEEXECUTED,
+    EXECTYPE,
+    TAG
+FROM DATABASECHANGELOG
+ORDER BY ORDEREXECUTED DESC;
+```
+
+**Check lock status:**
+
+```sql
+SELECT * FROM DATABASECHANGELOGLOCK;
+```
+
+**Manually release lock (emergency only):**
+
+```sql
+UPDATE DATABASECHANGELOGLOCK SET LOCKED = 0, LOCKGRANTED = NULL, LOCKEDBY = NULL;
+```
+
+**Find changesets by tag:**
+
+```sql
+SELECT ID, AUTHOR, FILENAME, DATEEXECUTED
+FROM DATABASECHANGELOG
+WHERE TAG = 'release-v1.0'
+ORDER BY DATEEXECUTED;
+```
+
+**Count objects by schema:**
+
+```sql
+SELECT
+    SCHEMA_NAME(schema_id) AS SchemaName,
+    type_desc AS ObjectType,
+    COUNT(*) AS ObjectCount
+FROM sys.objects
+WHERE schema_id = SCHEMA_ID('app')
+GROUP BY SCHEMA_NAME(schema_id), type_desc
+ORDER BY type_desc;
+```
+
+### Troubleshooting Quick Fixes
+
+| Problem | Quick Fix |
+|---------|-----------|
+| Connection refused | Add `--network=host` to docker run |
+| JDBC driver not found | Use `liquibase-custom:5.0.1` image |
+| Checksum mismatch | `liquibase clearCheckSums` (or create new changeset) |
+| Lock timeout | `liquibase releaseLocks` |
+| Password special chars | Use single quotes: `'Pass!word'` |
+| Path issues | Mount to `/workspace` not `/liquibase` |
+| Changes not detected | Check changelog.xml includes new files |
+| Rollback fails | Add `--rollback` comment to changeset |
+
+### Best Practice Checklist
+
+- [ ] Use version control (Git) for all changelog files
+- [ ] Never edit deployed changesets (create new ones instead)
+- [ ] Always include rollback SQL in changesets
+- [ ] Use descriptive changeset IDs (timestamp-sequence-description)
+- [ ] Preview with `updateSQL` before running `update`
+- [ ] Tag every release for easy rollback
+- [ ] Test in dev → verify in stage → deploy to prod
+- [ ] Use `runOnChange:true` for views, procedures, functions
+- [ ] Include `IF EXISTS` / `IF NOT EXISTS` for idempotency
+- [ ] Use contexts for environment-specific changes
+- [ ] Keep passwords in secrets, not in properties files
+- [ ] Verify deployment success after each environment
+- [ ] Generate rollback scripts before production deployment
+- [ ] Monitor DATABASECHANGELOG table regularly
+- [ ] Document purpose in changeset comments
+- [ ] Use preconditions for safety checks
+- [ ] Separate schema and data migrations
+- [ ] Use dedicated service account (not sa) in production
 
 ## References
 
