@@ -1,0 +1,5 @@
+# Template for stage environment
+# url=jdbc:postgresql://stage-db:5432/app
+# username=${DB_USER}
+# password=${DB_PASSWORD}
+logLevel=info

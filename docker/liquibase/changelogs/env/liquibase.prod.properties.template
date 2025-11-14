@@ -1,0 +1,5 @@
+# Template for prod environment
+# url=jdbc:postgresql://prod-db:5432/app
+# username=${DB_USER}
+# password=${DB_PASSWORD}
+logLevel=warn
