@@ -47,11 +47,11 @@ services:
       # Canonical mount: host changelog root -> /data/liquibase in container
       # Set LIQUIBASE_HOST_ROOT to an absolute host path like /data/liquibase, or
       # leave unset to default to the local ./changelogs folder in this repo.
-      - ${LIQUIBASE_HOST_ROOT:-./changelogs}:/data/liquibase:ro
-      # Note: :ro = read-only mount (container can't modify your files)
+      - ${LIQUIBASE_HOST_ROOT:-./changelogs}:/data/liquibase
+      # Note: Use :ro (read-only) for production changelogs, omit for dev/tutorial
 
       # Optional: Output directory for generated SQL, reports, etc.
-      # - ./output:/data/liquibase/output
+      - ./output:/data/liquibase/output
 
     # Network Configuration
     # Allows Liquibase to connect to database containers
