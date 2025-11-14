@@ -38,23 +38,20 @@ services:
     # Container name (easier to reference than auto-generated name)
     container_name: liquibase
 
-    # Working directory inside container
-    working_dir: /liquibase
+    # Working directory inside container (canonical path)
+    working_dir: /data/liquibase
 
     # Volume Mounts - CRITICAL FOR OPERATIONS
     # Maps your local changelog files into the container
     volumes:
-      # Changelogs directory - where your migration scripts live
-      # Adjust the local path to match your project structure
-      - ./changelogs:/liquibase/changelogs:ro
+      # Canonical mount: host changelog root -> /data/liquibase in container
+      # Set LIQUIBASE_HOST_ROOT to an absolute host path like /data/liquibase, or
+      # leave unset to default to the local ./changelogs folder in this repo.
+      - ${LIQUIBASE_HOST_ROOT:-./changelogs}:/data/liquibase:ro
       # Note: :ro = read-only mount (container can't modify your files)
 
-      # Optional: Properties file for connection details
-      # Uncomment and create liquibase.properties file if needed
-      # - ./liquibase.properties:/liquibase/liquibase.properties:ro
-
       # Optional: Output directory for generated SQL, reports, etc.
-      # - ./output:/liquibase/output
+      # - ./output:/data/liquibase/output
 
     # Network Configuration
     # Allows Liquibase to connect to database containers
@@ -72,8 +69,11 @@ services:
 
     # Command override example
     # By default, runs 'liquibase --help' (from Dockerfile CMD)
-    # Override with specific commands when running
-    # command: --help
+    # Override with specific commands when running, e.g.:
+    # command: >-
+    #   --defaults-file /data/liquibase/env/liquibase.dev.properties
+    #   --changelog-file /data/liquibase/platforms/postgres/databases/app/db.changelog-master.yaml
+    #   updateSQL
 
     # Restart policy - "no" is appropriate for run-once tools
     # Liquibase runs a migration and exits, shouldn't restart automatically
@@ -93,16 +93,11 @@ services:
 # ------------------------------------------------------------------------------
 # Networks
 # ------------------------------------------------------------------------------
-# Connect to existing database network or create a new one
+# Connect to existing database network
+# Network is shared with dev container and all database services
 networks:
   tool-library-network:
-    # Use external network if databases are in a separate docker-compose
-    # Uncomment if your databases are in another compose file
-    # external: true
-
-    # Or let this compose create the network
-    driver: bridge
-    name: dbtools-network
+    external: true
 # ==============================================================================
 # USAGE EXAMPLES:
 # ==============================================================================

@@ -45,4 +45,4 @@ services:
 
 networks:
   tool-library-network:
-    driver: bridge
+    external: true

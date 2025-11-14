@@ -21,13 +21,18 @@ ENV DEVCONTAINER_USER=${DEVCONTAINER_USER} \
 
 # Install system dependencies for pyodbc and PowerShell
 RUN apt-get update && \
-    apt-get install -y wget gnupg ca-certificates unixodbc-dev && \
+    apt-get install -y wget gnupg ca-certificates unixodbc-dev curl iputils-ping && \
     wget -q https://packages.microsoft.com/config/debian/12/packages-microsoft-prod.deb && \
     dpkg -i packages-microsoft-prod.deb && \
     rm packages-microsoft-prod.deb && \
     apt-get update && \
     apt-get install -y powershell msodbcsql18 mssql-tools18 && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Install Docker CLI
+RUN curl -fsSL https://get.docker.com -o /tmp/get-docker.sh && \
+    sh /tmp/get-docker.sh && \
+    rm /tmp/get-docker.sh
 
 # Create the conda environment and install base packages
 # Configure conda-forge as the sole channel to avoid Anaconda TOS prompts and ensure reproducible resolution.
@@ -69,6 +74,9 @@ mkdir -p "${DEVCONTAINER_HOME}"
 chown -R "${DEVCONTAINER_USER}:${DEVCONTAINER_GROUP}" "${DEVCONTAINER_HOME}"
 mkdir -p /data /logs
 chown -R "${DEVCONTAINER_USER}:${DEVCONTAINER_GROUP}" /data /logs
+
+# Add user to docker group for docker socket access
+usermod -aG docker "${DEVCONTAINER_USER}" || true
 BASH
 
 # Make sure the conda environment is available in interactive shells

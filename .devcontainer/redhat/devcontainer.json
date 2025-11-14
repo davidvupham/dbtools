@@ -21,9 +21,11 @@
       "userGid": "1000"
     },
     "ghcr.io/devcontainers/features/git:1": {},
-    "ghcr.io/devcontainers/features/docker-in-docker:2": {
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {
       "version": "latest"
     }
+    // Docker access via manual socket mount (see mounts section). The DooD feature
+    // installs Docker CLI and aligns group permissions for the mounted socket.
   },
   "customizations": {
     "vscode": {
@@ -144,6 +146,7 @@
     }
   },
   "workspaceFolder": "/workspaces/dbtools",
+  "initializeCommand": "docker network inspect tool-library-network >/dev/null 2>&1 || docker network create --driver bridge tool-library-network",
   "forwardPorts": [
     5432,
     1433,
@@ -174,7 +177,9 @@
     "--env",
     "PYTHONUNBUFFERED=1",
     "--mount",
-    "type=volume,source=vscode-server-cache,target=/home/${localEnv:USER}/.vscode-server,consistency=cached"
+    "type=volume,source=vscode-server-cache,target=/home/${localEnv:USER}/.vscode-server,consistency=cached",
+    "--network",
+    "tool-library-network"
   ],
   "postCreateCommand": "bash .devcontainer/postCreate.sh",
   "postStartCommand": "bash -lc 'mkdir -p ~/.vscode-server/extensions ~/.vscode-server/extensionsCache && chmod -R 775 ~/.vscode-server && chown -R ${USER}:${USER} ~/.vscode-server || true'",
@@ -212,6 +217,8 @@
     //   → Mapped to /logs (in dev container)
     //   → This mount maps to /logs (on host)
     //   → Result: Log files persist on host filesystem
-    "source=/logs,target=/logs,type=bind,consistency=cached"
+    "source=/logs,target=/logs,type=bind,consistency=cached",
+    // Docker Socket Mount
+    "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind"
   ]
 }

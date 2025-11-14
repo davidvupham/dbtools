@@ -40,6 +40,17 @@ help:
 	@echo "  make builder-prune    - Prune build cache"
 	@echo "  make clean-all        - Stop/rm all containers and prune"
 	@echo "  make verify           - Run quick verification commands"
+	@echo ""
+	@echo "Liquibase targets:"
+	@echo "  make liquibase-build            - Build Liquibase image via compose"
+	@echo "  make liquibase-validate         - Validate changelog (no DB required with offline URL)"
+	@echo "  make liquibase-update-sql       - Preview SQL to apply"
+	@echo "  make liquibase-update           - Apply changes (requires live DB URL)"
+	@echo ""
+	@echo "Variables (override as needed):"
+	@echo "  LB_CHANGELOG=/data/liquibase/platforms/postgres/databases/app/db.changelog-master.yaml"
+	@echo "  LB_DEFAULTS=/data/liquibase/env/liquibase.dev.properties"
+	@echo "  LIQUIBASE_HOST_ROOT (compose env) -> host path mounted to /data/liquibase"
 
 .PHONY: build
 build:
@@ -121,4 +132,35 @@ verify:
 		-w $(WORKDIR) \
 		$(IMAGE) bash -lc "python -V && terraform -version && aws --version && az version && sqlcmd -? | head -n 1"
 
- 
+### Liquibase convenience targets (docker compose)
+
+LB_COMPOSE := docker/liquibase/docker-compose.yml
+LB_SERVICE := liquibase
+LB_CHANGELOG ?= /data/liquibase/platforms/postgres/databases/app/db.changelog-master.yaml
+LB_DEFAULTS ?= /data/liquibase/env/liquibase.dev.properties
+
+.PHONY: liquibase-build
+liquibase-build:
+	docker compose -f $(LB_COMPOSE) build
+
+.PHONY: liquibase-validate
+liquibase-validate:
+	docker compose -f $(LB_COMPOSE) run --rm $(LB_SERVICE) \
+		--defaults-file $(LB_DEFAULTS) \
+		--changelog-file $(LB_CHANGELOG) \
+		validate
+
+.PHONY: liquibase-update-sql
+liquibase-update-sql:
+	docker compose -f $(LB_COMPOSE) run --rm $(LB_SERVICE) \
+		--defaults-file $(LB_DEFAULTS) \
+		--changelog-file $(LB_CHANGELOG) \
+		updateSQL
+
+.PHONY: liquibase-update
+liquibase-update:
+	@echo "Note: requires a live JDBC URL in $(LB_DEFAULTS) or env vars."
+	docker compose -f $(LB_COMPOSE) run --rm $(LB_SERVICE) \
+		--defaults-file $(LB_DEFAULTS) \
+		--changelog-file $(LB_CHANGELOG) \
+		update

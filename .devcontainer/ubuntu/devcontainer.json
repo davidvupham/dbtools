@@ -83,16 +83,9 @@
     },
     // git: Git version control (already in base image, ensures it's configured)
     "ghcr.io/devcontainers/features/git:1": {},
-    // docker-in-docker: Run Docker inside the dev container
-    // This is CRITICAL for our setup - allows us to run database containers
-    // inside this dev container
-    //
-    // HOW IT WORKS:
-    // - Installs Docker CLI in the dev container
-    // - Mounts host's Docker socket OR starts a Docker daemon in the container
-    // - Containers started inside appear as siblings to this dev container
-    // - Allows us to run mssql1, mongodb1, etc. from within this environment
-    "ghcr.io/devcontainers/features/docker-in-docker:2": {
+    // Docker Outside-of-Docker feature installs Docker CLI and configures access
+    // to the host daemon via the mounted socket.
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {
       "version": "latest"
     }
   },
@@ -229,6 +222,12 @@
   // Your local project directory gets mapped to this path
   "workspaceFolder": "/workspaces/dbtools",
   // ---------------------------------------------------------------------------
+  // Initialize Command (Runs on HOST before container starts)
+  // ---------------------------------------------------------------------------
+  // Creates the tool-library-network if it doesn't exist
+  // This network is shared by all database containers and the dev container
+  "initializeCommand": "docker network inspect tool-library-network >/dev/null 2>&1 || docker network create --driver bridge tool-library-network",
+  // ---------------------------------------------------------------------------
   // Port Forwarding (VS Code Feature)
   // ---------------------------------------------------------------------------
   // "forwardPorts": Ports that VS Code should automatically forward
@@ -288,36 +287,45 @@
     "--mount",
     "type=volume,source=vscode-server-cache,target=/home/${localEnv:USER}/.vscode-server,consistency=cached",
     // =========================================================================
-    // PORT PUBLISHING: Dev Container → WSL Host
+    // NETWORK: Connect to tool-library-network
     // =========================================================================
-    // These -p flags publish ports from the dev container to the WSL host
-    // Format: -p <host-port>:<container-port>
+    // This connects the dev container to the same Docker network as the
+    // database containers (mssql1, mongodb1-3, etc.)
     //
-    // HOW IT WORKS:
-    // 1. Database containers (mssql1, mongodb1, etc.) run INSIDE dev container
-    // 2. They expose ports to the dev container's network (e.g., 1433)
-    // 3. These -p flags forward those ports to the WSL host
-    // 4. You can then connect from WSL using: sqlcmd -S localhost,1433
-    //
-    // FLOW DIAGRAM:
-    // WSL Host:1433 → Dev Container:1433 → mssql1 container:1433 → SQL Server
-    //
-    // WITHOUT THESE FLAGS:
-    // - Databases only accessible from inside VS Code / dev container
-    // - Cannot connect from WSL terminal or other tools on host
-    //
-    // WITH THESE FLAGS:
-    // - Databases accessible from VS Code, dev container, AND WSL host
-    // - Can use host tools: sqlcmd, mongosh, psql from WSL terminal
+    // CRITICAL for docker-outside-of-docker:
+    // - Dev container and database containers run on the same Docker daemon
+    // - They need to be on the same network to communicate by container name
+    // - Without this, you can't connect to mongodb1, mssql1, etc. from code
     // =========================================================================
-    "-p",
-    "1433:1433", // SQL Server (mssql1)
-    "-p",
-    "27017:27017", // MongoDB instance 1 (mongodb1)
-    "-p",
-    "27018:27018", // MongoDB instance 2 (mongodb2)
-    "-p",
-    "27019:27019" // MongoDB instance 3 (mongodb3)
+    "--network",
+    "tool-library-network"
+    // =========================================================================
+    // PORT PUBLISHING: Not Needed with docker-outside-of-docker
+    // =========================================================================
+    // With docker-outside-of-docker, database containers run directly on the
+    // WSL Docker daemon (not inside the dev container). They publish their own
+    // ports via their docker-compose files:
+    //
+    // CONNECTIVITY:
+    // - Dev container → Database containers: Use container names on network
+    //   Example: mongodb://mongodb1:27017, Server=mssql1,1433
+    //
+    // - WSL host → Database containers: Use localhost with published ports
+    //   Example: mongodb://localhost:27017, Server=localhost,1433
+    //
+    // - Windows host → Databases: Windows can access WSL localhost
+    //   Example: Same as WSL host (localhost:27017, localhost:1433)
+    //
+    // Port mappings are handled by each service's docker-compose.yml:
+    //   - mssql1: 1433:1433
+    //   - mongodb1: 27017:27017
+    //   - mongodb2: 27018:27017
+    //   - mongodb3: 27019:27017
+    //   - psql1: 5432:5432
+    //   - psql2: 5433:5432
+    //   - kafka1: 9092:9092
+    //   - rabbitmq1: 5672:5672, 15672:15672
+    // =========================================================================
   ],
   // ---------------------------------------------------------------------------
   // Lifecycle Commands
@@ -381,7 +389,11 @@
     //   → Mapped to /logs (in dev container)
     //   → This mount maps to /logs (on host)
     //   → Result: Log files persist on host filesystem
-    "source=/logs,target=/logs,type=bind,consistency=cached"
+    "source=/logs,target=/logs,type=bind,consistency=cached",
+    // Docker Socket Mount
+    // Mount the host's Docker socket to use Docker from inside the container
+    // This allows running Docker commands without starting a daemon inside
+    "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind"
   ]
   // ===========================================================================
   // REBUILD INSTRUCTIONS:

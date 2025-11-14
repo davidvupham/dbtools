@@ -255,11 +255,11 @@ services:
 #
 networks:
   tool-library-network:
-    # Bridge driver: Default Docker network mode
-    #   - Services can communicate using service names
-    #   - DNS resolution built-in
-    #   - Isolated from host network by default
-    driver: bridge
+    # External network shared by all services
+    #   - Created by dev container initializeCommand
+    #   - Enables communication between dev container and all services
+    #   - Services can communicate using service names via DNS
+    external: true
 # ==============================================================================
 # USAGE INSTRUCTIONS
 # ==============================================================================

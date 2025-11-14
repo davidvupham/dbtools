@@ -64,13 +64,15 @@ Expected highlights include Liquibase `5.0.1`, Java 21, and JDBC drivers (SQL Se
 
 ## Run Liquibase commands in the container
 
-Liquibase reads changelog files relative to the container’s working directory (`/liquibase`). Mount your project into that path.
+Recommended path convention: mount your changelog root to `/data/liquibase` inside the container and reference absolute paths. This matches our architecture docs and keeps host/container paths consistent.
+
+Alternative (legacy) path: `/liquibase` also works (examples provided).
 
 ### 1. Prepare a changelog and properties file
 
-Place your changelog and `liquibase.properties` in a folder, e.g.:
+Place your changelog and `liquibase.properties` in a folder, e.g. (simple quick-start layout):
 
-```
+```text
 db/
   changelog/
     changelog.xml
@@ -89,9 +91,23 @@ changelog-file=changelog/changelog.xml
 
 ### 2. Run a dry run (`updateSQL`)
 
+Using the canonical `/data/liquibase` path:
+
 ```bash
 docker run --rm \
-  -v "$(pwd)/db":/liquibase \
+  --network tool-library-network \
+  -v "$(pwd)/db":/data/liquibase:ro \
+  liquibase-custom:latest \
+  --defaults-file /data/liquibase/liquibase.properties \
+  --changelog-file /data/liquibase/changelog/changelog.xml \
+  updateSQL
+```
+
+Using the legacy `/liquibase` path:
+
+```bash
+docker run --rm \
+  -v "$(pwd)/db":/liquibase:ro \
   liquibase-custom:latest \
   updateSQL
 ```
@@ -102,8 +118,11 @@ Liquibase will print the SQL it would execute, without touching the database.
 
 ```bash
 docker run --rm \
-  -v "$(pwd)/db":/liquibase \
+  --network tool-library-network \
+  -v "$(pwd)/db":/data/liquibase:ro \
   liquibase-custom:latest \
+  --defaults-file /data/liquibase/liquibase.properties \
+  --changelog-file /data/liquibase/changelog/changelog.xml \
   update
 ```
 
@@ -111,12 +130,26 @@ Environment variables override properties if needed:
 
 ```bash
 docker run --rm \
+  --network tool-library-network \
   -e LIQUIBASE_URL="jdbc:postgresql://postgres:5432/demo" \
   -e LIQUIBASE_USERNAME=demo \
   -e LIQUIBASE_PASSWORD=secret \
-  -v "$(pwd)/db":/liquibase \
+  -v "$(pwd)/db":/data/liquibase:ro \
   liquibase-custom:latest \
+  --changelog-file /data/liquibase/changelog/changelog.xml \
   update
+```
+
+Validate without applying changes:
+
+```bash
+docker run --rm \
+  --network tool-library-network \
+  -v "$(pwd)/db":/data/liquibase:ro \
+  liquibase-custom:latest \
+  --defaults-file /data/liquibase/liquibase.properties \
+  --changelog-file /data/liquibase/changelog/changelog.xml \
+  validate
 ```
 
 ## Testing with local databases
@@ -148,7 +181,7 @@ docker run -d --name postgres \
   postgres:latest
 ```
 
-Point your `liquibase.properties` at the running container (host `host.docker.internal` on macOS/Windows, `localhost` on Linux if using bridge networking).
+Point your `liquibase.properties` at the running container (host `host.docker.internal` on macOS/Windows, `localhost` on Linux if using bridge networking). If the database runs in another compose stack, ensure both are on a shared network (e.g., `tool-library-network`).
 
 ## Running Liquibase interactively
 
@@ -156,7 +189,7 @@ To explore inside the container:
 
 ```bash
 docker run --rm -it \
-  -v "$(pwd)/db":/liquibase \
+  -v "$(pwd)/db":/data/liquibase:ro \
   --entrypoint /bin/sh \
   liquibase-custom:latest
 ```
@@ -184,6 +217,17 @@ docker rmi liquibase-custom:latest
 - **Certificate/SSL issues**: add the appropriate JDBC parameters (e.g., `?encrypt=true;trustServerCertificate=true` for SQL Server).
 - **Custom drivers**: override the build args to download different driver versions or copy additional JARs into `/opt/liquibase/lib`.
 - **Permissions on mounted volumes**: ensure the host user can read the changelog files; root inside the container must see them.
+
+## Security and secrets
+
+- Do not commit real credentials to version control. Use templates like `*.properties.template` and provide actual values via CI/CD secrets or environment variables.
+- Prefer environment variables (e.g., `LIQUIBASE_URL`, `LIQUIBASE_USERNAME`, `LIQUIBASE_PASSWORD`) or secret managers.
+- If using local properties files, consider a global root such as `/data/liquibase` and ignore non-template files:
+
+  ```gitignore
+  /data/liquibase/**/*.properties
+  !/data/liquibase/**/*.properties.template
+  ```
 
 > **💡 For detailed troubleshooting**, see the [Troubleshooting section](liquibase-docker-operations-guide.md#troubleshooting) in the Operations Guide for solutions to common issues including lock management, checksum mismatches, and connection problems.
 
