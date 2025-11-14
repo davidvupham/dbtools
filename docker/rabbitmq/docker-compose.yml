@@ -6,9 +6,9 @@ services:
     image: gds-rabbitmq:latest
     container_name: rabbitmq1
     environment:
-      # Override via .env or shell exports for non-development credentials
-      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:-devuser}
-      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:-devpassword}
+      # Set via environment variables - no defaults for security
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
       RABBITMQ_DEFAULT_VHOST: ${RABBITMQ_DEFAULT_VHOST:-/}
     ports:
       - "5672:5672" # AMQP client connections

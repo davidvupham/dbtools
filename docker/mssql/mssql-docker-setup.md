@@ -102,6 +102,46 @@ gds-mssql    latest    abc123def456    2 minutes ago    2.15GB
 
 ## Starting SQL Server
 
+### Step 1: Set the SA Password
+
+**IMPORTANT:** The `MSSQL_SA_PASSWORD` environment variable must be set before starting the container. There is no default password for security reasons.
+
+**Option A: Use the password prompt script (Recommended)**
+
+```bash
+# From the workspace root
+. scripts/prompt_mssql_password.sh
+```
+
+This script will:
+
+- Prompt you to enter the password twice for confirmation
+- Validate password strength (minimum 8 characters, complexity requirements)
+- Export `MSSQL_SA_PASSWORD` to your current shell session
+- Optionally save it to `~/.bashrc` for future sessions
+
+**Option B: Set manually**
+
+```bash
+export MSSQL_SA_PASSWORD='YourStrong@Passw0rd123'
+```
+
+**Password Requirements:**
+
+- At least 8 characters long
+- Contains uppercase letters
+- Contains lowercase letters
+- Contains numbers
+- Contains special characters (@, !, #, $, etc.)
+
+**Verify the password is set:**
+
+```bash
+echo $MSSQL_SA_PASSWORD
+```
+
+### Step 2: Start the Container
+
 ### Method 1: Using Docker Compose (Recommended)
 
 ```bash
@@ -129,7 +169,7 @@ docker run -d \
   --name mssql1 \
   -e ACCEPT_EULA=Y \
   -e MSSQL_PID=Developer \
-  -e MSSQL_SA_PASSWORD='YourStrong!Passw0rd' \
+  -e MSSQL_SA_PASSWORD="${MSSQL_SA_PASSWORD}" \
   -p 1433:1433 \
   -v /data/mssql:/data/mssql \
   -v /logs/mssql:/logs/mssql \
@@ -138,7 +178,9 @@ docker run -d \
   gds-mssql:latest
 ```
 
-### Step 4: Verify the container is running
+**Note:** Make sure `MSSQL_SA_PASSWORD` is set in your environment before running this command.
+
+### Step 3: Verify the container is running
 
 ```bash
 docker ps --filter name=mssql1
@@ -151,7 +193,7 @@ CONTAINER ID   IMAGE                COMMAND                  CREATED          ST
 abc123def456   gds-mssql:latest     "/opt/mssql/bin/perm…"   10 seconds ago   Up 9 seconds    0.0.0.0:1433->1433/tcp   mssql1
 ```
 
-### Step 5: Check container logs
+### Step 4: Check container logs
 
 ```bash
 docker logs mssql1
@@ -167,6 +209,20 @@ Your master database file is owned by mssql.
 SQL Server is now ready for client connections.
 ```
 
+**If you see an error about missing `MSSQL_SA_PASSWORD`:**
+
+```
+ERROR: The variable MSSQL_SA_PASSWORD is not set. Defaulting to a blank string.
+```
+
+This means you forgot to set the password. Stop the container, set the password, and restart:
+
+```bash
+docker-compose down
+export MSSQL_SA_PASSWORD='YourStrong@Passw0rd123'
+docker-compose up -d
+```
+
 ## Connecting from Dev Container
 
 ### Prerequisites
@@ -180,7 +236,7 @@ Press `` Ctrl+` `` or go to Terminal → New Terminal
 ### Step 2: Connect using sqlcmd
 
 ```bash
-sqlcmd -C -S localhost -U SA -P 'YourStrong!Passw0rd'
+sqlcmd -C -S localhost -U SA -P "$MSSQL_SA_PASSWORD"
 ```
 
 **Parameter explanation:**
@@ -188,7 +244,7 @@ sqlcmd -C -S localhost -U SA -P 'YourStrong!Passw0rd'
 - `-C` - Trust server certificate (required for SQL Server 2022)
 - `-S localhost` - Server address (container accessible via localhost)
 - `-U SA` - Username (System Administrator)
-- `-P 'YourStrong!Passw0rd'` - Password (use single quotes to avoid shell issues)
+- `-P "$MSSQL_SA_PASSWORD"` - Password from environment variable
 
 ### Step 3: Test the connection
 

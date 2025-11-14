@@ -26,8 +26,8 @@ services:
     image: gds-postgresql:latest
     container_name: psql2
     environment:
-      # PostgreSQL superuser password
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-YourStrong!Passw0rd}
+      # PostgreSQL superuser password - must be set in environment
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       # Optional: set default database and user
       - POSTGRES_DB=${POSTGRES_DB:-postgres}
       - POSTGRES_USER=${POSTGRES_USER:-postgres}

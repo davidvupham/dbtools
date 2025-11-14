@@ -21,7 +21,7 @@ ENV DEVCONTAINER_USER=${DEVCONTAINER_USER} \
 
 # Install system dependencies for pyodbc, PowerShell, Docker CLI, and netcat
 RUN apt-get update && \
-    apt-get install -y wget gnupg ca-certificates unixodbc-dev curl iputils-ping docker.io netcat-openbsd && \
+    apt-get install -y wget gnupg ca-certificates unixodbc-dev curl iputils-ping docker.io netcat-openbsd build-essential && \
     wget -q https://packages.microsoft.com/config/debian/12/packages-microsoft-prod.deb && \
     dpkg -i packages-microsoft-prod.deb && \
     rm packages-microsoft-prod.deb && \

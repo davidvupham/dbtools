@@ -22,7 +22,7 @@ This guide walks you through building and operating the custom RabbitMQ image lo
 The RabbitMQ setup delivers:
 
 - RabbitMQ 3.13 with the management plugin (HTTP UI, REST API, Prometheus metrics)
-- Opinionated defaults (`devuser` / `devpassword`, vhost `/`) suitable for local use
+- Secure configuration requiring explicit credentials (no hardcoded defaults)
 - Persistent data and log directories on the host (`/data/rabbitmq`, `/logs/rabbitmq`)
 - Health checks and restart policy baked into Compose
 
@@ -53,6 +53,34 @@ sudo chmod -R 775 /data/rabbitmq /logs/rabbitmq
 ```
 
 > Tip: Re-run the `chown` command whenever you clean the directories to avoid permission issues.
+
+## Set RabbitMQ Credentials
+
+**IMPORTANT:** You must set the RabbitMQ credentials as environment variables before starting the container. There are no default credentials for security reasons.
+
+**Set the credentials:**
+
+```bash
+export RABBITMQ_DEFAULT_USER='your_admin_user'
+export RABBITMQ_DEFAULT_PASS='YourStrong@Passw0rd123'
+```
+
+**Password Requirements:**
+
+- At least 8 characters long
+- Contains uppercase letters
+- Contains lowercase letters
+- Contains numbers
+- Contains special characters
+
+**Verify the credentials are set:**
+
+```bash
+echo $RABBITMQ_DEFAULT_USER
+echo $RABBITMQ_DEFAULT_PASS
+```
+
+**Note:** These credentials will be used to create the RabbitMQ administrator account for accessing the Management UI and connecting clients.
 
 ## Build the Docker Image
 
@@ -133,9 +161,9 @@ The compose file sets `restart: unless-stopped`, so RabbitMQ automatically resta
 
 ## Access the Management UI
 
-- URL: http://localhost:15672
-- Default username: `devuser`
-- Default password: `devpassword`
+- URL: <http://localhost:15672>
+- Username: The value you set for `RABBITMQ_DEFAULT_USER`
+- Password: The value you set for `RABBITMQ_DEFAULT_PASS`
 
 The UI provides queue management, message tracing, metrics, and plugin administration.
 
@@ -153,16 +181,16 @@ If `docker compose up -d --wait` was used earlier, this status should already be
 Publish a test message and consume it with `rabbitmqadmin` (installed inside the container):
 
 ```bash
-docker exec -it rabbitmq1 rabbitmqadmin --username=devuser --password=devpassword declare queue name=test-queue durable=false
-docker exec -it rabbitmq1 rabbitmqadmin --username=devuser --password=devpassword publish routing_key=test-queue payload="hello world"
-docker exec -it rabbitmq1 rabbitmqadmin --username=devuser --password=devpassword get queue=test-queue requeue=false
+docker exec -it rabbitmq1 rabbitmqadmin --username="$RABBITMQ_DEFAULT_USER" --password="$RABBITMQ_DEFAULT_PASS" declare queue name=test-queue durable=false
+docker exec -it rabbitmq1 rabbitmqadmin --username="$RABBITMQ_DEFAULT_USER" --password="$RABBITMQ_DEFAULT_PASS" publish routing_key=test-queue payload="hello world"
+docker exec -it rabbitmq1 rabbitmqadmin --username="$RABBITMQ_DEFAULT_USER" --password="$RABBITMQ_DEFAULT_PASS" get queue=test-queue requeue=false
 ```
 
 Expected output shows the message payload in the `get` command response.
 
 ## Customise Credentials and VHosts
 
-Put overrides in an `.env` file or export them before running Compose:
+The credentials must be set before starting the container. You can also customize the virtual host:
 
 ```bash
 export RABBITMQ_DEFAULT_USER=myuser
@@ -212,7 +240,7 @@ docker compose restart rabbitmq1
 docker exec -it rabbitmq1 rabbitmqctl status
 
 # List queues via rabbitmqadmin
-docker exec -it rabbitmq1 rabbitmqadmin --username=devuser --password=devpassword list queues
+docker exec -it rabbitmq1 rabbitmqadmin --username="$RABBITMQ_DEFAULT_USER" --password="$RABBITMQ_DEFAULT_PASS" list queues
 
 # Remove all persisted data (WARNING: deletes queues/messages)
 sudo rm -rf /data/rabbitmq/* /logs/rabbitmq/*

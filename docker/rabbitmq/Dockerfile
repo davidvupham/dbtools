@@ -36,16 +36,13 @@ FROM rabbitmq:3.13-management
 # ENV sets key/value pairs baked into the image. They can be overridden at
 # runtime via `docker run -e` or the `environment:` section in Compose.
 # - RABBITMQ_DEFAULT_USER / RABBITMQ_DEFAULT_PASS create a bootstrap account.
-#   These defaults are intentionally simple for local dev; change them before
-#   exposing the broker beyond localhost.
+#   Must be set via docker-compose environment variables for security.
 # - RABBITMQ_DEFAULT_VHOST seeds the broker with a vhost so client libraries can
 #   connect without additional provisioning steps.
 # - RABBITMQ_NODE_PORT and RABBITMQ_DIST_PORT define the main AMQP port and the
 #   Erlang distribution port respectively. We keep the defaults but document
 #   them for visibility.
-ENV RABBITMQ_DEFAULT_USER=devuser \
-    RABBITMQ_DEFAULT_PASS=devpassword \
-    RABBITMQ_DEFAULT_VHOST=/ \
+ENV RABBITMQ_DEFAULT_VHOST=/ \
     RABBITMQ_NODE_PORT=5672 \
     RABBITMQ_DIST_PORT=25672
 

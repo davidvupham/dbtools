@@ -11,7 +11,33 @@ This directory contains Docker configuration for running PostgreSQL instances.
 
 ## Quick Start
 
-### Build and Start Both Instances
+### Step 1: Set PostgreSQL Password
+
+**IMPORTANT:** You must set the `POSTGRES_PASSWORD` environment variable before starting the containers. There is no default password for security reasons.
+
+**Set the password:**
+
+```bash
+export POSTGRES_PASSWORD='YourStrong@Passw0rd123'
+```
+
+**Password Requirements:**
+
+- At least 8 characters long
+- Contains uppercase letters
+- Contains lowercase letters
+- Contains numbers
+- Contains special characters
+
+**Verify the password is set:**
+
+```bash
+echo $POSTGRES_PASSWORD
+```
+
+### Step 2: Build and Start Instances
+
+#### Build and Start Both Instances
 
 ```bash
 docker-compose up -d
