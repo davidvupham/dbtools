@@ -4,10 +4,32 @@
 
 This repository uses Liquibase for database schema management across multiple platforms (PostgreSQL, SQL Server, Snowflake, MongoDB) with multiple databases per platform. Changes are written once and promoted through environments (dev → stage → prod) using environment-specific connection properties.
 
+## Table of Contents
+
+- [Overview](#overview)
+- [Directory Structure](#directory-structure)
+- [Design Principles](#design-principles)
+- [Conventions](#conventions)
+- [Baseline Management](#baseline-management)
+- [ChangeSet Best Practices](#changeset-best-practices)
+- [Contexts and Labels](#contexts-and-labels)
+- [Platform-Specific Changes](#platform-specific-changes)
+- [Shared Modules](#shared-modules)
+- [Reference Data](#reference-data)
+- [Environment Management](#environment-management)
+- [Execution Patterns](#execution-patterns)
+- [Docker Execution](#docker-execution)
+- [Rollback Strategy](#rollback-strategy)
+- [Common Patterns](#common-patterns)
+- [Troubleshooting](#troubleshooting)
+- [References](#references)
+
 ## Directory Structure
 
-```
-liquibase/changelogs/
+Canonical root for changelogs: `/data/liquibase` (host and container). Keeping the same absolute path inside the container avoids path translation issues.
+
+```text
+/data/liquibase/
   env/                                 # properties templates (no secrets)
     liquibase.dev.properties.template
     liquibase.stage.properties.template
@@ -42,6 +64,13 @@ liquibase/changelogs/
           releases/1.0/...
     mongodb/
       databases/
+        catalog/
+          db.changelog-master.yaml
+          releases/
+            1.0/
+              db.changelog-1.0.yaml
+              001-create-collections.yaml
+              002-create-indexes.yaml
 ```
 
 ## Design Principles
@@ -145,7 +174,7 @@ A baseline is an initial schema snapshot that captures the existing database sta
 
 **Directory Structure**:
 
-```
+```text
 platforms/<platform>/databases/<db>/
   baseline/
     db.changelog-baseline.yaml       # Initial schema snapshot
@@ -166,9 +195,11 @@ platforms/<platform>/databases/<db>/
 
 ```bash
 # Generate baseline from existing database
+# NOTE: If the target file exists, Liquibase will overwrite it.
+# Prefer generating to a new, dated file for review before renaming.
 liquibase \
-  --defaults-file=liquibase/changelogs/env/liquibase.prod.properties \
-  --changelog-file=liquibase/changelogs/platforms/postgres/databases/app/baseline/db.changelog-baseline.yaml \
+  --defaults-file=/data/liquibase/env/liquibase.prod.properties \
+  --changelog-file=/data/liquibase/platforms/postgres/databases/app/baseline/db.changelog-baseline-2025-11-14.yaml \
   generateChangeLog
 ```
 
@@ -179,14 +210,14 @@ For databases that already have the baseline schema, mark it as executed without
 ```bash
 # Sync baseline (don't actually run the DDL)
 liquibase \
-  --defaults-file=liquibase/changelogs/env/liquibase.prod.properties \
-  --changelog-file=liquibase/changelogs/platforms/postgres/databases/app/baseline/db.changelog-baseline.yaml \
+  --defaults-file=/data/liquibase/env/liquibase.prod.properties \
+  --changelog-file=/data/liquibase/platforms/postgres/databases/app/baseline/db.changelog-baseline.yaml \
   changelogSync
 
 # Tag it
 liquibase \
-  --defaults-file=liquibase/changelogs/env/liquibase.prod.properties \
-  --changelog-file=liquibase/changelogs/platforms/postgres/databases/app/db.changelog-master.yaml \
+  --defaults-file=/data/liquibase/env/liquibase.prod.properties \
+  --changelog-file=/data/liquibase/platforms/postgres/databases/app/db.changelog-master.yaml \
   tag baseline
 ```
 
@@ -197,8 +228,8 @@ For fresh dev/test databases, baseline runs normally:
 ```bash
 # New database gets full baseline + releases
 liquibase \
-  --defaults-file=liquibase/changelogs/env/liquibase.dev.properties \
-  --changelog-file=liquibase/changelogs/platforms/postgres/databases/app/db.changelog-master.yaml \
+  --defaults-file=/data/liquibase/env/liquibase.dev.properties \
+  --changelog-file=/data/liquibase/platforms/postgres/databases/app/db.changelog-master.yaml \
   update
 ```
 
@@ -243,6 +274,32 @@ databaseChangeLog:
 - **Minimize use**: Keep schema changes environment-agnostic
 - **Data seeds only**: Use `context: dev` for dev-only test data
 - **Labels for filtering**: `labels: 'db:app,platform:postgres'` for multi-DB deployments
+
+Examples:
+
+```yaml
+databaseChangeLog:
+  - changeSet:
+      id: 20251114-01-seed-dev-data
+      author: team
+      context: dev
+      changes:
+        - loadData:
+            file: ../../shared/data/reference/sample_users.csv
+            tableName: users
+
+  - changeSet:
+      id: 20251114-02-add-index-app
+      author: team
+      labels: 'platform:postgres,db:app'
+      changes:
+        - createIndex:
+            tableName: users
+            indexName: idx_users_email
+            columns:
+              - column:
+                  name: email
+```
 
 ### Platform-Specific Changes
 
@@ -317,7 +374,7 @@ Store CSVs in `shared/data/reference/` and load with `loadData`:
 Each environment has a properties file with connection details:
 
 ```properties
-# liquibase/changelogs/env/liquibase.dev.properties
+# /data/liquibase/env/liquibase.dev.properties
 url=jdbc:postgresql://dev-db.example.com:5432/app
 username=${DB_USER}
 password=${DB_PASSWORD}
@@ -328,7 +385,21 @@ logLevel=info
 
 - Keep `.properties.template` files in VCS as examples
 - Actual `.properties` files should be `.gitignore`d or use CI/CD secrets
-- Use environment variables for credentials
+- Use environment variables for credentials (e.g., `DB_USER`, `DB_PASSWORD`)
+- Prefer secret managers (e.g., HashiCorp Vault, AWS Secrets Manager, Azure Key Vault) in CI/CD
+- Example `.gitignore` additions:
+
+  ```gitignore
+  /data/liquibase/**/*.properties
+  !/data/liquibase/**/*.properties.template
+  ```
+
+- Export environment variables at runtime:
+
+  ```bash
+  export DB_USER=app_user
+  export DB_PASSWORD='s3cr3t'
+  ```
 
 ### Promotion Workflow
 
@@ -336,16 +407,16 @@ Same changelog, different properties:
 
 ```bash
 # Dev
-liquibase --defaults-file env/liquibase.dev.properties \
-  --changelog-file platforms/postgres/databases/app/db.changelog-master.yaml update
+liquibase --defaults-file /data/liquibase/env/liquibase.dev.properties \
+  --changelog-file /data/liquibase/platforms/postgres/databases/app/db.changelog-master.yaml update
 
 # Stage
-liquibase --defaults-file env/liquibase.stage.properties \
-  --changelog-file platforms/postgres/databases/app/db.changelog-master.yaml update
+liquibase --defaults-file /data/liquibase/env/liquibase.stage.properties \
+  --changelog-file /data/liquibase/platforms/postgres/databases/app/db.changelog-master.yaml update
 
 # Prod
-liquibase --defaults-file env/liquibase.prod.properties \
-  --changelog-file platforms/postgres/databases/app/db.changelog-master.yaml update
+liquibase --defaults-file /data/liquibase/env/liquibase.prod.properties \
+  --changelog-file /data/liquibase/platforms/postgres/databases/app/db.changelog-master.yaml update
 ```
 
 ## Execution Patterns
@@ -356,8 +427,8 @@ Always validate before applying:
 
 ```bash
 liquibase \
-  --defaults-file liquibase/changelogs/env/liquibase.dev.properties \
-  --changelog-file liquibase/changelogs/platforms/postgres/databases/app/db.changelog-master.yaml \
+  --defaults-file /data/liquibase/env/liquibase.dev.properties \
+  --changelog-file /data/liquibase/platforms/postgres/databases/app/db.changelog-master.yaml \
   updateSQL
 ```
 
@@ -365,8 +436,8 @@ liquibase \
 
 ```bash
 liquibase \
-  --defaults-file liquibase/changelogs/env/liquibase.dev.properties \
-  --changelog-file liquibase/changelogs/platforms/postgres/databases/app/db.changelog-master.yaml \
+  --defaults-file /data/liquibase/env/liquibase.dev.properties \
+  --changelog-file /data/liquibase/platforms/postgres/databases/app/db.changelog-master.yaml \
   update
 ```
 
@@ -378,14 +449,14 @@ Loop through all databases for a platform:
 set -euo pipefail
 platform=postgres
 for db in app analytics; do
-  cf="liquibase/changelogs/platforms/$platform/databases/$db/db.changelog-master.yaml"
+  cf="/data/liquibase/platforms/$platform/databases/$db/db.changelog-master.yaml"
 
   # Validate
-  liquibase --defaults-file liquibase/changelogs/env/liquibase.dev.properties \
+  liquibase --defaults-file /data/liquibase/env/liquibase.dev.properties \
     --changelog-file "$cf" updateSQL >/dev/null
 
   # Apply
-  liquibase --defaults-file liquibase/changelogs/env/liquibase.dev.properties \
+  liquibase --defaults-file /data/liquibase/env/liquibase.dev.properties \
     --changelog-file "$cf" update
 done
 ```
@@ -398,11 +469,11 @@ Promote through all environments sequentially:
 set -euo pipefail
 platform=postgres
 db=app
-cf="liquibase/changelogs/platforms/$platform/databases/$db/db.changelog-master.yaml"
+cf="/data/liquibase/platforms/$platform/databases/$db/db.changelog-master.yaml"
 
 for env in dev stage prod; do
   echo "Deploying to $env..."
-  liquibase --defaults-file "liquibase/changelogs/env/liquibase.$env.properties" \
+  liquibase --defaults-file "/data/liquibase/env/liquibase.$env.properties" \
     --changelog-file "$cf" update
 done
 ```
@@ -415,7 +486,7 @@ set -euo pipefail
 
 # Deploy all databases across all environments
 for platform in postgres mssql snowflake; do
-  for db_dir in liquibase/changelogs/platforms/$platform/databases/*; do
+  for db_dir in /data/liquibase/platforms/$platform/databases/*; do
     db=$(basename "$db_dir")
     cf="$db_dir/db.changelog-master.yaml"
 
@@ -426,27 +497,103 @@ for platform in postgres mssql snowflake; do
     echo "=== Deploying $platform/$db ==="
 
     # Validate
-    liquibase --defaults-file liquibase/changelogs/env/liquibase.dev.properties \
+    liquibase --defaults-file /data/liquibase/env/liquibase.dev.properties \
       --changelog-file "$cf" validate
 
     # Preview
-    liquibase --defaults-file liquibase/changelogs/env/liquibase.dev.properties \
+    liquibase --defaults-file /data/liquibase/env/liquibase.dev.properties \
       --changelog-file "$cf" updateSQL > /tmp/preview.sql
 
     # Apply dev
-    liquibase --defaults-file liquibase/changelogs/env/liquibase.dev.properties \
+    liquibase --defaults-file /data/liquibase/env/liquibase.dev.properties \
       --changelog-file "$cf" update
 
     # Apply stage (after approval)
-    liquibase --defaults-file liquibase/changelogs/env/liquibase.stage.properties \
+    liquibase --defaults-file /data/liquibase/env/liquibase.stage.properties \
       --changelog-file "$cf" update
 
     # Apply prod (after approval)
-    liquibase --defaults-file liquibase/changelogs/env/liquibase.prod.properties \
+    liquibase --defaults-file /data/liquibase/env/liquibase.prod.properties \
       --changelog-file "$cf" update
   done
 done
 ```
+
+### Additional Validation
+
+Validate changelog structure and connectivity without applying changes:
+
+```bash
+liquibase \
+  --defaults-file /data/liquibase/env/liquibase.dev.properties \
+  --changelog-file /data/liquibase/platforms/postgres/databases/app/db.changelog-master.yaml \
+  validate
+```
+
+Preview the SQL to be executed for audit/approval:
+
+```bash
+liquibase \
+  --defaults-file /data/liquibase/env/liquibase.dev.properties \
+  --changelog-file /data/liquibase/platforms/postgres/databases/app/db.changelog-master.yaml \
+  updateSQL > /tmp/preview.sql
+```
+
+Generate SQL to sync the DATABASECHANGELOG table (no DDL executed):
+
+```bash
+liquibase \
+  --defaults-file /data/liquibase/env/liquibase.dev.properties \
+  --changelog-file /data/liquibase/platforms/postgres/databases/app/db.changelog-master.yaml \
+  changelogSyncSQL > /tmp/sync.sql
+```
+
+## Docker Execution
+
+Run Liquibase in Docker while keeping paths consistent by mounting host `/data/liquibase` into the container at the same path:
+
+```bash
+docker run --rm \
+  --network tool-library-network \
+  -v /data/liquibase:/data/liquibase:ro \
+  liquibase:5.0.1 \
+  --defaults-file /data/liquibase/env/liquibase.dev.properties \
+  --changelog-file /data/liquibase/platforms/postgres/databases/app/db.changelog-master.yaml \
+  update
+```
+
+If you prefer using a different working directory inside the container (e.g., `/liquibase`), mount accordingly and adjust paths in commands.
+
+With Docker Compose, ensure the volume mount points to `/data/liquibase`:
+
+```yaml
+services:
+  liquibase:
+    image: liquibase:5.0.1
+    volumes:
+      - /data/liquibase:/data/liquibase:ro
+    working_dir: /data/liquibase
+    networks:
+      - tool-library-network
+```
+
+This keeps examples in this document valid both on host and in container.
+
+## Drift Detection (diffChangeLog)
+
+Detect drift between two environments and generate a changelog capturing differences:
+
+```bash
+liquibase \
+  --defaults-file /data/liquibase/env/liquibase.stage.properties \
+  --changelog-file /data/liquibase/platforms/postgres/databases/app/drift/db.changelog-drift-2025-11-14.yaml \
+  diffChangeLog \
+  --referenceUrl="${DEV_JDBC_URL}" \
+  --referenceUsername="${DEV_DB_USER}" \
+  --referencePassword="${DEV_DB_PASSWORD}"
+```
+
+Best practice: review and curate generated drift changelogs; do not auto-apply without code review.
 
 ## Rollback Strategy
 
@@ -455,7 +602,7 @@ done
 Roll back to a specific release:
 
 ```bash
-liquibase --defaults-file env/liquibase.prod.properties \
+liquibase --defaults-file /data/liquibase/env/liquibase.prod.properties \
   --changelog-file platforms/postgres/databases/app/db.changelog-master.yaml \
   rollback v1.0
 ```
@@ -465,7 +612,7 @@ liquibase --defaults-file env/liquibase.prod.properties \
 Roll back last N changeSets:
 
 ```bash
-liquibase --defaults-file env/liquibase.prod.properties \
+liquibase --defaults-file /data/liquibase/env/liquibase.prod.properties \
   --changelog-file platforms/postgres/databases/app/db.changelog-master.yaml \
   rollbackCount 3
 ```
@@ -475,7 +622,7 @@ liquibase --defaults-file env/liquibase.prod.properties \
 Roll back to a timestamp:
 
 ```bash
-liquibase --defaults-file env/liquibase.prod.properties \
+liquibase --defaults-file /data/liquibase/env/liquibase.prod.properties \
   --changelog-file platforms/postgres/databases/app/db.changelog-master.yaml \
   rollbackToDate 2025-11-13
 ```
@@ -499,13 +646,21 @@ When splitting a monolith into microservices:
 
 Use multiple releases with tags between steps for safe rollback.
 
+### Performance Tips
+
+- Prefer smaller, single-purpose changeSets to improve retryability
+- Batch large `loadData` operations and avoid running in prod unless necessary
+- Add indexes after large data loads to reduce migration time
+- Use `preConditions` to guard expensive operations when objects already exist
+- Avoid editing applied changeSets; append new changeSets instead
+
 ## Troubleshooting
 
 ### Lock Issues
 
 ```bash
 # Release stuck lock
-liquibase --defaults-file env/liquibase.dev.properties releaseLocks
+liquibase --defaults-file /data/liquibase/env/liquibase.dev.properties releaseLocks
 ```
 
 ### Checksum Mismatches
@@ -514,7 +669,7 @@ When changeSet edited after deployment:
 
 ```bash
 # Clear checksums (use with caution)
-liquibase --defaults-file env/liquibase.dev.properties clearCheckSums
+liquibase --defaults-file /data/liquibase/env/liquibase.dev.properties clearCheckSums
 ```
 
 Better: never edit deployed changeSets; create new ones.
@@ -524,12 +679,25 @@ Better: never edit deployed changeSets; create new ones.
 Mark changeSets as executed without running:
 
 ```bash
-liquibase --defaults-file env/liquibase.prod.properties \
+liquibase --defaults-file /data/liquibase/env/liquibase.prod.properties \
   changelogSync
+```
+
+### Monitoring
+
+Track applied changes via the `DATABASECHANGELOG` table and standard logging:
+
+```sql
+-- Recent changes
+SELECT id, author, filename, dateexecuted, tag FROM databasechangelog ORDER BY dateexecuted DESC LIMIT 20;
+
+-- Current lock status
+SELECT * FROM databasechangeloglock;
 ```
 
 ## References
 
 - [Liquibase Documentation](https://docs.liquibase.com/)
 - [Best Practices](https://www.liquibase.org/get-started/best-practices)
-- Internal: `liquibase/changelogs/README.md` for quick start
+- Internal: `/data/liquibase/README.md` (if present) for quick start
+- Tutorial: `docs/tutorials/liquibase/sqlserver-liquibase-tutorial.md` for end-to-end SQL Server example
