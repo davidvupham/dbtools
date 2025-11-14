@@ -1,0 +1,127 @@
+[29 ms] Dev Containers 0.431.0 in VS Code 1.106.0 (ac4cbdf48759c7d8c3eb91ffe6bb04316e263c57).
+[28 ms] Start: Run: wsl -d Ubuntu -e wslpath -u \\wsl.localhost\Ubuntu\home\dpham\src\dbtools\dbtools.code-workspace
+[178 ms] Start: Run: wsl -d Ubuntu -e wslpath -u \\wsl.localhost\Ubuntu\home\dpham\src\dbtools\dbtools.code-workspace
+[288 ms] Start: Resolving Remote
+[293 ms] Start: Run: wsl -d Ubuntu -e wslpath -u \\wsl.localhost\Ubuntu\home\dpham\src\dbtools
+[407 ms] Start: Run: wsl -d Ubuntu -e /bin/sh -c cd '/home/dpham/src/dbtools' && /bin/sh
+[411 ms] Start: Run in host: id -un
+[463 ms] dpham
+[464 ms]
+[464 ms] Start: Run in host:  (command -v getent >/dev/null 2>&1 && getent passwd 'dpham' || grep -E '^dpham|^[^:]*:[^:]*:dpham:' /etc/passwd || true)
+[466 ms] Start: Run in host: echo ~
+[466 ms] /home/dpham
+[466 ms]
+[467 ms] Start: Run in host: test -f '/home/dpham/.vscode-server/cli/servers/Stable-ac4cbdf48759c7d8c3eb91ffe6bb04316e263c57/server/node'
+[467 ms]
+[468 ms]
+[468 ms] Exit code 1
+[468 ms] Start: Run in host: test -f '/home/dpham/.vscode/cli/servers/Stable-ac4cbdf48759c7d8c3eb91ffe6bb04316e263c57/server/node'
+[470 ms]
+[470 ms]
+[470 ms] Exit code 1
+[470 ms] Start: Run in host: test -f '/home/dpham/.vscode-server/bin/ac4cbdf48759c7d8c3eb91ffe6bb04316e263c57/node'
+[471 ms]
+[471 ms]
+[471 ms] Start: Run in host: test -f '/home/dpham/.vscode-server/bin/ac4cbdf48759c7d8c3eb91ffe6bb04316e263c57/node_modules/node-pty/package.json'
+[472 ms]
+[472 ms]
+[472 ms] Start: Run in host: test -f '/home/dpham/.vscode-remote-containers/dist/vscode-remote-containers-server-0.431.0.js'
+[473 ms]
+[473 ms]
+[475 ms] userEnvProbe: loginInteractiveShell (default)
+[475 ms] userEnvProbe: not found in cache
+[476 ms] userEnvProbe shell: /bin/bash
+[1876 ms] userEnvProbe PATHs:
+Probe:     '/home/dpham/miniconda3/envs/gds/bin:/home/dpham/miniconda3/condabin:/home/dpham/.nvm/versions/node/v24.3.0/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/usr/lib/wsl/lib:/mnt/c/Windows/system32:/mnt/c/Windows:/mnt/c/Windows/System32/Wbem:/mnt/c/Windows/System32/WindowsPowerShell/v1.0:/mnt/c/Windows/System32/OpenSSH:/mnt/c/Program Files (x86)/NVIDIA Corporation/PhysX/Common:/mnt/c/Program Files/dotnet:/mnt/c/WINDOWS/system32:/mnt/c/WINDOWS:/mnt/c/WINDOWS/System32/Wbem:/mnt/c/WINDOWS/System32/WindowsPowerShell/v1.0:/mnt/c/WINDOWS/System32/OpenSSH:/mnt/c/Program Files/Amazon/AWSCLIV2:/mnt/c/Program Files (x86)/Microsoft SQL Server/160/Tools/Binn:/mnt/c/Program Files/Microsoft SQL Server/160/Tools/Binn:/mnt/c/Program Files/Microsoft SQL Server/Client SDK/ODBC/170/Tools/Binn:/mnt/c/Program Files/Microsoft SQL Server/160/DTS/Binn:/mnt/c/Program Files/NVIDIA Corporation/NVIDIA app/NvDLISR:/mnt/c/Program Files/Microsoft SQL Server/150/Tools/Binn:/mnt/c/ProgramData/chocolatey/bin:/mnt/c/Program Files/GitHub CLI:/mnt/c/Program Files/PowerShell/7:/Docker/host/bin:/mnt/c/Program Files/Microsoft SQL Server/170/Tools/Binn:/mnt/c/Program Files/Git/cmd:/mnt/c/Users/david/AppData/Local/Microsoft/WindowsApps:/mnt/c/Users/david/AppData/Local/Programs/Microsoft VS Code/bin:/mnt/c/Program Files/Azure Data Studio/bin:/mnt/c/Users/david/AppData/Local/GitHubDesktop/bin:/mnt/c/Users/david/AppData/Local/Programs/cursor/resources/app/bin:/mnt/c/Users/david/.dotnet/tools:/mnt/c/Users/david/AppData/Local/PowerToys:/snap/bin:/opt/mssql-tools/bin:/opt/mssql-tools18/bin:/opt/mssql-tools/bin'
+Container: None
+[1877 ms] Setting up container for folder or workspace: /home/dpham/src/dbtools/dbtools.code-workspace
+[1902 ms] Start: Check Docker is running
+[1902 ms] Start: Run in Host: docker version
+[1929 ms] Client: Docker Engine - Community
+ Version:           29.0.0
+ API version:       1.51 (downgraded from 1.52)
+ Go version:        go1.25.4
+ Git commit:        3d4129b
+ Built:             Mon Nov 10 21:46:31 2025
+ OS/Arch:           linux/amd64
+ Context:           default
+
+Server: Docker Desktop 4.50.0 (209931)
+[1930 ms]  Engine:
+  Version:          28.5.1
+  API version:      1.51 (minimum version 1.24)
+  Go version:       go1.24.8
+  Git commit:       f8215cc
+  Built:            Wed Oct  8 12:17:24 2025
+  OS/Arch:          linux/amd64
+  Experimental:     false
+ containerd:
+  Version:          1.7.27
+  GitCommit:        05044ec0a9a75232cad458027ca83437aae3f4da
+ runc:
+  Version:          1.2.5
+  GitCommit:        v1.2.5-0-g59923ef
+ docker-init:
+  Version:          0.19.0
+  GitCommit:        de40ad0
+[1932 ms] Start: Run in Host: docker volume ls -q
+[1954 ms] Start: Run in Host: docker ps -q -a --filter label=vsch.local.folder=\\wsl.localhost\Ubuntu\home\dpham\src\dbtools --filter label=vsch.quality=stable
+[1977 ms] Start: Run in Host: docker ps -q -a --filter label=devcontainer.local_folder=\\wsl.localhost\Ubuntu\home\dpham\src\dbtools --filter label=devcontainer.config_file=/home/dpham/src/dbtools/.devcontainer/devcontainer.json
+[1999 ms] Start: Run in Host: docker ps -q -a --filter label=devcontainer.local_folder=\\wsl.localhost\Ubuntu\home\dpham\src\dbtools
+[2021 ms] Running Dev Containers CLI:   up --container-session-data-folder /tmp/devcontainers-c197932b-5d9c-479c-a8cb-9548c0da7ccf1763125517032 --workspace-folder /home/dpham/src/dbtools --workspace-mount-consistency cached --gpu-availability detect --id-label devcontainer.local_folder=\\wsl.localhost\Ubuntu\home\dpham\src\dbtools --id-label devcontainer.config_file=/home/dpham/src/dbtools/.devcontainer/devcontainer.json --log-level debug --log-format json --config /home/dpham/src/dbtools/.devcontainer/devcontainer.json --default-user-env-probe loginInteractiveShell --remove-existing-container --mount type=volume,source=vscode,target=/vscode,external=true --mount type=bind,source=/run/user/1000/wayland-0,target=/tmp/vscode-wayland-00c46567-bb8f-4e91-9cbe-ed2c9815e7d9.sock --skip-post-create --update-remote-user-uid-default on --mount-workspace-git-root --include-configuration --include-merged-configuration
+[2021 ms] Start: Checking for Dev Containers CLI
+[2026 ms] Start: Run in Host: /home/dpham/.vscode-server/bin/ac4cbdf48759c7d8c3eb91ffe6bb04316e263c57/node /home/dpham/.vscode-remote-containers/dist/dev-containers-cli-0.431.0/dist/spec-node/devContainersSpecCLI.js up --container-session-data-folder /tmp/devcontainers-c197932b-5d9c-479c-a8cb-9548c0da7ccf1763125517032 --workspace-folder /home/dpham/src/dbtools --workspace-mount-consistency cached --gpu-availability detect --id-label devcontainer.local_folder=\\wsl.localhost\Ubuntu\home\dpham\src\dbtools --id-label devcontainer.config_file=/home/dpham/src/dbtools/.devcontainer/devcontainer.json --log-level debug --log-format json --config /home/dpham/src/dbtools/.devcontainer/devcontainer.json --default-user-env-probe loginInteractiveShell --remove-existing-container --mount type=volume,source=vscode,target=/vscode,external=true --mount type=bind,source=/run/user/1000/wayland-0,target=/tmp/vscode-wayland-00c46567-bb8f-4e91-9cbe-ed2c9815e7d9.sock --skip-post-create --update-remote-user-uid-default on --mount-workspace-git-root --include-configuration --include-merged-configuration
+[2099 ms] @devcontainers/cli 0.80.1. Node.js v22.20.0. linux 6.6.87.2-microsoft-standard-WSL2 x64.
+[2099 ms] Start: Run: docker buildx version
+[2353 ms] github.com/docker/buildx v0.29.1-desktop.1 28f6246ff24e2c05095e8741e48c48dcb2d3b4bc
+[2353 ms]
+[2353 ms] Start: Run: docker -v
+[2367 ms] Start: Resolving Remote
+[2369 ms] Start: Run: git rev-parse --show-cdup
+[2491 ms] Start: Run: docker ps -q -a --filter label=devcontainer.local_folder=\\wsl.localhost\Ubuntu\home\dpham\src\dbtools --filter label=devcontainer.config_file=/home/dpham/src/dbtools/.devcontainer/devcontainer.json
+[2518 ms] Start: Run: docker inspect --type image mcr.microsoft.com/devcontainers/miniconda:latest
+[3447 ms] Start: Run: docker buildx build --load --build-arg BUILDKIT_INLINE_CACHE=1 -f /tmp/devcontainercli-dpham/container-features/0.80.1-1763125521489/Dockerfile-with-features -t vsc-dbtools-7b4c301de6c538375f4160e619fad04c5416a5bc5a59bd54ddcf85183855bc5e --target dev_containers_target_stage --build-arg _DEV_CONTAINERS_BASE_IMAGE=dev_container_auto_added_stage_label /home/dpham/src/dbtools
+[+] Building 0.5s (5/5) FINISHED                                 docker:default
+ => [internal] load build definition from Dockerfile-with-features         0.0s
+ => => transferring dockerfile: 2.90kB                                     0.0s
+ => [internal] load metadata for mcr.microsoft.com/devcontainers/minicond  0.3s
+ => [internal] load .dockerignore                                          0.0s
+ => => transferring context: 136B                                          0.0s
+ => CACHED [dev_container_auto_added_stage_label 1/1] FROM mcr.microsoft.  0.0s
+ => => resolve mcr.microsoft.com/devcontainers/miniconda:latest@sha256:19  0.0s
+ => exporting to image                                                     0.1s
+ => => exporting layers                                                    0.0s
+ => => preparing layers for inline cache                                   0.0s
+ => => exporting manifest sha256:b2b0088a7f55d71fecfb914c60873a3372fd9cf3  0.0s
+ => => exporting config sha256:55e106b0cf12d406df1142900c8934c39f04acb4e3  0.0s
+ => => exporting attestation manifest sha256:91bb1e3478eaa46b4168386915d3  0.0s
+ => => exporting manifest list sha256:ea6b26b8c65ac18a944643689607c9d6947  0.0s
+ => => naming to docker.io/library/vsc-dbtools-7b4c301de6c538375f4160e619  0.0s
+ => => unpacking to docker.io/library/vsc-dbtools-7b4c301de6c538375f4160e  0.0s
+[4288 ms] Start: Run: docker inspect --type image vsc-dbtools-7b4c301de6c538375f4160e619fad04c5416a5bc5a59bd54ddcf85183855bc5e
+[4343 ms] Start: Run: docker build -f /tmp/devcontainercli-dpham/updateUID.Dockerfile-0.80.1 -t vsc-dbtools-7b4c301de6c538375f4160e619fad04c5416a5bc5a59bd54ddcf85183855bc5e-uid --platform linux/amd64 --build-arg BASE_IMAGE=vsc-dbtools-7b4c301de6c538375f4160e619fad04c5416a5bc5a59bd54ddcf85183855bc5e --build-arg REMOTE_USER=vscode --build-arg NEW_UID=1000 --build-arg NEW_GID=1000 --build-arg IMAGE_USER=root /tmp/devcontainercli-dpham/empty-folder
+[+] Building 0.7s (6/6) FINISHED                                 docker:default
+ => [internal] load build definition from updateUID.Dockerfile-0.80.1      0.0s
+ => => transferring dockerfile: 1.36kB                                     0.0s
+ => WARN: InvalidDefaultArgInFrom: Default value for ARG $BASE_IMAGE resu  0.0s
+ => [internal] load metadata for docker.io/library/vsc-dbtools-7b4c301de6  0.0s
+ => [internal] load .dockerignore                                          0.0s
+ => => transferring context: 2B                                            0.0s
+ => CACHED [1/2] FROM docker.io/library/vsc-dbtools-7b4c301de6c538375f416  0.0s
+ => => resolve docker.io/library/vsc-dbtools-7b4c301de6c538375f4160e619fa  0.0s
+ => [2/2] RUN eval $(sed -n "s/vscode:[^:]*:\([^:]*\):\([^:]*\):[^:]*:\([  0.2s
+ => exporting to image                                                     0.2s
+ => => exporting layers                                                    0.1s
+ => => exporting manifest sha256:374c3f27b2239bf426e927d590696f3ab9f94ac3  0.0s
+ => => exporting config sha256:b6014a183212ae4ab47334f536d90e85fcb94d2bd7  0.0s
+ => => exporting attestation manifest sha256:5092590ff5c66dd5959bf667ad15  0.0s
+ => => exporting manifest list sha256:13de887603d33e05b84e2431523fdef2509  0.0s
+ => => naming to docker.io/library/vsc-dbtools-7b4c301de6c538375f4160e619  0.0s
+ => => unpacking to docker.io/library/vsc-dbtools-7b4c301de6c538375f4160e  0.0s
+
+ 1 warning found (use docker --debug to expand):
+ - InvalidDefaultArgInFrom: Default value for ARG $BASE_IMAGE results in empty or invalid base image name (line 2)
+[5193 ms] Start: Run: docker events --format {{json .}} --filter event=start
+[5194 ms] Start: Starting container
+[5195 ms] Start: Run: docker run --sig-proxy=false -a STDOUT -a STDERR --mount type=bind,source=/home/dpham/src/dbtools,target=/workspaces/dbtools --mount type=volume,src=vscode,dst=/vscode --mount type=bind,src=/run/user/1000/wayland-0,dst=/tmp/vscode-wayland-00c46567-bb8f-4e91-9cbe-ed2c9815e7d9.sock -l devcontainer.local_folder=\\wsl.localhost\Ubuntu\home\dpham\src\dbtools -l devcontainer.config_file=/home/dpham/src/dbtools/.devcontainer/devcontainer.json --entrypoint /bin/sh vsc-dbtools-7b4c301de6c538375f4160e619fad04c5416a5bc5a59bd54ddcf85183855bc5e-uid -c echo Container started
+Container started

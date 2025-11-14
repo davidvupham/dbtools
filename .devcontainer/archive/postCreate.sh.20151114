@@ -49,15 +49,19 @@ echo "[postCreate] Installing local packages..."
 for pkg in gds_database gds_postgres gds_snowflake gds_vault gds_mongodb gds_mssql gds_notification gds_snmp_receiver; do
   install_editable "$pkg"
 done
+echo "[postCreate] Package installation complete."
 
-# Install pre-commit hooks if .pre-commit-config.yaml exists
+# Setup pre-commit if configured
 if [[ -f .pre-commit-config.yaml ]]; then
-  echo "[postCreate] Installing pre-commit hooks..."
-  if command -v pre-commit &> /dev/null; then
-    pre-commit install || echo "[postCreate] ⚠ Failed to install pre-commit hooks"
+  echo "[postCreate] Installing and configuring pre-commit hooks..."
+  if python -m pip install -q --upgrade pre-commit 2>/dev/null && pre-commit install 2>/dev/null; then
+    echo "[postCreate] ✓ Pre-commit hooks configured"
   else
-    echo "[postCreate] ⚠ pre-commit not installed, skipping hook installation"
+    echo "[postCreate] ⚠ Pre-commit setup failed (continuing anyway)"
   fi
+else
+  echo "[postCreate] No .pre-commit-config.yaml found; skipping pre-commit setup."
 fi
 
 echo "[postCreate] Setup complete!"
+exit 0
