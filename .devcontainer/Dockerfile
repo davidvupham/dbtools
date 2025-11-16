@@ -173,7 +173,8 @@ BASH
 
 # Install some common build tooling in the env
 RUN conda run -n ${CONDA_ENV_NAME} python -m pip install --upgrade pip && \
-    conda run -n ${CONDA_ENV_NAME} pip install ruff pytest pytest-cov wheel build pyodbc aiohttp
+    conda run -n ${CONDA_ENV_NAME} pip install ruff pytest pytest-cov wheel \
+    build pyodbc aiohttp pre-commit
 
 # Set path
 ENV PATH=/opt/conda/envs/${CONDA_ENV_NAME}/bin:/opt/mssql-tools18/bin:/opt/mssql-tools/bin:$PATH
