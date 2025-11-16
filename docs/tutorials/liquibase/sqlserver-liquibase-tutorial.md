@@ -47,6 +47,8 @@ This tutorial focuses exclusively on objects supported by the Community edition:
 - [Step 7: Deploy Change Across Environments](#step-7-deploy-change-across-environments)
 - [Step 8: More Database Changes](#step-8-more-database-changes)
 - [Step 9: Rollbacks and Tags](#step-9-rollbacks-and-tags)
+- [Step 10: Detecting Database Drift](#step-10-detecting-database-drift)
+- [Step 11: Generating Changelogs from Differences](#step-11-generating-changelogs-from-differences)
 - [Understanding the Deployment Pipeline](#understanding-the-deployment-pipeline)
 - [Common Troubleshooting](#common-troubleshooting)
 - [Best Practices](#best-practices)
@@ -2144,6 +2146,235 @@ WHERE ID = 1;
 ```
 
 **Important**: Only force-release if you're CERTAIN no deployment is actually running!
+
+## Step 10: Detecting Database Drift
+
+### What is Database Drift?
+
+**Database drift** occurs when the actual database schema differs from what's tracked in version control. This can happen when:
+
+- Someone makes manual changes directly in the database (bypassing Liquibase)
+- An emergency hotfix is applied without updating changelogs
+- Environments get out of sync (dev differs from stage/prod)
+- Unauthorized changes are made to production
+
+**Why drift is dangerous:**
+
+- ❌ Environments are inconsistent (code works in dev, fails in prod)
+- ❌ Deployments may fail or behave unexpectedly
+- ❌ Audit trail is incomplete (can't prove compliance)
+- ❌ Team doesn't know the true state of databases
+- ❌ Rollbacks won't work correctly
+
+**The solution**: Liquibase's `diff` command detects drift by comparing two databases.
+
+### Simulating Database Drift
+
+Let's intentionally create drift to demonstrate detection. We'll make a manual change to staging that bypasses Liquibase:
+
+```bash
+# Make an unauthorized change to staging (simulating drift)
+docker exec -it mssql_liquibase_tutorial /opt/mssql-tools18/bin/sqlcmd \
+  -C -S localhost -U SA -P "${MSSQL_LIQUIBASE_TUTORIAL_PWD}" \
+  -Q "
+USE testdbstg;
+
+-- Add a column that's NOT in our changelog (drift!)
+ALTER TABLE app.customer ADD loyalty_tier NVARCHAR(20) NULL;
+
+-- Add an index that's NOT in our changelog (drift!)
+CREATE NONCLUSTERED INDEX IX_customer_loyalty_tier
+ON app.customer(loyalty_tier);
+
+PRINT 'Created drift in staging database';
+"
+```
+
+**What we just did:**
+
+- Added `loyalty_tier` column to staging
+- Created an index on that column
+- These changes are NOT tracked in our changelog files
+- Development and production don't have these objects
+- Staging has "drifted" from version control
+
+### Detecting Drift with diff Command
+
+Now use Liquibase's `diff` command to detect the differences:
+
+```bash
+cd /data/liquibase-tutorial
+
+# Compare staging (target) to development (reference)
+# This shows what's different in staging vs development
+docker run --rm \
+  --user $(id -u):$(id -g) \
+  --network=liquibase_tutorial \
+  -v /data/liquibase-tutorial:/workspace \
+  liquibase:latest \
+  --defaults-file=/workspace/env/liquibase.stage.properties \
+  --password="${MSSQL_LIQUIBASE_TUTORIAL_PWD}" \
+  diff \
+  --reference-url="jdbc:sqlserver://mssql_liquibase_tutorial:1433;databaseName=testdbdev;encrypt=true;trustServerCertificate=true" \
+  --reference-username=sa \
+  --reference-password="${MSSQL_LIQUIBASE_TUTORIAL_PWD}"
+```
+
+**Expected output showing drift:**
+
+```text
+Diff Results:
+Reference Database: SA @ jdbc:sqlserver://mssql_liquibase_tutorial:1433;databaseName=testdbdev
+Comparison Database: SA @ jdbc:sqlserver://mssql_liquibase_tutorial:1433;databaseName=testdbstg
+
+Compared Schemas: app
+Product Name: EQUAL
+Product Version: EQUAL
+
+Missing Column(s): NONE
+
+Unexpected Column(s):
+     app.customer.loyalty_tier
+
+Changed Column(s): NONE
+
+Missing Index(s): NONE
+
+Unexpected Index(s):
+     IX_customer_loyalty_tier UNIQUE ON app.customer(loyalty_tier)
+
+Changed Index(s): NONE
+```
+
+**Understanding the output:**
+
+- **Reference Database**: The "source of truth" (development)
+- **Comparison Database**: The database being checked (staging)
+- **Unexpected Column(s)**: Objects in staging that DON'T exist in development = DRIFT!
+- **Unexpected Index(s)**: Additional objects found in staging = DRIFT!
+- **Missing Column(s)**: Would show objects in dev but NOT in staging
+
+**This tells us:**
+
+- ✅ Drift detected successfully
+- ✅ Staging has 1 extra column: `loyalty_tier`
+- ✅ Staging has 1 extra index: `IX_customer_loyalty_tier`
+- ⚠️ These changes are NOT in version control
+- ⚠️ Deployments might overwrite or conflict with these changes
+
+### What to Do When Drift is Detected
+
+When drift is found, you have three options:
+
+**Option 1: Remove the drift (preferred for unauthorized changes)**
+
+```bash
+# Manually remove the drifted objects
+docker exec -it mssql_liquibase_tutorial /opt/mssql-tools18/bin/sqlcmd \
+  -C -S localhost -U SA -P "${MSSQL_LIQUIBASE_TUTORIAL_PWD}" \
+  -Q "
+USE testdbstg;
+DROP INDEX IF EXISTS IX_customer_loyalty_tier ON app.customer;
+ALTER TABLE app.customer DROP COLUMN IF EXISTS loyalty_tier;
+PRINT 'Removed drift from staging';
+"
+```
+
+**Option 2: Incorporate the drift into version control** - Create a changelog entry for the valid change (see Step 11)
+
+**Option 3: Use diffChangeLog to auto-generate the changeset** (see Step 11)
+
+## Step 11: Generating Changelogs from Differences
+
+### What is diffChangeLog?
+
+While `diff` *detects* differences, `diffChangeLog` *generates* a changelog file that captures those differences as deployable changesets.
+
+**Use cases:**
+
+- Converting drift back into version control
+- Reverse-engineering an existing database
+- Syncing environments that got out of sync
+- Creating baseline from production database
+
+### Generate Changelog from Drift
+
+Let's generate a changelog that captures the drift we created in staging:
+
+```bash
+cd /data/liquibase-tutorial
+
+# Generate changelog capturing the drift in staging
+docker run --rm \
+  --user $(id -u):$(id -g) \
+  --network=liquibase_tutorial \
+  -v /data/liquibase-tutorial:/workspace \
+  liquibase:latest \
+  --defaults-file=/workspace/env/liquibase.stage.properties \
+  --password="${MSSQL_LIQUIBASE_TUTORIAL_PWD}" \
+  --changelog-file=/workspace/database/changelog/drift-captured-$(date +%Y%m%d).xml \
+  diffChangeLog \
+  --reference-url="jdbc:sqlserver://mssql_liquibase_tutorial:1433;databaseName=testdbdev;encrypt=true;trustServerCertificate=true" \
+  --reference-username=sa \
+  --reference-password="${MSSQL_LIQUIBASE_TUTORIAL_PWD}"
+```
+
+**What this does:**
+
+1. Compares staging (target) to development (reference)
+2. Finds all differences (the drift)
+3. Generates XML changesets to make development match staging
+4. Saves to `drift-captured-YYYYMMDD.xml`
+
+**View the generated changelog:**
+
+```bash
+cat database/changelog/drift-captured-*.xml
+```
+
+**What we see:**
+
+- ✅ Auto-generated changesets capturing the drift
+- ✅ Column addition with correct data type
+- ✅ Index creation with correct name and structure
+- ✅ Ready to version control and deploy
+
+### Clean Up the Drift (For Tutorial Continuation)
+
+Now remove the drift we created so the tutorial environments are synchronized:
+
+```bash
+# Remove the drift from staging
+docker exec -it mssql_liquibase_tutorial /opt/mssql-tools18/bin/sqlcmd \
+  -C -S localhost -U SA -P "${MSSQL_LIQUIBASE_TUTORIAL_PWD}" \
+  -Q "
+USE testdbstg;
+DROP INDEX IF EXISTS IX_customer_loyalty_tier ON app.customer;
+ALTER TABLE app.customer DROP COLUMN IF EXISTS loyalty_tier;
+PRINT 'Removed drift from staging';
+"
+
+# Verify drift is gone
+docker run --rm \
+  --user $(id -u):$(id -g) \
+  --network=liquibase_tutorial \
+  -v /data/liquibase-tutorial:/workspace \
+  liquibase:latest \
+  --defaults-file=/workspace/env/liquibase.stage.properties \
+  --password="${MSSQL_LIQUIBASE_TUTORIAL_PWD}" \
+  diff \
+  --reference-url="jdbc:sqlserver://mssql_liquibase_tutorial:1433;databaseName=testdbdev;encrypt=true;trustServerCertificate=true" \
+  --reference-username=sa \
+  --reference-password="${MSSQL_LIQUIBASE_TUTORIAL_PWD}"
+```
+
+**What you've learned:**
+
+- ✅ How to detect database drift with `diff`
+- ✅ How to generate changelogs from differences with `diffChangeLog`
+- ✅ How to compare environments and identify unauthorized changes
+- ✅ How to reverse-engineer databases into version control
+- ✅ Best practices for handling drift in production
 
 ## Understanding the Deployment Pipeline
 

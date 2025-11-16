@@ -59,7 +59,7 @@ Recommendation: If your platforms rely heavily on stored logic, **Liquibase Secu
 
 ## Liquibase Limitations
 
-**Important**: Liquibase has some fundamental limitations that apply to ALL editions (Community, Pro, and Secure):
+**Important**: Liquibase has some fundamental limitations that apply to ALL editions (Community and Secure):
 
 ### Schema Management
 
@@ -73,12 +73,30 @@ Key points:
 - ❌ The Schema object type has "N/A" for `--diff-types` syntax (no parameter exists to capture schemas)
 - ⚠️ **Schemas must exist before running Liquibase** - create them manually or through other tooling
 - ✅ Liquibase WILL include `schemaName` attributes on tables/views (when using `--include-schema=true`)
+- ✅ Liquibase CAN detect schema drift (missing/unexpected/changed schemas) via `diff` and `diffChangeLog` commands, but won't auto-generate creation statements
 
 **In production**: You should:
 
 - Create schemas manually before first Liquibase deployment
 - Use database initialization scripts run before Liquibase
 - Include schema creation in your infrastructure-as-code (Terraform, ARM templates, etc.)
+
+Example: model schema creation via SQL changeSets (works across editions):
+
+```yaml
+databaseChangeLog:
+  - changeSet:
+      id: 20251116-01-create-schema
+      author: platform-team
+      changes:
+        - sql:
+            sql: |
+              CREATE SCHEMA IF NOT EXISTS app_schema;
+      rollback:
+        - sql:
+            sql: |
+              DROP SCHEMA IF EXISTS app_schema CASCADE;
+```
 
 Example: model schema creation via SQL changeSets (works across editions):
 
@@ -1731,6 +1749,15 @@ SELECT id, author, filename, dateexecuted, tag FROM databasechangelog ORDER BY d
 SELECT * FROM databasechangeloglock;
 ```
 
+## Glossary
+
+- ChangeLog: The file (or tree of files) that defines database changes
+- ChangeSet: The atomic unit of change (id, author, changes, rollback)
+- Baseline: Initial schema snapshot prior to Liquibase-managed evolution
+- Drift: Differences between expected schema (changelogs) and actual DB
+- Tag: A named point-in-time marker for rollbacks and coordination
+- Flow file: Liquibase Secure workflow file that orchestrates stages/actions
+
 ## References
 
 ### Official Documentation
@@ -1764,15 +1791,6 @@ SELECT * FROM databasechangeloglock;
 - [DBmaestro](https://www.dbmaestro.com/) - Enterprise database DevOps
 - [Redgate](https://www.redgate.com/) - SQL Server focused tools
 - [Alembic](https://alembic.sqlalchemy.org/) - Python-based migrations
-
-## Glossary
-
-- ChangeLog: The file (or tree of files) that defines database changes
-- ChangeSet: The atomic unit of change (id, author, changes, rollback)
-- Baseline: Initial schema snapshot prior to Liquibase-managed evolution
-- Drift: Differences between expected schema (changelogs) and actual DB
-- Tag: A named point-in-time marker for rollbacks and coordination
-- Flow file: Liquibase Secure workflow file that orchestrates stages/actions
 
 ## Appendix
 
