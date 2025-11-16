@@ -5,6 +5,9 @@
 > **Maintainers:** Global Data Services Team
 > **Status:** Production - Actively Maintained
 
+![Liquibase Version](https://img.shields.io/badge/Liquibase-4.24%2B-blue)
+![Document Status](https://img.shields.io/badge/Status-Production-green)
+
 ## Overview
 
 This repository uses Liquibase for database schema management across multiple platforms (PostgreSQL, SQL Server, Snowflake, MongoDB) with multiple databases per platform. Changes are written once and promoted through environments (dev → stage → prod) using environment-specific connection properties.
@@ -24,16 +27,35 @@ This repository uses Liquibase for database schema management across multiple pl
 - ❌ Platform-specific tooling required (e.g., Flyway for Java-only shops)
 - ❌ Small team managing < 5 databases total
 
-## Liquibase Community Edition
+## Liquibase Community vs Liquibase Secure
 
-This architecture document applies to **Liquibase Community edition** (free, open-source version), which fully supports the core database objects you'll work with most often:
+This architecture (directory structure, naming, promotion, CI/CD) works with both **Liquibase Community** (free, open-source) and **Liquibase Secure** (commercial). Key differences relate to stored logic, governance, and workflow automation.
 
-- ✅ **Fully supports**: Tables, views, indexes, constraints, foreign keys, sequences (all core DDL objects)
-- ❌ **Does NOT capture**: Stored procedures, functions, triggers (requires Pro/Secure edition)
+### Core DDL Objects (Both Editions)
 
-The directory structure and patterns in this document focus on objects supported by the Community edition. These skills and patterns apply to both Community and Pro/Secure editions.
+- ✅ Tables, views, indexes, constraints, foreign keys, sequences
+- ✅ Primary keys, unique constraints, foreign keys
+- ✅ Columns, data types, schemas referenced via `schemaName` (with `--include-schema=true`)
 
-**Note**: For production environments requiring stored procedures and functions, consider Liquibase Pro/Secure, which automatically captures all database objects including stored logic.
+### Stored Logic Objects (Differences)
+
+**Liquibase Community:**
+
+- ⚠️ Limited support for procedures, functions, triggers, check constraints, packages
+- Can detect and reference these objects during `generateChangeLog`
+- Does not emit dedicated change types (e.g., `createFunction`, `createTrigger`)
+- Requires manual SQL-based changeSets to manage stored logic
+- No automated extraction into separate SQL files
+
+**Liquibase Secure:**
+
+- ✅ Automated extraction of procedures, functions, triggers, check constraints, packages
+- Generates `pro:` namespaced change types (e.g., `pro:createFunction`, `pro:createTrigger`)
+- Creates an `objects/` directory with separate SQL files per object
+- Supports `--diff-types` like `functions`, `storedprocedures`, `triggers`, `checkconstraints`
+- Improves accuracy and velocity for teams with significant stored logic
+
+Recommendation: If your platforms rely heavily on stored logic, **Liquibase Secure** materially reduces manual effort and drift risk.
 
 ## Liquibase Limitations
 
@@ -58,17 +80,34 @@ Key points:
 - Use database initialization scripts run before Liquibase
 - Include schema creation in your infrastructure-as-code (Terraform, ARM templates, etc.)
 
+Example: model schema creation via SQL changeSets (works across editions):
+
+```yaml
+databaseChangeLog:
+  - changeSet:
+      id: 20251116-01-create-schema
+      author: platform-team
+      changes:
+        - sql:
+            sql: |
+              CREATE SCHEMA IF NOT EXISTS app_schema;
+      rollback:
+        - sql:
+            sql: |
+              DROP SCHEMA IF EXISTS app_schema CASCADE;
+```
+
 ### Other Limitations
 
 - ❌ **Database users, roles, permissions** - Security objects are not captured
 - ❌ **Extended properties and descriptions** - SQL Server metadata is not captured
 - ❌ **Computed columns** - May be captured incorrectly or not at all
-- ℹ️ **Stored procedures, functions, triggers** - Not captured by Community edition (requires Pro/Secure)
+- ℹ️ **Stored procedures, functions, triggers** - Limited in Community; automated in Liquibase Secure
 
 ## Table of Contents
 
 - [Overview](#overview)
-- [Liquibase Community Edition](#liquibase-community-edition)
+- [Liquibase Community vs Liquibase Secure](#liquibase-community-vs-liquibase-secure)
 - [Liquibase Limitations](#liquibase-limitations)
 - [Directory Structure](#directory-structure)
 - [Design Principles](#design-principles)
@@ -86,11 +125,13 @@ Key points:
 - [Rollback Strategy](#rollback-strategy)
 - [Scalability and Performance](#scalability-and-performance)
 - [Common Patterns](#common-patterns)
+- [Edition Differences](#edition-differences)
 - [Alternative Approaches](#alternative-approaches)
 - [Testing Strategy](#testing-strategy)
 - [Migration from Legacy](#migration-from-legacy)
 - [Troubleshooting](#troubleshooting)
 - [References](#references)
+- [Glossary](#glossary)
 
 ## Directory Structure
 
@@ -516,6 +557,34 @@ Use `dbms` attribute for small platform deltas:
 
 For larger platform divergence, keep changes in separate files under each platform folder.
 
+#### MongoDB-Specific Patterns
+
+MongoDB uses extension change types for collections, indexes, and validation schemas.
+
+```yaml
+databaseChangeLog:
+  - changeSet:
+      id: 20251116-01-create-collection
+      author: team
+      changes:
+        - ext:createCollection:
+            collectionName: users
+        - ext:createIndex:
+            collectionName: users
+            keys:
+              - key: email
+                order: 1
+            options:
+              unique: true
+              name: idx_email_unique
+```
+
+Considerations:
+
+- Use the `ext:` namespace for MongoDB extension types
+- Manage validation rules with JSON schema changeSets
+- Document sharding/topology; avoid automating cluster-level ops in migrations
+
 ### Shared Modules
 
 Reusable patterns go in `shared/modules/`:
@@ -656,6 +725,43 @@ for db in app analytics; do
 done
 ```
 
+### Flow Files (Liquibase Secure)
+
+Liquibase Secure supports flow files to orchestrate multi-stage deployments with quality gates and audit capture.
+
+```yaml
+# liquibase.flowfile.yaml
+stages:
+  - stage:
+      name: validate-changes
+      actions:
+        - type: liquibase
+          command: validate
+        - type: liquibase
+          command: updateSQL
+
+  - stage:
+      name: quality-checks
+      actions:
+        - type: liquibase
+          command: checks run
+
+  - stage:
+      name: deploy
+      actions:
+        - type: liquibase
+          command: update
+        - type: liquibase
+          command: tag
+          tag: v${VERSION}
+```
+
+Benefits:
+
+- Reusable deployment workflows with gates
+- Automatic rollback script capture
+- Built-in audit trail and conditional logic
+
 ### Multi-Environment Promotion
 
 Promote through all environments sequentially:
@@ -789,6 +895,17 @@ liquibase \
 ```
 
 Best practice: review and curate generated drift changelogs; do not auto-apply without code review.
+
+### Liquibase Secure Drift Capabilities
+
+With Liquibase Secure you can enable:
+
+- Automated drift reports (scheduled scans and dashboards)
+- Drift alerts integrated with monitoring systems
+- Reconciliation workflows (automated/manual)
+- Policy enforcement to block out-of-band changes
+
+See: <https://docs.liquibase.com/secure/user-guide-5-0/what-is-the-drift-report>
 
 ## Rollback Strategy
 
@@ -1081,6 +1198,63 @@ When splitting a monolith into microservices:
 
 Use multiple releases with tags between steps for safe rollback.
 
+### Online Index Creation
+
+- PostgreSQL: prefer `CREATE INDEX CONCURRENTLY` to minimize locks
+- SQL Server: use `WITH (ONLINE = ON)` where edition supports it
+- Oracle: use the `ONLINE` clause; test on representative data
+
+Add preconditions to avoid duplicate indexes and expect longer build times.
+
+### Transactional Boundaries
+
+Understand DDL transaction behavior per platform:
+
+- PostgreSQL: most DDL is transactional; safe to wrap changeSets
+- MySQL/SQL Server/Oracle: some DDL autocommits or is non-transactional
+
+Design changeSets so partial failures won’t leave schema unusable.
+
+### Large Backfills and Batching
+
+- Use chunked DML via `sql`/`sqlFile` with ID/time windows
+- Schedule during low-traffic windows; add resume markers
+- Guard with preconditions to skip completed batches
+
+### Permissions and Grants
+
+Model GRANT/REVOKE as SQL changeSets, filtered with labels/contexts; keep secrets out of VCS.
+
+### Partitioning Lifecycle
+
+- Pre-create future partitions (monthly/weekly)
+- Archive/drop old partitions via scheduled changeSets
+- Use preconditions for idempotency
+
+### Collation/Encoding Changes
+
+Potentially disruptive; plan maintenance windows or rebuild strategies and validate application behavior.
+
+### Dependency-Heavy Objects
+
+Schema-bound views, materialized views, and computed/generated columns require careful ordering and rebuild policies.
+
+### Run Rules: `runOnChange` / `runAlways`
+
+Avoid unless necessary. Prefer explicit new changeSets to prevent checksum churn. Use `runOnChange` for templates designed to regenerate.
+
+### Multi-Tenant Rollouts
+
+Loop per-tenant schema/database; use labels like `tenant:acme` to filter and track progress per tenant.
+
+### Replication and HA
+
+For Postgres logical replication or SQL Server Always On, avoid blocking operations; prefer online DDL and validate impact on replicas.
+
+### Cross-Database Coordination
+
+When multiple databases must change in lockstep, coordinate tags and approvals and deploy in a controlled order with checkpoints.
+
 ### Performance Tips
 
 - Prefer smaller, single-purpose changeSets to improve retryability
@@ -1090,6 +1264,31 @@ Use multiple releases with tags between steps for safe rollback.
 - Avoid editing applied changeSets; append new changeSets instead
 
 ## Alternative Approaches
+
+## Edition Differences
+
+### Liquibase Community
+
+Included:
+
+- Core DDL object management, multiple changelog formats
+- Basic diff/diffChangeLog and rollbacks (tag/count/date)
+- CLI and APIs, 60+ platforms, community support
+
+Limitations:
+
+- Manual SQL changeSets for stored logic (procedures/functions/triggers/packages/check constraints)
+- No automated stored logic extraction, policy checks, or flow files
+- No advanced drift/rollback features or Secure IDE features
+
+### Liquibase Secure (adds to Community)
+
+- Automated stored logic extraction and `pro:` change types
+- Policy checks, compliance-ready audit trails, SIEM-friendly logs
+- Drift reports/alerts/reconciliation and policy enforcement
+- Flow files orchestration and automatic rollback generation
+- Targeted rollbacks and developer IDE integrations
+- Enterprise support, certified drivers, secure credential features
 
 ### When to Use This Structure
 
@@ -1565,6 +1764,15 @@ SELECT * FROM databasechangeloglock;
 - [DBmaestro](https://www.dbmaestro.com/) - Enterprise database DevOps
 - [Redgate](https://www.redgate.com/) - SQL Server focused tools
 - [Alembic](https://alembic.sqlalchemy.org/) - Python-based migrations
+
+## Glossary
+
+- ChangeLog: The file (or tree of files) that defines database changes
+- ChangeSet: The atomic unit of change (id, author, changes, rollback)
+- Baseline: Initial schema snapshot prior to Liquibase-managed evolution
+- Drift: Differences between expected schema (changelogs) and actual DB
+- Tag: A named point-in-time marker for rollbacks and coordination
+- Flow file: Liquibase Secure workflow file that orchestrates stages/actions
 
 ## Appendix
 
