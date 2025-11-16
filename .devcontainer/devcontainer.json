@@ -31,7 +31,7 @@
   // ---------------------------------------------------------------------------
   // "name": Display name shown in VS Code UI
   // This helps identify which dev container you're working in
-  "name": "dbtools - Ubuntu Miniconda (Py3.13)",
+  "name": "dbtools - Ubuntu Miniconda (Py3.14)",
   // ---------------------------------------------------------------------------
   // Build Configuration
   // ---------------------------------------------------------------------------
@@ -50,7 +50,7 @@
     "dockerfile": "Dockerfile",
     "context": "..",
     "args": {
-      "PYTHON_VERSION": "3.13",
+      "PYTHON_VERSION": "3.14",
       "CONDA_ENV_NAME": "gds",
       "DEVCONTAINER_USER": "${localEnv:USER}",
       "DEVCONTAINER_GROUP": "${localEnv:USER}",

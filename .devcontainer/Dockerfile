@@ -3,7 +3,7 @@
 FROM mcr.microsoft.com/devcontainers/miniconda:latest
 
 # Build args
-ARG PYTHON_VERSION=3.13
+ARG PYTHON_VERSION=3.14
 ARG CONDA_ENV_NAME=gds
 ARG DEVCONTAINER_USER=gds
 ARG DEVCONTAINER_GROUP=gds
@@ -20,14 +20,57 @@ ENV DEVCONTAINER_USER=${DEVCONTAINER_USER} \
     DEVCONTAINER_HOME=/home/${DEVCONTAINER_USER}
 
 # Install system dependencies for pyodbc, PowerShell, Docker CLI, and netcat
+# RUN apt-get install -y  && \
+#     wget -q https://packages.microsoft.com/config/debian/12/packages-microsoft-prod.deb && \
+#     dpkg -i packages-microsoft-prod.deb && \
+#     rm packages-microsoft-prod.deb && \
+#     # Create directory for keyrings
+#     sudo mkdir -p /etc/apt/keyrings && \
+#     # Add Docker’s official GPG key
+#     curl -fsSL https://download.docker.com/linux/debian/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg && \
+#     # Add Docker repository to APT sources
+#     echo \
+#     "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian bookworm stable"  \
+#     | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null && \
+#     apt-get update && \
+#     sudo apt-get remove -y docker docker-engine docker.io containerd runc moby-engine moby-cli moby-containerd && \
+#     apt-get install -y powershell msodbcsql18 mssql-tools18 wget gnupg ca-certificates unixodbc-dev curl iputils-ping docker.io \
+#     netcat-openbsd build-essential docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin runc && \
+#     apt-get clean && rm -rf /var/lib/apt/lists/*
 RUN apt-get update && \
-    apt-get install -y wget gnupg ca-certificates unixodbc-dev curl iputils-ping docker.io netcat-openbsd build-essential && \
+    apt-get install -y wget gnupg ca-certificates curl && \
+    # Install Microsoft repository for powershell, msodbcsql18, mssql-tools18
     wget -q https://packages.microsoft.com/config/debian/12/packages-microsoft-prod.deb && \
     dpkg -i packages-microsoft-prod.deb && \
     rm packages-microsoft-prod.deb && \
+    # Set up Docker’s official repository
+    mkdir -p /etc/apt/keyrings && \
+    curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg && \
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian bookworm stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null && \
+    # Update package index
     apt-get update && \
-    apt-get install -y powershell msodbcsql18 mssql-tools18 && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
+    # Remove conflicting packages
+    apt-get remove -y docker docker-engine docker.io containerd runc moby-engine moby-cli moby-containerd && \
+    apt-get autoremove -y && \
+    # Fix held packages
+    apt-get install -f -y && \
+    # Install required packages
+    apt-get install -y \
+    powershell \
+    msodbcsql18 \
+    mssql-tools18 \
+    unixodbc-dev \
+    iputils-ping \
+    netcat-openbsd \
+    build-essential \
+    docker-ce \
+    docker-ce-cli \
+    containerd.io \
+    docker-buildx-plugin \
+    docker-compose-plugin && \
+    # Clean up
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 # Create the conda environment and install base packages
 # Configure conda-forge as the sole channel to avoid Anaconda TOS prompts and ensure reproducible resolution.
