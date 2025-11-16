@@ -1,8 +1,8 @@
-# Liquibase Architecture
+# Liquibase Implementation Guide
 
 > **Document Version:** 2.0
-> **Last Updated:** November 14, 2025
-> **Maintainers:** Platform Engineering Team
+> **Last Updated:** November 16, 2025
+> **Maintainers:** Global Data Services Team
 > **Status:** Production - Actively Maintained
 
 ## Overview
@@ -24,9 +24,52 @@ This repository uses Liquibase for database schema management across multiple pl
 - ❌ Platform-specific tooling required (e.g., Flyway for Java-only shops)
 - ❌ Small team managing < 5 databases total
 
+## Liquibase Community Edition
+
+This architecture document applies to **Liquibase Community edition** (free, open-source version), which fully supports the core database objects you'll work with most often:
+
+- ✅ **Fully supports**: Tables, views, indexes, constraints, foreign keys, sequences (all core DDL objects)
+- ❌ **Does NOT capture**: Stored procedures, functions, triggers (requires Pro/Secure edition)
+
+The directory structure and patterns in this document focus on objects supported by the Community edition. These skills and patterns apply to both Community and Pro/Secure editions.
+
+**Note**: For production environments requiring stored procedures and functions, consider Liquibase Pro/Secure, which automatically captures all database objects including stored logic.
+
+## Liquibase Limitations
+
+**Important**: Liquibase has some fundamental limitations that apply to ALL editions (Community, Pro, and Secure):
+
+### Schema Management
+
+Liquibase **does not manage database schemas**. From the [official Liquibase documentation](https://docs.liquibase.com/commands/inspection/generate-changelog.html):
+
+> "*When using the update command to apply the changes in the changelog, Liquibase will not create a new database or schema. You must create them before applying the changelog to it.*"
+
+Key points:
+
+- ❌ `generateChangeLog` will NOT create `CREATE SCHEMA` statements
+- ❌ The Schema object type has "N/A" for `--diff-types` syntax (no parameter exists to capture schemas)
+- ⚠️ **Schemas must exist before running Liquibase** - create them manually or through other tooling
+- ✅ Liquibase WILL include `schemaName` attributes on tables/views (when using `--include-schema=true`)
+
+**In production**: You should:
+
+- Create schemas manually before first Liquibase deployment
+- Use database initialization scripts run before Liquibase
+- Include schema creation in your infrastructure-as-code (Terraform, ARM templates, etc.)
+
+### Other Limitations
+
+- ❌ **Database users, roles, permissions** - Security objects are not captured
+- ❌ **Extended properties and descriptions** - SQL Server metadata is not captured
+- ❌ **Computed columns** - May be captured incorrectly or not at all
+- ℹ️ **Stored procedures, functions, triggers** - Not captured by Community edition (requires Pro/Secure)
+
 ## Table of Contents
 
 - [Overview](#overview)
+- [Liquibase Community Edition](#liquibase-community-edition)
+- [Liquibase Limitations](#liquibase-limitations)
 - [Directory Structure](#directory-structure)
 - [Design Principles](#design-principles)
 - [Conventions](#conventions)
