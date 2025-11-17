@@ -1,0 +1,16 @@
+apiVersion: v2
+name: liquibase-migrations
+description: Helm chart for Liquibase database migrations
+type: application
+version: 1.0.0
+appVersion: "5.0.0"
+keywords:
+  - liquibase
+  - database
+  - migration
+  - schema
+maintainers:
+  - name: Database DevOps Team
+    email: dbtools-team@example.com
+sources:
+  - https://github.com/davidvupham/dbtools

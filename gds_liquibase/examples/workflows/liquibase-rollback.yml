@@ -1,0 +1,67 @@
+name: Rollback Database Changes
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Environment to rollback"
+        required: true
+        type: choice
+        options:
+          - development
+          - staging
+          - production
+      rollback_tag:
+        description: "Tag to rollback to"
+        required: true
+      changelog_file:
+        description: "Changelog file"
+        required: true
+        default: "changelogs/db.changelog-master.xml"
+
+jobs:
+  rollback:
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: liquibase/setup-liquibase@v2
+        with:
+          version: "5.0.0"
+          edition: "community"
+
+      - name: Install Database Driver
+        run: liquibase lpm add postgresql --global
+
+      - name: Generate Rollback SQL
+        env:
+          DB_URL: ${{ secrets[format('{0}_DB_URL', github.event.inputs.environment)] }}
+          DB_USERNAME: ${{ secrets[format('{0}_DB_USERNAME', github.event.inputs.environment)] }}
+          DB_PASSWORD: ${{ secrets[format('{0}_DB_PASSWORD', github.event.inputs.environment)] }}
+        run: |
+          liquibase rollback-sql \
+            --tag=${{ github.event.inputs.rollback_tag }} \
+            --changelog-file=${{ github.event.inputs.changelog_file }} \
+            --url=$DB_URL \
+            --username=$DB_USERNAME \
+            --password=$DB_PASSWORD > rollback.sql
+
+      - name: Upload Rollback SQL
+        uses: actions/upload-artifact@v4
+        with:
+          name: rollback-sql
+          path: rollback.sql
+
+      - name: Execute Rollback
+        env:
+          DB_URL: ${{ secrets[format('{0}_DB_URL', github.event.inputs.environment)] }}
+          DB_USERNAME: ${{ secrets[format('{0}_DB_USERNAME', github.event.inputs.environment)] }}
+          DB_PASSWORD: ${{ secrets[format('{0}_DB_PASSWORD', github.event.inputs.environment)] }}
+        run: |
+          liquibase rollback \
+            --tag=${{ github.event.inputs.rollback_tag }} \
+            --changelog-file=${{ github.event.inputs.changelog_file }} \
+            --url=$DB_URL \
+            --username=$DB_USERNAME \
+            --password=$DB_PASSWORD

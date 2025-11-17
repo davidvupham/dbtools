@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd
+        http://www.liquibase.org/xml/ns/dbchangelog-ext
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd">
+
+    <changeSet id="20241116-001-create-users-collection" author="david.pham@example.com">
+        <comment>Create users collection with validation</comment>
+
+        <ext:createCollection collectionName="users">
+            <ext:options>
+                {
+                    validator: {
+                        $jsonSchema: {
+                            bsonType: "object",
+                            required: ["username", "email", "createdAt"],
+                            properties: {
+                                username: {
+                                    bsonType: "string",
+                                    description: "Username must be a string and is required"
+                                },
+                                email: {
+                                    bsonType: "string",
+                                    pattern: "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$",
+                                    description: "Valid email address is required"
+                                },
+                                createdAt: {
+                                    bsonType: "date",
+                                    description: "Creation timestamp is required"
+                                },
+                                role: {
+                                    enum: ["admin", "user", "guest"],
+                                    description: "Role must be one of the enum values"
+                                }
+                            }
+                        }
+                    },
+                    validationLevel: "moderate",
+                    validationAction: "warn"
+                }
+            </ext:options>
+        </ext:createCollection>
+
+        <rollback>
+            <ext:dropCollection collectionName="users"/>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="20241116-002-create-users-index" author="david.pham@example.com">
+        <comment>Create index on users.email for faster queries</comment>
+
+        <ext:createIndex collectionName="users">
+            <ext:keys>
+                { email: 1 }
+            </ext:keys>
+            <ext:options>
+                { unique: true, name: "idx_users_email" }
+            </ext:options>
+        </ext:createIndex>
+
+        <rollback>
+            <ext:dropIndex collectionName="users" indexName="idx_users_email"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

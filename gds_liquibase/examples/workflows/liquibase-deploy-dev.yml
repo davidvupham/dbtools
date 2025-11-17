@@ -1,0 +1,42 @@
+name: Deploy to Development
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "changelogs/**"
+
+jobs:
+  deploy-dev:
+    runs-on: ubuntu-latest
+    environment: development
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: liquibase/setup-liquibase@v2
+        with:
+          version: "5.0.0"
+          edition: "community"
+
+      - name: Install Database Driver
+        run: liquibase lpm add postgresql --global
+
+      - name: Deploy Changes
+        env:
+          DB_URL: ${{ secrets.DEV_DB_URL }}
+          DB_USERNAME: ${{ secrets.DEV_DB_USERNAME }}
+          DB_PASSWORD: ${{ secrets.DEV_DB_PASSWORD }}
+        run: |
+          liquibase update \
+            --changelog-file=changelogs/db.changelog-master.xml \
+            --url=$DB_URL \
+            --username=$DB_USERNAME \
+            --password=$DB_PASSWORD
+
+      - name: Tag Deployment
+        run: |
+          liquibase tag "dev-$(date +%Y%m%d-%H%M%S)" \
+            --url=$DB_URL \
+            --username=$DB_USERNAME \
+            --password=$DB_PASSWORD

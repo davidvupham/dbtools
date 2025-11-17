@@ -1,0 +1,19 @@
+include README.md
+include LICENSE
+include PROJECT_PLAN.md
+include CODE_EXTRACTION_SUMMARY.md
+
+# Include example files
+recursive-include examples *.yml *.yaml *.xml *.properties *.py
+
+# Exclude documentation from source distribution
+prune docs
+
+# Exclude tests from source distribution
+prune tests
+
+# Exclude build artifacts
+global-exclude *.pyc
+global-exclude __pycache__
+global-exclude *.so
+global-exclude .git*

@@ -1,0 +1,40 @@
+name: Validate Liquibase Changelogs
+
+on:
+  pull_request:
+    paths:
+      - "changelogs/**"
+      - "liquibase.properties"
+      - ".github/workflows/liquibase-*.yml"
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: liquibase/setup-liquibase@v2
+        with:
+          version: "5.0.0"
+          edition: "community"
+
+      - name: Install PostgreSQL Driver
+        run: liquibase lpm add postgresql --global
+
+      - name: Validate Changelog
+        run: |
+          liquibase validate \
+            --changelog-file=changelogs/db.changelog-master.xml \
+            --url=jdbc:h2:mem:test
+
+      - name: Generate SQL Preview
+        run: |
+          liquibase update-sql \
+            --changelog-file=changelogs/db.changelog-master.xml \
+            --url=jdbc:h2:mem:test > migration-preview.sql
+
+      - name: Upload Preview
+        uses: actions/upload-artifact@v4
+        with:
+          name: migration-preview
+          path: migration-preview.sql

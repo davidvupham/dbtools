@@ -1,0 +1,145 @@
+# Default values for liquibase-migrations
+replicaCount: 1
+
+image:
+  repository: ghcr.io/your-org/liquibase-migrations
+  pullPolicy: IfNotPresent
+  tag: "1.0.0"
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+# Liquibase configuration
+liquibase:
+  # Command to execute (update, rollback, validate, status, etc.)
+  command: "update"
+
+  # Changelog file path
+  changelogFile: "changelogs/db.changelog-master.xml"
+
+  # Context and labels
+  contexts: ""
+  labels: ""
+
+  # Additional command arguments
+  extraArgs: []
+
+  # Log level (OFF, SEVERE, WARNING, INFO, FINE, FINEST, DEBUG)
+  logLevel: "INFO"
+
+# Database connection
+database:
+  # Database type (postgres, mssql, snowflake, mongodb)
+  type: postgres
+
+  # Connection details (can be overridden by existingSecret)
+  host: ""
+  port: ""
+  name: ""
+  username: ""
+  password: ""
+
+  # Use existing secret for credentials
+  existingSecret: ""
+  existingSecretUsernameKey: "username"
+  existingSecretPasswordKey: "password"
+
+  # JDBC URL (if provided, overrides host/port/name)
+  jdbcUrl: ""
+
+  # Additional connection parameters
+  connectionParams: ""
+
+# Job configuration
+job:
+  # Restart policy
+  restartPolicy: Never
+
+  # Backoff limit for retries
+  backoffLimit: 3
+
+  # TTL for finished jobs (seconds)
+  ttlSecondsAfterFinished: 86400
+
+  # Active deadline (max execution time in seconds)
+  activeDeadlineSeconds: 600
+
+  # Annotations
+  annotations: {}
+
+  # Labels
+  labels: {}
+
+# CronJob configuration (for scheduled operations like validation)
+cronjob:
+  enabled: false
+  schedule: "0 2 * * *" # Daily at 2 AM
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 1
+  concurrencyPolicy: Forbid
+  suspend: false
+
+# Pod configuration
+pod:
+  annotations: {}
+  labels: {}
+
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    fsGroup: 1000
+
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 256Mi
+
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+# Service Account
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+# ConfigMap for liquibase.properties
+configMap:
+  create: true
+  data: {}
+
+# Monitoring and observability
+monitoring:
+  enabled: false
+
+  # Prometheus ServiceMonitor
+  serviceMonitor:
+    enabled: false
+    interval: 30s
+    scrapeTimeout: 10s
+    labels: {}
+
+  # Logging
+  logging:
+    format: "json"
+    output: "stdout"
+
+# Migration strategies
+migration:
+  # Run as init container before application deployment
+  initContainer:
+    enabled: false
+
+  # Run as standalone Job
+  job:
+    enabled: true
+
+  # Run as CronJob for validation
+  validation:
+    enabled: false
+    schedule: "0 */6 * * *" # Every 6 hours
