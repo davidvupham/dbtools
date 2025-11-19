@@ -1,0 +1,89 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# One-shot setup helper for the Liquibase + SQL Server tutorial.
+#
+# Responsibilities:
+# - Source setup_environment.sh to capture/export required env vars
+# - Source setup_aliases.sh to register lb/sqlcmd-tutorial helpers
+# - Create missing Liquibase properties for dev/stage/prod under $LB_PROJECT_DIR/env
+#
+# IMPORTANT: This script must be SOURCED so that environment and aliases
+#            are applied to your current shell.
+#            Example:  source /path/to/repo/docs/tutorials/liquibase/scripts/setup_tutorial.sh
+
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+  echo "This script must be sourced so changes apply to your current shell." >&2
+  echo "Usage: source $0" >&2
+  exit 2
+fi
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# 1) Source environment setup (prompts on first run; exports values when sourced)
+ENV_HELPER="${SCRIPT_DIR}/setup_environment.sh"
+if [[ ! -f "${ENV_HELPER}" ]]; then
+  echo "Error: Missing setup helper: ${ENV_HELPER}" >&2
+  return 1
+fi
+source "${ENV_HELPER}"
+
+# 2) Source aliases (lb, sqlcmd-tutorial)
+ALIAS_HELPER="${SCRIPT_DIR}/setup_aliases.sh"
+if [[ ! -f "${ALIAS_HELPER}" ]]; then
+  # Backward-compatible fallback if someone used a different filename
+  if [[ -f "${SCRIPT_DIR}/setup_alias.sh" ]]; then
+    ALIAS_HELPER="${SCRIPT_DIR}/setup_alias.sh"
+  else
+    echo "Error: Missing aliases helper: ${ALIAS_HELPER}" >&2
+    return 1
+  fi
+fi
+source "${ALIAS_HELPER}"
+
+# 3) Ensure required env vars are available
+: "${MSSQL_LIQUIBASE_TUTORIAL_PWD:?MSSQL_LIQUIBASE_TUTORIAL_PWD must be set}"
+LB_PROJECT_DIR="${LB_PROJECT_DIR:-/data/liquibase-tutorial}"
+export LB_PROJECT_DIR
+
+# 4) Create missing Liquibase properties files
+mkdir -p "${LB_PROJECT_DIR}/env"
+
+create_prop() {
+  local envname="$1"; shift
+  local dbname="$1"; shift
+  local path="${LB_PROJECT_DIR}/env/liquibase.${envname}.properties"
+  if [[ -f "${path}" ]]; then
+    echo "Exists: ${path}"
+    return 0
+  fi
+  cat > "${path}" <<EOF
+# ${envname^} Environment Connection
+url=jdbc:sqlserver://mssql_liquibase_tutorial:1433;databaseName=${dbname};encrypt=true;trustServerCertificate=true
+username=sa
+password=\${MSSQL_LIQUIBASE_TUTORIAL_PWD}
+changelog-file=database/changelog/changelog.xml
+search-path=/workspace
+logLevel=info
+EOF
+  echo "Created: ${path}"
+}
+
+create_prop dev   testdbdev
+create_prop stage testdbstg
+create_prop prod  testdbprd
+
+# 5) Summarize
+echo
+echo "Tutorial setup complete. Summary:"
+echo "- LB_PROJECT_DIR: ${LB_PROJECT_DIR}"
+echo "- Env files:"
+ls -la "${LB_PROJECT_DIR}/env" || true
+echo
+echo "Verify helpers:"
+type lb || true
+type sqlcmd-tutorial || true
+echo
+# echo "You can now run Liquibase, e.g.:"
+# echo "  lb -e dev -- status --verbose"
+return 0

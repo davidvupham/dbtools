@@ -1,5 +1,3 @@
--- Create the 'app' schema in all three databases
--- This must be done BEFORE using Liquibase, as Liquibase does not manage schemas
 USE testdbdev;
 IF NOT EXISTS (
     SELECT 1
@@ -7,14 +5,16 @@ IF NOT EXISTS (
     WHERE name = 'app'
 ) EXEC('CREATE SCHEMA app');
 PRINT 'Created app schema in testdbdev';
-GO USE testdbstg;
+GO
+USE testdbstg;
 IF NOT EXISTS (
     SELECT 1
     FROM sys.schemas
     WHERE name = 'app'
 ) EXEC('CREATE SCHEMA app');
 PRINT 'Created app schema in testdbstg';
-GO USE testdbprd;
+GO
+USE testdbprd;
 IF NOT EXISTS (
     SELECT 1
     FROM sys.schemas

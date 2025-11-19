@@ -20,14 +20,16 @@ CREATE NONCLUSTERED INDEX IX_customer_name ON app.customer(full_name);
 PRINT 'Created table app.customer with indexes';
 END -- Step 2: Create view
 IF OBJECT_ID(N'app.v_customer_basic', N'V') IS NOT NULL DROP VIEW app.v_customer_basic;
-GO CREATE VIEW app.v_customer_basic AS
+GO
+CREATE VIEW app.v_customer_basic AS
 SELECT customer_id,
     full_name,
     email,
     phone_number,
     created_at
 FROM app.customer;
-GO PRINT 'Created view app.v_customer_basic';
+GO
+PRINT 'Created view app.v_customer_basic';
 -- Step 3: Insert sample data
 INSERT INTO app.customer (full_name, email, phone_number)
 VALUES (

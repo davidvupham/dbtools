@@ -1,5 +1,44 @@
 # Beginner's Tutorial: Database Change Management with Liquibase and SQL Server
 
+## Table of Contents
+
+- [Introduction](#introduction)
+- [Tutorial-Specific Considerations](#tutorial-specific-considerations)
+- [Prerequisites](#prerequisites)
+- [Environment Setup](#environment-setup)
+- [Project Structure](#project-structure)
+- [Step 1: Create Three Database Environments](#step-1-create-three-database-environments)
+- [Step 2: Populate Development with Existing Objects](#step-2-populate-development-with-existing-objects)
+- [Step 3: Configure Liquibase for Each Environment](#step-3-configure-liquibase-for-each-environment)
+- [Step 4: Generate Baseline from Development](#step-4-generate-baseline-from-development)
+- [Step 5: Deploy Baseline Across Environments](#step-5-deploy-baseline-across-environments)
+- [Step 6: Making Your First Change](#step-6-making-your-first-change)
+- [Step 7: Deploy Change Across Environments](#step-7-deploy-change-across-environments)
+- [Step 8: More Database Changes](#step-8-more-database-changes)
+- [Step 9: Tags and Deployment History](#step-9-tags-and-deployment-history)
+- [Tutorial Complete](#tutorial-complete)
+- [Appendix: Alternatives and Scenarios](#appendix-alternatives-and-scenarios)
+  - [Alternative: Rollback by Count](#alternative-rollback-by-count)
+  - [Real-World Rollback Strategy](#real-world-rollback-strategy)
+    - [Strategy 1: Test rollbacks in non-production first](#strategy-1-test-rollbacks-in-non-production-first)
+    - [Strategy 2: Forward-fix (often preferred)](#strategy-2-forward-fix-often-preferred)
+    - [Strategy 3: Manual rollback script for critical changes](#strategy-3-manual-rollback-script-for-critical-changes)
+    - [Strategy 4: Database restore (last resort)](#strategy-4-database-restore-last-resort)
+- [Understanding Liquibase's Tracking Mechanism](#understanding-liquibases-tracking-mechanism)
+- [Step 10: Detecting Database Drift](#step-10-detecting-database-drift)
+- [Step 11: Generating Changelogs from Differences](#step-11-generating-changelogs-from-differences)
+- [Understanding the Deployment Pipeline](#understanding-the-deployment-pipeline)
+- [Common Troubleshooting](#common-troubleshooting)
+- [Best Practices](#best-practices)
+- [Common Change Scenarios Reference](#common-change-scenarios-reference)
+- [Liquibase Community vs Pro Scenarios](#liquibase-community-vs-pro-scenarios)
+- [Next Steps](#next-steps)
+- [Quick Reference Guide](#quick-reference-guide)
+- [Cleanup After Tutorial](#cleanup-after-tutorial)
+- [Appendix](#appendix)
+  - [Glossary of Terms](#glossary-of-terms)
+- [References](#references)
+
 ## Introduction
 
 This tutorial teaches you **database change management** from the ground up using Liquibase and Microsoft SQL Server. You'll learn what CI/CD means for databases, why it matters, and how to safely deploy schema changes across multiple environments.
@@ -23,348 +62,19 @@ This tutorial teaches you **database change management** from the ground up usin
 
 A complete Liquibase project that manages a customer database across three environments (dev, stage, prod) running on the same SQL Server instance. By the end, you'll have a working system that safely tracks and deploys database changes automatically.
 
-**Important**: This tutorial uses **Liquibase Community edition** (free, open-source version). See the [Liquibase Implementation Guide](../../architecture/liquibase-implementation-guide.md#liquibase-community-edition) for details on Community Edition capabilities and [Liquibase Limitations](../../architecture/liquibase-implementation-guide.md#liquibase-limitations) that apply to all editions.
+**Important**: This tutorial uses **Liquibase Community edition** (free, open-source version). See the [Liquibase Implementation Guide](../../architecture/liquibase/liquibase-implementation-guide.md#liquibase-community-vs-liquibase-secure) for details on Community vs Secure capabilities and [Liquibase Limitations](../../architecture/liquibase/liquibase-implementation-guide.md#liquibase-limitations) that apply to all editions.
 
 This tutorial focuses exclusively on objects supported by the Community edition: tables, views, indexes, and constraints - the foundation of any database schema.
 
-## Tutorial-Specific Considerationssiderations
+## Tutorial-Specific Considerations
 
-**For this tutorial**: We assume the `app` schema already exists in all environments (created in Step 1). See the [Liquibase Limitations documentation](../../architecture/liquibase-implementation-guide.md#liquibase-limitations) for details on why schemas must be created outside of Liquibase.
+**For this tutorial**: We assume the `app` schema already exists in all environments (created in Step 1). See the [Liquibase Limitations documentation](../../architecture/liquibase/liquibase-implementation-guide.md#liquibase-limitations) for details on why schemas must be created outside of Liquibase.
 
-## Table of Contents
+You can safely stop or restart the tutorial at any time by running the cleanup helper. It removes the tutorial SQL Server container, network, and data volume, and optionally deletes your project directory (respects `LB_PROJECT_DIR`). After cleanup, start again from Environment Setup.
 
-- [Glossary of Terms](#glossary-of-terms)
-- [Understanding CI/CD for Databases](#understanding-cicd-for-databases)
-- [Prerequisites](#prerequisites)
-- [Environment Setup](#environment-setup)
-- [Project Structure](#project-structure)
-- [Step 1: Create Three Database Environments](#step-1-create-three-database-environments)
-- [Step 2: Populate Development with Existing Objects](#step-2-populate-development-with-existing-objects)
-- [Step 3: Configure Liquibase for Each Environment](#step-3-configure-liquibase-for-each-environment)
-- [Step 4: Generate Baseline from Development](#step-4-generate-baseline-from-development)
-- [Step 5: Deploy Baseline Across Environments](#step-5-deploy-baseline-across-environments)
-- [Step 6: Making Your First Change](#step-6-making-your-first-change)
-- [Step 7: Deploy Change Across Environments](#step-7-deploy-change-across-environments)
-- [Step 8: More Database Changes](#step-8-more-database-changes)
-- [Step 9: Rollbacks and Tags](#step-9-rollbacks-and-tags)
-- [Step 10: Detecting Database Drift](#step-10-detecting-database-drift)
-- [Step 11: Generating Changelogs from Differences](#step-11-generating-changelogs-from-differences)
-- [Understanding the Deployment Pipeline](#understanding-the-deployment-pipeline)
-- [Common Troubleshooting](#common-troubleshooting)
-- [Best Practices](#best-practices)
-- [Next Steps](#next-steps)
-
-## Glossary of Terms
-
-**New to databases, DevOps, or CI/CD?** This glossary explains all the technical terms you'll encounter in this tutorial.
-
-### What is Liquibase?
-
-**Liquibase** is an open-source database change management tool. Think of it as **"version control for databases"** - like Git, but for your database schema instead of code files.
-
-**The problem Liquibase solves:**
-
-Without Liquibase, database changes are chaotic:
-
-- Developer creates SQL script: `add-loyalty-column.sql`
-- Emails it to team or saves on shared drive
-- Someone manually runs it in dev... or do they? Hard to tell
-- Another person runs it in staging (maybe)
-- DBA runs it in production (hopefully the same script!)
-- Six months later: "Did we add that column to production? I can't remember!"
-
-**With Liquibase:**
-
-- Changes are tracked in files, committed to Git
-- Each environment has a log of exactly what ran
-- Can't accidentally run the same change twice
-- Can rollback if something breaks
-- Complete audit trail of who changed what and when
-
-**Simple analogy**:
-
-- **Without Liquibase**: Like moving houses by randomly packing boxes and hoping you remember what went where
-- **With Liquibase**: Like using a detailed inventory list that tracks every item, which box it's in, and where it goes in the new house
-
-**How it works in 30 seconds:**
-
-1. You write a database change in a "changeset" (SQL or YAML file)
-2. Add it to a "changelog" (master list of all changes)
-3. Run `liquibase update`
-4. Liquibase:
-   - Checks what changes already ran (stored in DATABASECHANGELOG table)
-   - Runs only new changes
-   - Records what it did
-5. Repeat for each environment (dev, stage, prod)
-
-**What makes Liquibase special:**
-
-- **Database-agnostic**: Works with SQL Server, PostgreSQL, MySQL, Oracle, and 30+ other databases
-- **Safe**: Prevents running changes twice, validates checksums, supports rollbacks
-- **Auditable**: Complete history of every change in DATABASECHANGELOG table
-- **Flexible**: Write changes in SQL, XML, YAML, or JSON format
-- **Free**: Open-source with enterprise support available
-
-### Database Terms
-
-- **Schema**: A container/namespace for database objects like tables, views, procedures. Think of it as a folder organizing related database objects. Example: `app.customer` means the `customer` table in the `app` schema.
-
-- **DDL (Data Definition Language)**: SQL commands that define database structure (CREATE TABLE, ALTER TABLE, DROP TABLE, CREATE VIEW, etc.). These change the schema, not the data.
-
-- **DML (Data Manipulation Language)**: SQL commands that work with data (INSERT, UPDATE, DELETE, SELECT). These change the data, not the schema.
-
-- **Stored Procedure**: Pre-written SQL code stored in the database that you can call repeatedly. Like a function in programming. *Note: This tutorial focuses on objects supported by Liquibase Community Edition and does not use stored procedures.*
-
-- **Function**: A database object that returns a value and can be used in SELECT statements. *Note: This tutorial focuses on objects supported by Liquibase Community Edition and does not use functions.*
-
-- **View**: A saved query that looks like a table. Doesn't store data itself, just retrieves it. Useful for simplifying complex queries or hiding sensitive columns.
-
-- **Index**: A data structure that speeds up queries, like an index in a book. Without it, the database scans every row. With it, lookups are fast.
-
-- **Foreign Key**: A link between two tables. Ensures data consistency. Example: `orders.customer_id` references `customer.customer_id` (you can't create an order for a non-existent customer).
-
-- **Primary Key**: Unique identifier for each row in a table. Like a Social Security Number - each person has exactly one, and no two people share the same one.
-
-- **Constraint**: A rule enforced by the database (e.g., "email cannot be null", "customer_id must be unique", "order_total must be positive").
-
-### Liquibase Terms
-
-- **Liquibase**: An open-source tool for database change management. Tracks what changes have been applied to which databases.
-
-- **Changeset**: A single database change (add table, modify column, create view). The fundamental unit of change in Liquibase. Each changeset has a unique ID.
-
-- **Changelog**: An XML, YAML, or SQL file that lists changesets in order. Like a recipe - step 1, step 2, step 3.
-
-- **Master Changelog**: The main changelog file that includes other changelog files. Acts as a table of contents.
-
-- **Baseline**: A snapshot of your database's existing structure when you start using Liquibase. Represents "everything that exists before we started tracking changes."
-
-- **DATABASECHANGELOG**: A table Liquibase creates to track which changesets have been executed. Like a logbook recording what changes ran when.
-
-- **DATABASECHANGELOGLOCK**: A table Liquibase uses to prevent multiple deployments from running simultaneously. Prevents conflicts.
-
-- **Checksum**: A calculated hash of a changeset's content. If the content changes, the checksum changes. Liquibase uses this to detect if someone modified an already-deployed changeset.
-
-- **Tag**: A named marker in the changelog history. Like a bookmark. Allows you to rollback to specific points. Example: tag `release-v1.0` marks your first production release.
-
-- **Rollback**: Undo changes by running reverse SQL. Example: if you created a table, rollback drops it.
-
-- **Precondition**: A check that runs before a changeset executes. Example: "only create this index if it doesn't already exist."
-
-- **Context**: A label that controls when a changeset runs. Example: changesets with `context:dev` only run in development, not production.
-
-### CI/CD Terms
-
-- **CI (Continuous Integration)**: Automatically testing changes when code is committed. Catches bugs early.
-
-- **CD (Continuous Deployment)**: Automatically deploying code changes through environments to production after tests pass.
-
-- **Pipeline**: An automated sequence of steps (build, test, deploy). Changes flow through the pipeline like an assembly line.
-
-- **Environment**: A separate instance of your application/database. Common environments: dev (development), test, stage (staging), prod (production).
-
-- **Deployment**: The process of applying changes to an environment. Moving code/database changes from version control to a running system.
-
-- **Rollback**: Reversing a deployment to a previous version. Like an "undo" button for production changes.
-
-- **Promotion**: Moving a change from one environment to the next (dev → stage → prod). Only promote after testing succeeds.
-
-- **Idempotent**: A change that can be run multiple times safely with the same result. Example: "CREATE TABLE IF NOT EXISTS" is idempotent; "CREATE TABLE" (without IF NOT EXISTS) is not.
-
-### Docker Terms
-
-- **Docker**: A platform for running applications in isolated containers. Packages software with all its dependencies.
-
-- **Container**: A lightweight, isolated environment for running applications. Like a virtual machine but faster and smaller.
-
-- **Image**: A template for creating containers. Like a blueprint or a snapshot you can spin up multiple times.
-
-- **Volume Mount**: Sharing a folder between your computer and a Docker container. Changes in one appear in the other. Example: `-v /data/liquibase-tutorial:/workspace`
-
-- **Network**: How Docker containers communicate. `--network=host` makes the container use your computer's network (easier for local dev).
-
-### DevOps Terms
-
-- **Version Control**: Tracking changes to files over time (usually with Git). Like "track changes" in Word, but much more powerful.
-
-- **Git**: A version control system. Tracks who changed what and when. Enables collaboration and rollback.
-
-- **Commit**: Saving your changes to version control with a message describing what you changed.
-
-- **Repository (Repo)**: A collection of files tracked by version control. Contains your code, database changes, documentation, etc.
-
-- **Pull Request (PR)**: A request to merge your changes into the main codebase. Team reviews your changes before accepting.
-
-- **Branch**: A parallel version of your code. Like a sandbox where you can experiment without affecting the main codebase.
-
-- **Secrets Management**: Securely storing sensitive information (passwords, API keys). Never put passwords in code!
-
-- **Audit Trail**: A complete history of what changed, when, and who changed it. Essential for compliance and debugging.
-
-### Miscellaneous Terms
-
-- **JDBC (Java Database Connectivity)**: The Java standard for connecting to databases. Liquibase uses JDBC to talk to SQL Server, PostgreSQL, Oracle, etc.
-
-- **CLI (Command Line Interface)**: Text-based way to interact with software (opposite of GUI - Graphical User Interface). Example: `liquibase update`
-
-- **SA (System Administrator)**: The default admin account in SQL Server. Has full permissions. Don't use in production (security risk).
-
-- **SSL/TLS Certificate**: Encryption certificate for secure connections. `trustServerCertificate=true` skips certificate validation (OK for local dev, not for production).
-
-- **Port**: A network endpoint for connections. SQL Server's default port is 1433. Like apartment numbers - the server is the building, the port is the specific apartment.
-
-**Pro tip**: Bookmark this glossary! Refer back to it whenever you encounter an unfamiliar term.
-
-### What is CI/CD?
-
-**CI/CD** stands for **Continuous Integration** and **Continuous Deployment**. These are software development practices that help teams deliver changes faster and more safely.
-
-**Breaking it down:**
-
-- **Continuous Integration (CI)**: Automatically testing and validating changes when developers commit code
-  - Think of it as an automatic quality checker
-  - Every time you make a change, automated tests verify it works
-  - Catches problems early, before they reach production
-
-- **Continuous Deployment (CD)**: Automatically deploying validated changes through environments to production
-  - Once changes pass tests, they move through environments automatically
-  - Reduces manual errors and speeds up releases
-  - Ensures consistent deployment process every time
-
-**Simple analogy**: Imagine baking bread in a factory. CI is like the quality inspector checking each batch of dough before baking. CD is the automated conveyor belt that moves good batches through the oven, cooling, and packaging stages. Without automation, someone might accidentally skip a step or use the wrong temperature.
-
-### Why does it matter for databases?
-
-**The old way (manual database changes):**
-
-Imagine you need to add a new column to a table. Without CI/CD, you might:
-
-1. Write SQL script in a text file
-2. Email it to someone or save on shared drive
-3. Manually connect to database
-4. Copy-paste the SQL and run it
-5. Hope you ran it on the right environment
-6. Try to remember if you already ran it in staging
-7. Forget to run it in production (production breaks!)
-
-**Problems with manual approach:**
-
-- **Manual**: Someone runs SQL scripts by hand (error-prone, time-consuming)
-- **Inconsistent**: Different process each time, easy to make mistakes
-- **Untraceable**: Hard to know what ran where and when ("Did we add that column to production?")
-- **Risky**: Production failures from untested changes or wrong scripts
-- **No rollback**: If something breaks, hard to undo changes
-- **Team confusion**: Multiple people making changes without coordination
-
-**The new way (with CI/CD for databases):**
-
-With Liquibase and CI/CD, the same scenario becomes:
-
-1. Write SQL change in a version-controlled file
-2. Commit to Git (version control system)
-3. Automated pipeline runs the change in dev first
-4. Tests verify it works
-5. Change automatically deploys to staging
-6. After approval, automatically deploys to production
-7. Complete history of what ran where
-
-**Benefits with CI/CD for databases:**
-
-- **Version control**: Every change is tracked in Git (like tracking document history in Google Docs)
-- **Repeatability**: Same change deploys identically across all environments (no "it works on my machine" problems)
-- **Safety**: Test in dev and stage before production (catch issues early)
-- **Auditability**: Complete history of what changed, when, and who made the change
-- **Rollback capability**: Undo changes if problems occur (like "undo" button for databases)
-- **Team collaboration**: Everyone sees the same changes, no surprises
-- **Automation**: Less manual work, fewer mistakes
-
-### What is Environment Promotion?
-
-**Environment promotion** means deploying changes through a series of environments in order, testing at each stage before moving forward.
-
-**The standard path:**
-
+```bash
+/path/to/your/repo/docs/tutorials/liquibase/scripts/cleanup_liquibase_tutorial.sh
 ```
-Development (dev) → Staging (stage) → Production (prod)
-```
-
-**Why this order? Think of it like testing a new recipe:**
-
-1. **Development (testdbdev)**: Your kitchen at home where you experiment
-   - Break things here, it's okay! This is your learning space
-   - Rapid iteration and experimentation
-   - May have test/sample data (fake customers, test orders)
-   - If you mess up, only you are affected
-   - **Example**: You're testing if adding a new "loyalty_points" column works correctly
-
-2. **Staging (testdbstg)**: A practice kitchen identical to the restaurant
-   - Same structure as production (simulates real environment)
-   - Test the exact deployment process you'll use in production
-   - Catch integration issues before prod (does it work with real-world data volumes?)
-   - Last chance to find problems
-   - **Example**: You verify the loyalty_points column works with realistic customer data and doesn't slow down queries
-
-3. **Production (testdbprd)**: The actual restaurant serving real customers
-   - Only deploy after dev and stage succeed
-   - Minimize risk, maximize stability
-   - Apply the exact same changes that worked in stage
-   - Real users, real data, no room for error
-   - **Example**: Your actual customers now have loyalty_points tracking their purchases
-
-**Why not skip to production?**
-
-- **Risk**: No testing means high chance of breaking production
-- **No safety net**: If it fails, real users are affected immediately
-- **Debugging nightmare**: Hard to diagnose issues under pressure
-- **Rollback complexity**: Harder to safely undo changes
-
-**The golden rule**: If it doesn't work in dev, don't promote it. If it doesn't work in stage, definitely don't deploy to production!
-
-### What is a Baseline?
-
-A **baseline** is a snapshot of your database's current state when you start using Liquibase. It's your starting point for tracking changes.
-
-**Why do you need it?**
-
-Most real-world scenarios involve existing databases:
-
-- You have existing tables, views, indexes, and constraints already in production
-- These objects were created before you started using Liquibase
-- Liquibase needs to know "this is the starting point" so it can track "everything from now on"
-- Without a baseline, Liquibase would try to create objects that already exist (causing errors)
-
-**Analogy**: Think of it like joining a book club midway through the year:
-
-- The baseline is like getting a summary of "all books discussed so far this year"
-- Now you can track "all books discussed from this point forward"
-- Without the baseline, you might try to discuss a book the club already finished
-
-**Real example:**
-
-Your production database already has:
-
-- `customer` table (created 2 years ago)
-- `orders` table (created 1 year ago)
-- `v_customer_orders` view (created 6 months ago)
-- Various indexes and constraints (created over time)
-
-When you start using Liquibase:
-
-1. **Generate baseline**: Liquibase scans production, creates a snapshot of all these objects
-2. **Mark as executed**: Tells Liquibase "I know these exist, don't try to recreate them"
-3. **Future changes**: From now on, Liquibase tracks new changes (new tables, modifications, etc.)
-
-**Without a baseline:**
-
-- Liquibase tries to create `customer` table → Error! Table already exists
-- Deployment fails, production breaks
-- Team panics
-
-**With a baseline:**
-
-- Liquibase knows these objects exist
-- Only applies new changes
-- Smooth deployment
 
 ## Prerequisites
 
@@ -393,32 +103,6 @@ When you start using Liquibase:
 - JDBC drivers (included in Liquibase Docker image)
   - **What's JDBC?** Java Database Connectivity - the driver that lets Java programs (like Liquibase) talk to SQL Server
 
-### Set Up Environment Variable
-
-**IMPORTANT**: Before starting, set the SQL Server SA password as an environment variable.
-
-```bash
-# Set the SQL Server SA password (required for tutorial)
-# IMPORTANT: Use a password WITHOUT exclamation marks (!) to avoid shell interpolation issues
-export MSSQL_LIQUIBASE_TUTORIAL_PWD='YourStrong@Passw0rd'
-
-# Verify it's set
-echo $MSSQL_LIQUIBASE_TUTORIAL_PWD
-```
-
-**Password requirements:**
-
-- At least 8 characters
-- Contains uppercase and lowercase letters
-- Contains numbers
-- Contains special characters (avoid exclamation marks for shell compatibility)
-
-**Why use an environment variable?**
-
-- Keeps passwords out of command history
-- Makes it easy to change the password in one place
-- Better security practice than hardcoding passwords
-
 **Verify prerequisites:**
 
 ```bash
@@ -428,13 +112,31 @@ docker --version
 
 **Expected output:**
 
-```
-Docker version 229.x.x
+```text
+Docker version 29.x.x
 ```
 
 ## Environment Setup
 
-### Step 0: Start the Tutorial SQL Server Container
+### Step 0: Configure Environment and Aliases
+
+Set up your environment, aliases, and the required Liquibase properties first. The helper will prompt you for:
+
+- Tutorial scripts directory (the folder containing `scripts/`)
+- Liquibase project directory (where `database/` and `env/` will live)
+- SQL Server SA password (`MSSQL_LIQUIBASE_TUTORIAL_PWD`)
+
+```bash
+# Source the one-shot setup helper (env, aliases, properties)
+source /path/to/your/repo/docs/tutorials/liquibase/scripts/setup_tutorial.sh
+```
+
+Tips:
+
+- `LB_PROJECT_DIR` is where your Liquibase project (changelog/env) lives; default is `/data/liquibase-tutorial`.
+- The setup script prompts for the tutorial scripts location so aliases work from anywhere.
+
+### Start the Tutorial SQL Server Container
 
 This tutorial uses a dedicated SQL Server container that can be safely removed after completion.
 
@@ -442,7 +144,7 @@ This tutorial uses a dedicated SQL Server container that can be safely removed a
 
 ```bash
 # Navigate to the tutorial docker directory
-cd /workspaces/dbtools/docs/tutorials/liquibase/docker
+cd "$LIQUIBASE_TUTORIAL_DIR/docker"
 
 # Start the SQL Server container
 docker compose up -d
@@ -453,7 +155,7 @@ docker ps | grep mssql_liquibase_tutorial
 
 **Expected output:**
 
-```
+```text
 mssql_liquibase_tutorial   mcr.microsoft.com/mssql/server:2022-latest   Up X seconds (healthy)   0.0.0.0:14333->1433/tcp
 ```
 
@@ -489,47 +191,67 @@ Look for: `SQL Server is now ready for client connections`
 The Liquibase container is a "run-once" tool (not a long-running service), so we just need to build the image:
 
 ```bash
-# Navigate to the liquibase docker directory
-cd /workspaces/dbtools/docker/liquibase
+# Navigate to the liquibase docker directory (from your repo root)
+cd /path/to/your/repo/docker/liquibase
 
 # Build the custom Liquibase image with SQL Server drivers
 docker compose build
 
 # Verify the image was created
 docker images | grep liquibase
-```
 
-**Expected output:**
-
-```
-liquibase       latest    abc123def456   Just now   500MB
+# Quick sanity check: verify the Liquibase CLI runs
+# (either command is fine; -it is optional for non-interactive output)
+docker run --rm liquibase:latest --version
+# or
+docker run -it liquibase:latest liquibase --version
 ```
 
 **Note:** The Liquibase container is not meant to stay running - it executes commands and exits. We'll use `docker run` to execute Liquibase commands throughout this tutorial.
 
+Troubleshooting:
+
+- If you see "Cannot find database driver: com.microsoft.sqlserver.jdbc.SQLServerDriver", rebuild the image from `docker/liquibase` and re-run the version check.
+- If an alias like `lb` is not found in a new shell, re-source the aliases: `source /path/to/your/repo/docs/tutorials/liquibase/scripts/setup_aliases.sh`.
+
 ### Important Note About Docker Commands
 
-Throughout this tutorial, all `docker run` commands for Liquibase follow this pattern:
+Prefer using the provided `lb` wrapper, which encapsulates the full `docker run` invocation so you don't need to know paths or Docker flags:
+
+Heads-up: The commands below are examples to show wrapper usage. Do not run them yet. Run `lb` commands only after Step 1 (databases created) and after your properties point to those databases (created in Step 0 or Step 3). If you run them now, they will fail with connection/DB-not-found errors because the databases don’t exist yet; however, seeing Liquibase start and attempt a connection still confirms the Liquibase container image is built and accessible.
+
+```bash
+# Show status for dev
+lb -e dev -- status --verbose
+
+# Run update in stage
+lb -e stage -- update
+```
+
+Note: The standalone `--` is intentional. It separates options for the `lb` wrapper (like `-e dev`) from the actual Liquibase command and its flags (for example, `status --verbose`).
+
+Under the hood, `lb` runs Docker with the correct user, network, mounted project directory, and injects your `--defaults-file` and password.
+
+If you prefer to run raw Docker yourself, mirror this pattern (note use of `LB_PROJECT_DIR` instead of hard-coded paths):
 
 ```bash
 docker run --rm \
   --user $(id -u):$(id -g) \
   --network=liquibase_tutorial \
-  -v /data/liquibase-tutorial:/workspace \
+  -v "$LB_PROJECT_DIR":/workspace \
   liquibase:latest \
   --defaults-file=/workspace/env/liquibase.<ENV>.properties \
   --password="${MSSQL_LIQUIBASE_TUTORIAL_PWD}" \
   <LIQUIBASE_COMMAND>
 ```
 
-**Critical points:**
+Notes:
 
-- `--user $(id -u):$(id -g)` - Run container as your user (not root) to avoid permission issues
-- `--network=liquibase_tutorial` - Use the dedicated Docker network (NOT `--network=host`)
-- `--password="${MSSQL_LIQUIBASE_TUTORIAL_PWD}"` - Pass password on command line (environment variable substitution doesn't work in properties files)
-- The password parameter must come AFTER the properties file but BEFORE the Liquibase command
+- The password parameter must come after the defaults file but before the Liquibase command
+- Use the dedicated Docker network `liquibase_tutorial`
+- Run as your user (not root) to avoid permission issues
 
-**If you see connection errors**, verify you're using the correct network and passing the password parameter.
+If you see connection errors, verify the correct network and password parameter order.
 
 ### Check SQL Server is Running
 
@@ -542,7 +264,7 @@ sqlcmd-tutorial -Q "SELECT @@SERVERNAME AS ServerName, GETDATE() AS CurrentTime"
 
 **Expected output:**
 
-```
+```text
 ServerName               CurrentTime
 ------------------------ -----------------------
 mssql_liquibase_tutorial 2025-11-16 02:49:32.910
@@ -555,13 +277,7 @@ mssql_liquibase_tutorial 2025-11-16 02:49:32.910
 
 ### Helper Script for sqlcmd
 
-To simplify running SQL commands inside the tutorial SQL Server container, this guide uses a helper script located at `sqlcmd-tutorial`.
-
-**Create an alias for easier use:**
-
-```bash
-alias sqlcmd-tutorial='sqlcmd-tutorial'
-```
+To simplify running SQL commands inside the tutorial SQL Server container, use the `sqlcmd-tutorial` helper (the alias is configured by `setup_aliases.sh`).
 
 **Usage examples:**
 
@@ -574,7 +290,7 @@ sqlcmd-tutorial -Q "SELECT @@SERVERNAME AS ServerName, GETDATE() AS CurrentTime;
 - Run a `.sql` file:
 
 ```bash
-sqlcmd-tutorial 01_create_databases.sql
+sqlcmd-tutorial create_databases.sql
 ```
 
 ## Project Structure
@@ -597,7 +313,7 @@ mkdir -p env
 
 **What each folder means:**
 
-```
+```text
 /data/liquibase-tutorial/
 ├── database/
 │   └── changelog/
@@ -639,19 +355,19 @@ We've provided a SQL script that creates all three databases. Navigate to the tu
 
 ```bash
 # Create development, staging, and production databases
-sqlcmd-tutorial 01_create_databases.sql
+sqlcmd-tutorial create_databases.sql
 ```
 
 **Verify all three databases exist:**
 
 ```bash
 # Run the verification script
-sqlcmd-tutorial 02_verify_databases.sql
+sqlcmd-tutorial verify_databases.sql
 ```
 
 **Expected output:**
 
-```
+```text
 name        database_id  create_date
 ----------- ------------ -----------------------
 testdbdev   5            2025-11-14 20:00:00.000
@@ -661,17 +377,38 @@ testdbstg   6            2025-11-14 20:00:00.500
 
 **What did we just do?**
 
-- Created three empty databases using `01_create_databases.sql`
+- Created three empty databases using `create_databases.sql`
 - All on the same SQL Server instance (simulating separate environments)
 - In real production, these would be on different servers/clouds
-- Verified creation with `02_verify_databases.sql`
+- Verified creation with `verify_databases.sql`
 
 **Next: Create the app schema** (required before using Liquibase):
 
 ```bash
 # Create app schema in all three databases
-sqlcmd-tutorial 02a_create_app_schema.sql
+sqlcmd-tutorial create_app_schema.sql
 ```
+
+**Verify schema exists in all three databases:**
+
+```bash
+# Expect to see three rows: dev/stage/prod with schema_name = app
+sqlcmd-tutorial verify_app_schema.sql
+```
+
+**Expected output:**
+
+```text
+env    schema_name
+-----  -----------
+dev    app
+stage  app
+prod   app
+```
+
+**Troubleshooting:**
+
+- If any row is missing, re-run `sqlcmd-tutorial create_app_schema.sql` and then `sqlcmd-tutorial verify_app_schema.sql`. Also verify `MSSQL_LIQUIBASE_TUTORIAL_PWD` is set.
 
 **Why this step?** Liquibase does not manage schema creation. The `app` schema must exist before we can create tables and views within it. In production, schemas would be created through:
 
@@ -690,25 +427,25 @@ We've provided a SQL script that creates objects in the development database:
 ```bash
 # Create table, view, indexes, and sample data in DEVELOPMENT
 # Note: Script assumes 'app' schema already exists
-sqlcmd-tutorial 03_populate_dev_database.sql
+sqlcmd-tutorial populate_dev_database.sql
 ```
 
 **Verify objects were created in development:**
 
 ```bash
 # List all objects in app schema (development only)
-sqlcmd-tutorial 04_verify_dev_objects.sql
+sqlcmd-tutorial verify_dev_objects.sql
 
 # Check sample data
-sqlcmd-tutorial 05_verify_dev_data.sql
+sqlcmd-tutorial verify_dev_data.sql
 ```
 
 **What did we just do?**
 
-- Created a complete working database in development using `03_populate_dev_database.sql`
+- Created a complete working database in development using `populate_dev_database.sql`
 - Table `customer` with indexes and constraints, view `v_customer_basic` (in existing `app` schema)
 - Added sample data (3 customer records)
-- Verified with `04_verify_dev_objects.sql` and `05_verify_dev_data.sql`
+- Verified with `verify_dev_objects.sql` and `verify_dev_data.sql`
 - Staging and production are still empty (we'll deploy to them next)
 
 **Note**: The `app` schema must exist before running Liquibase. In production, create schemas through infrastructure automation.
@@ -809,19 +546,10 @@ Now use Liquibase to capture the current state of development as a **baseline**:
 # Change to project directory
 cd /data/liquibase-tutorial
 
-# Generate baseline from development database
-# IMPORTANT: Use --schemas=app to capture objects in the app schema
+# Generate baseline from development database (using lb wrapper)
+# IMPORTANT: Use --schemas=app to capture only the app schema
 # IMPORTANT: Use --include-schema=true to include schemaName attributes in the XML
-# IMPORTANT: Use --user flag to run as your user (not root)
-# IMPORTANT: Use --network=liquibase_tutorial (not --network=host)
-# IMPORTANT: Pass password on command line since env var substitution doesn't work in properties file
-docker run --rm \
-  --user $(id -u):$(id -g) \
-  --network=liquibase_tutorial \
-  -v /data/liquibase-tutorial:/workspace \
-  liquibase:latest \
-  --defaults-file=/workspace/env/liquibase.dev.properties \
-  --password="${MSSQL_LIQUIBASE_TUTORIAL_PWD}" \
+lb -e dev -- \
   --changelog-file=/workspace/database/changelog/baseline/V0000__baseline.xml \
   --schemas=app \
   --include-schema=true \
@@ -829,6 +557,38 @@ docker run --rm \
 
 # Check the generated file (owned by your user, not root)
 cat database/changelog/baseline/V0000__baseline.xml
+```
+
+### Quick checks
+
+- schemaName: Verify all objects include `schemaName="app"`.
+
+```bash
+grep -n 'schemaName="app"' database/changelog/baseline/V0000__baseline.xml | head
+```
+
+- Objects captured: Spot tables, views, FKs, and indexes.
+
+```bash
+grep -nE '<createTable|<createView|<addForeignKeyConstraint|<createIndex' database/changelog/baseline/V0000__baseline.xml | head -n 20
+```
+
+- Sanity size check: Ensure it’s not trivially small.
+
+```bash
+wc -l database/changelog/baseline/V0000__baseline.xml
+```
+
+### If something looks off
+
+- Regenerate the baseline with the exact flags (only `app` schema, include schema attributes):
+
+```bash
+lb -e dev -- \
+  --changelog-file=/workspace/database/changelog/baseline/V0000__baseline.xml \
+  --schemas=app \
+  --include-schema=true \
+  generateChangeLog
 ```
 
 **What happened?**
@@ -903,24 +663,10 @@ Development already has these objects (we created them in Step 2), so we **sync*
 cd /data/liquibase-tutorial
 
 # Sync baseline to development (don't actually run DDL, just record as executed)
-docker run --rm \
-  --user $(id -u):$(id -g) \
-  --network=liquibase_tutorial \
-  -v /data/liquibase-tutorial:/workspace \
-  liquibase:latest \
-  --defaults-file=/workspace/env/liquibase.dev.properties \
-  --password="${MSSQL_LIQUIBASE_TUTORIAL_PWD}" \
-  changelogSync
+lb -e dev -- changelogSync
 
 # Tag the baseline (create a named checkpoint for rollback purposes)
-docker run --rm \
-  --user $(id -u):$(id -g) \
-  --network=liquibase_tutorial \
-  -v /data/liquibase-tutorial:/workspace \
-  liquibase:latest \
-  --defaults-file=/workspace/env/liquibase.dev.properties \
-  --password="${MSSQL_LIQUIBASE_TUTORIAL_PWD}" \
-  tag baseline
+lb -e dev -- tag baseline
 ```
 
 **What does tag do?**
@@ -948,7 +694,7 @@ ORDER BY DATEEXECUTED;
 "
 ```
 
-### Deploy to Staging (Full Deployment)
+### Deploy to Staging (Step 5: Baseline)
 
 Staging is empty, so we **deploy** the baseline (actually run all DDL):
 
@@ -956,34 +702,13 @@ Staging is empty, so we **deploy** the baseline (actually run all DDL):
 cd /data/liquibase-tutorial
 
 # Preview what will run
-docker run --rm \
-  --user $(id -u):$(id -g) \
-  --network=liquibase_tutorial \
-  -v /data/liquibase-tutorial:/workspace \
-  liquibase:latest \
-  --defaults-file=/workspace/env/liquibase.stage.properties \
-  --password="${MSSQL_LIQUIBASE_TUTORIAL_PWD}" \
-  updateSQL
+lb -e stage -- updateSQL
 
 # Deploy to staging
-docker run --rm \
-  --user $(id -u):$(id -g) \
-  --network=liquibase_tutorial \
-  -v /data/liquibase-tutorial:/workspace \
-  liquibase:latest \
-  --defaults-file=/workspace/env/liquibase.stage.properties \
-  --password="${MSSQL_LIQUIBASE_TUTORIAL_PWD}" \
-  update
+lb -e stage -- update
 
 # Tag the baseline
-docker run --rm \
-  --user $(id -u):$(id -g) \
-  --network=liquibase_tutorial \
-  -v /data/liquibase-tutorial:/workspace \
-  liquibase:latest \
-  --defaults-file=/workspace/env/liquibase.stage.properties \
-  --password="${MSSQL_LIQUIBASE_TUTORIAL_PWD}" \
-  tag baseline
+lb -e stage -- tag baseline
 ```
 
 **Verify deployment:**
@@ -1002,7 +727,7 @@ ORDER BY type_desc, name;
 "
 ```
 
-### Deploy to Production (Full Deployment)
+### Deploy to Production (Step 5: Baseline)
 
 Production is also empty, so we deploy the baseline:
 
@@ -1010,34 +735,13 @@ Production is also empty, so we deploy the baseline:
 cd /data/liquibase-tutorial
 
 # Preview what will run
-docker run --rm \
-  --user $(id -u):$(id -g) \
-  --network=liquibase_tutorial \
-  -v /data/liquibase-tutorial:/workspace \
-  liquibase:latest \
-  --defaults-file=/workspace/env/liquibase.prod.properties \
-  --password="${MSSQL_LIQUIBASE_TUTORIAL_PWD}" \
-  updateSQL
+lb -e prod -- updateSQL
 
 # Deploy to production
-docker run --rm \
-  --user $(id -u):$(id -g) \
-  --network=liquibase_tutorial \
-  -v /data/liquibase-tutorial:/workspace \
-  liquibase:latest \
-  --defaults-file=/workspace/env/liquibase.prod.properties \
-  --password="${MSSQL_LIQUIBASE_TUTORIAL_PWD}" \
-  update
+lb -e prod -- update
 
 # Tag the baseline
-docker run --rm \
-  --user $(id -u):$(id -g) \
-  --network=liquibase_tutorial \
-  -v /data/liquibase-tutorial:/workspace \
-  liquibase:latest \
-  --defaults-file=/workspace/env/liquibase.prod.properties \
-  --password="${MSSQL_LIQUIBASE_TUTORIAL_PWD}" \
-  tag baseline
+lb -e prod -- tag baseline
 ```
 
 **Verify deployment:**
@@ -1199,36 +903,16 @@ Now deploy this change through dev → stage → prod:
 cd /data/liquibase-tutorial
 
 # Check what will be deployed (should show V0001 only)
-docker run --rm \
-  --network=liquibase_tutorial \
-  -v /data/liquibase-tutorial:/workspace \
-  liquibase:latest \
-  --defaults-file=/workspace/env/liquibase.dev.properties \
-  status --verbose
+lb -e dev -- status --verbose
 
 # Preview the SQL
-docker run --rm \
-  --network=liquibase_tutorial \
-  -v /data/liquibase-tutorial:/workspace \
-  liquibase:latest \
-  --defaults-file=/workspace/env/liquibase.dev.properties \
-  updateSQL
+lb -e dev -- updateSQL
 
 # Deploy to development
-docker run --rm \
-  --network=liquibase_tutorial \
-  -v /data/liquibase-tutorial:/workspace \
-  liquibase:latest \
-  --defaults-file=/workspace/env/liquibase.dev.properties \
-  update
+lb -e dev -- update
 
 # Tag this release
-docker run --rm \
-  --network=liquibase_tutorial \
-  -v /data/liquibase-tutorial:/workspace \
-  liquibase:latest \
-  --defaults-file=/workspace/env/liquibase.dev.properties \
-  tag release-v1.1
+lb -e dev -- tag release-v1.1
 ```
 
 **Verify in development:**
@@ -1248,7 +932,7 @@ WHERE o.name = 'orders' AND SCHEMA_NAME(o.schema_id) = 'app';
 "
 ```
 
-### Deploy to Staging
+### Deploy to Staging (Step 7: V0001)
 
 After testing in dev, promote to staging:
 
@@ -1256,28 +940,13 @@ After testing in dev, promote to staging:
 cd /data/liquibase-tutorial
 
 # Preview (should be identical to what ran in dev)
-docker run --rm \
-  --network=liquibase_tutorial \
-  -v /data/liquibase-tutorial:/workspace \
-  liquibase:latest \
-  --defaults-file=/workspace/env/liquibase.stage.properties \
-  updateSQL
+lb -e stage -- updateSQL
 
 # Deploy to staging
-docker run --rm \
-  --network=liquibase_tutorial \
-  -v /data/liquibase-tutorial:/workspace \
-  liquibase:latest \
-  --defaults-file=/workspace/env/liquibase.stage.properties \
-  update
+lb -e stage -- update
 
 # Tag this release
-docker run --rm \
-  --network=liquibase_tutorial \
-  -v /data/liquibase-tutorial:/workspace \
-  liquibase:latest \
-  --defaults-file=/workspace/env/liquibase.stage.properties \
-  tag release-v1.1
+lb -e stage -- tag release-v1.1
 ```
 
 **Verify in staging:**
@@ -1289,7 +958,7 @@ SELECT name, type_desc FROM sys.objects WHERE name = 'orders' AND schema_id = SC
 "
 ```
 
-### Deploy to Production
+### Deploy to Production (Step 7: V0001)
 
 After staging succeeds, deploy to production:
 
@@ -1297,28 +966,13 @@ After staging succeeds, deploy to production:
 cd /data/liquibase-tutorial
 
 # Preview (should be identical to dev and stage)
-docker run --rm \
-  --network=liquibase_tutorial \
-  -v /data/liquibase-tutorial:/workspace \
-  liquibase:latest \
-  --defaults-file=/workspace/env/liquibase.prod.properties \
-  updateSQL
+lb -e prod -- updateSQL
 
 # Deploy to production
-docker run --rm \
-  --network=liquibase_tutorial \
-  -v /data/liquibase-tutorial:/workspace \
-  liquibase:latest \
-  --defaults-file=/workspace/env/liquibase.prod.properties \
-  update
+lb -e prod -- update
 
 # Tag this release
-docker run --rm \
-  --network=liquibase_tutorial \
-  -v /data/liquibase-tutorial:/workspace \
-  liquibase:latest \
-  --defaults-file=/workspace/env/liquibase.prod.properties \
-  tag release-v1.1
+lb -e prod -- tag release-v1.1
 ```
 
 **Verify in production:**
@@ -1375,6 +1029,14 @@ END
 EOF
 ```
 
+#### Quick preview (V0003)
+
+```bash
+# Quick preview
+wc -l database/changelog/changes/V0002__increase_email_length.sql
+head -n 10 database/changelog/changes/V0002__increase_email_length.sql
+```
+
 ### Change 3: Add Index for Performance
 
 Add an index on the `created_at` column for date-based queries:
@@ -1404,6 +1066,14 @@ END
 
 --rollback DROP INDEX IF EXISTS IX_customer_created_at ON app.customer;
 EOF
+```
+
+#### Quick preview
+
+```bash
+# Quick preview
+wc -l database/changelog/changes/V0003__add_customer_date_index.sql
+head -n 10 database/changelog/changes/V0003__add_customer_date_index.sql
 ```
 
 ### Change 4: Update View
@@ -1440,6 +1110,14 @@ GO
 
 --rollback DROP VIEW IF EXISTS app.v_customer_basic;
 EOF
+```
+
+#### Quick preview (V0004)
+
+```bash
+# Quick preview
+wc -l database/changelog/changes/V0004__update_customer_view.sql
+head -n 15 database/changelog/changes/V0004__update_customer_view.sql
 ```
 
 **Understanding `runOnChange`:**
@@ -1512,6 +1190,14 @@ cat > /data/liquibase-tutorial/database/changelog/changelog.xml << 'EOF'
 EOF
 ```
 
+#### Quick preview (changelog.xml)
+
+```bash
+# Quick preview
+wc -l /data/liquibase-tutorial/database/changelog/changelog.xml
+sed -n '1,60p' /data/liquibase-tutorial/database/changelog/changelog.xml
+```
+
 **What we added:** Each change now has an explicit `<rollback>` block that defines how to undo the change. This enables actual rollback functionality in Step 9.
 
 ### Deploy All Changes to Development
@@ -1520,68 +1206,88 @@ EOF
 cd /data/liquibase-tutorial
 
 # Check what will deploy (should show V0002, V0003, V0004)
-docker run --rm \
-  --network=liquibase_tutorial \
-  -v /data/liquibase-tutorial:/workspace \
-  liquibase:latest \
-  --defaults-file=/workspace/env/liquibase.dev.properties \
-  status --verbose
+lb -e dev -- status --verbose
 
 # Deploy to development
-docker run --rm \
-  --network=liquibase_tutorial \
-  -v /data/liquibase-tutorial:/workspace \
-  liquibase:latest \
-  --defaults-file=/workspace/env/liquibase.dev.properties \
-  update
+lb -e dev -- update
 
 # Tag the release
-docker run --rm \
-  --network=liquibase_tutorial \
-  -v /data/liquibase-tutorial:/workspace \
-  liquibase:latest \
-  --defaults-file=/workspace/env/liquibase.dev.properties \
-  tag release-v1.2
+lb -e dev -- tag release-v1.2
 ```
 
-### Deploy to Staging
+#### Quick review (dev deploy results)
+
+```bash
+# Confirm dev is up to date and tag is present
+cd /data/liquibase-tutorial
+lb -e dev -- status --verbose
+
+# Inspect the most recent changelog entries (should include release-v1.2 tag)
+sqlcmd-tutorial -Q "
+USE testdbdev;
+SELECT TOP 5 ID, TAG, DATEEXECUTED
+FROM DATABASECHANGELOG
+ORDER BY DATEEXECUTED DESC;
+"
+```
+
+Expected snippets:
+
+```text
+Liquibase is up to date
+ID                          TAG             DATEEXECUTED
+V0004-update-customer-view  release-v1.2    20xx-xx-xx hh:mm:ss
+```
+
+### Deploy to Staging (Step 8: V0002–V0004)
 
 ```bash
 cd /data/liquibase-tutorial
 
-docker run --rm \
-  --network=liquibase_tutorial \
-  -v /data/liquibase-tutorial:/workspace \
-  liquibase:latest \
-  --defaults-file=/workspace/env/liquibase.stage.properties \
-  update
+lb -e stage -- update
 
-docker run --rm \
-  --network=liquibase_tutorial \
-  -v /data/liquibase-tutorial:/workspace \
-  liquibase:latest \
-  --defaults-file=/workspace/env/liquibase.stage.properties \
-  tag release-v1.2
+lb -e stage -- tag release-v1.2
 ```
 
-### Deploy to Production
+#### Quick review (stage update results)
+
+```bash
+# Confirm stage is up to date after update
+cd /data/liquibase-tutorial
+lb -e stage -- status --verbose
+
+# Inspect the most recent changelog entries in staging
+sqlcmd-tutorial -Q "
+USE testdbstg;
+SELECT TOP 5 ID, TAG, DATEEXECUTED
+FROM DATABASECHANGELOG
+ORDER BY DATEEXECUTED DESC;
+"
+```
+
+### Deploy to Production (Step 8: V0002–V0004)
 
 ```bash
 cd /data/liquibase-tutorial
 
-docker run --rm \
-  --network=liquibase_tutorial \
-  -v /data/liquibase-tutorial:/workspace \
-  liquibase:latest \
-  --defaults-file=/workspace/env/liquibase.prod.properties \
-  update
+lb -e prod -- update
 
-docker run --rm \
-  --network=liquibase_tutorial \
-  -v /data/liquibase-tutorial:/workspace \
-  liquibase:latest \
-  --defaults-file=/workspace/env/liquibase.prod.properties \
-  tag release-v1.2
+lb -e prod -- tag release-v1.2
+```
+
+#### Quick review (prod update results)
+
+```bash
+# Confirm prod status and recent changelog entries
+cd /data/liquibase-tutorial
+lb -e prod -- status --verbose
+
+sqlcmd-tutorial -Q "
+USE testdbprd;
+SELECT TOP 5 ID, TAG, DATEEXECUTED
+FROM DATABASECHANGELOG
+ORDER BY DATEEXECUTED DESC;
+"
 ```
 
 **Verify all changes applied:**
@@ -1592,13 +1298,14 @@ sqlcmd-tutorial -Q "
 USE testdbprd;
 
 -- Check email column length
-SELECT c.name AS ColumnName, t.name AS DataType, c.max_length AS MaxLength
-FROM sys.columns c
-JOIN sys.types t ON c.user_type_id = t.user_type_id
-JOIN sys.objects o ON c.object_id = o.object_id
-WHERE SCHEMA_NAME(o.schema_id) = 'app'
-  AND o.name = 'customer'
-  AND c.name = 'email';
+SELECT
+  COLUMN_NAME AS ColumnName,
+  DATA_TYPE AS DataType,
+  CHARACTER_MAXIMUM_LENGTH AS MaxLengthChars
+FROM INFORMATION_SCHEMA.COLUMNS
+WHERE TABLE_SCHEMA = 'app'
+  AND TABLE_NAME = 'customer'
+  AND COLUMN_NAME = 'email';
 
 -- Check indexes
 SELECT i.name AS IndexName, i.type_desc, c.name AS ColumnName
@@ -1680,34 +1387,13 @@ ORDER BY ORDEREXECUTED;
 
 ```bash
 # Development status
-docker run --rm \
-  --user $(id -u):$(id -g) \
-  --network=liquibase_tutorial \
-  -v /data/liquibase-tutorial:/workspace \
-  liquibase:latest \
-  --defaults-file=/workspace/env/liquibase.dev.properties \
-  --password="${MSSQL_LIQUIBASE_TUTORIAL_PWD}" \
-  status --verbose
+lb -e dev -- status --verbose
 
 # Staging status
-docker run --rm \
-  --user $(id -u):$(id -g) \
-  --network=liquibase_tutorial \
-  -v /data/liquibase-tutorial:/workspace \
-  liquibase:latest \
-  --defaults-file=/workspace/env/liquibase.stage.properties \
-  --password="${MSSQL_LIQUIBASE_TUTORIAL_PWD}" \
-  status --verbose
+lb -e stage -- status --verbose
 
 # Production status
-docker run --rm \
-  --user $(id -u):$(id -g) \
-  --network=liquibase_tutorial \
-  -v /data/liquibase-tutorial:/workspace \
-  liquibase:latest \
-  --defaults-file=/workspace/env/liquibase.prod.properties \
-  --password="${MSSQL_LIQUIBASE_TUTORIAL_PWD}" \
-  status --verbose
+lb -e prod -- status --verbose
 ```
 
 **If all environments are synchronized:**
@@ -1745,12 +1431,13 @@ ORDER BY MIN(DATEEXECUTED);
 ```text
 ReleaseTag       ChangesetCount
 ---------------- --------------
-untagged         3              (baseline changesets 1-3)
-baseline         1              (baseline changeset 4)
+untagged         5              (baseline rows except tagged one + V0002,V0003)
+baseline         1              (baseline tag anchor)
 release-v1.1     1              (V0001)
-untagged         2              (V0002, V0003)
 release-v1.2     1              (V0004)
 ```
+
+Note: The query uses `COALESCE(TAG, 'untagged')` with `GROUP BY TAG`, so all rows where `TAG IS NULL` collapse into a single "untagged" bucket. In this tutorial, those NULL-tag rows include multiple baseline entries recorded by `changelogSync` (only the last was tagged `baseline`) and interim changes executed before the next release tag.
 
 ### Demonstrate Rollback to Previous Release
 
@@ -1760,24 +1447,10 @@ Now that we have explicit `<rollback>` blocks in our changesets, we can actually
 cd /data/liquibase-tutorial
 
 # First, let's see what changes would be rolled back
-docker run --rm \
-  --user $(id -u):$(id -g) \
-  --network=liquibase_tutorial \
-  -v /data/liquibase-tutorial:/workspace \
-  liquibase:latest \
-  --defaults-file=/workspace/env/liquibase.dev.properties \
-  --password="${MSSQL_LIQUIBASE_TUTORIAL_PWD}" \
-  rollbackSQL release-v1.1
+lb -e dev -- rollbackSQL release-v1.1
 
 # Actually perform the rollback
-docker run --rm \
-  --user $(id -u):$(id -g) \
-  --network=liquibase_tutorial \
-  -v /data/liquibase-tutorial:/workspace \
-  liquibase:latest \
-  --defaults-file=/workspace/env/liquibase.dev.properties \
-  --password="${MSSQL_LIQUIBASE_TUTORIAL_PWD}" \
-  rollback release-v1.1
+lb -e dev -- rollback release-v1.1
 ```
 
 **What happens:**
@@ -1786,6 +1459,36 @@ docker run --rm \
 - This removes V0002, V0003, V0004 changes
 - The database returns to release-v1.1 state
 - Rollback SQL from `<rollback>` blocks is executed
+
+#### Rollback troubleshooting (SQL Server specifics)
+
+During a live rollback, two SQL Server-specific errors required manual fixes. Liquibase’s rollback blocks didn’t fully account for these scenarios:
+
+- Error: View already exists
+  - Message: `There is already an object named 'v_customer_basic' in the database.`
+  - Fix (dev): Drop the view before retrying rollback.
+
+```bash
+sqlcmd-tutorial -Q "USE testdbdev; DROP VIEW IF EXISTS app.v_customer_basic;"
+```
+
+- Error: Constraint blocks column shrink
+  - Message: `The object 'UQ_customer_email' is dependent on column 'email'.`
+  - Fix (dev): Drop the constraint, retry rollback, then recreate the constraint.
+
+```bash
+# Drop unique constraint to allow column change
+sqlcmd-tutorial -Q "USE testdbdev; ALTER TABLE app.customer DROP CONSTRAINT UQ_customer_email;"
+
+# Re-run the rollback to tag release-v1.1
+cd /data/liquibase-tutorial
+lb -e dev -- rollback release-v1.1
+
+# Recreate the unique constraint after rollback completes
+sqlcmd-tutorial -Q "USE testdbdev; ALTER TABLE app.customer ADD CONSTRAINT UQ_customer_email UNIQUE (email);"
+```
+
+Recommendation: To avoid manual steps in future runs, adjust the rollback blocks to (1) drop or alter the view before recreation, and (2) drop/recreate dependent constraints around `ALTER COLUMN` operations.
 
 **Verify rollback worked:**
 
@@ -1802,11 +1505,14 @@ ORDER BY ORDEREXECUTED;
 # Email should be back to NVARCHAR(320)
 sqlcmd-tutorial -Q "
 USE testdbdev;
-SELECT c.name AS column_name, t.name AS type_name, c.max_length
-FROM sys.columns c
-JOIN sys.types t ON c.user_type_id = t.user_type_id
-WHERE object_id = OBJECT_ID('app.customer')
-  AND c.name = 'email';
+SELECT
+  COLUMN_NAME AS column_name,
+  DATA_TYPE AS type_name,
+  CHARACTER_MAXIMUM_LENGTH AS max_length_chars
+FROM INFORMATION_SCHEMA.COLUMNS
+WHERE TABLE_SCHEMA = 'app'
+  AND TABLE_NAME = 'customer'
+  AND COLUMN_NAME = 'email';
 "
 
 # IX_customer_created_at index should be gone
@@ -1822,30 +1528,40 @@ EXEC sp_helptext 'app.v_customer_basic';
 "
 ```
 
+#### Additional verifications (recommended)
+
+These checks validate the manual steps applied during rollback troubleshooting:
+
+```bash
+# Unique constraint restored on app.customer.email
+sqlcmd-tutorial -Q "
+USE testdbdev;
+SELECT kc.name
+FROM sys.key_constraints kc
+WHERE kc.parent_object_id = OBJECT_ID('app.customer')
+  AND kc.type = 'UQ';
+"
+
+# Ensure the rolled-back performance index is absent
+sqlcmd-tutorial -Q "
+USE testdbdev;
+SELECT name
+FROM sys.indexes
+WHERE object_id = OBJECT_ID('app.customer')
+  AND name = 'IX_customer_created_at';
+"
+```
+
 ### Roll Forward Again
 
 After demonstrating rollback, let's re-apply the changes:
 
 ```bash
 # Re-deploy the changes
-docker run --rm \
-  --user $(id -u):$(id -g) \
-  --network=liquibase_tutorial \
-  -v /data/liquibase-tutorial:/workspace \
-  liquibase:latest \
-  --defaults-file=/workspace/env/liquibase.dev.properties \
-  --password="${MSSQL_LIQUIBASE_TUTORIAL_PWD}" \
-  update
+lb -e dev -- update
 
 # Re-tag as release-v1.2
-docker run --rm \
-  --user $(id -u):$(id -g) \
-  --network=liquibase_tutorial \
-  -v /data/liquibase-tutorial:/workspace \
-  liquibase:latest \
-  --defaults-file=/workspace/env/liquibase.dev.properties \
-  --password="${MSSQL_LIQUIBASE_TUTORIAL_PWD}" \
-  tag release-v1.2
+lb -e dev -- tag release-v1.2
 ```
 
 **This demonstrates:**
@@ -1853,6 +1569,22 @@ docker run --rm \
 - ✅ Rollback capability with explicit `<rollback>` blocks
 - ✅ Ability to roll forward again after rollback
 - ✅ Full bidirectional change management
+
+### Tutorial Complete
+
+The core tutorial is complete. You can stop here or continue below for optional alternatives and real‑world scenarios.
+
+#### Cleanup (optional)
+
+To remove all tutorial resources, run the cleanup helper:
+
+```bash
+/path/to/your/repo/docs/tutorials/liquibase/scripts/cleanup_liquibase_tutorial.sh
+```
+
+This removes the tutorial SQL Server container, network, and data volume, and can also delete your Liquibase project directory (respects `LB_PROJECT_DIR`).
+
+## Appendix: Alternatives and Scenarios
 
 ### Alternative: Rollback by Count
 
@@ -2065,7 +1797,7 @@ ORDER BY ORDEREXECUTED;
 
 **Example output:**
 
-```
+```text
 ORDEREXECUTED  ID                           AUTHOR    FILENAME                              DATEEXECUTED         TAG
 1              baseline-schema              system    baseline/V0000__baseline.xml          2025-11-13 10:00:00  baseline
 2              baseline-table-customer      system    baseline/V0000__baseline.xml          2025-11-13 10:00:01  baseline
@@ -2105,14 +1837,14 @@ SELECT * FROM DATABASECHANGELOGLOCK;
 
 **Normal state (unlocked):**
 
-```
+```text
 ID  LOCKED  LOCKGRANTED  LOCKEDBY
 1   0       NULL         NULL
 ```
 
 **Locked state (deployment in progress):**
 
-```
+```text
 ID  LOCKED  LOCKGRANTED              LOCKEDBY
 1   1       2025-11-13 14:30:00.000  mycomputer (192.168.1.100)
 ```
@@ -2207,14 +1939,7 @@ cd /data/liquibase-tutorial
 
 # Compare staging (target) to development (reference)
 # This shows what's different in staging vs development
-docker run --rm \
-  --user $(id -u):$(id -g) \
-  --network=liquibase_tutorial \
-  -v /data/liquibase-tutorial:/workspace \
-  liquibase:latest \
-  --defaults-file=/workspace/env/liquibase.stage.properties \
-  --password="${MSSQL_LIQUIBASE_TUTORIAL_PWD}" \
-  diff \
+lb -e stage -- diff \
   --reference-url="jdbc:sqlserver://mssql_liquibase_tutorial:1433;databaseName=testdbdev;encrypt=true;trustServerCertificate=true" \
   --reference-username=sa \
   --reference-password="${MSSQL_LIQUIBASE_TUTORIAL_PWD}"
@@ -2266,7 +1991,7 @@ Changed Index(s): NONE
 
 When drift is found, you have three options:
 
-**Option 1: Remove the drift (preferred for unauthorized changes)**
+#### Option 1: Remove the drift (preferred for unauthorized changes)
 
 ```bash
 # Manually remove the drifted objects
@@ -2280,9 +2005,13 @@ PRINT 'Removed drift from staging';
 "
 ```
 
-**Option 2: Incorporate the drift into version control** - Create a changelog entry for the valid change (see Step 11)
+#### Option 2: Incorporate the drift into version control
 
-**Option 3: Use diffChangeLog to auto-generate the changeset** (see Step 11)
+Create a changelog entry for the valid change (see Step 11)
+
+#### Option 3: Use diffChangeLog to auto-generate the changeset
+
+See Step 11 for details
 
 ## Step 11: Generating Changelogs from Differences
 
@@ -2305,13 +2034,7 @@ Let's generate a changelog that captures the drift we created in staging:
 cd /data/liquibase-tutorial
 
 # Generate changelog capturing the drift in staging
-docker run --rm \
-  --user $(id -u):$(id -g) \
-  --network=liquibase_tutorial \
-  -v /data/liquibase-tutorial:/workspace \
-  liquibase:latest \
-  --defaults-file=/workspace/env/liquibase.stage.properties \
-  --password="${MSSQL_LIQUIBASE_TUTORIAL_PWD}" \
+lb -e stage -- \
   --changelog-file=/workspace/database/changelog/drift-captured-$(date +%Y%m%d).xml \
   diffChangeLog \
   --reference-url="jdbc:sqlserver://mssql_liquibase_tutorial:1433;databaseName=testdbdev;encrypt=true;trustServerCertificate=true" \
@@ -2355,14 +2078,7 @@ PRINT 'Removed drift from staging';
 "
 
 # Verify drift is gone
-docker run --rm \
-  --user $(id -u):$(id -g) \
-  --network=liquibase_tutorial \
-  -v /data/liquibase-tutorial:/workspace \
-  liquibase:latest \
-  --defaults-file=/workspace/env/liquibase.stage.properties \
-  --password="${MSSQL_LIQUIBASE_TUTORIAL_PWD}" \
-  diff \
+lb -e stage -- diff \
   --reference-url="jdbc:sqlserver://mssql_liquibase_tutorial:1433;databaseName=testdbdev;encrypt=true;trustServerCertificate=true" \
   --reference-username=sa \
   --reference-password="${MSSQL_LIQUIBASE_TUTORIAL_PWD}"
@@ -2384,7 +2100,7 @@ Here's how a typical change flows from idea to production. Understanding this wo
 
 **The journey of a database change:**
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────┐
 │ Step 1: Developer writes change                                │
 │ - Create SQL file: V0005__add_loyalty_points.sql               │
@@ -2474,7 +2190,7 @@ Understanding these principles will help you avoid common pitfalls and deploy ch
 
 **Why this matters:**
 
-```
+```text
 WRONG APPROACH:
 - changelog-dev.xml (different file for dev)
 - changelog-stage.xml (different file for stage)
@@ -2940,6 +2656,70 @@ cat rollback-v1.0.sql  # Review before running
 
 ## Best Practices
 
+### Labels vs Contexts
+
+Use contexts to select changesets by deployment environment and labels to select by feature or category.
+
+```xml
+<!-- changelog.xml -->
+<databaseChangeLog>
+  <changeSet id="V0010-feature-x" author="team" labels="feature-x,analytics" context="!prod">
+    <sql>ALTER TABLE app.customer ADD marketing_opt_in BIT NOT NULL DEFAULT 0;</sql>
+    <rollback><sql>ALTER TABLE app.customer DROP COLUMN marketing_opt_in;</sql></rollback>
+  </changeSet>
+</databaseChangeLog>
+```
+
+```bash
+# Run only feature-x changes in dev
+lb -e dev -- update --labels=feature-x
+
+# Run analytics-related changes everywhere except prod
+lb -e stage -- update --labels=analytics --contexts="!prod"
+```
+
+### Changelog Parameters (Property Substitution)
+
+Define parameters in your `.properties` files and reference them in changelogs.
+
+```properties
+# env/liquibase.dev.properties
+liquibase.command.url=jdbc:sqlserver://mssql_liquibase_tutorial:1433;databaseName=testdbdev;encrypt=true;trustServerCertificate=true
+liquibase.command.username=SA
+liquibase.command.password=${env.MSSQL_LIQUIBASE_TUTORIAL_PWD}
+schemaName=app
+```
+
+```xml
+<!-- database/changelog/changelog.xml -->
+<databaseChangeLog>
+  <changeSet id="V0011-use-parameter" author="team">
+    <createTable tableName="${schemaName}.audit_events">
+      <column name="id" type="BIGINT" />
+      <column name="created_at" type="DATETIME2" />
+    </createTable>
+    <rollback>
+      <dropTable tableName="${schemaName}.audit_events" />
+    </rollback>
+  </changeSet>
+</databaseChangeLog>
+```
+
+### includeAll Usage and Ordering
+
+Use `includeAll` to pull in all files from a directory; control order with filename prefixes.
+
+```xml
+<databaseChangeLog>
+  <include file="baseline/V0000__baseline.xml" relativeToChangelogFile="true"/>
+  <includeAll path="changes" relativeToChangelogFile="true" />
+</databaseChangeLog>
+```
+
+```text
+Ordering rule: files are applied in lexical order. Prefer prefixes like V0001__, V0002__ … to enforce order.
+```
+
 ### Use Preconditions for Safety
 
 Preconditions validate assumptions before running changesets:
@@ -3078,7 +2858,7 @@ liquibase tag release-v1.2
 - Create dedicated Liquibase user
 - Grant only necessary permissions
 
-**Example: Create dedicated Liquibase user**
+#### Example: Create dedicated Liquibase user
 
 ```sql
 -- Create Liquibase service account
@@ -3272,6 +3052,31 @@ CA,Canada
 MX,Mexico
 ```
 
+✅ **Pattern 5: Use loadUpdateData for idempotent upserts**
+
+Use `loadUpdateData` when you need deterministic upserts keyed by one or more columns.
+
+```yaml
+databaseChangeLog:
+  - changeSet:
+      id: load-currencies-upsert
+      author: tutorial
+      changes:
+        - loadUpdateData:
+            file: data/currencies.csv
+            relativeToChangelogFile: true
+            tableName: currencies
+            schemaName: app
+            primaryKey: code
+            onlyUpdate: false
+            separator: ","
+            encoding: UTF-8
+```
+
+```text
+Rollback considerations: data loads are often non-trivial to rollback. Prefer forward-fix changesets or a separate cleanup script when removing rows.
+```
+
 ### Common Anti-Patterns to Avoid
 
 ❌ **Don't modify deployed changesets**
@@ -3313,7 +3118,7 @@ INSERT INTO app.customer VALUES (...);
 
 ❌ **Don't skip environments**
 
-```
+```text
 WRONG: dev → prod (skipping stage)
 CORRECT: dev → stage → prod
 ```
@@ -3689,7 +3494,7 @@ END
 
 **Detection Methods:**
 
-**Method 1: Compare schemas manually**
+#### Method 1: Compare schemas manually
 
 ```bash
 # In dev - see what Liquibase thinks should exist
@@ -3717,7 +3522,7 @@ ORDER BY type_desc, name;
 "
 ```
 
-**Method 2: Generate changelog from database**
+#### Method 2: Generate changelog from database
 
 ```bash
 # Generate what SHOULD be in changelog based on actual database
@@ -3734,7 +3539,7 @@ docker run --rm \
 # Any objects in actual_database.xml but not in changelog.xml = drift
 ```
 
-**Method 3: Use diffChangeLog (recommended)**
+#### Method 3: Use diffChangeLog (recommended)
 
 ```bash
 # Compare database against your changelog
@@ -3750,9 +3555,9 @@ docker run --rm \
 # Review drift/database_drift.xml to see what's different
 ```
 
-**Resolution Strategies:**
+#### Resolution Strategies (continued)
 
-**Strategy 1: Bring Liquibase changelog up to date**
+##### Strategy 1: Bring Liquibase changelog up to date
 
 If the extra object SHOULD exist (it was a valid change made outside Liquibase):
 
@@ -3788,7 +3593,7 @@ docker run --rm \
   changelogSync
 ```
 
-**Strategy 2: Remove unwanted drift**
+#### Strategy 2: Remove unwanted drift
 
 If the object should NOT exist (accidental creation, testing leftover):
 
@@ -3811,7 +3616,7 @@ BEGIN
 END
 ```
 
-**Strategy 3: Make deployment idempotent to tolerate drift**
+#### Strategy 3: Make deployment idempotent to tolerate drift
 
 Use IF EXISTS checks so deployments work regardless of drift:
 
@@ -3831,7 +3636,7 @@ BEGIN
 END
 ```
 
-**Strategy 4: Use preconditions to require specific state**
+#### Strategy 4: Use preconditions to require specific state
 
 Make deployment fail if drift is detected:
 
@@ -3877,9 +3682,9 @@ docker run --rm \
 # - Index IX_customer_middle_name (present in target, missing in reference)
 ```
 
-**Resolution Strategies:**
+#### Resolution Strategies
 
-**Strategy 1: Update changelog to match reality**
+##### Strategy 1: Update changelog to match reality
 
 If the manual change was correct and should be preserved:
 
@@ -3896,7 +3701,7 @@ BEGIN
 END
 ```
 
-**Strategy 2: Revert manual change, apply proper changeset**
+##### Strategy 2: Revert manual change, apply proper changeset
 
 If the change should go through proper process:
 
@@ -3916,7 +3721,7 @@ BEGIN
 END
 ```
 
-**Strategy 3: Use runOnChange for procedures/views**
+##### Strategy 3: Use runOnChange for procedures/views
 
 For stored logic that might change outside Liquibase:
 
@@ -3946,7 +3751,7 @@ GO
 - Without `runOnChange`: Deployment FAILS with checksum mismatch
 - With `runOnChange`: Re-executes the changeset, updating the procedure
 
-**Strategy 4: Detect drift in CI/CD pipeline**
+##### Strategy 4: Detect drift in CI/CD pipeline
 
 Prevent drift by checking before deployment:
 
@@ -3981,7 +3786,7 @@ echo "No drift detected. Safe to deploy."
 
 ### Real-World Drift Scenarios
 
-**Scenario A: Emergency hotfix applied to production**
+#### Scenario A: Emergency hotfix applied to production
 
 **What happened:**
 
@@ -3989,6 +3794,41 @@ echo "No drift detected. Safe to deploy."
 - DBA manually adds index to fix slow query
 - System recovered, incident closed
 - Index not in Liquibase changelog
+
+#### Rollback troubleshooting (observed during execution)
+
+During a live run of the rollback, two issues required manual intervention. If you hit the same errors, apply the fixes below and re-run the rollback.
+
+- Error: View already exists
+  - Symptom: `There is already an object named 'v_customer_basic' in the database.`
+  - Cause: The V0004 rollback recreates the basic view definition without dropping the existing view first.
+  - Fix (development):
+
+```bash
+sqlcmd-tutorial -Q "USE testdbdev; DROP VIEW IF EXISTS app.v_customer_basic;"
+```
+
+- Error: Constraint blocks column shrink
+  - Symptom: `The object 'UQ_customer_email' is dependent on column 'email'.`
+  - Cause: Rolling back V0002 shrinks `app.customer.email` to NVARCHAR(320) while a unique constraint exists.
+  - Fix (development): drop the constraint, retry rollback, then recreate the constraint:
+
+```bash
+# Drop unique constraint to allow column change
+sqlcmd-tutorial -Q "USE testdbdev; ALTER TABLE app.customer DROP CONSTRAINT UQ_customer_email;"
+
+# Re-run the rollback to tag release-v1.1
+cd /data/liquibase-tutorial
+lb -e dev -- rollback release-v1.1
+
+# Recreate the unique constraint after rollback completes
+sqlcmd-tutorial -Q "USE testdbdev; ALTER TABLE app.customer ADD CONSTRAINT UQ_customer_email UNIQUE (email);"
+```
+
+Recommendation: You can avoid these manual steps by refining the rollback blocks:
+
+- V0004 rollback: `DROP VIEW IF EXISTS app.v_customer_basic;` before recreating, or use `ALTER VIEW` with the basic definition.
+- V0002 rollback: drop and recreate dependent constraints around the `ALTER COLUMN` statement.
 
 **Resolution:**
 
@@ -4015,7 +3855,7 @@ END
 -- Note: Consider if this should be permanent or temporary
 ```
 
-**Scenario B: Developer tested directly in dev database**
+#### Scenario B: Developer tested directly in dev database
 
 **What happened:**
 
@@ -4055,7 +3895,7 @@ CLOSE cur;
 DEALLOCATE cur;
 ```
 
-**Scenario C: Different data in different environments**
+#### Scenario C: Different data in different environments
 
 **What happened:**
 
@@ -4194,6 +4034,28 @@ END
 10. Create a view that joins customers, orders, and products with aggregations
 
 ## Quick Reference Guide
+
+**Labels and Contexts:**
+
+```bash
+# Run only changes with label feature-x
+lb -e dev -- update --labels=feature-x
+
+# Combine labels and contexts (exclude prod)
+lb -e stage -- update --labels=analytics --contexts="!prod"
+```
+
+**Mark Next ChangeSet Ran (without running SQL):**
+
+```bash
+lb -e dev -- markNextChangeSetRan
+```
+
+**Generate changelogSync SQL (review/approve in change window):**
+
+```bash
+lb -e prod -- changelogSyncSQL > mark-executed.sql
+```
 
 ### Essential Liquibase Commands
 
@@ -4482,7 +4344,7 @@ When you've completed the tutorial and want to clean up the containers and datab
 
 ```bash
 # Run the automated cleanup script
-/workspaces/dbtools/docs/tutorials/liquibase/scripts/cleanup_liquibase_tutorial.sh
+/path/to/your/repo/docs/tutorials/liquibase/scripts/cleanup_liquibase_tutorial.sh
 ```
 
 **What the script does:**
@@ -4501,7 +4363,7 @@ If you prefer to clean up manually:
 
 ```bash
 # Navigate to the tutorial docker directory
-cd /workspaces/dbtools/docs/tutorials/liquibase/docker
+cd "$LIQUIBASE_TUTORIAL_DIR/docker"
 
 # Stop and remove the SQL Server container using docker compose
 docker compose down
@@ -4548,7 +4410,7 @@ docker images | grep -E "liquibase|mssql_liquibase_tutorial"
 
 **Expected output:**
 
-```
+```text
 liquibase                    latest          abc123def456   X hours ago    500MB
 mssql_liquibase_tutorial     latest          def789ghi012   X hours ago    1.5GB
 ```
@@ -4579,6 +4441,325 @@ rm -rf /data/liquibase-tutorial
 - Containers: Stopped and removed with `docker compose down`
 - Images: Remain on your system (can be manually removed with commands above)
 - Tutorial files: Can be manually deleted from `/data/liquibase-tutorial`
+
+## Appendix
+
+## Glossary of Terms
+
+**New to databases, DevOps, or CI/CD?** This glossary explains all the technical terms you'll encounter in this tutorial.
+
+### What is Liquibase?
+
+**Liquibase** is an open-source database change management tool. Think of it as **"version control for databases"** - like Git, but for your database schema instead of code files.
+
+**The problem Liquibase solves:**
+
+Without Liquibase, database changes are chaotic:
+
+- Developer creates SQL script: `add-loyalty-column.sql`
+- Emails it to team or saves on shared drive
+- Someone manually runs it in dev... or do they? Hard to tell
+- Another person runs it in staging (maybe)
+- DBA runs it in production (hopefully the same script!)
+- Six months later: "Did we add that column to production? I can't remember!"
+
+**With Liquibase:**
+
+- Changes are tracked in files, committed to Git
+- Each environment has a log of exactly what ran
+- Can't accidentally run the same change twice
+- Can rollback if something breaks
+- Complete audit trail of who changed what and when
+
+**Simple analogy**:
+
+- **Without Liquibase**: Like moving houses by randomly packing boxes and hoping you remember what went where
+- **With Liquibase**: Like using a detailed inventory list that tracks every item, which box it's in, and where it goes in the new house
+
+**How it works in 30 seconds:**
+
+1. You write a database change in a "changeset" (SQL or YAML file)
+2. Add it to a "changelog" (master list of all changes)
+3. Run `liquibase update`
+4. Liquibase:
+
+- Checks what changes already ran (stored in DATABASECHANGELOG table)
+- Runs only new changes
+- Records what it did
+
+1. Repeat for each environment (dev, stage, prod)
+
+**What makes Liquibase special:**
+
+- **Database-agnostic**: Works with SQL Server, PostgreSQL, MySQL, Oracle, and 30+ other databases
+- **Safe**: Prevents running changes twice, validates checksums, supports rollbacks
+- **Auditable**: Complete history of every change in DATABASECHANGELOG table
+- **Flexible**: Write changes in SQL, XML, YAML, or JSON format
+- **Free**: Open-source with enterprise support available
+
+### Database Terms
+
+- **Schema**: A container/namespace for database objects like tables, views, procedures. Think of it as a folder organizing related database objects. Example: `app.customer` means the `customer` table in the `app` schema.
+
+- **DDL (Data Definition Language)**: SQL commands that define database structure (CREATE TABLE, ALTER TABLE, DROP TABLE, CREATE VIEW, etc.). These change the schema, not the data.
+
+- **DML (Data Manipulation Language)**: SQL commands that work with data (INSERT, UPDATE, DELETE, SELECT). These change the data, not the schema.
+
+- **Stored Procedure**: Pre-written SQL code stored in the database that you can call repeatedly. Like a function in programming. *Note: This tutorial focuses on objects supported by Liquibase Community Edition and does not use stored procedures.*
+
+- **Function**: A database object that returns a value and can be used in SELECT statements. *Note: This tutorial focuses on objects supported by Liquibase Community Edition and does not use functions.*
+
+- **View**: A saved query that looks like a table. Doesn't store data itself, just retrieves it. Useful for simplifying complex queries or hiding sensitive columns.
+
+- **Index**: A data structure that speeds up queries, like an index in a book. Without it, the database scans every row. With it, lookups are fast.
+
+- **Foreign Key**: A link between two tables. Ensures data consistency. Example: `orders.customer_id` references `customer.customer_id` (you can't create an order for a non-existent customer).
+
+- **Primary Key**: Unique identifier for each row in a table. Like a Social Security Number - each person has exactly one, and no two people share the same one.
+
+- **Constraint**: A rule enforced by the database (e.g., "email cannot be null", "customer_id must be unique", "order_total must be positive").
+
+### Liquibase Terms
+
+- **Liquibase**: An open-source tool for database change management. Tracks what changes have been applied to which databases.
+
+- **Changeset**: A single database change (add table, modify column, create view). The fundamental unit of change in Liquibase. Each changeset has a unique ID.
+
+- **Changelog**: An XML, YAML, or SQL file that lists changesets in order. Like a recipe - step 1, step 2, step 3.
+
+- **Master Changelog**: The main changelog file that includes other changelog files. Acts as a table of contents.
+
+- **Baseline**: A snapshot of your database's existing structure when you start using Liquibase. Represents "everything that exists before we started tracking changes."
+
+- **DATABASECHANGELOG**: A table Liquibase creates to track which changesets have been executed. Like a logbook recording what changes ran when.
+
+- **DATABASECHANGELOGLOCK**: A table Liquibase uses to prevent multiple deployments from running simultaneously. Prevents conflicts.
+
+- **Checksum**: A calculated hash of a changeset's content. If the content changes, the checksum changes. Liquibase uses this to detect if someone modified an already-deployed changeset.
+
+- **Tag**: A named marker in the changelog history. Like a bookmark. Allows you to rollback to specific points. Example: tag `release-v1.0` marks your first production release.
+
+- **Rollback**: Undo changes by running reverse SQL. Example: if you created a table, rollback drops it.
+
+- **Precondition**: A check that runs before a changeset executes. Example: "only create this index if it doesn't already exist."
+
+- **Context**: A label that controls when a changeset runs. Example: changesets with `context:dev` only run in development, not production.
+
+### CI/CD Terms
+
+- **CI (Continuous Integration)**: Automatically testing changes when code is committed. Catches bugs early.
+
+- **CD (Continuous Deployment)**: Automatically deploying code changes through environments to production after tests pass.
+
+- **Pipeline**: An automated sequence of steps (build, test, deploy). Changes flow through the pipeline like an assembly line.
+
+- **Environment**: A separate instance of your application/database. Common environments: dev (development), test, stage (staging), prod (production).
+
+- **Deployment**: The process of applying changes to an environment. Moving code/database changes from version control to a running system.
+
+- **Rollback**: Reversing a deployment to a previous version. Like an "undo" button for production changes.
+
+- **Promotion**: Moving a change from one environment to the next (dev → stage → prod). Only promote after testing succeeds.
+
+- **Idempotent**: A change that can be run multiple times safely with the same result. Example: "CREATE TABLE IF NOT EXISTS" is idempotent; "CREATE TABLE" (without IF NOT EXISTS) is not.
+
+### Docker Terms
+
+- **Docker**: A platform for running applications in isolated containers. Packages software with all its dependencies.
+
+- **Container**: A lightweight, isolated environment for running applications. Like a virtual machine but faster and smaller.
+
+- **Image**: A template for creating containers. Like a blueprint or a snapshot you can spin up multiple times.
+
+- **Volume Mount**: Sharing a folder between your computer and a Docker container. Changes in one appear in the other. Example: `-v /data/liquibase-tutorial:/workspace`
+
+- **Network**: How Docker containers communicate. `--network=host` makes the container use your computer's network (easier for local dev).
+
+### DevOps Terms
+
+- **Version Control**: Tracking changes to files over time (usually with Git). Like "track changes" in Word, but much more powerful.
+
+- **Git**: A version control system. Tracks who changed what and when. Enables collaboration and rollback.
+
+- **Commit**: Saving your changes to version control with a message describing what you changed.
+
+- **Repository (Repo)**: A collection of files tracked by version control. Contains your code, database changes, documentation, etc.
+
+- **Pull Request (PR)**: A request to merge your changes into the main codebase. Team reviews your changes before accepting.
+
+- **Branch**: A parallel version of your code. Like a sandbox where you can experiment without affecting the main codebase.
+
+- **Secrets Management**: Securely storing sensitive information (passwords, API keys). Never put passwords in code!
+
+- **Audit Trail**: A complete history of what changed, when, and who changed it. Essential for compliance and debugging.
+
+### Miscellaneous Terms
+
+- **JDBC (Java Database Connectivity)**: The Java standard for connecting to databases. Liquibase uses JDBC to talk to SQL Server, PostgreSQL, Oracle, etc.
+
+- **CLI (Command Line Interface)**: Text-based way to interact with software (opposite of GUI - Graphical User Interface). Example: `liquibase update`
+
+- **SA (System Administrator)**: The default admin account in SQL Server. Has full permissions. Don't use in production (security risk).
+
+- **SSL/TLS Certificate**: Encryption certificate for secure connections. `trustServerCertificate=true` skips certificate validation (OK for local dev, not for production).
+
+- **Port**: A network endpoint for connections. SQL Server's default port is 1433. Like apartment numbers - the server is the building, the port is the specific apartment.
+
+**Pro tip**: Bookmark this glossary! Refer back to it whenever you encounter an unfamiliar term.
+
+### What is CI/CD?
+
+**CI/CD** stands for **Continuous Integration** and **Continuous Deployment**. These are software development practices that help teams deliver changes faster and more safely.
+
+**Breaking it down:**
+
+- **Continuous Integration (CI)**: Automatically testing and validating changes when developers commit code
+  - Think of it as an automatic quality checker
+  - Every time you make a change, automated tests verify it works
+  - Catches problems early, before they reach production
+
+- **Continuous Deployment (CD)**: Automatically deploying validated changes through environments to production
+  - Once changes pass tests, they move through environments automatically
+  - Reduces manual errors and speeds up releases
+  - Ensures consistent deployment process every time
+
+**Simple analogy**: Imagine baking bread in a factory. CI is like the quality inspector checking each batch of dough before baking. CD is the automated conveyor belt that moves good batches through the oven, cooling, and packaging stages. Without automation, someone might accidentally skip a step or use the wrong temperature.
+
+### Why does it matter for databases?
+
+**The old way (manual database changes):**
+
+Imagine you need to add a new column to a table. Without CI/CD, you might:
+
+1. Write SQL script in a text file
+2. Email it to someone or save on shared drive
+3. Manually connect to database
+4. Copy-paste the SQL and run it
+5. Hope you ran it on the right environment
+6. Try to remember if you already ran it in staging
+7. Forget to run it in production (production breaks!)
+
+**Problems with manual approach:**
+
+- **Manual**: Someone runs SQL scripts by hand (error-prone, time-consuming)
+- **Inconsistent**: Different process each time, easy to make mistakes
+- **Untraceable**: Hard to know what ran where and when ("Did we add that column to production?")
+- **Risky**: Production failures from untested changes or wrong scripts
+- **No rollback**: If something breaks, hard to undo changes
+- **Team confusion**: Multiple people making changes without coordination
+
+**The new way (with CI/CD for databases):**
+
+With Liquibase and CI/CD, the same scenario becomes:
+
+1. Write SQL change in a version-controlled file
+2. Commit to Git (version control system)
+3. Automated pipeline runs the change in dev first
+4. Tests verify it works
+5. Change automatically deploys to staging
+6. After approval, automatically deploys to production
+7. Complete history of what ran where
+
+**Benefits with CI/CD for databases:**
+
+- **Version control**: Every change is tracked in Git (like tracking document history in Google Docs)
+- **Repeatability**: Same change deploys identically across all environments (no "it works on my machine" problems)
+- **Safety**: Test in dev and stage before production (catch issues early)
+- **Auditability**: Complete history of what changed, when, and who made the change
+- **Rollback capability**: Undo changes if problems occur (like "undo" button for databases)
+- **Team collaboration**: Everyone sees the same changes, no surprises
+- **Automation**: Less manual work, fewer mistakes
+
+### What is Environment Promotion?
+
+**Environment promotion** means deploying changes through a series of environments in order, testing at each stage before moving forward.
+
+**The standard path:**
+
+```text
+Development (dev) → Staging (stage) → Production (prod)
+```
+
+**Why this order? Think of it like testing a new recipe:**
+
+1. **Development (testdbdev)**: Your kitchen at home where you experiment
+
+- Break things here, it's okay! This is your learning space
+- Rapid iteration and experimentation
+- May have test/sample data (fake customers, test orders)
+- If you mess up, only you are affected
+- **Example**: You're testing if adding a new "loyalty_points" column works correctly
+
+1. **Staging (testdbstg)**: A practice kitchen identical to the restaurant
+
+- Same structure as production (simulates real environment)
+- Test the exact deployment process you'll use in production
+- Catch integration issues before prod (does it work with real-world data volumes?)
+- Last chance to find problems
+- **Example**: You verify the loyalty_points column works with realistic customer data and doesn't slow down queries
+
+1. **Production (testdbprd)**: The actual restaurant serving real customers
+
+- Only deploy after dev and stage succeed
+- Minimize risk, maximize stability
+- Apply the exact same changes that worked in stage
+- Real users, real data, no room for error
+- **Example**: Your actual customers now have loyalty_points tracking their purchases
+
+**Why not skip to production?**
+
+- **Risk**: No testing means high chance of breaking production
+- **No safety net**: If it fails, real users are affected immediately
+- **Debugging nightmare**: Hard to diagnose issues under pressure
+- **Rollback complexity**: Harder to safely undo changes
+
+**The golden rule**: If it doesn't work in dev, don't promote it. If it doesn't work in stage, definitely don't deploy to production!
+
+### What is a Baseline?
+
+A **baseline** is a snapshot of your database's current state when you start using Liquibase. It's your starting point for tracking changes.
+
+**Why do you need it?**
+
+Most real-world scenarios involve existing databases:
+
+- You have existing tables, views, indexes, and constraints already in production
+- These objects were created before you started using Liquibase
+- Liquibase needs to know "this is the starting point" so it can track "everything from now on"
+- Without a baseline, Liquibase would try to create objects that already exist (causing errors)
+
+**Analogy**: Think of it like joining a book club midway through the year:
+
+- The baseline is like getting a summary of "all books discussed so far this year"
+- Now you can track "all books discussed from this point forward"
+- Without the baseline, you might try to discuss a book the club already finished
+
+**Real example:**
+
+Your production database already has:
+
+- `customer` table (created 2 years ago)
+- `orders` table (created 1 year ago)
+- `v_customer_orders` view (created 6 months ago)
+- Various indexes and constraints (created over time)
+
+When you start using Liquibase:
+
+1. **Generate baseline**: Liquibase scans production, creates a snapshot of all these objects
+2. **Mark as executed**: Tells Liquibase "I know these exist, don't try to recreate them"
+3. **Future changes**: From now on, Liquibase tracks new changes (new tables, modifications, etc.)
+
+**Without a baseline:**
+
+- Liquibase tries to create `customer` table → Error! Table already exists
+- Deployment fails, production breaks
+- Team panics
+
+**With a baseline:**
+
+- Liquibase knows these objects exist
+- Only applies new changes
+- Smooth deployment
 
 ## References
 

@@ -97,21 +97,32 @@ fi
 if [[ -n "$SQL_FILE" ]]; then
   # Get the directory where this script is located
   SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-  
-  # Check if file exists as-is (absolute or relative to current directory)
-  if [[ -f "$SQL_FILE" ]]; then
-    # Use as-is
-    :
-  # If not found, try in the scripts directory
-  elif [[ -f "$SCRIPT_DIR/$SQL_FILE" ]]; then
-    SQL_FILE="$SCRIPT_DIR/$SQL_FILE"
-  else
+  # Candidate search paths for SQL files
+  CANDIDATES=(
+    "$SQL_FILE"
+    "$PWD/$SQL_FILE"
+    "$SCRIPT_DIR/$SQL_FILE"
+    "$SCRIPT_DIR/../sql/$SQL_FILE"
+  )
+  # Prefer LIQUIBASE_TUTORIAL_DIR if set
+  if [[ -n "${LIQUIBASE_TUTORIAL_DIR:-}" ]]; then
+    CANDIDATES+=("$LIQUIBASE_TUTORIAL_DIR/sql/$SQL_FILE")
+  fi
+
+  RESOLVED=""
+  for p in "${CANDIDATES[@]}"; do
+    if [[ -f "$p" ]]; then
+      RESOLVED="$p"; break
+    fi
+  done
+
+  if [[ -z "$RESOLVED" ]]; then
     echo "Error: SQL file not found: $SQL_FILE" >&2
     echo "Searched in:" >&2
-    echo "  - Current directory" >&2
-    echo "  - $SCRIPT_DIR" >&2
+    printf "  - %s\n" "${CANDIDATES[@]}" >&2
     exit 1
   fi
+  SQL_FILE="$RESOLVED"
 fi
 
 # Check container status

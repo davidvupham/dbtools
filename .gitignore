@@ -231,3 +231,4 @@ cert/*.der
 !cert/.gitkeep
 
 # (removed) PDF conversion resources and exceptions no longer used
+.liquibase/settings.json

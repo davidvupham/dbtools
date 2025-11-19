@@ -15,7 +15,8 @@ NC='\033[0m' # No Color
 CONTAINER_NAME="mssql_liquibase_tutorial"
 VOLUME_NAME="mssql_liquibase_tutorial_data"
 NETWORK_NAME="liquibase_tutorial"
-TUTORIAL_DIR="/data/liquibase-tutorial"
+# Respect LB_PROJECT_DIR if set; fallback to default path
+TUTORIAL_DIR="${LB_PROJECT_DIR:-/data/liquibase-tutorial}"
 DOCKER_COMPOSE_DIR="/workspaces/dbtools/docs/tutorials/liquibase/docker"
 
 echo -e "${YELLOW}========================================${NC}"
