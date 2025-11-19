@@ -18,6 +18,7 @@ DBTools is the shared engineering workspace for the GDS team. The repository com
 - `gds_mongodb/` – MongoDB client with advanced configuration and CRUD helpers
 - `gds_snowflake/` – Snowflake utilities used by monitoring tools and automation
 - `gds_vault/` – HashiCorp Vault client with pluggable authentication and caching
+- `gds_liquibase/` – Database change management with Liquibase integration and CI/CD workflows
 - `gds_notification/` – Design docs and stubs for the alert ingestion service
 - `gds_snmp_receiver/` – SNMP trap receiver service with FastAPI and worker pipeline
 - `snowflake_monitoring/` – Application that monitors Snowflake replication health
@@ -28,17 +29,35 @@ Each package exposes its own README with full installation, configuration, and A
 - `PowerShell/Modules/GDS.Common` – PSFramework-based logging utilities shared across modules
 - `PowerShell/Modules/GDS.NuGet` – Build, package, and publish helpers for PowerShell modules
 - `PowerShell/Modules/GDS.ActiveDirectory` – Cmdlets for exporting AD users/groups to SQL Server
-- Additional MSSQL and Windows-focused modules live alongside these core components
+- `PowerShell/Modules/GDS.MSSQL.AvailabilityGroups` – SQL Server availability group management
+- `PowerShell/Modules/GDS.MSSQL.Build` – SQL Server build and deployment automation
+- `PowerShell/Modules/GDS.MSSQL.Core` – Core SQL Server cmdlets and utilities
+- `PowerShell/Modules/GDS.MSSQL.Monitor` – SQL Server monitoring and alerting
+- `PowerShell/Modules/GDS.WindowsOS` – Windows OS administration utilities
 - Convenience scripts such as `PowerShell/BuildAllModules.ps1` and `Install-GDSModulesFromJFrog.ps1`
 
 See `PowerShell/README.md` for module usage, build instructions, and CI pipeline details.
 
 ### Documentation & supporting assets
-- `docs/` – Tutorials, architecture reviews, deployment guides, dev container walkthroughs, and historical prompts
+- `docs/tutorials/` – Comprehensive tutorials for:
+  - Liquibase database change management with SQL Server
+  - Kafka and RabbitMQ message queue integration
+  - Python OOP concepts and exercises
+  - Docker containerization
+  - PowerShell beginners guide
+  - Vault secret management
+- `docs/architecture/` – Architecture documentation for:
+  - Database change CI/CD pipelines
+  - Liquibase integration patterns
+  - OpenTelemetry observability architecture
+- `docs/vscode/` – Dev container setup guides and troubleshooting
+- `docs/runbooks/` – Operational procedures and runbooks
+- `docs/development/` and `docs/coding-standards/` – Development guidelines and standards
 - `schemas/` – Avro and JSON schema definitions used by data services
 - `scripts/` and `examples/` – Helper utilities and sample integrations
+- `docker/` – Docker configurations for development and testing environments
 - `cert/`, `data/`, and `dist/` – Test fixtures, generated artifacts, and packaged outputs
-- Top-level evaluation reports (e.g., `GDS_ARCHITECTURE_EVALUATION_2025-11-06.md`) capture design history
+- Top-level reports (e.g., `PACKAGE_CREATION_SUMMARY.md`, `SNOWFLAKE_CONNECTIVITY_TESTING_GUIDE.md`) capture project history
 
 ## Development Quick Start
 
@@ -100,7 +119,10 @@ echo 'export NODE_EXTRA_CA_CERTS=/usr/local/share/ca-certificates/corp.crt' | su
 - `PowerShell/FINAL_IMPLEMENTATION_SUMMARY.md` and `PowerShell/MODULE_ORGANIZATION.md` outline the PowerShell architecture
 - Detailed guides in `PowerShell/Modules/GDS.NuGet/` (NuGet build, JFrog publishing) and `PowerShell/Modules/GDS.Common/` (logging)
 - Dev container guides: `docs/vscode/DEVCONTAINER_BEGINNERS_GUIDE.md`, `docs/vscode/DEVCONTAINER.md`, and `docs/vscode/DEVCONTAINER_SQLTOOLS.md`
-- Architecture and implementation reports in the repo root (for example `PACKAGE_CREATION_SUMMARY.md`, `SNOWFLAKE_CONNECTIVITY_TESTING_GUIDE.md`)
+- Liquibase tutorial: `docs/tutorials/liquibase/sqlserver-liquibase-tutorial.md` – Comprehensive guide with hands-on examples
+- Architecture documentation: `docs/architecture/` covers database change CI/CD, Liquibase patterns, and OpenTelemetry observability
+- Tutorial catalog: `docs/tutorials/README.md` indexes all available learning resources
+- Implementation reports in the repo root (e.g., `PACKAGE_CREATION_SUMMARY.md`, `SNOWFLAKE_CONNECTIVITY_TESTING_GUIDE.md`)
 
 ## Contributing & Support
 - Use GitHub Issues at https://github.com/davidvupham/dbtools/issues for bug reports and feature requests
