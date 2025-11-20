@@ -29,7 +29,7 @@
 # - Pre-configured with default settings
 # - User 'mssql' (UID 10001) already created for running SQL Server
 #
-FROM mcr.microsoft.com/mssql/server:2022-latest
+FROM mcr.microsoft.com/mssql/server:2025-latest
 
 # ------------------------------------------------------------------------------
 # Environment Variables
