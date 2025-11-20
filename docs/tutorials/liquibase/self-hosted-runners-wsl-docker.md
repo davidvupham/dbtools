@@ -68,26 +68,31 @@ By the end of this guide, you'll have a complete local CI/CD environment that mi
 ### Advantages
 
 ✅ **No Firewall Configuration**
+
 - Direct access to local SQL Server
 - No Azure SQL firewall rules needed
 - Works with completely private databases
 
 ✅ **Zero GitHub Actions Minutes Used**
+
 - Unlimited free runs
 - No cost concerns
 - Perfect for learning and testing
 
 ✅ **Faster Feedback Loops**
+
 - No network latency to GitHub
 - Direct localhost connections
 - Instant deployment testing
 
 ✅ **Production-Like Environment**
+
 - Learn self-hosted runner management
 - Understand enterprise CI/CD patterns
 - Prepare for on-premises deployments
 
 ✅ **Full Control**
+
 - Install any tools you need
 - Custom configurations
 - Debug workflow issues locally
@@ -108,21 +113,25 @@ By the end of this guide, you'll have a complete local CI/CD environment that mi
 ### Components
 
 **1. WSL 2 (Windows Subsystem for Linux)**
+
 - Linux environment on Windows
 - Runs Docker daemon
 - Hosts runner and SQL Server containers
 
 **2. Docker**
+
 - Container runtime
 - Isolates runner and database
 - Easy cleanup and reset
 
 **3. GitHub Actions Runner Container**
+
 - Connects to GitHub.com
 - Pulls workflow jobs
 - Executes steps locally
 
 **4. SQL Server Container**
+
 - Local database instance
 - Accessible to runner
 - No internet exposure needed
@@ -152,9 +161,11 @@ By the end of this guide, you'll have a complete local CI/CD environment that mi
 ### Required Software
 
 ✅ **Windows 10 version 2004+ or Windows 11**
+
 - WSL 2 requires recent Windows
 
 ✅ **WSL 2 installed and configured**
+
 - Ubuntu distribution recommended
 
 ✅ **Docker Desktop for Windows** (optional) OR **Docker in WSL** (recommended)
@@ -306,8 +317,8 @@ docker network ls | grep liquibase
 **Best for:** Learning, clean setup, easy reset
 
 ```bash
-# Pull SQL Server 2022 image
-docker pull mcr.microsoft.com/mssql/server:2022-latest
+# Pull SQL Server 2025 image
+docker pull mcr.microsoft.com/mssql/server:2025-latest
 
 # Run SQL Server container
 docker run -d \
@@ -362,6 +373,7 @@ docker run --rm mcr.microsoft.com/mssql-tools \
 ```
 
 **Note:** Ensure SQL Server on Windows allows TCP/IP connections:
+
 1. SQL Server Configuration Manager
 2. SQL Server Network Configuration
 3. Protocols for MSSQLSERVER
@@ -451,11 +463,13 @@ nano runner.env
 ```
 
 **Replace:**
+
 - `YOUR_USERNAME` - Your GitHub username
 - `YOUR_REPO` - Your repository name
 - `YOUR_REGISTRATION_TOKEN_HERE` - Token from Step 3.1
 
 **Example:**
+
 ```bash
 RUNNER_REPOSITORY_URL=https://github.com/john/liquibase-demo
 RUNNER_TOKEN=AABBCCDDEE1122334455FFGGHHIIJJKKLLMMNNOOPPQQRRSSTTUUVV
@@ -490,6 +504,7 @@ docker logs github-runner
 ```
 
 **Expected output:**
+
 ```
 √ Connected to GitHub
 √ Runner successfully added
@@ -530,6 +545,7 @@ jdbc:sqlserver://sqlserver:1433;databaseName=liquibase_demo;encrypt=true;trustSe
 ```
 
 **Key points:**
+
 - Host: `sqlserver` (container name, not localhost)
 - Port: `1433` (default SQL Server port)
 - `trustServerCertificate=true` (required for self-signed certs)
@@ -578,18 +594,21 @@ Even though it's local, use secrets for best practices:
 Add these secrets:
 
 **Secret 1: DB_URL**
+
 ```
 Name: LOCAL_DB_URL
 Value: jdbc:sqlserver://sqlserver:1433;databaseName=liquibase_demo;encrypt=true;trustServerCertificate=true;loginTimeout=30
 ```
 
 **Secret 2: DB_USERNAME**
+
 ```
 Name: LOCAL_DB_USERNAME
 Value: sa
 ```
 
 **Secret 3: DB_PASSWORD**
+
 ```
 Name: LOCAL_DB_PASSWORD
 Value: YourStrong!Passw0rd
@@ -694,6 +713,7 @@ git push origin main
 4. Watch the steps execute in real-time
 
 **You'll see:**
+
 ```
 Checkout code ✓
 Set up Liquibase ✓
@@ -810,6 +830,7 @@ docker run -d \
 ```
 
 **Benefits:**
+
 - Faster workflow execution (no tool installation)
 - Consistent environment
 - Custom configurations
@@ -995,6 +1016,7 @@ jobs:
 ```
 
 **Benefits of hybrid:**
+
 - Fast local development (self-hosted)
 - Production-like cloud testing (GitHub-hosted)
 - Learn both approaches
@@ -1240,6 +1262,7 @@ jobs:
 ```
 
 **Benefits:**
+
 - Fast iteration
 - No costs
 - Learn GitHub Actions
@@ -1257,6 +1280,7 @@ jobs:
 ```
 
 **Benefits:**
+
 - Keep fast local development
 - Add cloud testing
 - Learn firewall configuration
@@ -1270,6 +1294,7 @@ jobs:
 ```
 
 **Benefits:**
+
 - Production-like
 - No maintenance
 - Team can use
@@ -1283,6 +1308,7 @@ jobs:
 ```
 
 **Benefits:**
+
 - Private databases
 - Compliance requirements
 - Custom tooling
@@ -1292,11 +1318,13 @@ jobs:
 ### Daily Operations
 
 **Start environment:**
+
 ```bash
 ~/start-liquibase-env.sh
 ```
 
 **Check status:**
+
 ```bash
 docker ps
 # Should show: github-runner (Up), sqlserver (Up)
@@ -1306,6 +1334,7 @@ docker ps
 ```
 
 **Stop environment:**
+
 ```bash
 ~/stop-liquibase-env.sh
 ```
@@ -1356,16 +1385,19 @@ docker exec github-runner find /tmp/github-runner -type d -mtime +30 -exec rm -r
 ### Advantages of Local Setup
 
 ✅ **Database Never Exposed to Internet**
+
 - No public IP
 - No firewall rules
 - No attack surface
 
 ✅ **Secrets Only Used Locally**
+
 - GitHub secrets stay in GitHub
 - Runner pulls secrets, doesn't expose them
 - Even if compromised, only local access
 
 ✅ **Isolated Environment**
+
 - Containers are isolated
 - Easy to reset/rebuild
 - No impact on production
@@ -1442,11 +1474,13 @@ Congratulations! You've set up a complete local CI/CD environment with:
 ### Next Steps
 
 **Continue Learning:**
+
 1. Follow the main tutorial: [sqlserver-liquibase-github-actions-tutorial.md](./sqlserver-liquibase-github-actions-tutorial.md)
 2. Add cloud staging environment (hybrid approach)
 3. Implement advanced workflows from [github-actions-liquibase-best-practices.md](./github-actions-liquibase-best-practices.md)
 
 **For Production:**
+
 1. Move to GitHub-hosted runners for cloud databases
 2. Or scale self-hosted runners for enterprise
 3. Add monitoring and alerting
@@ -1455,12 +1489,14 @@ Congratulations! You've set up a complete local CI/CD environment with:
 ### Resources
 
 **Official Documentation:**
+
 - [GitHub Self-Hosted Runners](https://docs.github.com/en/actions/hosting-your-own-runners)
 - [Docker Documentation](https://docs.docker.com/)
 - [WSL Documentation](https://learn.microsoft.com/en-us/windows/wsl/)
 - [SQL Server on Docker](https://hub.docker.com/_/microsoft-mssql-server)
 
 **Community Resources:**
+
 - [myoung34/github-runner](https://github.com/myoung34/docker-github-actions-runner) - Runner Docker image
 - [Liquibase Forum](https://forum.liquibase.org/)
 - [GitHub Community](https://github.com/orgs/community/discussions)
@@ -1468,6 +1504,7 @@ Congratulations! You've set up a complete local CI/CD environment with:
 ### Feedback and Support
 
 If you encounter issues with this guide:
+
 1. Check the [Troubleshooting](#troubleshooting) section
 2. Review Docker and runner logs
 3. Search GitHub Community discussions
