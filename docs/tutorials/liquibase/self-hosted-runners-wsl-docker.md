@@ -1,0 +1,1483 @@
+# Self-Hosted GitHub Actions Runners in WSL with Docker
+
+## Table of Contents
+
+- [Introduction](#introduction)
+- [Why Use Self-Hosted Runners?](#why-use-self-hosted-runners)
+- [Architecture Overview](#architecture-overview)
+- [Prerequisites](#prerequisites)
+- [Part 1: Setup Docker in WSL 2](#part-1-setup-docker-in-wsl-2)
+- [Part 2: Setup SQL Server](#part-2-setup-sql-server)
+- [Part 3: Configure GitHub Runner](#part-3-configure-github-runner)
+- [Part 4: Connect Runner to SQL Server](#part-4-connect-runner-to-sql-server)
+- [Part 5: Update Workflows](#part-5-update-workflows)
+- [Part 6: Test Your Setup](#part-6-test-your-setup)
+- [Part 7: Advanced Configuration](#part-7-advanced-configuration)
+- [Part 8: Hybrid Approach](#part-8-hybrid-approach)
+- [Troubleshooting](#troubleshooting)
+- [Comparison: Self-Hosted vs GitHub-Hosted](#comparison-self-hosted-vs-github-hosted)
+- [Migration Path](#migration-path)
+- [Maintenance and Operations](#maintenance-and-operations)
+- [Security Considerations](#security-considerations)
+- [Conclusion](#conclusion)
+
+## Introduction
+
+This guide teaches you how to set up **self-hosted GitHub Actions runners** running in Docker containers within Windows Subsystem for Linux (WSL 2). This approach is perfect for:
+
+- **Local development and testing** of GitHub Actions workflows
+- **Learning CI/CD** without cloud database costs
+- **Enterprise scenarios** where databases aren't internet-accessible
+- **Cost optimization** with unlimited free runner minutes
+
+By the end of this guide, you'll have a complete local CI/CD environment that mirrors production GitHub Actions, but runs entirely on your local machine.
+
+### What You'll Build
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  Windows 11                                                 │
+│                                                             │
+│  ┌───────────────────────────────────────────────────────┐ │
+│  │  WSL 2 (Ubuntu)                                       │ │
+│  │                                                       │ │
+│  │  ┌─────────────────┐      ┌─────────────────┐       │ │
+│  │  │ Docker Container│      │ Docker Container│       │ │
+│  │  │                 │      │                 │       │ │
+│  │  │ GitHub Actions  │─────▶│  SQL Server     │       │ │
+│  │  │ Runner          │      │  Database       │       │ │
+│  │  │                 │      │                 │       │ │
+│  │  └─────────────────┘      └─────────────────┘       │ │
+│  │         ▲                                            │ │
+│  │         │                                            │ │
+│  │         │ Pulls jobs from GitHub.com                │ │
+│  └─────────┼────────────────────────────────────────────┘ │
+│            │                                              │
+└────────────┼──────────────────────────────────────────────┘
+             │
+             ▼
+    ┌────────────────┐
+    │  GitHub.com    │
+    │  Your Repo     │
+    │  Workflows     │
+    └────────────────┘
+```
+
+## Why Use Self-Hosted Runners?
+
+### Advantages
+
+✅ **No Firewall Configuration**
+- Direct access to local SQL Server
+- No Azure SQL firewall rules needed
+- Works with completely private databases
+
+✅ **Zero GitHub Actions Minutes Used**
+- Unlimited free runs
+- No cost concerns
+- Perfect for learning and testing
+
+✅ **Faster Feedback Loops**
+- No network latency to GitHub
+- Direct localhost connections
+- Instant deployment testing
+
+✅ **Production-Like Environment**
+- Learn self-hosted runner management
+- Understand enterprise CI/CD patterns
+- Prepare for on-premises deployments
+
+✅ **Full Control**
+- Install any tools you need
+- Custom configurations
+- Debug workflow issues locally
+
+### When to Use Self-Hosted Runners
+
+| Scenario | Recommended Approach |
+|----------|---------------------|
+| Learning Liquibase + GitHub Actions | ✅ Self-hosted (this guide) |
+| Local SQL Server development | ✅ Self-hosted |
+| Testing workflows before cloud deployment | ✅ Self-hosted |
+| Enterprise with private databases | ✅ Self-hosted |
+| Production with cloud databases | ⚠️ GitHub-hosted or enterprise runners |
+| Small team, simple needs | ⚠️ GitHub-hosted (simpler) |
+
+## Architecture Overview
+
+### Components
+
+**1. WSL 2 (Windows Subsystem for Linux)**
+- Linux environment on Windows
+- Runs Docker daemon
+- Hosts runner and SQL Server containers
+
+**2. Docker**
+- Container runtime
+- Isolates runner and database
+- Easy cleanup and reset
+
+**3. GitHub Actions Runner Container**
+- Connects to GitHub.com
+- Pulls workflow jobs
+- Executes steps locally
+
+**4. SQL Server Container**
+- Local database instance
+- Accessible to runner
+- No internet exposure needed
+
+### How It Works
+
+```
+1. You push code to GitHub
+   ↓
+2. GitHub creates workflow job
+   ↓
+3. GitHub sends job to your runner (via polling)
+   ↓
+4. Runner (in WSL Docker) executes job
+   ↓
+5. Runner deploys to SQL Server (in WSL Docker)
+   ↓
+6. Runner reports results back to GitHub
+   ↓
+7. You see results in GitHub Actions UI
+```
+
+**Key point:** The runner is **pulling** jobs from GitHub, not receiving incoming connections. This works through firewalls and NAT.
+
+## Prerequisites
+
+### Required Software
+
+✅ **Windows 10 version 2004+ or Windows 11**
+- WSL 2 requires recent Windows
+
+✅ **WSL 2 installed and configured**
+- Ubuntu distribution recommended
+
+✅ **Docker Desktop for Windows** (optional) OR **Docker in WSL** (recommended)
+
+✅ **Git installed** in WSL
+
+✅ **GitHub account** with a repository
+
+### Check Your Setup
+
+```bash
+# Check Windows version (in PowerShell)
+winver
+# Should show version 2004 or higher
+
+# Check WSL version
+wsl --list --verbose
+# Should show "VERSION 2" for your distro
+
+# In WSL terminal:
+# Check WSL is Ubuntu
+cat /etc/os-release
+# Should show Ubuntu
+
+# Check you have internet
+ping -c 3 google.com
+```
+
+### Install WSL 2 (If Not Already Installed)
+
+**In PowerShell (as Administrator):**
+
+```powershell
+# Install WSL 2
+wsl --install
+
+# Restart computer
+
+# After restart, set default version to WSL 2
+wsl --set-default-version 2
+
+# Install Ubuntu
+wsl --install -d Ubuntu
+
+# Launch Ubuntu and create your user
+```
+
+## Part 1: Setup Docker in WSL 2
+
+### Option A: Docker Desktop (Easier)
+
+**Pros:** Simple installation, GUI management
+**Cons:** Resource intensive, commercial licensing for large companies
+
+**Steps:**
+
+1. Download [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+2. Install Docker Desktop
+3. In Docker Desktop settings:
+   - ✅ Enable "Use the WSL 2 based engine"
+   - ✅ Enable integration with your Ubuntu distro
+4. Restart Docker Desktop
+
+**Verify:**
+
+```bash
+# In WSL terminal
+docker --version
+docker run hello-world
+```
+
+### Option B: Docker in WSL Directly (Recommended for Learning)
+
+**Pros:** Lightweight, no extra software, free
+**Cons:** Command-line only, manual setup
+
+**Steps:**
+
+```bash
+# Update package list
+sudo apt update
+
+# Install prerequisites
+sudo apt install -y \
+    apt-transport-https \
+    ca-certificates \
+    curl \
+    gnupg \
+    lsb-release
+
+# Add Docker's official GPG key
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+
+# Add Docker repository
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
+  $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+# Install Docker Engine
+sudo apt update
+sudo apt install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
+
+# Start Docker service
+sudo service docker start
+
+# Add your user to docker group (avoid sudo)
+sudo usermod -aG docker $USER
+
+# Apply group membership (logout/login or use newgrp)
+newgrp docker
+
+# Verify Docker works
+docker --version
+docker run hello-world
+```
+
+### Configure Docker to Start on WSL Launch
+
+```bash
+# Create startup script
+cat >> ~/.bashrc << 'EOF'
+
+# Start Docker daemon if not running
+if ! docker info > /dev/null 2>&1; then
+    sudo service docker start > /dev/null 2>&1
+fi
+EOF
+
+# Reload bash configuration
+source ~/.bashrc
+```
+
+### Create Docker Network for Liquibase
+
+```bash
+# Create isolated network for runner and database
+docker network create liquibase-network
+
+# Verify
+docker network ls | grep liquibase
+```
+
+✅ **Checkpoint:** Docker is installed and working in WSL 2!
+
+## Part 2: Setup SQL Server
+
+### Option 1: SQL Server in Docker (Recommended)
+
+**Best for:** Learning, clean setup, easy reset
+
+```bash
+# Pull SQL Server 2022 image
+docker pull mcr.microsoft.com/mssql/server:2022-latest
+
+# Run SQL Server container
+docker run -d \
+  --name sqlserver \
+  --network liquibase-network \
+  -e "ACCEPT_EULA=Y" \
+  -e "SA_PASSWORD=YourStrong!Passw0rd" \
+  -e "MSSQL_PID=Developer" \
+  -p 1433:1433 \
+  -v sqlserver-data:/var/opt/mssql \
+  mcr.microsoft.com/mssql/server:2022-latest
+
+# Wait for SQL Server to start (30 seconds)
+sleep 30
+
+# Verify SQL Server is running
+docker logs sqlserver | grep "SQL Server is now ready"
+
+# Test connection
+docker exec -it sqlserver /opt/mssql-tools/bin/sqlcmd \
+  -S localhost -U sa -P 'YourStrong!Passw0rd' \
+  -Q "SELECT @@VERSION"
+```
+
+**Expected output:** SQL Server version information
+
+### Create Database for Tutorial
+
+```bash
+# Create database
+docker exec -it sqlserver /opt/mssql-tools/bin/sqlcmd \
+  -S localhost -U sa -P 'YourStrong!Passw0rd' \
+  -Q "CREATE DATABASE liquibase_demo; SELECT name FROM sys.databases WHERE name = 'liquibase_demo';"
+```
+
+### Option 2: SQL Server on Windows Host
+
+**Best for:** Already have SQL Server installed on Windows
+
+**Connection from WSL:**
+
+```bash
+# Get Windows host IP from WSL
+export WINDOWS_HOST=$(ip route show | grep -i default | awk '{ print $3}')
+echo "Windows host IP: $WINDOWS_HOST"
+
+# Test connection (replace SA password)
+docker run --rm mcr.microsoft.com/mssql-tools \
+  /opt/mssql-tools/bin/sqlcmd \
+  -S $WINDOWS_HOST -U sa -P 'YourPassword' \
+  -Q "SELECT @@VERSION"
+```
+
+**Note:** Ensure SQL Server on Windows allows TCP/IP connections:
+1. SQL Server Configuration Manager
+2. SQL Server Network Configuration
+3. Protocols for MSSQLSERVER
+4. Enable TCP/IP
+5. Restart SQL Server service
+
+### Option 3: SQL Server Directly in WSL
+
+**Best for:** Long-term WSL development
+
+```bash
+# Add Microsoft repository
+curl https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
+curl https://packages.microsoft.com/config/ubuntu/$(lsb_release -rs)/prod.list | sudo tee /etc/apt/sources.list.d/msprod.list
+
+# Install SQL Server
+sudo apt update
+sudo apt install -y mssql-server
+
+# Configure SQL Server
+sudo /opt/mssql/bin/mssql-conf setup
+# Choose: Developer edition
+# Accept EULA: Yes
+# Set SA password
+
+# Start SQL Server
+sudo systemctl start mssql-server
+
+# Verify
+systemctl status mssql-server
+```
+
+✅ **Checkpoint:** SQL Server is running and accessible!
+
+## Part 3: Configure GitHub Runner
+
+### Step 3.1: Register Runner in GitHub
+
+1. Go to your GitHub repository
+2. Click **Settings** tab
+3. In left sidebar: **Actions** → **Runners**
+4. Click **New self-hosted runner** button
+5. Select:
+   - **Linux** (operating system)
+   - **x64** (architecture)
+
+**You'll see registration instructions. DON'T FOLLOW THEM YET.**
+
+6. **Copy the registration token** shown (looks like: `AABBC...XYZ`)
+   - This token expires after 1 hour
+   - You'll use it in the next step
+
+### Step 3.2: Create Runner Configuration
+
+Create a configuration file:
+
+```bash
+# Create directory for runner configuration
+mkdir -p ~/github-runner-config
+cd ~/github-runner-config
+
+# Create .env file with your details
+cat > runner.env << 'EOF'
+# GitHub Runner Configuration
+
+# Your GitHub repository URL
+RUNNER_REPOSITORY_URL=https://github.com/YOUR_USERNAME/YOUR_REPO
+
+# Registration token from GitHub (Step 3.1)
+RUNNER_TOKEN=YOUR_REGISTRATION_TOKEN_HERE
+
+# Runner name (appears in GitHub)
+RUNNER_NAME=wsl-docker-runner
+
+# Runner labels (comma-separated)
+RUNNER_LABELS=self-hosted,linux,x64,wsl,docker
+
+# Runner group (leave as default)
+RUNNER_GROUP=default
+
+# Runner work directory
+RUNNER_WORKDIR=/tmp/github-runner
+EOF
+
+# Edit the file with your actual values
+nano runner.env
+```
+
+**Replace:**
+- `YOUR_USERNAME` - Your GitHub username
+- `YOUR_REPO` - Your repository name
+- `YOUR_REGISTRATION_TOKEN_HERE` - Token from Step 3.1
+
+**Example:**
+```bash
+RUNNER_REPOSITORY_URL=https://github.com/john/liquibase-demo
+RUNNER_TOKEN=AABBCCDDEE1122334455FFGGHHIIJJKKLLMMNNOOPPQQRRSSTTUUVV
+```
+
+### Step 3.3: Run GitHub Actions Runner Container
+
+```bash
+# Load environment variables
+source ~/github-runner-config/runner.env
+
+# Run runner container
+docker run -d \
+  --name github-runner \
+  --network liquibase-network \
+  --restart unless-stopped \
+  -e RUNNER_NAME="${RUNNER_NAME}" \
+  -e RUNNER_WORKDIR="${RUNNER_WORKDIR}" \
+  -e RUNNER_TOKEN="${RUNNER_TOKEN}" \
+  -e RUNNER_REPOSITORY_URL="${RUNNER_REPOSITORY_URL}" \
+  -e RUNNER_LABELS="${RUNNER_LABELS}" \
+  -e RUNNER_GROUP="${RUNNER_GROUP}" \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  -v ~/github-runner:/tmp/github-runner \
+  myoung34/github-runner:latest
+
+# Wait for runner to register (10 seconds)
+sleep 10
+
+# Check runner logs
+docker logs github-runner
+```
+
+**Expected output:**
+```
+√ Connected to GitHub
+√ Runner successfully added
+√ Runner connection is good
+```
+
+### Step 3.4: Verify Runner in GitHub
+
+1. Go back to GitHub: **Settings** → **Actions** → **Runners**
+2. You should see your runner listed:
+   - **Name:** wsl-docker-runner
+   - **Status:** 🟢 Idle (green dot)
+   - **Labels:** self-hosted, linux, x64, wsl, docker
+
+✅ **Checkpoint:** GitHub runner is connected and waiting for jobs!
+
+## Part 4: Connect Runner to SQL Server
+
+### Understanding Networking
+
+Your runner and SQL Server are in the same Docker network (`liquibase-network`). They can communicate using container names.
+
+### Step 4.1: Test Connectivity from Runner
+
+```bash
+# Test that runner can reach SQL Server
+docker exec github-runner ping -c 3 sqlserver
+```
+
+**Expected:** Successful ping responses
+
+### Step 4.2: Determine Connection String
+
+**If SQL Server is in Docker (Option 1 from Part 2):**
+
+```
+jdbc:sqlserver://sqlserver:1433;databaseName=liquibase_demo;encrypt=true;trustServerCertificate=true;loginTimeout=30
+```
+
+**Key points:**
+- Host: `sqlserver` (container name, not localhost)
+- Port: `1433` (default SQL Server port)
+- `trustServerCertificate=true` (required for self-signed certs)
+
+**If SQL Server is on Windows Host (Option 2):**
+
+```bash
+# Get Windows host IP
+docker exec github-runner sh -c "ip route show | grep -i default | awk '{ print \$3}'"
+# Example output: 172.28.160.1
+
+# Use this IP in connection string:
+jdbc:sqlserver://172.28.160.1:1433;databaseName=liquibase_demo;encrypt=true;trustServerCertificate=true;loginTimeout=30
+```
+
+### Step 4.3: Test Database Connection
+
+```bash
+# Install sqlcmd in runner container for testing
+docker exec -u root github-runner bash -c "
+  curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add -
+  curl https://packages.microsoft.com/config/ubuntu/20.04/prod.list > /etc/apt/sources.list.d/mssql-release.list
+  apt-get update
+  ACCEPT_EULA=Y apt-get install -y mssql-tools unixodbc-dev
+"
+
+# Test connection
+docker exec github-runner /opt/mssql-tools/bin/sqlcmd \
+  -S sqlserver -U sa -P 'YourStrong!Passw0rd' \
+  -Q "SELECT @@VERSION"
+```
+
+**Expected:** SQL Server version information displayed
+
+✅ **Checkpoint:** Runner can connect to SQL Server!
+
+## Part 5: Update Workflows
+
+### Step 5.1: Create or Update Secrets
+
+Even though it's local, use secrets for best practices:
+
+1. Go to GitHub: **Settings** → **Secrets and variables** → **Actions**
+2. Click **New repository secret**
+
+Add these secrets:
+
+**Secret 1: DB_URL**
+```
+Name: LOCAL_DB_URL
+Value: jdbc:sqlserver://sqlserver:1433;databaseName=liquibase_demo;encrypt=true;trustServerCertificate=true;loginTimeout=30
+```
+
+**Secret 2: DB_USERNAME**
+```
+Name: LOCAL_DB_USERNAME
+Value: sa
+```
+
+**Secret 3: DB_PASSWORD**
+```
+Name: LOCAL_DB_PASSWORD
+Value: YourStrong!Passw0rd
+```
+
+### Step 5.2: Create Workflow for Self-Hosted Runner
+
+```bash
+# In your repository directory (on WSL)
+cd ~/your-repo-directory
+
+# Create workflow directory if it doesn't exist
+mkdir -p .github/workflows
+
+# Create workflow file
+cat > .github/workflows/deploy-local.yml << 'EOF'
+name: Deploy to Local Database (Self-Hosted)
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'database/**'
+  workflow_dispatch:
+
+jobs:
+  deploy-local:
+    name: Deploy to Local SQL Server
+    runs-on: self-hosted  # Use your WSL runner
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Liquibase
+        uses: liquibase/setup-liquibase@v2
+        with:
+          version: '4.32.0'
+          edition: 'oss'
+
+      - name: Verify connection
+        run: |
+          echo "Testing database connection..."
+          # Connection test will happen during liquibase status
+
+      - name: Show pending changes
+        run: |
+          echo "Checking for pending database changes..."
+          liquibase status \
+            --changelog-file=database/changelog/changelog.xml \
+            --url="${{ secrets.LOCAL_DB_URL }}" \
+            --username="${{ secrets.LOCAL_DB_USERNAME }}" \
+            --password="${{ secrets.LOCAL_DB_PASSWORD }}"
+
+      - name: Deploy changes
+        run: |
+          echo "Deploying to local SQL Server..."
+          liquibase update \
+            --changelog-file=database/changelog/changelog.xml \
+            --url="${{ secrets.LOCAL_DB_URL }}" \
+            --username="${{ secrets.LOCAL_DB_USERNAME }}" \
+            --password="${{ secrets.LOCAL_DB_PASSWORD }}"
+
+      - name: Show deployment history
+        run: |
+          echo "Recent deployments:"
+          liquibase history --count=5 \
+            --url="${{ secrets.LOCAL_DB_URL }}" \
+            --username="${{ secrets.LOCAL_DB_USERNAME }}" \
+            --password="${{ secrets.LOCAL_DB_PASSWORD }}"
+
+      - name: Deployment summary
+        run: |
+          echo "✅ Deployment completed successfully!"
+          echo "Environment: Local (WSL Docker)"
+          echo "Triggered by: ${{ github.actor }}"
+          echo "Commit: ${{ github.sha }}"
+EOF
+```
+
+### Step 5.3: Commit and Push Workflow
+
+```bash
+# Add workflow file
+git add .github/workflows/deploy-local.yml
+
+# Commit
+git commit -m "Add self-hosted runner workflow for local deployment"
+
+# Push to GitHub
+git push origin main
+```
+
+## Part 6: Test Your Setup
+
+### Step 6.1: Watch Workflow Execute
+
+1. Go to GitHub: **Actions** tab
+2. You should see "Deploy to Local Database (Self-Hosted)" running
+3. Click on the workflow run
+4. Watch the steps execute in real-time
+
+**You'll see:**
+```
+Checkout code ✓
+Set up Liquibase ✓
+Verify connection ✓
+Show pending changes ✓
+Deploy changes ✓
+Show deployment history ✓
+Deployment summary ✓
+```
+
+### Step 6.2: Monitor Runner Locally
+
+In WSL terminal:
+
+```bash
+# Watch runner logs in real-time
+docker logs -f github-runner
+
+# You'll see:
+# - Job received from GitHub
+# - Steps executing
+# - Liquibase commands running
+# - Job completed and reported back to GitHub
+```
+
+### Step 6.3: Verify Database Changes
+
+```bash
+# Connect to SQL Server
+docker exec -it sqlserver /opt/mssql-tools/bin/sqlcmd \
+  -S localhost -U sa -P 'YourStrong!Passw0rd'
+
+# Check Liquibase tables were created
+1> USE liquibase_demo;
+2> SELECT * FROM DATABASECHANGELOG ORDER BY DATEEXECUTED DESC;
+3> GO
+
+# Check your application tables
+1> SELECT name FROM sys.tables;
+2> GO
+
+# Exit sqlcmd
+1> EXIT
+```
+
+### Step 6.4: Test Manual Trigger
+
+1. Go to **Actions** tab
+2. Click **Deploy to Local Database (Self-Hosted)** workflow
+3. Click **Run workflow** button
+4. Select branch: `main`
+5. Click **Run workflow**
+
+**Result:** Workflow runs immediately without code changes!
+
+✅ **Checkpoint:** Complete CI/CD pipeline working locally!
+
+## Part 7: Advanced Configuration
+
+### Custom Runner Image with Pre-installed Tools
+
+Create a custom runner image with Liquibase pre-installed:
+
+```bash
+# Create Dockerfile
+mkdir -p ~/custom-runner
+cd ~/custom-runner
+
+cat > Dockerfile << 'EOF'
+FROM myoung34/github-runner:latest
+
+# Install Liquibase
+USER root
+RUN apt-get update && \
+    apt-get install -y wget openjdk-11-jdk && \
+    wget -O /tmp/liquibase.tar.gz https://github.com/liquibase/liquibase/releases/download/v4.32.0/liquibase-4.32.0.tar.gz && \
+    mkdir /opt/liquibase && \
+    tar -xzf /tmp/liquibase.tar.gz -C /opt/liquibase && \
+    ln -s /opt/liquibase/liquibase /usr/local/bin/liquibase && \
+    chmod +x /usr/local/bin/liquibase && \
+    rm /tmp/liquibase.tar.gz
+
+# Install SQL Server tools
+RUN curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add - && \
+    curl https://packages.microsoft.com/config/ubuntu/20.04/prod.list > /etc/apt/sources.list.d/mssql-release.list && \
+    apt-get update && \
+    ACCEPT_EULA=Y apt-get install -y mssql-tools unixodbc-dev
+
+ENV PATH="/opt/mssql-tools/bin:${PATH}"
+
+USER runner
+EOF
+
+# Build custom image
+docker build -t custom-github-runner:latest .
+
+# Stop and remove existing runner
+docker stop github-runner
+docker rm github-runner
+
+# Run with custom image
+source ~/github-runner-config/runner.env
+docker run -d \
+  --name github-runner \
+  --network liquibase-network \
+  --restart unless-stopped \
+  -e RUNNER_NAME="${RUNNER_NAME}" \
+  -e RUNNER_WORKDIR="${RUNNER_WORKDIR}" \
+  -e RUNNER_TOKEN="${RUNNER_TOKEN}" \
+  -e RUNNER_REPOSITORY_URL="${RUNNER_REPOSITORY_URL}" \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  -v ~/github-runner:/tmp/github-runner \
+  custom-github-runner:latest
+```
+
+**Benefits:**
+- Faster workflow execution (no tool installation)
+- Consistent environment
+- Custom configurations
+
+### Multiple Runners
+
+Run multiple runners for parallel jobs:
+
+```bash
+# Runner 1 (already running)
+docker ps | grep github-runner
+
+# Runner 2
+docker run -d \
+  --name github-runner-2 \
+  --network liquibase-network \
+  --restart unless-stopped \
+  -e RUNNER_NAME="wsl-docker-runner-2" \
+  -e RUNNER_WORKDIR="/tmp/github-runner-2" \
+  -e RUNNER_TOKEN="NEW_TOKEN_HERE" \
+  -e RUNNER_REPOSITORY_URL="${RUNNER_REPOSITORY_URL}" \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  -v ~/github-runner-2:/tmp/github-runner-2 \
+  myoung34/github-runner:latest
+```
+
+**Use case:** Run tests in parallel with deployments
+
+### Runner Startup Script
+
+Create a script to start all containers:
+
+```bash
+cat > ~/start-liquibase-env.sh << 'EOF'
+#!/bin/bash
+set -e
+
+echo "Starting Liquibase CI/CD environment..."
+
+# Start SQL Server if not running
+if ! docker ps | grep -q sqlserver; then
+    echo "Starting SQL Server..."
+    docker start sqlserver || docker run -d \
+      --name sqlserver \
+      --network liquibase-network \
+      -e "ACCEPT_EULA=Y" \
+      -e "SA_PASSWORD=YourStrong!Passw0rd" \
+      -e "MSSQL_PID=Developer" \
+      -p 1433:1433 \
+      -v sqlserver-data:/var/opt/mssql \
+      mcr.microsoft.com/mssql/server:2022-latest
+fi
+
+# Wait for SQL Server
+sleep 10
+
+# Start GitHub runner if not running
+if ! docker ps | grep -q github-runner; then
+    echo "Starting GitHub Actions runner..."
+    source ~/github-runner-config/runner.env
+    docker start github-runner || docker run -d \
+      --name github-runner \
+      --network liquibase-network \
+      --restart unless-stopped \
+      -e RUNNER_NAME="${RUNNER_NAME}" \
+      -e RUNNER_WORKDIR="${RUNNER_WORKDIR}" \
+      -e RUNNER_TOKEN="${RUNNER_TOKEN}" \
+      -e RUNNER_REPOSITORY_URL="${RUNNER_REPOSITORY_URL}" \
+      -v /var/run/docker.sock:/var/run/docker.sock \
+      -v ~/github-runner:/tmp/github-runner \
+      myoung34/github-runner:latest
+fi
+
+echo "✅ Environment ready!"
+echo ""
+echo "SQL Server: localhost:1433"
+echo "Runner status: Check GitHub Settings → Actions → Runners"
+echo ""
+echo "Stop with: docker stop github-runner sqlserver"
+EOF
+
+chmod +x ~/start-liquibase-env.sh
+
+# Run it
+~/start-liquibase-env.sh
+```
+
+### Shutdown Script
+
+```bash
+cat > ~/stop-liquibase-env.sh << 'EOF'
+#!/bin/bash
+
+echo "Stopping Liquibase CI/CD environment..."
+
+docker stop github-runner sqlserver 2>/dev/null || true
+
+echo "✅ Environment stopped"
+echo "Restart with: ~/start-liquibase-env.sh"
+EOF
+
+chmod +x ~/stop-liquibase-env.sh
+```
+
+## Part 8: Hybrid Approach
+
+Use self-hosted for development, GitHub-hosted for staging/production:
+
+```yaml
+# .github/workflows/deploy-hybrid.yml
+name: Hybrid Deployment Pipeline
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'database/**'
+  workflow_dispatch:
+
+jobs:
+  # Local development - self-hosted
+  deploy-dev-local:
+    name: Deploy to Development (Local)
+    runs-on: self-hosted
+    environment: development
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: liquibase/setup-liquibase@v2
+        with:
+          version: '4.32.0'
+
+      - name: Deploy to local SQL Server
+        run: |
+          liquibase update \
+            --changelog-file=database/changelog/changelog.xml \
+            --url="${{ secrets.LOCAL_DB_URL }}" \
+            --username="${{ secrets.LOCAL_DB_USERNAME }}" \
+            --password="${{ secrets.LOCAL_DB_PASSWORD }}"
+
+  # Cloud staging - GitHub-hosted
+  deploy-staging-cloud:
+    name: Deploy to Staging (Azure SQL)
+    runs-on: ubuntu-latest
+    needs: deploy-dev-local
+    environment: staging
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: liquibase/setup-liquibase@v2
+        with:
+          version: '4.32.0'
+
+      - name: Deploy to Azure SQL
+        run: |
+          liquibase update \
+            --changelog-file=database/changelog/changelog.xml \
+            --url="${{ secrets.AZURE_STAGE_DB_URL }}" \
+            --username="${{ secrets.AZURE_STAGE_DB_USERNAME }}" \
+            --password="${{ secrets.AZURE_STAGE_DB_PASSWORD }}"
+
+  # Cloud production - GitHub-hosted
+  deploy-production-cloud:
+    name: Deploy to Production (Azure SQL)
+    runs-on: ubuntu-latest
+    needs: deploy-staging-cloud
+    environment: production
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: liquibase/setup-liquibase@v2
+        with:
+          version: '4.32.0'
+
+      - name: Deploy to production
+        run: |
+          liquibase update \
+            --changelog-file=database/changelog/changelog.xml \
+            --url="${{ secrets.AZURE_PROD_DB_URL }}" \
+            --username="${{ secrets.AZURE_PROD_DB_USERNAME }}" \
+            --password="${{ secrets.AZURE_PROD_DB_PASSWORD }}"
+```
+
+**Benefits of hybrid:**
+- Fast local development (self-hosted)
+- Production-like cloud testing (GitHub-hosted)
+- Learn both approaches
+- Optimize costs
+
+## Troubleshooting
+
+### Runner Not Appearing in GitHub
+
+**Symptom:** No runner shows up in Settings → Actions → Runners
+
+**Solutions:**
+
+```bash
+# Check runner logs
+docker logs github-runner
+
+# Look for errors like:
+# - "Failed to connect to GitHub"
+# - "Invalid token"
+# - "Repository not found"
+
+# If token expired, get new token:
+# 1. GitHub → Settings → Actions → Runners → New runner
+# 2. Copy new token
+# 3. Update runner.env
+# 4. Recreate container:
+
+docker stop github-runner
+docker rm github-runner
+
+source ~/github-runner-config/runner.env
+docker run -d \
+  --name github-runner \
+  --network liquibase-network \
+  --restart unless-stopped \
+  -e RUNNER_NAME="${RUNNER_NAME}" \
+  -e RUNNER_WORKDIR="${RUNNER_WORKDIR}" \
+  -e RUNNER_TOKEN="${RUNNER_TOKEN}" \
+  -e RUNNER_REPOSITORY_URL="${RUNNER_REPOSITORY_URL}" \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  -v ~/github-runner:/tmp/github-runner \
+  myoung34/github-runner:latest
+```
+
+### Workflow Doesn't Run on Self-Hosted Runner
+
+**Symptom:** Workflow queued forever or runs on GitHub-hosted runner
+
+**Check:**
+
+```yaml
+# Verify workflow specifies self-hosted
+jobs:
+  my-job:
+    runs-on: self-hosted  # Must be present
+
+# If using labels:
+jobs:
+  my-job:
+    runs-on: [self-hosted, linux]
+```
+
+**Verify runner labels match:**
+
+1. GitHub → Settings → Actions → Runners
+2. Click your runner name
+3. Check labels match workflow
+
+### SQL Server Connection Failed
+
+**Symptom:** "Cannot open server" or "Login timeout"
+
+**Diagnose:**
+
+```bash
+# 1. Check SQL Server is running
+docker ps | grep sqlserver
+
+# 2. Check containers are on same network
+docker inspect github-runner | grep -A 10 Networks
+docker inspect sqlserver | grep -A 10 Networks
+# Should both show "liquibase-network"
+
+# 3. Test connectivity
+docker exec github-runner ping -c 3 sqlserver
+
+# 4. Test SQL Server port
+docker exec github-runner nc -zv sqlserver 1433
+# Should show: "sqlserver [1433] open"
+
+# 5. Check SQL Server logs
+docker logs sqlserver | tail -20
+
+# 6. Verify SQL Server is ready
+docker exec sqlserver /opt/mssql-tools/bin/sqlcmd \
+  -S localhost -U sa -P 'YourStrong!Passw0rd' \
+  -Q "SELECT @@VERSION"
+```
+
+**Fix network issue:**
+
+```bash
+# Reconnect runner to network
+docker network disconnect liquibase-network github-runner
+docker network connect liquibase-network github-runner
+
+# Restart runner
+docker restart github-runner
+```
+
+### Liquibase Command Not Found
+
+**Symptom:** "liquibase: command not found" in workflow
+
+**Solution 1: Ensure setup step runs**
+
+```yaml
+steps:
+  - uses: actions/checkout@v3
+
+  # This step MUST be present
+  - uses: liquibase/setup-liquibase@v2
+    with:
+      version: '4.32.0'
+
+  # Then liquibase commands work
+  - run: liquibase --version
+```
+
+**Solution 2: Use custom runner image (Part 7)**
+
+### Docker Permission Denied
+
+**Symptom:** "permission denied while trying to connect to the Docker daemon socket"
+
+**Solution:**
+
+```bash
+# Add user to docker group
+sudo usermod -aG docker $USER
+
+# Apply group membership
+newgrp docker
+
+# Verify
+docker ps
+```
+
+### WSL Docker Not Starting
+
+**Symptom:** "Cannot connect to the Docker daemon"
+
+**Solutions:**
+
+```bash
+# Start Docker service
+sudo service docker start
+
+# Check status
+sudo service docker status
+
+# If fails, check logs
+sudo journalctl -u docker
+
+# Reinstall Docker if corrupted (nuclear option)
+sudo apt remove docker docker-engine docker.io containerd runc
+# Then follow Part 1 installation steps again
+```
+
+### Runner Offline After Windows Restart
+
+**Symptom:** Runner shows offline in GitHub after rebooting Windows
+
+**Solution:**
+
+```bash
+# WSL doesn't auto-start Docker containers
+# Start manually:
+sudo service docker start
+docker start sqlserver
+docker start github-runner
+
+# OR use startup script from Part 7
+~/start-liquibase-env.sh
+
+# OR set auto-start in .bashrc (already done in Part 1)
+```
+
+### High Memory/CPU Usage
+
+**Symptom:** Windows slow, high resource usage
+
+**Check:**
+
+```bash
+# See resource usage
+docker stats
+
+# Limit container resources:
+docker stop github-runner sqlserver
+docker rm github-runner sqlserver
+
+# Recreate with limits
+docker run -d \
+  --name sqlserver \
+  --network liquibase-network \
+  --memory="2g" \
+  --cpus="2" \
+  -e "ACCEPT_EULA=Y" \
+  -e "SA_PASSWORD=YourStrong!Passw0rd" \
+  -e "MSSQL_PID=Developer" \
+  -p 1433:1433 \
+  mcr.microsoft.com/mssql/server:2022-latest
+
+# Runner usually doesn't need limits (only active during jobs)
+```
+
+## Comparison: Self-Hosted vs GitHub-Hosted
+
+| Feature | Self-Hosted (This Guide) | GitHub-Hosted |
+|---------|-------------------------|---------------|
+| **Cost** | ✅ Free, unlimited | ⚠️ 2,000 min/month free |
+| **Setup Time** | ⚠️ 2-3 hours | ✅ 0 minutes |
+| **Maintenance** | ⚠️ You maintain | ✅ GitHub maintains |
+| **Database Access** | ✅ Direct, no firewall | ❌ Firewall rules needed |
+| **Speed** | ✅ Localhost speed | ⚠️ Internet latency |
+| **Learning Value** | ✅ Learn self-hosted | ⚠️ Limited to GitHub |
+| **Security** | ⚠️ Your responsibility | ✅ GitHub's responsibility |
+| **Persistence** | ✅ Keeps working | ✅ Always available |
+| **Windows Restart** | ⚠️ Manual restart | ✅ N/A |
+| **Production Ready** | ✅ Yes (enterprise) | ✅ Yes (cloud) |
+
+## Migration Path
+
+### Week 1: Learn Locally (Self-Hosted)
+
+```yaml
+# Use self-hosted for everything
+jobs:
+  deploy:
+    runs-on: self-hosted
+```
+
+**Benefits:**
+- Fast iteration
+- No costs
+- Learn GitHub Actions
+
+### Week 2: Add Cloud Database (Hybrid)
+
+```yaml
+jobs:
+  deploy-local:
+    runs-on: self-hosted
+
+  deploy-cloud:
+    needs: deploy-local
+    runs-on: ubuntu-latest
+```
+
+**Benefits:**
+- Keep fast local development
+- Add cloud testing
+- Learn firewall configuration
+
+### Week 3: Full Cloud (GitHub-Hosted)
+
+```yaml
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+```
+
+**Benefits:**
+- Production-like
+- No maintenance
+- Team can use
+
+### Enterprise: Keep Self-Hosted
+
+```yaml
+jobs:
+  deploy:
+    runs-on: [self-hosted, production]
+```
+
+**Benefits:**
+- Private databases
+- Compliance requirements
+- Custom tooling
+
+## Maintenance and Operations
+
+### Daily Operations
+
+**Start environment:**
+```bash
+~/start-liquibase-env.sh
+```
+
+**Check status:**
+```bash
+docker ps
+# Should show: github-runner (Up), sqlserver (Up)
+
+# Check runner in GitHub
+# Settings → Actions → Runners → should show green dot
+```
+
+**Stop environment:**
+```bash
+~/stop-liquibase-env.sh
+```
+
+### Weekly Maintenance
+
+```bash
+# Update runner image
+docker pull myoung34/github-runner:latest
+docker stop github-runner
+docker rm github-runner
+# Recreate with new image (use commands from Part 3)
+
+# Update SQL Server
+docker pull mcr.microsoft.com/mssql/server:2022-latest
+# Backup database first if needed
+docker stop sqlserver
+docker rm sqlserver
+# Recreate (data persists in volume)
+```
+
+### Backup SQL Server Data
+
+```bash
+# Backup SQL Server volume
+docker run --rm \
+  -v sqlserver-data:/source \
+  -v ~/backups:/backup \
+  ubuntu tar czf /backup/sqlserver-backup-$(date +%Y%m%d).tar.gz /source
+
+# Restore backup
+docker run --rm \
+  -v sqlserver-data:/target \
+  -v ~/backups:/backup \
+  ubuntu tar xzf /backup/sqlserver-backup-YYYYMMDD.tar.gz -C /
+```
+
+### Clean Up Old Workflow Runs
+
+```bash
+# GitHub auto-deletes after 90 days
+# Manual cleanup in runner:
+docker exec github-runner find /tmp/github-runner -type d -mtime +30 -exec rm -rf {} +
+```
+
+## Security Considerations
+
+### Advantages of Local Setup
+
+✅ **Database Never Exposed to Internet**
+- No public IP
+- No firewall rules
+- No attack surface
+
+✅ **Secrets Only Used Locally**
+- GitHub secrets stay in GitHub
+- Runner pulls secrets, doesn't expose them
+- Even if compromised, only local access
+
+✅ **Isolated Environment**
+- Containers are isolated
+- Easy to reset/rebuild
+- No impact on production
+
+### Security Best Practices
+
+**1. Use Strong Passwords**
+
+```bash
+# Generate strong password
+openssl rand -base64 24
+
+# Use in SA_PASSWORD
+-e "SA_PASSWORD=$(openssl rand -base64 24)"
+```
+
+**2. Rotate Runner Tokens**
+
+```bash
+# Every 30 days, regenerate:
+# 1. GitHub → Settings → Actions → Runners
+# 2. Remove old runner
+# 3. Add new runner (get new token)
+# 4. Update runner.env
+# 5. Recreate container
+```
+
+**3. Keep Docker Updated**
+
+```bash
+# Update Docker
+sudo apt update
+sudo apt upgrade docker-ce docker-ce-cli containerd.io
+
+# Update images
+docker pull myoung34/github-runner:latest
+docker pull mcr.microsoft.com/mssql/server:2022-latest
+```
+
+**4. Don't Share Secrets**
+
+- Never commit `runner.env` to Git
+- Don't share screenshots with tokens visible
+- Use GitHub Secrets for sensitive data
+
+**5. Monitor Runner Activity**
+
+```bash
+# Watch logs for suspicious activity
+docker logs -f github-runner
+
+# Check what workflows ran
+# GitHub → Actions → View workflow history
+```
+
+## Conclusion
+
+Congratulations! You've set up a complete local CI/CD environment with:
+
+✅ **GitHub Actions runner** in Docker on WSL
+✅ **SQL Server** accessible to runner
+✅ **Automated deployments** via GitHub workflows
+✅ **Production-like environment** for learning
+✅ **Zero cost** unlimited runs
+
+### What You've Learned
+
+1. **Self-hosted runners** - How they work and when to use them
+2. **Docker networking** - Container communication
+3. **WSL integration** - Linux on Windows development
+4. **CI/CD patterns** - Local → Cloud migration
+5. **Troubleshooting** - Common issues and solutions
+
+### Next Steps
+
+**Continue Learning:**
+1. Follow the main tutorial: [sqlserver-liquibase-github-actions-tutorial.md](./sqlserver-liquibase-github-actions-tutorial.md)
+2. Add cloud staging environment (hybrid approach)
+3. Implement advanced workflows from [github-actions-liquibase-best-practices.md](./github-actions-liquibase-best-practices.md)
+
+**For Production:**
+1. Move to GitHub-hosted runners for cloud databases
+2. Or scale self-hosted runners for enterprise
+3. Add monitoring and alerting
+4. Implement security hardening
+
+### Resources
+
+**Official Documentation:**
+- [GitHub Self-Hosted Runners](https://docs.github.com/en/actions/hosting-your-own-runners)
+- [Docker Documentation](https://docs.docker.com/)
+- [WSL Documentation](https://learn.microsoft.com/en-us/windows/wsl/)
+- [SQL Server on Docker](https://hub.docker.com/_/microsoft-mssql-server)
+
+**Community Resources:**
+- [myoung34/github-runner](https://github.com/myoung34/docker-github-actions-runner) - Runner Docker image
+- [Liquibase Forum](https://forum.liquibase.org/)
+- [GitHub Community](https://github.com/orgs/community/discussions)
+
+### Feedback and Support
+
+If you encounter issues with this guide:
+1. Check the [Troubleshooting](#troubleshooting) section
+2. Review Docker and runner logs
+3. Search GitHub Community discussions
+4. Check the main tutorial's troubleshooting section
+
+---
+
+**Document Version:** 1.0
+**Last Updated:** November 20, 2025
+**Author:** Database DevOps Team
+**Related Tutorials:** [START-HERE.md](./START-HERE.md) for complete series
+
+**Happy automating!** 🚀
