@@ -1,0 +1,13 @@
+{
+  "//": "Per-developer configuration. Copy this file to additional-repos.json and edit locally. Do NOT commit the copied file.",
+  "repos": [
+    // Simple string form: directory name inferred from repo name
+    // "git@github.com:your-org/sqlserver.git",
+    //
+    // Object form with explicit directory name
+    // {
+    //   "url": "git@github.com:your-org/linux-dev-setup.git",
+    //   "directory": "linux-dev-setup"
+    // }
+  ]
+}

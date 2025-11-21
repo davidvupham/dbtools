@@ -76,6 +76,133 @@ The script rewrites the target `devcontainer.json` with canonical JSON (comments
 
 Both variants leverage the shared `.devcontainer/postCreate.sh` script, so any tooling changes there automatically apply to every container build.
 
+## Working with Multiple Repositories (Per-Developer)
+
+Each developer can work with their own set of sibling repositories (for example `sqlserver`, `linux-dev-setup`, etc.) without forcing a single list on the whole team.
+
+### Workspace Layout
+
+The dev container mounts the **parent** of the `dbtools` repo as `/workspaces`, so the layout inside the container looks like:
+
+```text
+/workspaces/
+  dbtools/            # this repo
+  sqlserver/          # optional, per-developer
+  linux-dev-setup/    # optional, per-developer
+  ...                 # any other clones under the same parent directory
+```
+
+If you already have clones under the same parent on the host (for example `~/src/dbtools`, `~/src/sqlserver`, `~/src/linux-dev-setup`), they will automatically appear as siblings under `/workspaces` in the container.
+
+### Per-Developer Repo List (additional-repos.json)
+
+To avoid forcing a single list of repos on everyone, the devcontainer uses a **per-developer** configuration file:
+
+- Template (tracked in git): `.devcontainer/additional-repos.json.template`
+- Your local copy (ignored by git): `.devcontainer/additional-repos.json`
+
+The script `.devcontainer/scripts/clone-additional-repos.sh` reads from `additional-repos.json` and clones any missing repositories into `/workspaces`.
+
+#### 1. Create your personal config
+
+From the repo root:
+
+```bash
+cp .devcontainer/additional-repos.json.template .devcontainer/additional-repos.json
+```
+
+Then edit `.devcontainer/additional-repos.json` to list the repos you care about. Two entry forms are supported:
+
+- **String form** (directory name inferred from repo name):
+
+```json
+{
+  "repos": [
+    "git@github.com:your-org/sqlserver.git",
+    "git@github.com:your-org/linux-dev-setup.git"
+  ]
+}
+```
+
+- **Object form** (explicit directory name):
+
+```json
+{
+  "repos": [
+    {
+      "url": "git@github.com:your-org/sqlserver.git",
+      "directory": "sqlserver"
+    },
+    {
+      "url": "git@github.com:your-org/linux-dev-setup.git",
+      "directory": "linux-dev-setup"
+    }
+  ]
+}
+```
+
+> Note: `.devcontainer/additional-repos.json` is git-ignored so each developer can maintain their own list.
+
+#### 2. Behavior with already-cloned repos
+
+If a repository directory already exists under `/workspaces` (for example you cloned `~/src/sqlserver` on the host), the script will detect `/workspaces/sqlserver/.git` and **skip cloning**:
+
+- This allows you to:
+  - Keep using your existing clones.
+  - Still list them in `additional-repos.json` so new machines will clone them automatically.
+
+#### 3. When cloning happens
+
+- On initial container creation (or full rebuild), the devcontainer runs:
+  - `.devcontainer/postCreate.sh`
+  - `.devcontainer/scripts/clone-additional-repos.sh`
+- The clone script is **idempotent**:
+  - New repos in your JSON are cloned.
+  - Existing repos (with a `.git` directory) are skipped.
+
+#### 4. Clone or update repos manually (no rebuild required)
+
+You can run the clone script manually from inside the running dev container at any time:
+
+```bash
+cd /workspaces/dbtools
+bash .devcontainer/scripts/clone-additional-repos.sh
+```
+
+Typical workflows:
+
+- **Add a new repo to your environment:**
+  1. Add it to `.devcontainer/additional-repos.json`.
+  2. Run the script as above.
+
+- **Use an existing host clone (for example `~/src/sqlserver`):**
+  - Ensure `dbtools` and `sqlserver` share the same parent directory on the host.
+  - Add `sqlserver` to `additional-repos.json` if desired (for new machines).
+  - The script will see `/workspaces/sqlserver/.git` and skip cloning.
+
+#### 5. Removing a repo from your workspace
+
+To stop using a repo:
+
+1. Delete or comment out the entry from `.devcontainer/additional-repos.json`.
+2. Optionally remove the directory:
+
+   - From inside the container:
+
+     ```bash
+     cd /workspaces
+     rm -rf sqlserver
+     ```
+
+   - Or from the host (for example):
+
+     ```bash
+     cd ~/src
+     rm -rf sqlserver
+     ```
+
+3. The next time `clone-additional-repos.sh` runs, it will no longer recreate that repo (because it’s no longer in your JSON).
+
 ## Troubleshooting & Notes
 
 ### Copilot in Dev Containers

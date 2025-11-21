@@ -217,8 +217,26 @@
   // ---------------------------------------------------------------------------
   // Workspace Configuration
   // ---------------------------------------------------------------------------
-  // "workspaceFolder": Where the project is mounted inside the container
-  // Your local project directory gets mapped to this path
+  // "workspaceMount": Override the default mount so that we mount the *parent*
+  // directory of the dbtools repo as /workspaces. This allows additional
+  // repositories to be cloned as siblings of dbtools (e.g. /workspaces/other-repo)
+  // instead of nested inside the dbtools repo.
+  //
+  // Example host layout:
+  //   /home/user/src/
+  //     dbtools/            (this repo)
+  //     other-repo-1/
+  //     other-repo-2/
+  //
+  // Inside the container:
+  //   /workspaces/
+  //     dbtools/
+  //     other-repo-1/
+  //     other-repo-2/
+  //
+  // NOTE: VS Code still opens /workspaces/dbtools as the workspaceFolder.
+  "workspaceMount": "source=${localWorkspaceFolder}/..,target=/workspaces,type=bind",
+  // "workspaceFolder": Where the project is opened inside the container
   "workspaceFolder": "/workspaces/dbtools",
   // ---------------------------------------------------------------------------
   // Initialize Command (Runs on HOST before container starts)
@@ -332,7 +350,7 @@
   // These commands run at different stages of the dev container lifecycle
   // "postCreateCommand": Runs ONCE after the container is first created
   // Used for one-time setup: install dependencies, configure environment
-  "postCreateCommand": "bash .devcontainer/postCreate.sh",
+  "postCreateCommand": "bash .devcontainer/postCreate.sh && bash .devcontainer/scripts/clone-additional-repos.sh",
   // "postStartCommand": Runs EVERY TIME the container starts
   // Used for recurring setup: ensure directories exist, fix permissions
   "postStartCommand": "bash -lc 'mkdir -p ~/.vscode-server/extensions ~/.vscode-server/extensionsCache && chmod -R 775 ~/.vscode-server && chown -R ${USER}:${USER} ~/.vscode-server || true; PY=\"$(command -v python || true)\"; if [ \"$PY\" != \"/opt/conda/envs/gds/bin/python\" ]; then echo \"[postStart] WARNING: default python is $PY; expected /opt/conda/envs/gds/bin/python. New terminals will auto-activate gds; for current shell run: source /opt/conda/etc/profile.d/conda.sh && conda activate gds\"; fi'",
