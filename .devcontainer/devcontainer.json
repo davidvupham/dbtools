@@ -31,7 +31,7 @@
   // ---------------------------------------------------------------------------
   // "name": Display name shown in VS Code UI
   // This helps identify which dev container you're working in
-  "name": "dbtools - Ubuntu Miniconda (Py3.14)",
+  "name": "dbtools",
   // ---------------------------------------------------------------------------
   // Build Configuration
   // ---------------------------------------------------------------------------
