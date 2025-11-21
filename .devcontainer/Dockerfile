@@ -38,7 +38,7 @@ ENV DEVCONTAINER_USER=${DEVCONTAINER_USER} \
 #     netcat-openbsd build-essential docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin runc && \
 #     apt-get clean && rm -rf /var/lib/apt/lists/*
 RUN apt-get update && \
-    apt-get install -y wget gnupg ca-certificates curl && \
+    apt-get install -y wget gnupg ca-certificates curl lsb-release && \
     # Install Microsoft repository for powershell, msodbcsql18, mssql-tools18
     wget -q https://packages.microsoft.com/config/debian/12/packages-microsoft-prod.deb && \
     dpkg -i packages-microsoft-prod.deb && \
@@ -47,6 +47,10 @@ RUN apt-get update && \
     mkdir -p /etc/apt/keyrings && \
     curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg && \
     echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian bookworm stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null && \
+    # Setup HashiCorp repository for vault
+    curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg && \
+    echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | \
+    sudo tee /etc/apt/sources.list.d/hashicorp.list && \
     # Update package index
     apt-get update && \
     # Remove conflicting packages
@@ -67,7 +71,8 @@ RUN apt-get update && \
     docker-ce-cli \
     containerd.io \
     docker-buildx-plugin \
-    docker-compose-plugin && \
+    docker-compose-plugin \
+    vault && \
     # Clean up
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
