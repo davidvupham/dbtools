@@ -126,7 +126,6 @@
         "editorconfig.editorconfig", // EditorConfig support
         "davidanson.vscode-markdownlint", // Markdown linting
         // Utilities
-        "visualstudioexptteam.vscodeintellicode", // AI-assisted coding
         "streetsidesoftware.code-spell-checker", // Spell checker
         "redhat.vscode-yaml", // YAML language support
         "tamasfe.even-better-toml" // TOML language support
