@@ -1,0 +1,4 @@
+ansible-runner>=2.4,<3.0
+molecule>=24.6
+molecule-plugins[docker]>=24.6
+yamllint>=1.35

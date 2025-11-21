@@ -1,0 +1,87 @@
+services:
+  ansible:
+    build:
+      context: ./ansible
+    image: dbtools/ansible:latest
+    container_name: ansible-toolbox
+    volumes:
+      - ../:/workspace:rw
+      - ansible_ssh:/home/ansible/.ssh
+    environment:
+      - ANSIBLE_STDOUT_CALLBACK=community.general.yaml
+    working_dir: /workspace
+    tty: true
+    stdin_open: true
+    networks:
+      - tool-library-network
+
+  awx:
+    build:
+      context: ./awx
+    image: dbtools/awx:latest
+    container_name: awx-controller
+    depends_on:
+      awx-postgres:
+        condition: service_healthy
+      awx-redis:
+        condition: service_healthy
+    environment:
+      AWX_ADMIN_USER: ${AWX_ADMIN_USER:-admin}
+      AWX_ADMIN_PASSWORD: ${AWX_ADMIN_PASSWORD:-changeme}
+      AWX_SECRET_KEY: ${AWX_SECRET_KEY:-super-secret-key}
+      AWX_POSTGRES_HOST: awx-postgres
+      AWX_POSTGRES_PORT: 5432
+      AWX_POSTGRES_DB: awx
+      AWX_POSTGRES_USER: awx
+      AWX_POSTGRES_PASSWORD: ${AWX_POSTGRES_PASSWORD:-awxpass}
+      AWX_REDIS_HOST: awx-redis
+      AWX_REDIS_PORT: 6379
+      AWX_TASK_ENV: production
+    ports:
+      - "8052:8052"
+    volumes:
+      - awx_projects:/var/lib/awx/projects
+    networks:
+      - tool-library-network
+
+  awx-postgres:
+    image: postgres:15-alpine
+    container_name: awx-postgres
+    environment:
+      POSTGRES_DB: awx
+      POSTGRES_USER: awx
+      POSTGRES_PASSWORD: ${AWX_POSTGRES_PASSWORD:-awxpass}
+    volumes:
+      - awx_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks:
+      - tool-library-network
+
+  awx-redis:
+    image: redis:7-alpine
+    container_name: awx-redis
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - awx_redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - tool-library-network
+
+volumes:
+  awx_postgres_data:
+  awx_projects:
+  awx_redis_data:
+  ansible_ssh:
+
+networks:
+  tool-library-network:
+    external: true
