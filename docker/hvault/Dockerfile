@@ -1,4 +1,4 @@
-FROM hashicorp/vault:1.16.2
+FROM hashicorp/vault:latest
 
 LABEL org.opencontainers.image.title="HashiCorp Vault" \
       org.opencontainers.image.description="Vault server configured for containerized deployments" \

@@ -1,0 +1,36 @@
+# HashiCorp Vault Development Docker Compose Configuration
+# WARNING: This configuration is for DEVELOPMENT ONLY
+# DO NOT use in production environments
+
+services:
+  vault-dev:
+    image: hashicorp/vault:latest
+    container_name: vault-dev
+    hostname: vault-dev
+
+    cap_add:
+      - IPC_LOCK
+
+    environment:
+      # Development mode configuration
+      - VAULT_DEV_ROOT_TOKEN_ID=root
+      - VAULT_DEV_LISTEN_ADDRESS=0.0.0.0:8200
+      - VAULT_ADDR=http://0.0.0.0:8200
+
+      # Development logging
+      - VAULT_LOG_LEVEL=debug
+
+    ports:
+      - "8200:8200"
+
+    # Dev mode stores everything in memory - no volumes needed
+    # Data is lost when container stops
+
+    command: server -dev -dev-root-token-id=root
+
+    networks:
+      - tool-library-network
+
+networks:
+  tool-library-network:
+    external: true

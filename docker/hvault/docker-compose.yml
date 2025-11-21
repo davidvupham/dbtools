@@ -1,0 +1,167 @@
+# HashiCorp Vault Docker Compose Configuration
+# Based on production hardening best practices from HashiCorp
+# https://developer.hashicorp.com/vault/docs/concepts/production-hardening
+
+services:
+  vault1:
+    build:
+      context: ../..
+      dockerfile: docker/hvault/Dockerfile
+    image: gds-vault:latest
+    container_name: vault1
+    hostname: vault1
+
+    # Security: IPC_LOCK capability prevents memory from being swapped to disk
+    # CAP_SYSLOG allows audit log writing
+    cap_add:
+      - IPC_LOCK
+    cap_drop:
+      - ALL
+
+    # Security: Prevent privilege escalation
+    security_opt:
+      - no-new-privileges:true
+
+    # Resource limits: prevent OOM and resource exhaustion
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+      memlock:
+        soft: -1
+        hard: -1
+      core:
+        soft: 0
+        hard: 0
+
+    environment:
+      # Vault server configuration
+      - VAULT_ADDR=http://0.0.0.0:8200
+      - VAULT_API_ADDR=http://0.0.0.0:8200
+      - VAULT_CLUSTER_ADDR=http://0.0.0.0:8201
+
+      # Skip mlock for container environments (alternative: use overlayfs2 driver)
+      - VAULT_SKIP_VERIFY=${VAULT_SKIP_VERIFY:-false}
+
+      # Logging configuration
+      - VAULT_LOG_LEVEL=${VAULT_LOG_LEVEL:-info}
+      - VAULT_LOG_FORMAT=${VAULT_LOG_FORMAT:-json}
+
+      # Optional: Telemetry and metrics
+      - VAULT_TELEMETRY_ENABLED=${VAULT_TELEMETRY_ENABLED:-true}
+
+    ports:
+      - "8200:8200" # API port
+      - "8201:8201" # Cluster port
+
+    volumes:
+      # Storage: Mount data directory for file storage backend
+      - /data/vault/vault1:/vault/file
+
+      # Audit logs: Separate directory for audit logs (production best practice)
+      - /logs/vault/vault1/audit:/vault/logs/audit
+
+      # Operational logs
+      - /logs/vault/vault1:/vault/logs
+
+      # Configuration: Read-only mount
+      - ./config/vault.hcl:/vault/config/vault.hcl:ro
+
+      # Optional: TLS certificates (uncomment when TLS is enabled)
+      # - ./certs/vault1:/vault/certs:ro
+
+    # Healthcheck: Monitor Vault status
+    healthcheck:
+      test: ["CMD", "vault", "status"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+    restart: unless-stopped
+
+    networks:
+      - tool-library-network
+
+  vault2:
+    build:
+      context: ../..
+      dockerfile: docker/hvault/Dockerfile
+    image: gds-vault:latest
+    container_name: vault2
+    hostname: vault2
+
+    # Security: IPC_LOCK capability prevents memory from being swapped to disk
+    cap_add:
+      - IPC_LOCK
+    cap_drop:
+      - ALL
+
+    # Security: Prevent privilege escalation
+    security_opt:
+      - no-new-privileges:true
+
+    # Resource limits: prevent OOM and resource exhaustion
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+      memlock:
+        soft: -1
+        hard: -1
+      core:
+        soft: 0
+        hard: 0
+
+    environment:
+      # Vault server configuration
+      - VAULT_ADDR=http://0.0.0.0:8200
+      - VAULT_API_ADDR=http://0.0.0.0:8200
+      - VAULT_CLUSTER_ADDR=http://0.0.0.0:8201
+
+      # Skip mlock for container environments
+      - VAULT_SKIP_VERIFY=${VAULT_SKIP_VERIFY:-false}
+
+      # Logging configuration
+      - VAULT_LOG_LEVEL=${VAULT_LOG_LEVEL:-info}
+      - VAULT_LOG_FORMAT=${VAULT_LOG_FORMAT:-json}
+
+      # Optional: Telemetry and metrics
+      - VAULT_TELEMETRY_ENABLED=${VAULT_TELEMETRY_ENABLED:-true}
+
+    ports:
+      - "8210:8200" # API port
+      - "8211:8201" # Cluster port
+
+    volumes:
+      # Storage: Mount data directory for file storage backend
+      - /data/vault/vault2:/vault/file
+
+      # Audit logs: Separate directory for audit logs
+      - /logs/vault/vault2/audit:/vault/logs/audit
+
+      # Operational logs
+      - /logs/vault/vault2:/vault/logs
+
+      # Configuration: Read-only mount
+      - ./config/vault.hcl:/vault/config/vault.hcl:ro
+
+      # Optional: TLS certificates (uncomment when TLS is enabled)
+      # - ./certs/vault2:/vault/certs:ro
+
+    # Healthcheck: Monitor Vault status
+    healthcheck:
+      test: ["CMD", "vault", "status"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+    restart: unless-stopped
+
+    networks:
+      - tool-library-network
+
+networks:
+  tool-library-network:
+    external: true

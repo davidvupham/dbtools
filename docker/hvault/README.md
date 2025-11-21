@@ -1,5 +1,119 @@
 # HashiCorp Vault Tutorial: Beginner to Advanced
 
+**Production-Ready Docker Configuration**
+
+This directory contains a production-hardened HashiCorp Vault setup following [HashiCorp's Production Hardening Guidelines](https://developer.hashicorp.com/vault/docs/concepts/production-hardening).
+
+## Quick Links
+
+- [Operations Guide](OPERATIONS.md) - Complete operations documentation
+- [Security Checklist](SECURITY_CHECKLIST.md) - Security hardening checklist
+- [Tutorial](#tutorial) - Comprehensive Vault tutorial (below)
+
+## Docker Setup
+
+### Files and Structure
+
+```
+hvault/
+├── config/
+│   └── vault.hcl              # Production Vault configuration
+├── policies/
+│   ├── admin-policy.hcl       # Administrative access policy
+│   ├── app-policy.hcl         # Application access policy
+│   └── readonly-policy.hcl    # Read-only access policy
+├── scripts/
+│   ├── init-vault.sh          # Initialize new Vault
+│   └── unseal-vault.sh        # Unseal sealed Vault
+├── docker-compose.yml         # Production configuration
+├── docker-compose.dev.yml     # Development mode (testing only)
+├── Dockerfile                 # Vault container image
+├── .env.example               # Environment variables template
+├── OPERATIONS.md              # Operations guide
+├── SECURITY_CHECKLIST.md      # Security checklist
+└── README.md                  # This file
+```
+
+### Quick Start
+
+#### Development Mode (Testing Only)
+
+```bash
+# Start Vault in dev mode
+docker-compose -f docker-compose.dev.yml up -d
+
+# Access Vault
+export VAULT_ADDR=http://localhost:8200
+export VAULT_TOKEN=root
+vault status
+```
+
+⚠️ **WARNING:** Dev mode is insecure and stores data in memory only. Never use in production.
+
+#### Production Mode
+
+```bash
+# 1. Create required directories
+sudo mkdir -p /data/vault/vault{1,2}
+sudo mkdir -p /logs/vault/vault{1,2}/audit
+sudo chown -R 100:1000 /data/vault /logs/vault
+
+# 2. Start Vault
+docker-compose up -d
+
+# 3. Initialize (first time only)
+export VAULT_ADDR=http://localhost:8200
+./scripts/init-vault.sh
+
+# 4. Store unseal keys securely (from /tmp/vault-init-keys.json)
+
+# 5. Access Vault (use root token from initialization)
+export VAULT_TOKEN=<root-token>
+vault status
+```
+
+See [OPERATIONS.md](OPERATIONS.md) for complete operational procedures.
+
+### Security Features Implemented
+
+✅ **Container Security:**
+
+- Non-root user (vault)
+- Minimal capabilities (IPC_LOCK only)
+- No new privileges
+- Core dumps disabled
+- Proper ulimits configured
+
+✅ **Memory Protection:**
+
+- Memory locking enabled (prevents swapping)
+- Secure memory limits
+
+✅ **Monitoring:**
+
+- Docker healthcheck
+- Prometheus metrics
+- Structured JSON logging
+
+✅ **Operational Security:**
+
+- Audit logging support
+- Separate volumes for data/logs
+- Read-only configuration mounts
+
+⚠️ **Production Requirements:**
+
+- Enable TLS (currently disabled for development)
+- Configure auto-unseal
+- Use Raft storage for HA
+- Set up external monitoring
+
+See [SECURITY_CHECKLIST.md](SECURITY_CHECKLIST.md) for complete security configuration.
+
+---
+
+## Tutorial
+
 HashiCorp Vault is a tool for securely storing, accessing, and managing sensitive information such as API keys, database credentials, certificates, and encryption keys. This tutorial guides you from first principles to advanced operational scenarios. Each section builds on the previous one; complete it in sequence if you are new to Vault, or jump to the topics you need.
 
 ---
