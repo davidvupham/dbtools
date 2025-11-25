@@ -1,0 +1,7 @@
+# MongoDB Security - DO NOT COMMIT
+mongodb-keyfile
+*.key
+*.pem
+
+# Generated configs
+*.conf.generated
