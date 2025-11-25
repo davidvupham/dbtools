@@ -7,8 +7,12 @@ Note: Some snippets assume files/modules exist; adapt imports/package layout as 
 ## Week 1 — Foundations
 
 ### Day 1 — Book
+
+**Goal**: Create a minimal `Book` class and instantiate two books
+
 ```python
 class Book:
+    """A simple book with title and author."""
     def __init__(self, title: str, author: str):
         self.title = title
         self.author = author
@@ -16,9 +20,15 @@ class Book:
 b1 = Book("1984", "George Orwell")
 b2 = Book("Dune", "Frank Herbert")
 print(b1.title, b2.title)
+# Expected Output: 1984 Dune
 ```
 
+**Why this works**: Each instance (`b1`, `b2`) gets its own `title` and `author` attributes. Independent objects!
+
 ### Day 2 — Describe
+
+**Goal**: Add more attributes and a `describe()` method
+
 ```python
 class Book:
     def __init__(self, title: str, author: str, pages: int, isbn: str):
@@ -28,16 +38,27 @@ class Book:
         self.isbn = isbn
 
     def describe(self) -> str:
+        """Return a formatted description of the book."""
         return f"{self.title} by {self.author} — {self.pages} pages (ISBN: {self.isbn})"
+
+# Test it:
+book = Book("1984", "George Orwell", 328, "978-0451524935")
+print(book.describe())
+# Expected Output: 1984 by George Orwell — 328 pages (ISBN: 978-0451524935)
 ```
 
+**Why this works**: Instance methods (`describe`) have access to the object's attributes via `self`.
+
 ### Day 3 — Class var and from_dict
+
+**Goal**: Add a class variable to track total books, and an alternative constructor
+
 ```python
 class Book:
-    total_created = 0
+    total_created = 0  # Class variable shared by all instances
 
     def __init__(self, title: str, author: str, pages: int, isbn: str):
-        type(self).total_created += 1
+        type(self).total_created += 1  # Increment for each new book
         self.title = title
         self.author = author
         self.pages = pages
@@ -45,41 +66,79 @@ class Book:
 
     @classmethod
     def from_dict(cls, data: dict) -> "Book":
+        """Alternative constructor from dictionary."""
         return cls(data["title"], data["author"], data["pages"], data["isbn"])
+
+# Test it:
+book1 = Book("1984", "Orwell", 328, "123")
+book2 = Book.from_dict({"title": "Dune", "author": "Herbert", "pages": 688, "isbn": "456"})
+print(Book.total_created)
+# Expected Output: 2
 ```
 
+**Why this works**: Class methods receive the class (`cls`) as first argument, useful for factory methods.
+
 ### Day 4 — Property with validation
+
+**Goal**: Use `@property` to validate ISBN on assignment
+
 ```python
 class Book:
     def __init__(self, title: str, author: str, pages: int, isbn: str):
         self.title = title
         self.author = author
         self.pages = pages
-        self._isbn = None
-        self.isbn = isbn
+        self._isbn = None  # Private storage
+        self.isbn = isbn   # Uses the setter for validation
 
     @property
     def isbn(self) -> str:
+        """Get the ISBN."""
         return self._isbn
 
     @isbn.setter
     def isbn(self, value: str) -> None:
+        """Set ISBN with validation (must be 10 or 13 digits)."""
         if not isinstance(value, str) or len(value.replace("-", "")) not in (10, 13):
             raise ValueError("Invalid ISBN")
         self._isbn = value
+
+# Test it:
+book = Book("1984", "Orwell", 328, "1234567890")  # Valid
+print(book.isbn)
+# Expected Output: 1234567890
+
+# This would raise ValueError:
+# book.isbn = "123"  # Too short!
 ```
 
+**Why this works**: `@property` lets you control attribute access. Setter is called even in `__init__`!
+
 ### Day 5 — Dataclass with slots
+
+**Goal**: Simplify with `@dataclass` and optimize memory with `slots=True`
+
 ```python
 from dataclasses import dataclass
+import sys
 
 @dataclass(slots=True)
 class Book:
-    title: str
+    title str
     author: str
     pages: int
     isbn: str
+
+# Test it:
+book = Book("1984", "Orwell", 328, "1234567890")
+print(book)
+# Expected Output: Book(title='1984', author='Orwell', pages=328, isbn='1234567890')
+
+# Memory comparison
+print(f"Memory: {sys.getsizeof(book)} bytes")  # Smaller with slots!
 ```
+
+**Why this works**: `@dataclass` auto-generates `__init__`, `__repr__`, `__eq__`. `slots=True` saves memory!
 
 ### Day 6 — pytest sample
 ```python

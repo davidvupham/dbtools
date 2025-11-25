@@ -5057,23 +5057,232 @@ class TestUserWorkflow:
 
 ## Practice Exercises
 
-Try these short exercises to reinforce each concept:
+Try these short exercises to reinforce each concept. **Expected outputs are shown for each exercise.**
 
-1) Encapsulation: Create a `SafeCounter` with a private value and `increment()`, `decrement()` methods that never let it drop below zero. Add a read-only property `value`.
+### Exercise 1: Encapsulation - SafeCounter
 
-2) Inheritance & Polymorphism: Implement `Shape` with `area()`; add `Rectangle` and `Circle`, then write a function that takes a list of shapes and prints their areas.
+Create a `SafeCounter` with a private value and `increment()`, `decrement()` methods that never let it drop below zero. Add a read-only property `value`.
 
-3) Composition: Build a `Car` that uses `Engine` and `GPS` components. Add `start()`, `accelerate()`, and `navigate_to()` methods.
+**Expected behavior:**
+```python
+counter = SafeCounter()
+counter.increment()
+counter.increment()
+print(counter.value)  # Expected Output: 2
 
-4) ABCs: Define an abstract `Notifier` and implement `EmailNotifier` and `SMSNotifier`. Write a function that accepts any notifier and sends messages.
+counter.decrement()
+print(counter.value)  # Expected Output: 1
 
-5) Dataclasses: Create a `@dataclass(slots=True)` `User` with `id`, `name`; serialize to JSON and back.
+# Should not go below zero
+counter.decrement()
+counter.decrement()  # Stays at 0
+print(counter.value)  # Expected Output: 0
 
-6) Dunder methods: Create a `Vector` supporting `+`, printable with `repr`, and equality checks.
+# Trying to set value directly should fail
+# counter.value = 10  # Expected: AttributeError
+```
 
-7) Thread-safety: Implement a thread-safe `BankAccount` supporting `deposit`/`withdraw` with a lock.
+---
 
-Optional: Add tests with `pytest` for the above.
+### Exercise 2: Inheritance & Polymorphism - Shapes
+
+Implement `Shape` with `area()`; add `Rectangle` and `Circle`, then write a function that takes a list of shapes and prints their areas.
+
+**Expected behavior:**
+```python
+shapes = [
+    Rectangle(5, 3),
+    Circle(2),
+    Rectangle(10, 4)
+]
+
+print_areas(shapes)
+# Expected Output:
+# Rectangle area: 15.00
+# Circle area: 12.57
+# Rectangle area: 40.00
+
+# Polymorphism in action
+for shape in shapes:
+    print(shape.area())  # Each shape calculates differently
+```
+
+---
+
+### Exercise 3: Composition - Car with Components
+
+Build a `Car` that uses `Engine` and `GPS` components. Add `start()`, `accelerate()`, and `navigate_to()` methods.
+
+**Expected behavior:**
+```python
+car = Car("Toyota", "Camry", engine_hp=200)
+
+car.start()            # Expected Output: "Engine started"
+car.accelerate()       # Expected Output: "Accelerating to 10 mph"
+car.accelerate()       # Expected Output: "Accelerating to 20 mph"
+car.navigate_to("Home")  # Expected Output: "Navigating to Home"
+
+# Before starting engine
+car2 = Car("Honda", "Civic", engine_hp=180)
+car2.accelerate()      # Expected Output: "Can't accelerate - engine not running"
+```
+
+---
+
+### Exercise 4: ABCs - Notifier System
+
+Define an abstract `Notifier` and implement `EmailNotifier` and `SMSNotifier`. Write a function that accepts any notifier and sends messages.
+
+**Expected behavior:**
+```python
+from abc import ABC, abstractmethod
+
+email = EmailNotifier()
+sms = SMSNotifier()
+
+send_notification(email, "Hello!", "user@example.com")
+# Expected Output: "[EMAIL] Sent to user@example.com: Hello!"
+
+send_notification(sms, "Alert!", "+1234567890")
+# Expected Output: "[SMS] Sent to +1234567890: Alert!"
+
+# Trying to instantiate abstract class should fail
+# notifier = Notifier()  # Expected: TypeError: Can't instantiate abstract class
+```
+
+---
+
+### Exercise 5: Dataclasses - User Serialization
+
+Create a `@dataclass(slots=True)` `User` with `id`, `name`; serialize to JSON and back.
+
+**Expected behavior:**
+```python
+import json
+from dataclasses import dataclass, asdict
+
+user = User(id=1, name="Alice")
+print(user)  # Expected Output: User(id=1, name='Alice')
+
+# Serialize to JSON
+json_str = json.dumps(asdict(user))
+print(json_str)  # Expected Output: {"id": 1, "name": "Alice"}
+
+# Deserialize from JSON
+data = json.loads(json_str)
+user2 = User(**data)
+print(user2)  # Expected Output: User(id=1, name='Alice')
+print(user == user2)  # Expected Output: True
+```
+
+---
+
+### Exercise 6: Dunder Methods - Vector
+
+Create a `Vector` supporting `+`, printable with `repr`, and equality checks.
+
+**Expected behavior:**
+```python
+v1 = Vector(3, 4)
+v2 = Vector(1, 2)
+
+print(repr(v1))    # Expected Output: Vector(x=3, y=4)
+print(str(v1))     # Expected Output: <3, 4>
+
+v3 = v1 + v2
+print(v3)          # Expected Output: <4, 6>
+
+print(v1 == Vector(3, 4))  # Expected Output: True
+print(v1 == v2)            # Expected Output: False
+
+# Magnitude
+print(abs(v1))     # Expected Output: 5.0 (sqrt(3^2 + 4^2))
+```
+
+---
+
+### Exercise 7: Thread-Safety - Bank Account
+
+Implement a thread-safe `BankAccount` supporting `deposit`/`withdraw` with a lock.
+
+**Expected behavior:**
+```python
+import threading
+
+account = BankAccount(initial_balance=1000)
+
+def deposit_money():
+    for _ in range(100):
+        account.deposit(10)
+
+def withdraw_money():
+    for _ in range(100):
+        account.withdraw(5)
+
+# Create threads
+threads = [
+    threading.Thread(target=deposit_money),
+    threading.Thread(target=deposit_money),
+    threading.Thread(target=withdraw_money)
+]
+
+# Run all threads
+for t in threads:
+    t.start()
+for t in threads:
+    t.join()
+
+print(account.balance)  # Expected Output: 2500
+# (1000 + 2*100*10 - 100*5 = 1000 + 2000 - 500 = 2500)
+# Without lock: result would be unpredictable!
+```
+
+---
+
+### Optional: Testing with pytest
+
+Add tests for the above exercises:
+
+```python
+# test_exercises.py
+import pytest
+
+def test_safe_counter_never_negative():
+    counter = SafeCounter()
+    counter.decrement()  # Should stay at 0
+    assert counter.value == 0
+
+def test_shapes_polymorphism():
+    shapes = [Rectangle(5, 3), Circle(2)]
+    areas = [shape.area() for shape in shapes]
+    assert areas[0] == 15
+    assert abs(areas[1] - 12.566) < 0.01  # π * 2^2
+
+def test_car_needs_engine_started():
+    car = Car("Toyota", "Camry", 200)
+    result = car.accelerate()
+    assert "Can't accelerate" in result
+
+def test_notifier_abstract():
+    with pytest.raises(TypeError):
+        Notifier()  # Can't instantiate abstract class
+
+def test_user_serialization():
+    user = User(id=1, name="Alice")
+    data = asdict(user)
+    user2 = User(**data)
+    assert user == user2
+
+def test_vector_addition():
+    v1 = Vector(3, 4)
+    v2 = Vector(1, 2)
+    v3 = v1 + v2
+    assert v3.x == 4 and v3.y == 6
+
+def test_bank_account_thread_safety():
+    # See example above - verifies thread-safe operations
+    pass
+```
 
 Let's look at how OOP concepts are applied in our actual project code, with references to the real implementations.
 

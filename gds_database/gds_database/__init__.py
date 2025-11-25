@@ -41,6 +41,18 @@ from .base import (
     RetryableOperation,
     TransactionalConnection,
 )
+from .database import Database
+from .engine import DatabaseEngine
+from .metadata import (
+    BackupType,
+    DatabaseMetadata,
+    DatabaseState,
+    DatabaseType,
+    EngineMetadata,
+    LogEntry,
+    Metric,
+    ReplicationStatus,
+)
 
 __version__ = "1.0.0"
 __all__ = [
@@ -59,4 +71,15 @@ __all__ = [
     "ResourceManager",
     "RetryableOperation",
     "TransactionalConnection",
+    # New OOD Abstractions
+    "DatabaseEngine",
+    "Database",
+    "DatabaseMetadata",
+    "EngineMetadata",
+    "Metric",
+    "LogEntry",
+    "ReplicationStatus",
+    "DatabaseType",
+    "DatabaseState",
+    "BackupType",
 ]
