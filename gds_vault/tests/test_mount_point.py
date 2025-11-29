@@ -12,7 +12,7 @@ from unittest.mock import MagicMock, patch
 
 from gds_vault import VaultClient
 from gds_vault.cache import NoOpCache
-from gds_vault.vault import VaultClient as LegacyVaultClient
+from gds_vault.legacy.vault import VaultClient as LegacyVaultClient
 
 
 class TestMountPointModernClient(unittest.TestCase):
@@ -27,7 +27,12 @@ class TestMountPointModernClient(unittest.TestCase):
 
     def tearDown(self):
         """Clean up environment variables."""
-        for key in ["VAULT_ADDR", "VAULT_ROLE_ID", "VAULT_SECRET_ID", "VAULT_MOUNT_POINT"]:
+        for key in [
+            "VAULT_ADDR",
+            "VAULT_ROLE_ID",
+            "VAULT_SECRET_ID",
+            "VAULT_MOUNT_POINT",
+        ]:
             os.environ.pop(key, None)
 
     def test_mount_point_parameter(self):
@@ -56,7 +61,7 @@ class TestMountPointModernClient(unittest.TestCase):
         """Test mount_point property setter."""
         client = VaultClient()
         self.assertIsNone(client.mount_point)
-        
+
         client.mount_point = "kv-v2"
         self.assertEqual(client.mount_point, "kv-v2")
 
@@ -188,7 +193,12 @@ class TestMountPointLegacyClient(unittest.TestCase):
 
     def tearDown(self):
         """Clean up environment variables."""
-        for key in ["VAULT_ADDR", "VAULT_ROLE_ID", "VAULT_SECRET_ID", "VAULT_MOUNT_POINT"]:
+        for key in [
+            "VAULT_ADDR",
+            "VAULT_ROLE_ID",
+            "VAULT_SECRET_ID",
+            "VAULT_MOUNT_POINT",
+        ]:
             os.environ.pop(key, None)
 
     def test_mount_point_parameter(self):
@@ -231,8 +241,8 @@ class TestMountPointLegacyClient(unittest.TestCase):
         path = client._construct_secret_path("kv-v2/data/myapp")
         self.assertEqual(path, "kv-v2/data/myapp")
 
-    @patch("gds_vault.vault.requests.post")
-    @patch("gds_vault.vault.requests.get")
+    @patch("gds_vault.legacy.vault.requests.post")
+    @patch("gds_vault.legacy.vault.requests.get")
     def test_get_secret_with_mount_point(self, mock_get, mock_post):
         """Test get_secret prepends mount point to path."""
         # Mock authentication
@@ -258,8 +268,8 @@ class TestMountPointLegacyClient(unittest.TestCase):
         self.assertIn("kv-v2/data/myapp", call_args[0][0])
         self.assertEqual(secret, {"password": "secret123"})
 
-    @patch("gds_vault.vault.requests.post")
-    @patch("gds_vault.vault.requests.request")
+    @patch("gds_vault.legacy.vault.requests.post")
+    @patch("gds_vault.legacy.vault.requests.request")
     def test_list_secrets_with_mount_point(self, mock_request, mock_post):
         """Test list_secrets prepends mount point to path."""
         # Mock authentication
@@ -285,11 +295,11 @@ class TestMountPointLegacyClient(unittest.TestCase):
         self.assertIn("kv-v2/metadata/myapp", call_args[0][1])
         self.assertEqual(secrets, ["app1", "app2", "app3"])
 
-    @patch("gds_vault.vault.requests.post")
-    @patch("gds_vault.vault.requests.get")
+    @patch("gds_vault.legacy.vault.requests.post")
+    @patch("gds_vault.legacy.vault.requests.get")
     def test_functional_api_with_mount_point(self, mock_get, mock_post):
         """Test functional API get_secret_from_vault with mount_point."""
-        from gds_vault.vault import get_secret_from_vault
+        from gds_vault.legacy.vault import get_secret_from_vault
 
         # Mock authentication
         mock_post.return_value = MagicMock(
@@ -313,11 +323,11 @@ class TestMountPointLegacyClient(unittest.TestCase):
         self.assertIn("kv-v2/data/myapp", call_args[0][0])
         self.assertEqual(secret, {"password": "secret123"})
 
-    @patch("gds_vault.vault.requests.post")
-    @patch("gds_vault.vault.requests.get")
+    @patch("gds_vault.legacy.vault.requests.post")
+    @patch("gds_vault.legacy.vault.requests.get")
     def test_functional_api_with_mount_point_env(self, mock_get, mock_post):
         """Test functional API with VAULT_MOUNT_POINT environment variable."""
-        from gds_vault.vault import get_secret_from_vault
+        from gds_vault.legacy.vault import get_secret_from_vault
 
         os.environ["VAULT_MOUNT_POINT"] = "secret"
 
@@ -355,7 +365,12 @@ class TestMountPointEdgeCases(unittest.TestCase):
 
     def tearDown(self):
         """Clean up environment variables."""
-        for key in ["VAULT_ADDR", "VAULT_ROLE_ID", "VAULT_SECRET_ID", "VAULT_MOUNT_POINT"]:
+        for key in [
+            "VAULT_ADDR",
+            "VAULT_ROLE_ID",
+            "VAULT_SECRET_ID",
+            "VAULT_MOUNT_POINT",
+        ]:
             os.environ.pop(key, None)
 
     def test_empty_mount_point(self):
@@ -381,16 +396,16 @@ class TestMountPointEdgeCases(unittest.TestCase):
     def test_mount_point_changes_affect_subsequent_calls(self):
         """Test that changing mount_point affects subsequent operations."""
         client = VaultClient()
-        
+
         # Without mount point
         path1 = client._construct_secret_path("data/myapp")
         self.assertEqual(path1, "data/myapp")
-        
+
         # Set mount point
         client.mount_point = "kv-v2"
         path2 = client._construct_secret_path("data/myapp")
         self.assertEqual(path2, "kv-v2/data/myapp")
-        
+
         # Change mount point
         client.mount_point = "secret"
         path3 = client._construct_secret_path("data/myapp")

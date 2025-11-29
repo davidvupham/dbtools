@@ -6,7 +6,7 @@ from unittest.mock import Mock, patch
 
 import requests
 
-from gds_vault.vault import VaultClient, VaultError
+from gds_vault.legacy.vault import VaultClient, VaultError
 
 
 class TestVaultClientInit(unittest.TestCase):
@@ -77,8 +77,8 @@ class TestVaultClientInit(unittest.TestCase):
 class TestVaultClientAuthentication(unittest.TestCase):
     """Test VaultClient authentication."""
 
-    @patch("gds_vault.vault.requests.post")
-    @patch("gds_vault.vault.time.time")
+    @patch("gds_vault.legacy.vault.requests.post")
+    @patch("gds_vault.legacy.vault.time.time")
     def test_authenticate_success(self, mock_time, mock_post):
         """Test successful authentication."""
         mock_time.return_value = 1000.0
@@ -109,7 +109,7 @@ class TestVaultClientAuthentication(unittest.TestCase):
             verify=True,
         )
 
-    @patch("gds_vault.vault.requests.post")
+    @patch("gds_vault.legacy.vault.requests.post")
     def test_authenticate_connection_error(self, mock_post):
         """Test authentication connection error."""
         mock_post.side_effect = requests.RequestException("Connection failed")
@@ -124,7 +124,7 @@ class TestVaultClientAuthentication(unittest.TestCase):
             client.authenticate()
         self.assertIn("Failed to connect", str(context.exception))
 
-    @patch("gds_vault.vault.requests.post")
+    @patch("gds_vault.legacy.vault.requests.post")
     def test_authenticate_failure(self, mock_post):
         """Test authentication failure."""
         mock_post.return_value = Mock(ok=False, text="invalid credentials")
@@ -144,8 +144,8 @@ class TestVaultClientAuthentication(unittest.TestCase):
 class TestVaultClientGetSecret(unittest.TestCase):
     """Test VaultClient.get_secret method."""
 
-    @patch("gds_vault.vault.requests.get")
-    @patch("gds_vault.vault.requests.post")
+    @patch("gds_vault.legacy.vault.requests.get")
+    @patch("gds_vault.legacy.vault.requests.post")
     def test_get_secret_kv_v2(self, mock_post, mock_get):
         """Test getting secret from KV v2."""
         # Mock authentication
@@ -170,8 +170,8 @@ class TestVaultClientGetSecret(unittest.TestCase):
         self.assertEqual(secret, {"password": "secret123", "username": "admin"})
         mock_get.assert_called_once()
 
-    @patch("gds_vault.vault.requests.get")
-    @patch("gds_vault.vault.requests.post")
+    @patch("gds_vault.legacy.vault.requests.get")
+    @patch("gds_vault.legacy.vault.requests.post")
     def test_get_secret_kv_v1(self, mock_post, mock_get):
         """Test getting secret from KV v1."""
         # Mock authentication
@@ -195,8 +195,8 @@ class TestVaultClientGetSecret(unittest.TestCase):
 
         self.assertEqual(secret, {"password": "secret123", "username": "admin"})
 
-    @patch("gds_vault.vault.requests.get")
-    @patch("gds_vault.vault.requests.post")
+    @patch("gds_vault.legacy.vault.requests.get")
+    @patch("gds_vault.legacy.vault.requests.post")
     def test_get_secret_with_version(self, mock_post, mock_get):
         """Test getting specific version of secret."""
         # Mock authentication
@@ -223,8 +223,8 @@ class TestVaultClientGetSecret(unittest.TestCase):
         call_args = mock_get.call_args
         self.assertEqual(call_args[1]["params"], {"version": 2})
 
-    @patch("gds_vault.vault.requests.get")
-    @patch("gds_vault.vault.requests.post")
+    @patch("gds_vault.legacy.vault.requests.get")
+    @patch("gds_vault.legacy.vault.requests.post")
     def test_get_secret_caching(self, mock_post, mock_get):
         """Test that secrets are cached."""
         # Mock authentication
@@ -260,8 +260,8 @@ class TestVaultClientGetSecret(unittest.TestCase):
         self.assertEqual(cache_info["cached_secrets_count"], 1)
         self.assertIn("secret/data/myapp", cache_info["cached_secret_paths"])
 
-    @patch("gds_vault.vault.requests.get")
-    @patch("gds_vault.vault.requests.post")
+    @patch("gds_vault.legacy.vault.requests.get")
+    @patch("gds_vault.legacy.vault.requests.post")
     def test_get_secret_bypass_cache(self, mock_post, mock_get):
         """Test bypassing cache with use_cache=False."""
         # Mock authentication
@@ -290,8 +290,8 @@ class TestVaultClientGetSecret(unittest.TestCase):
         client.get_secret("secret/data/myapp", use_cache=False)
         self.assertEqual(mock_get.call_count, 2)
 
-    @patch("gds_vault.vault.requests.get")
-    @patch("gds_vault.vault.requests.post")
+    @patch("gds_vault.legacy.vault.requests.get")
+    @patch("gds_vault.legacy.vault.requests.post")
     def test_get_secret_fetch_failure(self, mock_post, mock_get):
         """Test secret fetch failure."""
         # Mock authentication
@@ -313,8 +313,8 @@ class TestVaultClientGetSecret(unittest.TestCase):
             client.get_secret("secret/data/myapp")
         self.assertIn("secret fetch failed", str(context.exception))
 
-    @patch("gds_vault.vault.requests.get")
-    @patch("gds_vault.vault.requests.post")
+    @patch("gds_vault.legacy.vault.requests.get")
+    @patch("gds_vault.legacy.vault.requests.post")
     def test_get_secret_malformed_response(self, mock_post, mock_get):
         """Test malformed response handling."""
         # Mock authentication
@@ -341,9 +341,9 @@ class TestVaultClientGetSecret(unittest.TestCase):
 class TestVaultClientTokenReuse(unittest.TestCase):
     """Test VaultClient token caching and reuse."""
 
-    @patch("gds_vault.vault.requests.get")
-    @patch("gds_vault.vault.requests.post")
-    @patch("gds_vault.vault.time.time")
+    @patch("gds_vault.legacy.vault.requests.get")
+    @patch("gds_vault.legacy.vault.requests.post")
+    @patch("gds_vault.legacy.vault.time.time")
     def test_token_reuse_multiple_secrets(self, mock_time, mock_post, mock_get):
         """Test that token is reused for multiple secret fetches."""
         mock_time.return_value = 1000.0
@@ -378,8 +378,8 @@ class TestVaultClientTokenReuse(unittest.TestCase):
 class TestVaultClientListSecrets(unittest.TestCase):
     """Test VaultClient.list_secrets method."""
 
-    @patch("gds_vault.vault.requests.request")
-    @patch("gds_vault.vault.requests.post")
+    @patch("gds_vault.legacy.vault.requests.request")
+    @patch("gds_vault.legacy.vault.requests.post")
     def test_list_secrets(self, mock_post, mock_request):
         """Test listing secrets."""
         # Mock authentication
@@ -410,8 +410,8 @@ class TestVaultClientListSecrets(unittest.TestCase):
             verify=True,
         )
 
-    @patch("gds_vault.vault.requests.request")
-    @patch("gds_vault.vault.requests.post")
+    @patch("gds_vault.legacy.vault.requests.request")
+    @patch("gds_vault.legacy.vault.requests.post")
     def test_list_secrets_failure(self, mock_post, mock_request):
         """Test list operation failure."""
         # Mock authentication
@@ -437,8 +437,8 @@ class TestVaultClientListSecrets(unittest.TestCase):
 class TestVaultClientCacheManagement(unittest.TestCase):
     """Test VaultClient cache management."""
 
-    @patch("gds_vault.vault.requests.get")
-    @patch("gds_vault.vault.requests.post")
+    @patch("gds_vault.legacy.vault.requests.get")
+    @patch("gds_vault.legacy.vault.requests.post")
     def test_clear_cache(self, mock_post, mock_get):
         """Test clearing cache."""
         # Mock authentication
@@ -474,7 +474,7 @@ class TestVaultClientCacheManagement(unittest.TestCase):
         self.assertEqual(cache_info["cached_secrets_count"], 0)
         self.assertFalse(cache_info["has_token"])
 
-    @patch("gds_vault.vault.requests.post")
+    @patch("gds_vault.legacy.vault.requests.post")
     def test_get_cache_info(self, mock_post):
         """Test getting cache information."""
         # Mock authentication
@@ -506,8 +506,8 @@ class TestVaultClientCacheManagement(unittest.TestCase):
 class TestVaultClientContextManager(unittest.TestCase):
     """Test VaultClient as context manager."""
 
-    @patch("gds_vault.vault.requests.get")
-    @patch("gds_vault.vault.requests.post")
+    @patch("gds_vault.legacy.vault.requests.get")
+    @patch("gds_vault.legacy.vault.requests.post")
     def test_context_manager(self, mock_post, mock_get):
         """Test using VaultClient as context manager."""
         # Mock authentication
