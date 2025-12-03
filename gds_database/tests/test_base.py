@@ -39,6 +39,7 @@ class TestDatabaseConnection(unittest.TestCase):
         class IncompleteDatabaseConnection(DatabaseConnection):
             def connect(self):
                 pass
+
             # Missing other required methods
 
         with self.assertRaises(TypeError):
@@ -84,43 +85,43 @@ class TestConfigurableComponent(unittest.TestCase):
 
         class TestComponent(ConfigurableComponent):
             def validate_config(self):
-                required_keys = ['host', 'port']
+                required_keys = ["host", "port"]
                 for key in required_keys:
                     if key not in self.config:
                         raise ConfigurationError(f"Missing required config: {key}")
                 return True
 
         # Test with valid config
-        component = TestComponent({'host': 'localhost', 'port': 5432})
-        self.assertEqual(component.get_config('host'), 'localhost')
-        self.assertEqual(component.get_config('port'), 5432)
-        self.assertEqual(component.get_config('nonexistent', 'default'), 'default')
+        component = TestComponent({"host": "localhost", "port": 5432})
+        self.assertEqual(component.get_config("host"), "localhost")
+        self.assertEqual(component.get_config("port"), 5432)
+        self.assertEqual(component.get_config("nonexistent", "default"), "default")
 
         # Test config updates
-        component.set_config('database', 'testdb')
-        self.assertEqual(component.get_config('database'), 'testdb')
+        component.set_config("database", "testdb")
+        self.assertEqual(component.get_config("database"), "testdb")
 
-        component.update_config({'user': 'testuser', 'password': 'testpass'})
-        self.assertEqual(component.get_config('user'), 'testuser')
+        component.update_config({"user": "testuser", "password": "testpass"})
+        self.assertEqual(component.get_config("user"), "testuser")
 
     def test_validation_error(self):
         """Test that validation errors are raised."""
 
         class TestComponent(ConfigurableComponent):
             def validate_config(self):
-                if 'required_field' not in self.config:
+                if "required_field" not in self.config:
                     raise ConfigurationError("Missing required_field")
                 return True
 
         # Should raise error on initialization
         with self.assertRaises(ConfigurationError):
-            TestComponent({'other_field': 'value'})
+            TestComponent({"other_field": "value"})
 
         # Should raise error on config update
-        component = TestComponent({'required_field': 'value'})
+        component = TestComponent({"required_field": "value"})
         with self.assertRaises(ConfigurationError):
-            component.set_config('required_field', None)
-            del component.config['required_field']
+            component.set_config("required_field", None)
+            del component.config["required_field"]
             component.validate_config()
 
 
@@ -222,6 +223,7 @@ class TestDatabaseConnectionSuperCalls(unittest.TestCase):
 
     def test_abstract_method_bodies_via_super(self):
         """Test that abstract method bodies can be called via super()."""
+
         class TestConnection(DatabaseConnection):
             def connect(self):
                 super().connect()  # Cover line 58
@@ -255,6 +257,7 @@ class TestConfigurableComponentSuperCalls(unittest.TestCase):
 
     def test_validate_config_via_super(self):
         """Test validate_config can be called via super()."""
+
         class TestComponent(ConfigurableComponent):
             def validate_config(self):
                 super().validate_config()  # Cover line 142
@@ -269,6 +272,7 @@ class TestResourceManagerSuperCalls(unittest.TestCase):
 
     def test_abstract_methods_via_super(self):
         """Test abstract method bodies can be called via super()."""
+
         class TestManager(ResourceManager):
             def initialize(self):
                 super().initialize()  # Cover line 234
@@ -291,6 +295,7 @@ class TestRetryableOperationSuperCalls(unittest.TestCase):
 
     def test_execute_via_super(self):
         """Test _execute can be called via super()."""
+
         class TestOperation(RetryableOperation):
             def _execute(self):
                 super()._execute()  # Cover line 290
@@ -306,6 +311,7 @@ class TestRetryableOperationEdgeCases(unittest.TestCase):
 
     def test_all_retries_fail(self):
         """Test behavior when all retries are exhausted."""
+
         class FailingOperation(RetryableOperation):
             def _execute(self):
                 raise ValueError("Always fails")
@@ -342,14 +348,11 @@ class TestOperationResult(unittest.TestCase):
         result = OperationResult.success_result("Test", {"key": "value"})
         result_dict = result.to_dict()
 
-        expected_keys = {
-            'success', 'message', 'data', 'error',
-            'duration_ms', 'timestamp', 'metadata'
-        }
+        expected_keys = {"success", "message", "data", "error", "duration_ms", "timestamp", "metadata"}
         self.assertEqual(set(result_dict.keys()), expected_keys)
-        self.assertTrue(result_dict['success'])
-        self.assertEqual(result_dict['message'], "Test")
-        self.assertEqual(result_dict['data'], {"key": "value"})
+        self.assertTrue(result_dict["success"])
+        self.assertEqual(result_dict["message"], "Test")
+        self.assertEqual(result_dict["data"], {"key": "value"})
 
     def test_is_success(self):
         """Test is_success helper method."""
@@ -368,9 +371,7 @@ class TestOperationResult(unittest.TestCase):
     def test_with_metadata(self):
         """Test result with metadata."""
         metadata = {"user": "test", "version": "1.0"}
-        result = OperationResult.success_result(
-            "Test", metadata=metadata
-        )
+        result = OperationResult.success_result("Test", metadata=metadata)
         self.assertEqual(result.metadata, metadata)
 
 
@@ -379,6 +380,7 @@ class TestProtocols(unittest.TestCase):
 
     def test_connectable_protocol(self):
         """Test Connectable protocol."""
+
         class MockConnectable:
             def connect(self):
                 return "connected"
@@ -394,6 +396,7 @@ class TestProtocols(unittest.TestCase):
 
     def test_queryable_protocol(self):
         """Test Queryable protocol."""
+
         class MockQueryable:
             def execute_query(self, query, params=None):
                 return [{"result": "data"}]
@@ -412,6 +415,7 @@ class TestConnectionPool(unittest.TestCase):
 
     def test_complete_implementation(self):
         """Test complete ConnectionPool implementation."""
+
         class TestPool(ConnectionPool):
             def get_connection(self):
                 return None
@@ -439,6 +443,7 @@ class TestTransactionalConnection(unittest.TestCase):
 
     def test_complete_implementation(self):
         """Test complete TransactionalConnection implementation."""
+
         class TestTransactional(TransactionalConnection):
             def __init__(self):
                 self._in_transaction = False
@@ -488,6 +493,7 @@ class TestAsyncDatabaseConnection(unittest.TestCase):
 
     def test_complete_implementation(self):
         """Test complete async implementation."""
+
         class TestAsyncConnection(AsyncDatabaseConnection):
             async def connect(self):
                 return "connected"
@@ -518,6 +524,7 @@ class TestAsyncResourceManager(unittest.TestCase):
 
     def test_async_context_manager(self):
         """Test async context manager protocol."""
+
         class TestAsyncManager(AsyncResourceManager):
             def __init__(self):
                 self.initialized = False
@@ -550,10 +557,12 @@ class TestPerformanceMonitored(unittest.TestCase):
 
     def test_performance_monitoring(self):
         """Test performance monitoring functionality."""
+
         class TestMonitored(PerformanceMonitored):
             def do_work(self):
                 with self._measure_time("test_operation"):
                     import time
+
                     time.sleep(0.01)
 
         monitored = TestMonitored()
@@ -580,5 +589,5 @@ class TestExceptions(unittest.TestCase):
             raise ConfigurationError("Config invalid")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

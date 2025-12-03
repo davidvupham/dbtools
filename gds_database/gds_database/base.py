@@ -312,7 +312,7 @@ class RetryableOperation(ABC):
                     break
 
                 # Calculate delay with exponential backoff
-                delay = min(self.backoff_factor ** attempt, 60)  # Max 60 seconds
+                delay = min(self.backoff_factor**attempt, 60)  # Max 60 seconds
                 time.sleep(delay)
 
         if last_exception:
@@ -331,6 +331,7 @@ class OperationResult:
     Provides a consistent way to return operation results with
     success/failure status, messages, data, and timing information.
     """
+
     success: bool
     message: str
     data: Optional[dict[str, Any]] = None
@@ -368,7 +369,7 @@ class OperationResult:
         message: str,
         data: Optional[dict[str, Any]] = None,
         metadata: Optional[dict[str, Any]] = None,
-    ) -> 'OperationResult':
+    ) -> "OperationResult":
         """
         Create a successful result.
 
@@ -388,7 +389,7 @@ class OperationResult:
         message: str,
         error: Optional[str] = None,
         metadata: Optional[dict[str, Any]] = None,
-    ) -> 'OperationResult':
+    ) -> "OperationResult":
         """
         Create a failure result.
 
@@ -400,9 +401,7 @@ class OperationResult:
         Returns:
             OperationResult indicating failure
         """
-        return cls(
-            success=False, message=message, error=error, metadata=metadata
-        )
+        return cls(success=False, message=message, error=error, metadata=metadata)
 
     def to_dict(self) -> dict[str, Any]:
         """
@@ -412,13 +411,13 @@ class OperationResult:
             Dictionary representation of the result
         """
         return {
-            'success': self.success,
-            'message': self.message,
-            'data': self.data,
-            'error': self.error,
-            'duration_ms': self.duration_ms,
-            'timestamp': self.timestamp.isoformat() if self.timestamp else None,
-            'metadata': self.metadata,
+            "success": self.success,
+            "message": self.message,
+            "data": self.data,
+            "error": self.error,
+            "duration_ms": self.duration_ms,
+            "timestamp": self.timestamp.isoformat() if self.timestamp else None,
+            "metadata": self.metadata,
         }
 
 
@@ -444,9 +443,7 @@ class Connectable(Protocol):
 class Queryable(Protocol):
     """Protocol for objects that can execute queries."""
 
-    def execute_query(
-        self, query: str, params: Optional[tuple[Any, ...]] = None
-    ) -> list[Any]:
+    def execute_query(self, query: str, params: Optional[tuple[Any, ...]] = None) -> list[Any]:
         """Execute a query."""
         ...
 
@@ -610,9 +607,7 @@ class AsyncDatabaseConnection(ABC):
         ...
 
     @abstractmethod
-    async def execute_query(
-        self, query: str, params: Optional[tuple[Any, ...]] = None
-    ) -> list[Any]:
+    async def execute_query(self, query: str, params: Optional[tuple[Any, ...]] = None) -> list[Any]:
         """
         Execute a query asynchronously and return results.
 
