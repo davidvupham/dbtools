@@ -28,9 +28,38 @@ services:
     networks:
       - liquibase_tutorial
 
+  github_runner:
+    image: myoung34/github-runner:latest
+    container_name: liquibase-tutorial-runner
+    restart: unless-stopped
+
+    environment:
+      - RUNNER_NAME=${RUNNER_NAME:-liquibase-tutorial-runner}
+      - RUNNER_WORKDIR=${RUNNER_WORKDIR:-/tmp/github-runner}
+      - RUNNER_TOKEN=${RUNNER_TOKEN}
+      - REPO_URL=${REPO_URL}
+      - RUNNER_LABELS=${RUNNER_LABELS:-self-hosted,linux,x64,wsl,docker}
+      - RUNNER_GROUP=${RUNNER_GROUP:-default}
+
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - github_runner_data:/tmp/github-runner
+
+    depends_on:
+      mssql_liquibase_tutorial:
+        condition: service_healthy
+
+    networks:
+      - liquibase_tutorial
+
+    profiles:
+      - runner
+
 volumes:
   mssql_liquibase_tutorial_data:
     name: mssql_liquibase_tutorial_data
+  github_runner_data:
+    name: github_runner_data
 
 networks:
   liquibase_tutorial:

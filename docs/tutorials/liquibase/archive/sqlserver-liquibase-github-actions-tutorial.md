@@ -35,6 +35,7 @@ This tutorial teaches you how to implement **automated database CI/CD** using Li
 - **Continuous Deployment**: Automatically deploy validated changes to your environments
 
 **Traditional Approach** (Manual):
+
 ```
 Developer writes SQL
     ↓
@@ -52,6 +53,7 @@ Hope nothing breaks!
 ```
 
 **CI/CD Approach** (Automated):
+
 ```
 Developer writes changelog
     ↓
@@ -123,7 +125,7 @@ Team receives notification
 
 ### Required Tools and Accounts
 
-1. **GitHub Account**: Free account at https://github.com
+1. **GitHub Account**: Free account at <https://github.com>
 2. **SQL Server Database**: One of:
    - Azure SQL Database (free tier available)
    - Local SQL Server (Docker or installed)
@@ -135,6 +137,7 @@ Team receives notification
 ### Database Requirements
 
 Your SQL Server database(s) must:
+
 - ✅ Be accessible from the internet (for GitHub Actions runners)
 - ✅ Have a user account with appropriate permissions
 - ✅ Allow connections on port 1433 (default SQL Server port)
@@ -144,7 +147,8 @@ Your SQL Server database(s) must:
 If your database is **NOT accessible from the internet**, or you want to **learn locally with zero costs**:
 
 ✅ **Use Self-Hosted GitHub Actions Runners**
-- Complete guide: [self-hosted-runners-wsl-docker.md](./self-hosted-runners-wsl-docker.md)
+
+- Complete guide: [setup-self-hosted-runner-docker-liquibase-tutorial.md](../setup-self-hosted-runner-docker-liquibase-tutorial.md)
 - Run GitHub Actions on your local machine (WSL + Docker)
 - Direct access to local SQL Server (no firewall needed)
 - Unlimited free runner minutes
@@ -152,10 +156,12 @@ If your database is **NOT accessible from the internet**, or you want to **learn
 - 2-3 hours setup time
 
 **This tutorial works with BOTH:**
+
 - **GitHub-hosted runners** (cloud, requires internet-accessible database)
 - **Self-hosted runners** (local, works with any database)
 
 Choose self-hosted if:
+
 - You have SQL Server running locally
 - You want to avoid Azure SQL setup initially
 - You want unlimited free testing
@@ -171,62 +177,74 @@ Choose self-hosted if:
 This tutorial is divided into parts that build on each other:
 
 ### Part 1: Local Setup (30 minutes)
+
 - Set up local development environment
 - Create Liquibase project structure
 - Test Liquibase locally
 
 ### Part 2: GitHub Repository Setup (15 minutes)
+
 - Create GitHub repository
 - Organize project structure
 - Push initial code
 
 ### Part 3: Configure Secrets (20 minutes)
+
 - Set up repository secrets
 - Configure environment-specific secrets
 - Security best practices
 
 ### Part 4: First Workflow (30 minutes)
+
 - Create simple deployment workflow
 - Test with development environment
 - Understand workflow execution
 
 ### Part 5: Environments (30 minutes)
+
 - Set up GitHub Environments
 - Configure approval gates
 - Add environment secrets
 
 ### Part 6: Multi-Environment Pipeline (45 minutes)
+
 - Build dev → staging → production pipeline
 - Implement approval workflow
 - Test end-to-end deployment
 
 ### Part 7: Making Changes (30 minutes)
+
 - Add database changes
 - Trigger automated deployment
 - Monitor workflow execution
 
 ### Part 8: Advanced Workflows (45 minutes)
+
 - Pull request validation
 - Manual deployment triggers
 - Rollback procedures
 
 ### Part 9: Monitoring (20 minutes)
+
 - View deployment history
 - Troubleshoot failures
 - Set up notifications
 
 ### Part 10: Production Best Practices (30 minutes)
+
 - Security hardening
 - Deployment best practices
 - Performance optimization
 
 ### Part 11: Advanced Rollback Strategies (45 minutes)
+
 - Rollback methods (tag, count, date)
 - Automated rollback on failure
 - Emergency procedures
 - Rollback testing
 
 ### Part 12 (Optional): Self-Hosted Runners (2-3 hours setup)
+
 - Security hardening
 - Performance optimization
 - Compliance and auditing
@@ -340,6 +358,7 @@ EOF
 ```
 
 **What this does:**
+
 - `<include>`: Includes the baseline snapshot (initial database state)
 - `<includeAll>`: Automatically includes all files in the `changes/` directory
 
@@ -389,6 +408,7 @@ EOF
 ```
 
 **What this creates:**
+
 - A `customers` table with basic fields
 - An index on the email column
 - Automatic timestamps
@@ -431,6 +451,7 @@ This project demonstrates automated database deployments using Liquibase and Git
 ## Project Structure
 
 ```
+
 ├── database/
 │   └── changelog/
 │       ├── changelog.xml          # Master changelog
@@ -439,6 +460,7 @@ This project demonstrates automated database deployments using Liquibase and Git
 ├── .github/
 │   └── workflows/                 # CI/CD workflows
 └── README.md
+
 ```
 
 ## Environments
@@ -500,7 +522,7 @@ git commit -m "Initial commit: Liquibase project structure"
 
 ### Step 2.2: Create GitHub Repository
 
-1. **Go to GitHub**: https://github.com
+1. **Go to GitHub**: <https://github.com>
 2. **Click** the "+" icon → "New repository"
 3. **Repository name**: `liquibase-github-actions-demo`
 4. **Description**: "Database CI/CD with Liquibase and GitHub Actions"
@@ -551,6 +573,7 @@ We'll start with repository secrets and add environment secrets later.
 ### Step 3.2: Gather Database Information
 
 For each environment, collect:
+
 - Database server address
 - Database name
 - Username
@@ -578,6 +601,7 @@ GitHub Actions runners use **dynamic IP addresses** that change with each workfl
 **Cons:** Less secure (allows any Azure service)
 
 **Steps:**
+
 1. Go to **Azure Portal** → **SQL Database** → **Your database**
 2. Click **Set server firewall** (or **Networking** in the left menu)
 3. Under **Exceptions**:
@@ -592,6 +616,7 @@ GitHub Actions runners use **dynamic IP addresses** that change with each workfl
 **Cons:** More complex, requires Azure networking setup
 
 **Steps:**
+
 1. Set up **Azure Private Link** for your SQL Database
 2. Use **GitHub-hosted runners** with **Service Tags** (requires Azure Virtual Network)
 3. Configure **Network Security Groups** to allow GitHub Actions IPs
@@ -604,6 +629,7 @@ GitHub Actions runners use **dynamic IP addresses** that change with each workfl
 **Cons:** Infrastructure to maintain
 
 **Steps:**
+
 1. Set up self-hosted GitHub Actions runner on-premises or in Azure
 2. Add runner's IP to Azure SQL firewall rules
 3. Update workflows to use `runs-on: self-hosted`
@@ -635,6 +661,7 @@ Test connectivity from GitHub Actions:
 **Expected result:** Should connect successfully and show SQL Server version.
 
 **If connection fails:**
+
 - Check firewall rules are saved
 - Verify "Allow Azure services" is enabled
 - Check connection string is correct
@@ -655,6 +682,7 @@ jdbc:sqlserver://YOUR_SERVER.database.windows.net:1433;
 ```
 
 **Key parameters explained:**
+
 - `encrypt=true`: Required by Azure SQL (enforces SSL/TLS encryption)
 - `trustServerCertificate=false`: Validates server certificate (recommended for Azure)
 - `loginTimeout=30`: Prevents hanging on connection issues
@@ -665,6 +693,7 @@ jdbc:sqlserver://YOUR_SERVER.database.windows.net:1433;
 **Error:** `Cannot open server 'xxx' requested by the login. Client with IP address 'xxx.xxx.xxx.xxx' is not allowed to access the server.`
 
 **Solution:**
+
 1. Note the IP address in the error message
 2. Go to Azure Portal → SQL Database → Networking
 3. Under **Firewall rules**, click **Add client IP**
@@ -674,6 +703,7 @@ jdbc:sqlserver://YOUR_SERVER.database.windows.net:1433;
 **Error:** `Login timeout expired`
 
 **Solution:**
+
 1. Check firewall rules are correct
 2. Verify connection string has correct server name
 3. Ensure database name is correct
@@ -696,11 +726,13 @@ Value: jdbc:sqlserver://YOUR_DEV_SERVER:1433;databaseName=YOUR_DEV_DATABASE;encr
 ```
 
 **Example for Azure SQL:**
+
 ```
 jdbc:sqlserver://dev-sql.database.windows.net:1433;databaseName=myapp_dev;encrypt=true;trustServerCertificate=false;loginTimeout=30;connectRetryCount=3
 ```
 
 **Example for On-Premises SQL:**
+
 ```
 jdbc:sqlserver://sqlserver.company.local:1433;databaseName=myapp_dev;encrypt=true;trustServerCertificate=true;loginTimeout=30
 ```
@@ -722,11 +754,13 @@ Value: YourActualPassword123!
 Repeat for staging and production:
 
 **Staging Secrets:**
+
 - `STAGE_DB_URL`
 - `STAGE_DB_USERNAME`
 - `STAGE_DB_PASSWORD`
 
 **Production Secrets:**
+
 - `PROD_DB_URL`
 - `PROD_DB_USERNAME`
 - `PROD_DB_PASSWORD`
@@ -764,6 +798,7 @@ jdbc:sqlserver://YOUR_SERVER:1433;databaseName=YOUR_DATABASE;encrypt=true;trustS
 ```
 
 **Key Differences:**
+
 - Azure SQL: `trustServerCertificate=false` (validate SSL certificate)
 - On-premises: `trustServerCertificate=true` (skip certificate validation)
 
@@ -776,6 +811,7 @@ Now let's create a simple workflow that deploys to development.
 ### Step 4.1: Understand Workflow Basics
 
 A workflow is a YAML file that defines:
+
 - **When** to run (trigger events)
 - **What** to run (jobs and steps)
 - **Where** to run (runner type)
@@ -879,31 +915,37 @@ on:
     paths:
       - 'database/**'
 ```
+
 - **Trigger**: Runs when code is pushed to `main` branch AND database files changed
 
 ```yaml
   workflow_dispatch:
 ```
+
 - **Manual Trigger**: Allows you to manually run this workflow from GitHub UI
 
 ```yaml
 runs-on: ubuntu-latest
 ```
+
 - **Runner**: Uses Ubuntu Linux server provided by GitHub
 
 ```yaml
 uses: actions/checkout@v3
 ```
+
 - **Action**: Checks out your repository code
 
 ```yaml
 uses: liquibase/setup-liquibase@v2
 ```
+
 - **Action**: Installs Liquibase on the runner
 
 ```yaml
 ${{ secrets.DEV_DB_URL }}
 ```
+
 - **Secret Reference**: Uses the secret you configured earlier
 
 ### Step 4.3: Commit and Push Workflow
@@ -959,6 +1001,7 @@ WHERE t.name = 'customers';
 ```
 
 **Expected Results:**
+
 - `DATABASECHANGELOG` table exists with 2 entries
 - `customers` table exists with correct schema
 - Index `idx_customers_email` exists
@@ -974,6 +1017,7 @@ Let's manually trigger the workflow:
 5. Click **Run workflow**
 
 The workflow runs again! This is useful for:
+
 - Testing workflows
 - Re-running deployments
 - Manual deployments without code changes
@@ -987,6 +1031,7 @@ Environments provide approval gates and environment-specific secrets.
 ### Step 5.1: Understand GitHub Environments
 
 **Environments** let you:
+
 - ✅ Require manual approval before deployment
 - ✅ Store environment-specific secrets
 - ✅ Restrict which branches can deploy
@@ -1002,6 +1047,7 @@ Environments provide approval gates and environment-specific secrets.
 5. Click **Configure environment**
 
 **Configuration:**
+
 - ❌ **Don't add** required reviewers (dev should deploy automatically)
 - ❌ **Don't add** wait timer
 - ✅ **Leave** deployment branches unrestricted
@@ -1014,6 +1060,7 @@ Environments provide approval gates and environment-specific secrets.
 3. Click **Configure environment**
 
 **Configuration:**
+
 - ❌ **Don't add** required reviewers (auto-deploy after dev)
 - ❌ **Don't add** wait timer
 - Click **Save protection rules**
@@ -1025,6 +1072,7 @@ Environments provide approval gates and environment-specific secrets.
 3. Click **Configure environment**
 
 **Configuration:**
+
 - ✅ **Check** "Required reviewers"
 - ✅ **Add** yourself as a reviewer (minimum 1 reviewer)
 - ✅ **Check** "Wait timer" (optional)
@@ -1034,6 +1082,7 @@ Environments provide approval gates and environment-specific secrets.
 - Click **Save protection rules**
 
 **What this means:**
+
 - Production deployments MUST be approved
 - Must wait 5 minutes after staging
 - Can only deploy from `main` branch
@@ -1049,6 +1098,7 @@ You can move secrets from repository level to environment level for better organ
 3. Click **Add secret**
 
 Add:
+
 - `DB_URL` → (same value as `DEV_DB_URL`)
 - `DB_USERNAME` → (same value as `DEV_DB_USERNAME`)
 - `DB_PASSWORD` → (same value as `DEV_DB_PASSWORD`)
@@ -1056,6 +1106,7 @@ Add:
 Repeat for staging and production.
 
 **Benefits:**
+
 - Cleaner secret names (just `DB_URL` instead of `DEV_DB_URL`)
 - Environment-scoped (can't accidentally use wrong secret)
 - Better organization
@@ -1245,16 +1296,19 @@ EOF
 ```yaml
 needs: deploy-dev
 ```
+
 - **Dependency**: This job waits for `deploy-dev` to complete successfully
 
 ```yaml
 environment: production
 ```
+
 - **Protection**: Triggers approval requirement we configured in Step 5
 
 ```yaml
 liquibase tag "release-${{ github.run_number }}"
 ```
+
 - **Tagging**: Creates a tag in the database for easy rollback
 
 ### Step 6.3: Delete Old Workflow
@@ -1313,16 +1367,19 @@ Watch production deployment complete!
 Check all three databases have the same schema:
 
 **Development:**
+
 ```sql
 SELECT COUNT(*) FROM DATABASECHANGELOG; -- Should match across all envs
 ```
 
 **Staging:**
+
 ```sql
 SELECT COUNT(*) FROM DATABASECHANGELOG; -- Should match
 ```
 
 **Production:**
+
 ```sql
 SELECT COUNT(*) FROM DATABASECHANGELOG; -- Should match
 SELECT * FROM DATABASECHANGELOGLOCK; -- Check locks
@@ -1363,17 +1420,20 @@ EOF
 ```sql
 --liquibase formatted sql
 ```
+
 - **Format**: Tells Liquibase this is a SQL file (not XML)
 
 ```sql
 --changeset tutorial:V0001-001
 ```
+
 - **Changeset ID**: Unique identifier for this change
 - Format: `author:id`
 
 ```sql
 --rollback DROP INDEX...
 ```
+
 - **Rollback**: SQL to undo this change if needed
 
 ### Step 7.2: Commit and Push
@@ -1562,6 +1622,7 @@ EOF
 ```
 
 **What this does:**
+
 - Runs on every pull request
 - Validates changelog syntax
 - Generates SQL preview
@@ -1666,6 +1727,7 @@ EOF
 ```
 
 **What this does:**
+
 - Allows manual trigger with environment selection
 - Optionally deploy up to a specific tag
 - Uses conditional logic to select correct credentials
@@ -1727,6 +1789,7 @@ On GitHub:
 4. Click **Create pull request**
 
 Watch the validation workflow run! It will:
+
 - ✅ Validate syntax
 - ✅ Generate SQL preview
 - ✅ Show in PR checks
@@ -1762,6 +1825,7 @@ Learn how to monitor deployments and fix issues.
 ### Step 9.1: View Workflow Runs
 
 **See all runs:**
+
 1. Go to **Actions** tab
 2. You'll see list of all workflow runs
 3. Filter by:
@@ -1770,6 +1834,7 @@ Learn how to monitor deployments and fix issues.
    - Status (success/failure/in progress)
 
 **See run details:**
+
 1. Click on any workflow run
 2. View:
    - Trigger (who, what commit)
@@ -1780,11 +1845,13 @@ Learn how to monitor deployments and fix issues.
 ### Step 9.2: View Deployment History
 
 **Environment deployments:**
+
 1. Go to **Settings** → **Environments**
 2. Click on environment name
 3. Scroll to **Deployment history**
 
 You'll see:
+
 - Deployment status
 - Who approved (for production)
 - When deployed
@@ -1801,6 +1868,7 @@ To view detailed logs:
 4. View full output
 
 **Look for:**
+
 ```
 Liquibase Community 4.32.0 by Liquibase
 Running Changeset: database/changelog/changes/V0001__add_customer_phone.sql::V0001-001::tutorial
@@ -1821,11 +1889,13 @@ Some workflows create artifacts (files):
 #### Issue 1: Connection Failed
 
 **Error:**
+
 ```
 Could not connect to database: Connection refused
 ```
 
 **Solutions:**
+
 1. Verify database is running and accessible
 2. Check firewall allows GitHub Actions IP ranges
 3. Verify connection string in secrets
@@ -1834,11 +1904,13 @@ Could not connect to database: Connection refused
 #### Issue 2: Authentication Failed
 
 **Error:**
+
 ```
 Login failed for user 'liquibase_user'
 ```
 
 **Solutions:**
+
 1. Verify username and password in secrets
 2. Check user exists in database
 3. Verify user has correct permissions
@@ -1847,11 +1919,13 @@ Login failed for user 'liquibase_user'
 #### Issue 3: Changeset Already Ran
 
 **Error:**
+
 ```
 Changeset database/changelog/changes/V0001__add_customer_phone.sql::V0001-001::tutorial has already been run
 ```
 
 **This is actually NORMAL!** Liquibase tracks what's been deployed. This happens when:
+
 - Re-running workflow on same environment
 - No new changes to deploy
 
@@ -1860,11 +1934,13 @@ Changeset database/changelog/changes/V0001__add_customer_phone.sql::V0001-001::t
 #### Issue 4: Validation Failed
 
 **Error:**
+
 ```
 Could not find file 'database/changelog/changelog.xml'
 ```
 
 **Solutions:**
+
 1. Verify file path is correct
 2. Check `actions/checkout@v3` step is included
 3. Ensure path uses forward slashes (/) not backslashes (\)
@@ -1872,11 +1948,13 @@ Could not find file 'database/changelog/changelog.xml'
 #### Issue 5: Secret Not Found
 
 **Error:**
+
 ```
 Error: secret DEV_DB_URL not found
 ```
 
 **Solutions:**
+
 1. Go to **Settings** → **Secrets and variables** → **Actions**
 2. Verify secret name matches exactly (case-sensitive)
 3. Check secret is not environment-specific when using repository secret
@@ -1887,6 +1965,7 @@ Error: secret DEV_DB_URL not found
 Get notified when deployments fail:
 
 **Email** (built-in):
+
 1. Go to your GitHub profile
 2. Click **Settings** → **Notifications**
 3. Ensure "Actions" is enabled
@@ -1964,6 +2043,7 @@ Move secrets from repository to environment level:
 #### Rotate Secrets Regularly
 
 Create a schedule:
+
 - Development: Quarterly
 - Staging: Quarterly
 - Production: Monthly (or after any suspected compromise)
@@ -2022,6 +2102,7 @@ Tag every production deployment:
 ```
 
 **Benefits:**
+
 - Easy rollback: `liquibase rollback v123-20250115`
 - Audit trail: Know exactly what's deployed
 - Troubleshooting: Link issues to specific deployments
@@ -2115,6 +2196,7 @@ jobs:
 #### Maintain Changelog Discipline
 
 **Good changelog naming:**
+
 ```
 V0001__add_customer_table.sql
 V0002__add_order_table.sql
@@ -2122,6 +2204,7 @@ V0003__modify_customer_email.sql
 ```
 
 **Bad naming:**
+
 ```
 change.sql
 fix.sql
@@ -2193,18 +2276,22 @@ liquibase rollback-count 1
 ```
 
 ## Rollback to Specific Tag
+
 ```bash
 liquibase rollback v123-20250115
 ```
 
 ## Database Restore
+
 ```bash
 az sql db restore --name prod-backup-20250115
 ```
 
 ## Emergency Contacts
+
 - DBA On-Call: +1-555-0123
 - DevOps Lead: +1-555-0456
+
 ```
 
 ### Step 10.6: Team Processes
@@ -2244,6 +2331,7 @@ Production deployments require:
 #### Schedule Reviews
 
 Regular team reviews:
+
 - Weekly: Review failed deployments
 - Monthly: Review approval patterns
 - Quarterly: Review security practices
@@ -2257,6 +2345,7 @@ One of the most critical aspects of production database CI/CD is the ability to 
 ### Why Rollback Strategies Matter
 
 **Production incident example:**
+
 ```
 3:00 AM: New deployment breaks critical customer-facing feature
 3:01 AM: Alerts start firing
@@ -2264,6 +2353,7 @@ One of the most critical aspects of production database CI/CD is the ability to 
 ```
 
 **With proper rollback strategy:**
+
 ```
 ✅ Automated rollback triggered: 2 minutes
 ✅ Service restored: 3 minutes
@@ -2271,6 +2361,7 @@ One of the most critical aspects of production database CI/CD is the ability to 
 ```
 
 **Without proper rollback strategy:**
+
 ```
 ❌ Find deployment details: 10 minutes
 ❌ Figure out rollback commands: 15 minutes
@@ -2296,16 +2387,19 @@ liquibase rollback "production-v123-20250120"
 ```
 
 **Pros:**
+
 - ✅ Semantic and meaningful
 - ✅ Easy to understand ("rollback to last known good")
 - ✅ Works across multiple changesets
 - ✅ Can rollback multiple deployments at once
 
 **Cons:**
+
 - ❌ Requires discipline to tag every deployment
 - ❌ Must remember tag naming convention
 
 **Use when:**
+
 - Rolling back a full release
 - Need to restore to a known good state
 - Multiple changesets deployed together
@@ -2323,16 +2417,19 @@ liquibase rollback-count 3
 ```
 
 **Pros:**
+
 - ✅ Simple and fast
 - ✅ No tag required
 - ✅ Good for immediate "undo"
 
 **Cons:**
+
 - ❌ Easy to miscount
 - ❌ Dangerous if other deployments happened in between
 - ❌ No semantic meaning
 
 **Use when:**
+
 - Just deployed and immediately need to undo
 - Only 1-2 changesets to undo
 - You're certain what was deployed
@@ -2347,16 +2444,19 @@ liquibase rollback-to-date "2025-01-20 14:30:00"
 ```
 
 **Pros:**
+
 - ✅ Time-based is intuitive
 - ✅ Good for "restore to yesterday"
 - ✅ Works without tags
 
 **Cons:**
+
 - ❌ Timezone confusion
 - ❌ Requires knowing exact deployment time
 - ❌ Can be imprecise
 
 **Use when:**
+
 - Need to restore to a specific time
 - Don't have tag information
 - Emergency scenario
@@ -2871,6 +2971,7 @@ ORDER BY DATEEXECUTED DESC
 ### Rollback Fails
 
 If rollback fails:
+
 ```bash
 # Option 1: Try rollback-to-date
 liquibase rollback-to-date "2025-01-15 10:00:00"
@@ -2891,6 +2992,7 @@ liquibase rollback-count 3
 ### Need DBA Help
 
 Contact: DBA on-call +1-555-0123
+
 ```
 
 ### Step 11.6: Best Practices for Rollback-Friendly Changes
@@ -2986,6 +3088,7 @@ Track rollback metrics:
 ```
 
 **Key metrics to track:**
+
 - Rollback frequency (goal: <1% of deployments)
 - Time to rollback (goal: <5 minutes)
 - Rollback success rate (goal: 100%)
@@ -3000,24 +3103,28 @@ Track rollback metrics:
 ### What You've Learned
 
 ✅ **GitHub Actions Fundamentals**
+
 - Created workflows with YAML
 - Used secrets for sensitive data
 - Configured environments with protection rules
 - Implemented approval gates
 
 ✅ **Liquibase Automation**
+
 - Automated database deployments
 - Validated changelogs in CI/CD
 - Tagged deployments for rollback
 - Tracked deployment history
 
 ✅ **CI/CD Best Practices**
+
 - Multi-environment pipeline (dev → staging → production)
 - Pull request validation
 - Manual deployment workflows
 - Security hardening
 
 ✅ **SQL Server Integration**
+
 - Configured JDBC connection strings
 - Set up database authentication
 - Implemented deployment workflows
@@ -3053,6 +3160,7 @@ Audit trail recorded
 ### Deployment Metrics
 
 After completing this tutorial, you've:
+
 - Created 3 GitHub Environments
 - Configured 9 secrets
 - Built 4 workflows
@@ -3116,20 +3224,24 @@ After completing this tutorial, you've:
 ### Recommended Resources
 
 **GitHub Actions:**
+
 - [GitHub Actions Documentation](https://docs.github.com/en/actions)
 - [Workflow Syntax Reference](https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions)
 - [Actions Marketplace](https://github.com/marketplace?type=actions)
 
 **Liquibase:**
+
 - [Liquibase Documentation](https://docs.liquibase.com/)
 - [Liquibase Best Practices](https://www.liquibase.org/get-started/best-practices)
 - [Liquibase Community Forum](https://forum.liquibase.org/)
 
 **SQL Server:**
+
 - [Azure SQL Database](https://learn.microsoft.com/en-us/azure/azure-sql/)
 - [SQL Server on Linux](https://learn.microsoft.com/en-us/sql/linux/)
 
 **DevOps:**
+
 - [Database DevOps](https://www.atlassian.com/devops/database)
 - [CI/CD Best Practices](https://www.atlassian.com/continuous-delivery)
 
@@ -3194,21 +3306,25 @@ liquibase tag "v1.0.0"
 ### Troubleshooting Checklist
 
 ❓ **Workflow not triggering?**
+
 - ✅ Check trigger conditions (`on:` section)
 - ✅ Verify file paths in `paths:` filter
 - ✅ Check branch name matches
 
 ❓ **Connection failed?**
+
 - ✅ Verify secrets are configured
 - ✅ Check database firewall rules
 - ✅ Test connection string locally
 
 ❓ **Approval not required?**
+
 - ✅ Verify environment protection rules
 - ✅ Check environment name matches workflow
 - ✅ Verify reviewers are specified
 
 ❓ **Deployment failed?**
+
 - ✅ Check workflow logs
 - ✅ Verify database permissions
 - ✅ Test changelog locally
@@ -3222,9 +3338,11 @@ liquibase tag "v1.0.0"
 **Symptom**: Pushed code but workflow didn't trigger
 
 **Checks:**
+
 1. Verify workflow file is in `.github/workflows/`
 2. Check YAML syntax (use YAML validator)
 3. Verify trigger conditions match:
+
    ```yaml
    on:
      push:
@@ -3239,6 +3357,7 @@ liquibase tag "v1.0.0"
 **Symptom**: `Error: secret DB_URL not found`
 
 **Fixes:**
+
 1. Go to **Settings** → **Secrets and variables** → **Actions**
 2. Verify secret name matches exactly (case-sensitive!)
 3. Check you're using correct syntax: `${{ secrets.SECRET_NAME }}`
@@ -3251,12 +3370,14 @@ liquibase tag "v1.0.0"
 **Symptom**: `Could not connect to database`
 
 **Checks:**
+
 1. Database is running and accessible
 2. Firewall allows connections from internet
 3. Connection string is correct
 4. Port is correct (default 1433 for SQL Server)
 
 **For Azure SQL:**
+
 ```bash
 # Add GitHub Actions IP ranges to firewall
 az sql server firewall-rule create \
@@ -3272,9 +3393,11 @@ az sql server firewall-rule create \
 **Symptom**: `Login failed for user`
 
 **Checks:**
+
 1. Username and password are correct in secrets
 2. User exists in database
 3. User has necessary permissions:
+
    ```sql
    -- Grant permissions
    GRANT CREATE TABLE TO liquibase_user;
@@ -3289,6 +3412,7 @@ az sql server firewall-rule create \
 **Symptom**: `Changeset has already been run`
 
 **This is NORMAL!** Liquibase tracks deployed changes. This happens when:
+
 - Re-running workflow without new changes
 - Changeset already deployed to this environment
 
@@ -3299,6 +3423,7 @@ az sql server firewall-rule create \
 **Symptom**: `Could not parse changelog`
 
 **Fixes:**
+
 1. Check XML/SQL syntax
 2. Verify file encoding (UTF-8)
 3. Test locally: `liquibase validate`
@@ -3307,11 +3432,13 @@ az sql server firewall-rule create \
 ### Need Help?
 
 **Community Resources:**
+
 - [GitHub Community Forum](https://github.com/orgs/community/discussions)
 - [Liquibase Forum](https://forum.liquibase.org/)
 - [Stack Overflow](https://stackoverflow.com/questions/tagged/github-actions+liquibase)
 
 **Documentation:**
+
 - [GitHub Actions Docs](https://docs.github.com/en/actions)
 - [Liquibase Docs](https://docs.liquibase.com/)
 
@@ -3348,10 +3475,12 @@ liquibase-github-actions-demo/
 Full multi-environment deployment with approval gates.
 
 **Triggers:**
+
 - Push to `main` branch with database changes
 - Manual trigger
 
 **Jobs:**
+
 - `deploy-dev`: Deploy to development (automatic)
 - `deploy-staging`: Deploy to staging (after dev succeeds)
 - `deploy-production`: Deploy to production (requires approval)
@@ -3361,9 +3490,11 @@ Full multi-environment deployment with approval gates.
 Validates database changes in pull requests.
 
 **Triggers:**
+
 - Pull request to `main` branch with database changes
 
 **Jobs:**
+
 - `validate`: Validate syntax, generate SQL preview
 
 #### manual-deploy.yml
@@ -3371,9 +3502,11 @@ Validates database changes in pull requests.
 Manual deployment with environment selection.
 
 **Triggers:**
+
 - Manual only
 
 **Jobs:**
+
 - `deploy`: Deploy to selected environment
 
 ### C. SQL Server Connection Strings
@@ -3438,6 +3571,7 @@ Before going to production:
 **Tutorial Version**: 1.0
 **Last Updated**: November 2025
 **Tested With**:
+
 - Liquibase 4.32.0
 - GitHub Actions (ubuntu-latest)
 - SQL Server 2022 / Azure SQL Database

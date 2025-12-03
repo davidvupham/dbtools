@@ -1,5 +1,125 @@
 # Tutorial Part 1: Baseline SQL Server + Liquibase Setup
 
+## Table of Contents
+
+- [Introduction](#introduction)
+  - [Goals of Part 1](#goals-of-part-1)
+  - [What You'll Learn](#what-youll-learn)
+  - [Prerequisites](#prerequisites)
+  - [Time Estimate](#time-estimate)
+- [Environment Setup](#environment-setup)
+  - [Step 0: Configure Environment and Aliases](#step-0-configure-environment-and-aliases)
+  - [Start the Tutorial SQL Server Container](#start-the-tutorial-sql-server-container)
+  - [Build Liquibase container image](#build-liquibase-container-image)
+  - [Important Note About Docker Commands](#important-note-about-docker-commands)
+  - [Check SQL Server is Running](#check-sql-server-is-running)
+  - [Helper Script for sqlcmd](#helper-script-for-sqlcmd)
+- [Project Structure](#project-structure)
+- [Step 1: Create Three Database Environments](#step-1-create-three-database-environments)
+- [Step 2: Populate Development with Existing Objects](#step-2-populate-development-with-existing-objects)
+- [Step 3: Configure Liquibase for Each Environment](#step-3-configure-liquibase-for-each-environment)
+- [Step 4: Generate Baseline from Development](#step-4-generate-baseline-from-development)
+- [Step 5: Deploy Baseline Across Environments](#step-5-deploy-baseline-across-environments)
+  - [Create Master Changelog](#create-master-changelog)
+  - [Deploy to Development (Sync Only)](#deploy-to-development-sync-only)
+  - [Deploy to Staging](#deploy-to-staging-step-5-baseline)
+  - [Deploy to Production](#deploy-to-production-step-5-baseline)
+- [Next Steps](#next-steps)
+- [Cleanup After Tutorial](#cleanup-after-tutorial)
+
+---
+
+## Introduction
+
+This tutorial is **Part 1** of a comprehensive series on implementing database change management with Liquibase and Microsoft SQL Server. Part 1 focuses on establishing a **baseline**—capturing the current state of an existing database and setting up Liquibase to manage future changes.
+
+### Goals of Part 1
+
+By the end of Part 1, you will have:
+
+1. ✅ **Set up a complete Liquibase project structure** with proper organization for changelogs and environment configurations
+2. ✅ **Created three database environments** (dev, stage, prod) to simulate a real-world multi-environment setup
+3. ✅ **Generated a baseline** from an existing development database that represents your current production state
+4. ✅ **Deployed the baseline** across all environments using Liquibase's sync and update commands
+5. ✅ **Established Liquibase tracking** so all future changes can be safely managed and deployed
+
+**The end result:** A fully configured Liquibase project that tracks your database schema across multiple environments, ready for incremental changes in Part 2.
+
+### What You'll Learn
+
+In this tutorial, you'll learn:
+
+- **Liquibase fundamentals:**
+  - What a baseline is and why it's critical for existing databases
+  - How to generate a baseline from an existing database using `generateChangeLog`
+  - The difference between `changelogSync` (marking changes as executed) and `update` (actually running changes)
+  - How to organize changelogs in a maintainable structure
+
+- **Multi-environment management:**
+  - Setting up separate databases for dev, staging, and production
+  - Configuring environment-specific Liquibase properties files
+  - Deploying the same baseline to multiple environments safely
+
+- **Best practices:**
+  - Proper project structure for Liquibase changelogs
+  - Using schema filtering to capture only relevant objects
+  - Tagging deployments for rollback capabilities
+  - Security considerations (environment variables, connection strings)
+
+- **Docker workflow:**
+  - Running Liquibase commands in Docker containers
+  - Managing file permissions correctly
+  - Using helper scripts and aliases for efficiency
+
+- **Real-world scenarios:**
+  - Baselining an existing database (common when adopting Liquibase)
+  - Handling the "existing production database" use case
+  - Setting up the foundation for incremental changes
+
+### Prerequisites
+
+Before starting this tutorial, you should have:
+
+- ✅ **Docker and Docker Compose** installed and running
+  - Docker version 20.10+ recommended
+  - Docker Compose version 2.0+ recommended
+  - Verify with: `docker --version` and `docker compose version`
+
+- ✅ **Bash shell** (Linux, macOS, or WSL2 on Windows)
+  - Tutorial uses bash-specific syntax
+  - Windows users: Use WSL2 or Git Bash
+
+- ✅ **Basic SQL knowledge**
+  - Understanding of databases, tables, schemas
+  - Familiarity with SQL Server basics (helpful but not required)
+
+- ✅ **Basic command line knowledge**
+  - Navigating directories (`cd`, `ls`)
+  - Running commands
+  - Understanding file paths
+
+**No prior Liquibase experience required!** This tutorial explains all concepts from the ground up.
+
+### Time Estimate
+
+- **First-time setup:** ~30 minutes
+  - Environment configuration
+  - Docker container setup
+  - Project structure creation
+
+- **Tutorial execution:** ~1-2 hours
+  - Database creation and population
+  - Liquibase configuration
+  - Baseline generation and deployment
+
+- **Verification and cleanup:** ~15 minutes
+  - Verifying deployments
+  - Understanding what was created
+
+**Total time:** Approximately **2-3 hours** for first-time completion. Subsequent runs will be faster as you become familiar with the workflow.
+
+---
+
 ## Environment Setup
 
 ### Step 0: Configure Environment and Aliases
@@ -161,15 +281,19 @@ To simplify running SQL commands inside the tutorial SQL Server container, use t
 
 **Usage examples:**
 
+> **Important:** The following commands are **examples only** demonstrating how to use the `sqlcmd-tutorial` alias. **Do not run them yet.** You will execute real versions later in the tutorial (database creation and verification occur in Step 1). Running them now is premature and may cause confusion.
+
 - Run an inline query:
 
 ```bash
+# EXAMPLE ONLY – DO NOT RUN YET
 sqlcmd-tutorial -Q "SELECT @@SERVERNAME AS ServerName, GETDATE() AS CurrentTime;"
 ```
 
 - Run a `.sql` file:
 
 ```bash
+# EXAMPLE ONLY – DO NOT RUN YET
 sqlcmd-tutorial create_databases.sql
 ```
 
@@ -458,7 +582,7 @@ grep -n 'schemaName="app"' database/changelog/baseline/V0000__baseline.xml | hea
 - Objects captured: Spot tables, views, FKs, and indexes.
 
 ```bash
-grep -nE '<createTable|<createView|<addForeignKeyConstraint|<createIndex' database/changelog/baseline/V0000__baseline.xml | head -n 20
+grep -nE '<createTable|<createView|<createIndex' database/changelog/baseline/V0000__baseline.xml | head -n 20
 ```
 
 - Sanity size check: Ensure it’s not trivially small.
@@ -511,6 +635,16 @@ lb -e dev -- \
 Now create the master changelog and deploy the baseline to each environment:
 
 ### Create Master Changelog
+
+The "master changelog" (`changelog.xml`) is the single entry point Liquibase reads when you run commands like `update`, `status`, or `changelogSync`. Every environment properties file we created earlier (`changelog-file=database/changelog/changelog.xml`) points to this file, so it must exist before any deployment action.
+
+Why not just point Liquibase directly at the baseline file? Because separating the baseline into its own file and including it from a master changelog lets you append future incremental changes (V0001, V0002, etc.) in a controlled, chronological order. The master changelog becomes your ordered "table of contents" of database evolution:
+
+1. Include baseline (captured state of the existing DB)
+2. Add new changeset files (e.g. `changes/V0001__add_orders_table.sql`)
+3. Keep a stable root reference for CI/CD pipelines and tooling
+
+Without this file, Liquibase would have no central place to aggregate future changes. Therefore creating it is required before deploying (syncing) the baseline across environments.
 
 ```bash
 # Create master changelog that includes baseline

@@ -11,12 +11,14 @@ This is a **comprehensive tutorial series** on implementing database CI/CD with 
 #### 1. Foundation & Planning
 
 **[README-GITHUB-ACTIONS.md](./README-GITHUB-ACTIONS.md)** - Navigation Hub
+
 - Complete index of all tutorials
 - Learning paths for different personas
 - Quick start guides
 - Comprehensive FAQ
 
 **[repository-strategies-for-database-cicd.md](./repository-strategies-for-database-cicd.md)** - Repository Strategy
+
 - Single vs multiple repositories explained
 - Decision framework for teams
 - Best practices by team size
@@ -24,6 +26,7 @@ This is a **comprehensive tutorial series** on implementing database CI/CD with 
 - 60 minutes reading time
 
 **[branch-strategies-for-database-cicd.md](./branch-strategies-for-database-cicd.md)** - Branch Strategy
+
 - Git branching fundamentals
 - Branch-based deployment workflows
 - GitHub Flow for teams under 20
@@ -33,12 +36,14 @@ This is a **comprehensive tutorial series** on implementing database CI/CD with 
 #### 2. GitHub Actions Fundamentals
 
 **[github-actions-primer.md](./github-actions-primer.md)** - Beginner's Guide
+
 - Complete introduction to GitHub Actions
 - No prior knowledge needed
 - All concepts explained in plain language
 - 45 minutes reading time
 
 **[github-actions-liquibase-best-practices.md](./github-actions-liquibase-best-practices.md)** - Best Practices
+
 - Research findings from Liquibase official docs
 - Architecture patterns
 - Security best practices
@@ -50,6 +55,7 @@ This is a **comprehensive tutorial series** on implementing database CI/CD with 
 #### 3. Hands-On Implementation
 
 **[sqlserver-liquibase-github-actions-tutorial.md](./sqlserver-liquibase-github-actions-tutorial.md)** - Complete Tutorial
+
 - Step-by-step implementation guide
 - Build production-ready CI/CD pipeline
 - Advanced rollback strategies
@@ -58,13 +64,15 @@ This is a **comprehensive tutorial series** on implementing database CI/CD with 
 - 5-6 hours (can do over multiple sessions)
 
 **[database-testing-strategies.md](./database-testing-strategies.md)** - Testing Guide ⭐ NEW
+
 - Comprehensive database testing for CI/CD
 - 8 types of database tests explained
 - GitHub Actions integration examples
 - Testing frameworks and tools
 - 60 minutes reading time
 
-**[self-hosted-runners-wsl-docker.md](./self-hosted-runners-wsl-docker.md)** - Self-Hosted Runners Guide ⭐ NEW
+**[setup-self-hosted-runner-docker-liquibase-tutorial.md](./setup-self-hosted-runner-docker-liquibase-tutorial.md)** - Self-Hosted Runner Setup for Tutorial ⭐ NEW
+
 - Complete setup for GitHub Actions runners in WSL with Docker
 - Local CI/CD environment for learning and testing
 - SQL Server connection options (Docker, Windows host, WSL)
@@ -75,6 +83,7 @@ This is a **comprehensive tutorial series** on implementing database CI/CD with 
 #### 4. Decision Guides
 
 **[local-vs-github-actions-comparison.md](./local-vs-github-actions-comparison.md)** - Approach Comparison
+
 - When to use local Docker vs GitHub Actions
 - Feature comparison and trade-offs
 - Transition strategy
@@ -84,12 +93,14 @@ This is a **comprehensive tutorial series** on implementing database CI/CD with 
 #### 5. Reference & Quality Assurance
 
 **[GITHUB-ACTIONS-TUTORIAL-SUMMARY.md](./GITHUB-ACTIONS-TUTORIAL-SUMMARY.md)** - Executive Overview
+
 - Summary of all documents
 - How they work together
 - Implementation timelines
 - Success metrics
 
 **[VALIDATION_REPORT_2025-11-20.md](./VALIDATION_REPORT_2025-11-20.md)** - Quality Assessment ⭐ NEW
+
 - Comprehensive validation of tutorial series
 - Comparison against industry standards
 - Gap analysis and recommendations
@@ -97,6 +108,7 @@ This is a **comprehensive tutorial series** on implementing database CI/CD with 
 - 45 minutes reading time
 
 **[ROADMAP_TO_100_PERCENT_2025-11-20.md](./ROADMAP_TO_100_PERCENT_2025-11-20.md)** - Enhancement Roadmap ⭐ NEW
+
 - Plan to achieve 100% completeness and accuracy
 - 16 detailed enhancements with priorities
 - Effort and cost estimates
@@ -104,6 +116,7 @@ This is a **comprehensive tutorial series** on implementing database CI/CD with 
 - 30 minutes reading time
 
 **[IMPLEMENTATION_PLAN_100_PERCENT_2025-11-20.md](./IMPLEMENTATION_PLAN_100_PERCENT_2025-11-20.md)** - Implementation Guide ⭐ NEW
+
 - Phased implementation plan for enhancements
 - Detailed tasks and timelines
 - Quality assurance requirements
@@ -112,19 +125,22 @@ This is a **comprehensive tutorial series** on implementing database CI/CD with 
 
 ## 🎯 Who Should Use This?
 
-### ✅ Perfect For:
+### ✅ Perfect For
+
 - Teams wanting to automate database deployments
 - Developers new to CI/CD or GitHub Actions
 - Organizations needing audit trails and approvals
 - Anyone using Liquibase + SQL Server
 - Teams transitioning from manual deployments
 
-### ✅ No Experience Needed In:
+### ✅ No Experience Needed In
+
 - GitHub Actions (we teach from scratch)
 - CI/CD concepts (everything explained)
 - DevOps (beginner-friendly)
 
-### ⚠️ You Should Know:
+### ⚠️ You Should Know
+
 - Basic Git (commit, push, pull)
 - Basic SQL
 - Basic database concepts
@@ -132,6 +148,7 @@ This is a **comprehensive tutorial series** on implementing database CI/CD with 
 ## 🚀 Quick Start Paths
 
 ### Path 1: Complete Beginner (Never Used GitHub or CI/CD)
+
 **Time: 2 days**
 
 ```
@@ -148,6 +165,7 @@ Day 2: Implementation
 ```
 
 ### Path 2: Know Git/GitHub (Want Database CI/CD)
+
 **Time: 1 day**
 
 ```
@@ -162,6 +180,7 @@ Afternoon: Implementation
 ```
 
 ### Path 3: Know GitHub Actions (Want Database Automation)
+
 **Time: Half day**
 
 ```
@@ -173,12 +192,18 @@ Afternoon: Implementation
 ```
 
 ### Path 4: Self-Hosted Runner (Local Learning)
+
 **Time: 1 day (setup) + practice**
 
-```
+> **Note:** You can complete the runner setup either:
+>
+> - **Now** (before starting Part 3) - recommended for focused learning
+> - **Later** during Part 3, Step 10 - if following the tutorial sequentially
+
+```text
 Morning: Setup Local Environment
 1. Read: README-GITHUB-ACTIONS.md (10 min)
-2. Setup: self-hosted-runners-wsl-docker.md (2-3 hours)
+2. Setup: setup-self-hosted-runner-docker-liquibase-tutorial.md (2-3 hours)
    - Install Docker in WSL
    - Setup SQL Server
    - Configure GitHub runner
@@ -199,6 +224,7 @@ Benefits:
 ```
 
 ### Path 5: Team Lead (Planning Implementation)
+
 **Time: 2-3 days**
 
 ```
@@ -211,7 +237,7 @@ Day 1: Research & Planning
 
 Day 2: Testing
 6. Test: sqlserver-liquibase-github-actions-tutorial.md (4-5 hours)
-   - OR test with self-hosted-runners-wsl-docker.md first
+   - OR test with setup-self-hosted-runner-docker-liquibase-tutorial.md first
 
 Day 3: Team Preparation
 7. Prepare training materials
@@ -221,9 +247,10 @@ Day 3: Team Preparation
 
 ## 📖 What You'll Learn
 
-### From the Tutorial Series:
+### From the Tutorial Series
 
 ✅ **GitHub Actions Fundamentals**
+
 - Workflows, jobs, steps, runners
 - Secrets management
 - Environments with protection rules
@@ -231,12 +258,14 @@ Day 3: Team Preparation
 - Modern features (2024-2025): Concurrency controls, OIDC, deployment protection
 
 ✅ **Liquibase Automation**
+
 - Automated deployments
 - Multi-environment pipelines (dev → staging → production)
 - Advanced rollback strategies (tag-based, automated, emergency procedures)
 - Change tracking and audit trails
 
 ✅ **Production Best Practices**
+
 - Security hardening
 - Least privilege access
 - Audit trails for compliance
@@ -244,6 +273,7 @@ Day 3: Team Preparation
 - Cost optimization strategies
 
 ✅ **SQL Server Integration**
+
 - JDBC connection strings
 - Azure SQL configuration and firewall rules
 - Authentication methods (including OIDC/Managed Identity)
@@ -251,21 +281,24 @@ Day 3: Team Preparation
 - Connection retry strategies
 
 ✅ **Database Testing** ⭐ NEW
+
 - 8 types of database tests
 - GitHub Actions integration
 - Automated validation workflows
 - Testing frameworks and tools
 
 ✅ **Self-Hosted Runners** ⭐ NEW
+
 - Setup runners in WSL with Docker
 - Local CI/CD environment
 - SQL Server connection patterns
 - Cost-free unlimited runs
 - Enterprise self-hosted patterns
 
-### By the End, You'll Have:
+### By the End, You'll Have
 
 🎯 **A Working CI/CD Pipeline** that:
+
 - Automatically validates database changes
 - Deploys to dev and staging automatically
 - Requires approval for production
@@ -300,7 +333,7 @@ Records audit trail
 
 ## 💡 Key Features
 
-### What Makes This Series Special:
+### What Makes This Series Special
 
 1. **Beginner-Friendly**: Assumes zero GitHub Actions knowledge
 2. **Comprehensive**: From basics to production in one series
@@ -312,11 +345,13 @@ Records audit trail
 
 ## 📦 What You Need
 
-### To Read/Learn:
+### To Read/Learn
+
 - ✅ Web browser
 - ❌ Nothing else!
 
-### To Complete Hands-On Tutorial:
+### To Complete Hands-On Tutorial
+
 - ✅ GitHub account (free)
 - ✅ SQL Server database:
   - Azure SQL (free tier available)
@@ -328,7 +363,7 @@ Records audit trail
 
 ## 🎓 Learning Approach
 
-### Educational Principles Used:
+### Educational Principles Used
 
 1. **Progressive Disclosure**: Start simple, add complexity
 2. **Multiple Learning Styles**: Visual, hands-on, reading, examples
@@ -336,7 +371,7 @@ Records audit trail
 4. **Production Focus**: Real-world practices throughout
 5. **Self-Contained**: Each document stands alone
 
-### How Documents Work Together:
+### How Documents Work Together
 
 ```
 README-GITHUB-ACTIONS.md (Start here)
@@ -376,25 +411,30 @@ README-GITHUB-ACTIONS.md (Start here)
 
 ## ⏱️ Time Investment
 
-### Individual Developer:
+### Individual Developer
+
 - **Learning**: 6-10 hours
 - **Implementation**: 2 weeks
 
-### Small Team (2-5):
+### Small Team (2-5)
+
 - **Learning**: 1 week
 - **Implementation**: 4 weeks
 
-### Medium Team (5-20):
+### Medium Team (5-20)
+
 - **Learning**: 2 weeks
 - **Implementation**: 8 weeks
 
-### Enterprise (20+):
+### Enterprise (20+)
+
 - **Learning**: 2-4 weeks
 - **Implementation**: 12 weeks
 
 ## 💰 Cost
 
-### GitHub Actions:
+### GitHub Actions
+
 - **Free tier**: 2,000 minutes/month (private repos)
 - **Public repos**: Unlimited free
 - **Typical deployment**: 2-5 minutes
@@ -403,7 +443,7 @@ README-GITHUB-ACTIONS.md (Start here)
 
 ## 🔒 Security
 
-### Production-Grade Security Included:
+### Production-Grade Security Included
 
 ✅ Encrypted secrets (GitHub Secrets)
 ✅ Approval workflows (multiple reviewers)
@@ -425,19 +465,22 @@ After completing this series, you'll be able to:
 
 ## 📊 What Teams Have Achieved
 
-### Results from Similar Implementations:
+### Results from Similar Implementations
 
 **Small Startup** (3 devs):
+
 - 90% reduction in deployment time
 - Zero errors after automation
 - 2 hours → 10 minutes per release
 
 **Medium Company** (15 devs):
+
 - Compliance-ready audit trails
 - Fewer incidents
 - Faster releases
 
 **Enterprise** (50+ devs):
+
 - 14x faster releases (2 weeks → daily)
 - Reduced risk
 - Auditor-approved
@@ -447,6 +490,7 @@ After completing this series, you'll be able to:
 ### Step 1: Read the Navigation Hub
 
 Open [README-GITHUB-ACTIONS.md](./README-GITHUB-ACTIONS.md) for:
+
 - Complete tutorial index
 - Detailed learning paths
 - Prerequisites checklist
@@ -457,10 +501,12 @@ Open [README-GITHUB-ACTIONS.md](./README-GITHUB-ACTIONS.md) for:
 Before implementing, understand your options:
 
 **Repository Strategy**: [repository-strategies-for-database-cicd.md](./repository-strategies-for-database-cicd.md)
+
 - Should database changes be in the same repo as app code?
 - **Recommendation for teams under 20**: Single repository
 
 **Branch Strategy**: [branch-strategies-for-database-cicd.md](./branch-strategies-for-database-cicd.md)
+
 - How to use branches for dev → staging → production?
 - **Recommendation for teams under 20**: GitHub Flow
 
@@ -477,6 +523,7 @@ Follow the complete hands-on tutorial:
 [sqlserver-liquibase-github-actions-tutorial.md](./sqlserver-liquibase-github-actions-tutorial.md)
 
 Build a production-ready CI/CD pipeline with:
+
 - Automated deployments
 - Approval workflows
 - Multi-environment support
@@ -488,7 +535,7 @@ If deciding between local Docker and GitHub Actions:
 
 ## 📝 Document Quality
 
-### All Documents Include:
+### All Documents Include
 
 ✅ **Table of Contents**: Easy navigation
 ✅ **Clear Structure**: Logical progression
@@ -498,7 +545,7 @@ If deciding between local Docker and GitHub Actions:
 ✅ **Checkpoints**: Verify progress
 ✅ **References**: Links to official docs
 
-### Quality Checks:
+### Quality Checks
 
 ✅ No linter errors
 ✅ All commands tested
@@ -508,7 +555,7 @@ If deciding between local Docker and GitHub Actions:
 
 ## 🆘 Need Help?
 
-### Resources:
+### Resources
 
 - **Tutorial troubleshooting**: Each doc has troubleshooting section
 - **GitHub Actions logs**: Detailed logs for every run
@@ -519,30 +566,33 @@ If deciding between local Docker and GitHub Actions:
 
 ## 📚 Related Documentation
 
-### Also Available:
+### Also Available
 
 **Local Development Tutorial:**
+
 - **[sqlserver-liquibase-tutorial.md](./sqlserver-liquibase-tutorial.md)**: Comprehensive local Docker tutorial
   - Learn Liquibase basics with hands-on practice
   - Complete before implementing CI/CD (recommended)
   - Great for understanding Liquibase fundamentals
 
 **Architecture Documentation:**
+
 - **Liquibase Implementation Guide**: High-level architectural decisions and guidance
 - Located in `../../architecture/liquibase/`
 
 **Complete Tutorial Collection:**
 All 9 documents in this series cover:
+
 - Strategic planning (repository & branch strategies)
 - GitHub Actions fundamentals
 - Hands-on implementation
 - Decision frameworks and comparisons
 
-## 🎉 You're Ready!
+## 🎉 You're Ready
 
 This tutorial series provides everything you need to implement professional database CI/CD with GitHub Actions and Liquibase.
 
-### Next Step:
+### Next Step
 
 **Open [README-GITHUB-ACTIONS.md](./README-GITHUB-ACTIONS.md) and choose your learning path!**
 
@@ -557,6 +607,7 @@ This tutorial series provides everything you need to implement professional data
 **Total Learning Time**: 17-21 hours
 
 **Topics Covered**:
+
 - Repository organization strategies
 - Git branching workflows
 - GitHub Actions fundamentals (including 2024-2025 features)

@@ -1,8 +1,27 @@
 # Tutorial Part 3: From Local Liquibase Project to GitHub Actions CI/CD
 
-> **Prerequisites**
-> - Complete **Part 1: Baseline SQL Server + Liquibase Setup** (`sqlserver-liquibase-part1-baseline.md`).
-> - (Recommended) Complete **Part 2: Manual Liquibase Deployment Lifecycle** (`sqlserver-liquibase-part2-manual-deploy.md`) so you are comfortable deploying and rolling back changes manually before automating them.
+## Table of Contents
+
+- [Prerequisites](#prerequisites)
+- [Phase 2: From Local Project to GitHub Repository](#phase-2-from-local-project-to-github-repository)
+  - [Step 6: Create a GitHub Repository](#step-6-create-a-github-repository)
+  - [Step 7: Initialize Git and Push Initial Project (First Person Only)](#step-7-initialize-git-and-push-initial-project-first-person-only)
+  - [Step 8: Create Your Personal Branch (All Learners)](#step-8-create-your-personal-branch-all-learners)
+- [Phase 3: CI/CD with GitHub Actions (Self-Hosted Runner in Docker)](#phase-3-cicd-with-github-actions-self-hosted-runner-in-docker)
+  - [Step 9: Where the Databases Live for CI/CD](#step-9-where-the-databases-live-for-cicd)
+  - [Step 10: Set Up a Self-Hosted Runner in a Docker Container](#step-10-set-up-a-self-hosted-runner-in-a-docker-container)
+  - [Step 11: Configure GitHub Secrets](#step-11-configure-github-secrets)
+  - [Step 12: First CI Workflow – Deploy to Development (Self-Hosted)](#step-12-first-ci-workflow--deploy-to-development-self-hosted)
+  - [Step 13: Multi-Environment Pipeline (Dev → Staging → Production)](#step-13-multi-environment-pipeline-dev--staging--production)
+- [Phase 4: Integrating Local Helper Scripts with CI/CD Practices](#phase-4-integrating-local-helper-scripts-with-cicd-practices)
+  - [Step 14: Using lb and sqlcmd-tutorial Alongside GitHub Actions](#step-14-using-lb-and-sqlcmd-tutorial-alongside-github-actions)
+  - [Step 15: Recommended Daily Workflow (Branch-Based)](#step-15-recommended-daily-workflow-branch-based)
+- [Phase 5: Best Practices and Improvements](#phase-5-best-practices-and-improvements)
+
+## Prerequisites
+
+- Complete **Part 1: Baseline SQL Server + Liquibase Setup** (`sqlserver-liquibase-part1-baseline.md`).
+- (Recommended) Complete **Part 2: Manual Liquibase Deployment Lifecycle** (`sqlserver-liquibase-part2-manual-deploy.md`) so you are comfortable deploying and rolling back changes manually before automating them.
 
 This Part 3 assumes you already have:
 
@@ -25,24 +44,58 @@ The sections and content below mirror the **Phase 2+** material from the origina
 
 ### Step 6: Create a GitHub Repository
 
+> **Multi-User Tutorial Setup:**
+> This tutorial assumes a **branch-based approach** where multiple people share one repository and each person works in their own branch.
+>
+> **Setup for branch-based tutorials:**
+>
+> - One instructor or first learner creates the base repository
+> - Each subsequent learner will be added as a collaborator
+> - Each person creates their own feature branch (e.g., `tutorial-alice`, `tutorial-bob`)
+> - Workflows trigger on individual branches, not `main`
+> - GitHub Secrets can be shared across all learners
+>
+> **Alternative approaches** (not covered in detail here):
+>
+> - **Fork-based**: Each learner forks the repo to their own account
+> - **Separate repositories**: Each person creates their own uniquely-named repo
+
+**If you are the first person or instructor:**
+
 On GitHub:
 
-1. Click **“New repository”**.
-2. Name it something like `sqlserver-liquibase-demo` or `liquibase-github-actions-demo`.
+1. Click **"New repository"**.
+2. Name it `sqlserver-liquibase-demo` or `liquibase-github-actions-demo`.
 3. Choose **Private** (recommended for database projects).
 4. Do **not** initialize with README or `.gitignore` (we already have them locally).
+5. After creating the repo, add collaborators:
+   - Go to **Settings → Collaborators**
+   - Add each learner by their GitHub username
 
-Copy the repository URL (HTTPS or SSH).
+**If you are joining an existing tutorial repo:**
 
-### Step 7: Add Liquibase Project Files to Git
+1. Accept the collaboration invitation email from GitHub
+2. Clone the repository:
 
-You will now treat `/data/liquibase-tutorial` as a Git repository that you push to GitHub:
+  ```bash
+  cd /data
+  git clone <https://github.com/ORG_NAME/sqlserver-liquibase-demo.git> liquibase-tutorial
+  cd liquibase-tutorial
+  ```
+
+1. Skip to **Step 8** to create your personal branch
+
+### Step 7: Initialize Git and Push Initial Project (First Person Only)
+
+**If you are the first person setting up the repository:**
+
+Treat `/data/liquibase-tutorial` as a Git repository:
 
 ```bash
 cd /data/liquibase-tutorial
 
 git init
-git remote add origin https://github.com/YOUR_USERNAME/YOUR_REPO.git  # or SSH URL
+git remote add origin https://github.com/ORG_NAME/sqlserver-liquibase-demo.git
 git branch -M main
 ```
 
@@ -84,7 +137,7 @@ git commit -m "Initial commit: Liquibase SQL Server tutorial project"
 
 > Keep **passwords and environment-specific properties out of Git**. CI/CD will use GitHub Secrets instead.
 
-### Step 8: Push the Project to GitHub
+Push to GitHub:
 
 ```bash
 git push -u origin main
@@ -94,7 +147,34 @@ Verify on GitHub that you see:
 
 - `database/changelog/...`
 - `env/` (without hard-coded passwords; use environment variables or secrets rather than committing passwords)
-- `.gitignore` and `README.md`.
+- `.gitignore` and `README.md`
+
+#### Important: Protect the main branch
+
+On GitHub:
+
+1. Go to **Settings → Branches**
+2. Add a branch protection rule for `main`:
+   - Require pull request reviews before merging (optional for tutorials)
+   - Restrict who can push (recommend: only the instructor/first person)
+
+This prevents accidental pushes to `main` from learners.
+
+### Step 8: Create Your Personal Branch (All Learners)
+
+**Everyone (including the first person) should now create a personal branch:**
+
+```bash
+cd /data/liquibase-tutorial
+
+# Replace 'yourname' with your actual name or initials
+export TUTORIAL_USER="yourname"  # e.g., alice, bob, dvp
+
+git checkout -b "tutorial-${TUTORIAL_USER}"
+git push -u origin "tutorial-${TUTORIAL_USER}"
+```
+
+From now on, **all your work happens in your personal branch**, not in `main`.
 
 ---
 
@@ -110,43 +190,98 @@ For this combined tutorial we will:
 - Run the GitHub Actions **runner itself in a Docker container**, attached to the same Docker network (for example `liquibase_tutorial`).
 - Use JDBC URLs that point at `mssql_liquibase_tutorial:1433` (inside the Docker network), not at a public cloud endpoint.
 
-> In real production you would typically move the databases to managed services (Azure SQL, RDS SQL Server, etc.) and use GitHub-hosted runners. The self-hosted runner in Docker is ideal for learning and for private environments that GitHub-hosted runners cannot reach.
+> The self-hosted runner in Docker is ideal for learning.
 
-### Step 9a: Set Up a Self-Hosted Runner in a Docker Container
+### Step 10: Set Up a Self-Hosted Runner in a Docker Container
 
-1. **Create a personal access token (PAT)** (once per machine) with at least `repo` scope, following GitHub’s “self-hosted runner” instructions.
-2. **Create a registration token** for the runner from your repo’s **Settings → Actions → Runners → New self-hosted runner** page.
-3. **Create a Docker network if you do not already have one shared with the tutorial containers** (this tutorial uses `liquibase_tutorial`):
+ > **If you already completed this:** If you followed START-HERE.md "Path 4: Self-Hosted Runner" and set up your runner environment, you can skip this step—just verify your runner shows as "Online" in GitHub Settings → Actions → Runners.
 
-```bash
-docker network create liquibase_tutorial 2>/dev/null || true
-```
+ > **Execution timing:** Complete the actions below now (before pushing any workflow files in Steps 12–13). The runner must be online and your secrets defined or initial workflow runs will queue indefinitely. If you are only reading ahead, you may delay the runner start until just before adding `.github/workflows`, but do not push workflow YAML until the runner shows as "Online" in GitHub.
 
-4. Ensure your `mssql_liquibase_tutorial` container is attached to that network (it should be if you followed the first tutorial’s `docker compose` file).
-5. **Run a self-hosted runner container** attached to the same network. One common pattern is to use the official Actions runner image and environment variables:
+ > **Detailed guide:** For comprehensive setup instructions including Docker/WSL installation, see [setup-self-hosted-runner-docker-liquibase-tutorial.md](./setup-self-hosted-runner-docker-liquibase-tutorial.md).
 
-```bash
-docker run -d --restart unless-stopped \
-  --name liquibase-actions-runner \
-  --network liquibase_tutorial \
-  -e REPO_URL="https://github.com/YOUR_ORG/YOUR_REPO" \
-  -e RUNNER_NAME="liquibase-tutorial-runner" \
-  -e RUNNER_WORKDIR="/runner/_work" \
-  -e RUNNER_LABELS="self-hosted,liquibase-tutorial" \
-  -e RUNNER_TOKEN="YOUR_REGISTRATION_TOKEN" \
-  -v /var/run/docker.sock:/var/run/docker.sock \
-  ghcr.io/actions/actions-runner:latest
-```
+- [ ] **Create a personal access token (PAT)** (once per machine) with at least `repo` scope, following GitHub's "self-hosted runner" instructions.
+- [ ] **Create a registration token** for the runner from your repo’s **Settings → Actions → Runners → New self-hosted runner** page. (This short‑lived token is different from the PAT and is used only during runner registration.)
+- [ ] **Create a Docker network** if you do not already have one shared with the tutorial containers (this tutorial uses `liquibase_tutorial`):
+
+   ```bash
+   #!/usr/bin/env bash
+   # Idempotent network creation: only create if absent
+   if ! docker network inspect liquibase_tutorial >/dev/null 2>&1; then
+     docker network create liquibase_tutorial
+     echo "Created docker network liquibase_tutorial"
+   else
+     echo "Docker network liquibase_tutorial already exists"
+   fi
+   ```
+
+- [ ] **Ensure your `mssql_liquibase_tutorial` container is attached to that network** (it should be if you followed the first tutorial’s `docker compose` file). Re-attach if needed:
+
+   ```bash
+   docker network connect liquibase_tutorial mssql_liquibase_tutorial
+   ```
+
+- [ ] **Run a self-hosted runner container** attached to the same network. One common pattern is to use the official Actions runner image and environment variables:
+
+   ```bash
+   docker run -d --restart unless-stopped \
+     --name liquibase-actions-runner \
+     --network liquibase_tutorial \
+     -e REPO_URL="https://github.com/ORG_NAME/sqlserver-liquibase-demo" \
+     -e RUNNER_NAME="liquibase-tutorial-runner" \
+     -e RUNNER_WORKDIR="/runner/_work" \
+     -e RUNNER_LABELS="self-hosted,liquibase-tutorial" \
+     -e RUNNER_TOKEN="YOUR_REGISTRATION_TOKEN" \
+     -v /var/run/docker.sock:/var/run/docker.sock \
+     ghcr.io/actions/actions-runner:latest
+   ```
+
+   Replace placeholders:
+
+  - ORG_NAME: GitHub organization or user name hosting the repo
+  - YOUR_REGISTRATION_TOKEN: Token from Actions → Runners → New self-hosted runner
+
+   Note: Remove the docker.sock mount if the runner does not need to start other containers.
 
 Key points:
 
 - The runner container joins the **same Docker network** as `mssql_liquibase_tutorial`.
 - The **label** `liquibase-tutorial` lets you target this runner from workflows.
 - Mounting `/var/run/docker.sock` is optional if you need the runner to start other containers; for basic Liquibase CLI use you can omit it.
+- After it starts, in the Actions UI you should see a **self-hosted runner** registered with labels like `self-hosted`, `linux`, and `liquibase-tutorial`. Only proceed to add workflow YAML files once it appears as Online.
 
-6. In the Actions UI, you should now see a **self-hosted runner** registered for your repo with labels like `self-hosted`, `linux`, and `liquibase-tutorial`.
+#### Quick Setup Alternative
 
-### Step 10: Configure GitHub Secrets
+If you prefer to set up the runner now without all the detail, follow the comprehensive guide: **[setup-self-hosted-runner-docker-liquibase-tutorial.md](./setup-self-hosted-runner-docker-liquibase-tutorial.md)**
+
+That guide covers Docker/WSL installation, SQL Server setup, runner configuration, network connectivity, and troubleshooting.
+
+#### Verification Checklist
+
+Before proceeding to Step 11, verify:
+
+- [ ] **Docker network** `liquibase_tutorial` exists
+- [ ] **SQL Server container** `mssql_liquibase_tutorial` is running and attached to the network
+- [ ] **Runner container** is running and attached to the same network
+- [ ] **GitHub shows runner as "Online"** in Settings → Actions → Runners
+- [ ] Runner has appropriate labels (e.g., `self-hosted`, `liquibase-tutorial`)
+
+**Test connectivity:**
+
+```bash
+# Verify network
+docker network inspect liquibase_tutorial
+
+# Verify both containers are on the network
+docker network inspect liquibase_tutorial | grep -E "(mssql_liquibase_tutorial|runner)"
+
+# Check runner logs
+docker logs <your-runner-container-name> | tail -20
+```
+
+Once your runner shows as **Online** in GitHub, proceed to Step 11.
+
+### Step 11: Configure GitHub Secrets
 
 In your new Liquibase repo on GitHub:
 
@@ -186,9 +321,11 @@ jdbc:sqlserver://mssql_liquibase_tutorial:1433;
 
 > For actual production, avoid using `sa`; create a dedicated **Liquibase service account** with only the permissions it needs (see the best practices section below).
 
-### Step 11: First CI Workflow – Deploy to Development (Self-Hosted)
+### Step 12: First CI Workflow – Deploy to Development (Self-Hosted)
 
 Create `.github/workflows/deploy-dev.yml` in your repo with a minimal workflow that targets the self-hosted runner container:
+
+> **Branch-based trigger:** This workflow triggers on pushes to branches matching `tutorial-*`, so each learner's branch will trigger their own deployments.
 
 ```yaml
 name: Deploy to Development
@@ -196,7 +333,7 @@ name: Deploy to Development
 on:
   push:
     branches:
-      - main
+      - 'tutorial-*'  # Triggers on all tutorial branches
     paths:
       - 'database/**'
   workflow_dispatch:
@@ -257,11 +394,13 @@ On GitHub:
 
 - Go to the **Actions** tab and watch the “Deploy to Development” workflow run on your next push.
 
-### Step 12: Multi-Environment Pipeline (Dev → Staging → Production)
+### Step 13: Multi-Environment Pipeline (Dev → Staging → Production)
 
 Now replace the single-env workflow with a pipeline that promotes changes through dev → stage → prod.
 
 Create `.github/workflows/deploy-pipeline.yml`:
+
+> **Branch-based trigger:** Each learner's branch triggers their own pipeline execution.
 
 ```yaml
 name: Database Deployment Pipeline
@@ -269,7 +408,7 @@ name: Database Deployment Pipeline
 on:
   push:
     branches:
-      - main
+      - 'tutorial-*'  # Triggers on all tutorial branches
     paths:
       - 'database/**'
   workflow_dispatch:
@@ -401,7 +540,7 @@ Then:
 
 You now have a pipeline that:
 
-- Runs on pushes to `main` that touch `database/**`.
+- Runs on pushes to any tutorial branch (`tutorial-*`) that touch `database/**`.
 - Deploys in order: dev → stage → prod.
 - Uses GitHub Environment protection rules for production approvals.
 - Executes entirely on your **self-hosted runner container**, which talks to the `mssql_liquibase_tutorial` SQL Server container over the shared `liquibase_tutorial` Docker network.
@@ -412,12 +551,12 @@ You now have a pipeline that:
 
 ## Phase 4: Integrating Local Helper Scripts with CI/CD Practices
 
-### Step 13: Using `lb` and `sqlcmd-tutorial` Alongside GitHub Actions
+### Step 14: Using `lb` and `sqlcmd-tutorial` Alongside GitHub Actions
 
 Even after you add CI/CD, the helper scripts from Part 1 remain extremely valuable:
 
 - **`lb` wrapper**
-  - Local “single command” runner for Liquibase against `testdbdev`, `testdbstg`, `testdbprd`.
+  - Local "single command" runner for Liquibase against `testdbdev`, `testdbstg`, `testdbprd`.
   - Mirrors the same `changelog.xml` that CI/CD uses.
   - Perfect for:
     - Trying new changesets quickly.
@@ -428,8 +567,10 @@ Even after you add CI/CD, the helper scripts from Part 1 remain extremely valuab
   - Lets you verify what CI/CD is doing by reproducing operations locally.
 
 > Best practice: treat the **local helper scripts + tutorial container** as your **sandbox** and GitHub Actions + real SQL Server as your **pipeline**. Both should always use the **same changelog and changeset discipline**.
+>
+> **In the branch-based approach:** Each learner works independently in their own branch. Your local testing and CI/CD both operate on your personal `tutorial-yourname` branch.
 
-### Step 14: Recommended Daily Workflow
+### Step 15: Recommended Daily Workflow (Branch-Based)
 
 1. **Create or modify a changeset locally**
    - Edit `database/changelog/changes/V00xx__description.sql`.
@@ -439,17 +580,33 @@ Even after you add CI/CD, the helper scripts from Part 1 remain extremely valuab
    - Use `lb -e dev -- status --verbose`, `lb -e dev -- update`, `lb -e dev -- rollback ...`.
    - Use `sqlcmd-tutorial` to inspect results.
 
-3. **Commit and push**
-   - `git add database/changelog`
-   - `git commit -m "Describe your change"`
-   - `git push origin main` or open a PR.
+3. **Commit and push to your personal branch**
+
+   ```bash
+   git add database/changelog
+   git commit -m "V00xx: Describe your change"
+   git push origin "tutorial-${TUTORIAL_USER}"
+   ```
 
 4. **CI/CD takes over**
    - GitHub Actions pipeline validates and deploys through dev → stage → prod.
    - Production deployments require approval via the `production` environment.
+   - **Each learner's workflow runs independently** based on their branch.
 
 5. **If something goes wrong**
    - Use the rollback strategies and workflows from the more detailed GitHub Actions tutorial and from the rollback section in the manual Liquibase tutorial.
+
+6. **(Optional) Merge to main after successful deployment**
+   - After your changeset successfully deploys to production in your branch pipeline:
+
+   ```bash
+   # Create a pull request from your branch to main
+   gh pr create --base main --head "tutorial-${TUTORIAL_USER}" \
+     --title "Changeset V00xx: Description" \
+     --body "Tested and deployed successfully in my tutorial branch"
+   ```
+
+   - This keeps `main` as a clean record of all validated changes from all learners.
 
 ---
 
