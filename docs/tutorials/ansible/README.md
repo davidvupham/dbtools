@@ -19,7 +19,8 @@ This tutorial is organized into progressive chapters, each building on the previ
 11. **[Error Handling](11-error-handling.md)** - Building resilient playbooks
 12. **[Collections and Galaxy](12-collections-galaxy.md)** - Extending Ansible
 13. **[Best Practices](13-best-practices.md)** - Professional automation techniques
-14. **[Real-World Projects](14-real-world-projects.md)** - Complete automation scenarios
+14. **[Windows Automation](14-windows-automation.md)** - Managing Windows servers
+15. **[Real-World Projects](15-real-world-projects.md)** - Complete automation scenarios
 
 ## 🎯 Learning Approach
 

@@ -41,7 +41,8 @@ Welcome! This comprehensive Ansible tutorial covers everything from absolute beg
 | Chapter | Title | Topics | Status |
 |---------|-------|--------|--------|
 | 13 | [Best Practices](13-best-practices.md) | Organization, security, performance, testing | ✅ Complete |
-| 14 | Real-World Projects | Complete automation scenarios | 📝 Framework |
+| 14 | [Windows Automation](14-windows-automation.md) | WinRM, Kerberos, Windows modules | ✅ Complete |
+| 15 | Real-World Projects | Complete automation scenarios | 📝 Framework |
 
 **Status Legend**: ✅ Complete with examples & exercises | 📝 Framework created (expand as needed)
 
@@ -290,7 +291,8 @@ Advanced (Be Familiar)
 | Configuration management | 5, 8, 9 | Chapter 8: Templates |
 | Infrastructure as Code | 2, 9, 13 | Best Practices |
 | CI/CD integration | 9, 13 | Best Practices: Testing |
-| Monitoring setup | 9, 14 | Real-World Projects |
+| Windows Management | 14 | Chapter 14: Windows |
+| Monitoring setup | 9, 15 | Real-World Projects |
 
 ## 💡 Learning Tips
 

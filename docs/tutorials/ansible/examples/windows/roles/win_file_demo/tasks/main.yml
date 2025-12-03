@@ -1,0 +1,16 @@
+---
+- name: Ensure a directory exists
+  ansible.windows.win_file:
+    path: C:\AnsibleDemo
+    state: directory
+
+- name: Create a file with content
+  ansible.windows.win_file:
+    path: C:\AnsibleDemo\hello.txt
+    state: touch
+
+- name: Add content to the file
+  ansible.windows.win_lineinfile:
+    path: C:\AnsibleDemo\hello.txt
+    line: "Hello from Ansible! Managed by Kerberos."
+    state: present

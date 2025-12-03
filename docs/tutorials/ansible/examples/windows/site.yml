@@ -1,0 +1,5 @@
+---
+- name: Configure Windows Server
+  hosts: windows
+  roles:
+    - win_file_demo
