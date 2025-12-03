@@ -231,5 +231,9 @@ cert/*.der
 !cert/README.md
 !cert/.gitkeep
 
+# GitHub Actions runner local secrets (tutorial)
+docs/tutorials/liquibase/runner_config/runner.env
+docs/tutorials/liquibase/runner_config/runner.env.local
+
 # (removed) PDF conversion resources and exceptions no longer used
 .liquibase/settings.json
