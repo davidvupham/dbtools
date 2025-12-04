@@ -7,7 +7,7 @@ This directory contains Ansible playbooks and roles for managing Windows servers
 ```
 ansible/
 ├── ansible.cfg                          # Ansible configuration
-├── playbook.yml                         # Main playbook
+├── windows_service_account_rights.yml   # Main playbook
 ├── inventory/
 │   └── windows_hosts.yml               # Example inventory file
 └── roles/
@@ -81,14 +81,14 @@ windows_servers:
 # Test connectivity
 ansible windows_servers -m win_ping
 
-# Run the playbook
-ansible-playbook playbook.yml
+# Run the playbook (must specify target_hosts)
+ansible-playbook windows_service_account_rights.yml -e "target_hosts=production"
 
-# Run with specific service name
-ansible-playbook playbook.yml -e "service_name=MSSQLSERVER"
+# Run against all SQL Servers
+ansible-playbook windows_service_account_rights.yml -e "target_hosts=sql_servers"
 
-# Run for a named SQL Server instance
-ansible-playbook playbook.yml -e "service_name=MSSQL\$PROD"
+# Run against development and staging only
+ansible-playbook windows_service_account_rights.yml -e "target_hosts=development:staging"
 ```
 
 ### 3. Verify Results
@@ -122,19 +122,19 @@ See [roles/windows_service_account_rights/README.md](roles/windows_service_accou
 ### SQL Server Default Instance
 
 ```bash
-ansible-playbook playbook.yml -e "service_name=MSSQLSERVER"
+ansible-playbook windows_service_account_rights.yml -e "target_hosts=production"
 ```
 
 ### SQL Server Named Instance
 
 ```bash
-ansible-playbook playbook.yml -e "service_name=MSSQL\$INSTANCENAME"
+ansible-playbook windows_service_account_rights.yml -e "target_hosts=production" -e "service_name=MSSQL\$INSTANCENAME"
 ```
 
 ### Grant Specific Rights Only
 
 ```bash
-ansible-playbook playbook.yml -e '{"user_rights_to_grant": ["SeManageVolumePrivilege", "SeLockMemoryPrivilege"]}'
+ansible-playbook windows_service_account_rights.yml -e "target_hosts=sql_servers" -e '{"user_rights_to_grant": ["SeManageVolumePrivilege", "SeLockMemoryPrivilege"]}'
 ```
 
 ## Troubleshooting

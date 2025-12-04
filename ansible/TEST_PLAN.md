@@ -72,7 +72,7 @@ ansible test_windows -i inventory/test_hosts.yml -m win_ping
 1. Run the playbook with default settings:
 
    ```bash
-   ansible-playbook playbook.yml -i inventory/test_hosts.yml
+   ansible-playbook windows_service_account_rights.yml -e "target_hosts=test_windows" -i inventory/test_hosts.yml
    ```
 
 **Expected Results:**
@@ -114,7 +114,7 @@ Or use GUI:
 1. Run with custom service name:
 
    ```bash
-   ansible-playbook playbook.yml -i inventory/test_hosts.yml -e "service_name=MSSQL\$PROD"
+   ansible-playbook windows_service_account_rights.yml -e "target_hosts=test_windows" -i inventory/test_hosts.yml -e "service_name=MSSQL\$PROD"
    ```
 
 **Expected Results:**
@@ -173,7 +173,7 @@ Verify only the specified rights were granted (SeServiceLogonRight may already e
 1. Run with non-existent service:
 
    ```bash
-   ansible-playbook playbook.yml -i inventory/test_hosts.yml -e "service_name=NONEXISTENT_SERVICE"
+   ansible-playbook windows_service_account_rights.yml -e "target_hosts=test_windows" -i inventory/test_hosts.yml -e "service_name=NONEXISTENT_SERVICE"
    ```
 
 **Expected Results:**
@@ -199,7 +199,7 @@ Check Ansible output for failure message
 1. Run against a system service (e.g., Windows Time service):
 
    ```bash
-   ansible-playbook playbook.yml -i inventory/test_hosts.yml -e "service_name=W32Time"
+   ansible-playbook windows_service_account_rights.yml -e "target_hosts=test_windows" -i inventory/test_hosts.yml -e "service_name=W32Time"
    ```
 
 **Expected Results:**
@@ -221,8 +221,8 @@ Check Ansible output for appropriate failure message
 1. Run the playbook twice in succession:
 
    ```bash
-   ansible-playbook playbook.yml -i inventory/test_hosts.yml
-   ansible-playbook playbook.yml -i inventory/test_hosts.yml
+   ansible-playbook windows_service_account_rights.yml -e "target_hosts=test_windows" -i inventory/test_hosts.yml
+   ansible-playbook windows_service_account_rights.yml -e "target_hosts=test_windows" -i inventory/test_hosts.yml
    ```
 
 **Expected Results:**
@@ -337,7 +337,7 @@ ansible_password: YourPassword
 1. Run with verbose output:
 
    ```bash
-   ansible-playbook playbook.yml -i inventory/test_hosts.yml -vv
+   ansible-playbook windows_service_account_rights.yml -e "target_hosts=test_windows" -i inventory/test_hosts.yml -vv
    ```
 
 **Expected Results:**
@@ -371,7 +371,7 @@ After running the playbook, verify on the Windows host:
 1. Run playbook and note execution time:
 
    ```bash
-   time ansible-playbook playbook.yml -i inventory/test_hosts.yml
+   time ansible-playbook windows_service_account_rights.yml -e "target_hosts=test_windows" -i inventory/test_hosts.yml
    ```
 
 **Expected Results:**
