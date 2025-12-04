@@ -179,32 +179,9 @@ ssh-add -l
 ```
 You should see a line representing your key.
 
-### Step 4: Removing Keys
-If you want to remove keys (e.g., to lock down your agent):
--   **Remove all keys**: `ssh-add -D`
--   **Remove specific key**: `ssh-add -d ~/.ssh/id_ed25519`
-
 Now, try `ssh user@server`. It won't ask for the key's passphrase anymore!
 
-## 8. Pro Tip: The SSH Config File
-
-Typing `ssh user@server_address.com` every time is tedious. You can use the `~/.ssh/config` file to make life easier.
-
-Create the file `~/.ssh/config` and add this:
-
-```ssh
-Host myserver
-    HostName server_address.com
-    User myusername
-    IdentityFile ~/.ssh/id_ed25519
-    AddKeysToAgent yes
-```
-
-**Benefits:**
-1.  **Aliases**: Now you just type `ssh myserver`.
-2.  **Auto-Add**: `AddKeysToAgent yes` tells SSH to automatically add your key to the running agent the first time you use it. You don't need to run `ssh-add` manually!
-
-## 9. Troubleshooting
+## 8. Troubleshooting
 
 Here are common issues you might face.
 
@@ -214,7 +191,6 @@ Here are common issues you might face.
     1.  Ensure `~/.ssh` is `chmod 700`.
     2.  Ensure `~/.ssh/authorized_keys` on the server is `chmod 600`.
     3.  Check if your key is loaded: `ssh-add -l`.
-    4.  **Debug Mode**: Run `ssh -v user@server` to see exactly what is happening. Look for "Offering public key".
 
 ### Issue 2: "Could not open a connection to your authentication agent."
 -   **Cause**: The agent is not running or the environment variable `SSH_AUTH_SOCK` is missing.
@@ -231,12 +207,10 @@ Here are common issues you might face.
     chmod 600 ~/.ssh/id_ed25519
     ```
 
-## 10. Best Practices
+## 9. Best Practices
 
 1.  **Use Ed25519 keys**: They are the current gold standard for security and performance.
 2.  **ALWAYS use a passphrase**: Never leave a private key unencrypted on disk.
 3.  **Use SSH Agent**: To balance security (passphrase) and convenience.
 4.  **Don't share Private Keys**: If you need to access a server from a different computer, generate a *new* key pair on that computer and add the new public key to the server.
-5.  **Be careful with Agent Forwarding**: `ssh -A` allows remote servers to access your local agent.
-    -   **Risk**: If the remote server is compromised (root access), an attacker can use *your* local agent to authenticate to *other* servers as you.
-    -   **Rule**: Only use this if you trust the remote server and its admins completely.
+5.  **Be careful with Agent Forwarding**: `ssh -A` allows remote servers to access your local agent. Only use this if you trust the remote server and the administrators of that server completely.
