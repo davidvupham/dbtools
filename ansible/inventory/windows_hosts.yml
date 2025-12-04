@@ -1,0 +1,36 @@
+---
+# Example inventory file for Windows hosts
+# Customize this file with your actual Windows servers
+
+all:
+  children:
+    windows_servers:
+      hosts:
+        sql-server-01:
+          ansible_host: 192.168.1.100
+        sql-server-02:
+          ansible_host: 192.168.1.101
+
+      vars:
+        # Connection settings for Windows
+        ansible_connection: winrm
+        ansible_port: 5986
+        ansible_winrm_transport: kerberos
+        ansible_winrm_server_cert_validation: ignore
+
+        # Authentication - use Kerberos for domain-joined hosts
+        # Make sure you have a valid Kerberos ticket (kinit user@DOMAIN.COM)
+        # ansible_user: administrator@DOMAIN.COM
+
+        # Alternative: Use NTLM authentication with username/password
+        # ansible_connection: winrm
+        # ansible_winrm_transport: ntlm
+        # ansible_user: administrator
+        # ansible_password: "{{ vault_windows_password }}"
+
+        # For development/testing with basic auth (NOT recommended for production)
+        # ansible_connection: winrm
+        # ansible_port: 5985
+        # ansible_winrm_transport: basic
+        # ansible_user: administrator
+        # ansible_password: YourPassword

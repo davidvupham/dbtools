@@ -1,0 +1,56 @@
+---
+# tasks file for windows_service_account_rights
+# This role retrieves the service account for a Windows service and grants user rights
+
+- name: Get service information
+  ansible.windows.win_service_info:
+    name: "{{ service_name }}"
+  register: service_info
+
+- name: Fail if service does not exist
+  ansible.builtin.fail:
+    msg: "Service '{{ service_name }}' not found on {{ inventory_hostname }}"
+  when: service_info.services | length == 0
+
+- name: Extract service account from service info
+  ansible.builtin.set_fact:
+    service_account: "{{ service_info.services[0].username }}"
+
+- name: Display service account
+  ansible.builtin.debug:
+    msg: "Service '{{ service_name }}' runs as: {{ service_account }}"
+
+- name: Fail if service runs as LocalSystem, LocalService, or NetworkService
+  ansible.builtin.fail:
+    msg: "Service runs as {{ service_account }}. This role is designed for domain/local user accounts, not built-in system accounts."
+  when: >
+    service_account in ['LocalSystem', 'NT AUTHORITY\\LocalService', 'NT AUTHORITY\\NetworkService',
+                        'LocalService', 'NetworkService', '.\\LocalSystem']
+
+- name: Grant 'Log on as a service' right
+  ansible.windows.win_user_right:
+    name: SeServiceLogonRight
+    users:
+      - "{{ service_account }}"
+    action: add
+  when: "'SeServiceLogonRight' in user_rights_to_grant"
+
+- name: Grant 'Perform volume maintenance tasks' right
+  ansible.windows.win_user_right:
+    name: SeManageVolumePrivilege
+    users:
+      - "{{ service_account }}"
+    action: add
+  when: "'SeManageVolumePrivilege' in user_rights_to_grant"
+
+- name: Grant 'Lock pages in memory' right
+  ansible.windows.win_user_right:
+    name: SeLockMemoryPrivilege
+    users:
+      - "{{ service_account }}"
+    action: add
+  when: "'SeLockMemoryPrivilege' in user_rights_to_grant"
+
+- name: Display granted rights
+  ansible.builtin.debug:
+    msg: "Successfully granted the following rights to {{ service_account }}: {{ user_rights_to_grant | join(', ') }}"

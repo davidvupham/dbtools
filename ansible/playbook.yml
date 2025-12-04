@@ -1,0 +1,25 @@
+---
+- name: Configure Windows Service Account User Rights
+  hosts: windows_servers
+  gather_facts: false
+
+  vars:
+    # Customize these variables as needed
+    service_name: MSSQLSERVER
+
+  roles:
+    - windows_service_account_rights
+
+  # Alternative: Use the role with different parameters for multiple services
+  # tasks:
+  #   - name: Configure SQL Server default instance
+  #     ansible.builtin.include_role:
+  #       name: windows_service_account_rights
+  #     vars:
+  #       service_name: MSSQLSERVER
+  #
+  #   - name: Configure SQL Server named instance
+  #     ansible.builtin.include_role:
+  #       name: windows_service_account_rights
+  #     vars:
+  #       service_name: "MSSQL$PROD"

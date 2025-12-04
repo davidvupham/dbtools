@@ -1,0 +1,18 @@
+---
+# defaults file for windows_service_account_rights
+
+# Name of the Windows service to query (e.g., MSSQLSERVER for default SQL Server instance)
+service_name: MSSQLSERVER
+
+# List of user rights to grant to the service account
+# Available options:
+#   - SeServiceLogonRight: Log on as a service
+#   - SeManageVolumePrivilege: Perform volume maintenance tasks
+#   - SeLockMemoryPrivilege: Lock pages in memory
+user_rights_to_grant:
+  - SeServiceLogonRight
+  - SeManageVolumePrivilege
+  - SeLockMemoryPrivilege
+# Optional: Override the service account if you don't want to query it from the service
+# Leave empty to auto-detect from the service
+# service_account_override: ""
