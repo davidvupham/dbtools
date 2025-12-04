@@ -6,6 +6,7 @@ Ansible isn't just for Linux! It has robust support for automating Windows serve
 
 ### Control Node (Linux)
 - Ansible installed
+- `ansible.windows` collection installed (included in full Ansible package, or run `ansible-galaxy collection install ansible.windows`)
 - Python `pywinrm` library: `pip install "pywinrm[kerberos]"`
 - `krb5-user` (Debian/Ubuntu) or `krb5-workstation` (RHEL/CentOS) package installed
 - A valid `/etc/krb5.conf` configured for your Active Directory domain
