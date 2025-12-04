@@ -352,8 +352,8 @@
   // Used for one-time setup: install dependencies, configure environment
   "postCreateCommand": "bash .devcontainer/postCreate.sh && bash .devcontainer/scripts/clone-additional-repos.sh",
   // "postStartCommand": Runs EVERY TIME the container starts
-  // Used for recurring setup: ensure directories exist, fix permissions
-  "postStartCommand": "bash -lc 'mkdir -p ~/.vscode-server/extensions ~/.vscode-server/extensionsCache && chmod -R 775 ~/.vscode-server && chown -R ${USER}:${USER} ~/.vscode-server || true; PY=\"$(command -v python || true)\"; if [ \"$PY\" != \"/opt/conda/envs/gds/bin/python\" ]; then echo \"[postStart] WARNING: default python is $PY; expected /opt/conda/envs/gds/bin/python. New terminals will auto-activate gds; for current shell run: source /opt/conda/etc/profile.d/conda.sh && conda activate gds\"; fi'",
+  // Used for recurring setup: ensure directories exist, fix permissions, install local packages
+  "postStartCommand": "bash -lc 'mkdir -p ~/.vscode-server/extensions ~/.vscode-server/extensionsCache && chmod -R 775 ~/.vscode-server && chown -R ${USER}:${USER} ~/.vscode-server || true; PY=\"$(command -v python || true)\"; if [ \"$PY\" != \"/opt/conda/envs/gds/bin/python\" ]; then echo \"[postStart] WARNING: default python is $PY; expected /opt/conda/envs/gds/bin/python. New terminals will auto-activate gds; for current shell run: source /opt/conda/etc/profile.d/conda.sh && conda activate gds\"; fi; echo \"[postStart] Installing local packages in editable mode...\"; pip install -q -e ./gds_database -e ./gds_postgres -e ./gds_mssql -e ./gds_mongodb -e ./gds_liquibase -e ./gds_vault -e ./gds_snowflake -e ./gds_snmp_receiver 2>/dev/null || echo \"[postStart] Some packages failed to install (dependencies may be missing)\"'",
   // ---------------------------------------------------------------------------
   // Container Environment Variables
   // ---------------------------------------------------------------------------
