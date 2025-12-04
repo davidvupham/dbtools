@@ -1,6 +1,6 @@
 ---
 - name: Configure Windows Service Account User Rights
-  hosts: windows_servers
+  hosts: production
   gather_facts: false
 
   vars:
@@ -18,8 +18,8 @@
   #     vars:
   #       service_name: MSSQLSERVER
   #
-  #   - name: Configure SQL Server named instance
+  #   - name: Configure SQL Server Agent
   #     ansible.builtin.include_role:
   #       name: windows_service_account_rights
   #     vars:
-  #       service_name: "MSSQL$PROD"
+  #       service_name: SQLSERVERAGENT
