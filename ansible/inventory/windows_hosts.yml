@@ -4,31 +4,35 @@
 
 all:
   children:
-    development:
-      hosts:
-        sql-dev-01:
-          ansible_host: 192.168.1.10
-        sql-dev-02:
-          ansible_host: 192.168.1.11
+    # Parent group containing all SQL Server hosts across all environments
+    # You can target this with: hosts: sql_servers
+    sql_servers:
+      children:
+        development:
+          hosts:
+            sql-dev-01:
+              ansible_host: 192.168.1.10
+            sql-dev-02:
+              ansible_host: 192.168.1.11
 
-    staging:
-      hosts:
-        sql-stg-01:
-          ansible_host: 192.168.1.20
-        sql-stg-02:
-          ansible_host: 192.168.1.21
+        staging:
+          hosts:
+            sql-stg-01:
+              ansible_host: 192.168.1.20
+            sql-stg-02:
+              ansible_host: 192.168.1.21
 
-    production:
-      hosts:
-        sql-prod-01:
-          ansible_host: 192.168.1.100
-        sql-prod-02:
-          ansible_host: 192.168.1.101
-        sql-prod-03:
-          ansible_host: 192.168.1.102
+        production:
+          hosts:
+            sql-prod-01:
+              ansible_host: 192.168.1.100
+            sql-prod-02:
+              ansible_host: 192.168.1.101
+            sql-prod-03:
+              ansible_host: 192.168.1.102
 
       vars:
-        # Connection settings for Windows
+        # Connection settings for Windows - applies to all SQL Server hosts
         ansible_connection: winrm
         ansible_port: 5986
         ansible_winrm_transport: kerberos
@@ -50,3 +54,12 @@ all:
         # ansible_winrm_transport: basic
         # ansible_user: administrator
         # ansible_password: YourPassword
+# Notes on host groups:
+# - 'all' is an implicit group that includes ALL hosts in the inventory
+# - 'sql_servers' is a parent group containing development, staging, and production
+# - You can target groups with:
+#   * hosts: all                          # All hosts
+#   * hosts: sql_servers                  # All SQL Server hosts (dev + staging + prod)
+#   * hosts: production                   # Only production hosts
+#   * hosts: development:staging          # Development AND staging hosts
+#   * hosts: production:&sql_servers      # Production hosts that are also in sql_servers

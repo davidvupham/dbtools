@@ -12,7 +12,19 @@
     - windows_service_account_rights  # Uses default: service_name=MSSQLSERVER
 ```
 
-## Example 2: All Environments (Development, Staging, Production)
+## Example 2: All SQL Server Hosts (Using Parent Group)
+
+> **Note:** The `sql_servers` parent group includes all environments (development, staging, production).
+
+```yaml
+---
+- name: Configure SQL Server service account rights across all SQL Servers
+  hosts: sql_servers
+  roles:
+    - windows_service_account_rights
+```
+
+## Example 3: All Environments (Development, Staging, Production)
 
 ```yaml
 ---
