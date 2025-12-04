@@ -1,0 +1,27 @@
+{
+    "include": [
+        "gds_database",
+        "gds_liquibase",
+        "gds_mongodb",
+        "gds_mssql",
+        "gds_postgres",
+        "gds_snowflake",
+        "gds_vault",
+        "gds_snmp_receiver",
+        "gds_notification"
+    ],
+    "extraPaths": [
+        "./gds_database",
+        "./gds_liquibase",
+        "./gds_mongodb",
+        "./gds_mssql",
+        "./gds_postgres",
+        "./gds_snowflake",
+        "./gds_vault",
+        "./gds_snmp_receiver",
+        "./gds_notification"
+    ],
+    "typeCheckingMode": "basic",
+    "reportMissingImports": true,
+    "reportMissingTypeStubs": false
+}
