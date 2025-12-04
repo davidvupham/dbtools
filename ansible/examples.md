@@ -7,7 +7,7 @@
 ```yaml
 ---
 - name: Configure SQL Server service account rights in production
-  hosts: production
+  hosts: windows
   roles:
     - windows_service_account_rights  # Uses default: service_name=MSSQLSERVER
 ```
@@ -19,7 +19,7 @@
 ```yaml
 ---
 - name: Configure SQL Server service account rights across all SQL Servers
-  hosts: sql_servers
+  hosts: windows
   roles:
     - windows_service_account_rights
 ```
@@ -29,7 +29,7 @@
 ```yaml
 ---
 - name: Configure SQL Server service account rights across all environments
-  hosts: development:staging:production
+  hosts: windows
   roles:
     - windows_service_account_rights
 ```
@@ -39,7 +39,7 @@
 ```yaml
 ---
 - name: Configure staging SQL Server with specific rights
-  hosts: staging
+  hosts: windows
   roles:
     - role: windows_service_account_rights
       vars:
@@ -54,7 +54,7 @@
 ```yaml
 ---
 - name: Configure development SQL Server with limited rights
-  hosts: development
+  hosts: windows
   roles:
     - role: windows_service_account_rights
       vars:
@@ -68,7 +68,7 @@
 ```yaml
 ---
 - name: Configure SQL Server Agent service account
-  hosts: development:staging:production
+  hosts: windows
   roles:
     - role: windows_service_account_rights
       vars:
@@ -80,7 +80,7 @@
 ```yaml
 ---
 - name: Configure SQL Server with environment-specific settings
-  hosts: all
+  hosts: windows
   roles:
     - role: windows_service_account_rights
       vars:
@@ -98,7 +98,7 @@
 ```yaml
 ---
 - name: Configure multiple SQL Server services in production
-  hosts: production
+  hosts: windows
   tasks:
     - name: Configure SQL Server default instance
       ansible.builtin.include_role:
@@ -118,7 +118,7 @@
 ```yaml
 ---
 - name: Remove user rights from SQL Server service account
-  hosts: production
+  hosts: windows
   roles:
     - role: windows_service_account_rights
       vars:
@@ -140,7 +140,7 @@
 ```yaml
 ---
 - name: Configure SQL Server named instance in production
-  hosts: production
+  hosts: windows
   roles:
     - role: windows_service_account_rights
       vars:
@@ -152,7 +152,7 @@
 ```yaml
 ---
 - name: Configure custom application service
-  hosts: development:staging:production
+  hosts: windows
   roles:
     - role: windows_service_account_rights
       vars:

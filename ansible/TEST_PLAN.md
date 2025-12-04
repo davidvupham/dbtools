@@ -35,25 +35,20 @@ pip install pywinrm[kerberos]
 
 ### 2. Configure Test Inventory
 
-Create a test inventory file with at least one Windows host:
+Edit `inventory/test/hosts.ini` to include your test server:
 
-```yaml
-# inventory/test_hosts.yml
-test_windows:
-  hosts:
-    test-sql-01:
-      ansible_host: <your-test-server-ip>
-  vars:
-    ansible_connection: winrm
-    ansible_port: 5986
-    ansible_winrm_transport: kerberos
-    ansible_winrm_server_cert_validation: ignore
+```ini
+# inventory/test/hosts.ini
+[windows]
+test-sql-01 ansible_host=192.168.1.50
 ```
+
+Ensure `inventory/test/group_vars/windows.yml` has the correct connection settings.
 
 ### 3. Verify Connectivity
 
 ```bash
-ansible test_windows -i inventory/test_hosts.yml -m win_ping
+ansible -i inventory/test windows -m win_ping
 ```
 
 ## Test Cases
@@ -72,7 +67,7 @@ ansible test_windows -i inventory/test_hosts.yml -m win_ping
 1. Run the playbook with default settings:
 
    ```bash
-   ansible-playbook windows_service_account_rights.yml -e "target_hosts=test_windows" -i inventory/test_hosts.yml
+   ansible-playbook windows_service_account_rights.yml -e "target_hosts=windows" -i inventory/test
    ```
 
 **Expected Results:**
@@ -114,7 +109,7 @@ Or use GUI:
 1. Run with custom service name:
 
    ```bash
-   ansible-playbook windows_service_account_rights.yml -e "target_hosts=test_windows" -i inventory/test_hosts.yml -e "service_name=MSSQL\$PROD"
+   ansible-playbook windows_service_account_rights.yml -e "target_hosts=windows" -i inventory/test -e "service_name=MSSQL\$PROD"
    ```
 
 **Expected Results:**
@@ -138,7 +133,7 @@ Same as Test Case 1
 
    ```yaml
    ---
-   - hosts: test_windows
+   - hosts: windows
      roles:
        - role: windows_service_account_rights
          vars:
@@ -151,7 +146,7 @@ Same as Test Case 1
 2. Run the playbook:
 
    ```bash
-   ansible-playbook test_selective_rights.yml -i inventory/test_hosts.yml
+   ansible-playbook test_selective_rights.yml -i inventory/test
    ```
 
 **Expected Results:**
@@ -173,7 +168,7 @@ Verify only the specified rights were granted (SeServiceLogonRight may already e
 1. Run with non-existent service:
 
    ```bash
-   ansible-playbook windows_service_account_rights.yml -e "target_hosts=test_windows" -i inventory/test_hosts.yml -e "service_name=NONEXISTENT_SERVICE"
+   ansible-playbook windows_service_account_rights.yml -e "target_hosts=windows" -i inventory/test -e "service_name=NONEXISTENT_SERVICE"
    ```
 
 **Expected Results:**
@@ -199,7 +194,7 @@ Check Ansible output for failure message
 1. Run against a system service (e.g., Windows Time service):
 
    ```bash
-   ansible-playbook windows_service_account_rights.yml -e "target_hosts=test_windows" -i inventory/test_hosts.yml -e "service_name=W32Time"
+   ansible-playbook windows_service_account_rights.yml -e "target_hosts=windows" -i inventory/test -e "service_name=W32Time"
    ```
 
 **Expected Results:**
@@ -221,8 +216,8 @@ Check Ansible output for appropriate failure message
 1. Run the playbook twice in succession:
 
    ```bash
-   ansible-playbook windows_service_account_rights.yml -e "target_hosts=test_windows" -i inventory/test_hosts.yml
-   ansible-playbook windows_service_account_rights.yml -e "target_hosts=test_windows" -i inventory/test_hosts.yml
+   ansible-playbook windows_service_account_rights.yml -e "target_hosts=windows" -i inventory/test
+   ansible-playbook windows_service_account_rights.yml -e "target_hosts=windows" -i inventory/test
    ```
 
 **Expected Results:**
@@ -246,7 +241,7 @@ Compare Ansible output from both runs
 
    ```yaml
    ---
-   - hosts: test_windows
+   - hosts: windows
      tasks:
        - include_role:
            name: windows_service_account_rights
@@ -262,7 +257,7 @@ Compare Ansible output from both runs
 2. Run the playbook:
 
    ```bash
-   ansible-playbook test_multiple_services.yml -i inventory/test_hosts.yml
+   ansible-playbook test_multiple_services.yml -i inventory/test
    ```
 
 **Expected Results:**
@@ -279,13 +274,13 @@ Verify rights for both service accounts in Local Security Policy
 
 **Objective:** Verify the role works with different WinRM authentication methods.
 
-**Test 8a: Kerberos Authentication**
+### Test 8a: Kerberos Authentication
 
 ```yaml
 ansible_winrm_transport: kerberos
 ```
 
-**Test 8b: NTLM Authentication**
+### Test 8b: NTLM Authentication
 
 ```yaml
 ansible_winrm_transport: ntlm
@@ -293,7 +288,7 @@ ansible_user: administrator
 ansible_password: "{{ vault_password }}"
 ```
 
-**Test 8c: Basic Authentication (Dev/Test Only)**
+### Test 8c: Basic Authentication (Dev/Test Only)
 
 ```yaml
 ansible_port: 5985
@@ -313,11 +308,11 @@ ansible_password: YourPassword
 
 **Objective:** Verify the role works with both domain and local service accounts.
 
-**Test 9a: Domain Account**
+### Test 9a: Domain Account
 
 - Service configured with domain account (DOMAIN\user)
 
-**Test 9b: Local Account**
+### Test 9b: Local Account
 
 - Service configured with local account (.\user or HOSTNAME\user)
 
@@ -337,7 +332,7 @@ ansible_password: YourPassword
 1. Run with verbose output:
 
    ```bash
-   ansible-playbook windows_service_account_rights.yml -e "target_hosts=test_windows" -i inventory/test_hosts.yml -vv
+   ansible-playbook windows_service_account_rights.yml -e "target_hosts=windows" -i inventory/test -vv
    ```
 
 **Expected Results:**
@@ -371,7 +366,7 @@ After running the playbook, verify on the Windows host:
 1. Run playbook and note execution time:
 
    ```bash
-   time ansible-playbook windows_service_account_rights.yml -e "target_hosts=test_windows" -i inventory/test_hosts.yml
+   time ansible-playbook windows_service_account_rights.yml -e "target_hosts=windows" -i inventory/test
    ```
 
 **Expected Results:**
@@ -456,7 +451,7 @@ Consider implementing automated tests using:
 
 Example Molecule test structure:
 
-```
+```yaml
 molecule/
   default/
     molecule.yml

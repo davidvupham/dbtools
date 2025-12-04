@@ -4,7 +4,7 @@ This directory contains inventory files for managing Windows SQL Server hosts ac
 
 ## Structure
 
-```
+```bash
 inventory/
 ├── development/         # Development environment
 │   ├── hosts.ini
@@ -53,26 +53,26 @@ This structure provides:
 
 ```bash
 # Development
-ansible-playbook windows_service_account_rights.yml -i inventory/development -e "target_hosts=development"
+ansible-playbook windows_service_account_rights.yml -i inventory/development -e "target_hosts=windows"
 
 # Test
-ansible-playbook windows_service_account_rights.yml -i inventory/test -e "target_hosts=test"
+ansible-playbook windows_service_account_rights.yml -i inventory/test -e "target_hosts=windows"
 
 # Staging
-ansible-playbook windows_service_account_rights.yml -i inventory/staging -e "target_hosts=staging"
+ansible-playbook windows_service_account_rights.yml -i inventory/staging -e "target_hosts=windows"
 
 # Production
-ansible-playbook windows_service_account_rights.yml -i inventory/production -e "target_hosts=production"
+ansible-playbook windows_service_account_rights.yml -i inventory/production -e "target_hosts=windows"
 ```
 
 ### Test Connectivity
 
 ```bash
 # Development
-ansible -i inventory/development development -m win_ping
+ansible -i inventory/development windows -m win_ping
 
 # Production
-ansible -i inventory/production production -m win_ping
+ansible -i inventory/production windows -m win_ping
 ```
 
 ## Configuration Hierarchy
@@ -115,10 +115,17 @@ Edit the appropriate environment's `hosts.ini`:
 
 ```ini
 # production/hosts.ini
-[production]
+[windows]
 sql-prd-01 ansible_host=192.168.1.100
 sql-prd-02 ansible_host=192.168.1.101
 sql-prd-04 ansible_host=192.168.1.104  # New host
+
+[linux]
+app-prd-01 ansible_host=192.168.1.110
+
+[production:children]
+windows
+linux
 ```
 
 ## Security Best Practices
@@ -152,7 +159,7 @@ ansible-vault edit inventory/production/group_vars/vault.yml
 # Run playbook with vault password
 ansible-playbook windows_service_account_rights.yml \
   -i inventory/production \
-  -e "target_hosts=production" \
+  -e "target_hosts=windows" \
   --ask-vault-pass
 ```
 
