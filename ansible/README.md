@@ -6,12 +6,32 @@ This directory contains Ansible playbooks and roles for managing Windows servers
 
 ```
 ansible/
-├── ansible.cfg                          # Ansible configuration
-├── windows_service_account_rights.yml   # Main playbook
+├── ansible.cfg
+├── windows_service_account_rights.yml
 ├── inventory/
-│   └── windows_hosts.yml               # Example inventory file
+│   ├── development/
+│   │   ├── hosts.ini
+│   │   ├── group_vars/
+│   │   │   └── all.yml
+│   │   └── host_vars/
+│   ├── test/
+│   │   ├── hosts.ini
+│   │   ├── group_vars/
+│   │   │   └── all.yml
+│   │   └── host_vars/
+│   ├── staging/
+│   │   ├── hosts.ini
+│   │   ├── group_vars/
+│   │   │   └── all.yml
+│   │   └── host_vars/
+│   ├── production/
+│   │   ├── hosts.ini
+│   │   ├── group_vars/
+│   │   │   └── all.yml
+│   │   └── host_vars/
+│   └── README.md
 └── roles/
-    └── windows_service_account_rights/ # Role for managing service account rights
+    └── windows_service_account_rights/
         ├── tasks/
         │   └── main.yml
         ├── defaults/
@@ -66,29 +86,41 @@ kinit user@DOMAIN.COM
 
 ### 1. Update Inventory
 
-Edit `inventory/windows_hosts.yml` with your Windows server details:
+The inventory is organized by environment directory. Each environment is completely isolated:
 
-```yaml
-windows_servers:
-  hosts:
-    sql-server-01:
-      ansible_host: your-server-ip
+- `inventory/development/` - Development
+- `inventory/test/` - Test
+- `inventory/staging/` - Staging
+- `inventory/production/` - Production
+
+Edit the appropriate environment's `hosts.ini` file:
+
+```ini
+# inventory/production/hosts.ini
+[production]
+sql-prd-01 ansible_host=192.168.1.100
+sql-prd-02 ansible_host=192.168.1.101
 ```
+
+Connection settings are in each environment's `group_vars/all.yml`.
 
 ### 2. Run the Playbook
 
 ```bash
-# Test connectivity
-ansible windows_servers -m win_ping
+# Test connectivity (production)
+ansible -i inventory/production production -m win_ping
 
-# Run the playbook (must specify target_hosts)
-ansible-playbook windows_service_account_rights.yml -e "target_hosts=production"
+# Run against production
+ansible-playbook windows_service_account_rights.yml -i inventory/production -e "target_hosts=production"
 
-# Run against all SQL Servers
-ansible-playbook windows_service_account_rights.yml -e "target_hosts=sql_servers"
+# Run against staging
+ansible-playbook windows_service_account_rights.yml -i inventory/staging -e "target_hosts=staging"
 
-# Run against development and staging only
-ansible-playbook windows_service_account_rights.yml -e "target_hosts=development:staging"
+# Run against development
+ansible-playbook windows_service_account_rights.yml -i inventory/development -e "target_hosts=development"
+
+# Run against test
+ansible-playbook windows_service_account_rights.yml -i inventory/test -e "target_hosts=test"
 ```
 
 ### 3. Verify Results
@@ -119,22 +151,28 @@ See [roles/windows_service_account_rights/README.md](roles/windows_service_accou
 
 ## Common Use Cases
 
-### SQL Server Default Instance
+### SQL Server Default Instance (Production)
 
 ```bash
-ansible-playbook windows_service_account_rights.yml -e "target_hosts=production"
+ansible-playbook windows_service_account_rights.yml -i inventory/production -e "target_hosts=production"
 ```
 
-### SQL Server Named Instance
+### SQL Server Named Instance (Staging)
 
 ```bash
-ansible-playbook windows_service_account_rights.yml -e "target_hosts=production" -e "service_name=MSSQL\$INSTANCENAME"
+ansible-playbook windows_service_account_rights.yml -i inventory/staging -e "target_hosts=staging" -e "service_name=MSSQL\$INSTANCENAME"
 ```
 
-### Grant Specific Rights Only
+### Remove User Rights (Production)
 
 ```bash
-ansible-playbook windows_service_account_rights.yml -e "target_hosts=sql_servers" -e '{"user_rights_to_grant": ["SeManageVolumePrivilege", "SeLockMemoryPrivilege"]}'
+ansible-playbook windows_service_account_rights.yml -i inventory/production -e "target_hosts=production" -e "user_rights_action=remove"
+```
+
+### Grant Specific Rights Only (Development)
+
+```bash
+ansible-playbook windows_service_account_rights.yml -i inventory/development -e "target_hosts=development" -e '{"user_rights_to_grant": ["SeManageVolumePrivilege", "SeLockMemoryPrivilege"]}'
 ```
 
 ## Troubleshooting

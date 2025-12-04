@@ -1,6 +1,11 @@
 ---
 # tasks file for windows_service_account_rights
-# This role retrieves the service account for a Windows service and grants user rights
+# This role retrieves the service account for a Windows service and manages user rights
+
+- name: Validate user_rights_action parameter
+  ansible.builtin.fail:
+    msg: "user_rights_action must be 'add' or 'remove', got: {{ user_rights_action }}"
+  when: user_rights_action not in ['add', 'remove']
 
 - name: Get service information
   ansible.windows.win_service_info:
@@ -27,30 +32,30 @@
     service_account in ['LocalSystem', 'NT AUTHORITY\\LocalService', 'NT AUTHORITY\\NetworkService',
                         'LocalService', 'NetworkService', '.\\LocalSystem']
 
-- name: Grant 'Log on as a service' right
+- name: "{{ user_rights_action | capitalize }} 'Log on as a service' right"
   ansible.windows.win_user_right:
     name: SeServiceLogonRight
     users:
       - "{{ service_account }}"
-    action: add
+    action: "{{ user_rights_action }}"
   when: "'SeServiceLogonRight' in user_rights_to_grant"
 
-- name: Grant 'Perform volume maintenance tasks' right
+- name: "{{ user_rights_action | capitalize }} 'Perform volume maintenance tasks' right"
   ansible.windows.win_user_right:
     name: SeManageVolumePrivilege
     users:
       - "{{ service_account }}"
-    action: add
+    action: "{{ user_rights_action }}"
   when: "'SeManageVolumePrivilege' in user_rights_to_grant"
 
-- name: Grant 'Lock pages in memory' right
+- name: "{{ user_rights_action | capitalize }} 'Lock pages in memory' right"
   ansible.windows.win_user_right:
     name: SeLockMemoryPrivilege
     users:
       - "{{ service_account }}"
-    action: add
+    action: "{{ user_rights_action }}"
   when: "'SeLockMemoryPrivilege' in user_rights_to_grant"
 
-- name: Display granted rights
+- name: Display action summary
   ansible.builtin.debug:
-    msg: "Successfully granted the following rights to {{ service_account }}: {{ user_rights_to_grant | join(', ') }}"
+    msg: "Successfully {{ 'granted' if user_rights_action == 'add' else 'removed' }} the following rights {{ 'to' if user_rights_action == 'add' else 'from' }} {{ service_account }}: {{ user_rights_to_grant | join(', ') }}"

@@ -4,7 +4,12 @@
 # Name of the Windows service to query (e.g., MSSQLSERVER for default SQL Server instance)
 service_name: MSSQLSERVER
 
-# List of user rights to grant to the service account
+# Action to perform: 'add' or 'remove'
+# Default is 'add' - grants the user rights
+# Set to 'remove' to revoke the user rights
+user_rights_action: add
+
+# List of user rights to grant/remove for the service account
 # Available options:
 #   - SeServiceLogonRight: Log on as a service
 #   - SeManageVolumePrivilege: Perform volume maintenance tasks

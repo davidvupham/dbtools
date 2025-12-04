@@ -1,6 +1,19 @@
 ---
-# Example inventory file for Windows hosts
-# Customize this file with your actual Windows servers organized by environment
+# DEPRECATED: This file is kept for reference only
+# Use the environment-specific inventory files instead:
+#   - inventory/dev.yml
+#   - inventory/tst.yml
+#   - inventory/stg.yml
+#   - inventory/prd.yml
+#
+# Global connection settings are now in:
+#   - inventory/group_vars/all.yml
+#
+# Example usage:
+#   ansible-playbook windows_service_account_rights.yml -i inventory/prd.yml -e "target_hosts=production"
+
+# This was the original combined inventory structure with all environments
+# Now split into separate files for better organization and security
 
 all:
   children:
@@ -59,7 +72,7 @@ all:
 # - 'sql_servers' is a parent group containing development, staging, and production
 # - You can target groups with:
 #   * hosts: all                          # All hosts
-#   * hosts: sql_servers                  # All SQL Server hosts (dev + staging + prod)
+#   * hosts: sql_servers                  # All SQL Servers (dev + staging + prod)
 #   * hosts: production                   # Only production hosts
 #   * hosts: development:staging          # Development AND staging hosts
 #   * hosts: production:&sql_servers      # Production hosts that are also in sql_servers

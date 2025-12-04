@@ -1,0 +1,12 @@
+---
+# Windows-specific connection settings (Kerberos)
+ansible_connection: winrm
+ansible_port: 5986
+ansible_winrm_transport: kerberos
+ansible_winrm_server_cert_validation: ignore
+# Authentication - Kerberos for domain-joined Windows hosts
+# Make sure you have a valid Kerberos ticket (kinit user@DOMAIN.COM)
+# ansible_user: administrator@DOMAIN.COM
+
+# IMPORTANT: For production, ensure Kerberos is properly configured
+# Never store production passwords in plain text

@@ -113,6 +113,22 @@
         service_name: SQLSERVERAGENT
 ```
 
+## Example 8: Remove User Rights
+
+```yaml
+---
+- name: Remove user rights from SQL Server service account
+  hosts: production
+  roles:
+    - role: windows_service_account_rights
+      vars:
+        service_name: MSSQLSERVER
+        user_rights_action: remove
+        user_rights_to_grant:
+          - SeManageVolumePrivilege
+          - SeLockMemoryPrivilege
+```
+
 ---
 
 ## Advanced Examples

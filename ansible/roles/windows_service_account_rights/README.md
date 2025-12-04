@@ -7,7 +7,7 @@ An Ansible role to retrieve the 'Log On As' account for a Windows service and gr
 This role automates the process of:
 
 1. Querying a Windows service to identify its service account
-2. Granting the service account specific user rights assignments:
+2. Adding or removing specific user rights assignments for the service account:
    - **SeServiceLogonRight**: Log on as a service
    - **SeManageVolumePrivilege**: Perform volume maintenance tasks
    - **SeLockMemoryPrivilege**: Lock pages in memory
@@ -33,7 +33,8 @@ None - the role uses sensible defaults.
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `service_name` | `MSSQLSERVER` | Name of the Windows service to query |
-| `user_rights_to_grant` | See below | List of user rights to grant |
+| `user_rights_action` | `add` | Action to perform: `add` or `remove` |
+| `user_rights_to_grant` | See below | List of user rights to add/remove |
 | `service_account_override` | `""` | Override auto-detection and specify account manually |
 
 **Default `user_rights_to_grant`:**
@@ -100,6 +101,22 @@ None
         service_name: "MSSQL$PROD"
 ```
 
+### Remove User Rights
+
+```yaml
+---
+- name: Remove user rights from service account
+  hosts: sql_servers
+  roles:
+    - role: windows_service_account_rights
+      vars:
+        service_name: MSSQLSERVER
+        user_rights_action: remove
+        user_rights_to_grant:
+          - SeManageVolumePrivilege
+          - SeLockMemoryPrivilege
+```
+
 ## User Rights Explained
 
 ### SeServiceLogonRight (Log on as a service)
@@ -118,7 +135,8 @@ Prevents the operating system from paging SQL Server memory to disk, which can i
 
 - The role will fail if the specified service does not exist
 - The role will fail if the service runs as a built-in system account (LocalSystem, LocalService, NetworkService)
-- User rights are additive - this role does not remove existing rights
+- The `user_rights_action` parameter controls whether rights are added or removed
+- Default action is `add` - set to `remove` to revoke user rights
 - Changes take effect immediately and do not require a service restart
 
 ## License
