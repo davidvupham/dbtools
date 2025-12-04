@@ -29,6 +29,7 @@
 - Use transactions where needed; when not available, use sagas/outbox patterns with idempotency.
 - Plan for schema evolution: forward/backward compatibility, migrations with dual writes/reads when necessary.
 - Classify data (PII/PHI/PCI) and apply retention, encryption, and access controls accordingly.
+- Support "Right to be Forgotten" (GDPR/CCPA) with automated deletion/anonymization workflows.
 
 ## API and Contract Design
 
@@ -67,6 +68,7 @@
 - Metrics follow RED (Rate, Errors, Duration) and USE (Utilization, Saturation, Errors) methods.
 - Distributed tracing across service boundaries with sampling strategies.
 - Build golden signals dashboards and alert on SLO-based burn rates, not raw metrics alone.
+- Monitor cost as a first-class metric (FinOps); tag resources for attribution.
 
 ## Security and Privacy
 
@@ -83,6 +85,7 @@
 - Keep configuration and secrets external; validate on startup; fail fast.
 - Runbooks for common incidents; playbooks for failover and disaster recovery.
 - Capacity planning and autoscaling policies with headroom for N+1 failures.
+- Optimize for sustainability and cost-efficiency; right-size resources dynamically.
 
 ## Testing Strategy
 
@@ -101,6 +104,7 @@
 
 - Use ADRs for significant decisions; capture context, options, consequences.
 - Enforce change approval for high-risk changes; automate low-risk paths.
+- Treat documentation as code; version control architecture decisions and runbooks.
 - Track operational readiness with a pre-launch checklist (below).
 
 ## Operational Readiness Checklist
