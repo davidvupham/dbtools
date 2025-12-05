@@ -1,0 +1,20 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "gds-kafka"
+version = "0.1.0"
+description = "Kafka integration tools for GDS services"
+readme = "README.md"
+requires-python = ">=3.8"
+dependencies = ["kafka-python>=2.0.2", "gds-metrics"]
+
+[project.optional-dependencies]
+dev = ["pytest"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["gds_kafka"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
