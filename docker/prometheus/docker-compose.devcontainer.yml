@@ -1,0 +1,20 @@
+# Dev Container Override
+# Use this when running inside a dev container (Docker-in-Docker)
+# Usage: docker compose -f docker-compose.yml -f docker-compose.devcontainer.yml up -d
+
+services:
+  prometheus:
+    # Override to use Dockerfile build (bakes config into image)
+    # Required because bind mounts don't work in Docker-in-Docker
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: prometheus-devcontainer
+    volumes:
+      # Remove the config bind mount, only keep data volume
+      - prometheus_data:/prometheus
+
+  grafana:
+    volumes:
+      # Remove provisioning bind mount for devcontainer
+      - grafana_data:/var/lib/grafana

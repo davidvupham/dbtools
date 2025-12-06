@@ -1,0 +1,71 @@
+# Prometheus Configuration for GDS Metrics Testing
+# This configuration scrapes metrics from gds_metrics PrometheusMetrics instances
+
+global:
+  scrape_interval: 15s # Default scrape interval
+  evaluation_interval: 15s # Evaluate rules every 15 seconds
+  scrape_timeout: 10s # Timeout for scrape requests
+
+# Alertmanager configuration (optional)
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: []
+
+# Rule files (optional)
+rule_files: []
+
+# Scrape configurations
+scrape_configs:
+  # Prometheus self-monitoring
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]
+        labels:
+          instance: "prometheus-server"
+
+  # GDS Metrics - Default port 8080
+  # This scrapes metrics from applications using gds_metrics.PrometheusMetrics
+  - job_name: "gds_metrics"
+    static_configs:
+      - targets: ["host.docker.internal:8080"]
+        labels:
+          app: "gds_metrics_test"
+    # Adjust scrape interval for testing
+    scrape_interval: 5s
+    scrape_timeout: 5s
+
+  # GDS Vault metrics (if using gds_vault with metrics)
+  - job_name: "gds_vault"
+    static_configs:
+      - targets: ["host.docker.internal:8081"]
+        labels:
+          app: "gds_vault"
+    scrape_interval: 10s
+
+  # GDS Database metrics (if using gds_database with metrics)
+  - job_name: "gds_database"
+    static_configs:
+      - targets: ["host.docker.internal:8082"]
+        labels:
+          app: "gds_database"
+    scrape_interval: 10s
+
+  # GDS MongoDB metrics (if using gds_mongodb with metrics)
+  - job_name: "gds_mongodb"
+    static_configs:
+      - targets: ["host.docker.internal:8083"]
+        labels:
+          app: "gds_mongodb"
+    scrape_interval: 10s
+
+  # HashiCorp Vault native metrics (from docker/hvault)
+  - job_name: "hashicorp_vault"
+    metrics_path: /v1/sys/metrics
+    params:
+      format: ["prometheus"]
+    static_configs:
+      - targets: ["hvault:8200"]
+        labels:
+          app: "hashicorp_vault"
+    scrape_interval: 30s
