@@ -197,3 +197,67 @@ class Configurable(ABC):
     def get_all_config(self) -> dict[str, Any]:
         """Get all configuration values."""
         pass
+
+
+class AsyncSecretProvider(ABC):
+    """
+    Abstract base class for asynchronous secret providers.
+    """
+
+    @abstractmethod
+    async def get_secret(self, path: str, **kwargs) -> dict[str, Any]:
+        """Retrieve a secret asynchronously."""
+        pass
+
+    @abstractmethod
+    async def authenticate(self) -> bool:
+        """Authenticate asynchronously."""
+        pass
+
+    @abstractmethod
+    def is_authenticated(self) -> bool:
+        """Check if authenticated (usually synchronous check of state)."""
+        pass
+
+
+class AsyncAuthStrategy(ABC):
+    """
+    Abstract base class for asynchronous authentication strategies.
+    """
+
+    @abstractmethod
+    async def authenticate(
+        self,
+        vault_addr: str,
+        timeout: int,
+        verify_ssl: bool = True,
+        ssl_cert_path: Optional[str] = None,
+    ) -> tuple[str, float]:
+        """Authenticate asynchronously and return token with expiry."""
+        pass
+
+
+class AsyncResourceManager(ABC):
+    """
+    Abstract base class for asynchronous resource management.
+    """
+
+    @abstractmethod
+    async def initialize(self) -> None:
+        """Initialize resources asynchronously."""
+        pass
+
+    @abstractmethod
+    async def cleanup(self) -> None:
+        """Clean up resources asynchronously."""
+        pass
+
+    async def __aenter__(self):
+        """Async context manager entry."""
+        await self.initialize()
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        """Async context manager exit."""
+        await self.cleanup()
+        return False

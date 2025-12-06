@@ -9,7 +9,7 @@ encapsulation, and extensive use of magic methods and properties.
 import logging
 import os
 import time
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any, Optional
 
 import requests
 
@@ -31,12 +31,36 @@ from gds_vault.exceptions import (
     VaultSecretNotFoundError,
 )
 from gds_vault.retry import RetryPolicy
-from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from gds_vault.transport import VaultTransport
 
 logger = logging.getLogger(__name__)
+
+try:
+    from gds_metrics import MetricsCollector, NoOpMetrics
+except ImportError:
+    # Fallback if gds_metrics is not installed
+    from typing import Protocol
+
+    class MetricsCollector(Protocol):
+        def increment(self, name: str, value: int = 1, labels: dict = None) -> None: ...
+        def gauge(self, name: str, value: float, labels: dict = None) -> None: ...
+        def histogram(self, name: str, value: float, labels: dict = None) -> None: ...
+        def timing(self, name: str, value_ms: float, labels: dict = None) -> None: ...
+
+    class NoOpMetrics:
+        def increment(self, *args, **kwargs):
+            pass
+
+        def gauge(self, *args, **kwargs):
+            pass
+
+        def histogram(self, *args, **kwargs):
+            pass
+
+        def timing(self, *args, **kwargs):
+            pass
 
 
 class VaultClient(SecretProvider, ResourceManager, Configurable):
@@ -113,6 +137,7 @@ class VaultClient(SecretProvider, ResourceManager, Configurable):
         mount_point: Optional[str] = None,
         namespace: Optional[str] = None,
         transport: Optional["VaultTransport"] = None,
+        metrics: Optional["MetricsCollector"] = None,
     ):
         """Initialize Vault client with OOP best practices."""
         # Initialize base classes
@@ -142,6 +167,7 @@ class VaultClient(SecretProvider, ResourceManager, Configurable):
         self._cache: CacheProtocol = cache if cache is not None else SecretCache()
         self._retry_policy = retry_policy or RetryPolicy(max_retries=3)
         self._transport = transport
+        self._metrics = metrics or NoOpMetrics()
 
         # State
         self._token: Optional[str] = None
@@ -304,10 +330,12 @@ class VaultClient(SecretProvider, ResourceManager, Configurable):
             self._authenticated = True
 
             logger.info("Successfully authenticated with Vault")
+            self._metrics.increment("vault.auth.success")
             return True
 
         except Exception as e:
             logger.error("Authentication failed: %s", e)
+            self._metrics.increment("vault.auth.failure")
             self._authenticated = False
             raise VaultAuthError(f"Authentication failed: {e}") from e
 
@@ -364,7 +392,14 @@ class VaultClient(SecretProvider, ResourceManager, Configurable):
             return self._fetch_secret_from_vault(full_path, version)
 
         try:
+            start_time = time.time()
             secret_data = self._retry_policy.execute(_fetch)
+            duration = (time.time() - start_time) * 1000
+            self._metrics.timing(
+                "vault.secret.fetch", duration, labels={"path": full_path}
+            )
+            self._metrics.increment("vault.secret.hit", labels={"path": full_path})
+
         except requests.HTTPError as e:
             # Parse HTTP errors into specific exception types
             if e.response.status_code == 404:
@@ -376,6 +411,9 @@ class VaultClient(SecretProvider, ResourceManager, Configurable):
             else:
                 raise VaultError(f"Failed to fetch secret {full_path}: {e}") from e
         except requests.RequestException as e:
+            self._metrics.increment(
+                "vault.secret.error", labels={"type": "connection", "path": full_path}
+            )
             raise VaultConnectionError(f"Failed to connect to Vault: {e}") from e
 
         # Cache the secret with rotation metadata if available

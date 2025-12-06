@@ -12,8 +12,14 @@ from typing import Optional
 
 import requests
 
-from gds_vault.base import AuthStrategy
+from gds_vault.base import AsyncAuthStrategy, AuthStrategy
 from gds_vault.exceptions import VaultAuthError
+
+try:
+    import aiohttp
+except ImportError:
+    aiohttp = None  # Handle optional dependency
+
 
 logger = logging.getLogger(__name__)
 
@@ -36,10 +42,10 @@ class AppRoleAuth(AuthStrategy):
     """
 
     def __init__(
-        self, 
-        role_id: Optional[str] = None, 
+        self,
+        role_id: Optional[str] = None,
         secret_id: Optional[str] = None,
-        namespace: Optional[str] = None
+        namespace: Optional[str] = None,
     ):
         """Initialize AppRole authentication."""
         self.role_id = role_id or os.getenv("VAULT_ROLE_ID")
@@ -53,11 +59,11 @@ class AppRoleAuth(AuthStrategy):
             )
 
     def authenticate(
-        self, 
-        vault_addr: str, 
+        self,
+        vault_addr: str,
         timeout: int,
         verify_ssl: bool = True,
-        ssl_cert_path: Optional[str] = None
+        ssl_cert_path: Optional[str] = None,
     ) -> tuple[str, float]:
         """
         Authenticate with Vault using AppRole.
@@ -77,25 +83,25 @@ class AppRoleAuth(AuthStrategy):
         logger.info("Authenticating with Vault using AppRole at %s", vault_addr)
         if self.namespace:
             logger.debug("Using Vault namespace: %s", self.namespace)
-        
+
         login_url = f"{vault_addr}/v1/auth/approle/login"
         login_payload = {"role_id": self.role_id, "secret_id": self.secret_id}
-        
+
         # Add namespace header if configured
         headers = {}
         if self.namespace:
             headers["X-Vault-Namespace"] = self.namespace
-        
+
         # Configure SSL verification
         verify = ssl_cert_path if ssl_cert_path else verify_ssl
 
         try:
             resp = requests.post(
-                login_url, 
-                json=login_payload, 
+                login_url,
+                json=login_payload,
                 headers=headers,
-                timeout=timeout, 
-                verify=verify
+                timeout=timeout,
+                verify=verify,
             )
         except requests.RequestException as e:
             logger.error("Network error during AppRole authentication: %s", e)
@@ -159,11 +165,11 @@ class TokenAuth(AuthStrategy):
         self.ttl = ttl
 
     def authenticate(
-        self, 
-        vault_addr: str, 
+        self,
+        vault_addr: str,
         timeout: int,
         verify_ssl: bool = True,
-        ssl_cert_path: Optional[str] = None
+        ssl_cert_path: Optional[str] = None,
     ) -> tuple[str, float]:
         """
         Return the provided token with calculated expiry.
@@ -212,11 +218,11 @@ class EnvironmentAuth(AuthStrategy):
             raise VaultAuthError("VAULT_TOKEN environment variable must be set")
 
     def authenticate(
-        self, 
-        vault_addr: str, 
+        self,
+        vault_addr: str,
         timeout: int,
         verify_ssl: bool = True,
-        ssl_cert_path: Optional[str] = None
+        ssl_cert_path: Optional[str] = None,
     ) -> tuple[str, float]:
         """
         Return token from environment with calculated expiry.
@@ -242,3 +248,94 @@ class EnvironmentAuth(AuthStrategy):
     def __str__(self) -> str:
         """User-friendly representation."""
         return "Environment Variable Token Authentication"
+
+
+class AsyncAppRoleAuth(AsyncAuthStrategy):
+    """
+    Async AppRole authentication strategy for HashiCorp Vault.
+
+    Requires 'aiohttp' to be installed.
+    """
+
+    def __init__(
+        self,
+        role_id: Optional[str] = None,
+        secret_id: Optional[str] = None,
+        namespace: Optional[str] = None,
+    ):
+        """Initialize Async AppRole authentication."""
+        self.role_id = role_id or os.getenv("VAULT_ROLE_ID")
+        self.secret_id = secret_id or os.getenv("VAULT_SECRET_ID")
+        self.namespace = namespace or os.getenv("VAULT_NAMESPACE")
+
+        if not self.role_id or not self.secret_id:
+            raise VaultAuthError(
+                "AppRole credentials must be provided or set in "
+                "VAULT_ROLE_ID and VAULT_SECRET_ID environment variables"
+            )
+
+    async def authenticate(
+        self,
+        vault_addr: str,
+        timeout: int,
+        verify_ssl: bool = True,
+        ssl_cert_path: Optional[str] = None,
+    ) -> tuple[str, float]:
+        """Authenticate with Vault using AppRole asynchronously."""
+        if aiohttp is None:
+            raise ImportError("aiohttp is required for async support")
+
+        logger.info("Authenticating with Vault using AppRole (Async) at %s", vault_addr)
+
+        login_url = f"{vault_addr}/v1/auth/approle/login"
+        login_payload = {"role_id": self.role_id, "secret_id": self.secret_id}
+
+        headers = {}
+        if self.namespace:
+            headers["X-Vault-Namespace"] = self.namespace
+
+        ssl_context = None
+        if ssl_cert_path:
+            import ssl
+
+            ssl_context = ssl.create_default_context(cafile=ssl_cert_path)
+        elif not verify_ssl:
+            import ssl
+
+            ssl_context = ssl.create_default_context()
+            ssl_context.check_hostname = False
+            ssl_context.verify_mode = ssl.CERT_NONE
+
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.post(
+                    login_url,
+                    json=login_payload,
+                    headers=headers,
+                    timeout=aiohttp.ClientTimeout(total=timeout),
+                    ssl=ssl_context,
+                ) as resp:
+                    if resp.status != 200:
+                        text = await resp.text()
+                        logger.error(
+                            "AppRole authentication failed with status %s: %s",
+                            resp.status,
+                            text,
+                        )
+                        raise VaultAuthError(f"Vault AppRole login failed: {text}")
+
+                    data = await resp.json()
+                    auth_data = data["auth"]
+                    token = auth_data["client_token"]
+                    lease_duration = auth_data.get("lease_duration", 3600)
+                    expiry = time.time() + lease_duration - 300
+
+                    logger.info(
+                        "Successfully authenticated with AppRole (Async). Token valid for %ss",
+                        lease_duration,
+                    )
+                    return token, expiry
+
+        except aiohttp.ClientError as e:
+            logger.error("Network error during Async AppRole authentication: %s", e)
+            raise VaultAuthError(f"Failed to connect to Vault: {e}") from e
