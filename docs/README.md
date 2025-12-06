@@ -2,7 +2,37 @@
 
 This directory contains all project documentation organized by category.
 
-## 📚 Documentation Structure
+## Table of Contents
+
+- [Documentation Organization](#documentation-organization)
+  - [tutorials/ - Learning-Oriented Guides](#tutorials---learning-oriented-guides)
+  - [explanation/ - Understanding-Oriented Documentation](#explanation---understanding-oriented-documentation)
+  - [development/ - Development Documentation](#development---development-documentation)
+  - [coding-standards/ - Coding Standards](#coding-standards---coding-standards)
+  - [runbooks/ - Operational Runbooks](#runbooks---operational-runbooks)
+  - [vscode/ - VS Code Setup](#vscode---vs-code-setup)
+  - [archive/ - Archived Files](#archive---archived-files)
+- [Component Documentation](#component-documentation)
+- [Quick Links](#quick-links)
+
+## 📚 Documentation Organization
+
+This documentation follows the **Diátaxis framework**, organizing content by user intent to help you find what you need based on your goal:
+
+- **Tutorials** (Learning-oriented): Step-by-step lessons to help you get started and acquire new skills.
+- **Explanation** (Understanding-oriented): High-level context, architecture decisions, and "why" things work the way they do.
+- **Runbooks** (Goal-oriented): Practical, procedural guides for performing specific operational tasks.
+- **Development** (Contributor-oriented): Standards and guides for working on the codebase itself.
+
+### Diagrams as Code (Mermaid)
+
+This project uses **[Mermaid.js](https://mermaid.js.org/)** for architectural, sequence, and class diagrams. This "diagram-as-code" approach aligns with best practices for engineering documentation:
+
+- **Version Control**: Diagrams are text-based, allowing them to be versioned, diffed, and reviewed in Pull Requests just like code.
+- **Maintainability**: No need for external binary files or proprietary tools; anyone can edit the diagrams using a text editor.
+- **Integration**: GitHub renders Mermaid diagrams natively in markdown files.
+
+Open the architecture files in the GitHub UI to see the diagrams rendered. In local editors (like VS Code), install the **Markdown Preview Mermaid Support** extension.
 
 ### [tutorials/](tutorials/) - Learning-Oriented Guides
 
@@ -57,6 +87,8 @@ Architecture decisions, design records, and conceptual explanations:
 - [PowerShell](coding-standards/powershell-coding-standards.md) - PowerShell coding standards
 - [Language Agnostic](coding-standards/language-agnostic-coding-standards.md) - General coding standards
 - [Systems Design](coding-standards/systems-design-best-practices.md) - Systems design best practices
+- [Enforcement Guide](coding-standards/enforcement-guide.md) - Guide on enforcing coding standards
+- [General Standards](coding-standards/coding-standards.md) - Additional general coding standards
 
 ---
 
@@ -74,6 +106,9 @@ Architecture decisions, design records, and conceptual explanations:
 - [DEVCONTAINER.md](vscode/DEVCONTAINER.md) - Dev container setup
 - [DEVCONTAINER_BEGINNERS_GUIDE.md](vscode/DEVCONTAINER_BEGINNERS_GUIDE.md) - Dev container beginner guide
 - [CICD_INTEGRATION.md](vscode/CICD_INTEGRATION.md) - CI/CD integration guide
+- [DEVCONTAINER_SQLTOOLS.md](vscode/DEVCONTAINER_SQLTOOLS.md) - SQLTools extension configuration in Dev Container
+- [PLATFORM_SPECIFIC.md](vscode/PLATFORM_SPECIFIC.md) - Platform-specific VS Code settings (Windows/Linux/macOS)
+- [SECURITY_BEST_PRACTICES.md](vscode/SECURITY_BEST_PRACTICES.md) - Security best practices for VS Code development
 
 ---
 
@@ -94,7 +129,3 @@ For component-specific documentation, see:
 ## Quick Links
 
 - [Workspace Overview](../README.md)
-
-### Viewing Diagrams
-
-GitHub renders Mermaid diagrams in Markdown natively. Open the architecture files in the GitHub UI to see class and sequence diagrams. In local editors without Mermaid preview, consider exporting SVGs via Mermaid CLI or simply rely on GitHub for viewing.
