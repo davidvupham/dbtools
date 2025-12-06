@@ -36,8 +36,7 @@ async def test_async_auth_success():
 
         # Manually create auth with credentials
         auth = AsyncAppRoleAuth(role_id="r", secret_id="s")
-        client = AsyncVaultClient(
-            vault_addr="http://localhost:8200", auth=auth)
+        client = AsyncVaultClient(vault_addr="http://localhost:8200", auth=auth)
 
         await client.initialize()
         success = await client.authenticate()
@@ -74,8 +73,7 @@ async def test_async_get_secret():
 
         # Manually create auth with credentials
         auth = AsyncAppRoleAuth(role_id="r", secret_id="s")
-        client = AsyncVaultClient(
-            vault_addr="http://localhost:8200", auth=auth)
+        client = AsyncVaultClient(vault_addr="http://localhost:8200", auth=auth)
 
         async with client:
             secret = await client.get_secret("my/secret")
