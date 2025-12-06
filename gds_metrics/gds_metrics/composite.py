@@ -5,7 +5,7 @@ This module provides a way to send metrics to multiple
 backends simultaneously (fan-out pattern).
 """
 
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING, Optional
 
 __all__ = ["CompositeMetrics"]
 
@@ -31,7 +31,7 @@ class CompositeMetrics:
         metrics.increment("requests")  # Sent to both backends
     """
 
-    def __init__(self, collectors: List["MetricsCollector"]):
+    def __init__(self, collectors: list["MetricsCollector"]):
         """
         Initialize composite metrics.
 
@@ -40,30 +40,22 @@ class CompositeMetrics:
         """
         self._collectors = collectors
 
-    def increment(
-        self, name: str, value: int = 1, labels: Optional[dict[str, str]] = None
-    ) -> None:
+    def increment(self, name: str, value: int = 1, labels: Optional[dict[str, str]] = None) -> None:
         """Increment counter on all backends."""
         for collector in self._collectors:
             collector.increment(name, value, labels)
 
-    def gauge(
-        self, name: str, value: float, labels: Optional[dict[str, str]] = None
-    ) -> None:
+    def gauge(self, name: str, value: float, labels: Optional[dict[str, str]] = None) -> None:
         """Set gauge on all backends."""
         for collector in self._collectors:
             collector.gauge(name, value, labels)
 
-    def histogram(
-        self, name: str, value: float, labels: Optional[dict[str, str]] = None
-    ) -> None:
+    def histogram(self, name: str, value: float, labels: Optional[dict[str, str]] = None) -> None:
         """Record histogram on all backends."""
         for collector in self._collectors:
             collector.histogram(name, value, labels)
 
-    def timing(
-        self, name: str, value_ms: float, labels: Optional[dict[str, str]] = None
-    ) -> None:
+    def timing(self, name: str, value_ms: float, labels: Optional[dict[str, str]] = None) -> None:
         """Record timing on all backends."""
         for collector in self._collectors:
             collector.timing(name, value_ms, labels)

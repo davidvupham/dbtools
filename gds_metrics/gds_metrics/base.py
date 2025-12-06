@@ -29,9 +29,7 @@ class MetricsCollector(Protocol):
         metrics: MetricsCollector = MyCustomMetrics()
     """
 
-    def increment(
-        self, name: str, value: int = 1, labels: Optional[dict[str, str]] = None
-    ) -> None:
+    def increment(self, name: str, value: int = 1, labels: Optional[dict[str, str]] = None) -> None:
         """
         Increment a counter metric.
 
@@ -45,9 +43,7 @@ class MetricsCollector(Protocol):
         """
         ...
 
-    def gauge(
-        self, name: str, value: float, labels: Optional[dict[str, str]] = None
-    ) -> None:
+    def gauge(self, name: str, value: float, labels: Optional[dict[str, str]] = None) -> None:
         """
         Set a gauge to a specific value.
 
@@ -61,9 +57,7 @@ class MetricsCollector(Protocol):
         """
         ...
 
-    def histogram(
-        self, name: str, value: float, labels: Optional[dict[str, str]] = None
-    ) -> None:
+    def histogram(self, name: str, value: float, labels: Optional[dict[str, str]] = None) -> None:
         """
         Record a value in a histogram.
 
@@ -77,9 +71,7 @@ class MetricsCollector(Protocol):
         """
         ...
 
-    def timing(
-        self, name: str, value_ms: float, labels: Optional[dict[str, str]] = None
-    ) -> None:
+    def timing(self, name: str, value_ms: float, labels: Optional[dict[str, str]] = None) -> None:
         """
         Record a timing measurement in milliseconds.
 

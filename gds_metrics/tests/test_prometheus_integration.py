@@ -15,11 +15,12 @@ Verification:
     3. Query metrics in Prometheus UI at http://localhost:9090
 """
 
-from gds_metrics import PrometheusMetrics
 import sys
 import time
 import urllib.error
 import urllib.request
+
+from gds_metrics import PrometheusMetrics
 
 # Add parent directory for imports
 sys.path.insert(0, str(__file__).rsplit("/", 2)[0])
@@ -37,8 +38,7 @@ def check_prometheus_available() -> bool:
 def check_metrics_endpoint(port: int = 8080) -> bool:
     """Check if metrics endpoint is accessible."""
     try:
-        response = urllib.request.urlopen(
-            f"http://localhost:{port}/metrics", timeout=2)
+        response = urllib.request.urlopen(f"http://localhost:{port}/metrics", timeout=2)
         content = response.read().decode("utf-8")
         return "# HELP" in content or "# TYPE" in content
     except (urllib.error.URLError, urllib.error.HTTPError):
@@ -84,14 +84,9 @@ def run_integration_test():
     try:
         # Counters
         for status in ["200", "201", "400", "404", "500"]:
-            count = {"200": 100, "201": 20, "400": 5, "404": 10, "500": 2}.get(
-                status, 1
-            )
-            metrics.increment(
-                "http_requests_total", value=count, labels={"status": status}
-            )
-            print(
-                f"      ✓ Counter: http_requests_total{{status={status}}} += {count}")
+            count = {"200": 100, "201": 20, "400": 5, "404": 10, "500": 2}.get(status, 1)
+            metrics.increment("http_requests_total", value=count, labels={"status": status})
+            print(f"      ✓ Counter: http_requests_total{{status={status}}} += {count}")
 
         # Gauges
         metrics.gauge("active_connections", 42.0, labels={"pool": "main"})
@@ -109,8 +104,7 @@ def run_integration_test():
 
         # Timing
         for ms in [10, 25, 50, 100, 250, 500]:
-            metrics.timing("query_time_ms", float(ms),
-                           labels={"query": "select"})
+            metrics.timing("query_time_ms", float(ms), labels={"query": "select"})
         print("      ✓ Timing: query_time_ms (6 observations)")
 
     except Exception as e:
@@ -120,8 +114,7 @@ def run_integration_test():
     # Verify metrics content
     print("\n[5/5] Verifying metrics content...")
     try:
-        response = urllib.request.urlopen(
-            "http://localhost:8080/metrics", timeout=2)
+        response = urllib.request.urlopen("http://localhost:8080/metrics", timeout=2)
         content = response.read().decode("utf-8")
 
         expected_metrics = [
@@ -177,9 +170,9 @@ def run_interactive_demo():
             # Simulate HTTP requests
             import random
 
-            status = random.choices(
-                ["200", "201", "400", "404", "500"], weights=[80, 10, 5, 4, 1]
-            )[0]
+            status = random.choices(["200", "201", "400", "404", "500"], weights=[80, 10, 5, 4, 1])[
+                0
+            ]
             metrics.increment("requests_total", labels={"status": status})
 
             # Simulate active connections
@@ -210,11 +203,8 @@ def run_interactive_demo():
 if __name__ == "__main__":
     import argparse
 
-    parser = argparse.ArgumentParser(
-        description="GDS Metrics Prometheus Integration Test")
-    parser.add_argument(
-        "--demo", action="store_true", help="Run interactive demo mode"
-    )
+    parser = argparse.ArgumentParser(description="GDS Metrics Prometheus Integration Test")
+    parser.add_argument("--demo", action="store_true", help="Run interactive demo mode")
     args = parser.parse_args()
 
     if args.demo:

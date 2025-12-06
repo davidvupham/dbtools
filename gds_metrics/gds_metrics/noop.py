@@ -24,27 +24,19 @@ class NoOpMetrics:
         metrics.increment("requests")  # Does nothing
     """
 
-    def increment(
-        self, name: str, value: int = 1, labels: Optional[dict[str, str]] = None
-    ) -> None:
+    def increment(self, name: str, value: int = 1, labels: Optional[dict[str, str]] = None) -> None:
         """Discard counter increment."""
         pass
 
-    def gauge(
-        self, name: str, value: float, labels: Optional[dict[str, str]] = None
-    ) -> None:
+    def gauge(self, name: str, value: float, labels: Optional[dict[str, str]] = None) -> None:
         """Discard gauge value."""
         pass
 
-    def histogram(
-        self, name: str, value: float, labels: Optional[dict[str, str]] = None
-    ) -> None:
+    def histogram(self, name: str, value: float, labels: Optional[dict[str, str]] = None) -> None:
         """Discard histogram observation."""
         pass
 
-    def timing(
-        self, name: str, value_ms: float, labels: Optional[dict[str, str]] = None
-    ) -> None:
+    def timing(self, name: str, value_ms: float, labels: Optional[dict[str, str]] = None) -> None:
         """Discard timing measurement."""
         pass
 

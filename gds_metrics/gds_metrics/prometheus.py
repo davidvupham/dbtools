@@ -6,11 +6,18 @@ prometheus-client library, exposing metrics at an HTTP endpoint.
 """
 
 import logging
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 __all__ = ["PrometheusMetrics"]
 
 logger = logging.getLogger(__name__)
+
+
+if TYPE_CHECKING:
+    # For type hints only; actual classes are set at runtime after import
+    from prometheus_client import Counter as _CounterType
+    from prometheus_client import Gauge as _GaugeType
+    from prometheus_client import Histogram as _HistogramType
 
 
 class PrometheusMetrics:
@@ -35,9 +42,7 @@ class PrometheusMetrics:
         start_server: Whether to start HTTP server (default: True)
     """
 
-    def __init__(
-        self, prefix: str = "gds", port: int = 8080, start_server: bool = True
-    ):
+    def __init__(self, prefix: str = "gds", port: int = 8080, start_server: bool = True):
         """Initialize Prometheus metrics."""
         try:
             from prometheus_client import Counter, Gauge, Histogram, start_http_server
@@ -51,9 +56,9 @@ class PrometheusMetrics:
         self._port = port
 
         # Lazy-initialized metric registries
-        self._counters: dict[str, Counter] = {}
-        self._gauges: dict[str, Gauge] = {}
-        self._histograms: dict[str, Histogram] = {}
+        self._counters: dict[str, _CounterType] = {}
+        self._gauges: dict[str, _GaugeType] = {}
+        self._histograms: dict[str, _HistogramType] = {}
 
         # Import classes for later use
         self._Counter = Counter
@@ -65,33 +70,27 @@ class PrometheusMetrics:
             start_http_server(port)
             logger.info("Prometheus metrics server started on port %d", port)
 
-    def _get_counter(self, name: str, labels: Optional[dict[str, str]]) -> "Counter":
+    def _get_counter(self, name: str, labels: Optional[dict[str, str]]) -> "_CounterType":
         """Get or create a counter metric."""
         full_name = f"{self._prefix}_{name}" if self._prefix else name
         label_names = tuple(labels.keys()) if labels else ()
 
         key = (full_name, label_names)
         if key not in self._counters:
-            self._counters[key] = self._Counter(
-                full_name, f"Counter: {name}", list(label_names)
-            )
+            self._counters[key] = self._Counter(full_name, f"Counter: {name}", list(label_names))
         return self._counters[key]
 
-    def _get_gauge(self, name: str, labels: Optional[dict[str, str]]) -> "Gauge":
+    def _get_gauge(self, name: str, labels: Optional[dict[str, str]]) -> "_GaugeType":
         """Get or create a gauge metric."""
         full_name = f"{self._prefix}_{name}" if self._prefix else name
         label_names = tuple(labels.keys()) if labels else ()
 
         key = (full_name, label_names)
         if key not in self._gauges:
-            self._gauges[key] = self._Gauge(
-                full_name, f"Gauge: {name}", list(label_names)
-            )
+            self._gauges[key] = self._Gauge(full_name, f"Gauge: {name}", list(label_names))
         return self._gauges[key]
 
-    def _get_histogram(
-        self, name: str, labels: Optional[dict[str, str]]
-    ) -> "Histogram":
+    def _get_histogram(self, name: str, labels: Optional[dict[str, str]]) -> "_HistogramType":
         """Get or create a histogram metric."""
         full_name = f"{self._prefix}_{name}" if self._prefix else name
         label_names = tuple(labels.keys()) if labels else ()
@@ -103,9 +102,7 @@ class PrometheusMetrics:
             )
         return self._histograms[key]
 
-    def increment(
-        self, name: str, value: int = 1, labels: Optional[dict[str, str]] = None
-    ) -> None:
+    def increment(self, name: str, value: int = 1, labels: Optional[dict[str, str]] = None) -> None:
         """Increment a Prometheus counter."""
         counter = self._get_counter(name, labels)
         if labels:
@@ -113,9 +110,7 @@ class PrometheusMetrics:
         else:
             counter.inc(value)
 
-    def gauge(
-        self, name: str, value: float, labels: Optional[dict[str, str]] = None
-    ) -> None:
+    def gauge(self, name: str, value: float, labels: Optional[dict[str, str]] = None) -> None:
         """Set a Prometheus gauge value."""
         gauge = self._get_gauge(name, labels)
         if labels:
@@ -123,9 +118,7 @@ class PrometheusMetrics:
         else:
             gauge.set(value)
 
-    def histogram(
-        self, name: str, value: float, labels: Optional[dict[str, str]] = None
-    ) -> None:
+    def histogram(self, name: str, value: float, labels: Optional[dict[str, str]] = None) -> None:
         """Observe a value in a Prometheus histogram."""
         histogram = self._get_histogram(name, labels)
         if labels:
@@ -133,9 +126,7 @@ class PrometheusMetrics:
         else:
             histogram.observe(value)
 
-    def timing(
-        self, name: str, value_ms: float, labels: Optional[dict[str, str]] = None
-    ) -> None:
+    def timing(self, name: str, value_ms: float, labels: Optional[dict[str, str]] = None) -> None:
         """Record timing as histogram (converts ms to seconds)."""
         # Prometheus convention: use seconds for durations
         value_seconds = value_ms / 1000.0

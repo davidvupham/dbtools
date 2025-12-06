@@ -50,8 +50,7 @@ class TestNoOpMetrics(unittest.TestCase):
     def test_histogram_does_nothing(self):
         """histogram() should not raise."""
         self.metrics.histogram("test_histogram", 0.125)
-        self.metrics.histogram("test_histogram", 0.125,
-                               labels={"key": "value"})
+        self.metrics.histogram("test_histogram", 0.125, labels={"key": "value"})
 
     def test_timing_does_nothing(self):
         """timing() should not raise."""
@@ -73,7 +72,7 @@ class TestConsoleMetrics(unittest.TestCase):
     def test_increment_prints_counter(self):
         """increment() should print to stdout."""
         metrics = ConsoleMetrics()
-        with patch("sys.stdout", new_callable=StringIO) as mock_stdout:
+        with patch("sys.stdout", new_callable=StringIO):
             with patch("builtins.print") as mock_print:
                 metrics.increment("requests_total")
                 mock_print.assert_called()
@@ -204,35 +203,32 @@ class TestCompositeMetrics(unittest.TestCase):
     def test_gauge_calls_all_collectors(self):
         """gauge() should delegate to all child collectors."""
         from unittest.mock import MagicMock
+
         mock1, mock2 = MagicMock(), MagicMock()
         composite = CompositeMetrics([mock1, mock2])
         composite.gauge("connections", 42.0, {"env": "prod"})
-        mock1.gauge.assert_called_once_with(
-            "connections", 42.0, {"env": "prod"})
-        mock2.gauge.assert_called_once_with(
-            "connections", 42.0, {"env": "prod"})
+        mock1.gauge.assert_called_once_with("connections", 42.0, {"env": "prod"})
+        mock2.gauge.assert_called_once_with("connections", 42.0, {"env": "prod"})
 
     def test_histogram_calls_all_collectors(self):
         """histogram() should delegate to all child collectors."""
         from unittest.mock import MagicMock
+
         mock1, mock2 = MagicMock(), MagicMock()
         composite = CompositeMetrics([mock1, mock2])
         composite.histogram("duration", 0.5, {"path": "/api"})
-        mock1.histogram.assert_called_once_with(
-            "duration", 0.5, {"path": "/api"})
-        mock2.histogram.assert_called_once_with(
-            "duration", 0.5, {"path": "/api"})
+        mock1.histogram.assert_called_once_with("duration", 0.5, {"path": "/api"})
+        mock2.histogram.assert_called_once_with("duration", 0.5, {"path": "/api"})
 
     def test_timing_calls_all_collectors(self):
         """timing() should delegate to all child collectors."""
         from unittest.mock import MagicMock
+
         mock1, mock2 = MagicMock(), MagicMock()
         composite = CompositeMetrics([mock1, mock2])
         composite.timing("query_ms", 150.0, {"db": "postgres"})
-        mock1.timing.assert_called_once_with(
-            "query_ms", 150.0, {"db": "postgres"})
-        mock2.timing.assert_called_once_with(
-            "query_ms", 150.0, {"db": "postgres"})
+        mock1.timing.assert_called_once_with("query_ms", 150.0, {"db": "postgres"})
+        mock2.timing.assert_called_once_with("query_ms", 150.0, {"db": "postgres"})
 
     def test_str(self):
         """__str__ should return user-friendly format."""
@@ -260,13 +256,12 @@ class TestCompositeMetrics(unittest.TestCase):
     def test_increment_with_mocks_verifies_delegation(self):
         """increment() should be verified via mocks."""
         from unittest.mock import MagicMock
+
         mock1, mock2 = MagicMock(), MagicMock()
         composite = CompositeMetrics([mock1, mock2])
         composite.increment("requests", 5, {"status": "200"})
-        mock1.increment.assert_called_once_with(
-            "requests", 5, {"status": "200"})
-        mock2.increment.assert_called_once_with(
-            "requests", 5, {"status": "200"})
+        mock1.increment.assert_called_once_with("requests", 5, {"status": "200"})
+        mock2.increment.assert_called_once_with("requests", 5, {"status": "200"})
 
 
 if __name__ == "__main__":

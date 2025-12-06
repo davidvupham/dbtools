@@ -7,7 +7,7 @@ and to verify correct interaction with Prometheus metric types.
 
 import sys
 import unittest
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 from gds_metrics.base import MetricsCollector
 
@@ -128,8 +128,8 @@ class TestPrometheusMetricsCounter(unittest.TestCase):
         """Set up test fixtures - clear registry and create fresh metrics instance."""
         # Clear the default registry to avoid conflicts between tests
         import prometheus_client
-        collectors = list(
-            prometheus_client.REGISTRY._names_to_collectors.values())
+
+        collectors = list(prometheus_client.REGISTRY._names_to_collectors.values())
         for collector in collectors:
             try:
                 prometheus_client.REGISTRY.unregister(collector)
@@ -137,8 +137,8 @@ class TestPrometheusMetricsCounter(unittest.TestCase):
                 pass
 
         from gds_metrics.prometheus import PrometheusMetrics
-        self.metrics = PrometheusMetrics(
-            prefix="counter_test", start_server=False)
+
+        self.metrics = PrometheusMetrics(prefix="counter_test", start_server=False)
 
     def test_increment_creates_counter(self):
         """increment() should create a Counter on first call."""
@@ -154,19 +154,18 @@ class TestPrometheusMetricsCounter(unittest.TestCase):
         self.metrics.increment("reuse_counter")
 
         # Should only have one counter
-        counter_keys = [k for k in self.metrics._counters.keys()
-                        if "reuse_counter" in k[0]]
+        counter_keys = [k for k in self.metrics._counters.keys() if "reuse_counter" in k[0]]
         self.assertEqual(len(counter_keys), 1)
 
     def test_increment_with_labels(self):
         """increment() should handle labels correctly."""
-        self.metrics.increment("labeled_counter", labels={
-                               "status": "200", "method": "GET"})
+        self.metrics.increment("labeled_counter", labels={"status": "200", "method": "GET"})
 
         # Verify counter was created with label names (order may vary due to dict ordering)
         # Just verify the counter exists with both labels
-        matching_keys = [k for k in self.metrics._counters.keys()
-                         if k[0] == "counter_test_labeled_counter"]
+        matching_keys = [
+            k for k in self.metrics._counters.keys() if k[0] == "counter_test_labeled_counter"
+        ]
         self.assertEqual(len(matching_keys), 1)
         # Verify both label names are present
         label_names = matching_keys[0][1]
@@ -191,8 +190,8 @@ class TestPrometheusMetricsGauge(unittest.TestCase):
     def setUp(self):
         """Set up test fixtures - clear registry and create fresh metrics instance."""
         import prometheus_client
-        collectors = list(
-            prometheus_client.REGISTRY._names_to_collectors.values())
+
+        collectors = list(prometheus_client.REGISTRY._names_to_collectors.values())
         for collector in collectors:
             try:
                 prometheus_client.REGISTRY.unregister(collector)
@@ -200,8 +199,8 @@ class TestPrometheusMetricsGauge(unittest.TestCase):
                 pass
 
         from gds_metrics.prometheus import PrometheusMetrics
-        self.metrics = PrometheusMetrics(
-            prefix="gauge_test", start_server=False)
+
+        self.metrics = PrometheusMetrics(prefix="gauge_test", start_server=False)
 
     def test_gauge_creates_gauge(self):
         """gauge() should create a Gauge on first call."""
@@ -229,8 +228,8 @@ class TestPrometheusMetricsHistogram(unittest.TestCase):
     def setUp(self):
         """Set up test fixtures - clear registry and create fresh metrics instance."""
         import prometheus_client
-        collectors = list(
-            prometheus_client.REGISTRY._names_to_collectors.values())
+
+        collectors = list(prometheus_client.REGISTRY._names_to_collectors.values())
         for collector in collectors:
             try:
                 prometheus_client.REGISTRY.unregister(collector)
@@ -238,8 +237,8 @@ class TestPrometheusMetricsHistogram(unittest.TestCase):
                 pass
 
         from gds_metrics.prometheus import PrometheusMetrics
-        self.metrics = PrometheusMetrics(
-            prefix="hist_test", start_server=False)
+
+        self.metrics = PrometheusMetrics(prefix="hist_test", start_server=False)
 
     def test_histogram_creates_histogram(self):
         """histogram() should create a Histogram on first call."""
@@ -250,9 +249,7 @@ class TestPrometheusMetricsHistogram(unittest.TestCase):
 
     def test_histogram_with_labels(self):
         """histogram() should handle labels correctly."""
-        self.metrics.histogram(
-            "labeled_histogram", 0.125, labels={"endpoint": "/api/users"}
-        )
+        self.metrics.histogram("labeled_histogram", 0.125, labels={"endpoint": "/api/users"})
 
         key = ("hist_test_labeled_histogram", ("endpoint",))
         self.assertIn(key, self.metrics._histograms)
@@ -269,8 +266,8 @@ class TestPrometheusMetricsTiming(unittest.TestCase):
     def setUp(self):
         """Set up test fixtures - clear registry and create fresh metrics instance."""
         import prometheus_client
-        collectors = list(
-            prometheus_client.REGISTRY._names_to_collectors.values())
+
+        collectors = list(prometheus_client.REGISTRY._names_to_collectors.values())
         for collector in collectors:
             try:
                 prometheus_client.REGISTRY.unregister(collector)
@@ -278,8 +275,8 @@ class TestPrometheusMetricsTiming(unittest.TestCase):
                 pass
 
         from gds_metrics.prometheus import PrometheusMetrics
-        self.metrics = PrometheusMetrics(
-            prefix="timing_test", start_server=False)
+
+        self.metrics = PrometheusMetrics(prefix="timing_test", start_server=False)
 
     def test_timing_converts_to_seconds(self):
         """timing() should convert milliseconds to seconds."""
@@ -292,8 +289,7 @@ class TestPrometheusMetricsTiming(unittest.TestCase):
 
     def test_timing_with_labels(self):
         """timing() should handle labels correctly."""
-        self.metrics.timing("db_query_ms", 50.0, labels={
-                            "query_type": "select"})
+        self.metrics.timing("db_query_ms", 50.0, labels={"query_type": "select"})
 
         key = ("timing_test_db_query_ms", ("query_type",))
         self.assertIn(key, self.metrics._histograms)
@@ -307,8 +303,7 @@ class TestPrometheusMetricsRepresentation(unittest.TestCase):
         """__repr__ should return developer-friendly format."""
         from gds_metrics.prometheus import PrometheusMetrics
 
-        metrics = PrometheusMetrics(
-            prefix="myapp", port=9090, start_server=False)
+        metrics = PrometheusMetrics(prefix="myapp", port=9090, start_server=False)
         repr_str = repr(metrics)
 
         self.assertIn("PrometheusMetrics", repr_str)
@@ -333,8 +328,8 @@ class TestPrometheusMetricsEdgeCases(unittest.TestCase):
     def setUp(self):
         """Clear registry before each test."""
         import prometheus_client
-        collectors = list(
-            prometheus_client.REGISTRY._names_to_collectors.values())
+
+        collectors = list(prometheus_client.REGISTRY._names_to_collectors.values())
         for collector in collectors:
             try:
                 prometheus_client.REGISTRY.unregister(collector)

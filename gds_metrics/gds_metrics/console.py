@@ -46,33 +46,25 @@ class ConsoleMetrics:
             return ""
         return f" {labels}"
 
-    def increment(
-        self, name: str, value: int = 1, labels: Optional[dict[str, str]] = None
-    ) -> None:
+    def increment(self, name: str, value: int = 1, labels: Optional[dict[str, str]] = None) -> None:
         """Print counter increment to stdout."""
         formatted_name = self._format_name(name)
         formatted_labels = self._format_labels(labels)
         print(f"[COUNTER] {formatted_name}: +{value}{formatted_labels}")
 
-    def gauge(
-        self, name: str, value: float, labels: Optional[dict[str, str]] = None
-    ) -> None:
+    def gauge(self, name: str, value: float, labels: Optional[dict[str, str]] = None) -> None:
         """Print gauge value to stdout."""
         formatted_name = self._format_name(name)
         formatted_labels = self._format_labels(labels)
         print(f"[GAUGE] {formatted_name}: {value}{formatted_labels}")
 
-    def histogram(
-        self, name: str, value: float, labels: Optional[dict[str, str]] = None
-    ) -> None:
+    def histogram(self, name: str, value: float, labels: Optional[dict[str, str]] = None) -> None:
         """Print histogram observation to stdout."""
         formatted_name = self._format_name(name)
         formatted_labels = self._format_labels(labels)
         print(f"[HISTOGRAM] {formatted_name}: {value}{formatted_labels}")
 
-    def timing(
-        self, name: str, value_ms: float, labels: Optional[dict[str, str]] = None
-    ) -> None:
+    def timing(self, name: str, value_ms: float, labels: Optional[dict[str, str]] = None) -> None:
         """Print timing measurement to stdout."""
         formatted_name = self._format_name(name)
         formatted_labels = self._format_labels(labels)
