@@ -15,7 +15,12 @@ Step-by-step tutorials for learning various technologies:
 - [OOP](tutorials/oop/) - Object-oriented programming tutorials
 - [Kafka](tutorials/kafka/) - Apache Kafka tutorials
 - [RabbitMQ](tutorials/rabbitmq/) - RabbitMQ messaging tutorials
-- [Observability](tutorials/observability/) - Enterprise observability tutorials
+- [**Observability**](tutorials/observability/) - **Comprehensive 9-part tutorial** covering:
+  - OpenTelemetry, distributed tracing, and the three pillars (traces, metrics, logs)
+  - Kafka streaming pipelines and data architecture
+  - Python and PowerShell instrumentation
+  - Alerting, notification, and best practices
+  - Hands-on exercises and quick reference guide
 - [Certificates](tutorials/certs/) - TLS/SSL certificate tutorials
 - [SSH Agent](tutorials/ssh-agent/) - SSH agent configuration
 

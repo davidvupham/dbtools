@@ -136,6 +136,14 @@ labels = with_trace_context({"env": "prod"})
 
 See [docs/DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md) for development setup and contributing guidelines.
 
+## Related Tutorials
+
+For learning about observability concepts and instrumentation patterns, see the [Observability Tutorial](../docs/tutorials/observability/):
+
+- [OpenTelemetry Deep Dive](../docs/tutorials/observability/04_OPENTELEMETRY.md) - Comprehensive OTel guide
+- [Python Integration](../docs/tutorials/observability/06_PYTHON_INTEGRATION.md) - Python instrumentation patterns
+- [Best Practices](../docs/tutorials/observability/09_BEST_PRACTICES.md) - Design patterns and SOLID principles
+
 ## License
 
 MIT

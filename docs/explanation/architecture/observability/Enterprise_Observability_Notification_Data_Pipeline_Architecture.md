@@ -13,6 +13,10 @@
 9. [Integration Patterns](#integration-patterns)
 10. [Implementation Roadmap](#implementation-roadmap)
 11. [Best Practices](#best-practices)
+12. [Learning Resources](#learning-resources)
+
+> [!TIP]
+> **New to Observability?** Check out the [Observability Tutorial](../../../tutorials/observability/) for a comprehensive learning guide covering OpenTelemetry, Kafka, Python/PowerShell instrumentation, and more.
 
 ---
 
@@ -1437,11 +1441,13 @@ This platform SHOULD adopt OpenTelemetry (OTel) across services for end-to-end c
 - Structured logs: JSON logs enriched with `trace_id`, `span_id`, `service.name`, `deployment.environment`.
 
 Minimal requirements:
+
 - All outbound HTTP calls (e.g., to Notification Service) inject trace context.
 - Kafka producers/consumers inject/extract trace context in message headers.
 - Emit span(s) around alert evaluation, enrichment, remediation, and notification for full lifecycle traceability.
 
 References:
+
 - `OPENTELEMETRY_ARCHITECTURE.md` (collection pipelines, semantic conventions, example configs)
 
 ---

@@ -118,44 +118,39 @@ For platform/infrastructure engineers:
 
 ## Key Concepts at a Glance
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                    OBSERVABILITY OVERVIEW                        │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                  │
-│   Applications & Scripts                                         │
-│   ┌─────────┐  ┌─────────┐  ┌─────────┐                         │
-│   │ Python  │  │PowerShell│  │  Other  │                         │
-│   │ Service │  │ Scripts │  │ Services│                         │
-│   └────┬────┘  └────┬────┘  └────┬────┘                         │
-│        │            │            │                               │
-│        └────────────┼────────────┘                               │
-│                     │                                            │
-│              OpenTelemetry SDK                                   │
-│                     │                                            │
-│                     ▼                                            │
-│   ┌─────────────────────────────────────┐                        │
-│   │      OpenTelemetry Collector        │                        │
-│   │  ┌─────────┐ ┌─────────┐ ┌────────┐ │                        │
-│   │  │Receivers│ │Processors│ │Exporters│                        │
-│   │  └─────────┘ └─────────┘ └────────┘ │                        │
-│   └─────────────────┬───────────────────┘                        │
-│                     │                                            │
-│      ┌──────────────┼──────────────┐                             │
-│      │              │              │                             │
-│      ▼              ▼              ▼                             │
-│ ┌─────────┐   ┌─────────┐   ┌─────────┐                          │
-│ │ Jaeger  │   │Prometheus│   │  Loki   │                          │
-│ │ (Traces)│   │ (Metrics)│   │ (Logs)  │                          │
-│ └────┬────┘   └────┬────┘   └────┬────┘                          │
-│      │             │             │                               │
-│      └─────────────┼─────────────┘                               │
-│                    ▼                                             │
-│              ┌──────────┐                                        │
-│              │ Grafana  │                                        │
-│              └──────────┘                                        │
-│                                                                  │
-└─────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TB
+    subgraph Apps["Applications & Scripts"]
+        Python["Python Service"]
+        PowerShell["PowerShell Scripts"]
+        Other["Other Services"]
+    end
+
+    SDK["OpenTelemetry SDK"]
+
+    subgraph Collector["OpenTelemetry Collector"]
+        Recv["Receivers"]
+        Proc["Processors"]
+        Exp["Exporters"]
+    end
+
+    subgraph Backends["Storage Backends"]
+        Jaeger["Jaeger (Traces)"]
+        Prometheus["Prometheus (Metrics)"]
+        Loki["Loki (Logs)"]
+    end
+
+    Grafana["Grafana"]
+
+    Apps --> SDK
+    SDK -->|OTLP| Recv
+    Recv --> Proc --> Exp
+    Exp --> Jaeger
+    Exp --> Prometheus
+    Exp --> Loki
+    Jaeger --> Grafana
+    Prometheus --> Grafana
+    Loki --> Grafana
 ```
 
 ---

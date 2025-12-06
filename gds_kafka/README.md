@@ -116,3 +116,11 @@ consumer = KafkaConsumerClient(
 
 - `kafka-python>=2.0.2`
 - `gds-metrics`
+
+## Related Tutorials
+
+For learning about Kafka in observability pipelines, see the [Observability Tutorial](../docs/tutorials/observability/):
+
+- [Data Pipeline Architecture](../docs/tutorials/observability/03_DATA_PIPELINE_ARCHITECTURE.md) - Kafka as telemetry backbone
+- [Kafka Streaming](../docs/tutorials/observability/07_KAFKA_STREAMING.md) - Producer/consumer patterns, DLQ, exactly-once semantics
+- [Quick Reference](../docs/tutorials/observability/QUICK_REFERENCE.md) - Kafka commands and snippets

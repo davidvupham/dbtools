@@ -11,6 +11,13 @@ OpenTelemetry (OTel) is an open-source, vendor-neutral observability framework t
 - Correlation is achieved through consistent trace context propagation
 - Trend analysis and predictive analytics are enabled through metrics and structured telemetry
 
+> [!TIP]
+> **Looking for hands-on guidance?** The [Observability Tutorial](../../../tutorials/observability/) provides step-by-step learning:
+>
+> - [OpenTelemetry Deep Dive](../../../tutorials/observability/04_OPENTELEMETRY.md) - Comprehensive OTel guide
+> - [Python Integration](../../../tutorials/observability/06_PYTHON_INTEGRATION.md) - Instrumentation patterns
+> - [PowerShell Logging](../../../tutorials/observability/05_POWERSHELL_LOGGING.md) - Structured logging
+
 ---
 
 ## Table of Contents
