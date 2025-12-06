@@ -120,7 +120,7 @@ Task: Create an abstract `AuthStrategy` base class with an
 1. ✅ `docs/tutorials/exercises/gds_vault_exercises.py`
    - All ruff checks passing
    - Formatted with `ruff format`
-   
+
 2. ✅ `docs/tutorials/exercises/gds_vault_exercises_solutions.py`
    - All ruff checks passing
    - Formatted with `ruff format`
@@ -201,6 +201,6 @@ The exercises remain fully functional for learning purposes!
 
 ---
 
-**Fixed by:** GitHub Copilot  
-**Date:** October 6, 2025  
+**Fixed by:** GitHub Copilot
+**Date:** October 6, 2025
 **Status:** Complete - All lint issues resolved ✅

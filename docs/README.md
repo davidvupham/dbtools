@@ -15,6 +15,7 @@ Step-by-step tutorials for learning various technologies:
 - [OOP](tutorials/oop/) - Object-oriented programming tutorials
 - [Kafka](tutorials/kafka/) - Apache Kafka tutorials
 - [RabbitMQ](tutorials/rabbitmq/) - RabbitMQ messaging tutorials
+- [Observability](tutorials/observability/) - Enterprise observability tutorials
 - [Certificates](tutorials/certs/) - TLS/SSL certificate tutorials
 - [SSH Agent](tutorials/ssh-agent/) - SSH agent configuration
 
@@ -74,6 +75,7 @@ Architecture decisions, design records, and conceptual explanations:
 ### [archive/](archive/) - Archived Files
 
 - [README_old.md](archive/README_old.md) - Original root README
+- [validation-reports/](archive/validation-reports/) - Development validation and implementation reports
 
 ---
 
