@@ -1,0 +1,81 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gds_notification"
+version = "0.1.0"
+description = "GDS Notification Service - Alert ingestion and multi-channel notification delivery"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [
+    {name = "GDS Team"}
+]
+keywords = ["notification", "alerts", "email", "mir3", "emergency"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Communications :: Email",
+    "Topic :: System :: Monitoring",
+]
+
+dependencies = [
+    "fastapi>=0.109.0",
+    "uvicorn[standard]>=0.27.0",
+    "pydantic>=2.5.0",
+    "aiohttp>=3.9.0",
+    "aiosmtplib>=3.0.0",
+    "pika>=1.3.2",
+    "python-dotenv>=1.0.0",
+    "zeep>=4.2.1",  # SOAP client for MIR3
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.23.0",
+    "pytest-cov>=4.1.0",
+    "mypy>=1.8.0",
+    "ruff>=0.1.0",
+    "responses>=0.24.0",
+]
+snmp = [
+    "pysnmp>=4.4.15",
+]
+database = [
+    "pyodbc>=5.0.0",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/gds/dbtools"
+"Bug Tracker" = "https://github.com/gds/dbtools/issues"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["gds_notification*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+addopts = "-v --tb=short"
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP", "B", "C4", "SIM"]
+ignore = ["E501"]
