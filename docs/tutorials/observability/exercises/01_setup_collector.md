@@ -14,9 +14,19 @@ Configure and run an OpenTelemetry Collector that receives telemetry via OTLP an
 
 ---
 
-## Step 1: Create Docker Compose File
+## Step 1: Inspect Configuration Files
 
-Create `docker-compose.yaml`:
+Navigate to the exercise source directory:
+
+```bash
+cd src/01_setup_collector
+```
+
+Inspect the provided configuration files.
+
+### Docker Compose
+
+`docker-compose.yaml` defines the services:
 
 ```yaml
 version: '3.8'
@@ -51,11 +61,9 @@ services:
       - '--config.file=/etc/prometheus/prometheus.yml'
 ```
 
----
+### Collector Configuration
 
-## Step 2: Create Collector Configuration
-
-Create `otel-config.yaml`:
+`otel-config.yaml` defines the pipeline:
 
 ```yaml
 receivers:
@@ -106,11 +114,9 @@ service:
       exporters: [prometheus, logging]
 ```
 
----
+### Prometheus Configuration
 
-## Step 3: Create Prometheus Configuration
-
-Create `prometheus.yaml`:
+`prometheus.yaml` configures scraping of the collector:
 
 ```yaml
 global:
@@ -124,7 +130,9 @@ scrape_configs:
 
 ---
 
-## Step 4: Start the Stack
+## Step 2: Start the Stack
+
+Run the stack using Docker Compose:
 
 ```bash
 docker-compose up -d
@@ -135,7 +143,7 @@ docker-compose logs -f otel-collector
 
 ---
 
-## Step 5: Verify Setup
+## Step 3: Verify Setup
 
 ### Check Collector Health
 
