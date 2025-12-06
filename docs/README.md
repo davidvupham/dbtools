@@ -1,18 +1,39 @@
-## Documentation Index
-
-- [Database Instance OO Design](./database-instance-oo-design.md)
-- [Database Instance Refactor Plan](./database-instance-refactor-plan.md)
-
-### Viewing diagrams
-
-- GitHub renders Mermaid diagrams in Markdown natively. Open the files above in the GitHub UI to see class and sequence diagrams.
-- In local editors without Mermaid preview, consider exporting SVGs via Mermaid CLI or simply rely on GitHub for viewing.
-
 # Project Documentation
 
 This directory contains all project documentation organized by category.
 
 ## 📚 Documentation Structure
+
+### [tutorials/](tutorials/) - Learning-Oriented Guides
+
+Step-by-step tutorials for learning various technologies:
+
+- [Ansible](tutorials/ansible/) - Ansible automation tutorials
+- [Docker](tutorials/docker/) - Container and Docker tutorials
+- [Liquibase](tutorials/liquibase/) - Database change management tutorials
+- [Python](tutorials/python/) - Python programming tutorials
+- [OOP](tutorials/oop/) - Object-oriented programming tutorials
+- [Kafka](tutorials/kafka/) - Apache Kafka tutorials
+- [RabbitMQ](tutorials/rabbitmq/) - RabbitMQ messaging tutorials
+- [Certificates](tutorials/certs/) - TLS/SSL certificate tutorials
+- [SSH Agent](tutorials/ssh-agent/) - SSH agent configuration
+
+---
+
+### [explanation/](explanation/) - Understanding-Oriented Documentation
+
+Architecture decisions, design records, and conceptual explanations:
+
+- [Architecture](explanation/architecture/) - System architecture documentation
+  - [Observability](explanation/architecture/observability/) - Monitoring and metrics architecture
+  - [Liquibase](explanation/architecture/liquibase/) - Liquibase implementation guides
+  - [Database CI/CD](explanation/architecture/database-change-cicd/) - Database change pipeline architecture
+- [Design Records](explanation/design-records/) - Design decisions and refactoring plans
+  - [Database Instance OO Design](explanation/design-records/database-instance-oo-design.md)
+  - [Database Instance Refactor Plan](explanation/design-records/database-instance-refactor-plan.md)
+  - [Database Platform OO Design](explanation/design-records/database-platform-oo-design.md)
+
+---
 
 ### [development/](development/) - Development Documentation
 
@@ -21,22 +42,40 @@ This directory contains all project documentation organized by category.
 - [UNIT_TESTING_SUMMARY.md](development/UNIT_TESTING_SUMMARY.md) - Unit testing summary
 - [REFACTORING.md](development/REFACTORING.md) - Refactoring history
 
-### [project_history/](project_history/) - Project History
+---
 
-- [PROMPTS.md](project_history/PROMPTS.md) - AI prompts used to generate project
-- [PROMPT_COMPARISON.md](project_history/PROMPT_COMPARISON.md) - Prompt strategy comparison
-- [PROJECT_STRUCTURE.md](project_history/PROJECT_STRUCTURE.md) - Original structure
-- [NEW_STRUCTURE.md](project_history/NEW_STRUCTURE.md) - Updated structure
-- [PACKAGE_REFACTORING.md](project_history/PACKAGE_REFACTORING.md) - Package refactoring notes
+### [coding-standards/](coding-standards/) - Coding Standards
+
+- [README.md](coding-standards/README.md) - Coding standards overview
+- [Python](coding-standards/python-coding-standards.md) - Python coding standards
+- [PowerShell](coding-standards/powershell-coding-standards.md) - PowerShell coding standards
+- [Language Agnostic](coding-standards/language-agnostic-coding-standards.md) - General coding standards
+- [Systems Design](coding-standards/systems-design-best-practices.md) - Systems design best practices
+
+---
+
+### [runbooks/](runbooks/) - Operational Runbooks
+
+- [README.md](runbooks/README.md) - Runbooks overview
+- [GMSA](runbooks/gmsa/) - Group Managed Service Account runbooks
+
+---
 
 ### [vscode/](vscode/) - VS Code Setup
 
-- [VSCODE_SETUP.md](vscode/VSCODE_SETUP.md) - VS Code configuration guide
-- [VSCODE_WORKSPACE_SUMMARY.md](vscode/VSCODE_WORKSPACE_SUMMARY.md) - Workspace summary
+- [README.md](vscode/README.md) - VS Code documentation index
+- [VSCODE_FEATURES.md](vscode/VSCODE_FEATURES.md) - VS Code features guide
+- [DEVCONTAINER.md](vscode/DEVCONTAINER.md) - Dev container setup
+- [DEVCONTAINER_BEGINNERS_GUIDE.md](vscode/DEVCONTAINER_BEGINNERS_GUIDE.md) - Dev container beginner guide
+- [CICD_INTEGRATION.md](vscode/CICD_INTEGRATION.md) - CI/CD integration guide
+
+---
 
 ### [archive/](archive/) - Archived Files
 
 - [README_old.md](archive/README_old.md) - Original root README
+
+---
 
 ## Component Documentation
 
@@ -48,5 +87,7 @@ For component-specific documentation, see:
 ## Quick Links
 
 - [Workspace Overview](../README.md)
-- [Restructuring Summary](../RESTRUCTURING_SUMMARY.md)
-- [Cleanup Plan](../CLEANUP_PLAN.md)
+
+### Viewing Diagrams
+
+GitHub renders Mermaid diagrams in Markdown natively. Open the architecture files in the GitHub UI to see class and sequence diagrams. In local editors without Mermaid preview, consider exporting SVGs via Mermaid CLI or simply rely on GitHub for viewing.
