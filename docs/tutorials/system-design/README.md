@@ -24,4 +24,4 @@ This directory contains resources for learning System Design, organized into cor
 
 *Step-by-step guides to designing common systems.*
 
-- *Coming Soon*
+- **[URL Shortener (TinyURL)](designs/design_url_shortener.md)**: ID Generation (Base62), NoSQL vs SQL, 301 vs 302.
