@@ -1,0 +1,105 @@
+{
+    "$schema": "https://raw.githubusercontent.com/PowerShell/DSC/main/schemas/2024/04/config/document.json",
+    "metadata": {
+        "description": "Comprehensive Full Stack SQL Server Deployment: Failover Cluster -> SQL Install -> Patching -> Availability Group"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Windows/PSDsc",
+            "name": "WindowsFailoverClustering",
+            "properties": {
+                "PSDscResource": {
+                    "ModuleName": "FailoverClusters",
+                    "Name": "WindowsFeature",
+                    "Settings": {
+                        "Name": "Failover-Clustering",
+                        "Ensure": "Present",
+                        "IncludeAllSubFeature": true
+                    }
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Windows/PSDsc",
+            "name": "SqlSetup",
+            "dependsOn": [
+                "[Microsoft.Windows/PSDsc]WindowsFailoverClustering"
+            ],
+            "properties": {
+                "PSDscResource": {
+                    "ModuleName": "SqlServerDsc",
+                    "Name": "SqlSetup",
+                    "Settings": {
+                        "InstanceName": "MSSQLSERVER",
+                        "Features": "SQLEngine,FullText",
+                        "SourcePath": "C:\\SQLServerInstaller",
+                        "SQLSysAdminAccounts": [
+                            "CONTOSO\\SQLAdmins"
+                        ],
+                        "UpdateEnabled": "True",
+                        "UpdateSource": "MU"
+                    }
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Windows/PSDsc",
+            "name": "SqlPatch",
+            "dependsOn": [
+                "[Microsoft.Windows/PSDsc]SqlSetup"
+            ],
+            "properties": {
+                "PSDscResource": {
+                    "ModuleName": "PSDesiredStateConfiguration",
+                    "Name": "Package",
+                    "Settings": {
+                        "Name": "SQLServerCumulativeUpdate",
+                        "Path": "C:\\Updates\\SQLServer2019-KB456789.exe",
+                        "ProductId": "12345678-90AB-CDEF-1234-567890ABCDEF",
+                        "Arguments": "/quiet /IAcceptSQLServerLicenseTerms /Action=Patch /InstanceName=MSSQLSERVER"
+                    }
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Windows/PSDsc",
+            "name": "SqlAlwaysOnService",
+            "dependsOn": [
+                "[Microsoft.Windows/PSDsc]SqlPatch"
+            ],
+            "properties": {
+                "PSDscResource": {
+                    "ModuleName": "SqlServerDsc",
+                    "Name": "SqlAlwaysOnService",
+                    "Settings": {
+                        "Ensure": "Present",
+                        "Name": "MSSQLSERVER",
+                        "RestartTimeout": 120
+                    }
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Windows/PSDsc",
+            "name": "SqlAG",
+            "dependsOn": [
+                "[Microsoft.Windows/PSDsc]SqlAlwaysOnService"
+            ],
+            "properties": {
+                "PSDscResource": {
+                    "ModuleName": "SqlServerDsc",
+                    "Name": "SqlAG",
+                    "Settings": {
+                        "Ensure": "Present",
+                        "Name": "MyAvailGroup",
+                        "ServerName": "SQLNode1",
+                        "InstanceName": "MSSQLSERVER",
+                        "AutomatedBackupPreference": "Secondary",
+                        "AvailabilityMode": "SynchronousCommit",
+                        "FailoverMode": "Automatic"
+                    }
+                }
+            }
+        }
+    ]
+}

@@ -1,0 +1,45 @@
+{
+    "$schema": "https://raw.githubusercontent.com/PowerShell/DSC/main/schemas/2024/04/config/document.json",
+    "metadata": {
+        "description": "Creates a SQL Server Availability Group using SqlServerDsc via the PSDsc adapter."
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Windows/PSDsc",
+            "name": "SqlAlwaysOnService",
+            "properties": {
+                "PSDscResource": {
+                    "ModuleName": "SqlServerDsc",
+                    "Name": "SqlAlwaysOnService",
+                    "Settings": {
+                        "Ensure": "Present",
+                        "Name": "MSSQLSERVER",
+                        "RestartTimeout": 120
+                    }
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Windows/PSDsc",
+            "name": "SqlAG",
+            "dependsOn": [
+                "[Microsoft.Windows/PSDsc]SqlAlwaysOnService"
+            ],
+            "properties": {
+                "PSDscResource": {
+                    "ModuleName": "SqlServerDsc",
+                    "Name": "SqlAG",
+                    "Settings": {
+                        "Ensure": "Present",
+                        "Name": "MyAvailGroup",
+                        "ServerName": "SQLNode1",
+                        "InstanceName": "MSSQLSERVER",
+                        "AutomatedBackupPreference": "Secondary",
+                        "AvailabilityMode": "SynchronousCommit",
+                        "FailoverMode": "Automatic"
+                    }
+                }
+            }
+        }
+    ]
+}

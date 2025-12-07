@@ -1,0 +1,22 @@
+{
+    "$schema": "https://raw.githubusercontent.com/PowerShell/DSC/main/schemas/2024/04/config/document.json",
+    "metadata": {
+        "description": "Sets 'Log on as a service' right for a specific account using the classic SecurityPolicyDsc module via the DSC v3 adapter."
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Windows/PSDsc",
+            "name": "LogOnAsServiceRight",
+            "properties": {
+                "PSDscResource": {
+                    "ModuleName": "SecurityPolicyDsc",
+                    "Name": "UserRightsAssignment",
+                    "Settings": {
+                        "Policy": "Log_on_as_a_service",
+                        "Identity": "CONTOSO\\MyServiceAccount"
+                    }
+                }
+            }
+        }
+    ]
+}

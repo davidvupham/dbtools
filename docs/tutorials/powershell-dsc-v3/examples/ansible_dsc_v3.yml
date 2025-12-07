@@ -1,0 +1,17 @@
+---
+- name: Apply DSC v3 Configuration on Windows
+  hosts: windows
+  tasks:
+    - name: Copy DSC configuration file to target
+      ansible.windows.win_copy:
+        src: ./simple_file.dsc.json
+        dest: C:\Temp\simple_file.dsc.json
+
+    - name: Apply configuration using dsc.exe
+      ansible.windows.win_command: |
+        dsc.exe config set --file C:\Temp\simple_file.dsc.json
+      register: dsc_result
+
+    - name: Show DSC Output
+      debug:
+        var: dsc_result.stdout_lines

@@ -1,0 +1,71 @@
+{
+    "$schema": "https://raw.githubusercontent.com/PowerShell/DSC/main/schemas/2024/04/config/document.json",
+    "metadata": {
+        "description": "Configures a Multi-Replica (3 nodes) Availability Group using SqlServerDsc via the PSDsc adapter."
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Windows/PSDsc",
+            "name": "SqlAG",
+            "properties": {
+                "PSDscResource": {
+                    "ModuleName": "SqlServerDsc",
+                    "Name": "SqlAG",
+                    "Settings": {
+                        "Ensure": "Present",
+                        "Name": "MyMultiNodeAG",
+                        "ServerName": "SQLPrimary",
+                        "InstanceName": "MSSQLSERVER",
+                        "AutomatedBackupPreference": "Secondary",
+                        "AvailabilityMode": "SynchronousCommit",
+                        "FailoverMode": "Automatic"
+                    }
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Windows/PSDsc",
+            "name": "SqlAGReplica_Node2",
+            "dependsOn": [
+                "[Microsoft.Windows/PSDsc]SqlAG"
+            ],
+            "properties": {
+                "PSDscResource": {
+                    "ModuleName": "SqlServerDsc",
+                    "Name": "SqlAGReplica",
+                    "Settings": {
+                        "Ensure": "Present",
+                        "Name": "SQLNode2",
+                        "AvailabilityGroupName": "MyMultiNodeAG",
+                        "ServerName": "SQLPrimary",
+                        "InstanceName": "MSSQLSERVER",
+                        "AvailabilityMode": "SynchronousCommit",
+                        "FailoverMode": "Automatic"
+                    }
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Windows/PSDsc",
+            "name": "SqlAGReplica_Node3",
+            "dependsOn": [
+                "[Microsoft.Windows/PSDsc]SqlAG"
+            ],
+            "properties": {
+                "PSDscResource": {
+                    "ModuleName": "SqlServerDsc",
+                    "Name": "SqlAGReplica",
+                    "Settings": {
+                        "Ensure": "Present",
+                        "Name": "SQLNode3",
+                        "AvailabilityGroupName": "MyMultiNodeAG",
+                        "ServerName": "SQLPrimary",
+                        "InstanceName": "MSSQLSERVER",
+                        "AvailabilityMode": "AsynchronousCommit",
+                        "FailoverMode": "Manual"
+                    }
+                }
+            }
+        }
+    ]
+}

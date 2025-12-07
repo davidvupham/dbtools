@@ -1,0 +1,13 @@
+{
+    "$schema": "https://raw.githubusercontent.com/PowerShell/DSC/main/schemas/2024/04/config/document.json",
+    "resources": [
+        {
+            "name": "MyTestFile",
+            "type": "File",
+            "properties": {
+                "destinationPath": "/tmp/testfile.txt",
+                "contents": "Hello from DSC v3!"
+            }
+        }
+    ]
+}

@@ -1,0 +1,19 @@
+{
+    "$schema": "https://raw.githubusercontent.com/PowerShell/DSC/main/schemas/2024/04/config/document.json",
+    "resources": [
+        {
+            "type": "Microsoft.Windows/PSDsc",
+            "name": "SetTimeZone",
+            "properties": {
+                "PSDscResource": {
+                    "ModuleName": "ComputerManagementDsc",
+                    "Name": "TimeZone",
+                    "Settings": {
+                        "IsSingleInstance": "Yes",
+                        "TimeZone": "Central Standard Time"
+                    }
+                }
+            }
+        }
+    ]
+}
