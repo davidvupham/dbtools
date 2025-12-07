@@ -1,87 +1,228 @@
 # Chapter 9: Persistence with Volumes and Mounts
 
-- Named volumes for lifecycle‑managed data.
-- Bind mounts to map host folders into containers.
+By default, data written inside a container is **ephemeral**—it disappears when the container is removed. This chapter teaches you how to persist data.
+
+## The Problem: Ephemeral Containers
 
 ```bash
-# Named volume
-docker volume create mydata
-docker run -d --name pg -v mydata:/var/lib/postgresql/data -e POSTGRES_PASSWORD=secret -p 5432:5432 postgres:16-alpine
+# Run a container, create a file
+docker run -it --name test alpine sh
+/ # echo "important data" > /myfile.txt
+/ # exit
 
-# Bind mount current dir
-docker run --rm -it -v "$PWD":/work -w /work alpine:3.19 ls -la
+# Remove the container
+docker rm test
+
+# The file is gone forever!
 ```
-
-Backups:
-- Use `docker run --rm -v vol:/data -v "$PWD":/backup alpine tar czf /backup/vol_backup.tgz -C /data .`
 
 ---
 
-## Choosing between bind mounts and named volumes
+## Solution 1: Named Volumes (Recommended)
 
-- Bind mounts:
-  - Pros: Great for local development (live code reload), uses an exact host path
-  - Cons: OS-dependent semantics; slower on macOS/WSL2; permission mismatches
-- Named volumes:
-  - Pros: Managed by Docker; portable; fast on macOS/WSL2; safer for databases
-  - Cons: Not directly browsable on host without helper containers
+Named volumes are managed by Docker and are the preferred way to persist data.
+
+### Create and Use a Volume
 
 ```bash
-# Bind mount (host → container)
-docker run -d --name web -p 8080:80 \
-  -v $(pwd)/site:/usr/share/nginx/html:ro \
-  nginx:alpine
+# Create a volume
+docker volume create mydata
 
-# Named volume for Postgres data
-docker volume create pgdata
+# Run a container with the volume attached
 docker run -d --name db \
-  -e POSTGRES_PASSWORD=secret \
-  -v pgdata:/var/lib/postgresql/data \
-  postgres:15-alpine
+  -v mydata:/var/lib/postgresql/data \
+  postgres:15
 
-# Inspect volumes
+# Data in /var/lib/postgresql/data persists even if container is removed
+```
+
+### Common Volume Commands
+
+```bash
+# List all volumes
 docker volume ls
-docker volume inspect pgdata
+
+# Inspect a volume (see where it's stored)
+docker volume inspect mydata
+
+# Remove a volume
+docker volume rm mydata
+
+# Remove all unused volumes
+docker volume prune
 ```
 
-## Backup and restore patterns
+### Why Named Volumes?
+
+| Feature | Named Volume |
+| :--- | :--- |
+| Managed by Docker | ✅ Yes |
+| Portable across hosts | ✅ With backup/restore |
+| Works on all platforms | ✅ Yes |
+| Easy backup | ✅ With helper containers |
+
+---
+
+## Solution 2: Bind Mounts
+
+Bind mounts link a **host directory** directly into the container. Useful for development.
 
 ```bash
-# Backup a named volume to a tarball in the current directory
+# Mount current directory into container
+docker run -it \
+  -v $(pwd):/app \
+  node:18 sh
+
+# Changes in /app inside container appear on your host, and vice versa
+```
+
+### Bind Mount Syntax
+
+```bash
+# Long form (recommended for clarity)
+docker run -v /host/path:/container/path myimage
+
+# Read-only mount
+docker run -v /host/path:/container/path:ro myimage
+```
+
+### When to Use Bind Mounts
+
+| Use Case | Bind Mount? |
+| :--- | :--- |
+| Development (live code reload) | ✅ Yes |
+| Production data storage | ❌ Use volumes |
+| Config files | ✅ Yes |
+| Sharing data between host and container | ✅ Yes |
+
+> [!WARNING]
+> Bind mounts depend on the host's filesystem structure. They can break portability.
+
+---
+
+## Volumes in Docker Compose
+
+```yaml
+services:
+  db:
+    image: postgres:15
+    volumes:
+      - db-data:/var/lib/postgresql/data  # Named volume
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql  # Bind mount
+
+volumes:
+  db-data:  # Declare the named volume
+```
+
+---
+
+## Backing Up and Restoring Volumes
+
+### Backup a Volume
+
+```bash
 docker run --rm \
-  -v pgdata:/data:ro \
+  -v mydata:/data \
   -v $(pwd):/backup \
-  busybox sh -c 'tar czf /backup/pgdata-backup.tgz -C /data .'
-
-# Restore into a new volume
-docker volume create pgdata_restored
-docker run --rm \
-  -v pgdata_restored:/data \
-  -v $(pwd):/backup:ro \
-  busybox sh -c 'cd /data && tar xzf /backup/pgdata-backup.tgz'
+  alpine tar czf /backup/mydata-backup.tar.gz -C /data .
 ```
 
-Tips:
-- Prefer consistent tagging/versioned backups (include date/hash in filename).
-- Quiesce apps or use database-native backup tooling for consistency.
-
-## Permissions and ownership
-
-- For bind mounts on Linux, align container user with host UID/GID or set proper ownership on the host path (`chown`).
-- Avoid running containers as root just to “fix” permissions—use `USER` and proper ownership instead.
-- For macOS/WSL2, prefer named volumes for databases and high I/O workloads.
-
-## Performance notes
-
-- macOS/WSL2: bind mounts cross a VM boundary and can be slow; named volumes perform better.
-- Linux: bind mounts are generally fast; still consider named volumes for data integrity and portability.
-
-## Cleaning up and auditing data usage
+### Restore a Volume
 
 ```bash
-docker system df                # High-level disk usage
-docker volume ls                # List volumes
-docker volume inspect <name>    # Inspect a specific volume
-docker volume rm <name>         # Remove (must not be in use)
-docker volume prune             # Remove all unused volumes
+docker run --rm \
+  -v mydata:/data \
+  -v $(pwd):/backup \
+  alpine tar xzf /backup/mydata-backup.tar.gz -C /data
 ```
+
+---
+
+## Common Pitfalls
+
+### 1. Permission Issues
+
+The user inside the container (often `root` or a specific UID) must match the permissions on the host directory.
+
+**Fix:**
+
+```bash
+# Run as a specific user ID
+docker run -u $(id -u):$(id -g) -v $(pwd):/app myimage
+```
+
+### 2. Overwriting Container Contents
+
+If you mount to a directory that already has files in the image, the mount **hides** those files.
+
+**Example:**
+
+```bash
+# This hides the default nginx files!
+docker run -v $(pwd)/empty:/usr/share/nginx/html nginx
+```
+
+### 3. Forgetting to Declare Volumes in Compose
+
+If you don't declare the volume in the `volumes:` section at the bottom of your `docker-compose.yml`, Docker creates an anonymous volume that's hard to manage.
+
+---
+
+## Summary
+
+| Method | Use Case | Managed by Docker? |
+| :--- | :--- | :--- |
+| **Named Volume** | Production data (databases, user uploads) | ✅ Yes |
+| **Bind Mount** | Development (live editing), config files | ❌ No (host filesystem) |
+| **tmpfs** | Sensitive data that shouldn't persist | ✅ Yes (in memory) |
+
+---
+
+## Volume Architecture
+
+```mermaid
+flowchart TB
+    subgraph Container["Container Filesystem"]
+        App["/app (read-only)"]
+        Data["/data (volume mount)"]
+    end
+
+    subgraph Host["Host Machine"]
+        Vol[(Docker Volume)]
+        Bind[Host Directory]
+    end
+
+    Data <--> Vol
+    App <-.-> Bind
+```
+
+---
+
+## Exercises
+
+### Exercise 1: Create and Inspect a Volume
+
+```bash
+docker volume create test-vol
+docker volume inspect test-vol
+docker run --rm -v test-vol:/data alpine sh -c "echo 'Hello' > /data/test.txt"
+docker run --rm -v test-vol:/data alpine cat /data/test.txt
+docker volume rm test-vol
+```
+
+### Exercise 2: Backup and Restore
+
+1. Use the scripts in `examples/volumes/` to backup a volume
+2. Create a new volume and restore the backup
+3. Verify the data survived
+
+### Exercise 3: Bind Mount for Development
+
+1. Create a simple HTML file locally
+2. Mount it into nginx: `docker run -v $(pwd):/usr/share/nginx/html:ro -p 8080:80 nginx`
+3. Edit the HTML file on your host
+4. Refresh the browser to see changes
+
+---
+
+**Next Chapter:** Explore advanced storage options in **Chapter 10: Advanced Data & Storage**.

@@ -1,0 +1,26 @@
+# Security Demo - Docker Compose
+# Demonstrates runtime security options
+
+services:
+  web:
+    build: .
+    ports:
+      - "8080:8080"
+
+    # Security hardening options
+    read_only: true           # Read-only root filesystem
+    security_opt:
+      - no-new-privileges:true  # Prevent privilege escalation
+    cap_drop:
+      - ALL                   # Drop all capabilities
+
+    # Writable directories for app needs
+    tmpfs:
+      - /tmp:size=10m,mode=1777
+
+    # Resource limits (prevent DoS)
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 128M

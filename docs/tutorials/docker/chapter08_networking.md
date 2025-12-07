@@ -57,6 +57,17 @@ flowchart LR
 - Built-in DNS-based service discovery by container name.
 - Automatic isolation from other networks; explicit joins only.
 
+### Default Bridge vs User-Defined Bridge
+
+| Feature | Default Bridge (`bridge`) | User-Defined Bridge (`my-net`) |
+| :--- | :--- | :--- |
+| **Service Discovery** | ❌ IP address only (via `/etc/hosts`) | ✅ Automatic DNS resolution by name |
+| **Isolation** | ❌ All containers connect here by default | ✅ Verified isolation |
+| **Configurability** | ❌ Hard to change MTU/Gateway | ✅ Fully configurable |
+| **Hot Attach** | ❌ Must stop container to detach | ✅ Can connect/disconnect running containers |
+
+**Verdict:** Always create your own network for applications.
+
 ```bash
 # Create an isolated bridge network
 docker network create app-net
@@ -130,6 +141,7 @@ docker network create -d macvlan \
 ```
 
 Warnings:
+
 - Many home/small office switches/APs block promiscuous MACs or have port-security policies.
 - Troubleshoot with `docker network inspect`, `ip a`, and switch logs.
 

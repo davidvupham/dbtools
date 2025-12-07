@@ -1,95 +1,280 @@
 # Chapter 16: CI/CD for Containers
 
-- Build on CI: tag with version/commit, push to registry
-- Multi‑arch builds with buildx
-- Scan images and fail builds on critical CVEs
+Automate building, testing, scanning, and deploying Docker images in your CI/CD pipeline.
 
-```bash
-# Buildx quick start
-docker buildx create --use --name mybuilder
-docker buildx build --platform linux/amd64,linux/arm64 -t REPO/app:1.0 --push .
+## The CI/CD Pipeline for Containers
+
+```
+┌─────────┐   ┌─────────┐   ┌─────────┐   ┌─────────┐   ┌─────────┐
+│  Code   │ → │  Build  │ → │  Test   │ → │  Scan   │ → │  Push   │ → Deploy
+│ Commit  │   │  Image  │   │ in Ctnr │   │  CVEs   │   │Registry │
+└─────────┘   └─────────┘   └─────────┘   └─────────┘   └─────────┘
 ```
 
 ---
 
-## GitHub Actions example (Docker Hub)
+## Building Images in CI
+
+### GitHub Actions Example
 
 ```yaml
-name: ci
+# .github/workflows/docker.yml
+name: Build and Push
+
 on:
   push:
-    branches: [ main ]
-    tags: [ 'v*.*.*' ]
+    branches: [main]
+
 jobs:
-  build-and-push:
+  build:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
-      - uses: docker/setup-buildx-action@v3
-      - uses: docker/login-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - uses: docker/build-push-action@v6
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
         with:
           context: .
-          platforms: linux/amd64,linux/arm64
           push: true
           tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/app:latest
-            ${{ secrets.DOCKERHUB_USERNAME }}/app:${{ github.sha }}
-          cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/app:buildcache
-          cache-to: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/app:buildcache,mode=max
-
-  scan:
-    needs: build-and-push
-    runs-on: ubuntu-latest
-    steps:
-      - name: Trivy scan
-        uses: aquasecurity/trivy-action@0.24.0
-        with:
-          image-ref: ${{ secrets.DOCKERHUB_USERNAME }}/app:${{ github.sha }}
-          format: 'table'
-          exit-code: '1'
-          severity: 'CRITICAL,HIGH'
+            myorg/myapp:${{ github.sha }}
+            myorg/myapp:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 ```
 
-## GitLab CI example
+### Key Features
+
+- **Buildx**: Modern builder with caching and multi-platform support
+- **`cache-from/cache-to`**: Use GitHub Actions cache for faster builds
+- **Tag with SHA**: Unique identifier for each build
+
+---
+
+## Multi-Platform Builds
+
+Build images that work on both AMD64 (Intel/AMD) and ARM64 (Apple Silicon, AWS Graviton).
 
 ```yaml
-stages: [build, scan]
-
-build:
-  stage: build
-  image: docker:24
-  services: [docker:24-dind]
-  variables:
-    DOCKER_TLS_CERTDIR: ""
-  script:
-    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
-    - docker buildx create --use || true
-    - docker buildx build --platform linux/amd64,linux/arm64 \
-        -t $CI_REGISTRY_IMAGE:${CI_COMMIT_SHA} --push .
-
-scan:
-  stage: scan
-  image: aquasec/trivy:latest
-  script:
-    - trivy image --exit-code 1 --severity CRITICAL,HIGH $CI_REGISTRY_IMAGE:${CI_COMMIT_SHA}
+- name: Build and push (multi-arch)
+  uses: docker/build-push-action@v5
+  with:
+    context: .
+    platforms: linux/amd64,linux/arm64
+    push: true
+    tags: myorg/myapp:latest
 ```
 
-## Tagging and promotion strategy
+### CLI Example
 
-- Push immutable tags per commit (e.g., SHA) and per release (e.g., 1.2.3).
-- Update moving tags (`latest`, major/minor lines) only after promotion.
-- Use distinct repos or tags for environments (dev/stage/prod) and promote by retagging.
+```bash
+# Create a builder
+docker buildx create --name multiarch --use
 
-## Caching for speed
+# Build for multiple platforms
+docker buildx build \
+  --platform linux/amd64,linux/arm64 \
+  -t myorg/myapp:latest \
+  --push .
+```
 
-- Export/import BuildKit cache to a registry to reuse across CI runners.
-- Keep Dockerfiles cache-friendly: install dependencies before copying source when possible.
+---
 
-## Policy and supply chain
+## Running Tests in Containers
 
-- Scan images in CI and on a schedule; fail on critical vulnerabilities.
-- Generate and store SBOMs; consider signing images and enforcing signature policies.
+### In GitHub Actions
+
+```yaml
+- name: Run tests
+  run: |
+    docker compose -f docker-compose.test.yml up --abort-on-container-exit
+    docker compose -f docker-compose.test.yml down
+```
+
+### Test Compose File
+
+```yaml
+# docker-compose.test.yml
+services:
+  test:
+    build: .
+    command: npm test
+    environment:
+      - NODE_ENV=test
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_PASSWORD: test
+    healthcheck:
+      test: ["CMD", "pg_isready"]
+      interval: 5s
+      retries: 5
+```
+
+---
+
+## Image Scanning in CI
+
+Scan for vulnerabilities before pushing to production.
+
+### With Trivy
+
+```yaml
+- name: Scan image
+  uses: aquasecurity/trivy-action@master
+  with:
+    image-ref: myorg/myapp:${{ github.sha }}
+    exit-code: '1'           # Fail pipeline on vulnerabilities
+    severity: 'CRITICAL,HIGH'
+    format: 'sarif'
+    output: 'trivy-results.sarif'
+
+- name: Upload scan results
+  uses: github/codeql-action/upload-sarif@v2
+  with:
+    sarif_file: 'trivy-results.sarif'
+```
+
+### With Docker Scout
+
+```yaml
+- name: Analyze with Docker Scout
+  uses: docker/scout-action@v1
+  with:
+    command: cves
+    image: myorg/myapp:${{ github.sha }}
+    only-severities: critical,high
+    exit-code: true
+```
+
+---
+
+## Caching Strategies
+
+### Layer Caching with Registry
+
+```yaml
+- name: Build with cache
+  uses: docker/build-push-action@v5
+  with:
+    context: .
+    push: true
+    tags: myorg/myapp:latest
+    cache-from: type=registry,ref=myorg/myapp:buildcache
+    cache-to: type=registry,ref=myorg/myapp:buildcache,mode=max
+```
+
+### GitHub Actions Cache
+
+```yaml
+cache-from: type=gha
+cache-to: type=gha,mode=max
+```
+
+---
+
+## Tagging Strategies
+
+```yaml
+- name: Generate tags
+  id: meta
+  uses: docker/metadata-action@v5
+  with:
+    images: myorg/myapp
+    tags: |
+      type=sha,prefix=
+      type=ref,event=branch
+      type=semver,pattern={{version}}
+      type=semver,pattern={{major}}.{{minor}}
+
+# Produces tags like:
+# myorg/myapp:abc1234
+# myorg/myapp:main
+# myorg/myapp:1.2.3
+# myorg/myapp:1.2
+```
+
+---
+
+## Complete Pipeline Example
+
+```yaml
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          load: true
+          tags: myapp:test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Run tests
+        run: docker run --rm myapp:test npm test
+
+      - name: Scan for vulnerabilities
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: myapp:test
+          exit-code: '1'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Login to registry
+        if: github.ref == 'refs/heads/main'
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Push to registry
+        if: github.ref == 'refs/heads/main'
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: myorg/myapp:${{ github.sha }},myorg/myapp:latest
+```
+
+---
+
+## Summary
+
+| Stage | Tools |
+| :--- | :--- |
+| Build | `docker buildx`, `docker/build-push-action` |
+| Test | `docker compose run`, container-based tests |
+| Scan | Trivy, Docker Scout, Snyk |
+| Push | Docker Hub, GHCR, ECR, Artifactory |
+| Cache | Registry cache, GitHub Actions cache |
+
+**Next Chapter:** Debug common issues in **Chapter 18: Troubleshooting & Debugging**.
