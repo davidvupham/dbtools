@@ -1,4 +1,5 @@
 # Python Tutorial Series for Beginners
+
 ## Learn Python Through the Snowflake Monitoring Project
 
 Welcome! This tutorial series will teach you Python from the ground up, using real examples from our Snowflake monitoring codebase. By the end, you'll understand not just **what** the code does, but **why** it was written this way.
@@ -18,10 +19,10 @@ Start here if you're new to Python or programming:
 
 ### Additional Tutorials
 
-- **[PowerShell Beginner's Tutorial](PowerShellBeginnersTutorial.md)** - Learn PowerShell from basics to object-oriented programming
-   - Abstract Base Classes
-   - Error handling
-   - Type hints
+- **[PowerShell Beginner's Tutorial](powershell/powershell-beginners-tutorial.md)** - Learn PowerShell from basics to object-oriented programming
+  - Abstract Base Classes
+  - Error handling
+  - Type hints
 
 2. **[Part 2: Advanced Concepts](python/01_PYTHON_BASICS_PART2.md)**
    - Decorators
@@ -72,26 +73,26 @@ For comprehensive OOP understanding:
 
 Once you understand the basics, dive into specific modules:
 
-6. **[Vault Module Tutorial](02_VAULT_MODULE_TUTORIAL.md)**
+6. **[Vault Module Tutorial](gds-vault/02-vault-module-tutorial.md)**
    - HashiCorp Vault integration
    - Secret management
    - Authentication and caching
    - Retry logic
 
-7. **[GDS Vault Deep Dive](05_GDS_VAULT_PYTHON_CONCEPTS.md)** ⭐ NEW!
+7. **[GDS Vault Deep Dive](gds-vault/05-gds-vault-python-concepts.md)** ⭐ NEW!
    - All Python concepts used in gds_vault
    - Abstract Base Classes with real examples
    - Properties, Magic Methods, Context Managers
    - Strategy Pattern and Composition
    - Complete concept-to-code mapping
 
-8. **[Connection Module Tutorial](03_CONNECTION_MODULE_TUTORIAL.md)**
+8. **[Connection Module Tutorial](gds-snowflake/03-connection-module-tutorial.md)**
    - Snowflake connections
    - Database operations
    - Connection management
    - Context managers in practice
 
-9. **[Replication Module Tutorial](04_REPLICATION_MODULE_TUTORIAL.md)**
+9. **[Replication Module Tutorial](gds-snowflake/04-replication-module-tutorial.md)**
    - Replication monitoring
    - Failover groups
    - Cron schedule parsing
@@ -165,6 +166,7 @@ Master concepts through progressive exercises:
 ### Learn by Example
 
 Every concept is explained with:
+
 1. **Simple examples** - Easy to understand
 2. **Real code from our project** - See it in action
 3. **Explanations of "why"** - Understand the reasoning
@@ -199,9 +201,10 @@ Skim [Part 1](python/01_PYTHON_BASICS_FOR_THIS_PROJECT.md) to review basics. Con
 ### Want to Understand Specific Code?
 
 Jump to the relevant module tutorial:
-- Vault integration → [Vault Tutorial](02_VAULT_MODULE_TUTORIAL.md)
-- Database connections → [Connection Tutorial](03_CONNECTION_MODULE_TUTORIAL.md)
-- Replication monitoring → [Replication Tutorial](04_REPLICATION_MODULE_TUTORIAL.md)
+
+- Vault integration → [Vault Tutorial](gds-vault/02-vault-module-tutorial.md)
+- Database connections → [Connection Tutorial](gds-snowflake/03-connection-module-tutorial.md)
+- Replication monitoring → [Replication Tutorial](gds-snowflake/04-replication-module-tutorial.md)
 
 ---
 
@@ -210,6 +213,7 @@ Jump to the relevant module tutorial:
 ### Complete OOP Guide (3031 lines)
 
 **Complete coverage of Object-Oriented Programming:**
+
 - Classes and objects fundamentals
 - Understanding `self` and instance methods
 - Encapsulation and data hiding
@@ -230,6 +234,7 @@ Jump to the relevant module tutorial:
 ### Advanced OOP Concepts (2000+ lines)
 
 **Deep dive into advanced OOP topics:**
+
 - Async/await with classes and concurrent programming
 - Multiple inheritance diamond problem solutions
 - Monkey patching and runtime class modification
@@ -243,30 +248,35 @@ Jump to the relevant module tutorial:
 ### Part 2: Advanced Concepts
 
 **Section 1: Decorators**
+
 - What are decorators?
 - Creating decorators
 - Decorators with arguments
 - Practical examples (@property, @retry)
 
 **Section 2: Context Managers**
+
 - The `with` statement
 - `__enter__` and `__exit__`
 - Creating context managers
 - Resource management
 
 **Section 3: Logging**
+
 - Why logging matters
 - Logging levels
 - Best practices
 - Lazy logging
 
 **Section 4: Modules & Packages**
+
 - Importing modules
 - Creating packages
 - `__init__.py` files
 - Package structure
 
 **Section 5: Design Patterns**
+
 - Factory pattern
 - Singleton pattern
 - Strategy pattern
@@ -274,6 +284,7 @@ Jump to the relevant module tutorial:
 - Template method pattern
 
 **Section 6: Complete Example**
+
 - Putting it all together
 - Real code walkthrough
 - Best practices in action
@@ -285,6 +296,7 @@ Jump to the relevant module tutorial:
 ### 1. Type the Code
 
 Don't just read - type the examples yourself! This helps you:
+
 - Remember syntax
 - Understand structure
 - Catch mistakes
@@ -293,6 +305,7 @@ Don't just read - type the examples yourself! This helps you:
 ### 2. Experiment
 
 Try modifying the examples:
+
 - Change parameters
 - Add new features
 - Break things (on purpose!)
@@ -301,6 +314,7 @@ Try modifying the examples:
 ### 3. Do the Exercises
 
 Each tutorial has practice exercises:
+
 - Reinforce concepts
 - Test understanding
 - Build confidence
@@ -309,6 +323,7 @@ Each tutorial has practice exercises:
 ### 4. Read the Real Code
 
 After learning a concept:
+
 - Find it in our codebase
 - Read the implementation
 - Understand why it's used
@@ -317,6 +332,7 @@ After learning a concept:
 ### 5. Ask Questions
 
 When confused:
+
 - Re-read the explanation
 - Try the example
 - Look at the real code
@@ -329,6 +345,7 @@ When confused:
 By the end of this tutorial series, you will be able to:
 
 ### Understand Python Fundamentals
+
 - ✅ Write Python code with proper syntax
 - ✅ Use variables, functions, and classes
 - ✅ Work with data structures effectively
@@ -336,6 +353,7 @@ By the end of this tutorial series, you will be able to:
 - ✅ Add type hints for clarity
 
 ### Master Object-Oriented Programming
+
 - ✅ Create and use classes
 - ✅ Implement inheritance hierarchies
 - ✅ Use abstract base classes
@@ -343,6 +361,7 @@ By the end of this tutorial series, you will be able to:
 - ✅ Follow SOLID principles
 
 ### Apply Advanced Concepts
+
 - ✅ Create and use decorators
 - ✅ Implement context managers
 - ✅ Use logging effectively
@@ -350,6 +369,7 @@ By the end of this tutorial series, you will be able to:
 - ✅ Apply design patterns
 
 ### Build Real Applications
+
 - ✅ Manage database connections
 - ✅ Handle secrets securely
 - ✅ Implement monitoring systems
@@ -396,16 +416,19 @@ By the end of this tutorial series, you will be able to:
 ## 🔗 Additional Resources
 
 ### Official Documentation
+
 - [Python Documentation](https://docs.python.org/3/)
 - [Python Tutorial](https://docs.python.org/3/tutorial/)
 - [Python Style Guide (PEP 8)](https://pep8.org/)
 
 ### Learning Resources
+
 - [Real Python](https://realpython.com/) - Excellent tutorials
 - [Python Type Checking](https://realpython.com/python-type-checking/)
 - [Design Patterns](https://refactoring.guru/design-patterns/python)
 
 ### Tools
+
 - [Python Tutor](http://pythontutor.com/) - Visualize code execution
 - [mypy](http://mypy-lang.org/) - Type checking
 - [pylint](https://pylint.org/) - Code analysis
@@ -443,6 +466,7 @@ By the end of this tutorial series, you will be able to:
 ## 📝 Feedback and Improvements
 
 This tutorial is a living document. If you find:
+
 - Unclear explanations
 - Missing concepts
 - Errors or typos
@@ -467,9 +491,9 @@ We've created comprehensive documentation to help you master the `gds_vault` pac
 ### Quick Links
 
 - 📘 **[Beginner's Guide](../../gds_vault/BEGINNERS_GUIDE.md)** - Start here! Complete guide from zero
-- 🐍 **[Python Concepts](05_GDS_VAULT_PYTHON_CONCEPTS.md)** - All Python features used in gds_vault
-- 🗺️ **[Learning Path](GDS_VAULT_LEARNING_PATH.md)** - Customized roadmap for your skill level
-- 📋 **[Quick Reference](GDS_VAULT_QUICK_REFERENCE.md)** - Fast lookup and navigation
+- 🐍 **[Python Concepts](gds-vault/05-gds-vault-python-concepts.md)** - All Python features used in gds_vault
+- 🗺️ **[Learning Path](gds-vault/gds-vault-learning-path.md)** - Customized roadmap for your skill level
+- 📋 **[Quick Reference](gds-vault/gds-vault-quick-reference.md)** - Fast lookup and navigation
 - 💻 **[Exercises](exercises/gds_vault_exercises.py)** - Build gds_vault from scratch (9 exercises)
 - ✅ **[Solutions](exercises/gds_vault_exercises_solutions.py)** - Complete solutions
 
@@ -486,22 +510,25 @@ We've created comprehensive documentation to help you master the `gds_vault` pac
 ### Start Learning
 
 **Complete Beginner?** (40-60 hours)
+
 1. Python Basics (Parts 1-3)
 2. Python Concepts in GDS Vault
 3. GDS Vault Beginner's Guide
 4. Complete all exercises
 
 **Intermediate?** (15-20 hours)
+
 1. Python Concepts in GDS Vault
 2. GDS Vault Beginner's Guide
 3. Exercises 5-9
 
 **Advanced?** (5-8 hours)
+
 1. Architecture overview
 2. Source code review
 3. Exercise 9 (complete mini-client)
 
-See **[GDS_VAULT_LEARNING_PATH.md](GDS_VAULT_LEARNING_PATH.md)** for detailed guidance!
+See **[GDS_VAULT_LEARNING_PATH.md](gds-vault/gds-vault-learning-path.md)** for detailed guidance!
 
 ---
 
@@ -529,8 +556,8 @@ See **[GDS_VAULT_LEARNING_PATH.md](GDS_VAULT_LEARNING_PATH.md)** for detailed gu
 | Module | Purpose | Key Classes | Tutorial |
 |--------|---------|-------------|----------|
 | `gds_vault` | Secret management | `VaultClient` | [Beginner's Guide](../../gds_vault/BEGINNERS_GUIDE.md) |
-| `gds_snowflake` | Snowflake operations | `SnowflakeConnection` | [Connection Tutorial](03_CONNECTION_MODULE_TUTORIAL.md) |
-| `replication` | Replication monitoring | `SnowflakeReplication` | [Replication Tutorial](04_REPLICATION_MODULE_TUTORIAL.md) |
+| `gds_snowflake` | Snowflake operations | `SnowflakeConnection` | [Connection Tutorial](gds-snowflake/03-connection-module-tutorial.md) |
+| `replication` | Replication monitoring | `SnowflakeReplication` | [Replication Tutorial](gds-snowflake/04-replication-module-tutorial.md) |
 | `base` | Abstract base classes | `BaseMonitor`, `DatabaseConnection` | Part 1 & 2 |
 
 ---

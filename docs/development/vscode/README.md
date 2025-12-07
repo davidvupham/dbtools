@@ -7,7 +7,9 @@ Welcome to the VS Code and Dev Container documentation for the dbtools project. 
 ### Getting Started
 
 #### 1. [DEVCONTAINER.md](DEVCONTAINER.md) - Quick Reference
+
 **Start here for a quick overview**
+
 - What's included in the dev container
 - How to open in VS Code
 - Basic verification commands
@@ -18,7 +20,9 @@ Welcome to the VS Code and Dev Container documentation for the dbtools project. 
 ---
 
 #### 2. [DEVCONTAINER_BEGINNERS_GUIDE.md](DEVCONTAINER_BEGINNERS_GUIDE.md) - Comprehensive Guide
+
 **Detailed walkthrough for beginners**
+
 - What is a dev container?
 - Step-by-step setup instructions
 - File-by-file explanation (Dockerfile, devcontainer.json, postCreate.sh)
@@ -33,7 +37,9 @@ Welcome to the VS Code and Dev Container documentation for the dbtools project. 
 ### Development Workflows
 
 #### 3. [VSCODE_FEATURES.md](VSCODE_FEATURES.md) - VS Code Features Guide
+
 **Master VS Code for productive development**
+
 - Debugging (Python & PowerShell)
   - 12 pre-configured debug scenarios
   - Breakpoints, logpoints, and debugging tips
@@ -51,7 +57,9 @@ Welcome to the VS Code and Dev Container documentation for the dbtools project. 
 ---
 
 #### 4. [DEVCONTAINER_SQLTOOLS.md](DEVCONTAINER_SQLTOOLS.md) - Database Connectivity
+
 **Comprehensive database connectivity guide**
+
 - Installed tools (Python & PowerShell)
 - Verification commands
 - Python examples:
@@ -71,9 +79,11 @@ Welcome to the VS Code and Dev Container documentation for the dbtools project. 
 ### Platform-Specific Guides
 
 #### 5. [PLATFORM_SPECIFIC.md](PLATFORM_SPECIFIC.md) - Platform Optimization
+
 **Platform-specific setup and optimization**
 
 **WSL2 (Windows)**:
+
 - Setup instructions
 - Performance optimization
 - File system best practices (critical!)
@@ -81,12 +91,14 @@ Welcome to the VS Code and Dev Container documentation for the dbtools project. 
 - WSL2-specific troubleshooting
 
 **macOS**:
+
 - Docker Desktop setup
 - Apple Silicon (M1/M2/M3) considerations
 - VirtioFS acceleration
 - Performance optimization
 
 **Linux**:
+
 - Docker installation (Ubuntu, Fedora, RHEL)
 - Non-root configuration
 - SELinux and AppArmor
@@ -99,7 +111,9 @@ Welcome to the VS Code and Dev Container documentation for the dbtools project. 
 ### Advanced Topics
 
 #### 6. [CICD_INTEGRATION.md](CICD_INTEGRATION.md) - CI/CD Integration
+
 **Using dev containers in CI/CD pipelines**
+
 - GitHub Actions workflows
 - GitLab CI configurations
 - Azure DevOps pipelines
@@ -114,7 +128,9 @@ Welcome to the VS Code and Dev Container documentation for the dbtools project. 
 ---
 
 #### 7. [SECURITY_BEST_PRACTICES.md](SECURITY_BEST_PRACTICES.md) - Security Guide
+
 **Security best practices and guidelines**
+
 - Secrets management (environment variables, Vault)
 - Container security
 - Database credential handling
@@ -131,7 +147,9 @@ Welcome to the VS Code and Dev Container documentation for the dbtools project. 
 ### Reference
 
 #### 8. [REVIEW_SUMMARY.md](REVIEW_SUMMARY.md) - Documentation Review
+
 **Summary of documentation improvements**
+
 - Issues identified and resolved
 - New documentation created
 - Changes made to existing docs
@@ -280,6 +298,7 @@ See: [DEVCONTAINER.md](DEVCONTAINER.md#what-you-get)
 The project includes a comprehensive VS Code workspace file: `dbtools.code-workspace`
 
 **Features**:
+
 - 12 pre-configured debug scenarios
 - 18 automation tasks
 - Optimized settings
@@ -287,6 +306,7 @@ The project includes a comprehensive VS Code workspace file: `dbtools.code-works
 - Color theme (Peacock)
 
 **Usage**:
+
 ```bash
 code dbtools.code-workspace
 ```
@@ -329,7 +349,7 @@ See: [SECURITY_BEST_PRACTICES.md](SECURITY_BEST_PRACTICES.md)
 ## 📊 Documentation Map
 
 ```
-docs/vscode/
+docs/development/vscode/
 ├── README.md                           # This file - Start here
 ├── DEVCONTAINER.md                     # Quick reference
 ├── DEVCONTAINER_BEGINNERS_GUIDE.md     # Detailed guide
@@ -366,6 +386,7 @@ docs/vscode/
 ## 📝 Contributing to Documentation
 
 When updating tools or configurations:
+
 1. Update relevant documentation
 2. Test changes in fresh container
 3. Update [REVIEW_SUMMARY.md](REVIEW_SUMMARY.md) if significant
@@ -376,6 +397,7 @@ When updating tools or configurations:
 ## 🎯 Summary
 
 This documentation suite provides:
+
 - ✅ Complete setup instructions for all platforms
 - ✅ Comprehensive feature guides for VS Code
 - ✅ Database connectivity examples

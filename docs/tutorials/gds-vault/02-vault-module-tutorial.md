@@ -184,7 +184,7 @@ def wrapper(*args, **kwargs):
     """Inner function that adds retry logic."""
     last_exception = None
     delay = initial_delay
-    
+
     # Try max_retries times
     for attempt in range(max_retries):
         try:
@@ -192,7 +192,7 @@ def wrapper(*args, **kwargs):
             return func(*args, **kwargs)
         except retriable_exceptions as e:
             last_exception = e
-            
+
             # On last attempt, give up
             if attempt == max_retries:
                 logger.error(
@@ -202,7 +202,7 @@ def wrapper(*args, **kwargs):
                     e
                 )
                 raise
-            
+
             # Wait before retrying (exponential backoff)
             current_delay = min(delay, max_delay)
             logger.warning(
@@ -214,7 +214,7 @@ def wrapper(*args, **kwargs):
             )
             time.sleep(current_delay)
             delay *= backoff_factor  # Double the delay
-    
+
     # If we get here, something went wrong
     raise last_exception
 ```
@@ -307,7 +307,7 @@ def __exit__(self, exc_type, exc_val, exc_tb):
         )
     else:
         logger.debug("Exiting VaultClient context manager")
-    
+
     # Clean up
     self.clear_cache()
     return False
@@ -338,24 +338,24 @@ with VaultClient(vault_addr="...") as client:
 def _authenticate(self) -> str:
     """
     Authenticate with Vault using AppRole and return a client token.
-    
+
     Returns:
         str: Client token
-        
+
     Raises:
         VaultError: If authentication fails
     """
     logger.info("Authenticating with Vault at %s", self.vault_addr)
-    
+
     # Construct login URL
     login_url = f"{self.vault_addr}/v1/auth/approle/login"
-    
+
     # Prepare credentials
     login_payload = {
         "role_id": self.role_id,
         "secret_id": self.secret_id
     }
-    
+
     try:
         # Send authentication request
         resp = requests.post(
@@ -366,7 +366,7 @@ def _authenticate(self) -> str:
     except requests.RequestException as e:
         logger.error("Network error connecting to Vault: %s", e)
         raise VaultError(f"Failed to connect to Vault: {e}") from e
-    
+
     # Check if authentication succeeded
     if not resp.ok:
         logger.error(
@@ -375,21 +375,21 @@ def _authenticate(self) -> str:
             resp.text
         )
         raise VaultError(f"Vault AppRole login failed: {resp.text}")
-    
+
     # Extract token from response
     auth_data = resp.json()["auth"]
     self._token = auth_data["client_token"]
-    
+
     # Calculate token expiry (lease_duration - 5 minutes safety buffer)
     lease_duration = auth_data.get("lease_duration", 3600)
     self._token_expiry = time.time() + lease_duration - 300
-    
+
     logger.info(
         "Successfully authenticated with Vault. Token valid for %ss",
         lease_duration
     )
     logger.debug("Token will be refreshed at %s", self._token_expiry)
-    
+
     return self._token
 ```
 
@@ -403,7 +403,7 @@ def _authenticate(self) -> str:
 
 4. **Prepare credentials**: Role ID and Secret ID
 
-5. **Send HTTP POST request**: 
+5. **Send HTTP POST request**:
    ```python
    resp = requests.post(login_url, json=login_payload, timeout=10)
    ```
@@ -448,15 +448,15 @@ def get_secret(
 ) -> Dict[str, Any]:
     """
     Retrieve a secret from Vault.
-    
+
     Args:
         secret_path: Path to the secret (e.g., 'secret/data/myapp')
         version: Specific version to retrieve (optional)
         use_cache: Whether to use cached secrets (default: True)
-        
+
     Returns:
         dict: Secret data
-        
+
     Raises:
         VaultError: If secret fetch fails
     """
@@ -619,11 +619,11 @@ with VaultClient() as client:
     # Get multiple secrets
     db_secret = client.get_secret("secret/data/database")
     api_secret = client.get_secret("secret/data/api")
-    
+
     # Use secrets
     connect_to_db(db_secret["password"])
     call_api(api_secret["api_key"])
-    
+
 # Automatically cleans up when done
 ```
 

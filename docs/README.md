@@ -73,22 +73,22 @@ Architecture decisions, design records, and conceptual explanations:
 
 ### [development/](development/) - Development Documentation
 
-- [TESTING.md](development/TESTING.md) - Complete testing guide
-- [TESTING_QUICK_REF.md](development/TESTING_QUICK_REF.md) - Quick testing reference
-- [UNIT_TESTING_SUMMARY.md](development/UNIT_TESTING_SUMMARY.md) - Unit testing summary
-- [REFACTORING.md](development/REFACTORING.md) - Refactoring history
+- [TESTING.md](development/testing.md) - Complete testing guide
+- [TESTING_QUICK_REF.md](development/testing-quick-ref.md) - Quick testing reference
+- [UNIT_TESTING_SUMMARY.md](development/unit-testing-summary.md) - Unit testing summary
+- [REFACTORING.md](development/refactoring.md) - Refactoring history
 
 ---
 
-### [coding-standards/](coding-standards/) - Coding Standards
+### [coding-standards/](development/coding-standards/) - Coding Standards
 
-- [README.md](coding-standards/README.md) - Coding standards overview
-- [Python](coding-standards/python-coding-standards.md) - Python coding standards
-- [PowerShell](coding-standards/powershell-coding-standards.md) - PowerShell coding standards
-- [Language Agnostic](coding-standards/language-agnostic-coding-standards.md) - General coding standards
-- [Systems Design](coding-standards/systems-design-best-practices.md) - Systems design best practices
-- [Enforcement Guide](coding-standards/enforcement-guide.md) - Guide on enforcing coding standards
-- [General Standards](coding-standards/coding-standards.md) - Additional general coding standards
+- [README.md](development/coding-standards/README.md) - Coding standards overview
+- [Python](development/coding-standards/python-coding-standards.md) - Python coding standards
+- [PowerShell](development/coding-standards/powershell-coding-standards.md) - PowerShell coding standards
+- [Language Agnostic](development/coding-standards/language-agnostic-coding-standards.md) - General coding standards
+- [Systems Design](development/coding-standards/systems-design-best-practices.md) - Systems design best practices
+- [Enforcement Guide](development/coding-standards/enforcement-guide.md) - Guide on enforcing coding standards
+- [General Standards](development/coding-standards/coding-standards.md) - Additional general coding standards
 
 ---
 
@@ -99,16 +99,16 @@ Architecture decisions, design records, and conceptual explanations:
 
 ---
 
-### [vscode/](vscode/) - VS Code Setup
+### [vscode/](development/vscode/) - VS Code Setup
 
-- [README.md](vscode/README.md) - VS Code documentation index
-- [VSCODE_FEATURES.md](vscode/VSCODE_FEATURES.md) - VS Code features guide
-- [DEVCONTAINER.md](vscode/DEVCONTAINER.md) - Dev container setup
-- [DEVCONTAINER_BEGINNERS_GUIDE.md](vscode/DEVCONTAINER_BEGINNERS_GUIDE.md) - Dev container beginner guide
-- [CICD_INTEGRATION.md](vscode/CICD_INTEGRATION.md) - CI/CD integration guide
-- [DEVCONTAINER_SQLTOOLS.md](vscode/DEVCONTAINER_SQLTOOLS.md) - SQLTools extension configuration in Dev Container
-- [PLATFORM_SPECIFIC.md](vscode/PLATFORM_SPECIFIC.md) - Platform-specific VS Code settings (Windows/Linux/macOS)
-- [SECURITY_BEST_PRACTICES.md](vscode/SECURITY_BEST_PRACTICES.md) - Security best practices for VS Code development
+- [README.md](development/vscode/README.md) - VS Code documentation index
+- [VSCODE_FEATURES.md](development/vscode/VSCODE_FEATURES.md) - VS Code features guide
+- [DEVCONTAINER.md](development/vscode/DEVCONTAINER.md) - Dev container setup
+- [DEVCONTAINER_BEGINNERS_GUIDE.md](development/vscode/DEVCONTAINER_BEGINNERS_GUIDE.md) - Dev container beginner guide
+- [CICD_INTEGRATION.md](development/vscode/CICD_INTEGRATION.md) - CI/CD integration guide
+- [DEVCONTAINER_SQLTOOLS.md](development/vscode/DEVCONTAINER_SQLTOOLS.md) - SQLTools extension configuration in Dev Container
+- [PLATFORM_SPECIFIC.md](development/vscode/PLATFORM_SPECIFIC.md) - Platform-specific VS Code settings (Windows/Linux/macOS)
+- [SECURITY_BEST_PRACTICES.md](development/vscode/SECURITY_BEST_PRACTICES.md) - Security best practices for VS Code development
 
 ---
 

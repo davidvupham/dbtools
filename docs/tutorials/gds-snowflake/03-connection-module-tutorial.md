@@ -24,6 +24,7 @@ This tutorial explains the `gds_snowflake.connection` module, which manages conn
 ### Snowflake is a Cloud Data Warehouse
 
 Think of Snowflake as a massive spreadsheet in the cloud that can:
+
 - Store huge amounts of data
 - Run complex queries very fast
 - Scale automatically
@@ -32,6 +33,7 @@ Think of Snowflake as a massive spreadsheet in the cloud that can:
 ### Why Do We Need a Connection Module?
 
 To access Snowflake, we need to:
+
 1. **Authenticate** (prove who we are)
 2. **Connect** (establish a connection)
 3. **Execute queries** (get data)
@@ -46,6 +48,7 @@ This module handles all of that!
 ### File: `gds_snowflake/connection.py`
 
 This file contains the `SnowflakeConnection` class that:
+
 - Connects to Snowflake using RSA key authentication
 - Retrieves credentials from Vault
 - Tests connectivity
@@ -79,16 +82,16 @@ class SnowflakeConnection:
     Manages Snowflake database connections using RSA key pair
     authentication.
     """
-    
+
     def __init__(self, account, user=None, ...):
         """Initialize connection parameters."""
-        
+
     def connect(self):
         """Establish connection to Snowflake."""
-        
+
     def execute_query(self, query):
         """Run a SQL query."""
-        
+
     def close(self):
         """Close the connection."""
 ```
@@ -120,6 +123,7 @@ This module uses RSA key pair authentication (more secure than passwords):
 ```
 
 **Benefits:**
+
 - More secure than passwords
 - Keys can be rotated
 - No password in config files
@@ -150,6 +154,7 @@ def __init__(
 **Parameters Explained:**
 
 **Snowflake Parameters:**
+
 - `account` → Your Snowflake account identifier (e.g., "xy12345.us-east-1")
 - `user` → Snowflake username (optional, can come from env)
 - `warehouse` → Virtual warehouse to use for queries
@@ -157,6 +162,7 @@ def __init__(
 - `database` → Default database to use
 
 **Vault Parameters:**
+
 - `vault_addr` → Vault server URL
 - `vault_namespace` → Vault namespace (for multi-tenancy)
 - `vault_secret_path` → Where the RSA key is stored
@@ -201,17 +207,21 @@ logger.info("SnowflakeConnection initialized for account: %s", self.account)
    - Environment variables
    - Default values
 
-2. **`or` operator chains**: 
+2. **`or` operator chains**:
+
    ```python
    user or os.getenv("SNOWFLAKE_USER")
    ```
+
    - If `user` is provided, use it
    - Otherwise, get from environment variable
 
 3. **Default path construction**:
+
    ```python
    f"secret/data/{self.account}"
    ```
+
    - Creates a default Vault path based on account name
 
 ---
@@ -222,33 +232,33 @@ logger.info("SnowflakeConnection initialized for account: %s", self.account)
 def _get_private_key_from_vault(self) -> str:
     """
     Fetch the RSA private key from Vault.
-    
+
     Returns:
         str: PEM-encoded RSA private key
-        
+
     Raises:
         Exception: If unable to retrieve the key
     """
     logger.info("Fetching private key from Vault: %s", self.vault_secret_path)
-    
+
     try:
         # Get secret from Vault
         secret_data = get_secret_from_vault(
             secret_path=self.vault_secret_path,
             vault_addr=self.vault_addr
         )
-        
+
         # Extract the private key
         private_key_pem = secret_data.get("private_key")
-        
+
         if not private_key_pem:
             raise Exception(
                 f"Private key not found in Vault secret at {self.vault_secret_path}"
             )
-        
+
         logger.debug("Successfully retrieved private key from Vault")
         return private_key_pem
-        
+
     except Exception as e:
         logger.error("Failed to retrieve private key from Vault: %s", str(e))
         raise Exception(f"Unable to get private key from Vault: {e}")
@@ -258,15 +268,18 @@ def _get_private_key_from_vault(self) -> str:
 
 1. **Log the attempt**: Track what's happening
 
-2. **Call Vault function**: 
+2. **Call Vault function**:
+
    ```python
    secret_data = get_secret_from_vault(secret_path, vault_addr)
    ```
 
 3. **Extract the key**:
+
    ```python
    private_key_pem = secret_data.get("private_key")
    ```
+
    - The secret is a dictionary
    - We want the "private_key" field
 
@@ -292,43 +305,43 @@ def _get_private_key_from_vault(self) -> str:
 def connect(self):
     """
     Establish a connection to Snowflake using RSA key pair authentication.
-    
+
     Returns:
         snowflake.connector.connection.SnowflakeConnection: Active connection
-        
+
     Raises:
         Exception: If connection fails
     """
     logger.info("Connecting to Snowflake account: %s", self.account)
-    
+
     try:
         # Get the private key from Vault
         private_key_pem = self._get_private_key_from_vault()
-        
+
         # Parse the PEM-encoded key
         from cryptography.hazmat.backends import default_backend
         from cryptography.hazmat.primitives import serialization
-        
+
         p_key = serialization.load_pem_private_key(
             private_key_pem.encode(),
             password=None,
             backend=default_backend()
         )
-        
+
         # Convert to DER format (required by Snowflake connector)
         pkb = p_key.private_bytes(
             encoding=serialization.Encoding.DER,
             format=serialization.PrivateFormat.PKCS8,
             encryption_algorithm=serialization.NoEncryption()
         )
-        
+
         # Build connection parameters
         connection_params = {
             "account": self.account,
             "user": self.user,
             "private_key": pkb,
         }
-        
+
         # Add optional parameters
         if self.warehouse:
             connection_params["warehouse"] = self.warehouse
@@ -336,16 +349,16 @@ def connect(self):
             connection_params["role"] = self.role
         if self.database:
             connection_params["database"] = self.database
-        
+
         # Establish connection
-        logger.debug("Attempting Snowflake connection with parameters: %s", 
+        logger.debug("Attempting Snowflake connection with parameters: %s",
                     {k: v for k, v in connection_params.items() if k != "private_key"})
-        
+
         self.connection = snowflake.connector.connect(**connection_params)
-        
+
         logger.info("Successfully connected to Snowflake account: %s", self.account)
         return self.connection
-        
+
     except Exception as e:
         logger.error("Failed to connect to Snowflake: %s", str(e))
         raise Exception(f"Snowflake connection failed: {e}")
@@ -354,6 +367,7 @@ def connect(self):
 **Step-by-Step Breakdown:**
 
 1. **Get private key from Vault**:
+
    ```python
    private_key_pem = self._get_private_key_from_vault()
    ```
@@ -367,6 +381,7 @@ def connect(self):
    - Convert using cryptography library
 
 4. **Build connection parameters**:
+
    ```python
    connection_params = {
        "account": self.account,
@@ -378,9 +393,11 @@ def connect(self):
 5. **Add optional parameters**: If provided
 
 6. **Connect**:
+
    ```python
    self.connection = snowflake.connector.connect(**connection_params)
    ```
+
    - `**connection_params` unpacks the dictionary into keyword arguments
 
 7. **Return connection**: Ready to use!
@@ -393,16 +410,16 @@ def connect(self):
 def test_connectivity(self, timeout: int = 30) -> Dict[str, Any]:
     """
     Test connectivity to Snowflake with detailed diagnostics.
-    
+
     Args:
         timeout: Maximum time to wait for connection (seconds)
-        
+
     Returns:
         dict: Test results with success status and details
     """
     import time
     from datetime import datetime
-    
+
     result = {
         'success': False,
         'account': self.account,
@@ -411,32 +428,32 @@ def test_connectivity(self, timeout: int = 30) -> Dict[str, Any]:
         'account_info': {},
         'error': None
     }
-    
+
     test_connection = None
     start_time = time.time()
-    
+
     try:
         # Create a test connection
         logger.info("Testing connectivity to Snowflake account: %s", self.account)
-        
+
         private_key_pem = self._get_private_key_from_vault()
-        
+
         # Parse and convert key
         from cryptography.hazmat.backends import default_backend
         from cryptography.hazmat.primitives import serialization
-        
+
         p_key = serialization.load_pem_private_key(
             private_key_pem.encode(),
             password=None,
             backend=default_backend()
         )
-        
+
         pkb = p_key.private_bytes(
             encoding=serialization.Encoding.DER,
             format=serialization.PrivateFormat.PKCS8,
             encryption_algorithm=serialization.NoEncryption()
         )
-        
+
         # Connect with timeout
         connection_params = {
             "account": self.account,
@@ -445,38 +462,38 @@ def test_connectivity(self, timeout: int = 30) -> Dict[str, Any]:
             "login_timeout": timeout,
             "network_timeout": timeout,
         }
-        
+
         if self.warehouse:
             connection_params["warehouse"] = self.warehouse
         if self.role:
             connection_params["role"] = self.role
-        
+
         test_connection = snowflake.connector.connect(**connection_params)
-        
+
         # Run a simple test query
         cursor = test_connection.cursor()
         cursor.execute("SELECT CURRENT_VERSION(), CURRENT_ACCOUNT(), CURRENT_USER()")
         row = cursor.fetchone()
         cursor.close()
-        
+
         # Store account information
         result['account_info'] = {
             'version': row[0],
             'account_name': row[1],
             'user': row[2]
         }
-        
+
         result['success'] = True
-        
+
         end_time = time.time()
         result['response_time_ms'] = round((end_time - start_time) * 1000, 2)
-        
+
         logger.info(
             "Connectivity test successful for %s (response time: %sms)",
             self.account,
             result['response_time_ms']
         )
-        
+
     except Exception as e:
         end_time = time.time()
         result['response_time_ms'] = round((end_time - start_time) * 1000, 2)
@@ -495,7 +512,7 @@ def test_connectivity(self, timeout: int = 30) -> Dict[str, Any]:
                 logger.info("Closed connection to Snowflake account: %s", self.account)
             except Exception as e:
                 logger.warning("Error closing test connection: %s", str(e))
-    
+
     return result
 ```
 
@@ -508,9 +525,11 @@ def test_connectivity(self, timeout: int = 30) -> Dict[str, Any]:
 3. **Connects to Snowflake**: Just like `connect()` but with timeout
 
 4. **Runs a test query**:
+
    ```sql
    SELECT CURRENT_VERSION(), CURRENT_ACCOUNT(), CURRENT_USER()
    ```
+
    - Gets Snowflake version
    - Gets account name
    - Gets current user
@@ -549,35 +568,35 @@ def execute_query(
 ) -> list:
     """
     Execute a SQL query and return results.
-    
+
     Args:
         query: SQL query to execute
         params: Optional query parameters for parameterized queries
-        
+
     Returns:
         list: Query results as list of tuples
     """
     if not self.connection or self.connection.is_closed():
         logger.warning("No active connection, connecting now...")
         self.connect()
-    
+
     logger.debug("Executing query: %s", query[:100])  # Log first 100 chars
-    
+
     try:
         cursor = self.connection.cursor()
-        
+
         # Execute with or without parameters
         if params:
             cursor.execute(query, params)
         else:
             cursor.execute(query)
-        
+
         results = cursor.fetchall()
         cursor.close()
-        
+
         logger.info("Query executed successfully, returned %s rows", len(results))
         return results
-        
+
     except Exception as e:
         logger.error("Query execution failed: %s", str(e))
         raise
@@ -804,11 +823,13 @@ secondary_conn.close()
 **Problem:** The secret doesn't contain "private_key" field.
 
 **Solution:** Check Vault secret format:
+
 ```bash
 vault kv get secret/data/your-account
 ```
 
 Should contain:
+
 ```json
 {
   "private_key": "-----BEGIN PRIVATE KEY-----\n...",
@@ -821,6 +842,7 @@ Should contain:
 **Problem:** Vault connection failed.
 
 **Solutions:**
+
 1. Check `VAULT_ADDR` environment variable
 2. Verify `VAULT_ROLE_ID` and `VAULT_SECRET_ID`
 3. Check network connectivity to Vault
@@ -831,6 +853,7 @@ Should contain:
 **Problem:** Can't connect to Snowflake.
 
 **Solutions:**
+
 1. Verify account identifier is correct
 2. Check user has proper permissions
 3. Verify private key matches public key in Snowflake
@@ -842,6 +865,7 @@ Should contain:
 **Problem:** Invalid SQL query.
 
 **Solutions:**
+
 1. Check SQL syntax
 2. Verify table/column names exist
 3. Check permissions on objects
@@ -852,6 +876,7 @@ Should contain:
 **Problem:** Queries take too long.
 
 **Solutions:**
+
 1. Use appropriate warehouse size
 2. Add WHERE clauses to filter data
 3. Create appropriate indexes
@@ -874,6 +899,7 @@ Should contain:
 ## Practice Exercise
 
 Create a script that:
+
 1. Connects to Snowflake
 2. Tests connectivity
 3. Runs a query
@@ -908,7 +934,7 @@ if __name__ == "__main__":
 ## Next Tutorial
 
 Ready to learn about replication monitoring? Continue to:
-**[Replication Module Tutorial](04_REPLICATION_MODULE_TUTORIAL.md)**
+**[Replication Module Tutorial](04-replication-module-tutorial.md)**
 
 ---
 

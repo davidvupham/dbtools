@@ -132,33 +132,33 @@ from unittest.mock import Mock, patch
 
 class TestMyFeature(unittest.TestCase):
     """Test cases for MyFeature"""
-    
+
     def setUp(self):
         """Set up test fixtures before each test"""
         self.test_data = "example"
-        
+
     def tearDown(self):
         """Clean up after each test"""
         pass
-        
+
     def test_something(self):
         """Test description"""
         # Arrange
         expected = "result"
-        
+
         # Act
         actual = my_function()
-        
+
         # Assert
         self.assertEqual(actual, expected)
-        
+
     @patch('module.dependency')
     def test_with_mock(self, mock_dependency):
         """Test with mocked dependency"""
         mock_dependency.return_value = "mocked"
-        
+
         result = my_function()
-        
+
         self.assertEqual(result, "mocked")
         mock_dependency.assert_called_once()
 ```
@@ -176,25 +176,25 @@ def test_data():
 
 class TestMyFeature:
     """Test cases for MyFeature"""
-    
+
     def test_something(self, test_data):
         """Test description"""
         # Arrange
         expected = "result"
-        
+
         # Act
         actual = my_function(test_data)
-        
+
         # Assert
         assert actual == expected
-        
+
     def test_with_mock(self, mocker):
         """Test with mocked dependency"""
         mock_dependency = mocker.patch('module.dependency')
         mock_dependency.return_value = "mocked"
-        
+
         result = my_function()
-        
+
         assert result == "mocked"
         mock_dependency.assert_called_once()
 ```
@@ -210,7 +210,7 @@ from unittest.mock import Mock, patch
 def test_connection(mock_connect):
     mock_connection = Mock()
     mock_connect.return_value = mock_connection
-    
+
     # Your test code here
 ```
 
@@ -276,28 +276,28 @@ on: [push, pull_request]
 jobs:
   test:
     runs-on: ubuntu-latest
-    
+
     steps:
     - uses: actions/checkout@v2
-    
+
     - name: Set up Python
       uses: actions/setup-python@v2
       with:
         python-version: '3.9'
-        
+
     - name: Install dependencies
       run: |
         pip install -r requirements.txt
         pip install -r requirements-dev.txt
-        
+
     - name: Run tests
       run: |
         python run_tests.py
-        
+
     - name: Run tests with coverage
       run: |
         pytest --cov=. --cov-report=xml
-        
+
     - name: Upload coverage
       uses: codecov/codecov-action@v2
 ```

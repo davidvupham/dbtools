@@ -46,12 +46,12 @@ from abc import ABC, abstractmethod
 
 class Animal(ABC):
     """Abstract base class for animals."""
-    
+
     @abstractmethod
     def make_sound(self):
         """All animals must make a sound."""
         pass
-    
+
     @abstractmethod
     def move(self):
         """All animals must be able to move."""
@@ -61,7 +61,7 @@ class Animal(ABC):
 class Dog(Animal):
     def make_sound(self):
         return "Woof!"
-    
+
     def move(self):
         return "Running on four legs"
 
@@ -86,20 +86,20 @@ cat = Cat()  # TypeError: Can't instantiate abstract class Cat
 class SecretProvider(ABC):
     """
     Blueprint for ALL secret providers.
-    
+
     Any class that provides secrets MUST implement these methods.
     """
-    
+
     @abstractmethod
     def get_secret(self, path: str, **kwargs) -> dict[str, Any]:
         """Every secret provider MUST be able to get a secret."""
         pass
-    
+
     @abstractmethod
     def authenticate(self) -> bool:
         """Every secret provider MUST be able to authenticate."""
         pass
-    
+
     @abstractmethod
     def is_authenticated(self) -> bool:
         """Every secret provider MUST know if it's authenticated."""
@@ -113,17 +113,17 @@ class VaultClient(SecretProvider):
     Concrete implementation of SecretProvider.
     MUST implement all abstract methods!
     """
-    
+
     def get_secret(self, path: str, **kwargs) -> dict[str, Any]:
         """Implementation for Vault."""
         # Actually fetch from Vault
         ...
-    
+
     def authenticate(self) -> bool:
         """Implementation for Vault."""
         # Actually authenticate with Vault
         ...
-    
+
     def is_authenticated(self) -> bool:
         """Implementation for Vault."""
         # Check if we have a valid token
@@ -141,7 +141,7 @@ class VaultClient(SecretProvider):
 def fetch_secret(provider: SecretProvider, path: str):
     """
     Works with ANY SecretProvider!
-    
+
     Could be VaultClient, ConsulClient, AWSSecretsClient, etc.
     As long as they implement SecretProvider, this works!
     """
@@ -173,11 +173,11 @@ class Database(ABC):
     @abstractmethod
     def connect(self):
         pass
-    
+
     @abstractmethod
     def query(self, sql: str):
         pass
-    
+
     @abstractmethod
     def close(self):
         pass
@@ -186,11 +186,11 @@ class PostgresDatabase(Database):
     def connect(self):
         print("Connecting to PostgreSQL...")
         self.connection = "postgres_connection"
-    
+
     def query(self, sql: str):
         print(f"Executing: {sql}")
         return "result"
-    
+
     def close(self):
         print("Closing PostgreSQL connection")
         self.connection = None
@@ -244,24 +244,24 @@ print(duck.swim())  # "Swimming in water"
 class VaultClient(SecretProvider, ResourceManager, Configurable):
     """
     VaultClient inherits from THREE classes!
-    
+
     Gets these methods from SecretProvider:
     - get_secret()
     - authenticate()
     - is_authenticated()
-    
+
     Gets these methods from ResourceManager:
     - initialize()
     - cleanup()
     - __enter__()
     - __exit__()
-    
+
     Gets these methods from Configurable:
     - get_config()
     - set_config()
     - get_all_config()
     """
-    
+
     def __init__(self, ...):
         # Initialize all parent classes
         Configurable.__init__(self)
@@ -347,24 +347,24 @@ Think of a thermostat:
 class Temperature:
     def __init__(self, celsius):
         self._celsius = celsius  # Private attribute
-    
+
     @property
     def celsius(self):
         """Get temperature in Celsius."""
         return self._celsius
-    
+
     @celsius.setter
     def celsius(self, value):
         """Set temperature with validation."""
         if value < -273.15:
             raise ValueError("Temperature below absolute zero!")
         self._celsius = value
-    
+
     @property
     def fahrenheit(self):
         """Get temperature in Fahrenheit (computed property)."""
         return self._celsius * 9/5 + 32
-    
+
     @fahrenheit.setter
     def fahrenheit(self, value):
         """Set temperature using Fahrenheit."""
@@ -390,17 +390,17 @@ class VaultClient:
         self._timeout = timeout        # Private
         self._token = None            # Private
         self._token_expiry = None     # Private
-    
+
     @property
     def vault_addr(self) -> str:
         """Get Vault address (read-only)."""
         return self._vault_addr
-    
+
     @property
     def timeout(self) -> int:
         """Get timeout."""
         return self._timeout
-    
+
     @timeout.setter
     def timeout(self, value: int) -> None:
         """Set timeout with validation."""
@@ -408,19 +408,19 @@ class VaultClient:
             raise ValueError("Timeout must be positive")
         self._timeout = value
         logger.debug("Timeout updated to %ds", value)
-    
+
     @property
     def is_authenticated(self) -> bool:
         """Check if authenticated (computed property)."""
         if not self._token:
             return False
-        
+
         # Check if token expired
         if self._token_expiry and time.time() >= self._token_expiry:
             return False
-        
+
         return True
-    
+
     @property
     def cached_secret_count(self) -> int:
         """Number of cached secrets (computed property)."""
@@ -464,7 +464,7 @@ print(client.cached_secret_count)  # 1
    @property
    def timeout(self):
        return self._timeout
-   
+
    @timeout.setter
    def timeout(self, value):
        if value <= 0:
@@ -503,19 +503,19 @@ Create a `BankAccount` class with a `balance` property that:
 class BankAccount:
     def __init__(self, initial_balance=0):
         self._balance = initial_balance
-    
+
     @property
     def balance(self):
         """Get current balance."""
         return self._balance
-    
+
     @balance.setter
     def balance(self, value):
         """Set balance with validation."""
         if value < 0:
             raise ValueError("Balance cannot be negative")
         self._balance = value
-    
+
     @property
     def formatted_balance(self):
         """Get formatted balance string."""
@@ -566,31 +566,31 @@ class MyClass:
 class ShoppingCart:
     def __init__(self):
         self._items = []
-    
+
     def __len__(self):
         """len(cart) returns number of items."""
         return len(self._items)
-    
+
     def __getitem__(self, index):
         """cart[0] returns first item."""
         return self._items[index]
-    
+
     def __setitem__(self, index, value):
         """cart[0] = 'apple' sets first item."""
         self._items[index] = value
-    
+
     def __contains__(self, item):
         """'apple' in cart checks if item exists."""
         return item in self._items
-    
+
     def __str__(self):
         """print(cart) shows user-friendly representation."""
         return f"Shopping cart with {len(self)} items"
-    
+
     def __repr__(self):
         """repr(cart) shows developer-friendly representation."""
         return f"ShoppingCart({self._items!r})"
-    
+
     def add(self, item):
         """Add item to cart."""
         self._items.append(item)
@@ -622,28 +622,28 @@ class VaultClient:
         self._vault_addr = vault_addr or os.getenv("VAULT_ADDR")
         self._auth = auth or AppRoleAuth()
         ...
-    
+
     def __enter__(self):
         """
         Context manager entry - called by 'with' statement.
-        
+
         with VaultClient() as client:  # __enter__ called here
             ...
         """
         self.initialize()
         return self
-    
+
     def __exit__(self, exc_type, exc_val, exc_tb):
         """
         Context manager exit - called at end of 'with' block.
-        
+
         with VaultClient() as client:
             ...
         # __exit__ called here (even if exception!)
         """
         self.cleanup()
         return False
-    
+
     def __repr__(self) -> str:
         """
         Developer-friendly representation.
@@ -653,7 +653,7 @@ class VaultClient:
             f"VaultClient(vault_addr='{self._vault_addr}', "
             f"authenticated={self.is_authenticated})"
         )
-    
+
     def __str__(self) -> str:
         """
         User-friendly representation.
@@ -661,14 +661,14 @@ class VaultClient:
         """
         status = "authenticated" if self.is_authenticated else "not authenticated"
         return f"Vault client at {self._vault_addr} ({status})"
-    
+
     def __len__(self) -> int:
         """
         Return number of cached secrets.
         len(client) returns this.
         """
         return len(self._cache)
-    
+
     def __bool__(self) -> bool:
         """
         Truth value - is client ready to use?
@@ -716,19 +716,19 @@ class SecretCache:
     def __init__(self, max_size=100):
         self._cache = {}
         self.max_size = max_size
-    
+
     def __len__(self) -> int:
         """Return number of cached items."""
         return len(self._cache)
-    
+
     def __contains__(self, key: str) -> bool:
         """Check if key is in cache."""
         return key in self._cache
-    
+
     def __repr__(self) -> str:
         """Developer representation."""
         return f"SecretCache(size={len(self)}, max_size={self.max_size})"
-    
+
     def __str__(self) -> str:
         """User representation."""
         return f"Cache with {len(self)} secrets (max: {self.max_size})"
@@ -753,12 +753,12 @@ class AppRoleAuth:
     def __init__(self, role_id, secret_id):
         self.role_id = role_id
         self.secret_id = secret_id
-    
+
     def __repr__(self) -> str:
         """Developer-friendly representation."""
         role_id_masked = f"{self.role_id[:8]}..." if self.role_id else "None"
         return f"AppRoleAuth(role_id='{role_id_masked}')"
-    
+
     def __str__(self) -> str:
         """User-friendly representation."""
         return "AppRole Authentication"
@@ -784,22 +784,22 @@ Create a `Library` class that:
 class Library:
     def __init__(self):
         self._books = []
-    
+
     def add_book(self, title):
         self._books.append(title)
-    
+
     def __len__(self):
         return len(self._books)
-    
+
     def __getitem__(self, index):
         return self._books[index]
-    
+
     def __contains__(self, title):
         return title in self._books
-    
+
     def __str__(self):
         return f"Library with {len(self)} books"
-    
+
     def __repr__(self):
         return f"Library({self._books!r})"
 
@@ -860,23 +860,23 @@ class DatabaseConnection:
     def __init__(self, db_name):
         self.db_name = db_name
         self.connection = None
-    
+
     def __enter__(self):
         """Setup - open connection."""
         print(f"Opening connection to {self.db_name}")
         self.connection = f"connected_to_{self.db_name}"
         return self
-    
+
     def __exit__(self, exc_type, exc_val, exc_tb):
         """Cleanup - close connection."""
         print(f"Closing connection to {self.db_name}")
         self.connection = None
-        
+
         if exc_type:
             print(f"An error occurred: {exc_val}")
-        
+
         return False  # Don't suppress exceptions
-    
+
     def query(self, sql):
         if not self.connection:
             raise RuntimeError("Not connected")
@@ -905,7 +905,7 @@ def database_connection(db_name):
     # Setup (before yield)
     print(f"Opening connection to {db_name}")
     connection = f"connected_to_{db_name}"
-    
+
     try:
         yield connection  # Give control back to caller
     finally:
@@ -926,48 +926,48 @@ class VaultClient(ResourceManager):
     def __init__(self, ...):
         self._initialized = False
         ...
-    
+
     def initialize(self) -> None:
         """Initialize resources."""
         if self._initialized:
             return
-        
+
         logger.debug("Initializing VaultClient")
-        
+
         # Authenticate if needed
         if not self.is_authenticated:
             self.authenticate()
-        
+
         self._initialized = True
         logger.debug("VaultClient initialized")
-    
+
     def cleanup(self) -> None:
         """Clean up resources."""
         logger.debug("Cleaning up VaultClient")
-        
+
         # Clear cached secrets
         self._cache.clear()
-        
+
         # Clear sensitive data
         self._token = None
         self._token_expiry = None
-        
+
         self._initialized = False
         logger.debug("VaultClient cleanup complete")
-    
+
     def __enter__(self):
         """Context manager entry."""
         logger.debug("Entering VaultClient context manager")
         self.initialize()
         return self
-    
+
     def __exit__(self, exc_type, exc_val, exc_tb):
         """Context manager exit."""
         logger.debug("Exiting VaultClient context manager")
-        
+
         if exc_type:
             logger.error("Exception in VaultClient context: %s", exc_val)
-        
+
         self.cleanup()
         return False  # Don't suppress exceptions
 
@@ -1007,28 +1007,28 @@ with VaultClient() as client:
 ```python
 class TemporaryConfig:
     """Temporarily change configuration."""
-    
+
     def __init__(self, client, **temp_config):
         self.client = client
         self.temp_config = temp_config
         self.old_config = {}
-    
+
     def __enter__(self):
         # Save current config
         for key in self.temp_config:
             self.old_config[key] = self.client.get_config(key)
-        
+
         # Apply temporary config
         for key, value in self.temp_config.items():
             self.client.set_config(key, value)
-        
+
         return self.client
-    
+
     def __exit__(self, exc_type, exc_val, exc_tb):
         # Restore old config
         for key, value in self.old_config.items():
             self.client.set_config(key, value)
-        
+
         return False
 
 # Usage
@@ -1062,12 +1062,12 @@ class Timer:
     def __init__(self, name="Operation"):
         self.name = name
         self.start_time = None
-    
+
     def __enter__(self):
         self.start_time = time.time()
         print(f"{self.name} starting...")
         return self
-    
+
     def __exit__(self, exc_type, exc_val, exc_tb):
         elapsed = time.time() - self.start_time
         print(f"{self.name} took {elapsed:.2f} seconds")
@@ -1135,7 +1135,7 @@ class VaultClient:
     @property
     def vault_addr(self):
         return self._vault_addr
-    
+
     # This is equivalent to:
     # vault_addr = property(vault_addr)
 ```
@@ -1149,7 +1149,7 @@ class SecretProvider(ABC):
     @abstractmethod
     def get_secret(self, path: str):
         pass
-    
+
     # Marks this method as "must be implemented by subclasses"
 ```
 
@@ -1200,4 +1200,3 @@ secret = get_secret("secret/data/app1")
 ```
 
 (Due to length constraints, I'll create a separate file for the remaining concepts and exercises)
-

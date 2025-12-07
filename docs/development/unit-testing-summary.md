@@ -248,7 +248,7 @@ The unit testing infrastructure provides:
 
 This ensures the Snowflake Replication Monitor is:
 - ✅ Reliable
-- ✅ Maintainable  
+- ✅ Maintainable
 - ✅ Well-documented
 - ✅ Production-ready
 - ✅ Easy to extend

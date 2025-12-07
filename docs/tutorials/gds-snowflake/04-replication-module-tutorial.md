@@ -24,6 +24,7 @@ This tutorial explains the `gds_snowflake.replication` module, which monitors Sn
 ### Database Replication Explained
 
 Imagine you have a notebook:
+
 - **Primary notebook** (Original) - You write in this one
 - **Secondary notebook** (Copy) - Automatically copied from the original
 
@@ -49,6 +50,7 @@ Primary Account          Secondary Account
 ### What is a Failover Group?
 
 A **failover group** is a collection of database objects that are replicated together:
+
 - Databases
 - Shares
 - Integrations
@@ -86,7 +88,7 @@ A **FailoverGroup** object stores information about one failover group:
 ```python
 class FailoverGroup:
     """Represents a Snowflake failover group with its properties."""
-    
+
     def __init__(self, name: str, properties: Dict):
         self.name = name                        # "MY_FAILOVER_GROUP"
         self.type = properties.get('type')       # "ACCOUNT FAILOVER"
@@ -113,16 +115,16 @@ class FailoverGroup:
 def _parse_secondary_accounts(self, secondary_state: str) -> List[str]:
     """
     Parse secondary accounts from the secondary_state string.
-    
+
     Args:
         secondary_state: "ACCOUNT2:READY, ACCOUNT3:READY"
-        
+
     Returns:
         ["ACCOUNT2", "ACCOUNT3"]
     """
     if not secondary_state:
         return []
-    
+
     accounts = []
     for part in secondary_state.split(','):
         part = part.strip()
@@ -167,6 +169,7 @@ fg.is_primary("ACCOUNT2.EAST")  # False
 ```
 
 **Why normalize?**
+
 - Account names can be `"ACCOUNT1.WEST"` or just `"ACCOUNT1"`
 - We want to compare just the account part
 - Case-insensitive comparison
@@ -194,11 +197,11 @@ SnowflakeReplication
 ```python
 class SnowflakeReplication:
     """Handles Snowflake replication monitoring and operations."""
-    
+
     def __init__(self, connection: SnowflakeConnection):
         """
         Initialize replication handler.
-        
+
         Args:
             connection: SnowflakeConnection instance
         """
@@ -228,21 +231,21 @@ replication = SnowflakeReplication(conn)
 def get_failover_groups(self) -> List[FailoverGroup]:
     """
     Retrieve all failover groups from Snowflake.
-    
+
     Returns:
         List of FailoverGroup objects
     """
     try:
         logger.info("Retrieving failover groups")
         results = self.connection.execute_query("SHOW FAILOVER GROUPS")
-        
+
         failover_groups = []
         for row in results:
             # Parse the row into a dictionary
             properties = {}
             if len(row) >= 2:
                 name = row[1]  # name is typically the second column
-                
+
                 # Extract properties from row columns
                 if len(row) > 2:
                     properties['type'] = row[2] if len(row) > 2 else ''
@@ -253,7 +256,7 @@ def get_failover_groups(self) -> List[FailoverGroup]:
                     properties['allowed_databases'] = row[11] if len(row) > 11 else ''
                     properties['allowed_shares'] = row[12] if len(row) > 12 else ''
                     properties['allowed_integration_types'] = row[13] if len(row) > 13 else ''
-                
+
                 fg = FailoverGroup(name, properties)
                 failover_groups.append(fg)
                 logger.info(
@@ -262,10 +265,10 @@ def get_failover_groups(self) -> List[FailoverGroup]:
                     fg.primary_account,
                     fg.replication_schedule
                 )
-        
+
         logger.info("Retrieved %s failover groups", len(failover_groups))
         return failover_groups
-        
+
     except Exception as e:
         logger.error("Error retrieving failover groups: %s", str(e))
         raise
@@ -274,6 +277,7 @@ def get_failover_groups(self) -> List[FailoverGroup]:
 **Step-by-Step:**
 
 1. **Execute Snowflake command**:
+
    ```sql
    SHOW FAILOVER GROUPS
    ```
@@ -284,6 +288,7 @@ def get_failover_groups(self) -> List[FailoverGroup]:
    - Extract relevant columns
 
 3. **Create FailoverGroup objects**:
+
    ```python
    fg = FailoverGroup(name, properties)
    ```
@@ -306,11 +311,11 @@ Value: [ts, "PROD_FG", "ACCOUNT FAILOVER", ..., ..., "ACCOUNT1", ...]
 def get_replication_history(self, failover_group_name: str, limit: int = 10) -> List[Dict]:
     """
     Get replication history for a failover group.
-    
+
     Args:
         failover_group_name: Name of the failover group
         limit: Maximum number of history records to retrieve
-        
+
     Returns:
         List of replication history records as dictionaries
     """
@@ -325,12 +330,12 @@ def get_replication_history(self, failover_group_name: str, limit: int = 10) -> 
         ORDER BY start_time DESC
         LIMIT {limit}
         """
-        
+
         logger.debug("Querying replication history for %s", failover_group_name)
         results = self.connection.execute_query_dict(query)
-        
+
         return results
-        
+
     except Exception as e:
         logger.error("Error retrieving replication history for %s: %s", failover_group_name, str(e))
         raise
@@ -338,13 +343,15 @@ def get_replication_history(self, failover_group_name: str, limit: int = 10) -> 
 
 **What This Does:**
 
-1. **Query Snowflake function**: 
+1. **Query Snowflake function**:
+
    ```sql
    INFORMATION_SCHEMA.REPLICATION_GROUP_REFRESH_HISTORY('PROD_FG')
    ```
+
    - Returns history of replication runs
 
-2. **Get recent runs**: 
+2. **Get recent runs**:
    - `ORDER BY start_time DESC` → Most recent first
    - `LIMIT 10` → Only 10 records
 
@@ -377,10 +384,10 @@ def get_replication_history(self, failover_group_name: str, limit: int = 10) -> 
 def parse_cron_schedule(self, cron_expression: str) -> Optional[int]:
     """
     Parse a cron schedule and calculate the interval in minutes.
-    
+
     Args:
         cron_expression: "USING CRON */10 * * * * UTC"
-        
+
     Returns:
         Interval in minutes (10), or None if unable to parse
     """
@@ -395,20 +402,20 @@ def parse_cron_schedule(self, cron_expression: str) -> Optional[int]:
                 # Get the 5 fields of cron expression
                 cron_fields = parts[cron_idx + 1:cron_idx + 6]
                 cron_str = ' '.join(cron_fields)
-                
+
                 # Use croniter to calculate the interval
                 base_time = datetime.now()
                 cron = croniter(cron_str, base_time)
                 next_time = cron.get_next(datetime)
                 following_time = cron.get_next(datetime)
-                
+
                 interval = (following_time - next_time).total_seconds() / 60
                 logger.debug("Parsed cron schedule '%s' -> %s minutes", cron_expression, interval)
                 return int(interval)
-        
+
         logger.warning("Unable to parse cron schedule: %s", cron_expression)
         return None
-        
+
     except Exception as e:
         logger.error("Error parsing cron schedule '%s': %s", cron_expression, str(e))
         return None
@@ -419,6 +426,7 @@ def parse_cron_schedule(self, cron_expression: str) -> Optional[int]:
 Cron format: `minute hour day month weekday`
 
 Examples:
+
 - `*/10 * * * *` → Every 10 minutes
 - `0 * * * *` → Every hour (at :00)
 - `0 0 * * *` → Every day at midnight
@@ -435,6 +443,7 @@ Input: `"USING CRON */10 * * * * UTC"`
 3. **Extract cron fields**: `["*/10", "*", "*", "*", "*"]` (5 fields after "CRON")
 
 4. **Use croniter library**:
+
    ```python
    cron = croniter("*/10 * * * *", datetime.now())
    next_time = cron.get_next(datetime)      # 10:10
@@ -451,30 +460,30 @@ Input: `"USING CRON */10 * * * * UTC"`
 def check_replication_failure(self, failover_group: FailoverGroup) -> Tuple[bool, Optional[str]]:
     """
     Check if the last replication failed for a failover group.
-    
+
     Args:
         failover_group: FailoverGroup object
-        
+
     Returns:
         Tuple of (is_failed, error_message)
     """
     try:
         history = self.get_replication_history(failover_group.name, limit=1)
-        
+
         if not history:
             logger.warning("No replication history found for %s", failover_group.name)
             return False, None
-        
+
         last_run = history[0]
         status = last_run.get('STATUS', '').upper()
-        
+
         if status == 'FAILED' or status == 'PARTIALLY_FAILED':
             message = last_run.get('MESSAGE', 'No error message available')
             logger.warning("Replication failed for %s: %s", failover_group.name, message)
             return True, message
-        
+
         return False, None
-        
+
     except Exception as e:
         logger.error("Error checking replication failure for %s: %s", failover_group.name, str(e))
         return False, None
@@ -514,13 +523,13 @@ else:
 def check_replication_latency(self, failover_group: FailoverGroup) -> Tuple[bool, Optional[str]]:
     """
     Check if there is replication latency for a failover group.
-    
+
     Latency is calculated as: expected_time = last_completion + interval + (last_duration * 1.1)
     If current time > expected_time, then there is latency.
-    
+
     Args:
         failover_group: FailoverGroup object
-        
+
     Returns:
         Tuple of (has_latency, latency_message)
     """
@@ -530,30 +539,30 @@ def check_replication_latency(self, failover_group: FailoverGroup) -> Tuple[bool
         if interval_minutes is None:
             logger.warning("Cannot determine latency for %s - unable to parse schedule", failover_group.name)
             return False, None
-        
+
         # Get the last replication history
         history = self.get_replication_history(failover_group.name, limit=1)
         if not history:
             logger.warning("No replication history found for %s", failover_group.name)
             return False, None
-        
+
         last_run = history[0]
         end_time = last_run.get('END_TIME')
         start_time = last_run.get('START_TIME')
-        
+
         if not end_time or not start_time:
             logger.warning("Missing time information for %s", failover_group.name)
             return False, None
-        
+
         # Calculate the duration of the last replication
         duration = (end_time - start_time).total_seconds() / 60  # in minutes
-        
+
         # Calculate expected next completion time
         # Formula: last_completion + interval + (duration * 1.1)
         expected_next = end_time + timedelta(minutes=interval_minutes + (duration * 1.1))
-        
+
         current_time = datetime.now(end_time.tzinfo) if end_time.tzinfo else datetime.now()
-        
+
         if current_time > expected_next:
             delay_minutes = (current_time - expected_next).total_seconds() / 60
             message = (f"Replication latency detected for {failover_group.name}. "
@@ -562,9 +571,9 @@ def check_replication_latency(self, failover_group: FailoverGroup) -> Tuple[bool
                       f"Last replication took {duration:.1f} minutes, interval is {interval_minutes} minutes.")
             logger.warning(message)
             return True, message
-        
+
         return False, None
-        
+
     except Exception as e:
         logger.error(
             "Error checking replication latency for %s: %s",
@@ -671,7 +680,7 @@ failover_groups = replication.get_failover_groups()
 # Check each for failures
 for fg in failover_groups:
     is_failed, error = replication.check_replication_failure(fg)
-    
+
     if is_failed:
         print(f"❌ {fg.name}: FAILED")
         print(f"   Error: {error}")
@@ -700,7 +709,7 @@ failover_groups = replication.get_failover_groups()
 
 for fg in failover_groups:
     has_latency, message = replication.check_replication_latency(fg)
-    
+
     if has_latency:
         print(f"⚠️  {fg.name}: LATENCY DETECTED")
         print(f"   {message}")
@@ -780,27 +789,27 @@ USING CRON 0 0 * * * UTC -> 1440 minutes
 def check_replication_health(replication):
     """Complete health check for all failover groups."""
     failover_groups = replication.get_failover_groups()
-    
+
     issues = []
-    
+
     for fg in failover_groups:
         # Check for failures
         is_failed, error = replication.check_replication_failure(fg)
         if is_failed:
             issues.append(f"{fg.name}: FAILED - {error}")
-        
+
         # Check for latency
         has_latency, message = replication.check_replication_latency(fg)
         if has_latency:
             issues.append(f"{fg.name}: LATENCY - {message}")
-    
+
     if issues:
         print("⚠️  Issues found:")
         for issue in issues:
             print(f"  - {issue}")
     else:
         print("✓ All replication healthy")
-    
+
     return len(issues) == 0
 
 # Usage
@@ -813,7 +822,7 @@ is_healthy = check_replication_health(replication)
 def alert_on_issues(replication, send_email_func):
     """Send alerts if replication has issues."""
     failover_groups = replication.get_failover_groups()
-    
+
     for fg in failover_groups:
         # Check for failures
         is_failed, error = replication.check_replication_failure(fg)
@@ -822,7 +831,7 @@ def alert_on_issues(replication, send_email_func):
                 subject=f"Replication Failed: {fg.name}",
                 body=f"Failover group {fg.name} has failed:\n{error}"
             )
-        
+
         # Check for latency
         has_latency, message = replication.check_replication_latency(fg)
         if has_latency:
@@ -843,13 +852,13 @@ def monitor_replication():
     conn = SnowflakeConnection(account="my-account")
     conn.connect()
     replication = SnowflakeReplication(conn)
-    
+
     # Check health
     is_healthy = check_replication_health(replication)
-    
+
     if not is_healthy:
         alert_on_issues(replication, send_email)
-    
+
     conn.close()
 
 # Run every 5 minutes
@@ -869,6 +878,7 @@ while True:
 **Problem:** `get_replication_history()` returns empty list.
 
 **Solutions:**
+
 1. Verify failover group name is correct
 2. Check if replication has run at least once
 3. Verify account permissions to view history
@@ -879,6 +889,7 @@ while True:
 **Problem:** Cron expression format is not recognized.
 
 **Solutions:**
+
 1. Check cron expression format: `"USING CRON */10 * * * * UTC"`
 2. Verify croniter library is installed
 3. Check for typos in cron expression
@@ -889,6 +900,7 @@ while True:
 **Problem:** Getting latency alerts when replication is fine.
 
 **Solutions:**
+
 1. Check the 1.1 multiplier (adjust if needed)
 2. Verify cron schedule is correct
 3. Account for timezone differences
@@ -899,6 +911,7 @@ while True:
 **Problem:** Cannot view failover groups or history.
 
 **Solutions:**
+
 1. Verify user has `MONITOR` privilege on failover groups
 2. Check account role permissions
 3. Verify user is on correct account
@@ -920,6 +933,7 @@ while True:
 ## Practice Exercise
 
 Create a monitoring script that:
+
 1. Connects to Snowflake
 2. Gets all failover groups
 3. Checks each for failures and latency
@@ -953,10 +967,10 @@ if __name__ == "__main__":
 
 ## Next Tutorial
 
-Ready to learn about comprehensive monitoring? Continue to:
-**[Monitor Module Tutorial](05_MONITOR_MODULE_TUTORIAL.md)**
+Ready to learn about comprehensive monitoring?
+**[Monitor Module Tutorial]** (Coming Soon)
 
-This tutorial covers the complete monitoring system that uses all previous modules!
+This tutorial will cover the complete monitoring system that uses all previous modules!
 
 ---
 
