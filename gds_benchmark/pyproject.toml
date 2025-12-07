@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gds-benchmark"
+version = "0.1.0"
+description = "Generic benchmarking interfaces for GDS tools"
+readme = "README.md"
+license = { text = "MIT" }
+authors = [{ name = "GDS Team", email = "gds-team@example.com" }]
+classifiers = ["Programming Language :: Python :: 3"]
+requires-python = ">=3.9"
+dependencies = []
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["gds_benchmark*"]
+
+[tool.setuptools.package-data]
+gds_benchmark = ["py.typed"]

@@ -10,6 +10,7 @@ This directory contains all project documentation organized by category.
   - [development/ - Development Documentation](#development---development-documentation)
   - [coding-standards/ - Coding Standards](#coding-standards---coding-standards)
   - [runbooks/ - Operational Runbooks](#runbooks---operational-runbooks)
+  - [how-to/ - How-to Guides](#how-to---how-to-guides)
   - [vscode/ - VS Code Setup](#vscode---vs-code-setup)
   - [archive/ - Archived Files](#archive---archived-files)
 - [Component Documentation](#component-documentation)
@@ -22,6 +23,7 @@ This documentation follows the **Diátaxis framework**, organizing content by us
 - **Tutorials** (Learning-oriented): Step-by-step lessons to help you get started and acquire new skills.
 - **Explanation** (Understanding-oriented): High-level context, architecture decisions, and "why" things work the way they do.
 - **Runbooks** (Goal-oriented): Practical, procedural guides for performing specific operational tasks.
+- **How-to Guides** (Goal-oriented): Directions to solve specific problems or achieve specific configuration goals.
 - **Development** (Contributor-oriented): Standards and guides for working on the codebase itself.
 
 ### Diagrams as Code (Mermaid)
@@ -96,6 +98,12 @@ Architecture decisions, design records, and conceptual explanations:
 
 - [README.md](runbooks/README.md) - Runbooks overview
 - [GMSA](runbooks/gmsa/) - Group Managed Service Account runbooks
+
+---
+
+### [how-to/](how-to/) - How-to Guides
+
+- [Configure Service Dependencies](how-to/configure-service-dependencies.md) - Ensuring scripts run before services start
 
 ---
 

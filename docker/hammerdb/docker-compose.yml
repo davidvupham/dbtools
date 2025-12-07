@@ -1,0 +1,16 @@
+services:
+  hammerdb:
+    build:
+      context: /workspaces/dbtools
+      dockerfile: docker/hammerdb/Dockerfile
+    container_name: hammerdb
+    stdin_open: true
+    tty: true
+    volumes:
+      - ./hammerdb/scripts:/benchmarks
+    networks:
+      - tool-library-network
+
+networks:
+  tool-library-network:
+    external: true

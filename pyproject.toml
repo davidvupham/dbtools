@@ -2,7 +2,24 @@
 # ========================================
 # This configuration applies to the entire workspace
 
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dbtools"
+version = "0.1.0"
+description = "Database tools and automation"
+authors = [{name = "DB Tools Team"}]
+requires-python = ">=3.9"
+dependencies = []
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["gds_*"]
+
 [tool.ruff]
+
 # Set line length to match your codebase
 line-length = 120
 

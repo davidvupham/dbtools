@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gds-hammerdb"
+version = "0.1.0"
+description = "HammerDB automation for GDS"
+readme = "README.md"
+license = { text = "MIT" }
+authors = [{ name = "GDS Team", email = "gds-team@example.com" }]
+classifiers = ["Programming Language :: Python :: 3"]
+requires-python = ">=3.9"
+dependencies = ["gds-benchmark>=0.1.0"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["gds_hammerdb*"]
+
+[tool.setuptools.package-data]
+gds_hammerdb = ["py.typed"]
