@@ -14,7 +14,7 @@ dependencies = ["kafka-python>=2.0.2", "gds-metrics"]
 dev = ["pytest"]
 
 [tool.hatch.build.targets.wheel]
-packages = ["gds_kafka"]
+packages = ["src/gds_kafka"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

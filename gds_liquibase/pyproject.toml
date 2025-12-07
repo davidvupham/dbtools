@@ -54,8 +54,9 @@ Homepage = "https://github.com/davidvupham/dbtools"
 Repository = "https://github.com/davidvupham/dbtools"
 Documentation = "https://github.com/davidvupham/dbtools/tree/main/gds_liquibase"
 
-[tool.setuptools]
-packages = ["gds_liquibase"]
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["gds_liquibase*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

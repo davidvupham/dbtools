@@ -8,11 +8,16 @@ version = "1.0.0"
 description = "A Python package for Snowflake connection management and replication monitoring"
 readme = "README.md"
 requires-python = ">=3.7"
-license = {text = "MIT"}
-authors = [
-    {name = "GDS Team", email = "gds@example.com"}
+license = { text = "MIT" }
+authors = [{ name = "GDS Team", email = "gds@example.com" }]
+keywords = [
+    "snowflake",
+    "database",
+    "replication",
+    "monitoring",
+    "failover",
+    "gds",
 ]
-keywords = ["snowflake", "database", "replication", "monitoring", "failover", "gds"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
@@ -51,8 +56,9 @@ Documentation = "https://github.com/davidvupham/dbtools/tree/main/gds_snowflake"
 Repository = "https://github.com/davidvupham/dbtools"
 "Bug Reports" = "https://github.com/davidvupham/dbtools/issues"
 
-[tool.setuptools]
-packages = ["gds_snowflake"]
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["gds_snowflake*"]
 
 [tool.setuptools.package-data]
 gds_snowflake = ["py.typed"]

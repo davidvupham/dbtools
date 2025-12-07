@@ -57,7 +57,7 @@ database = [
 "Bug Tracker" = "https://github.com/gds/dbtools/issues"
 
 [tool.setuptools.packages.find]
-where = ["."]
+where = ["src"]
 include = ["gds_notification*"]
 
 [tool.pytest.ini_options]

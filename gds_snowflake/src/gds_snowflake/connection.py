@@ -111,9 +111,7 @@ class SnowflakeConnection(DatabaseConnection, ConfigurableComponent, ResourceMan
                 self.private_key = secret.get("private_key")
                 if not self.private_key:
                     raise VaultError("private_key not found in Vault secret")
-                logger.info(
-                    "Snowflake private key loaded from Vault: %s", secret_path
-                )
+                logger.info("Snowflake private key loaded from Vault: %s", secret_path)
             except VaultError as e:
                 logger.error("Vault error: %s", e)
                 raise RuntimeError(
@@ -127,7 +125,7 @@ class SnowflakeConnection(DatabaseConnection, ConfigurableComponent, ResourceMan
     # Abstract method implementations
     def validate_config(self) -> bool:
         """Validate the current configuration."""
-        required_fields = ['account']
+        required_fields = ["account"]
         for field in required_fields:
             if not hasattr(self, field) or getattr(self, field) is None:
                 return False
@@ -157,12 +155,12 @@ class SnowflakeConnection(DatabaseConnection, ConfigurableComponent, ResourceMan
     def get_connection_info(self) -> dict[str, Any]:
         """Get connection information."""
         return {
-            'account': self.account,
-            'user': self.user,
-            'warehouse': self.warehouse,
-            'role': self.role,
-            'database': self.database,
-            'connected': self.is_connected()
+            "account": self.account,
+            "user": self.user,
+            "warehouse": self.warehouse,
+            "role": self.role,
+            "database": self.database,
+            "connected": self.is_connected(),
         }
 
     def connect(self) -> snowflake.connector.SnowflakeConnection:
@@ -187,15 +185,15 @@ class SnowflakeConnection(DatabaseConnection, ConfigurableComponent, ResourceMan
                 connection_params["database"] = self.database
             logger.info(
                 "Connecting to Snowflake account: %s as user: %s",
-                self.account, self.user
+                self.account,
+                self.user,
             )
             self.connection = snowflake.connector.connect(**connection_params)
             logger.info("Successfully connected to Snowflake account: %s", self.account)
             return self.connection
         except Exception as e:
             logger.error(
-                "Failed to connect to Snowflake account %s: %s",
-                self.account, str(e)
+                "Failed to connect to Snowflake account %s: %s", self.account, str(e)
             )
             raise
 
@@ -230,11 +228,11 @@ class SnowflakeConnection(DatabaseConnection, ConfigurableComponent, ResourceMan
 
         start_time = time.time()
         result = {
-            'success': False,
-            'response_time_ms': 0,
-            'account_info': {},
-            'error': None,
-            'timestamp': datetime.now().isoformat()
+            "success": False,
+            "response_time_ms": 0,
+            "account_info": {},
+            "error": None,
+            "timestamp": datetime.now().isoformat(),
         }
 
         try:
@@ -245,7 +243,7 @@ class SnowflakeConnection(DatabaseConnection, ConfigurableComponent, ResourceMan
                 "user": self.user,
                 "private_key": self.private_key,
                 "login_timeout": timeout_seconds,
-                "network_timeout": timeout_seconds
+                "network_timeout": timeout_seconds,
             }
 
             if self.warehouse:
@@ -255,9 +253,7 @@ class SnowflakeConnection(DatabaseConnection, ConfigurableComponent, ResourceMan
             if self.database:
                 connection_params["database"] = self.database
 
-            logger.info(
-                "Testing connectivity to Snowflake account: %s", self.account
-            )
+            logger.info("Testing connectivity to Snowflake account: %s", self.account)
 
             # Create test connection
             test_connection = snowflake.connector.connect(**connection_params)
@@ -283,37 +279,37 @@ class SnowflakeConnection(DatabaseConnection, ConfigurableComponent, ResourceMan
 
             account_info = cursor.fetchone()
             if account_info:
-                result['account_info'] = {
-                    'account_name': account_info[0],
-                    'current_user': account_info[1],
-                    'current_role': account_info[2],
-                    'current_warehouse': account_info[3],
-                    'current_database': account_info[4],
-                    'snowflake_version': account_info[5],
-                    'region': account_info[6]
+                result["account_info"] = {
+                    "account_name": account_info[0],
+                    "current_user": account_info[1],
+                    "current_role": account_info[2],
+                    "current_warehouse": account_info[3],
+                    "current_database": account_info[4],
+                    "snowflake_version": account_info[5],
+                    "region": account_info[6],
                 }
 
             cursor.close()
-            result['success'] = True
+            result["success"] = True
 
             end_time = time.time()
-            result['response_time_ms'] = round((end_time - start_time) * 1000, 2)
+            result["response_time_ms"] = round((end_time - start_time) * 1000, 2)
 
             logger.info(
                 "Connectivity test successful for %s (response time: %sms)",
                 self.account,
-                result['response_time_ms']
+                result["response_time_ms"],
             )
 
         except Exception as e:
             end_time = time.time()
-            result['response_time_ms'] = round((end_time - start_time) * 1000, 2)
-            result['error'] = str(e)
+            result["response_time_ms"] = round((end_time - start_time) * 1000, 2)
+            result["error"] = str(e)
             logger.error(
                 "Connectivity test failed for %s: %s (response time: %sms)",
                 self.account,
                 str(e),
-                result['response_time_ms']
+                result["response_time_ms"],
             )
         finally:
             # Clean up test connection

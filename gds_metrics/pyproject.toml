@@ -8,11 +8,18 @@ version = "0.2.0"
 description = "Unified metrics collection for GDS tooling ecosystem"
 readme = "README.md"
 requires-python = ">=3.9"
-license = {text = "MIT"}
-authors = [
-    {name = "GDS Team", email = "gds@example.com"}
+license = { text = "MIT" }
+authors = [{ name = "GDS Team", email = "gds@example.com" }]
+keywords = [
+    "metrics",
+    "prometheus",
+    "opentelemetry",
+    "kafka",
+    "monitoring",
+    "observability",
+    "gds",
+    "tracing",
 ]
-keywords = ["metrics", "prometheus", "opentelemetry", "kafka", "monitoring", "observability", "gds", "tracing"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
@@ -34,11 +41,7 @@ opentelemetry = [
     "opentelemetry-sdk>=1.20.0",
     "opentelemetry-exporter-otlp>=1.20.0",
 ]
-dev = [
-    "pytest>=7.0.0",
-    "pytest-cov>=4.0.0",
-    "ruff>=0.1.0",
-]
+dev = ["pytest>=7.0.0", "pytest-cov>=4.0.0", "ruff>=0.1.0"]
 all = [
     "prometheus-client>=0.14.0",
     "opentelemetry-api>=1.20.0",
@@ -50,8 +53,9 @@ all = [
 Repository = "https://github.com/gds/dbtools"
 Documentation = "https://github.com/gds/dbtools/tree/main/gds_metrics/docs"
 
-[tool.setuptools]
-packages = ["gds_metrics"]
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["gds_metrics*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

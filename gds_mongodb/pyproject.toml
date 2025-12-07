@@ -44,7 +44,7 @@ dev = [
 ]
 
 [tool.setuptools.packages.find]
-where = ["."]
+where = ["src"]
 include = ["gds_mongodb*"]
 
 [tool.setuptools.package-data]

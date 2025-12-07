@@ -56,7 +56,7 @@ Documentation = "https://github.com/davidvupham/dbtools/tree/main/gds_postgres"
 Issues = "https://github.com/davidvupham/dbtools/issues"
 
 [tool.setuptools.packages.find]
-where = ["."]
+where = ["src"]
 include = ["gds_postgres*"]
 
 [tool.setuptools.package-data]

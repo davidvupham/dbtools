@@ -92,16 +92,16 @@ class EnhancedVaultClient(
     """
 
     def __init__(
-            self,
-            vault_addr: Optional[str] = None,
-            role_id: Optional[str] = None,
-            secret_id: Optional[str] = None,
-            timeout: int = 10,
-            config: Optional[dict[str, Any]] = None,
-            max_retries: int = 3,
-            backoff_factor: float = 2.0,
-            namespace: Optional[str] = None,
-        ):
+        self,
+        vault_addr: Optional[str] = None,
+        role_id: Optional[str] = None,
+        secret_id: Optional[str] = None,
+        timeout: int = 10,
+        config: Optional[dict[str, Any]] = None,
+        max_retries: int = 3,
+        backoff_factor: float = 2.0,
+        namespace: Optional[str] = None,
+    ):
         """
         Initialize enhanced Vault client.
 
@@ -261,7 +261,9 @@ class EnhancedVaultClient(
             headers["X-Vault-Namespace"] = self.namespace
 
         try:
-            resp = requests.post(login_url, json=login_payload, headers=headers, timeout=self.timeout)
+            resp = requests.post(
+                login_url, json=login_payload, headers=headers, timeout=self.timeout
+            )
         except requests.RequestException as e:
             raise VaultError(f"Failed to connect to Vault: {e}") from e
 

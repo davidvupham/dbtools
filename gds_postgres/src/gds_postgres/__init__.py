@@ -10,7 +10,7 @@ Classes:
 
 Usage:
     from gds_postgres import PostgreSQLConnection
-    
+
     # Basic connection
     conn = PostgreSQLConnection(
         host='localhost',
@@ -18,12 +18,12 @@ Usage:
         user='myuser',
         password='mypass'
     )
-    
+
     # Using connection URL
     conn = PostgreSQLConnection(
         connection_url='postgresql://user:pass@localhost:5432/mydb'
     )
-    
+
     # Context manager usage
     with PostgreSQLConnection(host='localhost', database='mydb') as conn:
         results = conn.execute_query("SELECT * FROM users")

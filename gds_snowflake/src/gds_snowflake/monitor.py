@@ -25,6 +25,7 @@ from .replication import FailoverGroup, SnowflakeReplication
 
 class AlertSeverity(Enum):
     """Alert severity levels"""
+
     INFO = "INFO"
     WARNING = "WARNING"
     CRITICAL = "CRITICAL"
@@ -33,6 +34,7 @@ class AlertSeverity(Enum):
 @dataclass
 class MonitoringResult:
     """Result of a monitoring operation"""
+
     success: bool
     timestamp: datetime
     account: str
@@ -44,6 +46,7 @@ class MonitoringResult:
 @dataclass
 class ConnectivityResult:
     """Result of connectivity monitoring"""
+
     success: bool
     response_time_ms: float
     account_info: dict[str, str]
@@ -54,6 +57,7 @@ class ConnectivityResult:
 @dataclass
 class ReplicationResult:
     """Result of replication monitoring"""
+
     failover_group: str
     has_failure: bool
     has_latency: bool
@@ -123,8 +127,7 @@ class SnowflakeMonitor(BaseMonitor):
         """
         # Initialize base monitor
         super().__init__(
-            name=f"SnowflakeMonitor-{account}",
-            timeout=connectivity_timeout
+            name=f"SnowflakeMonitor-{account}", timeout=connectivity_timeout
         )
 
         self.account = account
@@ -164,7 +167,7 @@ class SnowflakeMonitor(BaseMonitor):
     def check(self) -> dict[str, Any]:
         """
         Perform the monitoring check (required by BaseMonitor).
-        
+
         Returns:
             Dictionary containing check results
         """
@@ -178,10 +181,10 @@ class SnowflakeMonitor(BaseMonitor):
             duration_ms = (time.time() - start_time) * 1000
 
             result = {
-                'success': results['summary']['connectivity_ok'],
-                'message': f"Monitoring completed for {self.account}",
-                'duration_ms': duration_ms,
-                'data': results
+                "success": results["summary"]["connectivity_ok"],
+                "message": f"Monitoring completed for {self.account}",
+                "duration_ms": duration_ms,
+                "data": results,
             }
 
             # Log and record the result
@@ -193,10 +196,10 @@ class SnowflakeMonitor(BaseMonitor):
         except Exception as e:
             duration_ms = (time.time() - start_time) * 1000
             result = {
-                'success': False,
-                'message': f"Monitoring failed for {self.account}: {e!s}",
-                'duration_ms': duration_ms,
-                'error': str(e)
+                "success": False,
+                "message": f"Monitoring failed for {self.account}: {e!s}",
+                "duration_ms": duration_ms,
+                "error": str(e),
             }
 
             self._log_result(result)
@@ -211,7 +214,9 @@ class SnowflakeMonitor(BaseMonitor):
         Returns:
             ConnectivityResult with connectivity status and diagnostics
         """
-        self.logger.info("Starting connectivity monitoring for account: %s", self.account)
+        self.logger.info(
+            "Starting connectivity monitoring for account: %s", self.account
+        )
 
         try:
             # Test connectivity using the connection's built-in method
@@ -220,26 +225,24 @@ class SnowflakeMonitor(BaseMonitor):
             )
 
             result = ConnectivityResult(
-                success=test_result['success'],
-                response_time_ms=test_result['response_time_ms'],
-                account_info=test_result['account_info'],
-                error=test_result.get('error'),
-                timestamp=datetime.fromisoformat(test_result['timestamp'])
+                success=test_result["success"],
+                response_time_ms=test_result["response_time_ms"],
+                account_info=test_result["account_info"],
+                error=test_result.get("error"),
+                timestamp=datetime.fromisoformat(test_result["timestamp"]),
             )
 
             if result.success:
                 self.logger.info(
                     "✓ Connectivity OK for %s (%sms)",
                     self.account,
-                    result.response_time_ms
+                    result.response_time_ms,
                 )
                 # Reset connectivity notification flag on success
                 self.notified_connectivity = False
             else:
                 self.logger.error(
-                    "✗ Connectivity FAILED for %s: %s",
-                    self.account,
-                    result.error
+                    "✗ Connectivity FAILED for %s: %s", self.account, result.error
                 )
                 # Send alert if enabled and not already notified
                 if self.enable_email_alerts and not self.notified_connectivity:
@@ -255,7 +258,7 @@ class SnowflakeMonitor(BaseMonitor):
                 response_time_ms=0,
                 account_info={},
                 error=str(e),
-                timestamp=datetime.now()
+                timestamp=datetime.now(),
             )
 
             # Send alert if enabled and not already notified
@@ -289,17 +292,20 @@ class SnowflakeMonitor(BaseMonitor):
                 self.logger.warning("No failover groups found")
                 return results
 
-            self.logger.info("Found %s failover groups to monitor", len(failover_groups))
+            self.logger.info(
+                "Found %s failover groups to monitor", len(failover_groups)
+            )
 
             for fg in failover_groups:
                 result = self._check_failover_group_failures(fg)
                 results.append(result)
 
                 # Send alert if failure detected and not already notified
-                if (result.has_failure
-                        and self.enable_email_alerts
-                        and fg.name not in self.notified_failures):
-
+                if (
+                    result.has_failure
+                    and self.enable_email_alerts
+                    and fg.name not in self.notified_failures
+                ):
                     self._send_replication_failure_alert(result)
                     self.notified_failures.add(fg.name)
                 elif not result.has_failure and fg.name in self.notified_failures:
@@ -341,10 +347,11 @@ class SnowflakeMonitor(BaseMonitor):
                 results.append(result)
 
                 # Send alert if latency exceeds threshold
-                if (result.has_latency
-                        and self.enable_email_alerts
-                        and f"{fg.name}_latency" not in self.notified_failures):
-
+                if (
+                    result.has_latency
+                    and self.enable_email_alerts
+                    and f"{fg.name}_latency" not in self.notified_failures
+                ):
                     self._send_replication_latency_alert(result)
                     self.notified_failures.add(f"{fg.name}_latency")
                 elif not result.has_latency:
@@ -370,38 +377,40 @@ class SnowflakeMonitor(BaseMonitor):
         start_time = datetime.now()
 
         results = {
-            'timestamp': start_time.isoformat(),
-            'account': self.account,
-            'connectivity': None,
-            'replication_failures': [],
-            'replication_latency': [],
-            'summary': {
-                'connectivity_ok': False,
-                'total_failover_groups': 0,
-                'groups_with_failures': 0,
-                'groups_with_latency': 0,
-                'monitoring_duration_ms': 0
-            }
+            "timestamp": start_time.isoformat(),
+            "account": self.account,
+            "connectivity": None,
+            "replication_failures": [],
+            "replication_latency": [],
+            "summary": {
+                "connectivity_ok": False,
+                "total_failover_groups": 0,
+                "groups_with_failures": 0,
+                "groups_with_latency": 0,
+                "monitoring_duration_ms": 0,
+            },
         }
 
         try:
             # 1. Check connectivity first
             connectivity_result = self.monitor_connectivity()
-            results['connectivity'] = connectivity_result
-            results['summary']['connectivity_ok'] = connectivity_result.success
+            results["connectivity"] = connectivity_result
+            results["summary"]["connectivity_ok"] = connectivity_result.success
 
             # Skip replication monitoring if connectivity fails
             if not connectivity_result.success:
-                self.logger.warning("Skipping replication monitoring due to connectivity failure")
+                self.logger.warning(
+                    "Skipping replication monitoring due to connectivity failure"
+                )
                 return results
 
             # 2. Check replication failures
             failure_results = self.monitor_replication_failures()
-            results['replication_failures'] = failure_results
+            results["replication_failures"] = failure_results
 
             # 3. Check replication latency
             latency_results = self.monitor_replication_latency()
-            results['replication_latency'] = latency_results
+            results["replication_latency"] = latency_results
 
             # Calculate summary statistics
             all_fg_names = set()
@@ -410,39 +419,49 @@ class SnowflakeMonitor(BaseMonitor):
             if latency_results:
                 all_fg_names.update(r.failover_group for r in latency_results)
 
-            results['summary'].update({
-                'total_failover_groups': len(all_fg_names),
-                'groups_with_failures': sum(1 for r in failure_results if r.has_failure),
-                'groups_with_latency': sum(1 for r in latency_results if r.has_latency),
-            })
+            results["summary"].update(
+                {
+                    "total_failover_groups": len(all_fg_names),
+                    "groups_with_failures": sum(
+                        1 for r in failure_results if r.has_failure
+                    ),
+                    "groups_with_latency": sum(
+                        1 for r in latency_results if r.has_latency
+                    ),
+                }
+            )
 
         except Exception as e:
             self.logger.error("Error in comprehensive monitoring: %s", str(e))
-            results['error'] = str(e)
+            results["error"] = str(e)
 
         finally:
             # Calculate duration
             end_time = datetime.now()
             duration_ms = (end_time - start_time).total_seconds() * 1000
-            results['summary']['monitoring_duration_ms'] = round(duration_ms, 2)
+            results["summary"]["monitoring_duration_ms"] = round(duration_ms, 2)
 
-            conn_status = 'OK' if results['summary']['connectivity_ok'] else 'FAILED'
+            conn_status = "OK" if results["summary"]["connectivity_ok"] else "FAILED"
             self.logger.info(
                 "Monitoring completed in %.2fms - Connectivity: %s, "
                 "Groups: %s, Failures: %s, Latency Issues: %s",
                 duration_ms,
                 conn_status,
-                results['summary']['total_failover_groups'],
-                results['summary']['groups_with_failures'],
-                results['summary']['groups_with_latency']
+                results["summary"]["total_failover_groups"],
+                results["summary"]["groups_with_failures"],
+                results["summary"]["groups_with_latency"],
             )
 
         return results
 
-    def _check_failover_group_failures(self, failover_group: FailoverGroup) -> ReplicationResult:
+    def _check_failover_group_failures(
+        self, failover_group: FailoverGroup
+    ) -> ReplicationResult:
         """Check a single failover group for replication failures."""
         try:
-            has_failure, failure_msg = self.replication.check_replication_failure(failover_group)
+            has_failure, failure_msg = self.replication.check_replication_failure(
+                failover_group
+            )
 
             return ReplicationResult(
                 failover_group=failover_group.name,
@@ -451,12 +470,14 @@ class SnowflakeMonitor(BaseMonitor):
                 latency_minutes=None,
                 failure_message=failure_msg if has_failure else None,
                 latency_message=None,
-                last_refresh=getattr(failover_group, 'last_refresh_time', None),
-                next_refresh=getattr(failover_group, 'next_scheduled_refresh', None)
+                last_refresh=getattr(failover_group, "last_refresh_time", None),
+                next_refresh=getattr(failover_group, "next_scheduled_refresh", None),
             )
 
         except Exception as e:
-            self.logger.error("Error checking failures for %s: %s", failover_group.name, str(e))
+            self.logger.error(
+                "Error checking failures for %s: %s", failover_group.name, str(e)
+            )
             return ReplicationResult(
                 failover_group=failover_group.name,
                 has_failure=True,
@@ -465,13 +486,17 @@ class SnowflakeMonitor(BaseMonitor):
                 failure_message=f"Error checking failures: {e!s}",
                 latency_message=None,
                 last_refresh=None,
-                next_refresh=None
+                next_refresh=None,
             )
 
-    def _check_failover_group_latency(self, failover_group: FailoverGroup) -> ReplicationResult:
+    def _check_failover_group_latency(
+        self, failover_group: FailoverGroup
+    ) -> ReplicationResult:
         """Check a single failover group for replication latency."""
         try:
-            has_latency, latency_msg = self.replication.check_replication_latency(failover_group)
+            has_latency, latency_msg = self.replication.check_replication_latency(
+                failover_group
+            )
 
             # Extract latency value if available
             latency_minutes = None
@@ -498,13 +523,17 @@ class SnowflakeMonitor(BaseMonitor):
                 has_latency=has_latency or threshold_exceeded,
                 latency_minutes=latency_minutes,
                 failure_message=None,
-                latency_message=latency_msg if (has_latency or threshold_exceeded) else None,
-                last_refresh=getattr(failover_group, 'last_refresh_time', None),
-                next_refresh=getattr(failover_group, 'next_scheduled_refresh', None)
+                latency_message=latency_msg
+                if (has_latency or threshold_exceeded)
+                else None,
+                last_refresh=getattr(failover_group, "last_refresh_time", None),
+                next_refresh=getattr(failover_group, "next_scheduled_refresh", None),
             )
 
         except Exception as e:
-            self.logger.error("Error checking latency for %s: %s", failover_group.name, str(e))
+            self.logger.error(
+                "Error checking latency for %s: %s", failover_group.name, str(e)
+            )
             return ReplicationResult(
                 failover_group=failover_group.name,
                 has_failure=False,
@@ -513,7 +542,7 @@ class SnowflakeMonitor(BaseMonitor):
                 failure_message=None,
                 latency_message=f"Error checking latency: {e!s}",
                 last_refresh=None,
-                next_refresh=None
+                next_refresh=None,
             )
 
     def _send_connectivity_alert(self, result: ConnectivityResult):
@@ -526,7 +555,7 @@ Snowflake connectivity test failed for account: {self.account}
 Test Results:
 - Success: {result.success}
 - Response Time: {result.response_time_ms} ms
-- Error: {result.error or 'Unknown error'}
+- Error: {result.error or "Unknown error"}
 - Timestamp: {result.timestamp.isoformat()}
 
 Account Information:
@@ -558,8 +587,8 @@ Account: {self.account}
 Failure Details:
 - Failover Group: {result.failover_group}
 - Error Message: {result.failure_message}
-- Last Refresh: {result.last_refresh or 'Unknown'}
-- Next Refresh: {result.next_refresh or 'Unknown'}
+- Last Refresh: {result.last_refresh or "Unknown"}
+- Next Refresh: {result.next_refresh or "Unknown"}
 
 Please investigate the replication status and resolve any issues.
 
@@ -580,11 +609,11 @@ Account: {self.account}
 
 Latency Details:
 - Failover Group: {result.failover_group}
-- Latency: {result.latency_minutes or 'Unknown'} minutes
+- Latency: {result.latency_minutes or "Unknown"} minutes
 - Threshold: {self.latency_threshold_minutes} minutes
 - Message: {result.latency_message}
-- Last Refresh: {result.last_refresh or 'Unknown'}
-- Next Refresh: {result.next_refresh or 'Unknown'}
+- Last Refresh: {result.last_refresh or "Unknown"}
+- Next Refresh: {result.next_refresh or "Unknown"}
 
 Please monitor the replication performance and investigate if necessary.
 
@@ -600,9 +629,18 @@ Account: {self.account}
         if not self.enable_email_alerts:
             return
 
-        if not all([self.smtp_server, self.from_email, self.to_emails,
-                   self.smtp_user, self.smtp_password]):
-            self.logger.warning("Email configuration incomplete. Skipping email notification.")
+        if not all(
+            [
+                self.smtp_server,
+                self.from_email,
+                self.to_emails,
+                self.smtp_user,
+                self.smtp_password,
+            ]
+        ):
+            self.logger.warning(
+                "Email configuration incomplete. Skipping email notification."
+            )
             return
 
         try:
@@ -613,7 +651,9 @@ Account: {self.account}
 
             msg.attach(MIMEText(body, "plain"))
 
-            self.logger.info("Sending %s email notification: %s", severity.value, subject)
+            self.logger.info(
+                "Sending %s email notification: %s", severity.value, subject
+            )
 
             with smtplib.SMTP(self.smtp_server, self.smtp_port) as server:
                 server.starttls()

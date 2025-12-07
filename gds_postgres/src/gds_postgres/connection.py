@@ -26,11 +26,11 @@ logger = logging.getLogger(__name__)
 class PostgreSQLConnection(DatabaseConnection, ConfigurableComponent, ResourceManager):
     """
     PostgreSQL database connection implementation.
-    
+
     Provides a complete implementation of the DatabaseConnection interface
     for PostgreSQL databases using psycopg2. Supports both individual
     connection parameters and connection URL formats.
-    
+
     Examples:
         # Using individual parameters
         conn = PostgreSQLConnection(
@@ -40,12 +40,12 @@ class PostgreSQLConnection(DatabaseConnection, ConfigurableComponent, ResourceMa
             user='myuser',
             password='mypassword'
         )
-        
+
         # Using connection URL
         conn = PostgreSQLConnection(
             connection_url='postgresql://user:pass@localhost:5432/mydb'
         )
-        
+
         # Using configuration dictionary
         config = {
             'host': 'localhost',
@@ -57,7 +57,7 @@ class PostgreSQLConnection(DatabaseConnection, ConfigurableComponent, ResourceMa
             'connect_timeout': 30
         }
         conn = PostgreSQLConnection(config=config)
-        
+
         # Using as context manager
         with PostgreSQLConnection(host='localhost', database='mydb') as conn:
             results = conn.execute_query("SELECT * FROM users")
@@ -72,11 +72,11 @@ class PostgreSQLConnection(DatabaseConnection, ConfigurableComponent, ResourceMa
         password: Optional[str] = None,
         connection_url: Optional[str] = None,
         config: Optional[Dict[str, Any]] = None,
-        **kwargs
+        **kwargs,
     ):
         """
         Initialize PostgreSQL connection.
-        
+
         Args:
             host: PostgreSQL server host
             port: PostgreSQL server port (default: 5432)
@@ -93,35 +93,37 @@ class PostgreSQLConnection(DatabaseConnection, ConfigurableComponent, ResourceMa
         if connection_url:
             # Parse connection URL
             parsed = urlparse(connection_url)
-            conn_config.update({
-                'host': parsed.hostname,
-                'port': parsed.port or 5432,
-                'database': parsed.path.lstrip('/'),
-                'user': parsed.username,
-                'password': parsed.password,
-                'connection_url': connection_url,
-            })
+            conn_config.update(
+                {
+                    "host": parsed.hostname,
+                    "port": parsed.port or 5432,
+                    "database": parsed.path.lstrip("/"),
+                    "user": parsed.username,
+                    "password": parsed.password,
+                    "connection_url": connection_url,
+                }
+            )
         else:
             # Use individual parameters
             if host is not None:
-                conn_config['host'] = host
+                conn_config["host"] = host
             if port is not None:
-                conn_config['port'] = port
+                conn_config["port"] = port
             if database is not None:
-                conn_config['database'] = database
+                conn_config["database"] = database
             if user is not None:
-                conn_config['user'] = user
+                conn_config["user"] = user
             if password is not None:
-                conn_config['password'] = password
+                conn_config["password"] = password
 
         # Add any additional parameters
         if kwargs:
             conn_config.update(kwargs)
 
         # Set defaults
-        conn_config.setdefault('port', 5432)
-        conn_config.setdefault('connect_timeout', 30)
-        conn_config.setdefault('autocommit', False)
+        conn_config.setdefault("port", 5432)
+        conn_config.setdefault("connect_timeout", 30)
+        conn_config.setdefault("autocommit", False)
 
         # Initialize parent classes
         ConfigurableComponent.__init__(self, conn_config)
@@ -133,24 +135,24 @@ class PostgreSQLConnection(DatabaseConnection, ConfigurableComponent, ResourceMa
     def validate_config(self) -> bool:
         """
         Validate PostgreSQL connection configuration.
-        
+
         Returns:
             True if configuration is valid
-            
+
         Raises:
             ConfigurationError: If required configuration is missing
         """
-        required_fields = ['host', 'database', 'user']
+        required_fields = ["host", "database", "user"]
         missing_fields = [field for field in required_fields if not self.config.get(field)]
 
         if missing_fields:
             raise ConfigurationError(f"Missing required configuration fields: {missing_fields}")
 
         # Validate port is a number
-        port = self.config.get('port')
+        port = self.config.get("port")
         if port and not isinstance(port, int):
             try:
-                self.config['port'] = int(port)
+                self.config["port"] = int(port)
             except ValueError as err:
                 raise ConfigurationError(f"Invalid port number: {port}") from err
 
@@ -159,10 +161,10 @@ class PostgreSQLConnection(DatabaseConnection, ConfigurableComponent, ResourceMa
     def connect(self) -> psycopg2.extensions.connection:
         """
         Establish connection to PostgreSQL database.
-        
+
         Returns:
             psycopg2 connection object
-            
+
         Raises:
             ConnectionError: If connection cannot be established
         """
@@ -172,14 +174,14 @@ class PostgreSQLConnection(DatabaseConnection, ConfigurableComponent, ResourceMa
 
         try:
             conn_params = self._build_connection_parameters()
-            autocommit = conn_params.pop('autocommit', False)
+            autocommit = conn_params.pop("autocommit", False)
 
             logger.info(
                 "Connecting to PostgreSQL database: %s@%s:%s/%s",
-                conn_params.get('user'),
-                conn_params.get('host'),
-                conn_params.get('port'),
-                conn_params.get('database')
+                conn_params.get("user"),
+                conn_params.get("host"),
+                conn_params.get("port"),
+                conn_params.get("database"),
             )
 
             # Establish connection
@@ -200,7 +202,7 @@ class PostgreSQLConnection(DatabaseConnection, ConfigurableComponent, ResourceMa
     def disconnect(self) -> None:
         """
         Close PostgreSQL database connection.
-        
+
         Properly closes cursor and connection, handling any errors gracefully.
         """
         try:
@@ -218,24 +220,20 @@ class PostgreSQLConnection(DatabaseConnection, ConfigurableComponent, ResourceMa
             self.connection = None
 
     def execute_query(
-        self,
-        query: str,
-        params: Optional[tuple] = None,
-        fetch_all: bool = True,
-        return_dict: bool = False
+        self, query: str, params: Optional[tuple] = None, fetch_all: bool = True, return_dict: bool = False
     ) -> List[Any]:
         """
         Execute a query and return results.
-        
+
         Args:
             query: SQL query string to execute
             params: Optional parameters for parameterized queries
             fetch_all: If True, fetch all results. If False, returns cursor
             return_dict: If True, return results as dictionaries
-            
+
         Returns:
             List of query results
-            
+
         Raises:
             ConnectionError: If not connected to database
             QueryError: If query execution fails
@@ -268,7 +266,7 @@ class PostgreSQLConnection(DatabaseConnection, ConfigurableComponent, ResourceMa
                 logger.debug("Query affected %d rows", affected_rows)
                 self._close_cursor(cursor)
                 self._cursor = None
-                return [{'affected_rows': affected_rows}]
+                return [{"affected_rows": affected_rows}]
 
             # SELECT query - fetch results
             if fetch_all:
@@ -291,20 +289,16 @@ class PostgreSQLConnection(DatabaseConnection, ConfigurableComponent, ResourceMa
             logger.error(error_msg)
             raise QueryError(error_msg) from e
 
-    def execute_query_dict(
-        self,
-        query: str,
-        params: Optional[tuple] = None
-    ) -> List[Dict[str, Any]]:
+    def execute_query_dict(self, query: str, params: Optional[tuple] = None) -> List[Dict[str, Any]]:
         """
         Execute query and return results as dictionaries.
-        
+
         Convenience method that calls execute_query with return_dict=True.
-        
+
         Args:
             query: SQL query string
             params: Optional query parameters
-            
+
         Returns:
             List of dictionaries representing query results
         """
@@ -313,7 +307,7 @@ class PostgreSQLConnection(DatabaseConnection, ConfigurableComponent, ResourceMa
     def is_connected(self) -> bool:
         """
         Check if connection is active.
-        
+
         Returns:
             True if connection is active and usable, False otherwise
         """
@@ -322,10 +316,10 @@ class PostgreSQLConnection(DatabaseConnection, ConfigurableComponent, ResourceMa
             return False
 
         try:
-            if getattr(conn, 'closed', 1) != 0:
+            if getattr(conn, "closed", 1) != 0:
                 return False
 
-            poll = getattr(conn, 'poll', None)
+            poll = getattr(conn, "poll", None)
             if callable(poll):
                 try:
                     poll()
@@ -339,27 +333,29 @@ class PostgreSQLConnection(DatabaseConnection, ConfigurableComponent, ResourceMa
     def get_connection_info(self) -> Dict[str, Any]:
         """
         Get connection information.
-        
+
         Returns:
             Dictionary containing connection metadata
         """
         info = {
-            'database_type': 'postgresql',
-            'host': self.config.get('host'),
-            'port': self.config.get('port'),
-            'database': self.config.get('database'),
-            'user': self.config.get('user'),
-            'connected': self.is_connected(),
+            "database_type": "postgresql",
+            "host": self.config.get("host"),
+            "port": self.config.get("port"),
+            "database": self.config.get("database"),
+            "user": self.config.get("user"),
+            "connected": self.is_connected(),
         }
 
         if self.connection:
             try:
-                info.update({
-                    'server_version': self.connection.server_version,
-                    'protocol_version': self.connection.protocol_version,
-                    'autocommit': self.connection.autocommit,
-                    'encoding': self.connection.encoding,
-                })
+                info.update(
+                    {
+                        "server_version": self.connection.server_version,
+                        "protocol_version": self.connection.protocol_version,
+                        "autocommit": self.connection.autocommit,
+                        "encoding": self.connection.encoding,
+                    }
+                )
             except (psycopg2.Error, AttributeError):
                 pass
 
@@ -400,13 +396,13 @@ class PostgreSQLConnection(DatabaseConnection, ConfigurableComponent, ResourceMa
             logger.error(error_msg)
             raise QueryError(error_msg) from e
 
-    def get_table_names(self, schema: str = 'public') -> List[str]:
+    def get_table_names(self, schema: str = "public") -> List[str]:
         """
         Get list of table names in specified schema.
-        
+
         Args:
             schema: Schema name (default: 'public')
-            
+
         Returns:
             List of table names
         """
@@ -420,14 +416,14 @@ class PostgreSQLConnection(DatabaseConnection, ConfigurableComponent, ResourceMa
         results = self.execute_query(query, (schema,))
         return [row[0] for row in results]
 
-    def get_column_info(self, table_name: str, schema: str = 'public') -> List[Dict[str, Any]]:
+    def get_column_info(self, table_name: str, schema: str = "public") -> List[Dict[str, Any]]:
         """
         Get column information for specified table.
-        
+
         Args:
             table_name: Name of the table
             schema: Schema name (default: 'public')
-            
+
         Returns:
             List of dictionaries containing column information
         """
@@ -471,7 +467,7 @@ class PostgreSQLConnection(DatabaseConnection, ConfigurableComponent, ResourceMa
         """Return psycopg2-compatible connection parameters."""
         conn_params = {key: value for key, value in self.config.items() if value is not None}
         # Remove internal keys that psycopg2 should not receive
-        conn_params.pop('connection_url', None)
+        conn_params.pop("connection_url", None)
         return conn_params
 
     def _close_cursor(self, cursor: psycopg2.extensions.cursor) -> None:

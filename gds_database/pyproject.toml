@@ -45,7 +45,7 @@ Documentation = "https://github.com/davidvupham/dbtools/tree/main/gds_database"
 Issues = "https://github.com/davidvupham/dbtools/issues"
 
 [tool.setuptools.packages.find]
-where = ["."]
+where = ["src"]
 include = ["gds_database*"]
 
 [tool.setuptools.package-data]
