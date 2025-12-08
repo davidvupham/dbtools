@@ -1,4 +1,4 @@
-# GDS.WindowsOS Module
+# GDS.Windows Module
 
 # Load private functions
 $privateFunctions = Get-ChildItem -Path "$PSScriptRoot\Private" -Filter "*.ps1" -Recurse

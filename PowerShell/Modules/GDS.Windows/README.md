@@ -1,6 +1,6 @@
-# GDS.WindowsOS Module
+# GDS.Windows Module
 
-The `GDS.WindowsOS` module provides PowerShell functions for interacting with and managing Windows Operating System components, utilizing PowerShell DSC v3 resources where applicable.
+The `GDS.Windows` module provides PowerShell functions for interacting with and managing Windows Operating System components, utilizing PowerShell DSC v3 resources where applicable.
 
 ## Functions
 
@@ -98,8 +98,8 @@ This module uses [Pester](https://pester.dev/) for unit testing. The tests mock 
 To run the tests for this module, execute the following command from the repository root or the module directory:
 
 ```powershell
-# Run all tests in the GDS.WindowsOS module
-Invoke-Pester -Path ./PowerShell/Modules/GDS.WindowsOS/tests/
+# Run all tests in the GDS.Windows module
+Invoke-Pester -Path ./PowerShell/Modules/GDS.Windows/tests/
 ```
 
 Successful output will look like:

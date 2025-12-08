@@ -1,6 +1,6 @@
 
 $here = Split-Path -Parent $MyInvocation.MyCommand.Path
-$modulePath = Join-Path $here "../GDS.WindowsOS.psd1"
+$modulePath = Join-Path $here "../GDS.Windows.psd1"
 
 # Import the module
 Import-Module $modulePath -Force
@@ -14,7 +14,7 @@ Describe 'Get-GDSUserRightPolicyState' {
   # Pester cannot easily mock .NET methods.
   # Workaround: valid temp file will be created by the system. We just need to mock Test-Path and Get-Content.
 
-  InModuleScope 'GDS.WindowsOS' {
+  InModuleScope 'GDS.Windows' {
     Context 'When gpresult runs successfully' {
 
       It 'Returns managed=true when User Right is present in GPO' {
