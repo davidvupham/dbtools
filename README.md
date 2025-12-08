@@ -5,7 +5,10 @@ DBTools is the shared engineering workspace for the GDS team. The repository com
 ## Key Capabilities
 - Database client libraries for Snowflake, PostgreSQL, SQL Server, MongoDB, and Vault
 - Shared abstractions (`gds-database`) that provide consistent connection patterns
+- **Observability & Messaging**: Unified metrics (`gds_metrics`), Kafka integration (`gds_kafka`), and alerting
+- **Benchmarking**: Automated performance testing frameworks (`gds_benchmark`, `gds_hammerdb`)
 - Operational services such as the Snowflake replication monitor and notification pipelines
+- **Infrastructure as Code**: Ansible playbooks for Windows management and PowerShell automation
 - PowerShell tooling for Active Directory export, logging, and NuGet packaging workflows
 - Comprehensive documentation, architecture notes, and CI/CD automation scripts
 
@@ -19,21 +22,31 @@ DBTools is the shared engineering workspace for the GDS team. The repository com
 - `gds_snowflake/` – Snowflake utilities used by monitoring tools and automation
 - `gds_vault/` – HashiCorp Vault client with pluggable authentication and caching
 - `gds_liquibase/` – Database change management with Liquibase integration and CI/CD workflows
+- `gds_kafka/` – Kafka producer/consumer clients, metrics, and logging handlers
+- `gds_metrics/` – Unified metrics collector supporting OpenTelemetry, Prometheus, and Kafka backends
+- `gds_benchmark/` – Abstract interfaces and models for performance benchmarking tools
+- `gds_hammerdb/` – Automated HammerDB benchmarking for PostgreSQL and SQL Server
 - `gds_notification/` – Design docs and stubs for the alert ingestion service
 - `gds_snmp_receiver/` – SNMP trap receiver service with FastAPI and worker pipeline
 - `snowflake_monitoring/` – Application that monitors Snowflake replication health
 
 Each package exposes its own README with full installation, configuration, and API guidance.
 
+### Ansible automation
+- `ansible/` – Playbooks and roles for Windows server management
+  - `windows_service_account_rights.yml` – Manage service account privileges (Lock Pages, Volume Maintenance)
+  - `roles/windows_service_account_rights/` – Reusable role for user rights assignment
+
 ### PowerShell automation
-- `PowerShell/Modules/GDS.Common` – PSFramework-based logging utilities shared across modules
+- `PowerShell/Modules/GDS.Logging` – PSFramework-based logging utilities (replaces `GDS.Common`)
 - `PowerShell/Modules/GDS.NuGet` – Build, package, and publish helpers for PowerShell modules
 - `PowerShell/Modules/GDS.ActiveDirectory` – Cmdlets for exporting AD users/groups to SQL Server
 - `PowerShell/Modules/GDS.MSSQL.AvailabilityGroups` – SQL Server availability group management
 - `PowerShell/Modules/GDS.MSSQL.Build` – SQL Server build and deployment automation
 - `PowerShell/Modules/GDS.MSSQL.Core` – Core SQL Server cmdlets and utilities
 - `PowerShell/Modules/GDS.MSSQL.Monitor` – SQL Server monitoring and alerting
-- `PowerShell/Modules/GDS.WindowsOS` – Windows OS administration utilities
+- `PowerShell/Modules/GDS.Security` – Script signing and certificate management utilities
+- `PowerShell/Modules/GDS.Windows` – Windows OS administration and WinRM configuration (replaces `GDS.WindowsOS`)
 - Convenience scripts such as `PowerShell/BuildAllModules.ps1` and `Install-GDSModulesFromJFrog.ps1`
 
 See `PowerShell/README.md` for module usage, build instructions, and CI pipeline details.
@@ -117,7 +130,7 @@ echo 'export NODE_EXTRA_CA_CERTS=/usr/local/share/ca-certificates/corp.crt' | su
 ## Documentation
 - Module and package documentation: see the README within each component directory
 - `PowerShell/FINAL_IMPLEMENTATION_SUMMARY.md` and `PowerShell/MODULE_ORGANIZATION.md` outline the PowerShell architecture
-- Detailed guides in `PowerShell/Modules/GDS.NuGet/` (NuGet build, JFrog publishing) and `PowerShell/Modules/GDS.Common/` (logging)
+- Detailed guides in `PowerShell/Modules/GDS.NuGet/` (NuGet build, JFrog publishing) and `PowerShell/Modules/GDS.Logging/` (logging)
 - Dev container guides: `docs/vscode/DEVCONTAINER_BEGINNERS_GUIDE.md`, `docs/vscode/DEVCONTAINER.md`, and `docs/vscode/DEVCONTAINER_SQLTOOLS.md`
 - Liquibase tutorial: `docs/tutorials/liquibase/sqlserver-liquibase-tutorial.md` – Comprehensive guide with hands-on examples
 - Architecture documentation: `docs/architecture/` covers database change CI/CD, Liquibase patterns, and OpenTelemetry observability
