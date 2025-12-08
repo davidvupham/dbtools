@@ -22,9 +22,9 @@ from gds_vault import (
     TokenAuth,
     TTLCache,
     VaultAuthError,
-    VaultConnectionError,
     VaultClient,
     VaultConfigurationError,
+    VaultConnectionError,
     VaultPermissionError,
     VaultSecretNotFoundError,
     get_secret_from_vault,
@@ -276,9 +276,7 @@ class TestVaultClientAuthentication(unittest.TestCase):
     def test_successful_authentication(self, mock_post):
         """Test successful authentication."""
         mock_post.return_value = Mock(ok=True)
-        mock_post.return_value.json.return_value = {
-            "auth": {"client_token": "test-token-123", "lease_duration": 3600}
-        }
+        mock_post.return_value.json.return_value = {"auth": {"client_token": "test-token-123", "lease_duration": 3600}}
 
         result = self.client.authenticate()
 
@@ -320,9 +318,7 @@ class TestVaultClientSecretRetrieval(unittest.TestCase):
     def test_get_secret_kv_v2(self, mock_get):
         """Test getting secret from KV v2."""
         mock_get.return_value = Mock(ok=True)
-        mock_get.return_value.json.return_value = {
-            "data": {"data": {"password": "secret123", "username": "admin"}}
-        }
+        mock_get.return_value.json.return_value = {"data": {"data": {"password": "secret123", "username": "admin"}}}
         mock_get.return_value.raise_for_status = Mock()
 
         secret = self.client.get_secret("secret/data/myapp")
@@ -334,16 +330,12 @@ class TestVaultClientSecretRetrieval(unittest.TestCase):
     def test_get_secret_kv_v1(self, mock_get):
         """Test getting secret from KV v1."""
         mock_get.return_value = Mock(ok=True)
-        mock_get.return_value.json.return_value = {
-            "data": {"api_key": "abc123", "endpoint": "https://api.example.com"}
-        }
+        mock_get.return_value.json.return_value = {"data": {"api_key": "abc123", "endpoint": "https://api.example.com"}}
         mock_get.return_value.raise_for_status = Mock()
 
         secret = self.client.get_secret("secret/myapp")
 
-        self.assertEqual(
-            secret, {"api_key": "abc123", "endpoint": "https://api.example.com"}
-        )
+        self.assertEqual(secret, {"api_key": "abc123", "endpoint": "https://api.example.com"})
 
     @patch("gds_vault.client.requests.get")
     def test_get_secret_with_caching(self, mock_get):
@@ -380,9 +372,7 @@ class TestVaultClientSecretRetrieval(unittest.TestCase):
         """Test VaultSecretNotFoundError for 404."""
         mock_response = Mock()
         mock_response.status_code = 404
-        mock_get.return_value.raise_for_status.side_effect = requests.HTTPError(
-            response=mock_response
-        )
+        mock_get.return_value.raise_for_status.side_effect = requests.HTTPError(response=mock_response)
 
         with self.assertRaises(VaultSecretNotFoundError):
             self.client.get_secret("secret/data/nonexistent")
@@ -392,9 +382,7 @@ class TestVaultClientSecretRetrieval(unittest.TestCase):
         """Test VaultPermissionError for 403."""
         mock_response = Mock()
         mock_response.status_code = 403
-        mock_get.return_value.raise_for_status.side_effect = requests.HTTPError(
-            response=mock_response
-        )
+        mock_get.return_value.raise_for_status.side_effect = requests.HTTPError(response=mock_response)
 
         with self.assertRaises(VaultPermissionError):
             self.client.get_secret("secret/data/restricted")
@@ -462,9 +450,7 @@ class TestVaultClientSSLBehavior(unittest.TestCase):
     def test_ssl_cert_path_used_for_verify(self, mock_get, mock_post):
         """When ssl_cert_path is set, verify should use that path."""
         mock_post.return_value = Mock(ok=True)
-        mock_post.return_value.json.return_value = {
-            "auth": {"client_token": "token", "lease_duration": 3600}
-        }
+        mock_post.return_value.json.return_value = {"auth": {"client_token": "token", "lease_duration": 3600}}
         mock_get.return_value = Mock(ok=True)
         mock_get.return_value.json.return_value = {"data": {"data": {"k": "v"}}}
 
@@ -487,9 +473,7 @@ class TestVaultClientSSLBehavior(unittest.TestCase):
     def test_verify_ssl_false_is_propagated(self, mock_get, mock_post):
         """When verify_ssl is False and no cert path, verify should be False."""
         mock_post.return_value = Mock(ok=True)
-        mock_post.return_value.json.return_value = {
-            "auth": {"client_token": "token", "lease_duration": 3600}
-        }
+        mock_post.return_value.json.return_value = {"auth": {"client_token": "token", "lease_duration": 3600}}
         mock_get.return_value = Mock(ok=True)
         mock_get.return_value.json.return_value = {"data": {"data": {"k": "v"}}}
 
@@ -515,9 +499,7 @@ class TestVaultClientContextManager(unittest.TestCase):
     def test_context_manager(self, mock_post):
         """Test using client as context manager."""
         mock_post.return_value = Mock(ok=True)
-        mock_post.return_value.json.return_value = {
-            "auth": {"client_token": "token", "lease_duration": 3600}
-        }
+        mock_post.return_value.json.return_value = {"auth": {"client_token": "token", "lease_duration": 3600}}
 
         with VaultClient() as client:
             self.assertIsInstance(client, VaultClient)
@@ -560,14 +542,10 @@ class TestConvenienceFunction(unittest.TestCase):
     def test_get_secret_from_vault(self, mock_get, mock_post):
         """Test convenience function."""
         mock_post.return_value = Mock(ok=True)
-        mock_post.return_value.json.return_value = {
-            "auth": {"client_token": "token", "lease_duration": 3600}
-        }
+        mock_post.return_value.json.return_value = {"auth": {"client_token": "token", "lease_duration": 3600}}
 
         mock_get.return_value = Mock(ok=True)
-        mock_get.return_value.json.return_value = {
-            "data": {"data": {"password": "secret123"}}
-        }
+        mock_get.return_value.json.return_value = {"data": {"data": {"password": "secret123"}}}
         mock_get.return_value.raise_for_status = Mock()
 
         secret = get_secret_from_vault("secret/data/myapp")

@@ -35,7 +35,7 @@ def humanize_name(name: str) -> str:
     base = name.strip()
     # Remove "test_" prefix for readability
     if base.startswith("test_"):
-        base = base[len("test_"):]
+        base = base[len("test_") :]
     return base.replace("_", " ")
 
 
@@ -65,7 +65,7 @@ def find_insertions_for_file(path: Path) -> List[Insertion]:
             return
         existing_line = lines[first_line_idx - 1]
         leading_len = len(existing_line) - len(existing_line.lstrip())
-        indent = existing_line[: leading_len]
+        indent = existing_line[:leading_len]
         # Compose docstring, keep it short
         desc = humanize_name(node.name)
         raw = f"Test: {desc}."

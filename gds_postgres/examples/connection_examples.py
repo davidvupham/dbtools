@@ -19,13 +19,7 @@ def basic_connection_example():
     print("=== Basic Connection Example ===")
 
     # Create connection with individual parameters
-    conn = PostgreSQLConnection(
-        host='localhost',
-        port=5432,
-        database='testdb',
-        user='testuser',
-        password='testpass'
-    )
+    conn = PostgreSQLConnection(host="localhost", port=5432, database="testdb", user="testuser", password="testpass")
 
     try:
         # Connect to database
@@ -37,10 +31,7 @@ def basic_connection_example():
         print(f"PostgreSQL version: {results[0][0]}")
 
         # Execute query with parameters
-        user_results = conn.execute_query(
-            "SELECT * FROM users WHERE age > %s",
-            (25,)
-        )
+        user_results = conn.execute_query("SELECT * FROM users WHERE age > %s", (25,))
         print(f"Found {len(user_results)} users over 25")
 
     finally:
@@ -52,9 +43,7 @@ def connection_url_example():
     print("\n=== Connection URL Example ===")
 
     # Create connection using URL
-    conn = PostgreSQLConnection(
-        connection_url='postgresql://testuser:testpass@localhost:5432/testdb'
-    )
+    conn = PostgreSQLConnection(connection_url="postgresql://testuser:testpass@localhost:5432/testdb")
 
     try:
         conn.connect()
@@ -73,12 +62,7 @@ def context_manager_example():
     print("\n=== Context Manager Example ===")
 
     # Use as context manager for automatic resource management
-    with PostgreSQLConnection(
-        host='localhost',
-        database='testdb',
-        user='testuser',
-        password='testpass'
-    ) as conn:
+    with PostgreSQLConnection(host="localhost", database="testdb", user="testuser", password="testpass") as conn:
         print("Connection automatically managed")
 
         # Execute query returning dictionaries
@@ -93,11 +77,11 @@ def transaction_example():
     print("\n=== Transaction Example ===")
 
     conn = PostgreSQLConnection(
-        host='localhost',
-        database='testdb',
-        user='testuser',
-        password='testpass',
-        autocommit=False  # Enable transaction mode
+        host="localhost",
+        database="testdb",
+        user="testuser",
+        password="testpass",
+        autocommit=False,  # Enable transaction mode
     )
 
     try:
@@ -107,15 +91,9 @@ def transaction_example():
         conn.begin_transaction()
 
         # Execute multiple operations
-        conn.execute_query(
-            "INSERT INTO users (name, email) VALUES (%s, %s)",
-            ('John Doe', 'john@example.com')
-        )
+        conn.execute_query("INSERT INTO users (name, email) VALUES (%s, %s)", ("John Doe", "john@example.com"))
 
-        conn.execute_query(
-            "UPDATE users SET last_login = NOW() WHERE email = %s",
-            ('john@example.com',)
-        )
+        conn.execute_query("UPDATE users SET last_login = NOW() WHERE email = %s", ("john@example.com",))
 
         # Commit transaction
         conn.commit()
@@ -134,13 +112,7 @@ def metadata_example():
     """Database metadata example."""
     print("\n=== Metadata Example ===")
 
-    with PostgreSQLConnection(
-        host='localhost',
-        database='testdb',
-        user='testuser',
-        password='testpass'
-    ) as conn:
-
+    with PostgreSQLConnection(host="localhost", database="testdb", user="testuser", password="testpass") as conn:
         # Get all table names
         tables = conn.get_table_names()
         print(f"Tables in public schema: {tables}")
@@ -151,7 +123,7 @@ def metadata_example():
             columns = conn.get_column_info(table)
 
             for col in columns:
-                nullable = "NULL" if col['is_nullable'] == 'YES' else "NOT NULL"
+                nullable = "NULL" if col["is_nullable"] == "YES" else "NOT NULL"
                 print(f"  {col['column_name']}: {col['data_type']} {nullable}")
 
 
@@ -161,22 +133,19 @@ def configuration_example():
 
     # Create connection with configuration dictionary
     config = {
-        'host': 'localhost',
-        'port': 5432,
-        'database': 'testdb',
-        'user': 'testuser',
-        'password': 'testpass',
-        'connect_timeout': 30,
-        'autocommit': True
+        "host": "localhost",
+        "port": 5432,
+        "database": "testdb",
+        "user": "testuser",
+        "password": "testpass",
+        "connect_timeout": 30,
+        "autocommit": True,
     }
 
     conn = PostgreSQLConnection(config=config)
 
     # Update configuration
-    conn.update_config({
-        'connect_timeout': 60,
-        'application_name': 'gds_postgres_example'
-    })
+    conn.update_config({"connect_timeout": 60, "application_name": "gds_postgres_example"})
 
     print(f"Connection timeout: {conn.get_config('connect_timeout')}")
     print(f"Application name: {conn.get_config('application_name')}")
@@ -198,24 +167,14 @@ def error_handling_example():
 
     # Example of handling connection errors
     try:
-        conn = PostgreSQLConnection(
-            host='nonexistent-host',
-            database='testdb',
-            user='testuser',
-            password='testpass'
-        )
+        conn = PostgreSQLConnection(host="nonexistent-host", database="testdb", user="testuser", password="testpass")
         conn.connect()
 
     except Exception as e:
         print(f"Connection error handled: {e}")
 
     # Example of handling query errors
-    conn = PostgreSQLConnection(
-        host='localhost',
-        database='testdb',
-        user='testuser',
-        password='testpass'
-    )
+    conn = PostgreSQLConnection(host="localhost", database="testdb", user="testuser", password="testpass")
 
     try:
         conn.connect()
@@ -230,13 +189,13 @@ def error_handling_example():
         conn.disconnect()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     """
     Run all examples.
-    
+
     Note: These examples assume you have a PostgreSQL database
     running with appropriate user and database created.
-    
+
     To set up a test database:
     1. Install PostgreSQL
     2. Create database: createdb testdb

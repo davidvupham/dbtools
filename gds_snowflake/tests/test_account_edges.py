@@ -50,9 +50,8 @@ def test_ensure_data_directory_error(tmp_path):
     def raise_mkdir(self, *args, **kwargs):  # self is Path
         raise OSError("cannot create dir")
 
-    with patch.object(Path, "mkdir", raise_mkdir):
-        with pytest.raises(OSError, match="cannot create dir"):
-            SnowflakeAccount(mock_conn, data_dir=str(tmp_path / "a" / "b"))
+    with patch.object(Path, "mkdir", raise_mkdir), pytest.raises(OSError, match="cannot create dir"):
+        SnowflakeAccount(mock_conn, data_dir=str(tmp_path / "a" / "b"))
 
 
 def test_load_accounts_roundtrip(tmp_path):

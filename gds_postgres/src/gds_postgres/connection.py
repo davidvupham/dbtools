@@ -14,10 +14,12 @@ import psycopg2.extras
 from gds_database import (
     ConfigurableComponent,
     ConfigurationError,
-    ConnectionError,
     DatabaseConnection,
     QueryError,
     ResourceManager,
+)
+from gds_database import (
+    DatabaseConnectionError as ConnectionError,
 )
 
 logger = logging.getLogger(__name__)

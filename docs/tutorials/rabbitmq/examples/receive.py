@@ -3,9 +3,7 @@ import pika
 
 def main() -> None:
     """Consume messages from the hello queue."""
-    connection = pika.BlockingConnection(
-        pika.URLParameters("amqp://devuser:devpassword@localhost:5672/")
-    )
+    connection = pika.BlockingConnection(pika.URLParameters("amqp://devuser:devpassword@localhost:5672/"))
     channel = connection.channel()
 
     channel.queue_declare(queue="hello", durable=True)

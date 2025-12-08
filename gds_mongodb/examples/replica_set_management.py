@@ -213,11 +213,7 @@ def example_monitoring():
                 elif lag_seconds < 60:
                     print(f"  {member}: {lag_seconds}s (acceptable lag)")
                 else:
-                    print(
-                        f"  {member}: {lag_seconds}s "
-                        f"({lag_seconds // 60}m {lag_seconds % 60}s - "
-                        f"significant lag!)"
-                    )
+                    print(f"  {member}: {lag_seconds}s ({lag_seconds // 60}m {lag_seconds % 60}s - significant lag!)")
         else:
             print("  No replication lag data available")
 
@@ -254,9 +250,7 @@ def example_advanced_operations():
         # Note: Uncomment the following line to actually step down
         # rs_manager.step_down(seconds=60)
         print("  (Commented out to prevent actual changes)")
-        print(
-            "  This forces the primary to become a secondary and triggers an election"
-        )
+        print("  This forces the primary to become a secondary and triggers an election")
 
         # Freeze a member (prevent it from becoming primary)
         print("\nFreezing a member to prevent election...")

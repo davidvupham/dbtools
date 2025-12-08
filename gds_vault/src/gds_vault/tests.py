@@ -14,11 +14,7 @@ from gds_vault.legacy.vault import VaultError, get_secret_from_vault
 # These tests require a running Vault dev server and valid env vars.
 # To skip if not configured:
 pytestmark = pytest.mark.skipif(
-    not (
-        os.getenv("VAULT_ROLE_ID")
-        and os.getenv("VAULT_SECRET_ID")
-        and os.getenv("VAULT_ADDR")
-    ),
+    not (os.getenv("VAULT_ROLE_ID") and os.getenv("VAULT_SECRET_ID") and os.getenv("VAULT_ADDR")),
     reason="Vault env vars not set",
 )
 

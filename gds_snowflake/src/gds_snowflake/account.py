@@ -12,7 +12,7 @@ Classes:
 import json
 import logging
 import os
-from dataclasses import dataclass, asdict
+from dataclasses import asdict, dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Optional
@@ -74,7 +74,7 @@ class SnowflakeAccount:
     If not set, it defaults to './data' in the current working directory.
 
     Example:
-        >>> conn = SnowflakeConnection(account='myaccount', user='myuser')
+        >>> conn = SnowflakeConnection(account="myaccount", user="myuser")
         >>> conn.connect()
         >>> account_mgr = SnowflakeAccount(conn)
         >>> accounts = account_mgr.get_all_accounts()
@@ -221,11 +221,7 @@ class SnowflakeAccount:
                     region=row.get("REGION"),
                     cloud_provider=row.get("CLOUD"),
                     account_url=row.get("ACCOUNT_LOCATOR_URL"),
-                    created_on=(
-                        row.get("CREATED_ON").isoformat()
-                        if row.get("CREATED_ON")
-                        else None
-                    ),
+                    created_on=(row.get("CREATED_ON").isoformat() if row.get("CREATED_ON") else None),
                     comment=row.get("COMMENT"),
                     is_org_admin=row.get("IS_ORG_ADMIN", False),
                     account_edition=row.get("EDITION"),
@@ -246,9 +242,7 @@ class SnowflakeAccount:
             )
             raise
 
-    def get_account_parameters(
-        self, account_name: Optional[str] = None
-    ) -> dict[str, Any]:
+    def get_account_parameters(self, account_name: Optional[str] = None) -> dict[str, Any]:
         """
         Get account-level parameters and settings.
 
@@ -284,9 +278,7 @@ class SnowflakeAccount:
             logger.error("Error retrieving account parameters: %s", e)
             raise
 
-    def save_accounts_to_json(
-        self, accounts: list[AccountInfo], filename: Optional[str] = None
-    ) -> Path:
+    def save_accounts_to_json(self, accounts: list[AccountInfo], filename: Optional[str] = None) -> Path:
         """
         Save account information to a JSON file in the data directory.
 
@@ -351,7 +343,7 @@ class SnowflakeAccount:
             raise FileNotFoundError(f"Account data file not found: {filepath}")
 
         try:
-            with open(filepath, "r", encoding="utf-8") as f:
+            with open(filepath, encoding="utf-8") as f:
                 data = json.load(f)
 
             accounts = []
@@ -378,9 +370,7 @@ class SnowflakeAccount:
         """
         summary = {
             "total_accounts": len(accounts),
-            "organizations": len(
-                set(a.organization_name for a in accounts if a.organization_name)
-            ),
+            "organizations": len(set(a.organization_name for a in accounts if a.organization_name)),
             "regions": {},
             "cloud_providers": {},
             "editions": {},
@@ -390,9 +380,7 @@ class SnowflakeAccount:
         for account in accounts:
             # Count by region
             if account.region:
-                summary["regions"][account.region] = (
-                    summary["regions"].get(account.region, 0) + 1
-                )
+                summary["regions"][account.region] = summary["regions"].get(account.region, 0) + 1
 
             # Count by cloud provider
             if account.cloud_provider:
@@ -402,9 +390,7 @@ class SnowflakeAccount:
 
             # Count by edition
             if account.account_edition:
-                summary["editions"][account.account_edition] = (
-                    summary["editions"].get(account.account_edition, 0) + 1
-                )
+                summary["editions"][account.account_edition] = summary["editions"].get(account.account_edition, 0) + 1
 
             # Count org admin accounts
             if account.is_org_admin:

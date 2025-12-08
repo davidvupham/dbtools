@@ -6,15 +6,15 @@ deployments, including server monitoring, database statistics, alerting,
 and replica set health monitoring.
 """
 
-import time
 import logging
+import time
 
 from gds_mongodb import (
+    Alert,
+    AlertManager,
+    AlertSeverity,
     MongoDBConnection,
     MongoDBMonitoring,
-    AlertManager,
-    Alert,
-    AlertSeverity,
     MongoDBReplicaSetManager,
 )
 
@@ -115,9 +115,7 @@ def example_alert_management():
         """Mock email notification handler."""
         if alert.severity in [AlertSeverity.ERROR, AlertSeverity.CRITICAL]:
             print(f"EMAIL ALERT: Would send email for {alert.alert_type.value}")
-            print(
-                f"  Subject: MongoDB {alert.severity.value.upper()}: {alert.alert_type.value}"
-            )
+            print(f"  Subject: MongoDB {alert.severity.value.upper()}: {alert.alert_type.value}")
             print(f"  Body: {alert.message}")
 
     # Add handlers

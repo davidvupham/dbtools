@@ -14,7 +14,6 @@ from typing import Any, Dict, List, Optional, Union
 
 from pymongo import MongoClient
 
-
 from .connection import MongoDBConnection
 
 logger = logging.getLogger(__name__)
@@ -129,9 +128,7 @@ class AlertManager:
             del self.active_alerts[alert_key]
             logger.info(f"Resolved alert {alert_type.value} for {source}")
 
-    def get_active_alerts(
-        self, severity: Optional[AlertSeverity] = None
-    ) -> List[Alert]:
+    def get_active_alerts(self, severity: Optional[AlertSeverity] = None) -> List[Alert]:
         """Get all active alerts, optionally filtered by severity."""
         alerts = list(self.active_alerts.values())
         if severity:
@@ -189,9 +186,7 @@ class MongoDBMonitoring:
             self.client = connection
             self.connection = None
         else:
-            raise ValueError(
-                "connection must be MongoDBConnection or MongoClient instance"
-            )
+            raise ValueError("connection must be MongoDBConnection or MongoClient instance")
 
         self.alert_manager = alert_manager or AlertManager()
 
@@ -238,9 +233,7 @@ class MongoDBMonitoring:
 
             alerts = self._check_server_alerts(metrics)
 
-            return MonitoringResult(
-                timestamp=timestamp, metrics=metrics, alerts=alerts, success=True
-            )
+            return MonitoringResult(timestamp=timestamp, metrics=metrics, alerts=alerts, success=True)
 
         except Exception as e:
             error_msg = f"Failed to monitor server status: {e}"
@@ -282,9 +275,7 @@ class MongoDBMonitoring:
 
             alerts = self._check_database_alerts(metrics)
 
-            return MonitoringResult(
-                timestamp=timestamp, metrics=metrics, alerts=alerts, success=True
-            )
+            return MonitoringResult(timestamp=timestamp, metrics=metrics, alerts=alerts, success=True)
 
         except Exception as e:
             error_msg = f"Failed to monitor database {database_name}: {e}"
@@ -297,9 +288,7 @@ class MongoDBMonitoring:
                 error_message=error_msg,
             )
 
-    def monitor_collection_stats(
-        self, database_name: str, collection_name: str
-    ) -> MonitoringResult:
+    def monitor_collection_stats(self, database_name: str, collection_name: str) -> MonitoringResult:
         """
         Monitor collection statistics and generate alerts.
 
@@ -330,14 +319,10 @@ class MongoDBMonitoring:
 
             alerts = self._check_collection_alerts(metrics)
 
-            return MonitoringResult(
-                timestamp=timestamp, metrics=metrics, alerts=alerts, success=True
-            )
+            return MonitoringResult(timestamp=timestamp, metrics=metrics, alerts=alerts, success=True)
 
         except Exception as e:
-            error_msg = (
-                f"Failed to monitor collection {database_name}.{collection_name}: {e}"
-            )
+            error_msg = f"Failed to monitor collection {database_name}.{collection_name}: {e}"
             logger.error(error_msg)
             return MonitoringResult(
                 timestamp=time.time(),
@@ -365,12 +350,8 @@ class MongoDBMonitoring:
 
             metrics = {
                 "current_operations": len(current_ops),
-                "active_operations": len(
-                    [op for op in current_ops if not op.get("waitingForLock", False)]
-                ),
-                "waiting_operations": len(
-                    [op for op in current_ops if op.get("waitingForLock", False)]
-                ),
+                "active_operations": len([op for op in current_ops if not op.get("waitingForLock", False)]),
+                "waiting_operations": len([op for op in current_ops if op.get("waitingForLock", False)]),
                 "opcounters": server_status.get("opcounters", {}),
                 "opcounters_replicated": server_status.get("opcountersRepl", {}),
                 "global_lock": server_status.get("globalLock", {}),
@@ -380,9 +361,7 @@ class MongoDBMonitoring:
 
             alerts = self._check_performance_alerts(metrics)
 
-            return MonitoringResult(
-                timestamp=timestamp, metrics=metrics, alerts=alerts, success=True
-            )
+            return MonitoringResult(timestamp=timestamp, metrics=metrics, alerts=alerts, success=True)
 
         except Exception as e:
             error_msg = f"Failed to monitor performance: {e}"
@@ -420,12 +399,8 @@ class MongoDBMonitoring:
                 try:
                     db = self.client[db_name]
                     collection_names = db.list_collection_names()
-                    for coll_name in collection_names[
-                        :5
-                    ]:  # Limit to first 5 collections
-                        results[f"collection_{db_name}_{coll_name}"] = (
-                            self.monitor_collection_stats(db_name, coll_name)
-                        )
+                    for coll_name in collection_names[:5]:  # Limit to first 5 collections
+                        results[f"collection_{db_name}_{coll_name}"] = self.monitor_collection_stats(db_name, coll_name)
                 except Exception as e:
                     logger.warning(f"Could not list collections for {db_name}: {e}")
 

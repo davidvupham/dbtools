@@ -45,9 +45,7 @@ class TestGetSecretFromVault(unittest.TestCase):
         """Test successful secret retrieval from KV v2."""
         # Mock AppRole login response
         mock_post.return_value = Mock(ok=True)
-        mock_post.return_value.json.return_value = {
-            "auth": {"client_token": "test-token-123"}
-        }
+        mock_post.return_value.json.return_value = {"auth": {"client_token": "test-token-123"}}
 
         # Mock KV v2 secret fetch response
         mock_get.return_value = Mock(ok=True)
@@ -57,9 +55,7 @@ class TestGetSecretFromVault(unittest.TestCase):
 
         result = get_secret_from_vault("secret/data/myapp")
 
-        self.assertEqual(
-            result, {"password": "super-secret-password", "username": "admin"}
-        )
+        self.assertEqual(result, {"password": "super-secret-password", "username": "admin"})
 
         # Verify API calls
         mock_post.assert_called_once_with(
@@ -89,30 +85,22 @@ class TestGetSecretFromVault(unittest.TestCase):
     def test_successful_secret_retrieval_kv_v1(self, mock_get, mock_post):
         """Test successful secret retrieval from KV v1."""
         mock_post.return_value = Mock(ok=True)
-        mock_post.return_value.json.return_value = {
-            "auth": {"client_token": "token-456"}
-        }
+        mock_post.return_value.json.return_value = {"auth": {"client_token": "token-456"}}
 
         # Mock KV v1 response (no nested data.data)
         mock_get.return_value = Mock(ok=True)
-        mock_get.return_value.json.return_value = {
-            "data": {"api_key": "abc123", "endpoint": "https://api.example.com"}
-        }
+        mock_get.return_value.json.return_value = {"data": {"api_key": "abc123", "endpoint": "https://api.example.com"}}
 
         result = get_secret_from_vault("secret/myapp")
 
-        self.assertEqual(
-            result, {"api_key": "abc123", "endpoint": "https://api.example.com"}
-        )
+        self.assertEqual(result, {"api_key": "abc123", "endpoint": "https://api.example.com"})
 
     def test_missing_role_id_raises_error(self):
         """Test VaultError when VAULT_ROLE_ID is missing."""
         with self.assertRaises(VaultError) as context:
             get_secret_from_vault("secret/data/test")
 
-        self.assertIn(
-            "VAULT_ROLE_ID and VAULT_SECRET_ID must be set", str(context.exception)
-        )
+        self.assertIn("VAULT_ROLE_ID and VAULT_SECRET_ID must be set", str(context.exception))
 
     @patch.dict(os.environ, {"VAULT_ROLE_ID": "test-role"})
     def test_missing_secret_id_raises_error(self):
@@ -120,9 +108,7 @@ class TestGetSecretFromVault(unittest.TestCase):
         with self.assertRaises(VaultError) as context:
             get_secret_from_vault("secret/data/test")
 
-        self.assertIn(
-            "VAULT_ROLE_ID and VAULT_SECRET_ID must be set", str(context.exception)
-        )
+        self.assertIn("VAULT_ROLE_ID and VAULT_SECRET_ID must be set", str(context.exception))
 
     @patch.dict(os.environ, {"VAULT_ROLE_ID": "role", "VAULT_SECRET_ID": "secret"})
     def test_missing_vault_addr_raises_error(self):
@@ -176,9 +162,7 @@ class TestGetSecretFromVault(unittest.TestCase):
     @patch("gds_vault.legacy.vault.requests.post")
     def test_approle_login_failure(self, mock_post):
         """Test VaultError on failed AppRole login."""
-        mock_post.return_value = Mock(
-            ok=False, text="permission denied: invalid credentials"
-        )
+        mock_post.return_value = Mock(ok=False, text="permission denied: invalid credentials")
 
         with self.assertRaises(VaultError) as context:
             get_secret_from_vault("secret/data/test")

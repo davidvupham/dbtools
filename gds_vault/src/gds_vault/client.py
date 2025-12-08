@@ -175,22 +175,16 @@ class VaultClient(SecretProvider, ResourceManager, Configurable):
         self._initialized = False
         self._authenticated = False
 
-        logger.debug(
-            "VaultClient initialized with SSL verification: %s", self._verify_ssl
-        )
+        logger.debug("VaultClient initialized with SSL verification: %s", self._verify_ssl)
 
     def _validate_configuration(self) -> None:
         """Validate client configuration."""
         if not self._vault_addr:
-            raise VaultConfigurationError(
-                "Vault address must be provided or set in VAULT_ADDR "
-                "environment variable"
-            )
+            raise VaultConfigurationError("Vault address must be provided or set in VAULT_ADDR environment variable")
 
         if not self._vault_addr.startswith(("http://", "https://")):
             raise VaultConfigurationError(
-                f"Invalid Vault address: {self._vault_addr}. "
-                "Must start with http:// or https://"
+                f"Invalid Vault address: {self._vault_addr}. Must start with http:// or https://"
             )
 
     # ========================================================================
@@ -339,9 +333,7 @@ class VaultClient(SecretProvider, ResourceManager, Configurable):
             self._authenticated = False
             raise VaultAuthError(f"Authentication failed: {e}") from e
 
-    def get_secret(
-        self, path: str, use_cache: bool = True, version: Optional[int] = None, **kwargs
-    ) -> dict[str, Any]:
+    def get_secret(self, path: str, use_cache: bool = True, version: Optional[int] = None, **kwargs) -> dict[str, Any]:
         """
         Retrieve a secret from Vault.
 
@@ -395,25 +387,18 @@ class VaultClient(SecretProvider, ResourceManager, Configurable):
             start_time = time.time()
             secret_data = self._retry_policy.execute(_fetch)
             duration = (time.time() - start_time) * 1000
-            self._metrics.timing(
-                "vault.secret.fetch", duration, labels={"path": full_path}
-            )
+            self._metrics.timing("vault.secret.fetch", duration, labels={"path": full_path})
             self._metrics.increment("vault.secret.hit", labels={"path": full_path})
 
         except requests.HTTPError as e:
             # Parse HTTP errors into specific exception types
             if e.response.status_code == 404:
                 raise VaultSecretNotFoundError(f"Secret not found: {full_path}") from e
-            elif e.response.status_code == 403:
-                raise VaultPermissionError(
-                    f"Permission denied for secret: {full_path}"
-                ) from e
-            else:
-                raise VaultError(f"Failed to fetch secret {full_path}: {e}") from e
+            if e.response.status_code == 403:
+                raise VaultPermissionError(f"Permission denied for secret: {full_path}") from e
+            raise VaultError(f"Failed to fetch secret {full_path}: {e}") from e
         except requests.RequestException as e:
-            self._metrics.increment(
-                "vault.secret.error", labels={"type": "connection", "path": full_path}
-            )
+            self._metrics.increment("vault.secret.error", labels={"type": "connection", "path": full_path})
             raise VaultConnectionError(f"Failed to connect to Vault: {e}") from e
 
         # Cache the secret with rotation metadata if available
@@ -428,9 +413,7 @@ class VaultClient(SecretProvider, ResourceManager, Configurable):
 
                 set_signature = inspect.signature(self._cache.set)
                 if "rotation_metadata" in set_signature.parameters:
-                    self._cache.set(
-                        cache_key, secret_data, rotation_metadata=rotation_metadata
-                    )
+                    self._cache.set(cache_key, secret_data, rotation_metadata=rotation_metadata)
                     logger.debug("Cached secret with rotation metadata: %s", cache_key)
                 else:
                     self._cache.set(cache_key, secret_data)
@@ -444,9 +427,7 @@ class VaultClient(SecretProvider, ResourceManager, Configurable):
 
         return secret_data
 
-    def _fetch_secret_from_vault(
-        self, secret_path: str, version: Optional[int] = None
-    ) -> dict[str, Any]:
+    def _fetch_secret_from_vault(self, secret_path: str, version: Optional[int] = None) -> dict[str, Any]:
         """
         Internal method to fetch secret from Vault.
 
@@ -478,9 +459,7 @@ class VaultClient(SecretProvider, ResourceManager, Configurable):
         verify = self._ssl_cert_path if self._ssl_cert_path else self._verify_ssl
 
         if self._transport is not None:
-            resp = self._transport.get(
-                secret_url, headers=headers, params=params, timeout=self._timeout
-            )
+            resp = self._transport.get(secret_url, headers=headers, params=params, timeout=self._timeout)
         else:
             resp = requests.get(
                 secret_url,
@@ -573,9 +552,7 @@ class VaultClient(SecretProvider, ResourceManager, Configurable):
             verify = self._ssl_cert_path if self._ssl_cert_path else self._verify_ssl
 
             if self._transport is not None:
-                resp = self._transport.request(
-                    "LIST", list_url, headers=headers, timeout=self._timeout
-                )
+                resp = self._transport.request("LIST", list_url, headers=headers, timeout=self._timeout)
             else:
                 resp = requests.request(
                     "LIST",
@@ -593,9 +570,7 @@ class VaultClient(SecretProvider, ResourceManager, Configurable):
             logger.info("Found %d secrets at %s", len(keys), full_path)
             return keys
         except requests.RequestException as e:
-            raise VaultConnectionError(
-                f"Failed to list secrets at {full_path}: {e}"
-            ) from e
+            raise VaultConnectionError(f"Failed to list secrets at {full_path}: {e}") from e
 
     # ========================================================================
     # ResourceManager interface implementation
@@ -732,9 +707,7 @@ class VaultClient(SecretProvider, ResourceManager, Configurable):
         )
 
     @classmethod
-    def from_token(
-        cls, token: str, vault_addr: Optional[str] = None, **kwargs
-    ) -> "VaultClient":
+    def from_token(cls, token: str, vault_addr: Optional[str] = None, **kwargs) -> "VaultClient":
         """
         Create client using direct token authentication.
 
@@ -763,15 +736,12 @@ class VaultClient(SecretProvider, ResourceManager, Configurable):
 
     def __repr__(self) -> str:
         """Developer-friendly representation."""
-        auth_status = "authenticated" if self.is_authenticated else "not authenticated"  # noqa: E501
-        return (
-            f"VaultClient(vault_addr={self._vault_addr!r}, "
-            f"timeout={self._timeout}, {auth_status})"
-        )
+        auth_status = "authenticated" if self.is_authenticated else "not authenticated"
+        return f"VaultClient(vault_addr={self._vault_addr!r}, timeout={self._timeout}, {auth_status})"
 
     def __str__(self) -> str:
         """User-friendly representation."""
-        auth_status = "authenticated" if self.is_authenticated else "not authenticated"  # noqa: E501
+        auth_status = "authenticated" if self.is_authenticated else "not authenticated"
         return f"Vault Client at {self._vault_addr} ({auth_status})"
 
     def __len__(self) -> int:
@@ -790,10 +760,7 @@ class VaultClient(SecretProvider, ResourceManager, Configurable):
         """Compare two VaultClient instances."""
         if not isinstance(other, VaultClient):
             return NotImplemented
-        return (
-            self._vault_addr == other._vault_addr
-            and type(self._auth).__name__ == type(other._auth).__name__
-        )
+        return self._vault_addr == other._vault_addr and type(self._auth).__name__ == type(other._auth).__name__
 
     def __hash__(self) -> int:
         """Make VaultClient hashable."""

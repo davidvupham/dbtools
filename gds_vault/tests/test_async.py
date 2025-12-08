@@ -14,9 +14,7 @@ from gds_vault.auth import AsyncAppRoleAuth
 @pytest.mark.asyncio
 async def test_async_client_initialization():
     # Use mock auth to avoid credential check during intialization
-    client = AsyncVaultClient(
-        vault_addr="http://localhost:8200", auth=MagicMock(spec=AsyncAppRoleAuth)
-    )
+    client = AsyncVaultClient(vault_addr="http://localhost:8200", auth=MagicMock(spec=AsyncAppRoleAuth))
     assert not client.is_initialized
     async with client as c:
         assert c.is_initialized
@@ -29,9 +27,7 @@ async def test_async_auth_success():
         # Mock response for login
         mock_resp = AsyncMock()
         mock_resp.status = 200
-        mock_resp.json.return_value = {
-            "auth": {"client_token": "test-token", "lease_duration": 3600}
-        }
+        mock_resp.json.return_value = {"auth": {"client_token": "test-token", "lease_duration": 3600}}
         mock_post.return_value.__aenter__.return_value = mock_resp
 
         # Manually create auth with credentials
@@ -56,9 +52,7 @@ async def test_async_get_secret():
         # Auth mock
         mock_auth_resp = AsyncMock()
         mock_auth_resp.status = 200
-        mock_auth_resp.json.return_value = {
-            "auth": {"client_token": "t", "lease_duration": 3600}
-        }
+        mock_auth_resp.json.return_value = {"auth": {"client_token": "t", "lease_duration": 3600}}
         mock_post.return_value.__aenter__.return_value = mock_auth_resp
 
         # Secret mock

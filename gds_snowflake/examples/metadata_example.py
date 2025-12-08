@@ -22,9 +22,9 @@ logger = logging.getLogger(__name__)
 
 def print_json(data, title):
     """Pretty print JSON data."""
-    print(f"\n{'='*80}")
+    print(f"\n{'=' * 80}")
     print(f"{title}")
-    print(f"{'='*80}")
+    print(f"{'=' * 80}")
     print(json.dumps(data, indent=2, default=str))
 
 
@@ -233,7 +233,7 @@ def example_filtering_results():
         table_columns = table_metadata.get_columns(table_name="CUSTOMERS", database_name="MYDB", schema_name="PUBLIC")
         print("\nColumns in CUSTOMERS table:")
         for col in table_columns:
-            print(f"  - {col['COLUMN_NAME']}: {col['DATA_TYPE']} " f"(Nullable: {col['IS_NULLABLE']})")
+            print(f"  - {col['COLUMN_NAME']}: {col['DATA_TYPE']} (Nullable: {col['IS_NULLABLE']})")
 
 
 def example_error_handling():

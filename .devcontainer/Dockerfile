@@ -24,11 +24,11 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
     apt-get update && \
     apt-get install -y --no-install-recommends \
-        wget \
-        gnupg \
-        ca-certificates \
-        curl \
-        lsb-release && \
+    wget \
+    gnupg \
+    ca-certificates \
+    curl \
+    lsb-release && \
     # Microsoft repository
     wget -q https://packages.microsoft.com/config/debian/12/packages-microsoft-prod.deb && \
     dpkg -i packages-microsoft-prod.deb && \
@@ -48,14 +48,14 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
     apt-get update && \
     apt-get remove -y --purge \
-        docker \
-        docker-engine \
-        docker.io \
-        containerd \
-        runc \
-        moby-engine \
-        moby-cli \
-        moby-containerd || true && \
+    docker \
+    docker-engine \
+    docker.io \
+    containerd \
+    runc \
+    moby-engine \
+    moby-cli \
+    moby-containerd || true && \
     apt-get autoremove -y
 
 # Layer 3: Install runtime dependencies (alphabetically sorted for maintainability)
@@ -63,22 +63,22 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
     apt-get update && \
     apt-get install -y --no-install-recommends \
-        ansible \
-        build-essential \
-        containerd.io \
-        docker-buildx-plugin \
-        docker-ce \
-        docker-ce-cli \
-        docker-compose-plugin \
-        gh \
-        iputils-ping \
-        msodbcsql18 \
-        mssql-tools18 \
-        netcat-openbsd \
-        powershell \
-        terraform \
-        unixodbc-dev \
-        vault && \
+    ansible \
+    build-essential \
+    containerd.io \
+    docker-buildx-plugin \
+    docker-ce \
+    docker-ce-cli \
+    docker-compose-plugin \
+    gh \
+    iputils-ping \
+    msodbcsql18 \
+    mssql-tools18 \
+    netcat-openbsd \
+    powershell \
+    terraform \
+    unixodbc-dev \
+    vault && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
@@ -130,8 +130,8 @@ BASH
 # Layer 7: Configure conda activation in shell profiles
 SHELL ["/bin/bash", "-lc"]
 RUN for f in /etc/skel/.bashrc ${DEVCONTAINER_HOME}/.bashrc ${DEVCONTAINER_HOME}/.profile; do \
-        echo 'if [ -f /opt/conda/etc/profile.d/conda.sh ]; then . /opt/conda/etc/profile.d/conda.sh; fi' >> "$f"; \
-        echo "conda activate ${CONDA_ENV_NAME}" >> "$f"; \
+    echo 'if [ -f /opt/conda/etc/profile.d/conda.sh ]; then . /opt/conda/etc/profile.d/conda.sh; fi' >> "$f"; \
+    echo "conda activate ${CONDA_ENV_NAME}" >> "$f"; \
     done
 
 # Layer 8: Configure custom bash prompt
@@ -184,14 +184,15 @@ BASH
 # Layer 10: Install Python packages in conda environment
 RUN conda run -n ${CONDA_ENV_NAME} python -m pip install --upgrade pip && \
     conda run -n ${CONDA_ENV_NAME} pip install --no-cache-dir \
-        ruff \
-        pytest \
-        pytest-cov \
-        wheel \
-        build \
-        pyodbc \
-        aiohttp \
-        pre-commit
+    ruff \
+    pytest \
+    pytest-cov \
+    pytest-asyncio \
+    wheel \
+    build \
+    pyodbc \
+    aiohttp \
+    pre-commit
 
 # Set PATH environment variable
 ENV PATH=/opt/conda/envs/${CONDA_ENV_NAME}/bin:/opt/mssql-tools18/bin:/opt/mssql-tools/bin:$PATH

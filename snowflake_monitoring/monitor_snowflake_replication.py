@@ -71,17 +71,13 @@ def send_email_notification(
         smtp_password = smtp_password or os.getenv("SMTP_PASSWORD")
 
         if not all([smtp_server, from_addr, to_addrs, smtp_user, smtp_password]):
-            logging.error(
-                "Email configuration incomplete. Skipping email notification."
-            )
+            logging.error("Email configuration incomplete. Skipping email notification.")
             return
 
         # Filter empty email addresses
         to_addrs = [addr.strip() for addr in to_addrs if addr.strip()]
         if not to_addrs:
-            logging.error(
-                "No valid recipient email addresses. " "Skipping email notification."
-            )
+            logging.error("No valid recipient email addresses. Skipping email notification.")
             return
 
         msg = MIMEMultipart()
@@ -106,11 +102,11 @@ def send_email_notification(
 def check_snowflake_connectivity(account: str, timeout_seconds: int = 30) -> bool:
     """
     Test connectivity to Snowflake account and log results.
-    
+
     Args:
         account: Snowflake account name
         timeout_seconds: Connection timeout in seconds
-        
+
     Returns:
         bool: True if connectivity test passed, False otherwise
     """
@@ -123,14 +119,11 @@ def check_snowflake_connectivity(account: str, timeout_seconds: int = 30) -> boo
         # Run connectivity test
         result = test_conn.test_connectivity(timeout_seconds=timeout_seconds)
 
-        if result['success']:
-            logging.info(
-                f"✓ Connectivity test PASSED for {account} "
-                f"(response time: {result['response_time_ms']}ms)"
-            )
+        if result["success"]:
+            logging.info(f"✓ Connectivity test PASSED for {account} (response time: {result['response_time_ms']}ms)")
 
             # Log account information
-            account_info = result.get('account_info', {})
+            account_info = result.get("account_info", {})
             if account_info:
                 logging.info(f"  - Account: {account_info.get('account_name')}")
                 logging.info(f"  - User: {account_info.get('current_user')}")
@@ -140,10 +133,7 @@ def check_snowflake_connectivity(account: str, timeout_seconds: int = 30) -> boo
                 logging.info(f"  - Version: {account_info.get('snowflake_version')}")
 
             return True
-        logging.error(
-            f"✗ Connectivity test FAILED for {account} "
-            f"(response time: {result['response_time_ms']}ms)"
-        )
+        logging.error(f"✗ Connectivity test FAILED for {account} (response time: {result['response_time_ms']}ms)")
         logging.error(f"  Error: {result.get('error', 'Unknown error')}")
 
         # Send alert for connectivity issues
@@ -154,14 +144,14 @@ def check_snowflake_connectivity(account: str, timeout_seconds: int = 30) -> boo
         logging.error(f"✗ Connectivity test FAILED for {account}: {e!s}")
 
         # Send alert for connectivity issues
-        send_connectivity_alert(account, {'error': str(e), 'success': False})
+        send_connectivity_alert(account, {"error": str(e), "success": False})
         return False
 
 
 def send_connectivity_alert(account: str, test_result: dict):
     """
     Send email alert for connectivity issues.
-    
+
     Args:
         account: Snowflake account name
         test_result: Connectivity test result dictionary
@@ -172,10 +162,10 @@ def send_connectivity_alert(account: str, test_result: dict):
 Snowflake connectivity test failed for account: {account}
 
 Test Results:
-- Success: {test_result.get('success', False)}
-- Response Time: {test_result.get('response_time_ms', 'N/A')} ms
-- Error: {test_result.get('error', 'Unknown error')}
-- Timestamp: {test_result.get('timestamp', 'N/A')}
+- Success: {test_result.get("success", False)}
+- Response Time: {test_result.get("response_time_ms", "N/A")} ms
+- Error: {test_result.get("error", "Unknown error")}
+- Timestamp: {test_result.get("timestamp", "N/A")}
 
 This could indicate:
 1. Network connectivity issues
@@ -227,16 +217,9 @@ def process_failover_group(
 
     try:
         if need_to_switch:
-            logging.info(
-                f"{fg_name} - Current account is primary, "
-                "switching to secondary for history query"
-            )
-            if not replication.switch_to_secondary_account(
-                failover_group, current_account
-            ):
-                logging.error(
-                    f"Failed to switch to secondary account for {fg_name}, " "skipping"
-                )
+            logging.info(f"{fg_name} - Current account is primary, switching to secondary for history query")
+            if not replication.switch_to_secondary_account(failover_group, current_account):
+                logging.error(f"Failed to switch to secondary account for {fg_name}, skipping")
                 return
 
         # Check for replication failures
@@ -266,9 +249,7 @@ Please investigate immediately.
 
         # Check for replication latency
         if failover_group.replication_schedule:
-            has_latency, latency_message = replication.check_replication_latency(
-                failover_group
-            )
+            has_latency, latency_message = replication.check_replication_latency(failover_group)
             if has_latency:
                 latency_key = f"{fg_name}_latency"
                 if latency_key not in notified_failures:
@@ -330,10 +311,7 @@ def monitor_failover_groups(
     role = role or os.getenv("SNOWFLAKE_ROLE")
 
     if not user:
-        raise ValueError(
-            "Snowflake user not provided. "
-            "Set via arguments or SNOWFLAKE_USER environment variable."
-        )
+        raise ValueError("Snowflake user not provided. Set via arguments or SNOWFLAKE_USER environment variable.")
 
     # Create connection (secret management handled in connection module)
     connection = SnowflakeConnection(
@@ -350,10 +328,7 @@ def monitor_failover_groups(
         logging.info("=" * 60)
 
         if not check_snowflake_connectivity(account):
-            logging.error(
-                f"Connectivity test failed for {account}. "
-                "Skipping replication monitoring."
-            )
+            logging.error(f"Connectivity test failed for {account}. Skipping replication monitoring.")
             return
 
         logging.info("Connectivity test passed. Proceeding with replication monitoring.")
@@ -376,9 +351,7 @@ def monitor_failover_groups(
         for fg in failover_groups:
             process_failover_group(fg, replication, connection, account)
 
-        logging.info(
-            "Completed monitoring cycle for %d failover groups", len(failover_groups)
-        )
+        logging.info("Completed monitoring cycle for %d failover groups", len(failover_groups))
 
     except Exception as e:
         logging.error("Error in monitoring cycle: %s", str(e))
@@ -411,12 +384,8 @@ Example:
     )
 
     parser.add_argument("account", help="Snowflake account name")
-    parser.add_argument(
-        "--user", help="Snowflake username (or set SNOWFLAKE_USER env var)"
-    )
-    parser.add_argument(
-        "--warehouse", help="Snowflake warehouse (or set SNOWFLAKE_WAREHOUSE env var)"
-    )
+    parser.add_argument("--user", help="Snowflake username (or set SNOWFLAKE_USER env var)")
+    parser.add_argument("--warehouse", help="Snowflake warehouse (or set SNOWFLAKE_WAREHOUSE env var)")
     parser.add_argument("--role", help="Snowflake role (or set SNOWFLAKE_ROLE env var)")
     parser.add_argument(
         "--interval",
@@ -458,10 +427,7 @@ Example:
         logging.info("Connectivity timeout: %d seconds", args.connectivity_timeout)
         logging.info("=" * 80)
 
-        success = check_snowflake_connectivity(
-            args.account,
-            timeout_seconds=args.connectivity_timeout
-        )
+        success = check_snowflake_connectivity(args.account, timeout_seconds=args.connectivity_timeout)
 
         if success:
             logging.info("=" * 80)

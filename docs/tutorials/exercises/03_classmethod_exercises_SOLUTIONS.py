@@ -9,8 +9,8 @@ Run this file to verify all exercises pass:
     python 03_classmethod_exercises_SOLUTIONS.py
 """
 
-from datetime import datetime
 import os
+from datetime import datetime
 
 # ============================================================================
 # EXERCISE 1: Create an Alternative Constructor (Easy)
@@ -125,17 +125,13 @@ def test_exercise_3():
     try:
         # Test create_savings
         savings = BankAccount.create_savings("12345678")
-        print(
-            f"✓ Created savings: {savings.account_number}, balance=${savings.balance}"
-        )
+        print(f"✓ Created savings: {savings.account_number}, balance=${savings.balance}")
         assert savings.balance == 0.0
         print("✓ Savings starts with $0")
 
         # Test create_checking
         checking = BankAccount.create_checking("87654321")
-        print(
-            f"✓ Created checking: {checking.account_number}, balance=${checking.balance}"
-        )
+        print(f"✓ Created checking: {checking.account_number}, balance=${checking.balance}")
         assert checking.balance == 100.0
         print("✓ Checking starts with $100")
 
@@ -295,9 +291,7 @@ class DatabaseConfig:
 
     @classmethod
     def from_dict(cls, config: dict):
-        return cls(
-            config["host"], config["port"], config["username"], config["password"]
-        )
+        return cls(config["host"], config["port"], config["username"], config["password"])
 
     @classmethod
     def development(cls):

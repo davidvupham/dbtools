@@ -106,9 +106,7 @@ def transaction_example():
     """Transaction management example."""
     print("=== Transaction Example ===")
 
-    conn = MSSQLConnection(
-        server="localhost", database="testdb", user="testuser", password="testpass"
-    )
+    conn = MSSQLConnection(server="localhost", database="testdb", user="testuser", password="testpass")
 
     try:
         conn.connect()
@@ -118,12 +116,8 @@ def transaction_example():
 
         try:
             # Execute multiple operations
-            conn.execute_query(
-                "INSERT INTO users (name, age) VALUES (?, ?)", ("John Doe", 30)
-            )
-            conn.execute_query(
-                "INSERT INTO users (name, age) VALUES (?, ?)", ("Jane Smith", 25)
-            )
+            conn.execute_query("INSERT INTO users (name, age) VALUES (?, ?)", ("John Doe", 30))
+            conn.execute_query("INSERT INTO users (name, age) VALUES (?, ?)", ("Jane Smith", 25))
 
             # Commit transaction
             conn.commit()
@@ -142,9 +136,7 @@ def context_manager_example():
     """Context manager usage example."""
     print("=== Context Manager Example ===")
 
-    with MSSQLConnection(
-        server="localhost", database="testdb", user="testuser", password="testpass"
-    ) as conn:
+    with MSSQLConnection(server="localhost", database="testdb", user="testuser", password="testpass") as conn:
         print("Connected using context manager")
 
         # Execute query
@@ -158,9 +150,7 @@ def dict_results_example():
     """Example of getting results as dictionaries."""
     print("=== Dictionary Results Example ===")
 
-    conn = MSSQLConnection(
-        server="localhost", database="testdb", user="testuser", password="testpass"
-    )
+    conn = MSSQLConnection(server="localhost", database="testdb", user="testuser", password="testpass")
 
     try:
         conn.connect()
@@ -188,6 +178,4 @@ if __name__ == "__main__":
     # context_manager_example()
     # dict_results_example()
 
-    print(
-        "Examples completed. Uncomment the functions above to run them with an actual SQL Server instance."
-    )
+    print("Examples completed. Uncomment the functions above to run them with an actual SQL Server instance.")

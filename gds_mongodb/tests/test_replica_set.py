@@ -8,13 +8,13 @@ MongoDB replica sets.
 import unittest
 from unittest.mock import MagicMock
 
+from pymongo.errors import OperationFailure, ServerSelectionTimeoutError
+
 from gds_database import (
     ConfigurationError,
     DatabaseConnectionError,
     QueryError,
 )
-from pymongo.errors import OperationFailure, ServerSelectionTimeoutError
-
 from gds_mongodb.replica_set import MongoDBReplicaSetManager
 
 
@@ -89,9 +89,7 @@ class TestMongoDBReplicaSetManager(unittest.TestCase):
 
     def test_get_status_not_replica_set(self):
         """Test get_status when not running as replica set."""
-        self.mock_admin.command.side_effect = OperationFailure(
-            "not running with --replSet"
-        )
+        self.mock_admin.command.side_effect = OperationFailure("not running with --replSet")
 
         manager = MongoDBReplicaSetManager(connection=self.mock_connection)
 
@@ -425,9 +423,7 @@ class TestMongoDBReplicaSetManager(unittest.TestCase):
         result = manager.reconfigure(new_config, force=True)
 
         self.assertEqual(result["ok"], 1)
-        self.mock_admin.command.assert_called_once_with(
-            "replSetReconfig", new_config, force=True
-        )
+        self.mock_admin.command.assert_called_once_with("replSetReconfig", new_config, force=True)
 
     def test_reconfigure_invalid_config(self):
         """Test reconfigure with invalid configuration."""

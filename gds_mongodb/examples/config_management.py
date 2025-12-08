@@ -7,8 +7,8 @@ support for instance metadata (name, environment, tags, etc.).
 """
 
 from gds_mongodb import (
-    MongoDBConnectionConfig,
     MongoDBConnection,
+    MongoDBConnectionConfig,
 )
 
 

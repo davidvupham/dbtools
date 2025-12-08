@@ -10,7 +10,7 @@ build-backend = "setuptools.build_meta"
 name = "dbtools"
 version = "0.1.0"
 description = "Database tools and automation"
-authors = [{name = "DB Tools Team"}]
+authors = [{ name = "GDS Team" }]
 requires-python = ">=3.9"
 dependencies = []
 
@@ -43,21 +43,21 @@ exclude = [
 [tool.ruff.lint]
 # Enable these rule sets
 select = [
-    "E",     # pycodestyle errors
-    "W",     # pycodestyle warnings
-    "F",     # pyflakes
-    "I",     # isort (import sorting)
-    "N",     # pep8-naming
-    "UP",    # pyupgrade (modern Python syntax)
-    "B",     # flake8-bugbear (common bugs)
-    "C4",    # flake8-comprehensions
-    "SIM",   # flake8-simplify
-    "TCH",   # flake8-type-checking
-    "PTH",   # flake8-use-pathlib
-    "RET",   # flake8-return
-    "ARG",   # flake8-unused-arguments
-    "PL",    # pylint rules
-    "RUF",   # Ruff-specific rules
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort (import sorting)
+    "N",   # pep8-naming
+    "UP",  # pyupgrade (modern Python syntax)
+    "B",   # flake8-bugbear (common bugs)
+    "C4",  # flake8-comprehensions
+    "SIM", # flake8-simplify
+    "TCH", # flake8-type-checking
+    "PTH", # flake8-use-pathlib
+    "RET", # flake8-return
+    "ARG", # flake8-unused-arguments
+    "PL",  # pylint rules
+    "RUF", # Ruff-specific rules
 ]
 
 # Ignore specific rules that might be too strict
@@ -79,16 +79,16 @@ dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 [tool.ruff.lint.per-file-ignores]
 # Ignore specific rules in specific files
 "__init__.py" = [
-    "F401",  # Unused imports (OK in __init__.py for re-exports)
-    "F403",  # Star imports (sometimes used in __init__.py)
+    "F401", # Unused imports (OK in __init__.py for re-exports)
+    "F403", # Star imports (sometimes used in __init__.py)
 ]
 "tests/**/*.py" = [
-    "ARG001", # Unused function argument (fixtures)
-    "S101",   # Use of assert (OK in tests)
+    "ARG001",  # Unused function argument (fixtures)
+    "S101",    # Use of assert (OK in tests)
     "PLR2004", # Magic values (OK in tests)
 ]
 "gds_snowflake/test_modules.py" = [
-    "F401",  # Unused imports (testing import functionality)
+    "F401", # Unused imports (testing import functionality)
 ]
 "docs/tutorials/exercises/*_exercises.py" = [
     "F821",   # Undefined name (exercises have TODO sections)
@@ -103,7 +103,7 @@ section-order = [
     "standard-library",
     "third-party",
     "first-party",
-    "local-folder"
+    "local-folder",
 ]
 
 [tool.ruff.lint.mccabe]
@@ -129,3 +129,25 @@ docstring-code-format = true
 
 # Format code in docstrings
 docstring-code-line-length = 80
+
+[tool.pytest.ini_options]
+addopts = "--import-mode=prepend"
+pythonpath = [
+    ".",
+    "gds_benchmark/src",
+    "gds_database/src",
+    "gds_hammerdb/src",
+    "gds_kafka/src",
+    "gds_liquibase/src",
+    "gds_metrics/src",
+    "gds_mongodb/src",
+    "gds_mssql/src",
+    "gds_notification/src",
+    "gds_postgres/src",
+    "gds_snmp_receiver/src",
+    "gds_snowflake/src",
+    "gds_vault/src",
+]
+
+testpaths = ["tests", "gds_*/tests"]
+python_files = "test_*.py"

@@ -59,9 +59,7 @@ class HammerDBRunner(BenchmarkRunner):
         # 2. Run Benchmark
         return self.run(config)
 
-    def _execute(
-        self, script_content: str, hammerdb_config: HammerDBConfig
-    ) -> BenchmarkResult:
+    def _execute(self, script_content: str, hammerdb_config: HammerDBConfig) -> BenchmarkResult:
         run_id = str(uuid.uuid4())
         start_time = datetime.now()
 

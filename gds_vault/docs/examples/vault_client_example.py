@@ -240,9 +240,7 @@ def example_error_handling():
 
     # Example 2: Invalid secret path
     try:
-        client = VaultClient(
-            vault_addr="https://vault.example.com", role_id="test", secret_id="test"
-        )
+        client = VaultClient(vault_addr="https://vault.example.com", role_id="test", secret_id="test")
         client.get_secret("invalid/path")
     except VaultError as e:
         print(f"✓ Caught invalid path error: {e}")

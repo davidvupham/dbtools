@@ -8,7 +8,7 @@ The cache will automatically refresh secrets before their scheduled rotation
 time with a configurable buffer period.
 """
 
-from gds_vault import VaultClient, RotationAwareCache, TTLCache
+from gds_vault import RotationAwareCache, TTLCache, VaultClient
 from gds_vault.exceptions import VaultError
 
 
@@ -75,13 +75,9 @@ def example_manual_rotation_metadata():
             "host": "db.example.com",
         }
 
-        cache.set(
-            "secret/data/database", secret_data, rotation_metadata=rotation_metadata
-        )
+        cache.set("secret/data/database", secret_data, rotation_metadata=rotation_metadata)
 
-        print(
-            f"✓ Cached secret with rotation schedule: {rotation_metadata['schedule']}"
-        )
+        print(f"✓ Cached secret with rotation schedule: {rotation_metadata['schedule']}")
 
         # Check rotation info
         rotation_info = cache.get_rotation_info("secret/data/database")
@@ -165,9 +161,7 @@ def example_rotation_schedule_parsing():
             print(f"  TTL: {ttl} seconds")
 
             # Check if refresh needed
-            needs_refresh = should_refresh_secret(
-                last_rotation, schedule, buffer_minutes=10
-            )
+            needs_refresh = should_refresh_secret(last_rotation, schedule, buffer_minutes=10)
             print(f"  Needs refresh: {needs_refresh}")
 
     except Exception as e:

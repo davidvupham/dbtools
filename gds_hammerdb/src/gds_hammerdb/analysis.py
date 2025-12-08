@@ -6,9 +6,7 @@ from gds_benchmark.models import BenchmarkResult, BenchmarkStatus
 class ResultAnalyzer:
     """Analyzes HammerDB benchmark results."""
 
-    def analyze(
-        self, result: BenchmarkResult, baseline_nopm: Optional[float] = None
-    ) -> Dict[str, Any]:
+    def analyze(self, result: BenchmarkResult, baseline_nopm: Optional[float] = None) -> Dict[str, Any]:
         """
         Analyzes the result against a baseline.
 
@@ -44,19 +42,13 @@ class ResultAnalyzer:
 
             if percent_diff < -10.0:
                 analysis["status"] = "REGRESSION"
-                analysis["findings"].append(
-                    f"Performance regression: {abs(percent_diff)}% below baseline."
-                )
+                analysis["findings"].append(f"Performance regression: {abs(percent_diff)}% below baseline.")
             elif percent_diff > 10.0:
                 analysis["status"] = "IMPROVED"
-                analysis["findings"].append(
-                    f"Performance improvement: {percent_diff}% above baseline."
-                )
+                analysis["findings"].append(f"Performance improvement: {percent_diff}% above baseline.")
             else:
                 analysis["status"] = "PASS"
-                analysis["findings"].append(
-                    "Performance within acceptable range of baseline."
-                )
+                analysis["findings"].append("Performance within acceptable range of baseline.")
         else:
             analysis["status"] = "PASS"
             analysis["findings"].append("No baseline provided. Run checks passed.")

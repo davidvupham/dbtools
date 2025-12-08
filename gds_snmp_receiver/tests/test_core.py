@@ -186,9 +186,7 @@ class TestSNMPReceiverConfig:
 
     def test_valid_amqps_url(self):
         """AMQPS (TLS) URL should be accepted."""
-        config = SNMPReceiverConfig(
-            rabbit_url="amqps://user:pass@secure.example.com:5671/"
-        )
+        config = SNMPReceiverConfig(rabbit_url="amqps://user:pass@secure.example.com:5671/")
         assert config.rabbit_url == "amqps://user:pass@secure.example.com:5671/"
 
     def test_empty_queue_name(self):
@@ -666,9 +664,7 @@ class TestStopAndCleanup:
         receiver = SNMPReceiver()
 
         mock_engine = Mock()
-        mock_engine.transportDispatcher.closeDispatcher.side_effect = Exception(
-            "Close failed"
-        )
+        mock_engine.transportDispatcher.closeDispatcher.side_effect = Exception("Close failed")
         receiver._snmp_engine = mock_engine
 
         # Should not raise

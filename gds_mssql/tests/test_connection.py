@@ -5,7 +5,8 @@ Test suite for Microsoft SQL Server connection implementation.
 import unittest
 from unittest.mock import MagicMock, patch
 
-from gds_database import ConfigurationError, ConnectionError
+from gds_database import ConfigurationError
+from gds_database import DatabaseConnectionError as ConnectionError
 
 # Mock pyodbc to avoid import errors in test environment
 mock_pyodbc = MagicMock()
@@ -34,9 +35,7 @@ class TestMSSQLConnection(unittest.TestCase):
 
     def test_initialization_with_parameters(self):
         """Test initialization with individual parameters."""
-        conn = MSSQLConnection(
-            server="localhost", database="testdb", user="testuser", password="testpass"
-        )
+        conn = MSSQLConnection(server="localhost", database="testdb", user="testuser", password="testpass")
 
         self.assertEqual(conn.config["server"], "localhost")
         self.assertEqual(conn.config["port"], 1433)
@@ -47,9 +46,7 @@ class TestMSSQLConnection(unittest.TestCase):
 
     def test_initialization_with_kerberos(self):
         """Test initialization with Kerberos authentication."""
-        conn = MSSQLConnection(
-            server="localhost", database="testdb", authentication="kerberos"
-        )
+        conn = MSSQLConnection(server="localhost", database="testdb", authentication="kerberos")
 
         self.assertEqual(conn.config["server"], "localhost")
         self.assertEqual(conn.config["database"], "testdb")
@@ -84,16 +81,12 @@ class TestMSSQLConnection(unittest.TestCase):
             )
             conn.validate_config()
 
-        self.assertIn(
-            "User/password should not be provided with Kerberos", str(cm.exception)
-        )
+        self.assertIn("User/password should not be provided with Kerberos", str(cm.exception))
 
     def test_config_validation_username_password_missing_user(self):
         """Test configuration validation with username/password missing user."""
         with self.assertRaises(ConfigurationError) as cm:
-            conn = MSSQLConnection(
-                server="localhost", database="testdb", password="testpass"
-            )
+            conn = MSSQLConnection(server="localhost", database="testdb", password="testpass")
             conn.validate_config()
 
         self.assertIn(
@@ -122,9 +115,7 @@ class TestMSSQLConnection(unittest.TestCase):
 
     def test_connection_string_building_kerberos(self):
         """Test building connection string for Kerberos auth."""
-        conn = MSSQLConnection(
-            server="myserver.domain.com", database="testdb", authentication="kerberos"
-        )
+        conn = MSSQLConnection(server="myserver.domain.com", database="testdb", authentication="kerberos")
 
         conn_str = conn._build_connection_string()
         self.assertIn("SERVER=myserver.domain.com", conn_str)
@@ -139,9 +130,7 @@ class TestMSSQLConnection(unittest.TestCase):
         mock_connection = MagicMock()
         mock_connect.return_value = mock_connection
 
-        conn = MSSQLConnection(
-            server="localhost", database="testdb", user="testuser", password="testpass"
-        )
+        conn = MSSQLConnection(server="localhost", database="testdb", user="testuser", password="testpass")
 
         result = conn.connect()
 
@@ -154,9 +143,7 @@ class TestMSSQLConnection(unittest.TestCase):
         """Test connection failure."""
         mock_connect.side_effect = mock_pyodbc.Error("Connection failed")
 
-        conn = MSSQLConnection(
-            server="localhost", database="testdb", user="testuser", password="testpass"
-        )
+        conn = MSSQLConnection(server="localhost", database="testdb", user="testuser", password="testpass")
 
         with self.assertRaises(ConnectionError) as cm:
             conn.connect()
@@ -168,9 +155,7 @@ class TestMSSQLConnection(unittest.TestCase):
         mock_connection = MagicMock()
         mock_cursor = MagicMock()
 
-        conn = MSSQLConnection(
-            server="localhost", database="testdb", user="testuser", password="testpass"
-        )
+        conn = MSSQLConnection(server="localhost", database="testdb", user="testuser", password="testpass")
         conn.connection = mock_connection
         conn._cursor = mock_cursor
 
@@ -187,9 +172,7 @@ class TestMSSQLConnection(unittest.TestCase):
         mock_cursor = MagicMock()
         mock_cursor.fetchone.return_value = [1]
 
-        conn = MSSQLConnection(
-            server="localhost", database="testdb", user="testuser", password="testpass"
-        )
+        conn = MSSQLConnection(server="localhost", database="testdb", user="testuser", password="testpass")
         conn.connection = mock_connection
         mock_connection.cursor.return_value = mock_cursor
 
@@ -200,9 +183,7 @@ class TestMSSQLConnection(unittest.TestCase):
 
     def test_is_connected_false(self):
         """Test is_connected returns False when not connected."""
-        conn = MSSQLConnection(
-            server="localhost", database="testdb", user="testuser", password="testpass"
-        )
+        conn = MSSQLConnection(server="localhost", database="testdb", user="testuser", password="testpass")
 
         result = conn.is_connected()
 
@@ -233,9 +214,7 @@ class TestMSSQLConnection(unittest.TestCase):
         mock_cursor.description = [("id",), ("name",)]
         mock_cursor.fetchall.return_value = [(1, "test")]
 
-        conn = MSSQLConnection(
-            server="localhost", database="testdb", user="testuser", password="testpass"
-        )
+        conn = MSSQLConnection(server="localhost", database="testdb", user="testuser", password="testpass")
         conn.connection = mock_connection
         mock_connection.cursor.return_value = mock_cursor
 
@@ -252,18 +231,14 @@ class TestMSSQLConnection(unittest.TestCase):
         mock_cursor.description = None
         mock_cursor.rowcount = 1
 
-        conn = MSSQLConnection(
-            server="localhost", database="testdb", user="testuser", password="testpass"
-        )
+        conn = MSSQLConnection(server="localhost", database="testdb", user="testuser", password="testpass")
         conn.connection = mock_connection
         mock_connection.cursor.return_value = mock_cursor
 
         result = conn.execute_query("INSERT INTO test_table VALUES (1, 'test')")
 
         self.assertEqual(result, [{"affected_rows": 1}])
-        mock_cursor.execute.assert_called_with(
-            "INSERT INTO test_table VALUES (1, 'test')", ()
-        )
+        mock_cursor.execute.assert_called_with("INSERT INTO test_table VALUES (1, 'test')", ())
         mock_cursor.close.assert_called_once()
 
     def test_execute_query_dict(self):
@@ -273,9 +248,7 @@ class TestMSSQLConnection(unittest.TestCase):
         mock_cursor.description = [("id",), ("name",)]
         mock_cursor.fetchall.return_value = [(1, "test"), (2, "test2")]
 
-        conn = MSSQLConnection(
-            server="localhost", database="testdb", user="testuser", password="testpass"
-        )
+        conn = MSSQLConnection(server="localhost", database="testdb", user="testuser", password="testpass")
         conn.connection = mock_connection
         mock_connection.cursor.return_value = mock_cursor
 
@@ -288,9 +261,7 @@ class TestMSSQLConnection(unittest.TestCase):
         """Test committing a transaction."""
         mock_connection = MagicMock()
 
-        conn = MSSQLConnection(
-            server="localhost", database="testdb", user="testuser", password="testpass"
-        )
+        conn = MSSQLConnection(server="localhost", database="testdb", user="testuser", password="testpass")
         conn.connection = mock_connection
 
         conn.commit()
@@ -301,9 +272,7 @@ class TestMSSQLConnection(unittest.TestCase):
         """Test rolling back a transaction."""
         mock_connection = MagicMock()
 
-        conn = MSSQLConnection(
-            server="localhost", database="testdb", user="testuser", password="testpass"
-        )
+        conn = MSSQLConnection(server="localhost", database="testdb", user="testuser", password="testpass")
         conn.connection = mock_connection
 
         conn.rollback()
@@ -317,9 +286,7 @@ class TestMSSQLConnection(unittest.TestCase):
         mock_cursor.description = [("TABLE_NAME",)]
         mock_cursor.fetchall.return_value = [("users",), ("products",)]
 
-        conn = MSSQLConnection(
-            server="localhost", database="testdb", user="testuser", password="testpass"
-        )
+        conn = MSSQLConnection(server="localhost", database="testdb", user="testuser", password="testpass")
         conn.connection = mock_connection
         mock_connection.cursor.return_value = mock_cursor
 

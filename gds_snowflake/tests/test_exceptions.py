@@ -25,9 +25,7 @@ class TestSnowflakeConnectionError:
 
     def test_init_with_message_and_account(self):
         """Test exception with message and account"""
-        error = SnowflakeConnectionError(
-            "Connection failed", account="test_account"
-        )
+        error = SnowflakeConnectionError("Connection failed", account="test_account")
 
         assert str(error) == "Connection failed"
         assert error.account == "test_account"
@@ -40,9 +38,7 @@ class TestSnowflakeConnectionError:
     def test_raise_and_catch(self):
         """Test raising and catching the exception"""
         with pytest.raises(SnowflakeConnectionError) as exc_info:
-            raise SnowflakeConnectionError(
-                "Test connection error", account="test_account"
-            )
+            raise SnowflakeConnectionError("Test connection error", account="test_account")
 
         assert "Test connection error" in str(exc_info.value)
         assert exc_info.value.account == "test_account"
@@ -76,9 +72,7 @@ class TestSnowflakeQueryError:
         test_query = "SELECT * FROM invalid_table"
 
         with pytest.raises(SnowflakeQueryError) as exc_info:
-            raise SnowflakeQueryError(
-                "Query execution failed", query=test_query
-            )
+            raise SnowflakeQueryError("Query execution failed", query=test_query)
 
         assert "Query execution failed" in str(exc_info.value)
         assert exc_info.value.query == test_query
@@ -97,9 +91,7 @@ class TestVaultAuthenticationError:
     def test_init_with_message_and_vault_addr(self):
         """Test exception with message and vault address"""
         vault_addr = "https://vault.example.com"
-        error = VaultAuthenticationError(
-            "Authentication failed", vault_addr=vault_addr
-        )
+        error = VaultAuthenticationError("Authentication failed", vault_addr=vault_addr)
 
         assert str(error) == "Authentication failed"
         assert error.vault_addr == vault_addr
@@ -114,9 +106,7 @@ class TestVaultAuthenticationError:
         vault_addr = "https://vault.test.com"
 
         with pytest.raises(VaultAuthenticationError) as exc_info:
-            raise VaultAuthenticationError(
-                "Vault authentication failed", vault_addr=vault_addr
-            )
+            raise VaultAuthenticationError("Vault authentication failed", vault_addr=vault_addr)
 
         assert "Vault authentication failed" in str(exc_info.value)
         assert exc_info.value.vault_addr == vault_addr
@@ -150,9 +140,7 @@ class TestVaultSecretError:
         secret_path = "secret/missing/path"
 
         with pytest.raises(VaultSecretError) as exc_info:
-            raise VaultSecretError(
-                "Secret retrieval failed", secret_path=secret_path
-            )
+            raise VaultSecretError("Secret retrieval failed", secret_path=secret_path)
 
         assert "Secret retrieval failed" in str(exc_info.value)
         assert exc_info.value.secret_path == secret_path
@@ -171,9 +159,7 @@ class TestSnowflakeConfigurationError:
     def test_init_with_message_and_parameter(self):
         """Test exception with message and parameter"""
         parameter = "account"
-        error = SnowflakeConfigurationError(
-            "Invalid configuration", parameter=parameter
-        )
+        error = SnowflakeConfigurationError("Invalid configuration", parameter=parameter)
 
         assert str(error) == "Invalid configuration"
         assert error.parameter == parameter
@@ -188,9 +174,7 @@ class TestSnowflakeConfigurationError:
         parameter = "warehouse"
 
         with pytest.raises(SnowflakeConfigurationError) as exc_info:
-            raise SnowflakeConfigurationError(
-                "Configuration parameter missing", parameter=parameter
-            )
+            raise SnowflakeConfigurationError("Configuration parameter missing", parameter=parameter)
 
         assert "Configuration parameter missing" in str(exc_info.value)
         assert exc_info.value.parameter == parameter
@@ -220,9 +204,7 @@ class TestExceptionInteroperability:
             try:
                 raise ValueError("Original error")
             except ValueError as e:
-                raise SnowflakeConnectionError(
-                    "Connection failed due to configuration"
-                ) from e
+                raise SnowflakeConnectionError("Connection failed due to configuration") from e
         except SnowflakeConnectionError as exc:
             assert exc.__cause__ is not None
             assert isinstance(exc.__cause__, ValueError)

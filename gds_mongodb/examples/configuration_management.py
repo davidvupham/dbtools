@@ -7,12 +7,13 @@ to retrieve and modify MongoDB server configuration settings.
 Reference: https://www.mongodb.com/docs/manual/reference/command/getParameter/
 """
 
+from pymongo.errors import PyMongoError
+
 from gds_mongodb import (
+    MongoDBConfiguration,
     MongoDBConnection,
     MongoDBConnectionConfig,
-    MongoDBConfiguration,
 )
-from pymongo.errors import PyMongoError
 
 
 def example_basic_configuration_retrieval():
@@ -81,7 +82,7 @@ def example_all_configurations():
         for i, (name, value) in enumerate(list(all_settings.items())[:10]):
             print(f"  {name}: {value}")
 
-        print("\n... (and {} more)".format(len(all_settings) - 10))
+        print(f"\n... (and {len(all_settings) - 10} more)")
 
 
 def example_all_configurations_with_details():
@@ -131,10 +132,7 @@ def example_all_configurations_list():
         for setting in all_list[:5]:
             print(f"\n{setting['name']}: {setting['value']}")
             if setting.get("settable_at_runtime") is not None:
-                print(
-                    f"  Runtime: {setting.get('settable_at_runtime')}, "
-                    f"Startup: {setting.get('settable_at_startup')}"
-                )
+                print(f"  Runtime: {setting.get('settable_at_runtime')}, Startup: {setting.get('settable_at_startup')}")
 
 
 def example_runtime_configurations():

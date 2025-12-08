@@ -10,7 +10,8 @@ This example demonstrates how to:
 """
 
 import os
-from gds_snowflake import SnowflakeConnection, SnowflakeAccount
+
+from gds_snowflake import SnowflakeAccount, SnowflakeConnection
 
 
 def main():
@@ -59,9 +60,7 @@ def main():
                     f"{account.account_edition}{current_marker}"
                 )
         except Exception as e:
-            print(
-                "Note: Could not retrieve all accounts. This may require organization admin privileges."
-            )
+            print("Note: Could not retrieve all accounts. This may require organization admin privileges.")
             print(f"Error: {e}")
             # Use current account only for demonstration
             accounts = [current_account]

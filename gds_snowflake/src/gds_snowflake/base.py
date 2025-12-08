@@ -238,16 +238,12 @@ class OperationResult:
             self.timestamp = datetime.now()
 
     @classmethod
-    def success_result(
-        cls, message: str, data: Optional[dict[str, Any]] = None
-    ) -> "OperationResult":
+    def success_result(cls, message: str, data: Optional[dict[str, Any]] = None) -> "OperationResult":
         """Create a successful result."""
         return cls(success=True, message=message, data=data)
 
     @classmethod
-    def failure_result(
-        cls, message: str, error: Optional[str] = None
-    ) -> "OperationResult":
+    def failure_result(cls, message: str, error: Optional[str] = None) -> "OperationResult":
         """Create a failure result."""
         return cls(success=False, message=message, error=error)
 

@@ -1,197 +1,159 @@
-.PHONY: build-gds-snmp build-gds-notification build-all
+.PHONY: help all lint format test clean \
+        build-all build-gds-snmp build-gds-notification \
+        dev-build dev-run dev-shell dev-stop \
+        infra-vault-up infra-vault-down \
+        liquibase-validate liquibase-update-sql \
+        test-pwsh install coverage pre-commit ci
 
-# Build package images in this mono-repo. Each target builds from the
-# package directory so the docker build context is small and package-owned.
+.DELETE_ON_ERROR:
+
+# Default shell
+SHELL := /bin/bash
+
+# Python variables
+PYTHON_FILES := .
+PYTEST_ARGS ?= -v
+
+# Dynamically discover src directories for PYTHONPATH
+SRC_DIRS := $(shell find $(PWD) -maxdepth 3 -type d -name "src")
+PYTHONPATH_DIRS := $(if $(SRC_DIRS),$(shell echo $(SRC_DIRS) | tr ' ' ':')):.
+
+# Discover test directories (excluding hidden/venv)
+TEST_DIRS := $(shell find . -name "tests" -type d -not -path "*/.*" -not -path "./tests")
 
 # Image definitions
 SNMP_IMAGE ?= gds_snmp_receiver:latest
 NOTIF_IMAGE ?= gds_notification:latest
+DEV_IMAGE_NAME ?= dbtools-dev
+DEV_IMAGE_TAG ?= latest
+DEV_IMAGE := $(DEV_IMAGE_NAME):$(DEV_IMAGE_TAG)
 
-build-gds-snmp:
+# Liquibase variables
+LB_COMPOSE := docker/liquibase/docker-compose.yml
+LB_DEFAULTS ?= /data/liquibase/env/liquibase.dev.properties
+LB_CHANGELOG ?= /data/liquibase/platforms/postgres/databases/app/db.changelog-master.yaml
+
+## --- Main Tasks ---
+
+help: ## Show this help message
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
+
+all: lint test build-all ## Run lint, test, and build everything
+
+## --- Python Development ---
+
+lint: ## Run Python linting (Ruff)
+	ruff check $(PYTHON_FILES)
+
+format: ## Run Python formatting (Ruff)
+	ruff format $(PYTHON_FILES)
+
+test: ## Run Python tests (Pytest) per directory to avoid namespace collisions
+	@for dir in $(TEST_DIRS); do \
+		echo "----------------------------------------------------------------------"; \
+		echo "Running tests in $$dir"; \
+		echo "----------------------------------------------------------------------"; \
+		(cd $$dir && PYTHONPATH=$(PYTHONPATH_DIRS) pytest $(PYTEST_ARGS)); \
+		exit_code=$$?; \
+		if [ $$exit_code -eq 5 ]; then \
+			echo "No tests found in $$dir (skipping)"; \
+		elif [ $$exit_code -ne 0 ]; then \
+			exit 1; \
+		fi; \
+	done
+	@echo "----------------------------------------------------------------------"
+	@echo "Running root tests"
+	@echo "----------------------------------------------------------------------"
+	@PYTHONPATH=$(PYTHONPATH_DIRS) pytest $(PYTEST_ARGS) tests/; \
+	exit_code=$$?; \
+	if [ $$exit_code -eq 5 ]; then \
+		echo "No tests found in tests/ (skipping)"; \
+	elif [ $$exit_code -ne 0 ]; then \
+		exit 1; \
+	fi
+
+
+
+
+clean: ## Clean up Python cache and artifacts
+	rm -rf .pytest_cache .ruff_cache __pycache__ .coverage htmlcov dist build
+	find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
+	find . -type d -name "*.egg-info" -exec rm -rf {} + 2>/dev/null || true
+	find . -type f -name "*.pyc" -delete 2>/dev/null || true
+
+
+## --- Docker Builds ---
+
+build-all: build-gds-snmp build-gds-notification ## Build all GDS application images
+
+build-gds-snmp: ## Build SNMP Receiver image
 	docker build -t $(SNMP_IMAGE) gds_snmp_receiver/
 
-build-gds-notification:
+build-gds-notification: ## Build Notification Service image
 	@if [ -d gds_notification ]; then \
 	  docker build -t $(NOTIF_IMAGE) gds_notification/; \
 	else \
 	  echo "gds_notification/ not present, skipping"; \
 	fi
 
-build-all: build-gds-snmp build-gds-notification
-# Makefile for dev container workflows
+## --- Dev Container ---
 
-IMAGE_NAME ?= dbtools-dev
-IMAGE_TAG ?= latest
-IMAGE := $(IMAGE_NAME):$(IMAGE_TAG)
-WORKDIR ?= /workspaces/dbtools
-KRB5_CONF ?= .devcontainer/krb5/krb5.conf
+dev-build: ## Build the dev container image
+	docker build -f .devcontainer/Dockerfile -t $(DEV_IMAGE) .
 
-.PHONY: help
-help:
-	@echo "Devcontainer Make targets:"
-	@echo "  make build            - Build the dev image"
-	@echo "  make build-no-cache   - Build without cache (fresh)"
-	@echo "  make run              - Run container with repo mounted"
-	@echo "  make shell            - Start interactive bash in container"
-	@echo "  make ps               - List running containers"
-	@echo "  make ps-all           - List all containers"
-	@echo "  make images           - List images"
-	@echo "  make logs ID=...      - Show logs for container"
-	@echo "  make stop ID=...      - Stop container"
-	@echo "  make rm ID=...        - Remove container"
-	@echo "  make rmi IMG=...      - Remove image"
-	@echo "  make prune            - Prune unused data"
-	@echo "  make builder-prune    - Prune build cache"
-	@echo "  make clean-all        - Stop/rm all containers and prune"
-	@echo "  make verify           - Run quick verification commands"
-	@echo ""
-	@echo "GDS Package Targets:"
-	@echo "  make build-gds-snmp         - Build SNMP receiver image"
-	@echo "  make build-gds-notification - Build Notification service image"
-	@echo "  make build-all              - Build all GDS images"
-	@echo ""
-	@echo "Infrastructure Targets:"
-	@echo "  make infra-vault-up         - Start Vault service"
-	@echo "  make infra-vault-down       - Stop Vault service"
-	@echo ""
-	@echo "Liquibase targets:"
-	@echo "  make liquibase-build            - Build Liquibase image via compose"
-	@echo "  make liquibase-validate         - Validate changelog (no DB required with offline URL)"
-	@echo "  make liquibase-update-sql       - Preview SQL to apply"
-	@echo "  make liquibase-update           - Apply changes (requires live DB URL)"
-	@echo ""
-	@echo "Variables (override as needed):"
-	@echo "  LB_CHANGELOG=/data/liquibase/platforms/postgres/databases/app/db.changelog-master.yaml"
-	@echo "  LB_DEFAULTS=/data/liquibase/env/liquibase.dev.properties"
-	@echo "  LIQUIBASE_HOST_ROOT (compose env) -> host path mounted to /data/liquibase"
+dev-run: ## Run dev container in background
+	docker run --rm -d --name $(DEV_IMAGE_NAME) \
+		-v "$$(pwd)":/workspaces/dbtools \
+		-w /workspaces/dbtools \
+		$(DEV_IMAGE) tail -f /dev/null
 
-.PHONY: build
-build:
-	docker build -f .devcontainer/Dockerfile -t $(IMAGE) .
-
-.PHONY: build-no-cache
-build-no-cache:
-	docker build --no-cache -f .devcontainer/Dockerfile -t $(IMAGE) .
-
-.PHONY: run
-run:
-	docker run --rm -d \
-		--name $(IMAGE_NAME) \
-		-v "$(PWD)":$(WORKDIR) \
-		-v "$(PWD)/$(KRB5_CONF)":/etc/krb5.conf:ro \
-		-e KRB5_CONFIG=/etc/krb5.conf \
-		-w $(WORKDIR) \
-		$(IMAGE) tail -f /dev/null
-
-.PHONY: shell
-shell:
-	docker exec -it $(IMAGE_NAME) bash || docker run --rm -it \
-		-v "$(PWD)":$(WORKDIR) \
-		-v "$(PWD)/$(KRB5_CONF)":/etc/krb5.conf:ro \
-		-e KRB5_CONFIG=/etc/krb5.conf \
-		-w $(WORKDIR) \
-		$(IMAGE) bash
-
-.PHONY: ps
-ps:
-	docker ps
-
-.PHONY: ps-all
-ps-all:
-	docker ps -a
-
-.PHONY: images
-images:
-	docker images
-
-.PHONY: logs
-logs:
-	@if [ -z "$(ID)" ]; then echo "Usage: make logs ID=<container_id>"; exit 1; fi
-	docker logs $(ID)
-
-.PHONY: stop
-stop:
-	@if [ -z "$(ID)" ]; then echo "Usage: make stop ID=<container_id>"; exit 1; fi
-	docker stop $(ID)
-
-.PHONY: rm
-rm:
-	@if [ -z "$(ID)" ]; then echo "Usage: make rm ID=<container_id>"; exit 1; fi
-	docker rm $(ID)
-
-.PHONY: rmi
-rmi:
-	@if [ -z "$(IMG)" ]; then echo "Usage: make rmi IMG=<image_id_or_name>"; exit 1; fi
-	docker rmi $(IMG)
-
-.PHONY: prune
-prune:
-	docker system prune -f
-
-.PHONY: builder-prune
-builder-prune:
-	docker builder prune -af
-
-.PHONY: clean-all
-clean-all:
-	-@docker ps -aq | xargs -r docker stop
-	-@docker ps -aq | xargs -r docker rm
-	docker system prune -f
-
-.PHONY: verify
-verify:
-	docker run --rm \
-		-v "$(PWD)":$(WORKDIR) \
-		-w $(WORKDIR) \
-		$(IMAGE) bash -lc "python -V && terraform -version && aws --version && az version && sqlcmd -? | head -n 1"
-
-### Infrastructure targets
-INFRA_COMPOSE := docker/docker-compose.yml
-
-.PHONY: infra-vault-up
-infra-vault-up:
-	docker compose -f $(INFRA_COMPOSE) up -d vault
-
-.PHONY: infra-vault-down
-infra-vault-down:
-	docker compose -f $(INFRA_COMPOSE) down
-
-### Liquibase convenience targets (docker compose)
-
-LB_COMPOSE := docker/liquibase/docker-compose.yml
-LB_SERVICE := liquibase
-LB_CHANGELOG ?= /data/liquibase/platforms/postgres/databases/app/db.changelog-master.yaml
-LB_DEFAULTS ?= /data/liquibase/env/liquibase.dev.properties
-
-.PHONY: check-liquibase-env
-check-liquibase-env:
-	@if [ -z "$$LIQUIBASE_HOST_ROOT" ] && [ ! -d "./changelogs" ]; then \
-		echo "WARNING: LIQUIBASE_HOST_ROOT is not set and ./changelogs does not exist."; \
-		echo "         Use 'export LIQUIBASE_HOST_ROOT=/absolute/path/to/changelogs'"; \
+dev-shell: ## Open shell in dev container
+	@if ! docker exec -it $(DEV_IMAGE_NAME) bash 2>/dev/null; then \
+		$(MAKE) dev-run && sleep 1 && docker exec -it $(DEV_IMAGE_NAME) bash; \
 	fi
 
-.PHONY: liquibase-build
-liquibase-build: check-liquibase-env
-	docker compose -f $(LB_COMPOSE) build
+dev-stop: ## Stop dev container
+	docker stop $(DEV_IMAGE_NAME)
 
-.PHONY: liquibase-validate
-liquibase-validate: check-liquibase-env
-	docker compose -f $(LB_COMPOSE) run --rm $(LB_SERVICE) \
+## --- Infrastructure (Vault, Liquibase) ---
+
+infra-vault-up: ## Start Vault via Docker Compose
+	docker compose -f docker/docker-compose.yml up -d vault
+
+infra-vault-down: ## Stop Vault
+	docker compose -f docker/docker-compose.yml down
+
+liquibase-validate: ## Validate Liquibase changelogs
+	docker compose -f $(LB_COMPOSE) run --rm liquibase \
 		--defaults-file $(LB_DEFAULTS) \
 		--changelog-file $(LB_CHANGELOG) \
 		validate
 
-.PHONY: liquibase-update-sql
-liquibase-update-sql: check-liquibase-env
-	docker compose -f $(LB_COMPOSE) run --rm $(LB_SERVICE) \
+liquibase-update-sql: ## Preview Liquibase SQL
+	docker compose -f $(LB_COMPOSE) run --rm liquibase \
 		--defaults-file $(LB_DEFAULTS) \
 		--changelog-file $(LB_CHANGELOG) \
 		updateSQL
 
-.PHONY: liquibase-update
-liquibase-update: check-liquibase-env
-	@echo "Note: requires a live JDBC URL in $(LB_DEFAULTS) or env vars."
-	docker compose -f $(LB_COMPOSE) run --rm $(LB_SERVICE) \
-		--defaults-file $(LB_DEFAULTS) \
-		--changelog-file $(LB_CHANGELOG) \
-		update
+## --- PowerShell ---
+
+test-pwsh: ## Run PowerShell Pester tests (requires pwsh)
+	pwsh -Command "Invoke-Pester -Output Detailed"
+
+## --- Additional Utilities ---
+
+install: ## Install all packages in development mode
+	@for pkg in gds_*/; do \
+		if [ -f "$$pkg/pyproject.toml" ]; then \
+			echo "Installing $$pkg..."; \
+			pip install -e "$$pkg"; \
+		fi \
+	done
+
+coverage: ## Run tests with coverage report
+	PYTHONPATH=$(PYTHONPATH_DIRS) pytest --cov=. --cov-report=html --cov-report=term tests/
+
+pre-commit: ## Run pre-commit hooks on all files
+	pre-commit run --all-files
+
+ci: lint test ## Run all CI checks (lint + test)

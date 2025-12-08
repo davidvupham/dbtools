@@ -3,9 +3,7 @@ import pika
 
 def main() -> None:
     """Send a single hello message to the RabbitMQ queue."""
-    connection = pika.BlockingConnection(
-        pika.URLParameters("amqp://devuser:devpassword@localhost:5672/")
-    )
+    connection = pika.BlockingConnection(pika.URLParameters("amqp://devuser:devpassword@localhost:5672/"))
     channel = connection.channel()
 
     # Ensure the queue exists and survives broker restarts

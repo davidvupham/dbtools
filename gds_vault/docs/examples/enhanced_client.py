@@ -120,9 +120,7 @@ class EnhancedVaultClient:
         url = f"{self.vault_addr}/v1/auth/approle/login"
         payload = {"role_id": self.role_id, "secret_id": self.secret_id}
 
-        resp = requests.post(
-            url, json=payload, timeout=self.timeout, verify=self.verify_ssl
-        )
+        resp = requests.post(url, json=payload, timeout=self.timeout, verify=self.verify_ssl)
 
         if not resp.ok:
             raise VaultError(f"Authentication failed: {resp.text}")
@@ -168,9 +166,7 @@ class EnhancedVaultClient:
 
         headers = {"X-Vault-Token": self._get_token()}
 
-        resp = requests.get(
-            url, headers=headers, timeout=self.timeout, verify=self.verify_ssl
-        )
+        resp = requests.get(url, headers=headers, timeout=self.timeout, verify=self.verify_ssl)
 
         if not resp.ok:
             raise VaultError(f"Failed to read secret: {resp.text}")
@@ -232,9 +228,7 @@ class EnhancedVaultClient:
         url = f"{self.vault_addr}/v1/{path}"
         headers = {"X-Vault-Token": self._get_token()}
 
-        resp = requests.delete(
-            url, headers=headers, timeout=self.timeout, verify=self.verify_ssl
-        )
+        resp = requests.delete(url, headers=headers, timeout=self.timeout, verify=self.verify_ssl)
 
         if not resp.ok:
             raise VaultError(f"Failed to delete secret: {resp.text}")
@@ -278,9 +272,7 @@ class EnhancedVaultClient:
         url = f"{self.vault_addr}/v1/auth/token/renew-self"
         headers = {"X-Vault-Token": self._token_cache}
 
-        resp = requests.post(
-            url, headers=headers, timeout=self.timeout, verify=self.verify_ssl
-        )
+        resp = requests.post(url, headers=headers, timeout=self.timeout, verify=self.verify_ssl)
 
         if not resp.ok:
             return False
@@ -299,9 +291,7 @@ class EnhancedVaultClient:
         url = f"{self.vault_addr}/v1/auth/token/revoke-self"
         headers = {"X-Vault-Token": self._token_cache}
 
-        resp = requests.post(
-            url, headers=headers, timeout=self.timeout, verify=self.verify_ssl
-        )
+        resp = requests.post(url, headers=headers, timeout=self.timeout, verify=self.verify_ssl)
 
         self._token_cache = None
         self._token_expiry = None
@@ -318,9 +308,7 @@ if __name__ == "__main__":
         print(f"Password: {secret.get('password')}")
 
         # Write secret
-        client.write_secret(
-            "secret/data/myapp/api", {"key": "value", "token": "abc123"}
-        )
+        client.write_secret("secret/data/myapp/api", {"key": "value", "token": "abc123"})
 
         # List secrets
         secrets = client.list_secrets("secret/metadata/myapp")

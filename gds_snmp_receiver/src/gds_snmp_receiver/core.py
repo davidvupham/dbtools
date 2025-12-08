@@ -29,7 +29,7 @@ Example:
     ...     listen_host="0.0.0.0",
     ...     listen_port=9162,
     ...     rabbit_url="amqp://guest:guest@localhost:5672/",
-    ...     queue_name="alerts"
+    ...     queue_name="alerts",
     ... )
     >>> receiver.run()  # Blocks until stopped
 
@@ -47,13 +47,14 @@ import signal
 import socket
 import threading
 import time
+from collections.abc import Iterable
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Any, Iterable, Optional
+from typing import Any, Optional
 from urllib.parse import urlparse
 
 import pika
-from pika.exceptions import AMQPConnectionError, AMQPChannelError
+from pika.exceptions import AMQPChannelError, AMQPConnectionError
 
 # pysnmp changed carrier backends over versions: older versions expose
 # pysnmp.carrier.asynsock, newer versions expose pysnmp.carrier.asyncio.
@@ -68,7 +69,7 @@ except Exception:
     from pysnmp.carrier.asyncio.dgram import udp
 
     _PYSNMP_BACKEND = "asyncio"
-from pysnmp.entity import engine, config
+from pysnmp.entity import config, engine
 from pysnmp.entity.rfc3413 import ntfrcv
 
 logger = logging.getLogger("gds_snmp_receiver")
@@ -121,10 +122,7 @@ class SNMPReceiverConfig:
         rabbitmq_wait_timeout: Max time to wait for RabbitMQ at startup.
 
     Example:
-        >>> config = SNMPReceiverConfig(
-        ...     listen_port=9162,
-        ...     community_string="my_secret"
-        ... )
+        >>> config = SNMPReceiverConfig(listen_port=9162, community_string="my_secret")
         >>> receiver = SNMPReceiver.from_config(config)
     """
 
@@ -159,14 +157,9 @@ class SNMPReceiverConfig:
     def _validate_port(self) -> None:
         """Validate listen_port is in valid range."""
         if not isinstance(self.listen_port, int):
-            raise ValueError(
-                f"listen_port must be an integer, got {type(self.listen_port).__name__}"
-            )
+            raise ValueError(f"listen_port must be an integer, got {type(self.listen_port).__name__}")
         if not MIN_PORT <= self.listen_port <= MAX_PORT:
-            raise ValueError(
-                f"listen_port must be between {MIN_PORT} and {MAX_PORT}, "
-                f"got {self.listen_port}"
-            )
+            raise ValueError(f"listen_port must be between {MIN_PORT} and {MAX_PORT}, got {self.listen_port}")
         if self.listen_port <= PRIVILEGED_PORT_MAX:
             logger.warning(
                 "Port %d requires root/admin privileges. Consider using port >= %d",
@@ -177,9 +170,7 @@ class SNMPReceiverConfig:
     def _validate_host(self) -> None:
         """Validate listen_host is a valid IP or hostname."""
         if not isinstance(self.listen_host, str):
-            raise ValueError(
-                f"listen_host must be a string, got {type(self.listen_host).__name__}"
-            )
+            raise ValueError(f"listen_host must be a string, got {type(self.listen_host).__name__}")
         if not self.listen_host:
             raise ValueError("listen_host cannot be empty")
 
@@ -187,35 +178,27 @@ class SNMPReceiverConfig:
         try:
             socket.inet_aton(self.listen_host)
             return
-        except socket.error:
+        except OSError:
             pass
 
         # Check if it's a valid hostname pattern
         hostname_pattern = re.compile(
-            r"^[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?"
-            r"(\.[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?)*$"
+            r"^[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?" r"(\.[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?)*$"
         )
         if not hostname_pattern.match(self.listen_host):
-            raise ValueError(
-                f"listen_host '{self.listen_host}' is not a valid IP address or hostname"
-            )
+            raise ValueError(f"listen_host '{self.listen_host}' is not a valid IP address or hostname")
 
     def _validate_rabbit_url(self) -> None:
         """Validate rabbit_url is a valid AMQP URL."""
         if not isinstance(self.rabbit_url, str):
-            raise ValueError(
-                f"rabbit_url must be a string, got {type(self.rabbit_url).__name__}"
-            )
+            raise ValueError(f"rabbit_url must be a string, got {type(self.rabbit_url).__name__}")
         if not self.rabbit_url:
             raise ValueError("rabbit_url cannot be empty")
 
         try:
             parsed = urlparse(self.rabbit_url)
             if parsed.scheme not in ("amqp", "amqps"):
-                raise ValueError(
-                    f"rabbit_url must use 'amqp://' or 'amqps://' scheme, "
-                    f"got '{parsed.scheme}://'"
-                )
+                raise ValueError(f"rabbit_url must use 'amqp://' or 'amqps://' scheme, got '{parsed.scheme}://'")
             if not parsed.hostname:
                 raise ValueError("rabbit_url must include a hostname")
         except Exception as e:
@@ -226,9 +209,7 @@ class SNMPReceiverConfig:
     def _validate_queue_name(self) -> None:
         """Validate queue_name is a valid RabbitMQ queue name."""
         if not isinstance(self.queue_name, str):
-            raise ValueError(
-                f"queue_name must be a string, got {type(self.queue_name).__name__}"
-            )
+            raise ValueError(f"queue_name must be a string, got {type(self.queue_name).__name__}")
         if not self.queue_name:
             raise ValueError("queue_name cannot be empty")
         # RabbitMQ queue names can be up to 255 bytes
@@ -238,13 +219,9 @@ class SNMPReceiverConfig:
     def _validate_timeouts(self) -> None:
         """Validate timeout values are positive."""
         if self.connection_timeout <= 0:
-            raise ValueError(
-                f"connection_timeout must be positive, got {self.connection_timeout}"
-            )
+            raise ValueError(f"connection_timeout must be positive, got {self.connection_timeout}")
         if self.rabbitmq_wait_timeout <= 0:
-            raise ValueError(
-                f"rabbitmq_wait_timeout must be positive, got {self.rabbitmq_wait_timeout}"
-            )
+            raise ValueError(f"rabbitmq_wait_timeout must be positive, got {self.rabbitmq_wait_timeout}")
 
 
 # =============================================================================
@@ -298,8 +275,7 @@ class SNMPReceiver:
 
     Example:
         >>> receiver = SNMPReceiver(
-        ...     listen_port=9162,
-        ...     rabbit_url="amqp://user:pass@localhost:5672/"
+        ...     listen_port=9162, rabbit_url="amqp://user:pass@localhost:5672/"
         ... )
         >>> receiver.run()  # Blocks until stopped
     """
@@ -387,13 +363,11 @@ class SNMPReceiver:
             self.listen_host,
             self.listen_port,
             self.queue_name,
-            "***"
-            if self.community_string != DEFAULT_COMMUNITY_STRING
-            else self.community_string,
+            "***" if self.community_string != DEFAULT_COMMUNITY_STRING else self.community_string,
         )
 
     @classmethod
-    def from_config(cls, config: SNMPReceiverConfig) -> "SNMPReceiver":
+    def from_config(cls, config: SNMPReceiverConfig) -> SNMPReceiver:
         """Create an SNMPReceiver from a configuration object.
 
         Args:
@@ -421,9 +395,7 @@ class SNMPReceiver:
         """Configure logging for the receiver."""
         if not logger.handlers:
             h = logging.StreamHandler()
-            h.setFormatter(
-                logging.Formatter("%(asctime)s %(levelname)s [%(name)s] %(message)s")
-            )
+            h.setFormatter(logging.Formatter("%(asctime)s %(levelname)s [%(name)s] %(message)s"))
             logger.addHandler(h)
 
         # Allow overriding log level via environment for debugging.
@@ -486,8 +458,7 @@ class SNMPReceiver:
                 break
             if waited >= self.rabbitmq_wait_timeout:
                 logger.warning(
-                    "Could not establish RabbitMQ connection after %ds, "
-                    "continuing without AMQP",
+                    "Could not establish RabbitMQ connection after %ds, continuing without AMQP",
                     self.rabbitmq_wait_timeout,
                 )
                 break
@@ -534,9 +505,7 @@ class SNMPReceiver:
             loop = asyncio.get_event_loop()
             logger.debug("Loop running=%s", loop.is_running())
 
-            if hasattr(self, "_snmp_transport") and hasattr(
-                self._snmp_transport, "_lport"
-            ):
+            if hasattr(self, "_snmp_transport") and hasattr(self._snmp_transport, "_lport"):
                 logger.debug("Awaiting UDP socket binding future")
                 loop.run_until_complete(self._snmp_transport._lport)
                 logger.debug("UDP socket bound. Loop running=%s", loop.is_running())
@@ -703,9 +672,7 @@ class SNMPReceiver:
         # Inspect dispatcher for socket-related attributes for diagnostics
         try:
             disp = snmp_engine.transportDispatcher
-            sock_attrs = [
-                a for a in dir(disp) if "sock" in a.lower() or "socket" in a.lower()
-            ]
+            sock_attrs = [a for a in dir(disp) if "sock" in a.lower() or "socket" in a.lower()]
             for a in sock_attrs:
                 try:
                     logger.debug("dispatcher.%s=%r", a, getattr(disp, a))
@@ -795,15 +762,13 @@ class SNMPReceiver:
 
                 # Step 2: Identify the trap type from snmpTrapOID.0
                 # Standard OID: 1.3.6.1.6.3.1.1.4.1.0
-                if oid_str.endswith(".1.3.6.1.6.3.1.1.4.1.0") or oid_str.endswith(
-                    "1.3.6.1.6.3.1.1.4.1.0"
-                ):
+                if oid_str.endswith(".1.3.6.1.6.3.1.1.4.1.0") or oid_str.endswith("1.3.6.1.6.3.1.1.4.1.0"):
                     alert_name = str(val)
 
             # Step 3: Fallback - use first varbind OID if no trap OID found
             if not alert_name and var_binds_list:
                 first = var_binds_list[0]
-                alert_name = f"snmp:{str(first[0])}"
+                alert_name = f"snmp:{first[0]!s}"
 
             # Step 4: Generate unique idempotency key for duplicate detection
             idempotency_id = self.compute_idempotency_from_trap(var_binds_list)
@@ -1049,12 +1014,11 @@ class SNMPReceiver:
                     idempotency_id,
                 )
                 return True
-            else:
-                logger.error(
-                    "No channel after reconnect, dropping payload id=%s",
-                    idempotency_id,
-                )
-                return False
+            logger.error(
+                "No channel after reconnect, dropping payload id=%s",
+                idempotency_id,
+            )
+            return False
 
         except Exception:
             # Second attempt failed - give up
@@ -1074,7 +1038,7 @@ class SNMPReceiver:
         Returns:
             A 64-character hexadecimal SHA-256 hash string.
         """
-        s = "".join(f"{str(x[0])}={str(x[1])};" for x in var_binds)
+        s = "".join(f"{x[0]!s}={x[1]!s};" for x in var_binds)
         # Use timezone-aware datetime (no deprecation warning)
         s += datetime.now(timezone.utc).isoformat()
         return hashlib.sha256(s.encode("utf-8")).hexdigest()

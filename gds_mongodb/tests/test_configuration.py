@@ -2,8 +2,9 @@
 Unit tests for MongoDB Configuration Manager
 """
 
-import pytest
 from unittest.mock import Mock
+
+import pytest
 from pymongo.errors import PyMongoError
 
 from gds_mongodb.configuration import MongoDBConfiguration
@@ -274,9 +275,7 @@ class TestMongoDBConfiguration:
         config = MongoDBConfiguration(mock_conn)
         config.set("logLevel", 2, comment="Increase logging")
 
-        mock_admin_db.command.assert_called_once_with(
-            setParameter=1, logLevel=2, comment="Increase logging"
-        )
+        mock_admin_db.command.assert_called_once_with(setParameter=1, logLevel=2, comment="Increase logging")
 
     def test_set_empty_name(self):
         """Test set with empty name raises ValueError"""
@@ -293,15 +292,11 @@ class TestMongoDBConfiguration:
         mock_admin_db = Mock()
         mock_conn.get_client.return_value.admin = mock_admin_db
 
-        mock_admin_db.command.side_effect = PyMongoError(
-            "Parameter is settable at startup only"
-        )
+        mock_admin_db.command.side_effect = PyMongoError("Parameter is settable at startup only")
 
         config = MongoDBConfiguration(mock_conn)
 
-        with pytest.raises(
-            PyMongoError, match="can only be set at startup, not at runtime"
-        ):
+        with pytest.raises(PyMongoError, match="can only be set at startup, not at runtime"):
             config.set("someParam", 123)
 
     def test_set_multiple(self):
@@ -318,9 +313,7 @@ class TestMongoDBConfiguration:
         result = config.set_multiple(settings)
 
         assert result["ok"] == 1
-        mock_admin_db.command.assert_called_once_with(
-            setParameter=1, logLevel=2, quiet=False
-        )
+        mock_admin_db.command.assert_called_once_with(setParameter=1, logLevel=2, quiet=False)
 
     def test_set_multiple_with_comment(self):
         """Test setting multiple configurations with comment"""
@@ -335,9 +328,7 @@ class TestMongoDBConfiguration:
         settings = {"logLevel": 2, "quiet": False}
         config.set_multiple(settings, comment="Batch update")
 
-        mock_admin_db.command.assert_called_once_with(
-            setParameter=1, logLevel=2, quiet=False, comment="Batch update"
-        )
+        mock_admin_db.command.assert_called_once_with(setParameter=1, logLevel=2, quiet=False, comment="Batch update")
 
     def test_set_multiple_empty_dict(self):
         """Test set_multiple with empty dict raises ValueError"""

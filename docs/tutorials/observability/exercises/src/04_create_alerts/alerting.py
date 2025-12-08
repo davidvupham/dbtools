@@ -2,11 +2,11 @@
 Simple Alert Evaluation System
 """
 
-from dataclasses import dataclass, field
-from enum import Enum
-from datetime import datetime
-from typing import Dict, List, Optional
 import uuid
+from dataclasses import dataclass, field
+from datetime import datetime
+from enum import Enum
+from typing import Dict, List, Optional
 
 # ============================================
 # Data Models
@@ -310,14 +310,10 @@ def main():
             for rule in evaluator.rules.values():
                 key = f"{rule.id}:{metric.get('instance_id', 'default')}"
                 if key in evaluator.condition_start:
-                    elapsed = (
-                        datetime.utcnow() - evaluator.condition_start[key]
-                    ).total_seconds()
+                    elapsed = (datetime.utcnow() - evaluator.condition_start[key]).total_seconds()
                     remaining = rule.duration - elapsed
                     if remaining > 0:
-                        print(
-                            f"  ⏳ Condition met for {rule.name}, duration: {elapsed:.1f}s / {rule.duration}s"
-                        )
+                        print(f"  ⏳ Condition met for {rule.name}, duration: {elapsed:.1f}s / {rule.duration}s")
 
         # Small delay to simulate real-time
         time.sleep(1)

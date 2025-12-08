@@ -54,8 +54,7 @@ class AppRoleAuth(AuthStrategy):
 
         if not self.role_id or not self.secret_id:
             raise VaultAuthError(
-                "AppRole credentials must be provided or set in "
-                "VAULT_ROLE_ID and VAULT_SECRET_ID environment variables"
+                "AppRole credentials must be provided or set in VAULT_ROLE_ID and VAULT_SECRET_ID environment variables"
             )
 
     def authenticate(
@@ -270,8 +269,7 @@ class AsyncAppRoleAuth(AsyncAuthStrategy):
 
         if not self.role_id or not self.secret_id:
             raise VaultAuthError(
-                "AppRole credentials must be provided or set in "
-                "VAULT_ROLE_ID and VAULT_SECRET_ID environment variables"
+                "AppRole credentials must be provided or set in VAULT_ROLE_ID and VAULT_SECRET_ID environment variables"
             )
 
     async def authenticate(
@@ -307,34 +305,36 @@ class AsyncAppRoleAuth(AsyncAuthStrategy):
             ssl_context.verify_mode = ssl.CERT_NONE
 
         try:
-            async with aiohttp.ClientSession() as session:
-                async with session.post(
+            async with (
+                aiohttp.ClientSession() as session,
+                session.post(
                     login_url,
                     json=login_payload,
                     headers=headers,
                     timeout=aiohttp.ClientTimeout(total=timeout),
                     ssl=ssl_context,
-                ) as resp:
-                    if resp.status != 200:
-                        text = await resp.text()
-                        logger.error(
-                            "AppRole authentication failed with status %s: %s",
-                            resp.status,
-                            text,
-                        )
-                        raise VaultAuthError(f"Vault AppRole login failed: {text}")
-
-                    data = await resp.json()
-                    auth_data = data["auth"]
-                    token = auth_data["client_token"]
-                    lease_duration = auth_data.get("lease_duration", 3600)
-                    expiry = time.time() + lease_duration - 300
-
-                    logger.info(
-                        "Successfully authenticated with AppRole (Async). Token valid for %ss",
-                        lease_duration,
+                ) as resp,
+            ):
+                if resp.status != 200:
+                    text = await resp.text()
+                    logger.error(
+                        "AppRole authentication failed with status %s: %s",
+                        resp.status,
+                        text,
                     )
-                    return token, expiry
+                    raise VaultAuthError(f"Vault AppRole login failed: {text}")
+
+                data = await resp.json()
+                auth_data = data["auth"]
+                token = auth_data["client_token"]
+                lease_duration = auth_data.get("lease_duration", 3600)
+                expiry = time.time() + lease_duration - 300
+
+                logger.info(
+                    "Successfully authenticated with AppRole (Async). Token valid for %ss",
+                    lease_duration,
+                )
+                return token, expiry
 
         except aiohttp.ClientError as e:
             logger.error("Network error during Async AppRole authentication: %s", e)

@@ -33,9 +33,7 @@ def mock_connection():
 @pytest.fixture
 def mock_replication():
     """Mock SnowflakeReplication for testing"""
-    with patch(
-        "gds_snowflake.monitor.SnowflakeReplication"
-    ) as mock_repl_class:
+    with patch("gds_snowflake.monitor.SnowflakeReplication") as mock_repl_class:
         mock_repl = Mock()
 
         # Mock failover group
@@ -63,11 +61,11 @@ def mock_smtp():
 class TestSnowflakeMonitorInitialization:
     """Test monitor initialization and configuration"""
 
-    @patch('gds_snowflake.connection.get_secret_from_vault')
+    @patch("gds_snowflake.connection.get_secret_from_vault")
     def test_init_minimal_params(self, mock_vault):
         """Test initialization with minimal parameters"""
-        mock_vault.return_value = {'private_key': 'LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0t', 'user': 'test_user'}
-        
+        mock_vault.return_value = {"private_key": "LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0t", "user": "test_user"}
+
         monitor = SnowflakeMonitor(account="test_account", vault_secret_path="secret/snowflake")
 
         assert monitor.account == "test_account"
@@ -75,11 +73,11 @@ class TestSnowflakeMonitorInitialization:
         assert monitor.connection is not None
         assert monitor.replication is None  # replication is initialized to None
 
-    @patch('gds_snowflake.connection.get_secret_from_vault')
+    @patch("gds_snowflake.connection.get_secret_from_vault")
     def test_init_with_email_configuration(self, mock_vault):
         """Test initialization with email configuration"""
-        mock_vault.return_value = {'private_key': 'LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0t', 'user': 'test_user'}
-        
+        mock_vault.return_value = {"private_key": "LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0t", "user": "test_user"}
+
         monitor = SnowflakeMonitor(
             account="test_account",
             vault_secret_path="secret/snowflake",
@@ -100,11 +98,11 @@ class TestSnowflakeMonitorInitialization:
         assert monitor.smtp_user == "smtp_user"
         assert monitor.smtp_password == "smtp_pass"
 
-    @patch('gds_snowflake.connection.get_secret_from_vault')
+    @patch("gds_snowflake.connection.get_secret_from_vault")
     def test_init_with_all_params(self, mock_vault):
         """Test initialization with all parameters"""
-        mock_vault.return_value = {'private_key': 'LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0t', 'user': 'test_user'}
-        
+        mock_vault.return_value = {"private_key": "LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0t", "user": "test_user"}
+
         monitor = SnowflakeMonitor(
             account="test_account",
             user="test_user",
@@ -156,9 +154,7 @@ class TestSnowflakeMonitorConnectivity:
             "timestamp": "2025-10-03T10:00:00",
         }
 
-        monitor = SnowflakeMonitor(
-            account="test_account", enable_email_alerts=False
-        )
+        monitor = SnowflakeMonitor(account="test_account", enable_email_alerts=False)
         monitor.connection = mock_connection
 
         result = monitor.monitor_connectivity()
@@ -168,9 +164,7 @@ class TestSnowflakeMonitorConnectivity:
         assert result.error == "Connection timeout"
         assert result.response_time_ms == 0
 
-    def test_monitor_connectivity_with_email_alert(
-        self, mock_connection, mock_smtp
-    ):
+    def test_monitor_connectivity_with_email_alert(self, mock_connection, mock_smtp):
         """Test connectivity monitoring with email alerts"""
         mock_connection.test_connectivity.return_value = {
             "success": False,
@@ -203,9 +197,7 @@ class TestSnowflakeMonitorConnectivity:
 class TestSnowflakeMonitorReplication:
     """Test replication monitoring functionality"""
 
-    def test_monitor_replication_failures_none(
-        self, mock_connection, mock_replication
-    ):
+    def test_monitor_replication_failures_none(self, mock_connection, mock_replication):
         """Test replication failure monitoring with no failures"""
         monitor = SnowflakeMonitor(account="test_account")
         monitor.connection = mock_connection
@@ -219,18 +211,14 @@ class TestSnowflakeMonitorReplication:
         assert results[0].has_failure is False
         assert results[0].failure_message is None
 
-    def test_monitor_replication_failures_with_failures(
-        self, mock_connection, mock_replication
-    ):
+    def test_monitor_replication_failures_with_failures(self, mock_connection, mock_replication):
         """Test replication failure monitoring with failures detected"""
         mock_replication.check_replication_failure.return_value = (
             True,
             "Replication failed for 3 objects",
         )
 
-        monitor = SnowflakeMonitor(
-            account="test_account", enable_email_alerts=False
-        )
+        monitor = SnowflakeMonitor(account="test_account", enable_email_alerts=False)
         monitor.connection = mock_connection
         monitor.replication = mock_replication
 
@@ -240,9 +228,7 @@ class TestSnowflakeMonitorReplication:
         assert results[0].has_failure is True
         assert results[0].failure_message == "Replication failed for 3 objects"
 
-    def test_monitor_replication_latency_none(
-        self, mock_connection, mock_replication
-    ):
+    def test_monitor_replication_latency_none(self, mock_connection, mock_replication):
         """Test replication latency monitoring with no latency issues"""
         monitor = SnowflakeMonitor(account="test_account")
         monitor.connection = mock_connection
@@ -256,18 +242,14 @@ class TestSnowflakeMonitorReplication:
         assert results[0].has_latency is False
         assert results[0].latency_minutes is None
 
-    def test_monitor_replication_latency_with_latency(
-        self, mock_connection, mock_replication
-    ):
+    def test_monitor_replication_latency_with_latency(self, mock_connection, mock_replication):
         """Test replication latency monitoring with latency detected"""
         mock_replication.check_replication_latency.return_value = (
             True,
             "Replication latency: 45.2 minutes",
         )
 
-        monitor = SnowflakeMonitor(
-            account="test_account", enable_email_alerts=False
-        )
+        monitor = SnowflakeMonitor(account="test_account", enable_email_alerts=False)
         monitor.connection = mock_connection
         monitor.replication = mock_replication
 
@@ -278,9 +260,7 @@ class TestSnowflakeMonitorReplication:
         assert results[0].latency_minutes == 45.2
         assert "45.2 minutes" in results[0].latency_message
 
-    def test_monitor_replication_multiple_failover_groups(
-        self, mock_connection, mock_replication
-    ):
+    def test_monitor_replication_multiple_failover_groups(self, mock_connection, mock_replication):
         """Test monitoring with multiple failover groups"""
         # Mock multiple failover groups
         fg1 = Mock()
@@ -296,9 +276,7 @@ class TestSnowflakeMonitorReplication:
                 return (True, "FG1 has failures")
             return (False, None)
 
-        mock_replication.check_replication_failure.side_effect = (
-            check_failure_side_effect
-        )
+        mock_replication.check_replication_failure.side_effect = check_failure_side_effect
 
         monitor = SnowflakeMonitor(account="test_account")
         monitor.connection = mock_connection
@@ -316,11 +294,11 @@ class TestSnowflakeMonitorReplication:
 class TestSnowflakeMonitorComprehensive:
     """Test comprehensive monitoring functionality"""
 
-    @patch('gds_snowflake.connection.get_secret_from_vault')
+    @patch("gds_snowflake.connection.get_secret_from_vault")
     def test_monitor_all_success(self, mock_vault, mock_connection, mock_replication):
         """Test comprehensive monitoring with all systems healthy"""
-        mock_vault.return_value = {'private_key': 'LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0t', 'user': 'test_user'}
-        
+        mock_vault.return_value = {"private_key": "LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0t", "user": "test_user"}
+
         monitor = SnowflakeMonitor(account="test_account", vault_secret_path="secret/snowflake")
         monitor.connection = mock_connection
         monitor.replication = mock_replication
@@ -339,11 +317,11 @@ class TestSnowflakeMonitorComprehensive:
         assert summary["groups_with_failures"] == 0
         assert summary["groups_with_latency"] == 0
 
-    @patch('gds_snowflake.connection.get_secret_from_vault')
+    @patch("gds_snowflake.connection.get_secret_from_vault")
     def test_monitor_all_with_issues(self, mock_vault, mock_connection, mock_replication):
         """Test comprehensive monitoring with issues detected"""
-        mock_vault.return_value = {'private_key': 'LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0t', 'user': 'test_user'}
-        
+        mock_vault.return_value = {"private_key": "LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0t", "user": "test_user"}
+
         # Simulate connectivity failure
         mock_connection.test_connectivity.return_value = {
             "success": False,
@@ -378,19 +356,17 @@ class TestSnowflakeMonitorComprehensive:
         assert summary["groups_with_failures"] == 0
         assert summary["groups_with_latency"] == 0
 
-    @patch('gds_snowflake.connection.get_secret_from_vault')
-    def test_monitor_all_custom_thresholds(
-        self, mock_vault, mock_connection, mock_replication
-    ):
+    @patch("gds_snowflake.connection.get_secret_from_vault")
+    def test_monitor_all_custom_thresholds(self, mock_vault, mock_connection, mock_replication):
         """Test comprehensive monitoring with custom thresholds"""
-        mock_vault.return_value = {'private_key': 'LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0t', 'user': 'test_user'}
-        
+        mock_vault.return_value = {"private_key": "LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0t", "user": "test_user"}
+
         # Thresholds are set in __init__, not in monitor_all()
         monitor = SnowflakeMonitor(
-            account="test_account", 
+            account="test_account",
             vault_secret_path="secret/snowflake",
-            connectivity_timeout=30, 
-            latency_threshold_minutes=20
+            connectivity_timeout=30,
+            latency_threshold_minutes=20,
         )
         monitor.connection = mock_connection
         monitor.replication = mock_replication
@@ -405,11 +381,11 @@ class TestSnowflakeMonitorComprehensive:
 class TestSnowflakeMonitorEmailNotifications:
     """Test email notification functionality"""
 
-    @patch('gds_snowflake.connection.get_secret_from_vault')
+    @patch("gds_snowflake.connection.get_secret_from_vault")
     def test_send_email_critical(self, mock_vault, mock_smtp):
         """Test sending critical alert email"""
-        mock_vault.return_value = {'private_key': 'LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0t', 'user': 'test_user'}
-        
+        mock_vault.return_value = {"private_key": "LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0t", "user": "test_user"}
+
         monitor = SnowflakeMonitor(
             account="test_account",
             vault_secret_path="secret/snowflake",
@@ -431,11 +407,11 @@ class TestSnowflakeMonitorEmailNotifications:
         mock_smtp.login.assert_called_once_with("user", "pass")
         mock_smtp.send_message.assert_called_once()
 
-    @patch('gds_snowflake.connection.get_secret_from_vault')
+    @patch("gds_snowflake.connection.get_secret_from_vault")
     def test_send_email_warning(self, mock_vault, mock_smtp):
         """Test sending warning alert email"""
-        mock_vault.return_value = {'private_key': 'LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0t', 'user': 'test_user'}
-        
+        mock_vault.return_value = {"private_key": "LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0t", "user": "test_user"}
+
         monitor = SnowflakeMonitor(
             account="test_account",
             vault_secret_path="secret/snowflake",
@@ -455,11 +431,11 @@ class TestSnowflakeMonitorEmailNotifications:
 
         mock_smtp.send_message.assert_called_once()
 
-    @patch('gds_snowflake.connection.get_secret_from_vault')
+    @patch("gds_snowflake.connection.get_secret_from_vault")
     def test_send_email_disabled(self, mock_vault):
         """Test email sending when alerts are disabled"""
-        mock_vault.return_value = {'private_key': 'LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0t', 'user': 'test_user'}
-        
+        mock_vault.return_value = {"private_key": "LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0t", "user": "test_user"}
+
         monitor = SnowflakeMonitor(
             account="test_account", vault_secret_path="secret/snowflake", enable_email_alerts=False
         )
@@ -471,10 +447,10 @@ class TestSnowflakeMonitorEmailNotifications:
             severity=AlertSeverity.INFO,
         )
 
-    @patch('gds_snowflake.connection.get_secret_from_vault')
+    @patch("gds_snowflake.connection.get_secret_from_vault")
     def test_send_email_smtp_error(self, mock_vault, mock_smtp):
         """Test email sending with SMTP error"""
-        mock_vault.return_value = {'private_key': 'LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0t', 'user': 'test_user'}
+        mock_vault.return_value = {"private_key": "LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0t", "user": "test_user"}
         mock_smtp.send_message.side_effect = Exception("SMTP error")
 
         monitor = SnowflakeMonitor(
@@ -524,9 +500,7 @@ class TestSnowflakeMonitorContextManager:
 
     def test_context_manager_connection_cleanup(self):
         """Test that context manager properly cleans up connections"""
-        with patch(
-            "gds_snowflake.monitor.SnowflakeConnection"
-        ) as mock_conn_class:
+        with patch("gds_snowflake.monitor.SnowflakeConnection") as mock_conn_class:
             mock_conn = Mock()
             mock_conn_class.return_value = mock_conn
 
@@ -594,10 +568,10 @@ class TestSnowflakeMonitorResultClasses:
 class TestSnowflakeMonitorEdgeCases:
     """Test edge cases and error conditions"""
 
-    @patch('gds_snowflake.connection.get_secret_from_vault')
+    @patch("gds_snowflake.connection.get_secret_from_vault")
     def test_no_failover_groups(self, mock_vault, mock_connection, mock_replication):
         """Test monitoring when no failover groups exist"""
-        mock_vault.return_value = {'private_key': 'LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0t', 'user': 'test_user'}
+        mock_vault.return_value = {"private_key": "LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0t", "user": "test_user"}
         mock_replication.get_failover_groups.return_value = []
 
         monitor = SnowflakeMonitor(account="test_account", vault_secret_path="secret/snowflake")
@@ -610,15 +584,11 @@ class TestSnowflakeMonitorEdgeCases:
         assert len(failure_results) == 0
         assert len(latency_results) == 0
 
-    @patch('gds_snowflake.connection.get_secret_from_vault')
-    def test_replication_error_handling(
-        self, mock_vault, mock_connection, mock_replication
-    ):
+    @patch("gds_snowflake.connection.get_secret_from_vault")
+    def test_replication_error_handling(self, mock_vault, mock_connection, mock_replication):
         """Test handling of replication errors"""
-        mock_vault.return_value = {'private_key': 'LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0t', 'user': 'test_user'}
-        mock_replication.get_failover_groups.side_effect = Exception(
-            "Replication error"
-        )
+        mock_vault.return_value = {"private_key": "LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0t", "user": "test_user"}
+        mock_replication.get_failover_groups.side_effect = Exception("Replication error")
 
         monitor = SnowflakeMonitor(account="test_account", vault_secret_path="secret/snowflake")
         monitor.connection = mock_connection
@@ -628,11 +598,11 @@ class TestSnowflakeMonitorEdgeCases:
         failure_results = monitor.monitor_replication_failures()
         assert len(failure_results) == 0
 
-    @patch('gds_snowflake.connection.get_secret_from_vault')
+    @patch("gds_snowflake.connection.get_secret_from_vault")
     def test_invalid_email_configuration(self, mock_vault):
         """Test handling of invalid email configuration"""
-        mock_vault.return_value = {'private_key': 'LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0t', 'user': 'test_user'}
-        
+        mock_vault.return_value = {"private_key": "LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0t", "user": "test_user"}
+
         # Should not raise exception during initialization
         monitor = SnowflakeMonitor(
             account="test_account",
@@ -644,11 +614,11 @@ class TestSnowflakeMonitorEdgeCases:
         assert monitor.enable_email_alerts is True
         assert monitor.smtp_server is None
 
-    @patch('gds_snowflake.connection.get_secret_from_vault')
+    @patch("gds_snowflake.connection.get_secret_from_vault")
     def test_repr_method(self, mock_vault):
         """Test string representation"""
-        mock_vault.return_value = {'private_key': 'LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0t', 'user': 'test_user'}
-        
+        mock_vault.return_value = {"private_key": "LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0t", "user": "test_user"}
+
         monitor = SnowflakeMonitor(account="test_account", vault_secret_path="secret/snowflake")
 
         repr_str = repr(monitor)

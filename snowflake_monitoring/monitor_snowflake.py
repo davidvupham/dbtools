@@ -22,70 +22,34 @@ from gds_snowflake import SnowflakeMonitor
 def setup_logging(verbose: bool = False):
     """Set up logging configuration."""
     level = logging.DEBUG if verbose else logging.INFO
-    logging.basicConfig(
-        level=level,
-        format='%(asctime)s - %(levelname)s - %(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S'
-    )
+    logging.basicConfig(level=level, format="%(asctime)s - %(levelname)s - %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
 
 
 def main():
     """Main entry point."""
-    parser = argparse.ArgumentParser(
-        description="Monitor Snowflake account connectivity and replication"
-    )
+    parser = argparse.ArgumentParser(description="Monitor Snowflake account connectivity and replication")
 
     # Required arguments
-    parser.add_argument(
-        "--account",
-        required=True,
-        help="Snowflake account name"
-    )
+    parser.add_argument("--account", required=True, help="Snowflake account name")
 
     # Monitoring mode
-    parser.add_argument(
-        "--connectivity-only",
-        action="store_true",
-        help="Only test connectivity"
-    )
-    parser.add_argument(
-        "--replication-only",
-        action="store_true",
-        help="Only check replication (failures and latency)"
-    )
+    parser.add_argument("--connectivity-only", action="store_true", help="Only test connectivity")
+    parser.add_argument("--replication-only", action="store_true", help="Only check replication (failures and latency)")
 
     # Configuration
     parser.add_argument(
-        "--connectivity-timeout",
-        type=int,
-        default=30,
-        help="Connectivity timeout in seconds (default: 30)"
+        "--connectivity-timeout", type=int, default=30, help="Connectivity timeout in seconds (default: 30)"
     )
     parser.add_argument(
-        "--latency-threshold",
-        type=float,
-        default=30.0,
-        help="Latency threshold in minutes (default: 30.0)"
+        "--latency-threshold", type=float, default=30.0, help="Latency threshold in minutes (default: 30.0)"
     )
 
     # Email notifications
-    parser.add_argument(
-        "--enable-email",
-        action="store_true",
-        help="Enable email notifications (requires env vars)"
-    )
+    parser.add_argument("--enable-email", action="store_true", help="Enable email notifications (requires env vars)")
 
     # Output
-    parser.add_argument(
-        "--json",
-        action="store_true",
-        help="Output results in JSON format"
-    )
-    parser.add_argument(
-        "--verbose", "-v",
-        action="store_true",
-        help="Enable verbose logging"
-    )
+    parser.add_argument("--json", action="store_true", help="Output results in JSON format")
+    parser.add_argument("--verbose", "-v", action="store_true", help="Enable verbose logging")
 
     args = parser.parse_args()
 
@@ -103,12 +67,12 @@ def main():
             latency_threshold_minutes=args.latency_threshold,
             enable_email_alerts=args.enable_email,
             # Email configuration from environment variables
-            smtp_server=os.getenv('SMTP_SERVER'),
-            smtp_port=int(os.getenv('SMTP_PORT', '587')),
-            smtp_user=os.getenv('SMTP_USER'),
-            smtp_password=os.getenv('SMTP_PASSWORD'),
-            from_email=os.getenv('FROM_EMAIL'),
-            to_emails=os.getenv('TO_EMAILS', '').split(',') if os.getenv('TO_EMAILS') else None,
+            smtp_server=os.getenv("SMTP_SERVER"),
+            smtp_port=int(os.getenv("SMTP_PORT", "587")),
+            smtp_user=os.getenv("SMTP_USER"),
+            smtp_password=os.getenv("SMTP_PASSWORD"),
+            from_email=os.getenv("FROM_EMAIL"),
+            to_emails=os.getenv("TO_EMAILS", "").split(",") if os.getenv("TO_EMAILS") else None,
         )
 
         # Run monitoring based on options
@@ -118,12 +82,12 @@ def main():
 
             if args.json:
                 output = {
-                    'connectivity': {
-                        'success': result.success,
-                        'response_time_ms': result.response_time_ms,
-                        'account_info': result.account_info,
-                        'error': result.error,
-                        'timestamp': result.timestamp.isoformat()
+                    "connectivity": {
+                        "success": result.success,
+                        "response_time_ms": result.response_time_ms,
+                        "account_info": result.account_info,
+                        "error": result.error,
+                        "timestamp": result.timestamp.isoformat(),
                     }
                 }
                 print(json.dumps(output, indent=2))
@@ -147,23 +111,23 @@ def main():
 
             if args.json:
                 output = {
-                    'replication_failures': [
+                    "replication_failures": [
                         {
-                            'failover_group': r.failover_group,
-                            'has_failure': r.has_failure,
-                            'failure_message': r.failure_message
+                            "failover_group": r.failover_group,
+                            "has_failure": r.has_failure,
+                            "failure_message": r.failure_message,
                         }
                         for r in failure_results
                     ],
-                    'replication_latency': [
+                    "replication_latency": [
                         {
-                            'failover_group': r.failover_group,
-                            'has_latency': r.has_latency,
-                            'latency_minutes': r.latency_minutes,
-                            'latency_message': r.latency_message
+                            "failover_group": r.failover_group,
+                            "has_latency": r.has_latency,
+                            "latency_minutes": r.latency_minutes,
+                            "latency_message": r.latency_message,
                         }
                         for r in latency_results
-                    ]
+                    ],
                 }
                 print(json.dumps(output, indent=2))
             else:
@@ -202,10 +166,10 @@ def main():
                 json_results = json.loads(json.dumps(results, default=str))
                 print(json.dumps(json_results, indent=2))
             else:
-                summary = results['summary']
-                conn_ok = summary['connectivity_ok']
-                failures = summary['groups_with_failures']
-                latency_issues = summary['groups_with_latency']
+                summary = results["summary"]
+                conn_ok = summary["connectivity_ok"]
+                failures = summary["groups_with_failures"]
+                latency_issues = summary["groups_with_latency"]
 
                 print("Monitoring Results:")
                 print(f"  Account: {results['account']}")
@@ -217,18 +181,18 @@ def main():
 
                 # Show details if there are issues
                 if not conn_ok:
-                    conn = results.get('connectivity', {})
+                    conn = results.get("connectivity", {})
                     print(f"\nConnectivity Error: {conn.get('error', 'Unknown')}")
 
                 if failures > 0:
                     print("\nReplication Failures:")
-                    for r in results.get('replication_failures', []):
+                    for r in results.get("replication_failures", []):
                         if r.has_failure:
                             print(f"  ✗ {r.failover_group}: {r.failure_message}")
 
                 if latency_issues > 0:
                     print("\nLatency Issues:")
-                    for r in results.get('replication_latency', []):
+                    for r in results.get("replication_latency", []):
                         if r.has_latency:
                             duration = f" ({r.latency_minutes} min)" if r.latency_minutes else ""
                             print(f"  ⚠ {r.failover_group}: {r.latency_message}{duration}")
@@ -240,9 +204,9 @@ def main():
 
             # Exit with appropriate code
             has_issues = (
-                not results['summary']['connectivity_ok'] or
-                results['summary']['groups_with_failures'] > 0 or
-                results['summary']['groups_with_latency'] > 0
+                not results["summary"]["connectivity_ok"]
+                or results["summary"]["groups_with_failures"] > 0
+                or results["summary"]["groups_with_latency"] > 0
             )
             sys.exit(1 if has_issues else 0)
 
@@ -253,6 +217,7 @@ def main():
         logger.error(f"Error during monitoring: {e!s}")
         if args.verbose:
             import traceback
+
             traceback.print_exc()
         sys.exit(1)
     finally:

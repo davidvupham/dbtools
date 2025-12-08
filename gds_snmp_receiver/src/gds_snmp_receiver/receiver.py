@@ -9,8 +9,8 @@ is object-oriented and easier to maintain.
 from __future__ import annotations
 
 import argparse
-import os
 import logging
+import os
 from typing import Optional
 
 from .core import SNMPReceiver
@@ -49,9 +49,7 @@ def main(argv: Optional[list[str]] = None) -> None:
 
     # Configure root logging according to the CLI option
     numeric_level = getattr(logging, args.log_level.upper(), logging.INFO)
-    logging.basicConfig(
-        level=numeric_level, format="%(asctime)s %(levelname)s [%(name)s] %(message)s"
-    )
+    logging.basicConfig(level=numeric_level, format="%(asctime)s %(levelname)s [%(name)s] %(message)s")
 
     receiver = SNMPReceiver(
         listen_host=args.host,

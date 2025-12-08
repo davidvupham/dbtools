@@ -39,9 +39,7 @@ def enqueue_jobs(channel) -> None:
 
 def main() -> None:
     """Entry point for the enqueue script."""
-    connection = pika.BlockingConnection(
-        pika.URLParameters("amqp://devuser:devpassword@localhost:5672/")
-    )
+    connection = pika.BlockingConnection(pika.URLParameters("amqp://devuser:devpassword@localhost:5672/"))
     channel = connection.channel()
 
     channel.queue_declare(queue="tasks", durable=True)

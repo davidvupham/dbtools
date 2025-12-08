@@ -139,9 +139,7 @@ def calculate_rotation_ttl(
             # Try ISO format first
             if last_rotation.endswith("Z"):
                 # Handle UTC timezone
-                last_rotation_dt = datetime.fromisoformat(
-                    last_rotation.replace("Z", "+00:00")
-                )
+                last_rotation_dt = datetime.fromisoformat(last_rotation.replace("Z", "+00:00"))
                 # Convert to local time for comparison
                 last_rotation_dt = last_rotation_dt.replace(tzinfo=None)
             else:
@@ -219,14 +217,10 @@ def should_refresh_secret(
         bool: True if secret should be refreshed immediately
     """
     try:
-        ttl = calculate_rotation_ttl(
-            last_rotation, rotation_schedule, buffer_minutes, current_time
-        )
+        ttl = calculate_rotation_ttl(last_rotation, rotation_schedule, buffer_minutes, current_time)
         return ttl <= 0
     except Exception as e:
-        logger.warning(
-            "Error checking rotation schedule, assuming refresh needed: %s", e
-        )
+        logger.warning("Error checking rotation schedule, assuming refresh needed: %s", e)
         return True
 
 

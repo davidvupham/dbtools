@@ -2,9 +2,10 @@
 Alert Evaluation with Kafka Consumer
 """
 
-from confluent_kafka import Consumer, KafkaError
 import json
-from alerting import AlertRule, AlertEvaluator, ConsoleNotifier, Operator, Severity
+
+from alerting import AlertEvaluator, AlertRule, ConsoleNotifier, Operator, Severity
+from confluent_kafka import Consumer, KafkaError
 
 
 def main():

@@ -87,9 +87,7 @@ class SnowflakeTable:
 
         try:
             logger.info("Retrieving table metadata")
-            return self.connection.execute_query_dict(
-                query, tuple(params) if params else None
-            )
+            return self.connection.execute_query_dict(query, tuple(params) if params else None)
         except Exception as e:
             logger.error("Error retrieving table metadata: %s", e)
             raise
@@ -150,9 +148,7 @@ class SnowflakeTable:
             logger.error("Error retrieving table metadata for %s: %s", table_name, e)
             raise
 
-    def get_views(
-        self, database_name: Optional[str] = None, schema_name: Optional[str] = None
-    ) -> list[dict[str, Any]]:
+    def get_views(self, database_name: Optional[str] = None, schema_name: Optional[str] = None) -> list[dict[str, Any]]:
         """
         Get metadata about views.
 
@@ -193,9 +189,7 @@ class SnowflakeTable:
 
         try:
             logger.info("Retrieving view metadata")
-            return self.connection.execute_query_dict(
-                query, tuple(params) if params else None
-            )
+            return self.connection.execute_query_dict(query, tuple(params) if params else None)
         except Exception as e:
             logger.error("Error retrieving view metadata: %s", e)
             raise
@@ -260,9 +254,7 @@ class SnowflakeTable:
 
         try:
             logger.info("Retrieving column metadata")
-            return self.connection.execute_query_dict(
-                query, tuple(params) if params else None
-            )
+            return self.connection.execute_query_dict(query, tuple(params) if params else None)
         except Exception as e:
             logger.error("Error retrieving column metadata: %s", e)
             raise

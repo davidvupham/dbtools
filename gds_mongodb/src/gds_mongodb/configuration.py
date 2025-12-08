@@ -12,7 +12,8 @@ options.
 Reference: https://www.mongodb.com/docs/manual/reference/command/getParameter/
 """
 
-from typing import TYPE_CHECKING, Dict, Any, Optional, List
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
+
 from pymongo.database import Database
 from pymongo.errors import PyMongoError
 
@@ -34,19 +35,19 @@ class MongoDBConfiguration:
         >>> with MongoDBConnection(host='localhost', database='admin') as conn:
         >>>     config = MongoDBConfiguration(conn)
         >>>
-        >>>     # Get a single setting
+        >>> # Get a single setting
         >>>     log_level = config.get("logLevel")
         >>>     print(f"Log level: {log_level}")
         >>>
-        >>>     # Get setting details
+        >>> # Get setting details
         >>>     details = config.get_details("maxBsonObjectSize")
         >>>     if details.get("settable_at_runtime"):
         >>>         print(f"{details['name']} can be changed at runtime")
         >>>
-        >>>     # Set a runtime configuration
+        >>> # Set a runtime configuration
         >>>     config.set("logLevel", 2)
         >>>
-        >>>     # Get all configurations
+        >>> # Get all configurations
         >>>     all_settings = config.get_all()
     """
 
@@ -77,9 +78,7 @@ class MongoDBConfiguration:
             RuntimeError: If connection is not established
         """
         if not self._connection.is_connected():
-            raise RuntimeError(
-                "Connection must be established before accessing configuration"
-            )
+            raise RuntimeError("Connection must be established before accessing configuration")
 
         if self._admin_db is None:
             self._admin_db = self._connection.get_client().admin
@@ -120,7 +119,7 @@ class MongoDBConfiguration:
             return result.get(name)
 
         except PyMongoError as e:
-            raise PyMongoError(f"Failed to retrieve configuration '{name}': {str(e)}")
+            raise PyMongoError(f"Failed to retrieve configuration '{name}': {e!s}")
 
     def get_details(self, name: str) -> Dict[str, Any]:
         """
@@ -150,9 +149,7 @@ class MongoDBConfiguration:
 
         try:
             admin_db = self._get_admin_db()
-            result = admin_db.command(
-                "getParameter", {"showDetails": True}, **{name: 1}
-            )
+            result = admin_db.command("getParameter", {"showDetails": True}, **{name: 1})
 
             param_data = result.get(name, {})
 
@@ -164,9 +161,7 @@ class MongoDBConfiguration:
             }
 
         except PyMongoError as e:
-            raise PyMongoError(
-                f"Failed to retrieve configuration details for '{name}': {str(e)}"
-            )
+            raise PyMongoError(f"Failed to retrieve configuration details for '{name}': {e!s}")
 
     def get_all(self, include_details: bool = False) -> Dict[str, Any]:
         """
@@ -188,15 +183,13 @@ class MongoDBConfiguration:
             >>>
             >>> # Get all configurations with details
             >>> detailed = config.get_all(include_details=True)
-            >>> print(detailed['maxBsonObjectSize'])
+            >>> print(detailed["maxBsonObjectSize"])
         """
         try:
             admin_db = self._get_admin_db()
 
             if include_details:
-                result = admin_db.command(
-                    "getParameter", {"showDetails": True, "allParameters": True}
-                )
+                result = admin_db.command("getParameter", {"showDetails": True, "allParameters": True})
             else:
                 result = admin_db.command("getParameter", "*")
 
@@ -208,7 +201,7 @@ class MongoDBConfiguration:
             return result
 
         except PyMongoError as e:
-            raise PyMongoError(f"Failed to retrieve all configurations: {str(e)}")
+            raise PyMongoError(f"Failed to retrieve all configurations: {e!s}")
 
     def get_all_details(self) -> List[Dict[str, Any]]:
         """
@@ -247,7 +240,7 @@ class MongoDBConfiguration:
             return setting_list
 
         except PyMongoError as e:
-            raise PyMongoError(f"Failed to retrieve configuration details: {str(e)}")
+            raise PyMongoError(f"Failed to retrieve configuration details: {e!s}")
 
     def get_runtime_configurable(self) -> Dict[str, Any]:
         """
@@ -269,9 +262,7 @@ class MongoDBConfiguration:
         """
         try:
             admin_db = self._get_admin_db()
-            result = admin_db.command(
-                "getParameter", {"allParameters": True, "setAt": "runtime"}
-            )
+            result = admin_db.command("getParameter", {"allParameters": True, "setAt": "runtime"})
 
             # Remove metadata fields
             result.pop("ok", None)
@@ -285,12 +276,8 @@ class MongoDBConfiguration:
             if "setAt" in str(e) or "unrecognized" in str(e).lower():
                 # Filter manually for older versions
                 all_settings = self.get_all_details()
-                return {
-                    s["name"]: s["value"]
-                    for s in all_settings
-                    if s.get("settable_at_runtime")
-                }
-            raise PyMongoError(f"Failed to retrieve runtime configurations: {str(e)}")
+                return {s["name"]: s["value"] for s in all_settings if s.get("settable_at_runtime")}
+            raise PyMongoError(f"Failed to retrieve runtime configurations: {e!s}")
 
     def get_startup_configurable(self) -> Dict[str, Any]:
         """
@@ -312,9 +299,7 @@ class MongoDBConfiguration:
         """
         try:
             admin_db = self._get_admin_db()
-            result = admin_db.command(
-                "getParameter", {"allParameters": True, "setAt": "startup"}
-            )
+            result = admin_db.command("getParameter", {"allParameters": True, "setAt": "startup"})
 
             # Remove metadata fields
             result.pop("ok", None)
@@ -328,12 +313,8 @@ class MongoDBConfiguration:
             if "setAt" in str(e) or "unrecognized" in str(e).lower():
                 # Filter manually for older versions
                 all_settings = self.get_all_details()
-                return {
-                    s["name"]: s["value"]
-                    for s in all_settings
-                    if s.get("settable_at_startup")
-                }
-            raise PyMongoError(f"Failed to retrieve startup configurations: {str(e)}")
+                return {s["name"]: s["value"] for s in all_settings if s.get("settable_at_startup")}
+            raise PyMongoError(f"Failed to retrieve startup configurations: {e!s}")
 
     def get_by_prefix(self, prefix: str) -> Dict[str, Any]:
         """
@@ -355,11 +336,7 @@ class MongoDBConfiguration:
             raise ValueError("Prefix cannot be empty")
 
         all_settings = self.get_all()
-        return {
-            name: value
-            for name, value in all_settings.items()
-            if name.startswith(prefix)
-        }
+        return {name: value for name, value in all_settings.items() if name.startswith(prefix)}
 
     def search(self, keyword: str, case_sensitive: bool = False) -> Dict[str, Any]:
         """
@@ -384,16 +361,9 @@ class MongoDBConfiguration:
         all_settings = self.get_all()
 
         if case_sensitive:
-            return {
-                name: value for name, value in all_settings.items() if keyword in name
-            }
-        else:
-            keyword_lower = keyword.lower()
-            return {
-                name: value
-                for name, value in all_settings.items()
-                if keyword_lower in name.lower()
-            }
+            return {name: value for name, value in all_settings.items() if keyword in name}
+        keyword_lower = keyword.lower()
+        return {name: value for name, value in all_settings.items() if keyword_lower in name.lower()}
 
     def to_dict(self) -> Dict[str, Any]:
         """
@@ -404,9 +374,7 @@ class MongoDBConfiguration:
         """
         return self.get_all()
 
-    def set(
-        self, name: str, value: Any, comment: Optional[str] = None
-    ) -> Dict[str, Any]:
+    def set(self, name: str, value: Any, comment: Optional[str] = None) -> Dict[str, Any]:
         """
         Set a runtime-configurable setting value.
 
@@ -433,7 +401,7 @@ class MongoDBConfiguration:
             >>> result = config.set(
             ...     "cursorTimeoutMillis",
             ...     300000,
-            ...     comment="Increase cursor timeout to 5 minutes"
+            ...     comment="Increase cursor timeout to 5 minutes",
             ... )
         """
         if not name:
@@ -452,15 +420,10 @@ class MongoDBConfiguration:
         except PyMongoError as e:
             error_msg = str(e)
             if "settable at startup" in error_msg.lower():
-                raise PyMongoError(
-                    f"Configuration '{name}' can only be set at startup, "
-                    f"not at runtime: {error_msg}"
-                )
+                raise PyMongoError(f"Configuration '{name}' can only be set at startup, not at runtime: {error_msg}")
             raise PyMongoError(f"Failed to set configuration '{name}': {error_msg}")
 
-    def set_multiple(
-        self, settings: Dict[str, Any], comment: Optional[str] = None
-    ) -> Dict[str, Any]:
+    def set_multiple(self, settings: Dict[str, Any], comment: Optional[str] = None) -> Dict[str, Any]:
         """
         Set multiple runtime-configurable settings at once.
 
@@ -476,11 +439,7 @@ class MongoDBConfiguration:
             PyMongoError: If any configuration cannot be set
 
         Example:
-            >>> settings = {
-            ...     "logLevel": 2,
-            ...     "cursorTimeoutMillis": 300000,
-            ...     "notablescan": False
-            ... }
+            >>> settings = {"logLevel": 2, "cursorTimeoutMillis": 300000, "notablescan": False}
             >>> result = config.set_multiple(settings)
         """
         if not settings:
@@ -497,7 +456,7 @@ class MongoDBConfiguration:
             return result
 
         except PyMongoError as e:
-            raise PyMongoError(f"Failed to set configurations: {str(e)}")
+            raise PyMongoError(f"Failed to set configurations: {e!s}")
 
     def reset(self, name: str) -> bool:
         """

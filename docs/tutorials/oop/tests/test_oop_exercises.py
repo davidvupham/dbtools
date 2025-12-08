@@ -5,13 +5,13 @@ Test suite for OOP tutorial exercises.
 Run with: pytest test_oop_exercises.py -v
 """
 
-import pytest
-from abc import ABC, abstractmethod
-from dataclasses import dataclass, asdict
 import json
 import math
 import threading
+from abc import ABC, abstractmethod
+from dataclasses import asdict, dataclass
 
+import pytest
 
 # ============================================================================
 # Exercise 1: SafeCounter

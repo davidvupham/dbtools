@@ -24,24 +24,16 @@ def setup_logging(verbose: bool = False):
     """Set up logging configuration."""
     level = logging.DEBUG if verbose else logging.INFO
     logging.basicConfig(
-        level=level,
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S'
+        level=level, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
     )
 
 
 def main():
     """Main entry point."""
-    parser = argparse.ArgumentParser(
-        description="Snowflake monitoring example using SnowflakeMonitor class"
-    )
+    parser = argparse.ArgumentParser(description="Snowflake monitoring example using SnowflakeMonitor class")
 
     # Required arguments
-    parser.add_argument(
-        "--account",
-        required=True,
-        help="Snowflake account name"
-    )
+    parser.add_argument("--account", required=True, help="Snowflake account name")
 
     # Optional Snowflake connection parameters
     parser.add_argument("--user", help="Snowflake username")
@@ -50,32 +42,14 @@ def main():
     parser.add_argument("--database", help="Snowflake database")
 
     # Monitoring options
+    parser.add_argument("--connectivity-only", action="store_true", help="Only test connectivity")
+    parser.add_argument("--failures-only", action="store_true", help="Only check replication failures")
+    parser.add_argument("--latency-only", action="store_true", help="Only check replication latency")
     parser.add_argument(
-        "--connectivity-only",
-        action="store_true",
-        help="Only test connectivity"
+        "--connectivity-timeout", type=int, default=30, help="Connectivity timeout in seconds (default: 30)"
     )
     parser.add_argument(
-        "--failures-only",
-        action="store_true",
-        help="Only check replication failures"
-    )
-    parser.add_argument(
-        "--latency-only",
-        action="store_true",
-        help="Only check replication latency"
-    )
-    parser.add_argument(
-        "--connectivity-timeout",
-        type=int,
-        default=30,
-        help="Connectivity timeout in seconds (default: 30)"
-    )
-    parser.add_argument(
-        "--latency-threshold",
-        type=float,
-        default=30.0,
-        help="Latency threshold in minutes (default: 30.0)"
+        "--latency-threshold", type=float, default=30.0, help="Latency threshold in minutes (default: 30.0)"
     )
 
     # Email configuration
@@ -84,28 +58,12 @@ def main():
     parser.add_argument("--smtp-user", help="SMTP username")
     parser.add_argument("--smtp-password", help="SMTP password")
     parser.add_argument("--from-email", help="From email address")
-    parser.add_argument(
-        "--to-emails",
-        nargs="+",
-        help="Recipient email addresses"
-    )
-    parser.add_argument(
-        "--disable-email",
-        action="store_true",
-        help="Disable email notifications"
-    )
+    parser.add_argument("--to-emails", nargs="+", help="Recipient email addresses")
+    parser.add_argument("--disable-email", action="store_true", help="Disable email notifications")
 
     # Output options
-    parser.add_argument(
-        "--json-output",
-        action="store_true",
-        help="Output results in JSON format"
-    )
-    parser.add_argument(
-        "--verbose", "-v",
-        action="store_true",
-        help="Enable verbose logging"
-    )
+    parser.add_argument("--json-output", action="store_true", help="Output results in JSON format")
+    parser.add_argument("--verbose", "-v", action="store_true", help="Enable verbose logging")
 
     args = parser.parse_args()
 
@@ -140,15 +98,20 @@ def main():
             result = monitor.monitor_connectivity()
 
             if args.json_output:
-                print(json.dumps({
-                    'connectivity': {
-                        'success': result.success,
-                        'response_time_ms': result.response_time_ms,
-                        'account_info': result.account_info,
-                        'error': result.error,
-                        'timestamp': result.timestamp.isoformat()
-                    }
-                }, indent=2))
+                print(
+                    json.dumps(
+                        {
+                            "connectivity": {
+                                "success": result.success,
+                                "response_time_ms": result.response_time_ms,
+                                "account_info": result.account_info,
+                                "error": result.error,
+                                "timestamp": result.timestamp.isoformat(),
+                            }
+                        },
+                        indent=2,
+                    )
+                )
             else:
                 print_connectivity_result(result)
 
@@ -157,18 +120,23 @@ def main():
             results = monitor.monitor_replication_failures()
 
             if args.json_output:
-                print(json.dumps({
-                    'replication_failures': [
+                print(
+                    json.dumps(
                         {
-                            'failover_group': r.failover_group,
-                            'has_failure': r.has_failure,
-                            'failure_message': r.failure_message,
-                            'last_refresh': r.last_refresh.isoformat() if r.last_refresh else None,
-                            'next_refresh': r.next_refresh.isoformat() if r.next_refresh else None
-                        }
-                        for r in results
-                    ]
-                }, indent=2))
+                            "replication_failures": [
+                                {
+                                    "failover_group": r.failover_group,
+                                    "has_failure": r.has_failure,
+                                    "failure_message": r.failure_message,
+                                    "last_refresh": r.last_refresh.isoformat() if r.last_refresh else None,
+                                    "next_refresh": r.next_refresh.isoformat() if r.next_refresh else None,
+                                }
+                                for r in results
+                            ]
+                        },
+                        indent=2,
+                    )
+                )
             else:
                 print_replication_results(results, "Failure")
 
@@ -177,19 +145,24 @@ def main():
             results = monitor.monitor_replication_latency()
 
             if args.json_output:
-                print(json.dumps({
-                    'replication_latency': [
+                print(
+                    json.dumps(
                         {
-                            'failover_group': r.failover_group,
-                            'has_latency': r.has_latency,
-                            'latency_minutes': r.latency_minutes,
-                            'latency_message': r.latency_message,
-                            'last_refresh': r.last_refresh.isoformat() if r.last_refresh else None,
-                            'next_refresh': r.next_refresh.isoformat() if r.next_refresh else None
-                        }
-                        for r in results
-                    ]
-                }, indent=2))
+                            "replication_latency": [
+                                {
+                                    "failover_group": r.failover_group,
+                                    "has_latency": r.has_latency,
+                                    "latency_minutes": r.latency_minutes,
+                                    "latency_message": r.latency_message,
+                                    "last_refresh": r.last_refresh.isoformat() if r.last_refresh else None,
+                                    "next_refresh": r.next_refresh.isoformat() if r.next_refresh else None,
+                                }
+                                for r in results
+                            ]
+                        },
+                        indent=2,
+                    )
+                )
             else:
                 print_replication_results(results, "Latency")
 
@@ -216,6 +189,7 @@ def main():
         logger.error(f"Error during monitoring: {e!s}")
         if args.verbose:
             import traceback
+
             traceback.print_exc()
         sys.exit(1)
 
@@ -270,7 +244,7 @@ def print_comprehensive_results(results):
     print(f"Duration: {results['summary']['monitoring_duration_ms']} ms")
 
     # Connectivity
-    conn = results.get('connectivity')
+    conn = results.get("connectivity")
     if conn:
         status = "✓ CONNECTED" if conn.success else "✗ DISCONNECTED"
         print(f"\nConnectivity: {status}")
@@ -280,14 +254,14 @@ def print_comprehensive_results(results):
             print(f"  Response Time: {conn.response_time_ms} ms")
 
     # Summary
-    summary = results['summary']
+    summary = results["summary"]
     print("\nSummary:")
     print(f"  Total Failover Groups: {summary['total_failover_groups']}")
     print(f"  Groups with Failures: {summary['groups_with_failures']}")
     print(f"  Groups with Latency Issues: {summary['groups_with_latency']}")
 
     # Failures
-    failures = results.get('replication_failures', [])
+    failures = results.get("replication_failures", [])
     if any(r.has_failure for r in failures):
         print("\nReplication Failures:")
         for result in failures:
@@ -295,7 +269,7 @@ def print_comprehensive_results(results):
                 print(f"  ✗ {result.failover_group}: {result.failure_message}")
 
     # Latency
-    latency_issues = results.get('replication_latency', [])
+    latency_issues = results.get("replication_latency", [])
     if any(r.has_latency for r in latency_issues):
         print("\nLatency Issues:")
         for result in latency_issues:
@@ -305,9 +279,7 @@ def print_comprehensive_results(results):
 
     # Overall status
     has_issues = (
-        not summary['connectivity_ok'] or
-        summary['groups_with_failures'] > 0 or
-        summary['groups_with_latency'] > 0
+        not summary["connectivity_ok"] or summary["groups_with_failures"] > 0 or summary["groups_with_latency"] > 0
     )
 
     overall_status = "⚠ ISSUES DETECTED" if has_issues else "✓ ALL SYSTEMS OK"

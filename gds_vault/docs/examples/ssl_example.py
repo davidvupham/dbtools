@@ -60,9 +60,7 @@ def example_2_custom_certificate():
     cert_path = os.path.join(os.path.dirname(__file__), "..", "cert", "vault-ca.crt")
 
     try:
-        client = VaultClient(
-            vault_addr="https://vault.example.com", ssl_cert_path=cert_path
-        )
+        client = VaultClient(vault_addr="https://vault.example.com", ssl_cert_path=cert_path)
 
         print(f"✅ Connected to: {client.vault_addr}")
         print(f"✅ SSL certificate: {client.ssl_cert_path}")
@@ -142,9 +140,7 @@ def example_5_context_manager():
     cert_path = "/path/to/vault-ca.crt"
 
     try:
-        with VaultClient(
-            vault_addr="https://vault.example.com", ssl_cert_path=cert_path
-        ) as client:
+        with VaultClient(vault_addr="https://vault.example.com", ssl_cert_path=cert_path) as client:
             print(f"✅ Connected to: {client.vault_addr}")
             print(f"✅ SSL certificate: {cert_path}")
 
@@ -187,9 +183,7 @@ def example_6_multiple_vault_servers():
         print(f"✅ Staging: {staging_client.vault_addr}")
 
         # Development Vault (self-signed cert)
-        dev_client = VaultClient(
-            vault_addr="https://vault.dev.local", ssl_cert_path="cert/dev-vault-ca.crt"
-        )
+        dev_client = VaultClient(vault_addr="https://vault.dev.local", ssl_cert_path="cert/dev-vault-ca.crt")
         print(f"✅ Development: {dev_client.vault_addr}")
 
         print("✅ All environments configured successfully")

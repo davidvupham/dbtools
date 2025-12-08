@@ -504,6 +504,8 @@ class TestDatabase(unittest.TestCase):
                 return OperationResult.success_result("Failover")
 
         engine = TestEngine(MockConnection())
+        engine.build()
+        engine.destroy()
         engine.list_databases()
         engine.get_database("test")
         engine.startup()

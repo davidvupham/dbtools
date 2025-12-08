@@ -13,8 +13,8 @@ import argparse
 import json
 import os
 from collections import OrderedDict
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Iterable
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEVCONTAINER_DIR = REPO_ROOT / ".devcontainer"
@@ -161,9 +161,7 @@ def main() -> int:
     write_config(target_path, target_config)
     # Preserve original file permissions
     os.chmod(target_path, os.stat(source_path).st_mode)
-    print(
-        f"[sync] Updated {target_path.relative_to(REPO_ROOT)} from {args.source} -> {args.target}."
-    )
+    print(f"[sync] Updated {target_path.relative_to(REPO_ROOT)} from {args.source} -> {args.target}.")
     return 0
 
 

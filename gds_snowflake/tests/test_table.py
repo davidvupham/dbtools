@@ -87,9 +87,7 @@ class TestSnowflakeTable(unittest.TestCase):
         ]
         self.mock_connection.execute_query_dict.return_value = mock_tables
 
-        result = self.table_metadata.get_tables(
-            database_name="TEST_DB", schema_name="PUBLIC"
-        )
+        result = self.table_metadata.get_tables(database_name="TEST_DB", schema_name="PUBLIC")
 
         self.assertEqual(result, mock_tables)
 
@@ -167,9 +165,7 @@ class TestSnowflakeTable(unittest.TestCase):
         ]
         self.mock_connection.execute_query_dict.return_value = mock_views
 
-        result = self.table_metadata.get_views(
-            database_name="TEST_DB", schema_name="PUBLIC"
-        )
+        result = self.table_metadata.get_views(database_name="TEST_DB", schema_name="PUBLIC")
 
         self.assertEqual(result, mock_views)
 
@@ -229,12 +225,8 @@ class TestSnowflakeTable(unittest.TestCase):
     def test_get_all_table_metadata(self):
         """Test get_all_table_metadata method."""
         # Mock all the individual methods
-        self.table_metadata.get_tables = Mock(
-            return_value=[{"TABLE_NAME": "CUSTOMERS"}]
-        )
-        self.table_metadata.get_views = Mock(
-            return_value=[{"VIEW_NAME": "CUSTOMER_VIEW"}]
-        )
+        self.table_metadata.get_tables = Mock(return_value=[{"TABLE_NAME": "CUSTOMERS"}])
+        self.table_metadata.get_views = Mock(return_value=[{"VIEW_NAME": "CUSTOMER_VIEW"}])
         self.table_metadata.get_columns = Mock(return_value=[{"COLUMN_NAME": "ID"}])
 
         result = self.table_metadata.get_all_table_metadata()
@@ -258,24 +250,16 @@ class TestSnowflakeTable(unittest.TestCase):
     def test_get_all_table_metadata_with_filters(self):
         """Test get_all_table_metadata with filters."""
         # Mock all the individual methods
-        self.table_metadata.get_tables = Mock(
-            return_value=[{"TABLE_NAME": "CUSTOMERS"}]
-        )
+        self.table_metadata.get_tables = Mock(return_value=[{"TABLE_NAME": "CUSTOMERS"}])
         self.table_metadata.get_views = Mock(return_value=[])
         self.table_metadata.get_columns = Mock(return_value=[])
 
-        self.table_metadata.get_all_table_metadata(
-            database_name="TEST_DB", schema_name="PUBLIC"
-        )
+        self.table_metadata.get_all_table_metadata(database_name="TEST_DB", schema_name="PUBLIC")
 
         # Check that filters were passed
-        self.table_metadata.get_tables.assert_called_once_with(
-            "TEST_DB", "PUBLIC", include_views=False
-        )
+        self.table_metadata.get_tables.assert_called_once_with("TEST_DB", "PUBLIC", include_views=False)
         self.table_metadata.get_views.assert_called_once_with("TEST_DB", "PUBLIC")
-        self.table_metadata.get_columns.assert_called_once_with(
-            None, "TEST_DB", "PUBLIC"
-        )
+        self.table_metadata.get_columns.assert_called_once_with(None, "TEST_DB", "PUBLIC")
 
     # =========================================================================
     # Error Handling Tests

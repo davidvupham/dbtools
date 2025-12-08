@@ -13,9 +13,7 @@ def mock_vault_client():
     mock.secrets = MagicMock()
     mock.secrets.kv = MagicMock()
     mock.secrets.kv.v2 = MagicMock()
-    mock.secrets.kv.v2.read_secret_version = MagicMock(
-        return_value={"data": {"data": {"key": "value"}}}
-    )
+    mock.secrets.kv.v2.read_secret_version = MagicMock(return_value={"data": {"data": {"key": "value"}}})
     return mock
 
 

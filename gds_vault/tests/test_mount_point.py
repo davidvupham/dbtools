@@ -90,9 +90,7 @@ class TestMountPointModernClient(unittest.TestCase):
         # Mock authentication
         mock_post.return_value = MagicMock(
             ok=True,
-            json=lambda: {
-                "auth": {"client_token": "test-token", "lease_duration": 3600}
-            },
+            json=lambda: {"auth": {"client_token": "test-token", "lease_duration": 3600}},
         )
 
         # Mock secret fetch
@@ -117,9 +115,7 @@ class TestMountPointModernClient(unittest.TestCase):
         # Mock authentication
         mock_post.return_value = MagicMock(
             ok=True,
-            json=lambda: {
-                "auth": {"client_token": "test-token", "lease_duration": 3600}
-            },
+            json=lambda: {"auth": {"client_token": "test-token", "lease_duration": 3600}},
         )
 
         # Mock list operation
@@ -162,9 +158,7 @@ class TestMountPointModernClient(unittest.TestCase):
         # Mock authentication
         mock_post.return_value = MagicMock(
             ok=True,
-            json=lambda: {
-                "auth": {"client_token": "test-token", "lease_duration": 3600}
-            },
+            json=lambda: {"auth": {"client_token": "test-token", "lease_duration": 3600}},
         )
 
         # Mock secret fetch
@@ -248,9 +242,7 @@ class TestMountPointLegacyClient(unittest.TestCase):
         # Mock authentication
         mock_post.return_value = MagicMock(
             ok=True,
-            json=lambda: {
-                "auth": {"client_token": "test-token", "lease_duration": 3600}
-            },
+            json=lambda: {"auth": {"client_token": "test-token", "lease_duration": 3600}},
         )
 
         # Mock secret fetch
@@ -275,9 +267,7 @@ class TestMountPointLegacyClient(unittest.TestCase):
         # Mock authentication
         mock_post.return_value = MagicMock(
             ok=True,
-            json=lambda: {
-                "auth": {"client_token": "test-token", "lease_duration": 3600}
-            },
+            json=lambda: {"auth": {"client_token": "test-token", "lease_duration": 3600}},
         )
 
         # Mock list operation
@@ -304,9 +294,7 @@ class TestMountPointLegacyClient(unittest.TestCase):
         # Mock authentication
         mock_post.return_value = MagicMock(
             ok=True,
-            json=lambda: {
-                "auth": {"client_token": "test-token", "lease_duration": 3600}
-            },
+            json=lambda: {"auth": {"client_token": "test-token", "lease_duration": 3600}},
         )
 
         # Mock secret fetch
@@ -334,9 +322,7 @@ class TestMountPointLegacyClient(unittest.TestCase):
         # Mock authentication
         mock_post.return_value = MagicMock(
             ok=True,
-            json=lambda: {
-                "auth": {"client_token": "test-token", "lease_duration": 3600}
-            },
+            json=lambda: {"auth": {"client_token": "test-token", "lease_duration": 3600}},
         )
 
         # Mock secret fetch

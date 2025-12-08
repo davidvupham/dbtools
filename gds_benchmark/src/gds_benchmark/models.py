@@ -35,7 +35,5 @@ class BenchmarkResult:
     raw_output: Optional[str] = None
     error_message: Optional[str] = None
 
-    def add_metric(
-        self, name: str, value: float, unit: str, description: Optional[str] = None
-    ):
+    def add_metric(self, name: str, value: float, unit: str, description: Optional[str] = None):
         self.metrics.append(Metric(name, value, unit, description))

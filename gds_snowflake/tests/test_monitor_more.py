@@ -52,8 +52,8 @@ def test_latency_threshold_triggers_alert_and_clears_on_recovery(mock_vault):
         assert smtp.call_count == 1
         assert "fg1_latency" in mon.notified_failures
 
-    # Second run: latency recovered to 5 minutes (below threshold)
-    # -> no email, clear notified
+        # Second run: latency recovered to 5 minutes (below threshold)
+        # -> no email, clear notified
         mon.replication.check_replication_latency.return_value = (
             False,
             "Replication latency: 5 minutes",

@@ -7,8 +7,8 @@ and monitoring replica set health.
 """
 
 import logging
-from typing import Any, Dict, List, Optional, Union
 import time
+from typing import Any, Dict, List, Optional, Union
 
 from pymongo import MongoClient
 from pymongo.errors import OperationFailure, ServerSelectionTimeoutError
@@ -94,9 +94,7 @@ class MongoDBReplicaSetManager:
             self.client = connection
             self.connection = None
         else:
-            raise ValueError(
-                "connection must be MongoDBConnection or MongoClient instance"
-            )
+            raise ValueError("connection must be MongoDBConnection or MongoClient instance")
 
         if not self.client:
             raise ValueError("Connection not established")
@@ -124,7 +122,7 @@ class MongoDBReplicaSetManager:
             >>> status = rs_manager.get_status()
             >>> print(f"Replica set: {status['set']}")
             >>> print(f"My state: {status['myState']}")
-            >>> for member in status['members']:
+            >>> for member in status["members"]:
             ...     print(f"  {member['name']}: {member['stateStr']}")
         """
         try:
@@ -172,8 +170,8 @@ class MongoDBReplicaSetManager:
             >>> config = rs_manager.get_config()
             >>> print(f"Replica set: {config['_id']}")
             >>> print(f"Version: {config['version']}")
-            >>> for member in config['members']:
-            ...     priority = member.get('priority', 1)
+            >>> for member in config["members"]:
+            ...     priority = member.get("priority", 1)
             ...     print(f"  {member['host']} - priority: {priority}")
         """
         try:
@@ -230,35 +228,29 @@ class MongoDBReplicaSetManager:
 
         Examples:
             >>> # Add a regular data-bearing member
-            >>> rs_manager.add_member('replica4.example.com:27017')
+            >>> rs_manager.add_member("replica4.example.com:27017")
 
             >>> # Add a priority 0 member (cannot become primary)
-            >>> rs_manager.add_member('replica5.example.com:27017', priority=0)
+            >>> rs_manager.add_member("replica5.example.com:27017", priority=0)
 
             >>> # Add an arbiter (no data, voting only)
-            >>> rs_manager.add_member(
-            ...     'arbiter1.example.com:27017',
-            ...     arbiter_only=True
-            ... )
+            >>> rs_manager.add_member("arbiter1.example.com:27017", arbiter_only=True)
 
             >>> # Add a hidden member with delayed replication
             >>> rs_manager.add_member(
-            ...     'backup.example.com:27017',
+            ...     "backup.example.com:27017",
             ...     hidden=True,
             ...     slave_delay=3600,  # 1 hour delay
-            ...     priority=0
+            ...     priority=0,
             ... )
 
             >>> # Add member with custom tags
             >>> rs_manager.add_member(
-            ...     'replica6.example.com:27017',
-            ...     tags={'dc': 'east', 'usage': 'analytics'}
+            ...     "replica6.example.com:27017", tags={"dc": "east", "usage": "analytics"}
             ... )
         """
         if not host or ":" not in host:
-            raise ConfigurationError(
-                "Host must be in format 'hostname:port', e.g. 'localhost:27017'"
-            )
+            raise ConfigurationError("Host must be in format 'hostname:port', e.g. 'localhost:27017'")
 
         try:
             logger.debug(f"Adding member {host} to replica set")
@@ -269,9 +261,7 @@ class MongoDBReplicaSetManager:
             # Check if member already exists
             for member in config.get("members", []):
                 if member.get("host") == host:
-                    raise ConfigurationError(
-                        f"Member with host {host} already exists in replica set"
-                    )
+                    raise ConfigurationError(f"Member with host {host} already exists in replica set")
 
             # Find next available member ID
             member_ids = [m.get("_id", 0) for m in config.get("members", [])]
@@ -295,18 +285,12 @@ class MongoDBReplicaSetManager:
                 if hidden:
                     new_member["hidden"] = True
                     if priority > 0:
-                        logger.warning(
-                            "Hidden members should have priority 0, "
-                            "setting priority to 0"
-                        )
+                        logger.warning("Hidden members should have priority 0, setting priority to 0")
                         new_member["priority"] = 0
                 if slave_delay > 0:
                     new_member["slaveDelay"] = slave_delay
                     if priority > 0:
-                        logger.warning(
-                            "Delayed members should have priority 0, "
-                            "setting priority to 0"
-                        )
+                        logger.warning("Delayed members should have priority 0, setting priority to 0")
                         new_member["priority"] = 0
                 if tags:
                     new_member["tags"] = tags
@@ -318,9 +302,7 @@ class MongoDBReplicaSetManager:
             config["version"] += 1
 
             # Apply new configuration
-            logger.debug(
-                f"Applying new replica set configuration (version {config['version']})"
-            )
+            logger.debug(f"Applying new replica set configuration (version {config['version']})")
             result = self.client.admin.command("replSetReconfig", config)
 
             logger.info(f"Successfully added member {host} to replica set")
@@ -354,10 +336,10 @@ class MongoDBReplicaSetManager:
 
         Examples:
             >>> # Remove a member by host
-            >>> rs_manager.remove_member('replica4.example.com:27017')
+            >>> rs_manager.remove_member("replica4.example.com:27017")
 
             >>> # Remove an arbiter
-            >>> rs_manager.remove_member('arbiter1.example.com:27017')
+            >>> rs_manager.remove_member("arbiter1.example.com:27017")
         """
         if not host:
             raise ConfigurationError("Host must be specified")
@@ -375,9 +357,7 @@ class MongoDBReplicaSetManager:
             config["members"] = [m for m in members if m.get("host") != host]
 
             if len(config["members"]) == original_count:
-                raise ConfigurationError(
-                    f"Member with host {host} not found in replica set"
-                )
+                raise ConfigurationError(f"Member with host {host} not found in replica set")
 
             # Increment version
             config["version"] += 1
@@ -502,7 +482,7 @@ class MongoDBReplicaSetManager:
         Examples:
             >>> health = rs_manager.get_member_health()
             >>> for member, is_healthy in health.items():
-            ...     status = 'healthy' if is_healthy else 'unhealthy'
+            ...     status = "healthy" if is_healthy else "unhealthy"
             ...     print(f"{member}: {status}")
         """
         try:
@@ -599,9 +579,7 @@ class MongoDBReplicaSetManager:
             logger.error(error_msg)
             raise QueryError(error_msg) from e
 
-    def reconfigure(
-        self, config: Dict[str, Any], force: bool = False
-    ) -> Dict[str, Any]:
+    def reconfigure(self, config: Dict[str, Any], force: bool = False) -> Dict[str, Any]:
         """
         Apply a new replica set configuration.
 
@@ -624,11 +602,11 @@ class MongoDBReplicaSetManager:
         Examples:
             >>> # Get current config, modify it, and reapply
             >>> config = rs_manager.get_config()
-            >>> config['version'] += 1
+            >>> config["version"] += 1
             >>> # Modify member priorities
-            >>> for member in config['members']:
-            ...     if member['host'] == 'replica1.example.com:27017':
-            ...         member['priority'] = 10
+            >>> for member in config["members"]:
+            ...     if member["host"] == "replica1.example.com:27017":
+            ...         member["priority"] = 10
             >>> rs_manager.reconfigure(config)
         """
         if not config:
@@ -641,14 +619,10 @@ class MongoDBReplicaSetManager:
             raise ConfigurationError("Configuration must include members")
 
         try:
-            logger.debug(
-                f"Applying replica set configuration (version {config.get('version')})"
-            )
+            logger.debug(f"Applying replica set configuration (version {config.get('version')})")
 
             if force:
-                result = self.client.admin.command(
-                    "replSetReconfig", config, force=True
-                )
+                result = self.client.admin.command("replSetReconfig", config, force=True)
             else:
                 result = self.client.admin.command("replSetReconfig", config)
 
@@ -756,7 +730,7 @@ class MongoDBReplicaSetManager:
         Examples:
             >>> health = rs_manager.monitor_health()
             >>> print(f"Overall health: {health['overall_health']}")
-            >>> for alert in health['alerts']:
+            >>> for alert in health["alerts"]:
             ...     print(f"Alert: {alert['type']} - {alert['message']}")
         """
         try:
@@ -769,38 +743,26 @@ class MongoDBReplicaSetManager:
 
             # Check replica set status
             status = self.get_status()
-            health_data["checks"]["replica_set_status"] = (
-                self._check_replica_set_status(status)
-            )
+            health_data["checks"]["replica_set_status"] = self._check_replica_set_status(status)
 
             # Check member health
             member_health = self.get_member_health()
-            health_data["checks"]["member_health"] = self._check_member_health(
-                member_health
-            )
+            health_data["checks"]["member_health"] = self._check_member_health(member_health)
 
             # Check replication lag
             replication_lag = self.get_replication_lag()
-            health_data["checks"]["replication_lag"] = self._check_replication_lag(
-                replication_lag
-            )
+            health_data["checks"]["replication_lag"] = self._check_replication_lag(replication_lag)
 
             # Check primary availability
             primary = self.get_primary()
-            health_data["checks"]["primary_availability"] = (
-                self._check_primary_availability(primary, status)
-            )
+            health_data["checks"]["primary_availability"] = self._check_primary_availability(primary, status)
 
             # Check configuration consistency
             config = self.get_config()
-            health_data["checks"]["configuration_consistency"] = (
-                self._check_configuration_consistency(config, status)
-            )
+            health_data["checks"]["configuration_consistency"] = self._check_configuration_consistency(config, status)
 
             # Determine overall health
-            health_data["overall_health"] = self._determine_overall_health(
-                health_data["checks"]
-            )
+            health_data["overall_health"] = self._determine_overall_health(health_data["checks"])
 
             # Generate alerts
             alerts = self._generate_replica_set_alerts(health_data)
@@ -834,7 +796,7 @@ class MongoDBReplicaSetManager:
 
         Examples:
             >>> diagnostics = rs_manager.troubleshoot_replication_issues()
-            >>> for issue in diagnostics['issues']:
+            >>> for issue in diagnostics["issues"]:
             ...     print(f"Issue: {issue['description']}")
             ...     print(f"Recommendation: {issue['recommendation']}")
         """
@@ -930,9 +892,7 @@ class MongoDBReplicaSetManager:
 
         if member_count < 3:
             check_result["status"] = "warning"
-            check_result["issues"].append(
-                f"Low member count: {member_count} (recommended: 3+)"
-            )
+            check_result["issues"].append(f"Low member count: {member_count} (recommended: 3+)")
 
         # Check for quorum
         healthy_members = sum(1 for m in members if m.get("health") == 1)
@@ -948,16 +908,12 @@ class MongoDBReplicaSetManager:
         """Check individual member health."""
         check_result = {"status": "healthy", "details": {}, "issues": []}
 
-        unhealthy_members = [
-            member for member, healthy in member_health.items() if not healthy
-        ]
+        unhealthy_members = [member for member, healthy in member_health.items() if not healthy]
         check_result["details"]["unhealthy_members"] = unhealthy_members
 
         if unhealthy_members:
             check_result["status"] = "critical"
-            check_result["issues"].extend(
-                [f"Member {member} is unhealthy" for member in unhealthy_members]
-            )
+            check_result["issues"].extend([f"Member {member} is unhealthy" for member in unhealthy_members])
 
         return check_result
 
@@ -982,15 +938,11 @@ class MongoDBReplicaSetManager:
             check_result["status"] = max_severity
 
             for member, lag, severity in high_lag_members:
-                check_result["issues"].append(
-                    f"High replication lag on {member}: {lag}s"
-                )
+                check_result["issues"].append(f"High replication lag on {member}: {lag}s")
 
         return check_result
 
-    def _check_primary_availability(
-        self, primary: Optional[str], status: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    def _check_primary_availability(self, primary: Optional[str], status: Dict[str, Any]) -> Dict[str, Any]:
         """Check primary availability."""
         check_result = {"status": "healthy", "details": {}, "issues": []}
 
@@ -998,9 +950,7 @@ class MongoDBReplicaSetManager:
 
         if not primary:
             check_result["status"] = "critical"
-            check_result["issues"].append(
-                "No primary available - possible election in progress or split brain"
-            )
+            check_result["issues"].append("No primary available - possible election in progress or split brain")
 
             # Check if this is an election
             members = status.get("members", [])
@@ -1010,9 +960,7 @@ class MongoDBReplicaSetManager:
 
         return check_result
 
-    def _check_configuration_consistency(
-        self, config: Dict[str, Any], status: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    def _check_configuration_consistency(self, config: Dict[str, Any], status: Dict[str, Any]) -> Dict[str, Any]:
         """Check configuration consistency."""
         check_result = {"status": "healthy", "details": {}, "issues": []}
 
@@ -1026,23 +974,13 @@ class MongoDBReplicaSetManager:
         missing_in_status = config_hosts - status_hosts
         if missing_in_status:
             check_result["status"] = "warning"
-            check_result["issues"].extend(
-                [
-                    f"Member {host} configured but not in status"
-                    for host in missing_in_status
-                ]
-            )
+            check_result["issues"].extend([f"Member {host} configured but not in status" for host in missing_in_status])
 
         # Check for extra members
         extra_in_status = status_hosts - config_hosts
         if extra_in_status:
             check_result["status"] = "warning"
-            check_result["issues"].extend(
-                [
-                    f"Member {host} in status but not configured"
-                    for host in extra_in_status
-                ]
-            )
+            check_result["issues"].extend([f"Member {host} in status but not configured" for host in extra_in_status])
 
         return check_result
 
@@ -1059,9 +997,7 @@ class MongoDBReplicaSetManager:
         severity_names = {0: "healthy", 1: "warning", 2: "error", 3: "critical"}
         return severity_names[max_severity]
 
-    def _generate_replica_set_alerts(
-        self, health_data: Dict[str, Any]
-    ) -> List["Alert"]:
+    def _generate_replica_set_alerts(self, health_data: Dict[str, Any]) -> List["Alert"]:
         """Generate alerts from health check results."""
         alerts = []
 
@@ -1106,9 +1042,7 @@ class MongoDBReplicaSetManager:
 
         return mapping.get(check_name, AlertType.REPLICA_SET_SPLIT_BRAIN)
 
-    def _diagnose_primary_issues(
-        self, status: Dict[str, Any], diagnostics: Dict[str, Any]
-    ):
+    def _diagnose_primary_issues(self, status: Dict[str, Any], diagnostics: Dict[str, Any]):
         """Diagnose primary-related issues."""
         primary = None
         for member in status.get("members", []):
@@ -1138,9 +1072,7 @@ class MongoDBReplicaSetManager:
                 }
             )
 
-    def _diagnose_member_issues(
-        self, status: Dict[str, Any], diagnostics: Dict[str, Any]
-    ):
+    def _diagnose_member_issues(self, status: Dict[str, Any], diagnostics: Dict[str, Any]):
         """Diagnose member-related issues."""
         members = status.get("members", [])
 
@@ -1170,9 +1102,7 @@ class MongoDBReplicaSetManager:
                     }
                 )
 
-    def _diagnose_network_issues(
-        self, status: Dict[str, Any], diagnostics: Dict[str, Any]
-    ):
+    def _diagnose_network_issues(self, status: Dict[str, Any], diagnostics: Dict[str, Any]):
         """Diagnose network-related issues."""
         members = status.get("members", [])
 
@@ -1190,9 +1120,7 @@ class MongoDBReplicaSetManager:
                     }
                 )
 
-    def _diagnose_oplog_issues(
-        self, status: Dict[str, Any], diagnostics: Dict[str, Any]
-    ):
+    def _diagnose_oplog_issues(self, status: Dict[str, Any], diagnostics: Dict[str, Any]):
         """Diagnose oplog-related issues."""
         # Get oplog information
         try:
@@ -1264,9 +1192,7 @@ class MongoDBReplicaSetManager:
             logger.warning(f"Could not get oplog info: {e}")
             return {}
 
-    def _calculate_replication_throughput(
-        self, status: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    def _calculate_replication_throughput(self, status: Dict[str, Any]) -> Dict[str, Any]:
         """Calculate replication throughput metrics."""
         throughput = {"oplog_entries_per_second": 0, "data_replicated_mb_per_second": 0}
 

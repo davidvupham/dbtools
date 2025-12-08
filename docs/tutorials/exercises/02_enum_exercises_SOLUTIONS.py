@@ -15,6 +15,7 @@ from enum import Enum, auto
 # EXERCISE 1: Create Your First Enum (Easy)
 # ============================================================================
 
+
 class Color(Enum):
     RED = "red"
     GREEN = "green"
@@ -23,9 +24,9 @@ class Color(Enum):
 
 def test_exercise_1():
     """Test Exercise 1"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("EXERCISE 1: Create Your First Enum")
-    print("="*60)
+    print("=" * 60)
 
     try:
         # Test enum values
@@ -54,6 +55,7 @@ def test_exercise_1():
 # EXERCISE 2: Enum from Codebase (Easy)
 # ============================================================================
 
+
 class AlertSeverity(Enum):
     INFO = "INFO"
     WARNING = "WARNING"
@@ -62,9 +64,9 @@ class AlertSeverity(Enum):
 
 def test_exercise_2():
     """Test Exercise 2"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("EXERCISE 2: Enum from Codebase")
-    print("="*60)
+    print("=" * 60)
 
     try:
         # Test all severity levels
@@ -88,6 +90,7 @@ def test_exercise_2():
 # EXERCISE 3: Using Enums in Functions (Medium)
 # ============================================================================
 
+
 class Environment(Enum):
     DEVELOPMENT = "dev"
     STAGING = "staging"
@@ -98,16 +101,16 @@ def get_database_url(env: Environment) -> str:
     urls = {
         Environment.DEVELOPMENT: "localhost:5432",
         Environment.STAGING: "staging-db.company.com",
-        Environment.PRODUCTION: "prod-db.company.com"
+        Environment.PRODUCTION: "prod-db.company.com",
     }
     return urls[env]
 
 
 def test_exercise_3():
     """Test Exercise 3"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("EXERCISE 3: Using Enums in Functions")
-    print("="*60)
+    print("=" * 60)
 
     try:
         # Test each environment
@@ -134,6 +137,7 @@ def test_exercise_3():
 # EXERCISE 4: Auto-numbering Enums (Medium)
 # ============================================================================
 
+
 class Status(Enum):
     PENDING = auto()
     RUNNING = auto()
@@ -147,9 +151,9 @@ def is_terminal_status(status: Status) -> bool:
 
 def test_exercise_4():
     """Test Exercise 4"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("EXERCISE 4: Auto-numbering Enums")
-    print("="*60)
+    print("=" * 60)
 
     try:
         # Test auto values
@@ -176,6 +180,7 @@ def test_exercise_4():
 # EXERCISE 5: Iterating Over Enums (Medium)
 # ============================================================================
 
+
 class DayOfWeek(Enum):
     MONDAY = 1
     TUESDAY = 2
@@ -196,9 +201,9 @@ def get_all_weekdays() -> list:
 
 def test_exercise_5():
     """Test Exercise 5"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("EXERCISE 5: Iterating Over Enums")
-    print("="*60)
+    print("=" * 60)
 
     try:
         # Test weekend detection
@@ -227,6 +232,7 @@ def test_exercise_5():
 # ============================================================================
 # EXERCISE 6: Enum with Methods (Hard)
 # ============================================================================
+
 
 class HttpStatus(Enum):
     OK = 200
@@ -257,9 +263,9 @@ class HttpStatus(Enum):
 
 def test_exercise_6():
     """Test Exercise 6"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("EXERCISE 6: Enum with Methods")
-    print("="*60)
+    print("=" * 60)
 
     try:
         # Test success statuses
@@ -295,6 +301,7 @@ def test_exercise_6():
 # ============================================================================
 # EXERCISE 7: Real-World Application (Hard)
 # ============================================================================
+
 
 class Priority(Enum):
     LOW = 1
@@ -340,9 +347,9 @@ class TaskManager:
 
 def test_exercise_7():
     """Test Exercise 7"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("EXERCISE 7: Real-World Application")
-    print("="*60)
+    print("=" * 60)
 
     try:
         manager = TaskManager()
@@ -387,9 +394,9 @@ def test_exercise_7():
 # ============================================================================
 def run_all_tests():
     """Run all exercises"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("ENUM EXERCISES - SOLUTIONS")
-    print("="*60)
+    print("=" * 60)
     print("\nValidating that all exercises can be solved correctly.\n")
 
     results = []
@@ -404,9 +411,9 @@ def run_all_tests():
     results.append(("Exercise 7", test_exercise_7()))
 
     # Print summary
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("SUMMARY")
-    print("="*60)
+    print("=" * 60)
 
     passed = sum(1 for _, result in results if result)
     total = len(results)
@@ -427,5 +434,6 @@ def run_all_tests():
 
 if __name__ == "__main__":
     import sys
+
     success = run_all_tests()
     sys.exit(0 if success else 1)

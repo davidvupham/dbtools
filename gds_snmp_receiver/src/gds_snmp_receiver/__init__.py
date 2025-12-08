@@ -27,19 +27,19 @@ Or with configuration:
 """
 
 from .core import (
+    ConfigurationError,
+    PortBindingError,
+    RabbitMQConnectionError,
     SNMPReceiver,
     SNMPReceiverConfig,
     SNMPReceiverError,
-    PortBindingError,
-    ConfigurationError,
-    RabbitMQConnectionError,
 )
 
 __all__ = [
+    "ConfigurationError",
+    "PortBindingError",
+    "RabbitMQConnectionError",
     "SNMPReceiver",
     "SNMPReceiverConfig",
     "SNMPReceiverError",
-    "PortBindingError",
-    "ConfigurationError",
-    "RabbitMQConnectionError",
 ]

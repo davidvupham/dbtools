@@ -61,6 +61,7 @@ def wait_for_rabbit(timeout: int = 60) -> bool:
         run("pip install --no-cache-dir pika", check=True)
         # import via importlib after installing
         import importlib
+
         pika = importlib.import_module("pika")
 
     start = time.time()
@@ -91,7 +92,7 @@ def wait_for_queue(queue: str, timeout: int = 30) -> bool:
             # passive declare will throw if queue does not exist
             ch.queue_declare(queue=queue, passive=True)
             conn.close()
-            print("Queue '{}' exists".format(queue))
+            print(f"Queue '{queue}' exists")
             return True
         except pika.exceptions.AMQPError as e:
             # queue not found or connection error
@@ -128,7 +129,7 @@ def poll_for_message(queue: str, timeout: int = 20) -> Optional[str]:
             conn.close()
             if body:
                 print("Message received from queue")
-                return body.decode(errors='ignore')
+                return body.decode(errors="ignore")
         except Exception as e:
             print("pika poll error:", e)
         time.sleep(1)
@@ -163,9 +164,8 @@ def main() -> int:
         print("E2E SUCCESS — received message:")
         print(msg)
         return 0
-    else:
-        print("E2E FAILURE — no message received from RabbitMQ")
-        return 4
+    print("E2E FAILURE — no message received from RabbitMQ")
+    return 4
 
 
 if __name__ == "__main__":

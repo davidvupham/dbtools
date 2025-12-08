@@ -9,13 +9,16 @@ import logging
 from typing import Any, Dict, List, Optional
 
 import pyodbc
+
 from gds_database import (
     ConfigurableComponent,
     ConfigurationError,
-    ConnectionError,
     DatabaseConnection,
     QueryError,
     ResourceManager,
+)
+from gds_database import (
+    DatabaseConnectionError as ConnectionError,
 )
 
 logger = logging.getLogger(__name__)
@@ -134,28 +137,19 @@ class MSSQLConnection(DatabaseConnection, ConfigurableComponent, ResourceManager
             ConfigurationError: If required configuration is missing or invalid
         """
         required_fields = ["server", "database"]
-        missing_fields = [
-            field for field in required_fields if not self.config.get(field)
-        ]
+        missing_fields = [field for field in required_fields if not self.config.get(field)]
 
         if missing_fields:
-            raise ConfigurationError(
-                f"Missing required configuration fields: {missing_fields}"
-            )
+            raise ConfigurationError(f"Missing required configuration fields: {missing_fields}")
 
         auth_method = self.config.get("authentication")
         if auth_method == "kerberos":
             # For Kerberos, user/password should not be provided
             if self.config.get("user") or self.config.get("password"):
-                raise ConfigurationError(
-                    "User/password should not be provided with Kerberos authentication"
-                )
-        else:
-            # For username/password, user is required
-            if not self.config.get("user"):
-                raise ConfigurationError(
-                    "Username is required for username/password authentication"
-                )
+                raise ConfigurationError("User/password should not be provided with Kerberos authentication")
+        # For username/password, user is required
+        elif not self.config.get("user"):
+            raise ConfigurationError("Username is required for username/password authentication")
 
         # Validate port is a number
         port = self.config.get("port")
@@ -192,9 +186,7 @@ class MSSQLConnection(DatabaseConnection, ConfigurableComponent, ResourceManager
             )
 
             # Establish connection
-            self.connection = pyodbc.connect(
-                conn_string, timeout=self.config.get("connection_timeout", 30)
-            )
+            self.connection = pyodbc.connect(conn_string, timeout=self.config.get("connection_timeout", 30))
 
             logger.info("Successfully connected to SQL Server database")
             return self.connection
@@ -291,19 +283,16 @@ class MSSQLConnection(DatabaseConnection, ConfigurableComponent, ResourceManager
                 self._close_cursor(cursor)
                 self._cursor = None
                 return results
-            else:
-                # Return cursor for manual fetching
-                logger.debug("Returning open cursor for manual fetching")
-                return cursor
+            # Return cursor for manual fetching
+            logger.debug("Returning open cursor for manual fetching")
+            return cursor
 
         except pyodbc.Error as e:
             error_msg = f"Query execution failed: {e}"
             logger.error(error_msg)
             raise QueryError(error_msg) from e
 
-    def execute_query_dict(
-        self, query: str, params: Optional[tuple] = None
-    ) -> List[Dict[str, Any]]:
+    def execute_query_dict(self, query: str, params: Optional[tuple] = None) -> List[Dict[str, Any]]:
         """
         Execute query and return results as dictionaries.
 
@@ -424,9 +413,7 @@ class MSSQLConnection(DatabaseConnection, ConfigurableComponent, ResourceManager
         results = self.execute_query(query, (schema,))
         return [row[0] for row in results]
 
-    def get_column_info(
-        self, table_name: str, schema: str = "dbo"
-    ) -> List[Dict[str, Any]]:
+    def get_column_info(self, table_name: str, schema: str = "dbo") -> List[Dict[str, Any]]:
         """
         Get column information for specified table.
 

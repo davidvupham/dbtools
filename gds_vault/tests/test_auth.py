@@ -23,9 +23,7 @@ class TestAppRoleAuth(unittest.TestCase):
         self.assertEqual(auth.role_id, "test-role")
         self.assertEqual(auth.secret_id, "test-secret")
 
-    @patch.dict(
-        os.environ, {"VAULT_ROLE_ID": "env-role", "VAULT_SECRET_ID": "env-secret"}
-    )
+    @patch.dict(os.environ, {"VAULT_ROLE_ID": "env-role", "VAULT_SECRET_ID": "env-secret"})
     def test_init_from_environment(self):
         """Test initialization from environment variables."""
         auth = AppRoleAuth()
@@ -41,9 +39,7 @@ class TestAppRoleAuth(unittest.TestCase):
     def test_successful_authentication(self, mock_post):
         """Test successful authentication."""
         mock_post.return_value = Mock(ok=True)
-        mock_post.return_value.json.return_value = {
-            "auth": {"client_token": "test-token", "lease_duration": 3600}
-        }
+        mock_post.return_value.json.return_value = {"auth": {"client_token": "test-token", "lease_duration": 3600}}
 
         auth = AppRoleAuth(role_id="role", secret_id="secret")
         token, expiry = auth.authenticate("https://vault.example.com", timeout=10)

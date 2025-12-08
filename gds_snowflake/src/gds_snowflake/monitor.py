@@ -126,9 +126,7 @@ class SnowflakeMonitor(BaseMonitor):
             vault_*: Vault configuration parameters (optional)
         """
         # Initialize base monitor
-        super().__init__(
-            name=f"SnowflakeMonitor-{account}", timeout=connectivity_timeout
-        )
+        super().__init__(name=f"SnowflakeMonitor-{account}", timeout=connectivity_timeout)
 
         self.account = account
         self.connectivity_timeout = connectivity_timeout
@@ -214,15 +212,11 @@ class SnowflakeMonitor(BaseMonitor):
         Returns:
             ConnectivityResult with connectivity status and diagnostics
         """
-        self.logger.info(
-            "Starting connectivity monitoring for account: %s", self.account
-        )
+        self.logger.info("Starting connectivity monitoring for account: %s", self.account)
 
         try:
             # Test connectivity using the connection's built-in method
-            test_result = self.connection.test_connectivity(
-                timeout_seconds=self.connectivity_timeout
-            )
+            test_result = self.connection.test_connectivity(timeout_seconds=self.connectivity_timeout)
 
             result = ConnectivityResult(
                 success=test_result["success"],
@@ -241,9 +235,7 @@ class SnowflakeMonitor(BaseMonitor):
                 # Reset connectivity notification flag on success
                 self.notified_connectivity = False
             else:
-                self.logger.error(
-                    "✗ Connectivity FAILED for %s: %s", self.account, result.error
-                )
+                self.logger.error("✗ Connectivity FAILED for %s: %s", self.account, result.error)
                 # Send alert if enabled and not already notified
                 if self.enable_email_alerts and not self.notified_connectivity:
                     self._send_connectivity_alert(result)
@@ -292,20 +284,14 @@ class SnowflakeMonitor(BaseMonitor):
                 self.logger.warning("No failover groups found")
                 return results
 
-            self.logger.info(
-                "Found %s failover groups to monitor", len(failover_groups)
-            )
+            self.logger.info("Found %s failover groups to monitor", len(failover_groups))
 
             for fg in failover_groups:
                 result = self._check_failover_group_failures(fg)
                 results.append(result)
 
                 # Send alert if failure detected and not already notified
-                if (
-                    result.has_failure
-                    and self.enable_email_alerts
-                    and fg.name not in self.notified_failures
-                ):
+                if result.has_failure and self.enable_email_alerts and fg.name not in self.notified_failures:
                     self._send_replication_failure_alert(result)
                     self.notified_failures.add(fg.name)
                 elif not result.has_failure and fg.name in self.notified_failures:
@@ -399,9 +385,7 @@ class SnowflakeMonitor(BaseMonitor):
 
             # Skip replication monitoring if connectivity fails
             if not connectivity_result.success:
-                self.logger.warning(
-                    "Skipping replication monitoring due to connectivity failure"
-                )
+                self.logger.warning("Skipping replication monitoring due to connectivity failure")
                 return results
 
             # 2. Check replication failures
@@ -422,12 +406,8 @@ class SnowflakeMonitor(BaseMonitor):
             results["summary"].update(
                 {
                     "total_failover_groups": len(all_fg_names),
-                    "groups_with_failures": sum(
-                        1 for r in failure_results if r.has_failure
-                    ),
-                    "groups_with_latency": sum(
-                        1 for r in latency_results if r.has_latency
-                    ),
+                    "groups_with_failures": sum(1 for r in failure_results if r.has_failure),
+                    "groups_with_latency": sum(1 for r in latency_results if r.has_latency),
                 }
             )
 
@@ -443,8 +423,7 @@ class SnowflakeMonitor(BaseMonitor):
 
             conn_status = "OK" if results["summary"]["connectivity_ok"] else "FAILED"
             self.logger.info(
-                "Monitoring completed in %.2fms - Connectivity: %s, "
-                "Groups: %s, Failures: %s, Latency Issues: %s",
+                "Monitoring completed in %.2fms - Connectivity: %s, Groups: %s, Failures: %s, Latency Issues: %s",
                 duration_ms,
                 conn_status,
                 results["summary"]["total_failover_groups"],
@@ -454,14 +433,10 @@ class SnowflakeMonitor(BaseMonitor):
 
         return results
 
-    def _check_failover_group_failures(
-        self, failover_group: FailoverGroup
-    ) -> ReplicationResult:
+    def _check_failover_group_failures(self, failover_group: FailoverGroup) -> ReplicationResult:
         """Check a single failover group for replication failures."""
         try:
-            has_failure, failure_msg = self.replication.check_replication_failure(
-                failover_group
-            )
+            has_failure, failure_msg = self.replication.check_replication_failure(failover_group)
 
             return ReplicationResult(
                 failover_group=failover_group.name,
@@ -475,9 +450,7 @@ class SnowflakeMonitor(BaseMonitor):
             )
 
         except Exception as e:
-            self.logger.error(
-                "Error checking failures for %s: %s", failover_group.name, str(e)
-            )
+            self.logger.error("Error checking failures for %s: %s", failover_group.name, str(e))
             return ReplicationResult(
                 failover_group=failover_group.name,
                 has_failure=True,
@@ -489,14 +462,10 @@ class SnowflakeMonitor(BaseMonitor):
                 next_refresh=None,
             )
 
-    def _check_failover_group_latency(
-        self, failover_group: FailoverGroup
-    ) -> ReplicationResult:
+    def _check_failover_group_latency(self, failover_group: FailoverGroup) -> ReplicationResult:
         """Check a single failover group for replication latency."""
         try:
-            has_latency, latency_msg = self.replication.check_replication_latency(
-                failover_group
-            )
+            has_latency, latency_msg = self.replication.check_replication_latency(failover_group)
 
             # Extract latency value if available
             latency_minutes = None
@@ -512,10 +481,7 @@ class SnowflakeMonitor(BaseMonitor):
                     pass
 
             # Check against our threshold
-            threshold_exceeded = (
-                latency_minutes is not None
-                and latency_minutes > self.latency_threshold_minutes
-            )
+            threshold_exceeded = latency_minutes is not None and latency_minutes > self.latency_threshold_minutes
 
             return ReplicationResult(
                 failover_group=failover_group.name,
@@ -523,17 +489,13 @@ class SnowflakeMonitor(BaseMonitor):
                 has_latency=has_latency or threshold_exceeded,
                 latency_minutes=latency_minutes,
                 failure_message=None,
-                latency_message=latency_msg
-                if (has_latency or threshold_exceeded)
-                else None,
+                latency_message=latency_msg if (has_latency or threshold_exceeded) else None,
                 last_refresh=getattr(failover_group, "last_refresh_time", None),
                 next_refresh=getattr(failover_group, "next_scheduled_refresh", None),
             )
 
         except Exception as e:
-            self.logger.error(
-                "Error checking latency for %s: %s", failover_group.name, str(e)
-            )
+            self.logger.error("Error checking latency for %s: %s", failover_group.name, str(e))
             return ReplicationResult(
                 failover_group=failover_group.name,
                 has_failure=False,
@@ -638,9 +600,7 @@ Account: {self.account}
                 self.smtp_password,
             ]
         ):
-            self.logger.warning(
-                "Email configuration incomplete. Skipping email notification."
-            )
+            self.logger.warning("Email configuration incomplete. Skipping email notification.")
             return
 
         try:
@@ -651,9 +611,7 @@ Account: {self.account}
 
             msg.attach(MIMEText(body, "plain"))
 
-            self.logger.info(
-                "Sending %s email notification: %s", severity.value, subject
-            )
+            self.logger.info("Sending %s email notification: %s", severity.value, subject)
 
             with smtplib.SMTP(self.smtp_server, self.smtp_port) as server:
                 server.starttls()

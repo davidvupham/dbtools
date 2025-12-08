@@ -19,7 +19,7 @@ except ImportError:
     VaultError = Exception
 
 try:
-    from gds_database import DatabaseConnection, ConfigurableComponent, ResourceManager
+    from gds_database import ConfigurableComponent, DatabaseConnection, ResourceManager
 except ImportError:
     # Fallback to local base classes if gds_database not available
     from .base import ConfigurableComponent, DatabaseConnection, ResourceManager
@@ -114,13 +114,9 @@ class SnowflakeConnection(DatabaseConnection, ConfigurableComponent, ResourceMan
                 logger.info("Snowflake private key loaded from Vault: %s", secret_path)
             except VaultError as e:
                 logger.error("Vault error: %s", e)
-                raise RuntimeError(
-                    "Snowflake private key could not be retrieved from Vault."
-                ) from e
+                raise RuntimeError("Snowflake private key could not be retrieved from Vault.") from e
         else:
-            raise RuntimeError(
-                "Vault secret path must be provided to retrieve private key."
-            )
+            raise RuntimeError("Vault secret path must be provided to retrieve private key.")
 
     # Abstract method implementations
     def validate_config(self) -> bool:
@@ -192,9 +188,7 @@ class SnowflakeConnection(DatabaseConnection, ConfigurableComponent, ResourceMan
             logger.info("Successfully connected to Snowflake account: %s", self.account)
             return self.connection
         except Exception as e:
-            logger.error(
-                "Failed to connect to Snowflake account %s: %s", self.account, str(e)
-            )
+            logger.error("Failed to connect to Snowflake account %s: %s", self.account, str(e))
             raise
 
     def get_connection(self) -> snowflake.connector.SnowflakeConnection:
@@ -394,9 +388,7 @@ class SnowflakeConnection(DatabaseConnection, ConfigurableComponent, ResourceMan
             logger.error("Query: %s", query)
             raise
 
-    def switch_account(
-        self, new_account: str
-    ) -> snowflake.connector.SnowflakeConnection:
+    def switch_account(self, new_account: str) -> snowflake.connector.SnowflakeConnection:
         """
         Switch to a different Snowflake account.
 

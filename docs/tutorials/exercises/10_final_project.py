@@ -114,9 +114,7 @@ def test_basic_functionality():
         print("✓ Enums work")
 
         # Test dataclasses
-        config = DatabaseConfig(
-            "prod_db", DatabaseType.SNOWFLAKE, "db.example.com", 5432
-        )
+        config = DatabaseConfig("prod_db", DatabaseType.SNOWFLAKE, "db.example.com", 5432)
         assert config.name == "prod_db"
         print("✓ DatabaseConfig dataclass works")
 
@@ -263,10 +261,7 @@ def test_report_generation():
         print("✓ Generated report")
 
         # Verify report contains key information
-        assert (
-            "Database Monitoring Report" in report
-            or "MONITORING REPORT" in report.upper()
-        )
+        assert "Database Monitoring Report" in report or "MONITORING REPORT" in report.upper()
         assert "prod_db" in report
         assert "Monitor" in report
         print("✓ Report contains required information")
@@ -299,13 +294,9 @@ def test_real_world_scenario():
         system = MonitoringSystem()
 
         databases = [
-            DatabaseConfig(
-                "analytics_db", DatabaseType.SNOWFLAKE, "analytics.example.com", 5432
-            ),
+            DatabaseConfig("analytics_db", DatabaseType.SNOWFLAKE, "analytics.example.com", 5432),
             DatabaseConfig("api_db", DatabaseType.POSTGRES, "api.example.com", 5433),
-            DatabaseConfig(
-                "cache_db", DatabaseType.MONGODB, "cache.example.com", 27017
-            ),
+            DatabaseConfig("cache_db", DatabaseType.MONGODB, "cache.example.com", 27017),
         ]
 
         for db_config in databases:
@@ -322,9 +313,7 @@ def test_real_world_scenario():
 
         # Scenario: Check for unhealthy systems
         unhealthy = [
-            name
-            for name, status in results.items()
-            if status in [MonitorStatus.WARNING, MonitorStatus.CRITICAL]
+            name for name, status in results.items() if status in [MonitorStatus.WARNING, MonitorStatus.CRITICAL]
         ]
         print(f"✓ Found {len(unhealthy)} monitors needing attention")
 
@@ -336,9 +325,7 @@ def test_real_world_scenario():
         # Scenario: Get critical alerts for immediate action
         critical_alerts = system.get_alerts(AlertLevel.CRITICAL)
         if critical_alerts:
-            print(
-                f"⚠ {len(critical_alerts)} critical alerts require immediate attention!"
-            )
+            print(f"⚠ {len(critical_alerts)} critical alerts require immediate attention!")
         else:
             print("✓ No critical alerts")
 
@@ -350,11 +337,7 @@ def test_real_world_scenario():
         print("✓ Generated comprehensive report for all databases")
 
         # Scenario: Find performance bottlenecks
-        perf_metrics = [
-            m
-            for m in all_metrics
-            if "query" in m.name.lower() or "latency" in m.name.lower()
-        ]
+        perf_metrics = [m for m in all_metrics if "query" in m.name.lower() or "latency" in m.name.lower()]
         slow_queries = [m for m in perf_metrics if m.value > 150]
         print(f"✓ Identified {len(slow_queries)} slow queries")
 

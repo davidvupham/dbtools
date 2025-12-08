@@ -107,9 +107,7 @@ def test_exercise_3():
 
 completed_tasks = {"task1", "task2", "task3", "task4", "task5"}
 pending_tasks = {"task3", "task4", "task6", "task7"}
-truly_completed = (
-    completed_tasks - pending_tasks
-)  # or completed_tasks.difference(pending_tasks)
+truly_completed = completed_tasks - pending_tasks  # or completed_tasks.difference(pending_tasks)
 
 
 def test_exercise_4():

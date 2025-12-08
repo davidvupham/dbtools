@@ -6,8 +6,7 @@ Complete solutions for all exercises. Try to solve them yourself first!
 """
 
 from abc import ABC, abstractmethod
-from typing import Optional, Any
-
+from typing import Any, Optional
 
 # ============================================================================
 # EXERCISE 1 SOLUTION: Abstract Base Classes

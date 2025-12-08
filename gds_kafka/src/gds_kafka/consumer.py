@@ -2,7 +2,8 @@
 
 import json
 import logging
-from typing import Any, Dict, Generator, Optional
+from collections.abc import Generator
+from typing import Any, Dict, Optional
 
 from kafka import KafkaConsumer
 from kafka.errors import (
@@ -52,9 +53,7 @@ class KafkaConsumerClient:
         **config: Any,
     ):
         default_config = {
-            "value_deserializer": lambda v: json.loads(v.decode("utf-8"))
-            if v
-            else None,
+            "value_deserializer": lambda v: json.loads(v.decode("utf-8")) if v else None,
             "bootstrap_servers": bootstrap_servers,
             "group_id": group_id,
             "auto_offset_reset": "earliest",
@@ -64,9 +63,7 @@ class KafkaConsumerClient:
         try:
             self.consumer = KafkaConsumer(topic, **default_config)
         except NoBrokersAvailable as e:
-            raise KafkaConnectionError(
-                f"Failed to connect to Kafka brokers: {bootstrap_servers}"
-            ) from e
+            raise KafkaConnectionError(f"Failed to connect to Kafka brokers: {bootstrap_servers}") from e
         except KafkaError as e:
             raise KafkaConnectionError(f"Kafka connection error: {e}") from e
 
@@ -97,9 +94,7 @@ class KafkaConsumerClient:
                         "offset": message.offset,
                     }
                 except (json.JSONDecodeError, UnicodeDecodeError) as e:
-                    raise KafkaSerializationError(
-                        f"Failed to deserialize message: {e}"
-                    ) from e
+                    raise KafkaSerializationError(f"Failed to deserialize message: {e}") from e
         except KafkaLibTimeoutError as e:
             raise KafkaTimeoutError(f"Consumer poll timed out: {e}") from e
         except KafkaError as e:

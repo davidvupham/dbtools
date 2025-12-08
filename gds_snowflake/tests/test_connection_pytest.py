@@ -13,19 +13,19 @@ from gds_snowflake.connection import SnowflakeConnection
 def connection_params():
     """Fixture providing standard connection parameters for RSA auth"""
     return {
-        'account': 'test_account',
-        'user': 'test_user',
-        'vault_secret_path': 'secret/snowflake',
-        'vault_mount_point': 'kv-v2',
-        'warehouse': 'test_warehouse',
-        'role': 'test_role'
+        "account": "test_account",
+        "user": "test_user",
+        "vault_secret_path": "secret/snowflake",
+        "vault_mount_point": "kv-v2",
+        "warehouse": "test_warehouse",
+        "role": "test_role",
     }
 
 
 @pytest.fixture
 def mock_snowflake_connection():
     """Fixture providing a mocked Snowflake connection"""
-    with patch('snowflake.connector.connect') as mock_connect:
+    with patch("snowflake.connector.connect") as mock_connect:
         mock_conn = Mock()
         mock_conn.is_closed.return_value = False
         mock_connect.return_value = mock_conn
@@ -35,10 +35,10 @@ def mock_snowflake_connection():
 @pytest.fixture
 def mock_vault():
     """Fixture for mocking Vault operations"""
-    with patch('gds_snowflake.connection.get_secret_from_vault') as mock_vault:
+    with patch("gds_snowflake.connection.get_secret_from_vault") as mock_vault:
         mock_vault.return_value = {
-            'private_key': 'LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCk1JSUV2Z0lCQURBTkJna3Foa2lHOXcwQkFRRUZBQVNDQkt',  # Valid base64
-            'user': 'vault_user'
+            "private_key": "LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCk1JSUV2Z0lCQURBTkJna3Foa2lHOXcwQkFRRUZBQVNDQkt",  # Valid base64
+            "user": "vault_user",
         }
         yield mock_vault
 
@@ -50,23 +50,19 @@ class TestSnowflakeConnectionInit:
         """Test initialization with all parameters"""
         conn = SnowflakeConnection(**connection_params)
 
-        assert conn.account == connection_params['account']
-        assert conn.user == connection_params['user']
+        assert conn.account == connection_params["account"]
+        assert conn.user == connection_params["user"]
         # vault_secret_path is not stored as an instance attribute
-        assert conn.warehouse == connection_params['warehouse']
-        assert conn.role == connection_params['role']
+        assert conn.warehouse == connection_params["warehouse"]
+        assert conn.role == connection_params["role"]
         assert conn.connection is None
 
     def test_init_minimal_params(self, mock_vault):
         """Test initialization with minimal parameters"""
-        conn = SnowflakeConnection(
-            account='test_account',
-            user='test_user',
-            vault_secret_path='secret/snowflake'
-        )
+        conn = SnowflakeConnection(account="test_account", user="test_user", vault_secret_path="secret/snowflake")
 
-        assert conn.account == 'test_account'
-        assert conn.user == 'test_user'
+        assert conn.account == "test_account"
+        assert conn.user == "test_user"
         assert conn.connection is None
 
 
@@ -94,14 +90,14 @@ class TestSnowflakeConnectionConnect:
         # Verify connection was called with correct parameters
         mock_connect.assert_called_once()
         call_args = mock_connect.call_args[1]
-        assert call_args['account'] == connection_params['account']
-        assert call_args['user'] == connection_params['user']
-        assert call_args['warehouse'] == connection_params['warehouse']
-        assert call_args['role'] == connection_params['role']
+        assert call_args["account"] == connection_params["account"]
+        assert call_args["user"] == connection_params["user"]
+        assert call_args["warehouse"] == connection_params["warehouse"]
+        assert call_args["role"] == connection_params["role"]
 
     def test_connect_failure(self, connection_params, mock_vault):
         """Test connection failure"""
-        with patch('snowflake.connector.connect', side_effect=Exception("Connection failed")):
+        with patch("snowflake.connector.connect", side_effect=Exception("Connection failed")):
             conn = SnowflakeConnection(**connection_params)
 
             with pytest.raises(Exception):
@@ -115,7 +111,7 @@ class TestSnowflakeConnectionQueries:
         """Test query execution"""
         mock_connect, mock_conn = mock_snowflake_connection
         mock_cursor = Mock()
-        mock_cursor.fetchall.return_value = [('row1',), ('row2',)]
+        mock_cursor.fetchall.return_value = [("row1",), ("row2",)]
         mock_cursor.execute = Mock()
         mock_cursor.close = Mock()
         # Return cursor directly, not as context manager
@@ -126,14 +122,14 @@ class TestSnowflakeConnectionQueries:
 
         result = conn.execute_query("SELECT * FROM test_table")
 
-        assert result == [('row1',), ('row2',)]
+        assert result == [("row1",), ("row2",)]
         mock_cursor.execute.assert_called_once_with("SELECT * FROM test_table")
 
     def test_execute_query_with_params(self, connection_params, mock_snowflake_connection, mock_vault):
         """Test query execution with parameters"""
         mock_connect, mock_conn = mock_snowflake_connection
         mock_cursor = Mock()
-        mock_cursor.fetchall.return_value = [('result',)]
+        mock_cursor.fetchall.return_value = [("result",)]
         mock_cursor.execute = Mock()
         mock_cursor.close = Mock()
         # Return cursor directly, not as context manager
@@ -142,31 +138,32 @@ class TestSnowflakeConnectionQueries:
         conn = SnowflakeConnection(**connection_params)
         conn.connect()
 
-        result = conn.execute_query("SELECT * FROM test WHERE id = %s", ('123',))
+        result = conn.execute_query("SELECT * FROM test WHERE id = %s", ("123",))
 
-        assert result == [('result',)]
-        mock_cursor.execute.assert_called_once_with("SELECT * FROM test WHERE id = %s", ('123',))
+        assert result == [("result",)]
+        mock_cursor.execute.assert_called_once_with("SELECT * FROM test WHERE id = %s", ("123",))
 
     def test_execute_query_dict(self, connection_params, mock_snowflake_connection, mock_vault):
         """Test query execution returning dictionaries"""
         mock_connect, mock_conn = mock_snowflake_connection
-        
+
         # Mock regular cursor
         mock_cursor = Mock()
         mock_cursor.execute = Mock()
         mock_cursor.close = Mock()
-        
+
         # Mock dict cursor
         mock_dict_cursor = Mock()
-        mock_dict_cursor.fetchall.return_value = [{'col1': 'val1', 'col2': 'val2'}]
+        mock_dict_cursor.fetchall.return_value = [{"col1": "val1", "col2": "val2"}]
         mock_dict_cursor.execute = Mock()
         mock_dict_cursor.close = Mock()
-        
+
         # Return dict cursor when DictCursor is passed
         def cursor_factory(cursor_class=None):
             if cursor_class is not None:
                 return mock_dict_cursor
             return mock_cursor
+
         mock_conn.cursor.side_effect = cursor_factory
 
         conn = SnowflakeConnection(**connection_params)
@@ -174,7 +171,7 @@ class TestSnowflakeConnectionQueries:
 
         result = conn.execute_query_dict("SELECT col1, col2 FROM test")
 
-        assert result == [{'col1': 'val1', 'col2': 'val2'}]
+        assert result == [{"col1": "val1", "col2": "val2"}]
 
 
 class TestSnowflakeConnectionLifecycle:
@@ -212,13 +209,13 @@ class TestSnowflakeConnectionLifecycle:
     def test_switch_account(self, connection_params, mock_snowflake_connection, mock_vault):
         """Test account switching"""
         mock_connect, mock_conn = mock_snowflake_connection
-        
+
         conn = SnowflakeConnection(**connection_params)
 
         original_account = conn.account
-        conn.switch_account('new_account')
+        conn.switch_account("new_account")
 
-        assert conn.account == 'new_account'
+        assert conn.account == "new_account"
         assert conn.account != original_account
         # Connection is set after switch_account calls connect()
         assert conn.connection is not None

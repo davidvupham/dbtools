@@ -27,19 +27,13 @@ class TestBaseClasses(unittest.TestCase):
     def test_operation_result_creation(self):
         """Test OperationResult creation and methods."""
         # Test success result
-        success_result = OperationResult.success_result(
-            "Operation completed",
-            {"data": "test"}
-        )
+        success_result = OperationResult.success_result("Operation completed", {"data": "test"})
         self.assertTrue(success_result.success)
         self.assertEqual(success_result.message, "Operation completed")
         self.assertEqual(success_result.data, {"data": "test"})
 
         # Test failure result
-        failure_result = OperationResult.failure_result(
-            "Operation failed",
-            "Connection timeout"
-        )
+        failure_result = OperationResult.failure_result("Operation failed", "Connection timeout")
         self.assertFalse(failure_result.success)
         self.assertEqual(failure_result.message, "Operation failed")
         self.assertEqual(failure_result.error, "Connection timeout")
@@ -47,31 +41,33 @@ class TestBaseClasses(unittest.TestCase):
         # Test to_dict conversion
         result_dict = success_result.to_dict()
         self.assertIsInstance(result_dict, dict)
-        self.assertTrue(result_dict['success'])
+        self.assertTrue(result_dict["success"])
 
     def test_configurable_component(self):
         """Test ConfigurableComponent functionality."""
+
         class TestComponent(ConfigurableComponent):
             def validate_config(self) -> bool:
-                return 'required_key' in self.config
+                return "required_key" in self.config
 
         # Test with valid config
-        component = TestComponent({'required_key': 'value'})
+        component = TestComponent({"required_key": "value"})
         self.assertTrue(component.validate_config())
 
         # Test configuration methods
-        self.assertEqual(component.get_config('required_key'), 'value')
-        self.assertEqual(component.get_config('missing', 'default'), 'default')
+        self.assertEqual(component.get_config("required_key"), "value")
+        self.assertEqual(component.get_config("missing", "default"), "default")
 
-        component.set_config('new_key', 'new_value')
-        self.assertEqual(component.get_config('new_key'), 'new_value')
+        component.set_config("new_key", "new_value")
+        self.assertEqual(component.get_config("new_key"), "new_value")
 
-        component.update_config({'key1': 'val1', 'key2': 'val2'})
-        self.assertEqual(component.get_config('key1'), 'val1')
-        self.assertEqual(component.get_config('key2'), 'val2')
+        component.update_config({"key1": "val1", "key2": "val2"})
+        self.assertEqual(component.get_config("key1"), "val1")
+        self.assertEqual(component.get_config("key2"), "val2")
 
     def test_resource_manager(self):
         """Test ResourceManager context manager functionality."""
+
         class TestResource(ResourceManager):
             def __init__(self):
                 self.initialized = False
@@ -97,6 +93,7 @@ class TestBaseClasses(unittest.TestCase):
 
     def test_retryable_operation(self):
         """Test RetryableOperation retry logic."""
+
         class TestOperation(RetryableOperation):
             def __init__(self, fail_count=2):
                 super().__init__(max_retries=3, backoff_factor=1.0)
@@ -133,13 +130,10 @@ class TestSnowflakeConnectionInheritance(unittest.TestCase):
 
     def test_connection_abstract_methods(self):
         """Test that all abstract methods are implemented."""
-        with patch('gds_snowflake.connection.get_secret_from_vault') as mock_vault:
-            mock_vault.return_value = {'private_key': 'test_key'}
+        with patch("gds_snowflake.connection.get_secret_from_vault") as mock_vault:
+            mock_vault.return_value = {"private_key": "test_key"}
 
-            conn = SnowflakeConnection(
-                account='test_account',
-                vault_secret_path='test/path'
-            )
+            conn = SnowflakeConnection(account="test_account", vault_secret_path="test/path")
 
             # Test abstract method implementations
             self.assertTrue(conn.validate_config())
@@ -156,18 +150,18 @@ class TestSnowflakeConnectionInheritance(unittest.TestCase):
 
     def test_connection_context_manager(self):
         """Test connection context manager with inheritance."""
-        with patch('gds_snowflake.connection.get_secret_from_vault') as mock_vault:
-            mock_vault.return_value = {'private_key': 'test_key'}
+        with patch("gds_snowflake.connection.get_secret_from_vault") as mock_vault:
+            mock_vault.return_value = {"private_key": "test_key"}
 
-            with patch('snowflake.connector.connect') as mock_connect:
+            with patch("snowflake.connector.connect") as mock_connect:
                 mock_conn_obj = Mock()
                 mock_conn_obj.is_closed.return_value = False
                 mock_connect.return_value = mock_conn_obj
 
                 with SnowflakeConnection(
-                    account='test_account',
-                    user='test_user',  # Add required user parameter
-                    vault_secret_path='test/path'
+                    account="test_account",
+                    user="test_user",  # Add required user parameter
+                    vault_secret_path="test/path",
                 ) as conn:
                     self.assertTrue(conn.is_initialized())
                     # Connection should be initialized and connected
@@ -175,21 +169,18 @@ class TestSnowflakeConnectionInheritance(unittest.TestCase):
 
     def test_connection_info(self):
         """Test connection info method."""
-        with patch('gds_snowflake.connection.get_secret_from_vault') as mock_vault:
-            mock_vault.return_value = {'private_key': 'test_key'}
+        with patch("gds_snowflake.connection.get_secret_from_vault") as mock_vault:
+            mock_vault.return_value = {"private_key": "test_key"}
 
             conn = SnowflakeConnection(
-                account='test_account',
-                user='test_user',
-                warehouse='test_warehouse',
-                vault_secret_path='test/path'
+                account="test_account", user="test_user", warehouse="test_warehouse", vault_secret_path="test/path"
             )
 
             info = conn.get_connection_info()
-            self.assertEqual(info['account'], 'test_account')
-            self.assertEqual(info['user'], 'test_user')
-            self.assertEqual(info['warehouse'], 'test_warehouse')
-            self.assertFalse(info['connected'])
+            self.assertEqual(info["account"], "test_account")
+            self.assertEqual(info["user"], "test_user")
+            self.assertEqual(info["warehouse"], "test_warehouse")
+            self.assertFalse(info["connected"])
 
 
 class TestSnowflakeMonitorInheritance(unittest.TestCase):
@@ -199,7 +190,7 @@ class TestSnowflakeMonitorInheritance(unittest.TestCase):
         """Test that SnowflakeMonitor properly inherits from BaseMonitor."""
         self.assertTrue(issubclass(SnowflakeMonitor, BaseMonitor))
 
-    @patch('gds_snowflake.monitor.SnowflakeConnection')
+    @patch("gds_snowflake.monitor.SnowflakeConnection")
     def test_monitor_base_functionality(self, mock_conn_class):
         """Test BaseMonitor functionality in SnowflakeMonitor."""
         # Mock the connection
@@ -207,32 +198,32 @@ class TestSnowflakeMonitorInheritance(unittest.TestCase):
         mock_conn_class.return_value = mock_conn
 
         # Create monitor
-        monitor = SnowflakeMonitor(account='test_account')
+        monitor = SnowflakeMonitor(account="test_account")
 
         # Test base class properties
-        self.assertEqual(monitor.name, 'SnowflakeMonitor-test_account')
+        self.assertEqual(monitor.name, "SnowflakeMonitor-test_account")
         self.assertEqual(monitor.timeout, 30)  # Default timeout
 
         # Test stats before any checks
         stats = monitor.get_stats()
-        self.assertEqual(stats['name'], 'SnowflakeMonitor-test_account')
-        self.assertEqual(stats['check_count'], 0)
-        self.assertIsNone(stats['start_time'])
-        self.assertIsNone(stats['last_check'])
+        self.assertEqual(stats["name"], "SnowflakeMonitor-test_account")
+        self.assertEqual(stats["check_count"], 0)
+        self.assertIsNone(stats["start_time"])
+        self.assertIsNone(stats["last_check"])
 
-    @patch('gds_snowflake.monitor.SnowflakeConnection')
-    @patch('gds_snowflake.monitor.SnowflakeReplication')
+    @patch("gds_snowflake.monitor.SnowflakeConnection")
+    @patch("gds_snowflake.monitor.SnowflakeReplication")
     def test_monitor_check_method(self, mock_repl_class, mock_conn_class):
         """Test the check method implementation."""
         # Mock the connection and replication
         mock_conn = Mock()
         mock_conn_class.return_value = mock_conn
         mock_conn.test_connectivity.return_value = {
-            'success': True,
-            'response_time_ms': 100,
-            'account_info': {'account_name': 'test_account'},
-            'error': None,
-            'timestamp': datetime.now().isoformat()
+            "success": True,
+            "response_time_ms": 100,
+            "account_info": {"account_name": "test_account"},
+            "error": None,
+            "timestamp": datetime.now().isoformat(),
         }
 
         mock_repl = Mock()
@@ -240,23 +231,23 @@ class TestSnowflakeMonitorInheritance(unittest.TestCase):
         mock_repl.get_failover_groups.return_value = []
 
         # Create monitor
-        monitor = SnowflakeMonitor(account='test_account')
+        monitor = SnowflakeMonitor(account="test_account")
 
         # Test check method
         result = monitor.check()
 
         # Verify result structure
         self.assertIsInstance(result, dict)
-        self.assertIn('success', result)
-        self.assertIn('message', result)
-        self.assertIn('duration_ms', result)
-        self.assertIn('data', result)
+        self.assertIn("success", result)
+        self.assertIn("message", result)
+        self.assertIn("duration_ms", result)
+        self.assertIn("data", result)
 
         # Verify stats were recorded
         stats = monitor.get_stats()
-        self.assertEqual(stats['check_count'], 1)
-        self.assertIsNotNone(stats['start_time'])
-        self.assertIsNotNone(stats['last_check'])
+        self.assertEqual(stats["check_count"], 1)
+        self.assertIsNotNone(stats["start_time"])
+        self.assertIsNotNone(stats["last_check"])
 
 
 class TestEnhancedOOPFeatures(unittest.TestCase):
@@ -264,37 +255,43 @@ class TestEnhancedOOPFeatures(unittest.TestCase):
 
     def test_polymorphism_with_base_classes(self):
         """Test polymorphism using base classes."""
+
         class TestMonitor(BaseMonitor):
             def check(self) -> dict:
-                return {
-                    'success': True,
-                    'message': 'Test check completed',
-                    'duration_ms': 50
-                }
+                return {"success": True, "message": "Test check completed", "duration_ms": 50}
 
         class TestConnection(DatabaseConnection):
-            def connect(self): pass
-            def disconnect(self): pass
-            def execute_query(self, query: str, params=None): return []
-            def is_connected(self) -> bool: return True
-            def get_connection_info(self) -> dict: return {}
+            def connect(self):
+                pass
+
+            def disconnect(self):
+                pass
+
+            def execute_query(self, query: str, params=None):
+                return []
+
+            def is_connected(self) -> bool:
+                return True
+
+            def get_connection_info(self) -> dict:
+                return {}
 
         # Test polymorphism - both inherit from base classes
-        monitor = TestMonitor('test')
+        monitor = TestMonitor("test")
         connection = TestConnection()
 
         # Both should have common base functionality
-        self.assertTrue(hasattr(monitor, 'check'))
-        self.assertTrue(hasattr(connection, 'connect'))
-        self.assertTrue(hasattr(connection, 'execute_query'))
+        self.assertTrue(hasattr(monitor, "check"))
+        self.assertTrue(hasattr(connection, "connect"))
+        self.assertTrue(hasattr(connection, "execute_query"))
 
     def test_composition_pattern(self):
         """Test composition pattern in monitor."""
-        with patch('gds_snowflake.monitor.SnowflakeConnection') as mock_conn_class:
+        with patch("gds_snowflake.monitor.SnowflakeConnection") as mock_conn_class:
             mock_conn = Mock()
             mock_conn_class.return_value = mock_conn
 
-            monitor = SnowflakeMonitor(account='test_account')
+            monitor = SnowflakeMonitor(account="test_account")
 
             # Monitor should compose (contain) a connection
             self.assertIsInstance(monitor.connection, Mock)
@@ -302,20 +299,21 @@ class TestEnhancedOOPFeatures(unittest.TestCase):
 
     def test_factory_pattern_potential(self):
         """Test potential factory pattern usage."""
+
         # This demonstrates how we could use factory patterns
-        def create_monitor(account: str, monitor_type: str = 'standard'):
-            if monitor_type == 'standard':
+        def create_monitor(account: str, monitor_type: str = "standard"):
+            if monitor_type == "standard":
                 return SnowflakeMonitor(account=account)
-            if monitor_type == 'basic':
+            if monitor_type == "basic":
                 # Could return a BasicMonitor class
                 return SnowflakeMonitor(account=account)
             raise ValueError(f"Unknown monitor type: {monitor_type}")
 
-        with patch('gds_snowflake.monitor.SnowflakeConnection'):
+        with patch("gds_snowflake.monitor.SnowflakeConnection"):
             # Test factory
-            monitor = create_monitor('test_account', 'standard')
+            monitor = create_monitor("test_account", "standard")
             self.assertIsInstance(monitor, SnowflakeMonitor)
-            self.assertEqual(monitor.account, 'test_account')
+            self.assertEqual(monitor.account, "test_account")
 
 
 class TestOOPBestPractices(unittest.TestCase):
@@ -323,16 +321,13 @@ class TestOOPBestPractices(unittest.TestCase):
 
     def test_encapsulation(self):
         """Test proper encapsulation with private attributes."""
-        with patch('gds_snowflake.connection.get_secret_from_vault') as mock_vault:
-            mock_vault.return_value = {'private_key': 'test_key'}
+        with patch("gds_snowflake.connection.get_secret_from_vault") as mock_vault:
+            mock_vault.return_value = {"private_key": "test_key"}
 
-            conn = SnowflakeConnection(
-                account='test_account',
-                vault_secret_path='test/path'
-            )
+            conn = SnowflakeConnection(account="test_account", vault_secret_path="test/path")
 
             # Private attributes should be accessible but conventionally private
-            self.assertTrue(hasattr(conn, '_initialized'))
+            self.assertTrue(hasattr(conn, "_initialized"))
             self.assertFalse(conn._initialized)  # Should start as False
 
     def test_inheritance_hierarchy(self):
@@ -348,25 +343,25 @@ class TestOOPBestPractices(unittest.TestCase):
     def test_abstract_method_implementation(self):
         """Test that all abstract methods are properly implemented."""
         # SnowflakeConnection should implement all DatabaseConnection methods
-        conn_methods = ['connect', 'disconnect', 'execute_query', 'is_connected', 'get_connection_info']
+        conn_methods = ["connect", "disconnect", "execute_query", "is_connected", "get_connection_info"]
         for method in conn_methods:
             self.assertTrue(hasattr(SnowflakeConnection, method))
 
         # SnowflakeMonitor should implement BaseMonitor check method
-        self.assertTrue(hasattr(SnowflakeMonitor, 'check'))
+        self.assertTrue(hasattr(SnowflakeMonitor, "check"))
 
     def test_interface_segregation(self):
         """Test interface segregation principle."""
         # Each base class should have a focused interface
-        base_monitor_methods = ['check', 'get_stats']
+        base_monitor_methods = ["check", "get_stats"]
         for method in base_monitor_methods:
             self.assertTrue(hasattr(BaseMonitor, method))
 
         # Database connection should have database-specific methods
-        db_methods = ['connect', 'disconnect', 'execute_query']
+        db_methods = ["connect", "disconnect", "execute_query"]
         for method in db_methods:
             self.assertTrue(hasattr(DatabaseConnection, method))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

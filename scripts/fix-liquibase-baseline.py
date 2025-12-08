@@ -38,34 +38,20 @@ def parse_args():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=__doc__,
     )
-    parser.add_argument(
-        "--baseline-file", required=True, help="Path to the baseline XML file to fix"
-    )
-    parser.add_argument(
-        "--schema", default="app", help="Schema name to use (default: app)"
-    )
+    parser.add_argument("--baseline-file", required=True, help="Path to the baseline XML file to fix")
+    parser.add_argument("--schema", default="app", help="Schema name to use (default: app)")
     parser.add_argument(
         "--add-db-objects",
         action="store_true",
         help="Connect to database and extract stored procedures and functions",
     )
-    parser.add_argument(
-        "--server", default="localhost", help="SQL Server hostname (default: localhost)"
-    )
-    parser.add_argument(
-        "--port", default="1433", help="SQL Server port (default: 1433)"
-    )
-    parser.add_argument(
-        "--database", default="testdb", help="Database name (default: testdb)"
-    )
-    parser.add_argument(
-        "--username", default="sa", help="Database username (default: sa)"
-    )
+    parser.add_argument("--server", default="localhost", help="SQL Server hostname (default: localhost)")
+    parser.add_argument("--port", default="1433", help="SQL Server port (default: 1433)")
+    parser.add_argument("--database", default="testdb", help="Database name (default: testdb)")
+    parser.add_argument("--username", default="sa", help="Database username (default: sa)")
     parser.add_argument("--password", help="Database password")
     parser.add_argument("--output", help="Output file (default: overwrites input file)")
-    parser.add_argument(
-        "--backup", action="store_true", help="Create backup of original file"
-    )
+    parser.add_argument("--backup", action="store_true", help="Create backup of original file")
 
     return parser.parse_args()
 
@@ -112,7 +98,7 @@ def add_schema_attributes(xml_content: str, schema: str) -> str:
 
 def create_schema_changeset(schema: str, author: str = "system") -> str:
     """Create a changeset for schema creation"""
-    return f'''    <changeSet id="baseline-schema-{schema}" author="{author}">
+    return f"""    <changeSet id="baseline-schema-{schema}" author="{author}">
         <sql>
             IF NOT EXISTS (SELECT 1 FROM sys.schemas WHERE name = '{schema}')
             BEGIN
@@ -121,7 +107,7 @@ def create_schema_changeset(schema: str, author: str = "system") -> str:
         </sql>
     </changeSet>
 
-'''
+"""
 
 
 def get_database_objects(
@@ -208,36 +194,32 @@ def get_database_objects(
         return [], []
 
 
-def create_procedure_changeset(
-    proc_name: str, definition: str, schema: str, author: str = "system"
-) -> str:
+def create_procedure_changeset(proc_name: str, definition: str, schema: str, author: str = "system") -> str:
     """Create a changeset for a stored procedure"""
     # Clean up the definition
     definition = definition.strip()
 
-    return f'''    <changeSet id="baseline-proc-{proc_name}" author="{author}" runOnChange="true">
+    return f"""    <changeSet id="baseline-proc-{proc_name}" author="{author}" runOnChange="true">
         <sql splitStatements="false">
             {definition}
         </sql>
     </changeSet>
 
-'''
+"""
 
 
-def create_function_changeset(
-    func_name: str, definition: str, schema: str, author: str = "system"
-) -> str:
+def create_function_changeset(func_name: str, definition: str, schema: str, author: str = "system") -> str:
     """Create a changeset for a function"""
     # Clean up the definition
     definition = definition.strip()
 
-    return f'''    <changeSet id="baseline-func-{func_name}" author="{author}" runOnChange="true">
+    return f"""    <changeSet id="baseline-func-{func_name}" author="{author}" runOnChange="true">
         <sql splitStatements="false">
             {definition}
         </sql>
     </changeSet>
 
-'''
+"""
 
 
 def fix_baseline_xml(
@@ -285,9 +267,7 @@ def fix_baseline_xml(
             if procedures:
                 additional_changesets.append("    <!-- Stored Procedures -->")
                 for proc_name, definition in procedures:
-                    changeset = create_procedure_changeset(
-                        proc_name, definition, schema
-                    )
+                    changeset = create_procedure_changeset(proc_name, definition, schema)
                     additional_changesets.append(changeset)
                 print(f"    ✓ Added {len(procedures)} stored procedure(s)")
 
@@ -299,12 +279,7 @@ def fix_baseline_xml(
                     additional_changesets.append(changeset)
                 print(f"    ✓ Added {len(functions)} function(s)")
 
-            content = (
-                content[:insert_pos]
-                + "\n".join(additional_changesets)
-                + "\n"
-                + content[insert_pos:]
-            )
+            content = content[:insert_pos] + "\n".join(additional_changesets) + "\n" + content[insert_pos:]
 
     # Write the output
     output = output_path or filepath

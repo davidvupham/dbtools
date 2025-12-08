@@ -350,17 +350,13 @@ class TestSnowflakeDatabase(unittest.TestCase):
         """Test get_all_database_metadata method."""
         # Mock all the individual methods
         self.metadata.get_databases = Mock(return_value=[{"DATABASE_NAME": "TEST_DB"}])
-        self.metadata.get_database_info = Mock(
-            return_value={"DATABASE_NAME": "TEST_DB"}
-        )
+        self.metadata.get_database_info = Mock(return_value={"DATABASE_NAME": "TEST_DB"})
         self.metadata.get_schemas = Mock(return_value=[{"SCHEMA_NAME": "PUBLIC"}])
         self.metadata.get_functions = Mock(return_value=[{"FUNCTION_NAME": "ADD"}])
         self.metadata.get_procedures = Mock(return_value=[{"PROCEDURE_NAME": "UPDATE"}])
         self.metadata.get_sequences = Mock(return_value=[{"SEQUENCE_NAME": "SEQ1"}])
         self.metadata.get_stages = Mock(return_value=[{"STAGE_NAME": "STAGE1"}])
-        self.metadata.get_file_formats = Mock(
-            return_value=[{"FILE_FORMAT_NAME": "CSV1"}]
-        )
+        self.metadata.get_file_formats = Mock(return_value=[{"FILE_FORMAT_NAME": "CSV1"}])
         self.metadata.get_pipes = Mock(return_value=[{"PIPE_NAME": "PIPE1"}])
         self.metadata.get_tasks = Mock(return_value=[{"task_name": "TASK1"}])
         self.metadata.get_streams = Mock(return_value=[{"STREAM_NAME": "STREAM1"}])
@@ -400,9 +396,7 @@ class TestSnowflakeDatabase(unittest.TestCase):
         """Test get_all_database_metadata with database filter."""
         # Mock all the individual methods
         self.metadata.get_databases = Mock(return_value=[{"DATABASE_NAME": "TEST_DB"}])
-        self.metadata.get_database_info = Mock(
-            return_value={"DATABASE_NAME": "TEST_DB"}
-        )
+        self.metadata.get_database_info = Mock(return_value={"DATABASE_NAME": "TEST_DB"})
         self.metadata.get_schemas = Mock(return_value=[{"SCHEMA_NAME": "PUBLIC"}])
         self.metadata.get_functions = Mock(return_value=[])
         self.metadata.get_procedures = Mock(return_value=[])
@@ -426,9 +420,7 @@ class TestSnowflakeDatabase(unittest.TestCase):
 
     def test_get_databases_error(self):
         """Test error handling in get_databases."""
-        self.mock_connection.execute_query_dict.side_effect = Exception(
-            "Database error"
-        )
+        self.mock_connection.execute_query_dict.side_effect = Exception("Database error")
 
         with self.assertRaises(Exception) as context:
             self.metadata.get_databases()

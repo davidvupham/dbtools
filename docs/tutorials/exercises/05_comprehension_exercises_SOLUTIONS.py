@@ -200,14 +200,10 @@ query_results = [
 active_names = [name for id, name, status, value in query_results if status == "active"]
 
 # Task 2: Sum of values where status is 'active'
-active_total = sum(
-    value for id, name, status, value in query_results if status == "active"
-)
+active_total = sum(value for id, name, status, value in query_results if status == "active")
 
 # Task 3: Dictionary mapping name to value for active records
-active_dict = {
-    name: value for id, name, status, value in query_results if status == "active"
-}
+active_dict = {name: value for id, name, status, value in query_results if status == "active"}
 
 
 def test_exercise_7():

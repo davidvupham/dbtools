@@ -24,10 +24,9 @@ import re
 import sys
 import textwrap
 import traceback
+from collections.abc import Iterable, Iterator, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable, Iterator, Sequence
-
 
 CODE_FENCE_PATTERN = re.compile(
     r"```(?P<lang>python|py|python3)\s*\n(?P<code>.*?)```",
@@ -116,10 +115,8 @@ def main(argv: Sequence[str] | None = None) -> int:
             try:
                 compiled = compile(code, filename=str(md_file), mode="exec")
                 exec(compiled, file_namespace)
-            except Exception as exc:  # noqa: BLE001 - broad except required for reporting
-                failure = "".join(
-                    traceback.format_exception(exc.__class__, exc, exc.__traceback__)
-                )
+            except Exception as exc:
+                failure = "".join(traceback.format_exception(exc.__class__, exc, exc.__traceback__))
                 failures.append((block, failure))
 
     if failures:

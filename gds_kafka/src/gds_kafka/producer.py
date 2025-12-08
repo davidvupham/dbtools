@@ -52,15 +52,11 @@ class KafkaProducerClient:
         try:
             self.producer = KafkaProducer(**default_config)
         except NoBrokersAvailable as e:
-            raise KafkaConnectionError(
-                f"Failed to connect to Kafka brokers: {bootstrap_servers}"
-            ) from e
+            raise KafkaConnectionError(f"Failed to connect to Kafka brokers: {bootstrap_servers}") from e
         except KafkaError as e:
             raise KafkaConnectionError(f"Kafka connection error: {e}") from e
 
-    def send(
-        self, topic: str, value: Dict[str, Any], key: Optional[str] = None
-    ) -> None:
+    def send(self, topic: str, value: Dict[str, Any], key: Optional[str] = None) -> None:
         """Send a message to a Kafka topic.
 
         Args:

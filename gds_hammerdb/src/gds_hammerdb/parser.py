@@ -8,9 +8,7 @@ from .models import HammerDBConfig
 class ResultParser:
     """Parses HammerDB output to extract metrics."""
 
-    def parse(
-        self, stdout: str, config: HammerDBConfig, run_id: str
-    ) -> BenchmarkResult:
+    def parse(self, stdout: str, config: HammerDBConfig, run_id: str) -> BenchmarkResult:
         """
         Parses the stdout from HammerDB CLI.
 
@@ -54,17 +52,13 @@ class ResultParser:
         if nopm_matches:
             nopm_values = [float(v) for v in nopm_matches]
             peak_nopm = max(nopm_values)
-            result.add_metric(
-                "NOPM", peak_nopm, "orders/min", "New Orders Per Minute (Peak)"
-            )
+            result.add_metric("NOPM", peak_nopm, "orders/min", "New Orders Per Minute (Peak)")
             result.metadata["nopm_samples"] = nopm_values
 
         if tpm_matches:
             tpm_values = [float(v) for v in tpm_matches]
             peak_tpm = max(tpm_values)
-            result.add_metric(
-                "TPM", peak_tpm, "trans/min", "Transactions Per Minute (Peak)"
-            )
+            result.add_metric("TPM", peak_tpm, "trans/min", "Transactions Per Minute (Peak)")
             result.metadata["tpm_samples"] = tpm_values
 
         return result

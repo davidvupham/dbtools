@@ -5,11 +5,11 @@ Simple demo of rotation-aware TTL functionality.
 This demonstrates the core functionality without requiring a Vault server.
 """
 
-from datetime import datetime, timedelta
+import os
 
 # Import the modules directly
 import sys
-import os
+from datetime import datetime, timedelta
 
 sys.path.insert(0, os.path.dirname(__file__))
 

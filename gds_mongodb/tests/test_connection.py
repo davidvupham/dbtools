@@ -88,14 +88,10 @@ class TestMongoDBConnection(unittest.TestCase):
     def test_config_validation_username_without_password(self):
         """Test configuration validation with username but no password."""
         with self.assertRaises(ConfigurationError) as cm:
-            conn = MongoDBConnection(
-                host="localhost", database="testdb", username="testuser"
-            )
+            conn = MongoDBConnection(host="localhost", database="testdb", username="testuser")
             conn.validate_config()
 
-        self.assertIn(
-            "Password is required when username is provided", str(cm.exception)
-        )
+        self.assertIn("Password is required when username is provided", str(cm.exception))
 
     def test_config_validation_connection_string_without_database(self):
         """Test configuration validation with connection string but no database."""
@@ -119,9 +115,7 @@ class TestMongoDBConnection(unittest.TestCase):
 
     def test_config_validation_success(self):
         """Test successful configuration validation."""
-        conn = MongoDBConnection(
-            host="localhost", database="testdb", username="user", password="pass"
-        )
+        conn = MongoDBConnection(host="localhost", database="testdb", username="user", password="pass")
 
         result = conn.validate_config()
         self.assertTrue(result)

@@ -56,9 +56,7 @@ def main():
             print(f"     - {user['name']}, age {user['age']}")
 
         # Find with projection (select specific fields)
-        names_only = conn.execute_query(
-            "users", {}, projection={"name": 1, "email": 1, "_id": 0}
-        )
+        names_only = conn.execute_query("users", {}, projection={"name": 1, "email": 1, "_id": 0})
         print("\n   Users (names and emails only):")
         for user in names_only:
             print(f"     - {user['name']}: {user['email']}")
@@ -72,10 +70,7 @@ def main():
             {"name": "John Doe"},
             {"$set": {"age": 31, "status": "updated"}},
         )
-        print(
-            f"   Updated {result['modified_count']} user "
-            f"(matched: {result['matched_count']})"
-        )
+        print(f"   Updated {result['modified_count']} user (matched: {result['matched_count']})")
 
         # Update multiple documents
         result = conn.update_many(
@@ -83,10 +78,7 @@ def main():
             {"age": {"$lt": 30}},
             {"$set": {"category": "young"}},
         )
-        print(
-            f"   Updated {result['modified_count']} users "
-            f"(matched: {result['matched_count']})"
-        )
+        print(f"   Updated {result['modified_count']} users (matched: {result['matched_count']})")
 
         # Upsert (update or insert)
         result = conn.update_one(
@@ -115,11 +107,7 @@ def main():
         field_info = conn.get_column_info("users", sample_size=10)
         print("   Fields in 'users' collection:")
         for field in field_info:
-            print(
-                f"     - {field['field_name']}: "
-                f"{field['data_type']} "
-                f"(appears in {field['count']} documents)"
-            )
+            print(f"     - {field['field_name']}: {field['data_type']} (appears in {field['count']} documents)")
 
         print("\n=== Example Complete ===")
 

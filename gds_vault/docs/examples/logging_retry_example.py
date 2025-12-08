@@ -52,9 +52,7 @@ def example_debug_logging():
         logging.root.removeHandler(handler)
 
     # Configure DEBUG level for detailed information
-    logging.basicConfig(
-        level=logging.DEBUG, format="%(asctime)s - %(levelname)-8s - %(message)s"
-    )
+    logging.basicConfig(level=logging.DEBUG, format="%(asctime)s - %(levelname)-8s - %(message)s")
 
     print("\nWith DEBUG level, you see:")
     print("- Cache hits/misses")
@@ -97,9 +95,7 @@ def example_production_file_logging():
             backupCount=3,
         )
         file_handler.setLevel(logging.INFO)
-        file_formatter = logging.Formatter(
-            "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-        )
+        file_formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
         file_handler.setFormatter(file_formatter)
         logger.addHandler(file_handler)
         print("\nFile logging configured: /tmp/vault_example.log")
@@ -151,12 +147,8 @@ def example_retry_behavior():
     print("3. Retries the operation")
     print("4. Repeats up to 3 times")
     print("\nExample log output on transient failure:")
-    print(
-        "  WARNING: authenticate attempt 1 failed: Connection timeout. Retrying in 1.0s..."
-    )
-    print(
-        "  WARNING: authenticate attempt 2 failed: Connection timeout. Retrying in 2.0s..."
-    )
+    print("  WARNING: authenticate attempt 1 failed: Connection timeout. Retrying in 1.0s...")
+    print("  WARNING: authenticate attempt 2 failed: Connection timeout. Retrying in 2.0s...")
     print("  INFO: Successfully authenticated with Vault. Token valid for 3600s")
     print("\nDelay pattern: 1s → 2s → 4s (exponential backoff)")
     print("Total max time: ~7 seconds")

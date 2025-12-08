@@ -11,13 +11,13 @@ from .metrics import KafkaMetrics
 from .producer import KafkaProducerClient
 
 __all__ = [
-    "KafkaProducerClient",
-    "KafkaConsumerClient",
-    "KafkaMetrics",
-    "KafkaLoggingHandler",
     "GdsKafkaError",
     "KafkaConnectionError",
+    "KafkaConsumerClient",
+    "KafkaLoggingHandler",
     "KafkaMessageError",
+    "KafkaMetrics",
+    "KafkaProducerClient",
     "KafkaSerializationError",
     "KafkaTimeoutError",
 ]

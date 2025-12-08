@@ -3,7 +3,6 @@ import time
 
 import pika
 
-
 OPERATIONS = {
     "resize-image": lambda payload: time.sleep(2),
     "send-email": lambda payload: time.sleep(1),
@@ -20,9 +19,7 @@ def process_job(job: dict) -> None:
 
 def main() -> None:
     """Start a blocking worker that consumes tasks."""
-    connection = pika.BlockingConnection(
-        pika.URLParameters("amqp://devuser:devpassword@localhost:5672/")
-    )
+    connection = pika.BlockingConnection(pika.URLParameters("amqp://devuser:devpassword@localhost:5672/"))
     channel = connection.channel()
 
     channel.queue_declare(queue="tasks", durable=True)

@@ -56,9 +56,8 @@ def test_no_old_references():
     if not os.path.exists(old_cert_dir):
         print(f"✅ Old certs directory removed: {old_cert_dir}")
         return True
-    else:
-        print(f"❌ Old certs directory still exists: {old_cert_dir}")
-        return False
+    print(f"❌ Old certs directory still exists: {old_cert_dir}")
+    return False
 
 
 def test_code_imports():
@@ -75,12 +74,11 @@ def test_code_imports():
             sys.path.insert(0, gds_vault_path)
 
         # Test imports to verify they work
-        from gds_vault.auth import (
-            AppRoleAuth,  # type: ignore[import-not-found]  # noqa: F401
-        )
-
         from gds_vault import (
             VaultClient,  # type: ignore[import-not-found]  # noqa: F401
+        )
+        from gds_vault.auth import (
+            AppRoleAuth,  # type: ignore[import-not-found]  # noqa: F401
         )
 
         print("✅ VaultClient imported successfully")
@@ -136,13 +134,10 @@ def test_ssl_cert_path_handling():
         except Exception as e:
             # VaultConfigurationError or auth errors are OK
             if "VAULT_ROLE_ID" in str(e) or "VAULT_SECRET_ID" in str(e):
-                print(
-                    "✅ Client initialization works (auth credentials missing as expected)"
-                )
+                print("✅ Client initialization works (auth credentials missing as expected)")
                 return True
-            else:
-                print(f"❌ Unexpected error: {e}")
-                return False
+            print(f"❌ Unexpected error: {e}")
+            return False
 
     except Exception as e:
         print(f"❌ Test failed: {e}")
@@ -168,7 +163,7 @@ def test_documentation_references():
     for doc_file in doc_files:
         doc_path = os.path.join(docs_dir, doc_file)
         if os.path.exists(doc_path):
-            with open(doc_path, "r") as f:
+            with open(doc_path) as f:
                 content = f.read()
 
                 # Check for old references (excluding system paths)
@@ -182,9 +177,8 @@ def test_documentation_references():
         for ref in bad_refs:
             print(f"   - {ref}")
         return False
-    else:
-        print("✅ No old gds_vault/certs references found in documentation")
-        return True
+    print("✅ No old gds_vault/certs references found in documentation")
+    return True
 
 
 def main():
@@ -221,9 +215,8 @@ def main():
     if passed == total:
         print("\n🎉 All tests passed! Migration successful!")
         return 0
-    else:
-        print(f"\n⚠️  {total - passed} test(s) failed. Please review above.")
-        return 1
+    print(f"\n⚠️  {total - passed} test(s) failed. Please review above.")
+    return 1
 
 
 if __name__ == "__main__":

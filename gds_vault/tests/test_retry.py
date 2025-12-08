@@ -35,14 +35,10 @@ class TestRetryPolicy(unittest.TestCase):
 
     def test_retry_on_failure(self):
         """Test retry on retriable exception."""
-        policy = RetryPolicy(
-            max_retries=3, initial_delay=0.1, retriable_exceptions=(Exception,)
-        )
+        policy = RetryPolicy(max_retries=3, initial_delay=0.1, retriable_exceptions=(Exception,))
 
         # Fail twice, then succeed
-        operation = Mock(
-            side_effect=[Exception("fail1"), Exception("fail2"), "success"]
-        )
+        operation = Mock(side_effect=[Exception("fail1"), Exception("fail2"), "success"])
 
         result = policy.execute(operation)
 
@@ -51,9 +47,7 @@ class TestRetryPolicy(unittest.TestCase):
 
     def test_max_retries_exceeded(self):
         """Test that operation fails after max retries."""
-        policy = RetryPolicy(
-            max_retries=2, initial_delay=0.1, retriable_exceptions=(Exception,)
-        )
+        policy = RetryPolicy(max_retries=2, initial_delay=0.1, retriable_exceptions=(Exception,))
         operation = Mock(side_effect=Exception("persistent failure"))
 
         with self.assertRaises(Exception) as context:
@@ -64,9 +58,7 @@ class TestRetryPolicy(unittest.TestCase):
 
     def test_non_retriable_exception(self):
         """Test that non-retriable exceptions are not retried."""
-        policy = RetryPolicy(
-            max_retries=3, initial_delay=0.1, retriable_exceptions=(ValueError,)
-        )
+        policy = RetryPolicy(max_retries=3, initial_delay=0.1, retriable_exceptions=(ValueError,))
 
         operation = Mock(side_effect=TypeError("not retriable"))
 
@@ -152,9 +144,7 @@ class TestRetryDecorator(unittest.TestCase):
         """Test decorator retries on failure."""
         call_count = {"count": 0}
 
-        @retry_with_backoff(
-            max_retries=3, initial_delay=0.1, retriable_exceptions=(Exception,)
-        )
+        @retry_with_backoff(max_retries=3, initial_delay=0.1, retriable_exceptions=(Exception,))
         def flaky_function():
             call_count["count"] += 1
             if call_count["count"] < 3:

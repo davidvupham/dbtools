@@ -4,15 +4,14 @@ Traffic Generator for Order Service
 Generates realistic traffic patterns to demonstrate observability features.
 """
 
-import time
-import random
-import requests
 import logging
+import random
+import time
 from concurrent.futures import ThreadPoolExecutor
 
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
-)
+import requests
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger("traffic-gen")
 
 BASE_URL = "http://localhost:5000"
@@ -41,9 +40,8 @@ def create_order():
         if resp.status_code == 201:
             logger.info(f"Order created: {resp.json().get('order_id')}")
             return resp.json().get("order_id")
-        else:
-            logger.warning(f"Failed to create order: {resp.status_code} - {resp.text}")
-            return None
+        logger.warning(f"Failed to create order: {resp.status_code} - {resp.text}")
+        return None
     except Exception as e:
         logger.error(f"Connection error: {e}")
         return None

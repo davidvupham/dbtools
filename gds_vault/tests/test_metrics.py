@@ -1,6 +1,5 @@
 from unittest.mock import MagicMock, patch
 
-
 from gds_vault import VaultClient
 
 
@@ -29,18 +28,14 @@ class MockMetrics:
 def test_metrics_integration(mock_get, mock_post):
     # Setup mocks
     mock_post.return_value.status_code = 200
-    mock_post.return_value.json.return_value = {
-        "auth": {"client_token": "test-token", "lease_duration": 3600}
-    }
+    mock_post.return_value.json.return_value = {"auth": {"client_token": "test-token", "lease_duration": 3600}}
 
     mock_get.return_value.status_code = 200
     mock_get.return_value.json.return_value = {"data": {"data": {"foo": "bar"}}}
 
     metrics = MockMetrics()
 
-    client = VaultClient(
-        vault_addr="http://localhost:8200", auth=MagicMock(), metrics=metrics
-    )
+    client = VaultClient(vault_addr="http://localhost:8200", auth=MagicMock(), metrics=metrics)
 
     # Mock auth strategy to return token
     client._auth.authenticate.return_value = ("test-token", 3600)

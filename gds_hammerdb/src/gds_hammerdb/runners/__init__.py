@@ -1,4 +1,4 @@
 from .mssql import MSSQLRunner
 from .postgres import PostgresRunner
 
-__all__ = ["PostgresRunner", "MSSQLRunner"]
+__all__ = ["MSSQLRunner", "PostgresRunner"]

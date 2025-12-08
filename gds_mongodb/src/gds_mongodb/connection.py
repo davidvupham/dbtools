@@ -19,8 +19,8 @@ from pymongo.errors import (
 from gds_database import (
     ConfigurableComponent,
     ConfigurationError,
-    DatabaseConnectionError,
     DatabaseConnection,
+    DatabaseConnectionError,
     QueryError,
     ResourceManager,
 )
@@ -162,14 +162,10 @@ class MongoDBConnection(DatabaseConnection, ConfigurableComponent, ResourceManag
         if not self.config.get("connection_string"):
             # Validate individual parameters
             required_fields = ["host", "database"]
-            missing_fields = [
-                field for field in required_fields if not self.config.get(field)
-            ]
+            missing_fields = [field for field in required_fields if not self.config.get(field)]
 
             if missing_fields:
-                raise ConfigurationError(
-                    f"Missing required configuration fields: {missing_fields}"
-                )
+                raise ConfigurationError(f"Missing required configuration fields: {missing_fields}")
 
             # Validate authentication requirements
             auth_mechanism = self.config.get("auth_mechanism")
@@ -200,18 +196,12 @@ class MongoDBConnection(DatabaseConnection, ConfigurableComponent, ResourceManag
                     f"Supported: SCRAM-SHA-1, SCRAM-SHA-256, "
                     f"MONGODB-X509, GSSAPI, PLAIN"
                 )
-            else:
-                # No auth_mechanism specified, basic validation
-                if self.config.get("username") and not self.config.get("password"):
-                    raise ConfigurationError(
-                        "Password is required when username is provided"
-                    )
-        else:
-            # Connection string provided
-            if not self.config.get("database"):
-                raise ConfigurationError(
-                    "Database name is required even when using connection string"
-                )
+            # No auth_mechanism specified, basic validation
+            elif self.config.get("username") and not self.config.get("password"):
+                raise ConfigurationError("Password is required when username is provided")
+        # Connection string provided
+        elif not self.config.get("database"):
+            raise ConfigurationError("Database name is required even when using connection string")
 
         # Validate port is a number
         port = self.config.get("port")
@@ -248,9 +238,7 @@ class MongoDBConnection(DatabaseConnection, ConfigurableComponent, ResourceManag
 
             # Establish connection
             if self.config.get("connection_string"):
-                self.client = MongoClient(
-                    self.config["connection_string"], **connection_params
-                )
+                self.client = MongoClient(self.config["connection_string"], **connection_params)
             else:
                 conn_string = self._build_connection_string()
                 self.client = MongoClient(conn_string, **connection_params)
@@ -324,9 +312,7 @@ class MongoDBConnection(DatabaseConnection, ConfigurableComponent, ResourceManag
             filter_query = filter_query or {}
             coll = self._db[collection]
 
-            logger.debug(
-                "Executing query on collection '%s': %s", collection, filter_query
-            )
+            logger.debug("Executing query on collection '%s': %s", collection, filter_query)
 
             # Build cursor
             cursor = coll.find(filter_query, projection)
@@ -408,9 +394,7 @@ class MongoDBConnection(DatabaseConnection, ConfigurableComponent, ResourceManag
             logger.error(error_msg)
             raise QueryError(error_msg) from e
 
-    def insert_many(
-        self, collection: str, documents: List[Dict[str, Any]]
-    ) -> Dict[str, Any]:
+    def insert_many(self, collection: str, documents: List[Dict[str, Any]]) -> Dict[str, Any]:
         """
         Insert multiple documents into a collection.
 
@@ -539,9 +523,7 @@ class MongoDBConnection(DatabaseConnection, ConfigurableComponent, ResourceManag
             logger.error(error_msg)
             raise QueryError(error_msg) from e
 
-    def delete_one(
-        self, collection: str, filter_query: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    def delete_one(self, collection: str, filter_query: Dict[str, Any]) -> Dict[str, Any]:
         """
         Delete a single document from a collection.
 
@@ -576,9 +558,7 @@ class MongoDBConnection(DatabaseConnection, ConfigurableComponent, ResourceManag
             logger.error(error_msg)
             raise QueryError(error_msg) from e
 
-    def delete_many(
-        self, collection: str, filter_query: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    def delete_many(self, collection: str, filter_query: Dict[str, Any]) -> Dict[str, Any]:
         """
         Delete multiple documents from a collection.
 
@@ -725,9 +705,7 @@ class MongoDBConnection(DatabaseConnection, ConfigurableComponent, ResourceManag
         """
         return self.get_collection_names()
 
-    def get_column_info(
-        self, collection: str, sample_size: int = 100
-    ) -> List[Dict[str, Any]]:
+    def get_column_info(self, collection: str, sample_size: int = 100) -> List[Dict[str, Any]]:
         """
         Get field information for a collection by sampling documents.
 
@@ -834,9 +812,7 @@ class MongoDBConnection(DatabaseConnection, ConfigurableComponent, ResourceManag
         params = {}
 
         if self.config.get("server_selection_timeout_ms"):
-            params["serverSelectionTimeoutMS"] = self.config[
-                "server_selection_timeout_ms"
-            ]
+            params["serverSelectionTimeoutMS"] = self.config["server_selection_timeout_ms"]
 
         # Add any other pymongo-specific parameters from config
         pymongo_params = [

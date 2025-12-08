@@ -230,9 +230,7 @@ class TTLCache(SecretCache):
                     buffer_minutes=10,  # Default buffer
                 )
 
-                effective_ttl = (
-                    calculated_ttl if calculated_ttl > 0 else self.default_ttl
-                )
+                effective_ttl = calculated_ttl if calculated_ttl > 0 else self.default_ttl
                 logger.debug(
                     "Using rotation-based TTL for %s: %ds (from schedule: %s)",
                     key,
@@ -273,9 +271,7 @@ class TTLCache(SecretCache):
         """
         with self._lock:
             now = time.time()
-            expired_keys = [
-                key for key, expiry_time in self._expiry.items() if now >= expiry_time
-            ]
+            expired_keys = [key for key, expiry_time in self._expiry.items() if now >= expiry_time]
 
             for key in expired_keys:
                 self.remove(key)
@@ -293,28 +289,18 @@ class TTLCache(SecretCache):
 
         # Calculate average remaining TTL
         now = time.time()
-        remaining_ttls = [
-            expiry - now for expiry in self._expiry.values() if expiry > now
-        ]
-        stats["avg_remaining_ttl"] = (
-            sum(remaining_ttls) / len(remaining_ttls) if remaining_ttls else 0.0
-        )
+        remaining_ttls = [expiry - now for expiry in self._expiry.values() if expiry > now]
+        stats["avg_remaining_ttl"] = sum(remaining_ttls) / len(remaining_ttls) if remaining_ttls else 0.0
 
         return stats
 
     def __repr__(self) -> str:
         """Developer-friendly representation."""
-        return (
-            f"TTLCache(size={len(self._cache)}, max_size={self.max_size}, "
-            f"default_ttl={self.default_ttl})"
-        )
+        return f"TTLCache(size={len(self._cache)}, max_size={self.max_size}, default_ttl={self.default_ttl})"
 
     def __str__(self) -> str:
         """User-friendly representation."""
-        return (
-            f"TTL Secret Cache ({len(self._cache)}/{self.max_size} entries, "
-            f"TTL: {self.default_ttl}s)"
-        )
+        return f"TTL Secret Cache ({len(self._cache)}/{self.max_size} entries, TTL: {self.default_ttl}s)"
 
 
 class RotationAwareCache(SecretCache):
@@ -344,9 +330,7 @@ class RotationAwareCache(SecretCache):
         secret = cache.get("secret/data/app1")  # Returns None if within buffer time
     """
 
-    def __init__(
-        self, max_size: int = 100, buffer_minutes: int = 10, fallback_ttl: int = 300
-    ):
+    def __init__(self, max_size: int = 100, buffer_minutes: int = 10, fallback_ttl: int = 300):
         """Initialize rotation-aware cache."""
         super().__init__(max_size)
         self.buffer_minutes = buffer_minutes
@@ -418,9 +402,7 @@ class RotationAwareCache(SecretCache):
                 )
 
                 # Use calculated TTL or fallback
-                effective_ttl = (
-                    calculated_ttl if calculated_ttl > 0 else self.fallback_ttl
-                )
+                effective_ttl = calculated_ttl if calculated_ttl > 0 else self.fallback_ttl
                 with self._lock:
                     self._expiry[key] = time.time() + effective_ttl
 
@@ -443,9 +425,7 @@ class RotationAwareCache(SecretCache):
             effective_ttl = ttl if ttl is not None else self.fallback_ttl
             with self._lock:
                 self._expiry[key] = time.time() + effective_ttl
-            logger.debug(
-                "Cached secret with manual TTL: %s (TTL: %ds)", key, effective_ttl
-            )
+            logger.debug("Cached secret with manual TTL: %s (TTL: %ds)", key, effective_ttl)
 
     def _is_rotation_expired(self, key: str) -> bool:
         """Check if secret is expired based on rotation schedule."""
@@ -465,9 +445,7 @@ class RotationAwareCache(SecretCache):
                 self.buffer_minutes,
             )
         except Exception as e:
-            logger.warning(
-                "Error checking rotation schedule for %s, assuming expired: %s", key, e
-            )
+            logger.warning("Error checking rotation schedule for %s, assuming expired: %s", key, e)
             return True
 
     def remove(self, key: str) -> bool:
@@ -556,14 +534,8 @@ class RotationAwareCache(SecretCache):
 
         # Calculate average remaining TTL
         current_time = time.time()
-        remaining_ttls = [
-            expiry - current_time
-            for expiry in self._expiry.values()
-            if expiry > current_time
-        ]
-        stats["avg_remaining_ttl"] = (
-            sum(remaining_ttls) / len(remaining_ttls) if remaining_ttls else 0.0
-        )
+        remaining_ttls = [expiry - current_time for expiry in self._expiry.values() if expiry > current_time]
+        stats["avg_remaining_ttl"] = sum(remaining_ttls) / len(remaining_ttls) if remaining_ttls else 0.0
 
         return stats
 

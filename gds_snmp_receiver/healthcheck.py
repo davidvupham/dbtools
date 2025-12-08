@@ -16,10 +16,7 @@ def main() -> int:
         try:
             with open(f"/proc/{pid}/cmdline", "rb") as f:
                 cmd = f.read().decode(errors="ignore")
-                if (
-                    "gds_snmp_receiver.receiver" in cmd
-                    or "gds_snmp_receiver/core.py" in cmd
-                ):
+                if "gds_snmp_receiver.receiver" in cmd or "gds_snmp_receiver/core.py" in cmd:
                     return 0
         except OSError:
             # processes can disappear; ignore OS-related errors

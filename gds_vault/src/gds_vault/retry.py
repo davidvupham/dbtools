@@ -77,9 +77,7 @@ class RetryPolicy:
                 last_exception = e
 
                 if attempt == self.max_retries:
-                    logger.error(
-                        "Operation failed after %d retries: %s", self.max_retries, e
-                    )
+                    logger.error("Operation failed after %d retries: %s", self.max_retries, e)
                     raise
 
                 # Calculate delay with exponential backoff

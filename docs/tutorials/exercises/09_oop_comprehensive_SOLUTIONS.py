@@ -9,12 +9,12 @@ Run this file to verify all exercises pass:
     python 09_oop_comprehensive_SOLUTIONS.py
 """
 
-from dataclasses import dataclass, field
-from enum import Enum
-from abc import ABC, abstractmethod
-from typing import List, Optional
-from datetime import datetime
 import math
+from abc import ABC, abstractmethod
+from dataclasses import dataclass, field
+from datetime import datetime
+from enum import Enum
+from typing import List, Optional
 
 # ============================================================================
 # EXERCISE 1: Build a Task Management System (Medium)
@@ -57,7 +57,7 @@ class TaskManager:
         return [task for task in self.tasks if task.status == status]
 
     def get_statistics(self) -> dict:
-        stats = {status: 0 for status in TaskStatus}
+        stats = dict.fromkeys(TaskStatus, 0)
         for task in self.tasks:
             stats[task.status] += 1
         return stats
@@ -482,9 +482,7 @@ class Order:
         return cls(id=order_id, customer_name=customer_name, items=cart_items)
 
     def __str__(self):
-        items_str = "\n".join(
-            f"  - {item.product.name} x{item.quantity}" for item in self.items
-        )
+        items_str = "\n".join(f"  - {item.product.name} x{item.quantity}" for item in self.items)
         return f"""Order #{self.id}
 Customer: {self.customer_name}
 Status: {self.status.value}

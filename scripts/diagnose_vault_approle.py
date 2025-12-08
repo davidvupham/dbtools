@@ -33,9 +33,7 @@ def check_environment_variables() -> tuple[Optional[str], Optional[str], Optiona
 
     print(f"VAULT_SECRET_ID: {'✓ Set' if secret_id else '✗ NOT SET'}")
     if secret_id:
-        print(
-            f"  Value: {secret_id[:8]}...{secret_id[-4:] if len(secret_id) > 12 else ''}"
-        )
+        print(f"  Value: {secret_id[:8]}...{secret_id[-4:] if len(secret_id) > 12 else ''}")
 
     print()
 
@@ -145,16 +143,12 @@ def test_approle_login(vault_addr: str, role_id: str, secret_id: str) -> None:
             print("     → Check if credentials were recently rotated")
             print()
             print("  2. AppRole not configured properly in Vault")
-            print(
-                "     → Verify AppRole exists: vault read auth/approle/role/<role-name>"
-            )
+            print("     → Verify AppRole exists: vault read auth/approle/role/<role-name>")
             print("     → Check AppRole policies are correct")
             print()
             print("  3. Secret ID already used (if configured as single-use)")
             print("     → Generate a new secret_id")
-            print(
-                "     → Command: vault write -f auth/approle/role/<role-name>/secret-id"
-            )
+            print("     → Command: vault write -f auth/approle/role/<role-name>/secret-id")
             print()
             print("  4. IP/CIDR restrictions on AppRole")
             print("     → Check bound_cidr_list in AppRole configuration")

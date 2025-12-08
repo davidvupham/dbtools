@@ -24,14 +24,10 @@ def test_get_all_database_metadata_summary_and_none_entry():
     db.get_stages = MagicMock(return_value=[{"STAGE_NAME": "ST"}])
     db.get_file_formats = MagicMock(return_value=[])
     db.get_pipes = MagicMock(return_value=[])
-    db.get_tasks = MagicMock(
-        return_value=[{"TASK_NAME": "T1"}, {"TASK_NAME": "T2"}]
-    )
+    db.get_tasks = MagicMock(return_value=[{"TASK_NAME": "T1"}, {"TASK_NAME": "T2"}])
     db.get_streams = MagicMock(return_value=[])
 
-    result = db.get_all_database_metadata(
-        database_name="DBX", schema_name="SCH"
-    )
+    result = db.get_all_database_metadata(database_name="DBX", schema_name="SCH")
 
     # Databases list contains [None] and should not be counted in summary
     assert result["databases"] == [None]

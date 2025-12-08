@@ -185,9 +185,7 @@ class MongoDBConnectionConfig(ConfigurableComponent):
         return cls(config=config_dict)
 
     @classmethod
-    def from_connection_string(
-        cls, connection_string: str, database: str
-    ) -> "MongoDBConnectionConfig":
+    def from_connection_string(cls, connection_string: str, database: str) -> "MongoDBConnectionConfig":
         """
         Create MongoDBConnectionConfig from connection string.
 
@@ -220,14 +218,10 @@ class MongoDBConnectionConfig(ConfigurableComponent):
         if not self.config.get("connection_string"):
             # Validate individual parameters
             required_fields = ["host", "database"]
-            missing_fields = [
-                field for field in required_fields if not self.config.get(field)
-            ]
+            missing_fields = [field for field in required_fields if not self.config.get(field)]
 
             if missing_fields:
-                raise ConfigurationError(
-                    f"Missing required configuration fields: {missing_fields}"
-                )
+                raise ConfigurationError(f"Missing required configuration fields: {missing_fields}")
 
             # Validate authentication requirements
             auth_mechanism = self.config.get("auth_mechanism")
@@ -246,9 +240,7 @@ class MongoDBConnectionConfig(ConfigurableComponent):
                 # X.509 doesn't require password, but needs TLS
                 if not self.config.get("tls"):
                     raise ConfigurationError("MONGODB-X509 requires TLS to be enabled")
-            elif (
-                auth_mechanism and auth_mechanism not in self.SUPPORTED_AUTH_MECHANISMS
-            ):
+            elif auth_mechanism and auth_mechanism not in self.SUPPORTED_AUTH_MECHANISMS:
                 raise ConfigurationError(
                     f"Unsupported auth_mechanism: {auth_mechanism}. "
                     f"Supported: {', '.join(self.SUPPORTED_AUTH_MECHANISMS)}"
@@ -258,15 +250,10 @@ class MongoDBConnectionConfig(ConfigurableComponent):
                 username = self.config.get("username")
                 password = self.config.get("password")
                 if username and not password:
-                    raise ConfigurationError(
-                        "Password is required when username is provided"
-                    )
-        else:
-            # Connection string provided
-            if not self.config.get("database"):
-                raise ConfigurationError(
-                    "Database name is required even when using connection string"
-                )
+                    raise ConfigurationError("Password is required when username is provided")
+        # Connection string provided
+        elif not self.config.get("database"):
+            raise ConfigurationError("Database name is required even when using connection string")
 
         # Validate port is a number
         port = self.config.get("port")
@@ -345,9 +332,7 @@ class MongoDBConnectionConfig(ConfigurableComponent):
         params = {}
 
         if self.config.get("server_selection_timeout_ms"):
-            params["serverSelectionTimeoutMS"] = self.config[
-                "server_selection_timeout_ms"
-            ]
+            params["serverSelectionTimeoutMS"] = self.config["server_selection_timeout_ms"]
 
         # Add any other pymongo-specific parameters from config
         pymongo_params = [
@@ -487,8 +472,4 @@ class MongoDBConnectionConfig(ConfigurableComponent):
                 f"MongoDB Instance '{instance_name}'{env_str}: "
                 f"{self.get_host()}:{self.get_port()}/{self.get_database()}"
             )
-        else:
-            return (
-                f"MongoDB Configuration: "
-                f"{self.get_host()}:{self.get_port()}/{self.get_database()}"
-            )
+        return f"MongoDB Configuration: {self.get_host()}:{self.get_port()}/{self.get_database()}"

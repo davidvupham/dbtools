@@ -87,9 +87,7 @@ class AsyncVaultClient(AsyncSecretProvider, AsyncResourceManager, Configurable):
         self,
         vault_addr: Optional[str] = None,
         auth: Optional[AsyncAuthStrategy] = None,
-        cache: Optional[
-            CacheProtocol
-        ] = None,  # Can use sync cache if thread-safe or simple dict
+        cache: Optional[CacheProtocol] = None,  # Can use sync cache if thread-safe or simple dict
         retry_policy: Optional[RetryPolicy] = None,
         timeout: int = 10,
         config: Optional[dict[str, Any]] = None,
@@ -137,9 +135,7 @@ class AsyncVaultClient(AsyncSecretProvider, AsyncResourceManager, Configurable):
     def _validate_configuration(self) -> None:
         """Validate client configuration."""
         if not self._vault_addr:
-            raise VaultConfigurationError(
-                "Vault address must be provided or set in VAULT_ADDR environment variable"
-            )
+            raise VaultConfigurationError("Vault address must be provided or set in VAULT_ADDR environment variable")
         if not self._vault_addr.startswith(("http://", "https://")):
             raise VaultConfigurationError(
                 f"Invalid Vault address: {self._vault_addr}. Must start with http:// or https://"
@@ -209,9 +205,7 @@ class AsyncVaultClient(AsyncSecretProvider, AsyncResourceManager, Configurable):
                     if attempt < self._retry_policy.max_retries:
                         import asyncio
 
-                        await asyncio.sleep(
-                            self._retry_policy.backoff_factor * (2**attempt)
-                        )
+                        await asyncio.sleep(self._retry_policy.backoff_factor * (2**attempt))
 
             raise last_exception
 
@@ -257,17 +251,13 @@ class AsyncVaultClient(AsyncSecretProvider, AsyncResourceManager, Configurable):
                     if attempt < self._retry_policy.max_retries:
                         import asyncio
 
-                        await asyncio.sleep(
-                            self._retry_policy.backoff_factor * (2**attempt)
-                        )
+                        await asyncio.sleep(self._retry_policy.backoff_factor * (2**attempt))
 
             if secret_data is None:
                 raise last_exception
 
             duration = (time.time() - start_time) * 1000
-            self._metrics.timing(
-                "vault.secret.fetch", duration, labels={"path": full_path}
-            )
+            self._metrics.timing("vault.secret.fetch", duration, labels={"path": full_path})
             self._metrics.increment("vault.secret.hit", labels={"path": full_path})
 
             if use_cache:
@@ -278,19 +268,14 @@ class AsyncVaultClient(AsyncSecretProvider, AsyncResourceManager, Configurable):
         except aiohttp.ClientResponseError as e:
             if e.status == 404:
                 raise VaultSecretNotFoundError(f"Secret not found: {full_path}") from e
-            elif e.status == 403:
+            if e.status == 403:
                 raise VaultPermissionError(f"Permission denied: {full_path}") from e
-            else:
-                raise VaultError(f"Failed to fetch secret {full_path}: {e}") from e
+            raise VaultError(f"Failed to fetch secret {full_path}: {e}") from e
         except Exception as e:
-            self._metrics.increment(
-                "vault.secret.error", labels={"type": "connection", "path": full_path}
-            )
+            self._metrics.increment("vault.secret.error", labels={"type": "connection", "path": full_path})
             raise VaultConnectionError(f"Failed to connect to Vault: {e}") from e
 
-    async def _fetch_secret_from_vault(
-        self, secret_path: str, version: Optional[int] = None
-    ) -> dict[str, Any]:
+    async def _fetch_secret_from_vault(self, secret_path: str, version: Optional[int] = None) -> dict[str, Any]:
         if not self.is_authenticated:
             await self.authenticate()
 
@@ -328,10 +313,9 @@ class AsyncVaultClient(AsyncSecretProvider, AsyncResourceManager, Configurable):
 
             if "data" in data and "data" in data["data"]:
                 return data["data"]["data"]
-            elif "data" in data:
+            if "data" in data:
                 return data["data"]
-            else:
-                raise VaultError(f"Unexpected response format for secret {secret_path}")
+            raise VaultError(f"Unexpected response format for secret {secret_path}")
 
     # Configurable implementation (same as synchronous)
     def get_config(self, key: str, default: Any = None) -> Any:

@@ -9,12 +9,12 @@ Run this file to verify the solution passes all tests:
     python 10_final_project_SOLUTIONS.py
 """
 
-from dataclasses import dataclass
-from enum import Enum
-from abc import ABC, abstractmethod
-from typing import List, Optional, Dict
-from datetime import datetime
 import random
+from abc import ABC, abstractmethod
+from dataclasses import dataclass
+from datetime import datetime
+from enum import Enum
+from typing import Dict, List, Optional
 
 # ============================================================================
 # Enums
@@ -108,15 +108,12 @@ class ConnectionMonitor(Monitor):
     def check_health(self) -> MonitorStatus:
         if self.is_connected:
             return MonitorStatus.HEALTHY
-        else:
-            return MonitorStatus.CRITICAL
+        return MonitorStatus.CRITICAL
 
     def get_metrics(self) -> List[Metric]:
         now = datetime.now()
         return [
-            Metric(
-                "connection_status", 1.0 if self.is_connected else 0.0, now, "boolean"
-            ),
+            Metric("connection_status", 1.0 if self.is_connected else 0.0, now, "boolean"),
             Metric("response_time", random.uniform(5, 50), now, "ms"),
         ]
 
@@ -133,10 +130,9 @@ class PerformanceMonitor(Monitor):
     def check_health(self) -> MonitorStatus:
         if self.query_time < self.threshold_ms:
             return MonitorStatus.HEALTHY
-        elif self.query_time < self.threshold_ms * 1.5:
+        if self.query_time < self.threshold_ms * 1.5:
             return MonitorStatus.WARNING
-        else:
-            return MonitorStatus.CRITICAL
+        return MonitorStatus.CRITICAL
 
     def get_metrics(self) -> List[Metric]:
         now = datetime.now()
@@ -159,10 +155,9 @@ class StorageMonitor(Monitor):
     def check_health(self) -> MonitorStatus:
         if self.current_usage < self.max_usage_percent:
             return MonitorStatus.HEALTHY
-        elif self.current_usage < self.max_usage_percent * 1.1:
+        if self.current_usage < self.max_usage_percent * 1.1:
             return MonitorStatus.WARNING
-        else:
-            return MonitorStatus.CRITICAL
+        return MonitorStatus.CRITICAL
 
     def get_metrics(self) -> List[Metric]:
         now = datetime.now()
@@ -206,13 +201,9 @@ class MonitoringSystem:
             # Generate alerts based on status
             now = datetime.now()
             if status == MonitorStatus.CRITICAL:
-                self.alerts.append(
-                    Alert(AlertLevel.CRITICAL, f"{name} is in CRITICAL state!", now)
-                )
+                self.alerts.append(Alert(AlertLevel.CRITICAL, f"{name} is in CRITICAL state!", now))
             elif status == MonitorStatus.WARNING:
-                self.alerts.append(
-                    Alert(AlertLevel.WARNING, f"{name} needs attention", now)
-                )
+                self.alerts.append(Alert(AlertLevel.WARNING, f"{name} needs attention", now))
 
         return self.last_check_results
 
@@ -252,9 +243,7 @@ class MonitoringSystem:
                 MonitorStatus.UNKNOWN: "?",
             }.get(status, "?")
 
-            report_lines.append(
-                f"{status_symbol} {name:<50} {status.value.upper():>15}"
-            )
+            report_lines.append(f"{status_symbol} {name:<50} {status.value.upper():>15}")
 
         # Add metrics summary
         report_lines.extend(
@@ -276,8 +265,7 @@ class MonitoringSystem:
             max_value = max(values)
             min_value = min(values)
             report_lines.append(
-                f"{metric_name:<30} Avg: {avg_value:>8.2f}  "
-                f"Min: {min_value:>8.2f}  Max: {max_value:>8.2f}"
+                f"{metric_name:<30} Avg: {avg_value:>8.2f}  Min: {min_value:>8.2f}  Max: {max_value:>8.2f}"
             )
 
         # Add alerts
@@ -296,9 +284,7 @@ class MonitoringSystem:
                     AlertLevel.WARNING: "🟡",
                     AlertLevel.INFO: "ℹ️",
                 }.get(alert.level, "•")
-                report_lines.append(
-                    f"{alert_symbol} [{alert.level.value.upper()}] {alert.message}"
-                )
+                report_lines.append(f"{alert_symbol} [{alert.level.value.upper()}] {alert.message}")
         else:
             report_lines.extend(
                 [
@@ -329,9 +315,7 @@ def test_basic_functionality():
         print("✓ Enums work")
 
         # Test dataclasses
-        config = DatabaseConfig(
-            "prod_db", DatabaseType.SNOWFLAKE, "db.example.com", 5432
-        )
+        config = DatabaseConfig("prod_db", DatabaseType.SNOWFLAKE, "db.example.com", 5432)
         assert config.name == "prod_db"
         print("✓ DatabaseConfig dataclass works")
 
@@ -478,10 +462,7 @@ def test_report_generation():
         print("✓ Generated report")
 
         # Verify report contains key information
-        assert (
-            "Database Monitoring Report" in report
-            or "MONITORING REPORT" in report.upper()
-        )
+        assert "Database Monitoring Report" in report or "MONITORING REPORT" in report.upper()
         assert "prod_db" in report
         assert "Monitor" in report
         print("✓ Report contains required information")
@@ -514,13 +495,9 @@ def test_real_world_scenario():
         system = MonitoringSystem()
 
         databases = [
-            DatabaseConfig(
-                "analytics_db", DatabaseType.SNOWFLAKE, "analytics.example.com", 5432
-            ),
+            DatabaseConfig("analytics_db", DatabaseType.SNOWFLAKE, "analytics.example.com", 5432),
             DatabaseConfig("api_db", DatabaseType.POSTGRES, "api.example.com", 5433),
-            DatabaseConfig(
-                "cache_db", DatabaseType.MONGODB, "cache.example.com", 27017
-            ),
+            DatabaseConfig("cache_db", DatabaseType.MONGODB, "cache.example.com", 27017),
         ]
 
         for db_config in databases:
@@ -537,9 +514,7 @@ def test_real_world_scenario():
 
         # Scenario: Check for unhealthy systems
         unhealthy = [
-            name
-            for name, status in results.items()
-            if status in [MonitorStatus.WARNING, MonitorStatus.CRITICAL]
+            name for name, status in results.items() if status in [MonitorStatus.WARNING, MonitorStatus.CRITICAL]
         ]
         print(f"✓ Found {len(unhealthy)} monitors needing attention")
 
@@ -551,9 +526,7 @@ def test_real_world_scenario():
         # Scenario: Get critical alerts for immediate action
         critical_alerts = system.get_alerts(AlertLevel.CRITICAL)
         if critical_alerts:
-            print(
-                f"⚠ {len(critical_alerts)} critical alerts require immediate attention!"
-            )
+            print(f"⚠ {len(critical_alerts)} critical alerts require immediate attention!")
         else:
             print("✓ No critical alerts")
 
@@ -565,11 +538,7 @@ def test_real_world_scenario():
         print("✓ Generated comprehensive report for all databases")
 
         # Scenario: Find performance bottlenecks
-        perf_metrics = [
-            m
-            for m in all_metrics
-            if "query" in m.name.lower() or "latency" in m.name.lower()
-        ]
+        perf_metrics = [m for m in all_metrics if "query" in m.name.lower() or "latency" in m.name.lower()]
         slow_queries = [m for m in perf_metrics if m.value > 150]
         print(f"✓ Identified {len(slow_queries)} slow queries")
 

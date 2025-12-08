@@ -28,9 +28,9 @@ from datetime import datetime
 
 def test_exercise_1():
     """Test Exercise 1"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("EXERCISE 1: Create Your First Dataclass")
-    print("="*60)
+    print("=" * 60)
 
     try:
         book = Book("Python Basics", "John Doe", 350)
@@ -73,9 +73,9 @@ def test_exercise_1():
 
 def test_exercise_2():
     """Test Exercise 2"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("EXERCISE 2: Default Values")
-    print("="*60)
+    print("=" * 60)
 
     try:
         # Test with defaults
@@ -118,9 +118,9 @@ def test_exercise_2():
 
 def test_exercise_3():
     """Test Exercise 3"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("EXERCISE 3: Dataclass from Codebase")
-    print("="*60)
+    print("=" * 60)
 
     try:
         result = MonitoringResult(
@@ -128,7 +128,7 @@ def test_exercise_3():
             timestamp=datetime.now(),
             account="prod",
             message="All checks passed",
-            details={"checks": 5, "failures": 0}
+            details={"checks": 5, "failures": 0},
         )
         print(f"✓ Created monitoring result: {result}")
         assert result.severity == "INFO"
@@ -141,7 +141,7 @@ def test_exercise_3():
             account="prod",
             message="Connection failed",
             details={},
-            severity="CRITICAL"
+            severity="CRITICAL",
         )
         print(f"✓ Created critical result: {result2}")
         assert result2.severity == "CRITICAL"
@@ -173,9 +173,9 @@ def test_exercise_3():
 
 def test_exercise_4():
     """Test Exercise 4"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("EXERCISE 4: Mutable Defaults")
-    print("="*60)
+    print("=" * 60)
 
     try:
         cart1 = ShoppingCart("Alice")
@@ -226,9 +226,9 @@ def test_exercise_4():
 
 def test_exercise_5():
     """Test Exercise 5"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("EXERCISE 5: Frozen Dataclass")
-    print("="*60)
+    print("=" * 60)
 
     try:
         point = Point(3.0, 4.0)
@@ -279,9 +279,9 @@ def test_exercise_5():
 
 def test_exercise_6():
     """Test Exercise 6"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("EXERCISE 6: Complex Dataclass")
-    print("="*60)
+    print("=" * 60)
 
     try:
         user = User("alice", "alice@example.com")
@@ -355,9 +355,9 @@ def test_exercise_6():
 
 def test_exercise_7():
     """Test Exercise 7"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("EXERCISE 7: Real-World Application")
-    print("="*60)
+    print("=" * 60)
 
     try:
         system = MonitoringSystem("Production Monitor")
@@ -399,9 +399,9 @@ def test_exercise_7():
 # ============================================================================
 def run_all_tests():
     """Run all exercises"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("DATACLASS EXERCISES")
-    print("="*60)
+    print("=" * 60)
     print("\nComplete each exercise by uncommenting and filling in the code.")
     print("Run this file to test your solutions.\n")
 
@@ -417,9 +417,9 @@ def run_all_tests():
     results.append(("Exercise 7", test_exercise_7()))
 
     # Print summary
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("SUMMARY")
-    print("="*60)
+    print("=" * 60)
 
     passed = sum(1 for _, result in results if result)
     total = len(results)

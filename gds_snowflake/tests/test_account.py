@@ -203,15 +203,13 @@ class TestSnowflakeAccount(unittest.TestCase):
         ]
 
         account_mgr = SnowflakeAccount(self.mock_connection, data_dir=self.temp_dir)
-        filepath = account_mgr.save_accounts_to_json(
-            accounts, filename="test_accounts.json"
-        )
+        filepath = account_mgr.save_accounts_to_json(accounts, filename="test_accounts.json")
 
         self.assertTrue(filepath.exists())
         self.assertEqual(filepath.name, "test_accounts.json")
 
         # Verify JSON content
-        with open(filepath, "r", encoding="utf-8") as f:
+        with open(filepath, encoding="utf-8") as f:
             data = json.load(f)
 
         self.assertIn("metadata", data)
@@ -395,9 +393,7 @@ class TestSnowflakeAccount(unittest.TestCase):
 
     def test_error_handling_get_all_accounts(self):
         """Test error handling in get_all_accounts."""
-        self.mock_connection.execute_query_dict.side_effect = Exception(
-            "Permission denied"
-        )
+        self.mock_connection.execute_query_dict.side_effect = Exception("Permission denied")
 
         account_mgr = SnowflakeAccount(self.mock_connection, data_dir=self.temp_dir)
 

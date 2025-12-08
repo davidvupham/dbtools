@@ -64,9 +64,7 @@ class TestVaultClientInit(unittest.TestCase):
             VaultClient()
         self.assertIn("VAULT_ROLE_ID and VAULT_SECRET_ID", str(context.exception))
 
-    @patch.dict(
-        os.environ, {"VAULT_ADDR": "https://vault.com", "VAULT_ROLE_ID": "role"}
-    )
+    @patch.dict(os.environ, {"VAULT_ADDR": "https://vault.com", "VAULT_ROLE_ID": "role"})
     def test_init_missing_secret_id(self):
         """Test initialization fails with only role_id."""
         with self.assertRaises(VaultError) as context:
@@ -150,15 +148,11 @@ class TestVaultClientGetSecret(unittest.TestCase):
         """Test getting secret from KV v2."""
         # Mock authentication
         mock_post.return_value = Mock(ok=True)
-        mock_post.return_value.json.return_value = {
-            "auth": {"client_token": "token", "lease_duration": 3600}
-        }
+        mock_post.return_value.json.return_value = {"auth": {"client_token": "token", "lease_duration": 3600}}
 
         # Mock secret fetch
         mock_get.return_value = Mock(ok=True)
-        mock_get.return_value.json.return_value = {
-            "data": {"data": {"password": "secret123", "username": "admin"}}
-        }
+        mock_get.return_value.json.return_value = {"data": {"data": {"password": "secret123", "username": "admin"}}}
 
         client = VaultClient(
             vault_addr="https://vault.com",
@@ -176,15 +170,11 @@ class TestVaultClientGetSecret(unittest.TestCase):
         """Test getting secret from KV v1."""
         # Mock authentication
         mock_post.return_value = Mock(ok=True)
-        mock_post.return_value.json.return_value = {
-            "auth": {"client_token": "token", "lease_duration": 3600}
-        }
+        mock_post.return_value.json.return_value = {"auth": {"client_token": "token", "lease_duration": 3600}}
 
         # Mock secret fetch (KV v1 format)
         mock_get.return_value = Mock(ok=True)
-        mock_get.return_value.json.return_value = {
-            "data": {"password": "secret123", "username": "admin"}
-        }
+        mock_get.return_value.json.return_value = {"data": {"password": "secret123", "username": "admin"}}
 
         client = VaultClient(
             vault_addr="https://vault.com",
@@ -201,15 +191,11 @@ class TestVaultClientGetSecret(unittest.TestCase):
         """Test getting specific version of secret."""
         # Mock authentication
         mock_post.return_value = Mock(ok=True)
-        mock_post.return_value.json.return_value = {
-            "auth": {"client_token": "token", "lease_duration": 3600}
-        }
+        mock_post.return_value.json.return_value = {"auth": {"client_token": "token", "lease_duration": 3600}}
 
         # Mock secret fetch
         mock_get.return_value = Mock(ok=True)
-        mock_get.return_value.json.return_value = {
-            "data": {"data": {"password": "old-secret"}}
-        }
+        mock_get.return_value.json.return_value = {"data": {"data": {"password": "old-secret"}}}
 
         client = VaultClient(
             vault_addr="https://vault.com",
@@ -229,15 +215,11 @@ class TestVaultClientGetSecret(unittest.TestCase):
         """Test that secrets are cached."""
         # Mock authentication
         mock_post.return_value = Mock(ok=True)
-        mock_post.return_value.json.return_value = {
-            "auth": {"client_token": "token", "lease_duration": 3600}
-        }
+        mock_post.return_value.json.return_value = {"auth": {"client_token": "token", "lease_duration": 3600}}
 
         # Mock secret fetch
         mock_get.return_value = Mock(ok=True)
-        mock_get.return_value.json.return_value = {
-            "data": {"data": {"password": "secret123"}}
-        }
+        mock_get.return_value.json.return_value = {"data": {"data": {"password": "secret123"}}}
 
         client = VaultClient(
             vault_addr="https://vault.com",
@@ -266,15 +248,11 @@ class TestVaultClientGetSecret(unittest.TestCase):
         """Test bypassing cache with use_cache=False."""
         # Mock authentication
         mock_post.return_value = Mock(ok=True)
-        mock_post.return_value.json.return_value = {
-            "auth": {"client_token": "token", "lease_duration": 3600}
-        }
+        mock_post.return_value.json.return_value = {"auth": {"client_token": "token", "lease_duration": 3600}}
 
         # Mock secret fetch
         mock_get.return_value = Mock(ok=True)
-        mock_get.return_value.json.return_value = {
-            "data": {"data": {"password": "secret123"}}
-        }
+        mock_get.return_value.json.return_value = {"data": {"data": {"password": "secret123"}}}
 
         client = VaultClient(
             vault_addr="https://vault.com",
@@ -296,9 +274,7 @@ class TestVaultClientGetSecret(unittest.TestCase):
         """Test secret fetch failure."""
         # Mock authentication
         mock_post.return_value = Mock(ok=True)
-        mock_post.return_value.json.return_value = {
-            "auth": {"client_token": "token", "lease_duration": 3600}
-        }
+        mock_post.return_value.json.return_value = {"auth": {"client_token": "token", "lease_duration": 3600}}
 
         # Mock failed secret fetch
         mock_get.return_value = Mock(ok=False, text="permission denied")
@@ -319,9 +295,7 @@ class TestVaultClientGetSecret(unittest.TestCase):
         """Test malformed response handling."""
         # Mock authentication
         mock_post.return_value = Mock(ok=True)
-        mock_post.return_value.json.return_value = {
-            "auth": {"client_token": "token", "lease_duration": 3600}
-        }
+        mock_post.return_value.json.return_value = {"auth": {"client_token": "token", "lease_duration": 3600}}
 
         # Mock malformed response
         mock_get.return_value = Mock(ok=True)
@@ -350,9 +324,7 @@ class TestVaultClientTokenReuse(unittest.TestCase):
 
         # Mock authentication
         mock_post.return_value = Mock(ok=True)
-        mock_post.return_value.json.return_value = {
-            "auth": {"client_token": "token123", "lease_duration": 3600}
-        }
+        mock_post.return_value.json.return_value = {"auth": {"client_token": "token123", "lease_duration": 3600}}
 
         # Mock secret fetches
         mock_get.return_value = Mock(ok=True)
@@ -384,15 +356,11 @@ class TestVaultClientListSecrets(unittest.TestCase):
         """Test listing secrets."""
         # Mock authentication
         mock_post.return_value = Mock(ok=True)
-        mock_post.return_value.json.return_value = {
-            "auth": {"client_token": "token", "lease_duration": 3600}
-        }
+        mock_post.return_value.json.return_value = {"auth": {"client_token": "token", "lease_duration": 3600}}
 
         # Mock list operation
         mock_request.return_value = Mock(ok=True)
-        mock_request.return_value.json.return_value = {
-            "data": {"keys": ["app1", "app2", "app3"]}
-        }
+        mock_request.return_value.json.return_value = {"data": {"keys": ["app1", "app2", "app3"]}}
 
         client = VaultClient(
             vault_addr="https://vault.com",
@@ -416,9 +384,7 @@ class TestVaultClientListSecrets(unittest.TestCase):
         """Test list operation failure."""
         # Mock authentication
         mock_post.return_value = Mock(ok=True)
-        mock_post.return_value.json.return_value = {
-            "auth": {"client_token": "token", "lease_duration": 3600}
-        }
+        mock_post.return_value.json.return_value = {"auth": {"client_token": "token", "lease_duration": 3600}}
 
         # Mock failed list
         mock_request.return_value = Mock(ok=False, text="permission denied")
@@ -443,9 +409,7 @@ class TestVaultClientCacheManagement(unittest.TestCase):
         """Test clearing cache."""
         # Mock authentication
         mock_post.return_value = Mock(ok=True)
-        mock_post.return_value.json.return_value = {
-            "auth": {"client_token": "token", "lease_duration": 3600}
-        }
+        mock_post.return_value.json.return_value = {"auth": {"client_token": "token", "lease_duration": 3600}}
 
         # Mock secret fetch
         mock_get.return_value = Mock(ok=True)
@@ -479,9 +443,7 @@ class TestVaultClientCacheManagement(unittest.TestCase):
         """Test getting cache information."""
         # Mock authentication
         mock_post.return_value = Mock(ok=True)
-        mock_post.return_value.json.return_value = {
-            "auth": {"client_token": "token", "lease_duration": 3600}
-        }
+        mock_post.return_value.json.return_value = {"auth": {"client_token": "token", "lease_duration": 3600}}
 
         client = VaultClient(
             vault_addr="https://vault.com",
@@ -512,15 +474,11 @@ class TestVaultClientContextManager(unittest.TestCase):
         """Test using VaultClient as context manager."""
         # Mock authentication
         mock_post.return_value = Mock(ok=True)
-        mock_post.return_value.json.return_value = {
-            "auth": {"client_token": "token", "lease_duration": 3600}
-        }
+        mock_post.return_value.json.return_value = {"auth": {"client_token": "token", "lease_duration": 3600}}
 
         # Mock secret fetch
         mock_get.return_value = Mock(ok=True)
-        mock_get.return_value.json.return_value = {
-            "data": {"data": {"password": "secret123"}}
-        }
+        mock_get.return_value.json.return_value = {"data": {"data": {"password": "secret123"}}}
 
         with VaultClient(
             vault_addr="https://vault.com",

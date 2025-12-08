@@ -10,7 +10,6 @@ Run this file to test your solutions:
 """
 
 
-
 # ============================================================================
 # EXERCISE 1: Create Your First Enum (Easy)
 # ============================================================================
@@ -27,9 +26,9 @@ Run this file to test your solutions:
 
 def test_exercise_1():
     """Test Exercise 1"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("EXERCISE 1: Create Your First Enum")
-    print("="*60)
+    print("=" * 60)
 
     try:
         # Test enum values
@@ -70,9 +69,9 @@ def test_exercise_1():
 
 def test_exercise_2():
     """Test Exercise 2"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("EXERCISE 2: Enum from Codebase")
-    print("="*60)
+    print("=" * 60)
 
     try:
         # Test all severity levels
@@ -117,9 +116,9 @@ def test_exercise_2():
 
 def test_exercise_3():
     """Test Exercise 3"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("EXERCISE 3: Using Enums in Functions")
-    print("="*60)
+    print("=" * 60)
 
     try:
         # Test each environment
@@ -165,9 +164,9 @@ def test_exercise_3():
 
 def test_exercise_4():
     """Test Exercise 4"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("EXERCISE 4: Auto-numbering Enums")
-    print("="*60)
+    print("=" * 60)
 
     try:
         # Test auto values
@@ -221,9 +220,9 @@ def test_exercise_4():
 
 def test_exercise_5():
     """Test Exercise 5"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("EXERCISE 5: Iterating Over Enums")
-    print("="*60)
+    print("=" * 60)
 
     try:
         # Test weekend detection
@@ -276,9 +275,9 @@ def test_exercise_5():
 
 def test_exercise_6():
     """Test Exercise 6"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("EXERCISE 6: Enum with Methods")
-    print("="*60)
+    print("=" * 60)
 
     try:
         # Test success statuses
@@ -359,9 +358,9 @@ def test_exercise_6():
 
 def test_exercise_7():
     """Test Exercise 7"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("EXERCISE 7: Real-World Application")
-    print("="*60)
+    print("=" * 60)
 
     try:
         manager = TaskManager()
@@ -406,9 +405,9 @@ def test_exercise_7():
 # ============================================================================
 def run_all_tests():
     """Run all exercises"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("ENUM EXERCISES")
-    print("="*60)
+    print("=" * 60)
     print("\nComplete each exercise by uncommenting and filling in the code.")
     print("Run this file to test your solutions.\n")
 
@@ -424,9 +423,9 @@ def run_all_tests():
     results.append(("Exercise 7", test_exercise_7()))
 
     # Print summary
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("SUMMARY")
-    print("="*60)
+    print("=" * 60)
 
     passed = sum(1 for _, result in results if result)
     total = len(results)

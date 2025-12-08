@@ -59,9 +59,7 @@ class KafkaMetrics(MetricsCollector):
             # Log warning but don't fail the calling application
             logger.warning(f"Failed to send metric '{name}': {e}")
 
-    def increment(
-        self, name: str, value: int = 1, labels: Optional[dict[str, str]] = None
-    ) -> None:
+    def increment(self, name: str, value: int = 1, labels: Optional[dict[str, str]] = None) -> None:
         """Increment a counter metric.
 
         Args:
@@ -71,9 +69,7 @@ class KafkaMetrics(MetricsCollector):
         """
         self._send("counter", name, float(value), labels)
 
-    def gauge(
-        self, name: str, value: float, labels: Optional[dict[str, str]] = None
-    ) -> None:
+    def gauge(self, name: str, value: float, labels: Optional[dict[str, str]] = None) -> None:
         """Set a gauge to a specific value.
 
         Args:
@@ -83,9 +79,7 @@ class KafkaMetrics(MetricsCollector):
         """
         self._send("gauge", name, value, labels)
 
-    def histogram(
-        self, name: str, value: float, labels: Optional[dict[str, str]] = None
-    ) -> None:
+    def histogram(self, name: str, value: float, labels: Optional[dict[str, str]] = None) -> None:
         """Record a value in a histogram.
 
         Args:
@@ -95,9 +89,7 @@ class KafkaMetrics(MetricsCollector):
         """
         self._send("histogram", name, value, labels)
 
-    def timing(
-        self, name: str, value_ms: float, labels: Optional[dict[str, str]] = None
-    ) -> None:
+    def timing(self, name: str, value_ms: float, labels: Optional[dict[str, str]] = None) -> None:
         """Record a timing measurement in milliseconds.
 
         Args:

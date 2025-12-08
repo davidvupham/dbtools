@@ -121,17 +121,13 @@ def test_exercise_3():
     try:
         # Test create_savings
         savings = BankAccount.create_savings("12345678")
-        print(
-            f"✓ Created savings: {savings.account_number}, balance=${savings.balance}"
-        )
+        print(f"✓ Created savings: {savings.account_number}, balance=${savings.balance}")
         assert savings.balance == 0.0
         print("✓ Savings starts with $0")
 
         # Test create_checking
         checking = BankAccount.create_checking("87654321")
-        print(
-            f"✓ Created checking: {checking.account_number}, balance=${checking.balance}"
-        )
+        print(f"✓ Created checking: {checking.account_number}, balance=${checking.balance}")
         assert checking.balance == 100.0
         print("✓ Checking starts with $100")
 

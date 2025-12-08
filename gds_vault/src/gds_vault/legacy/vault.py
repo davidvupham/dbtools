@@ -143,18 +143,14 @@ class VaultClient:
         """
         self.vault_addr = vault_addr or os.getenv("VAULT_ADDR")
         if not self.vault_addr:
-            raise VaultConfigurationError(
-                "Vault address must be provided or set in VAULT_ADDR environment variable"
-            )
+            raise VaultConfigurationError("Vault address must be provided or set in VAULT_ADDR environment variable")
 
         self.role_id = role_id or os.getenv("VAULT_ROLE_ID")
         self.secret_id = secret_id or os.getenv("VAULT_SECRET_ID")
 
         if not self.role_id or not self.secret_id:
             # Keep message for test compatibility; raise as configuration error subtype
-            raise VaultConfigurationError(
-                "VAULT_ROLE_ID and VAULT_SECRET_ID must be provided or set in environment"
-            )
+            raise VaultConfigurationError("VAULT_ROLE_ID and VAULT_SECRET_ID must be provided or set in environment")
 
         self.timeout = timeout
         self.verify_ssl = verify_ssl
@@ -236,9 +232,7 @@ class VaultClient:
         lease_duration = auth_data.get("lease_duration", 3600)
         self._token_expiry = time.time() + lease_duration - 300
 
-        logger.info(
-            "Successfully authenticated with Vault. Token valid for %ss", lease_duration
-        )
+        logger.info("Successfully authenticated with Vault. Token valid for %ss", lease_duration)
         logger.debug("Token will be refreshed at %s", self._token_expiry)
 
         return self._token
@@ -250,9 +244,7 @@ class VaultClient:
         Returns:
             str: Valid client token
         """
-        if self._token is None or (
-            self._token_expiry and time.time() >= self._token_expiry
-        ):
+        if self._token is None or (self._token_expiry and time.time() >= self._token_expiry):
             self.authenticate()
         return self._token
 
@@ -280,9 +272,7 @@ class VaultClient:
         return path
 
     @retry_with_backoff(max_retries=3, initial_delay=1.0)
-    def get_secret(
-        self, secret_path: str, use_cache: bool = True, version: Optional[int] = None
-    ) -> dict[str, Any]:
+    def get_secret(self, secret_path: str, use_cache: bool = True, version: Optional[int] = None) -> dict[str, Any]:
         """
         Retrieve a secret from Vault.
 
@@ -344,9 +334,7 @@ class VaultClient:
                 resp.text,
             )
             if resp.status_code == 404:
-                raise VaultSecretNotFoundError(
-                    f"Vault secret fetch failed: {resp.text}"
-                )
+                raise VaultSecretNotFoundError(f"Vault secret fetch failed: {resp.text}")
             if resp.status_code == 403:
                 raise VaultPermissionError(f"Vault secret fetch failed: {resp.text}")
             raise VaultError(f"Vault secret fetch failed: {resp.text}")
@@ -407,9 +395,7 @@ class VaultClient:
         verify = self.ssl_cert_path if self.ssl_cert_path else self.verify_ssl
 
         try:
-            resp = requests.request(
-                "LIST", list_url, headers=headers, timeout=self.timeout, verify=verify
-            )
+            resp = requests.request("LIST", list_url, headers=headers, timeout=self.timeout, verify=verify)
         except requests.RequestException as e:
             logger.error("Network error listing secrets at %s: %s", path, e)
             raise VaultError(f"Failed to connect to Vault: {e}") from e
@@ -446,8 +432,7 @@ class VaultClient:
         """
         return {
             "has_token": self._token is not None,
-            "token_valid": self._token is not None
-            and (self._token_expiry is None or time.time() < self._token_expiry),
+            "token_valid": self._token is not None and (self._token_expiry is None or time.time() < self._token_expiry),
             "cached_secrets_count": len(self._secret_cache),
             "cached_secret_paths": list(self._secret_cache.keys()),
         }
@@ -482,9 +467,7 @@ def get_secret_from_vault(
     secret_id = os.getenv("VAULT_SECRET_ID")
     if not role_id or not secret_id:
         logger.error("VAULT_ROLE_ID and VAULT_SECRET_ID not found in environment")
-        raise VaultConfigurationError(
-            "VAULT_ROLE_ID and VAULT_SECRET_ID must be set in environment"
-        )
+        raise VaultConfigurationError("VAULT_ROLE_ID and VAULT_SECRET_ID must be set in environment")
 
     vault_addr = vault_addr or os.getenv("VAULT_ADDR")
     if not vault_addr:
@@ -531,9 +514,7 @@ def get_secret_from_vault(
         raise VaultConnectionError(f"Failed to connect to Vault: {e}") from e
 
     if not resp.ok:
-        logger.error(
-            "AppRole login failed (status %s): %s", resp.status_code, resp.text
-        )
+        logger.error("AppRole login failed (status %s): %s", resp.status_code, resp.text)
         raise VaultAuthError(f"Vault AppRole login failed: {resp.text}")
 
     client_token = resp.json()["auth"]["client_token"]
@@ -578,7 +559,5 @@ def get_secret_from_vault(
         logger.debug("Successfully fetched KV v1 secret: %s", full_path)
         return data["data"]
 
-    logger.error(
-        "Unexpected response format for secret %s: %s", full_path, list(data.keys())
-    )
+    logger.error("Unexpected response format for secret %s: %s", full_path, list(data.keys()))
     raise VaultError("Secret data not found in Vault response")

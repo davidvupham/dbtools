@@ -91,9 +91,7 @@ class SnowflakeDatabase:
             results = self.connection.execute_query_dict(query, (database_name,))
             return results[0] if results else None
         except Exception as e:
-            logger.error(
-                "Error retrieving database metadata for %s: %s", database_name, e
-            )
+            logger.error("Error retrieving database metadata for %s: %s", database_name, e)
             raise
 
     def get_schemas(self, database_name: Optional[str] = None) -> list[dict[str, Any]]:
@@ -203,9 +201,7 @@ class SnowflakeDatabase:
 
         try:
             logger.info("Retrieving function metadata")
-            return self.connection.execute_query_dict(
-                query, tuple(params) if params else None
-            )
+            return self.connection.execute_query_dict(query, tuple(params) if params else None)
         except Exception as e:
             logger.error("Error retrieving function metadata: %s", e)
             raise
@@ -254,9 +250,7 @@ class SnowflakeDatabase:
 
         try:
             logger.info("Retrieving procedure metadata")
-            return self.connection.execute_query_dict(
-                query, tuple(params) if params else None
-            )
+            return self.connection.execute_query_dict(query, tuple(params) if params else None)
         except Exception as e:
             logger.error("Error retrieving procedure metadata: %s", e)
             raise
@@ -313,9 +307,7 @@ class SnowflakeDatabase:
 
         try:
             logger.info("Retrieving sequence metadata")
-            return self.connection.execute_query_dict(
-                query, tuple(params) if params else None
-            )
+            return self.connection.execute_query_dict(query, tuple(params) if params else None)
         except Exception as e:
             logger.error("Error retrieving sequence metadata: %s", e)
             raise
@@ -368,9 +360,7 @@ class SnowflakeDatabase:
 
         try:
             logger.info("Retrieving stage metadata")
-            return self.connection.execute_query_dict(
-                query, tuple(params) if params else None
-            )
+            return self.connection.execute_query_dict(query, tuple(params) if params else None)
         except Exception as e:
             logger.error("Error retrieving stage metadata: %s", e)
             raise
@@ -421,9 +411,7 @@ class SnowflakeDatabase:
 
         try:
             logger.info("Retrieving file format metadata")
-            return self.connection.execute_query_dict(
-                query, tuple(params) if params else None
-            )
+            return self.connection.execute_query_dict(query, tuple(params) if params else None)
         except Exception as e:
             logger.error("Error retrieving file format metadata: %s", e)
             raise
@@ -432,9 +420,7 @@ class SnowflakeDatabase:
     # Pipe Metadata
     # =========================================================================
 
-    def get_pipes(
-        self, database_name: Optional[str] = None, schema_name: Optional[str] = None
-    ) -> list[dict[str, Any]]:
+    def get_pipes(self, database_name: Optional[str] = None, schema_name: Optional[str] = None) -> list[dict[str, Any]]:
         """
         Get metadata about pipes (for Snowpipe).
 
@@ -475,9 +461,7 @@ class SnowflakeDatabase:
 
         try:
             logger.info("Retrieving pipe metadata")
-            return self.connection.execute_query_dict(
-                query, tuple(params) if params else None
-            )
+            return self.connection.execute_query_dict(query, tuple(params) if params else None)
         except Exception as e:
             logger.error("Error retrieving pipe metadata: %s", e)
             raise
@@ -486,9 +470,7 @@ class SnowflakeDatabase:
     # Task and Stream Metadata
     # =========================================================================
 
-    def get_tasks(
-        self, database_name: Optional[str] = None, schema_name: Optional[str] = None
-    ) -> list[dict[str, Any]]:
+    def get_tasks(self, database_name: Optional[str] = None, schema_name: Optional[str] = None) -> list[dict[str, Any]]:
         """
         Get metadata about tasks.
 
@@ -532,9 +514,7 @@ class SnowflakeDatabase:
 
         try:
             logger.info("Retrieving task metadata")
-            return self.connection.execute_query_dict(
-                query, tuple(params) if params else None
-            )
+            return self.connection.execute_query_dict(query, tuple(params) if params else None)
         except Exception as e:
             logger.error("Error retrieving task metadata: %s", e)
             raise
@@ -582,9 +562,7 @@ class SnowflakeDatabase:
 
         try:
             logger.info("Retrieving stream metadata")
-            return self.connection.execute_query_dict(
-                query, tuple(params) if params else None
-            )
+            return self.connection.execute_query_dict(query, tuple(params) if params else None)
         except Exception as e:
             logger.error("Error retrieving stream metadata: %s", e)
             raise
@@ -612,11 +590,7 @@ class SnowflakeDatabase:
         logger.info("Retrieving comprehensive database metadata for Snowflake objects")
 
         metadata = {
-            "databases": (
-                self.get_databases()
-                if not database_name
-                else [self.get_database_info(database_name)]
-            ),
+            "databases": (self.get_databases() if not database_name else [self.get_database_info(database_name)]),
             "schemas": self.get_schemas(database_name),
             "functions": self.get_functions(database_name, schema_name),
             "procedures": self.get_procedures(database_name, schema_name),

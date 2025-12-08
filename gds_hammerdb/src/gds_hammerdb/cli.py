@@ -31,9 +31,7 @@ class HammerDBExecutor:
             # raising error for now to be explicit.
             raise FileNotFoundError(f"HammerDB CLI not found at: {self.cli_path}")
 
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".tcl", delete=False
-        ) as temp_script:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".tcl", delete=False) as temp_script:
             temp_script.write(script_content)
             temp_script_path = temp_script.name
 

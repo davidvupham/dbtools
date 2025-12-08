@@ -11,7 +11,6 @@ Complete exercises in order - each builds on previous ones!
 from abc import ABC, abstractmethod
 from typing import Any, Optional
 
-
 # ============================================================================
 # EXERCISE 1: Abstract Base Classes (Easy)
 # ============================================================================
@@ -280,7 +279,7 @@ Expected output:
     cache = NoOpCache()
     cache.set("key", "value")
     print(cache.get("key"))  # None (doesn't store anything)
-    
+
     # MemoryCache
     cache = MemoryCache()
     cache.set("key", "value")
@@ -429,7 +428,7 @@ Expected output:
     client = Client(cache=MemoryCache())
     client.store_secret("key", "value")
     print(client.get_secret("key"))  # "value"
-    
+
     # With NoOpCache
     client = Client(cache=NoOpCache())
     client.store_secret("key", "value")

@@ -63,10 +63,7 @@ def main():
             {"$or": [{"price": {"$gte": 500}}, {"stock": {"$lt": 20}}]},
         )
         for product in filtered:
-            print(
-                f"   - {product['name']}: "
-                f"${product['price']} (stock: {product['stock']})"
-            )
+            print(f"   - {product['name']}: ${product['price']} (stock: {product['stock']})")
 
         # 4. Sorting
         print("\n4. Products sorted by price (descending):")

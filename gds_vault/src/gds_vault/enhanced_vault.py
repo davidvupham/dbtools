@@ -78,9 +78,7 @@ class VaultError(Exception):
     """Exception raised for Vault operation errors."""
 
 
-class EnhancedVaultClient(
-    SecretProvider, ConfigurableComponent, ResourceManager, RetryableOperation
-):
+class EnhancedVaultClient(SecretProvider, ConfigurableComponent, ResourceManager, RetryableOperation):
     """
     Enhanced Vault client with proper OOP inheritance.
 
@@ -139,14 +137,10 @@ class EnhancedVaultClient(
     def _validate_config(self) -> None:
         """Validate Vault configuration."""
         if not self.vault_addr:
-            raise VaultError(
-                "Vault address must be provided or set in VAULT_ADDR environment variable"
-            )
+            raise VaultError("Vault address must be provided or set in VAULT_ADDR environment variable")
 
         if not self.role_id or not self.secret_id:
-            raise VaultError(
-                "VAULT_ROLE_ID and VAULT_SECRET_ID must be provided or set in environment"
-            )
+            raise VaultError("VAULT_ROLE_ID and VAULT_SECRET_ID must be provided or set in environment")
 
     # SecretProvider interface implementation
     def get_secret(self, path: str, **kwargs) -> dict[str, Any]:
@@ -261,9 +255,7 @@ class EnhancedVaultClient(
             headers["X-Vault-Namespace"] = self.namespace
 
         try:
-            resp = requests.post(
-                login_url, json=login_payload, headers=headers, timeout=self.timeout
-            )
+            resp = requests.post(login_url, json=login_payload, headers=headers, timeout=self.timeout)
         except requests.RequestException as e:
             raise VaultError(f"Failed to connect to Vault: {e}") from e
 
@@ -275,15 +267,11 @@ class EnhancedVaultClient(
 
         # Cache token with expiry
         lease_duration = auth_data.get("lease_duration", 3600)
-        self._token_expiry = (
-            time.time() + lease_duration - 300
-        )  # 5-minute early refresh
+        self._token_expiry = time.time() + lease_duration - 300  # 5-minute early refresh
 
         return token
 
-    def _fetch_secret_from_vault(
-        self, secret_path: str, version: Optional[int] = None
-    ) -> dict[str, Any]:
+    def _fetch_secret_from_vault(self, secret_path: str, version: Optional[int] = None) -> dict[str, Any]:
         """Fetch secret from Vault."""
         if not self.is_authenticated():
             self.authenticate()
@@ -295,9 +283,7 @@ class EnhancedVaultClient(
         params = {"version": version} if version else None
 
         try:
-            resp = requests.get(
-                secret_url, headers=headers, params=params, timeout=self.timeout
-            )
+            resp = requests.get(secret_url, headers=headers, params=params, timeout=self.timeout)
         except requests.RequestException as e:
             raise VaultError(f"Failed to connect to Vault: {e}") from e
 
@@ -342,12 +328,8 @@ class EnhancedVaultClient(
             "timeout": self.timeout,
             "max_retries": self.max_retries,
             "backoff_factor": self.backoff_factor,
-            "role_id": self.role_id[:4] + "..."
-            if self.role_id
-            else None,  # Masked for security
-            "secret_id": self.secret_id[:4] + "..."
-            if self.secret_id
-            else None,  # Masked for security
+            "role_id": self.role_id[:4] + "..." if self.role_id else None,  # Masked for security
+            "secret_id": self.secret_id[:4] + "..." if self.secret_id else None,  # Masked for security
         }
 
     def update_timeout(self, timeout: int) -> None:
@@ -383,9 +365,7 @@ def create_vault_client(
         Vault client instance
     """
     if enhanced:
-        return EnhancedVaultClient(
-            vault_addr=vault_addr, role_id=role_id, secret_id=secret_id
-        )
+        return EnhancedVaultClient(vault_addr=vault_addr, role_id=role_id, secret_id=secret_id)
     # Import original VaultClient for fallback
     from .vault import VaultClient
 

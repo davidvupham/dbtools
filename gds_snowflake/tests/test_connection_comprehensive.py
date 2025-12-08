@@ -103,9 +103,7 @@ class TestSnowflakeConnectionInitialization:
 
     def test_init_vault_error_handling(self):
         """Test Vault error handling during initialization"""
-        with patch(
-            "gds_snowflake.connection.get_secret_from_vault"
-        ) as mock_vault:
+        with patch("gds_snowflake.connection.get_secret_from_vault") as mock_vault:
             mock_vault.side_effect = Exception("Vault connection failed")
 
             with pytest.raises(
@@ -119,12 +117,8 @@ class TestSnowflakeConnectionInitialization:
 
     def test_init_missing_private_key_in_vault(self):
         """Test handling when private key is missing from Vault response"""
-        with patch(
-            "gds_snowflake.connection.get_secret_from_vault"
-        ) as mock_vault:
-            mock_vault.return_value = {
-                "user": "vault_user"
-            }  # Missing private_key
+        with patch("gds_snowflake.connection.get_secret_from_vault") as mock_vault:
+            mock_vault.return_value = {"user": "vault_user"}  # Missing private_key
 
             with pytest.raises(
                 RuntimeError,
@@ -143,9 +137,7 @@ class TestSnowflakeConnectionConnectivity:
         """Test successful connection"""
         mock_connect, mock_conn, _ = mock_snowflake_connect
 
-        conn = SnowflakeConnection(
-            account="test_account", vault_secret_path="secret/snowflake"
-        )
+        conn = SnowflakeConnection(account="test_account", vault_secret_path="secret/snowflake")
 
         result = conn.connect()
 
@@ -154,9 +146,7 @@ class TestSnowflakeConnectionConnectivity:
         mock_connect.assert_called_once()
         mock_vault_success.assert_called_once()
 
-    def test_connect_with_all_parameters(
-        self, mock_vault_success, mock_snowflake_connect
-    ):
+    def test_connect_with_all_parameters(self, mock_vault_success, mock_snowflake_connect):
         """Test connection with all parameters"""
         mock_connect, mock_conn, _ = mock_snowflake_connect
 
@@ -182,23 +172,17 @@ class TestSnowflakeConnectionConnectivity:
         with patch("snowflake.connector.connect") as mock_connect:
             mock_connect.side_effect = Exception("Connection failed")
 
-            conn = SnowflakeConnection(
-                account="test_account", vault_secret_path="secret/snowflake"
-            )
+            conn = SnowflakeConnection(account="test_account", vault_secret_path="secret/snowflake")
 
             with pytest.raises(Exception, match="Connection failed"):
                 conn.connect()
 
-    def test_get_connection_existing(
-        self, mock_vault_success, mock_snowflake_connect
-    ):
+    def test_get_connection_existing(self, mock_vault_success, mock_snowflake_connect):
         """Test get_connection with existing connection"""
         mock_connect, mock_conn, _ = mock_snowflake_connect
         mock_conn.is_closed.return_value = False
 
-        conn = SnowflakeConnection(
-            account="test_account", vault_secret_path="secret/snowflake"
-        )
+        conn = SnowflakeConnection(account="test_account", vault_secret_path="secret/snowflake")
         conn.connect()
 
         # Reset mock to test get_connection doesn't call connect again
@@ -209,15 +193,11 @@ class TestSnowflakeConnectionConnectivity:
         assert result == mock_conn
         mock_connect.assert_not_called()  # Should not reconnect
 
-    def test_get_connection_auto_reconnect(
-        self, mock_vault_success, mock_snowflake_connect
-    ):
+    def test_get_connection_auto_reconnect(self, mock_vault_success, mock_snowflake_connect):
         """Test get_connection with auto-reconnect"""
         mock_connect, mock_conn, _ = mock_snowflake_connect
 
-        conn = SnowflakeConnection(
-            account="test_account", vault_secret_path="secret/snowflake"
-        )
+        conn = SnowflakeConnection(account="test_account", vault_secret_path="secret/snowflake")
         conn.connection = mock_conn
 
         # Simulate closed connection
@@ -229,15 +209,11 @@ class TestSnowflakeConnectionConnectivity:
         # Should have called connect again
         mock_connect.assert_called()
 
-    def test_close_connection(
-        self, mock_vault_success, mock_snowflake_connect
-    ):
+    def test_close_connection(self, mock_vault_success, mock_snowflake_connect):
         """Test connection closing"""
         mock_connect, mock_conn, _ = mock_snowflake_connect
 
-        conn = SnowflakeConnection(
-            account="test_account", vault_secret_path="secret/snowflake"
-        )
+        conn = SnowflakeConnection(account="test_account", vault_secret_path="secret/snowflake")
         conn.connect()
         conn.close()
 
@@ -247,9 +223,7 @@ class TestSnowflakeConnectionConnectivity:
 
     def test_close_no_connection(self, mock_vault_success):
         """Test closing when no connection exists"""
-        conn = SnowflakeConnection(
-            account="test_account", user="test_user", vault_secret_path="secret/snowflake"
-        )
+        conn = SnowflakeConnection(account="test_account", user="test_user", vault_secret_path="secret/snowflake")
 
         # Should not raise an exception
         conn.close()
@@ -259,9 +233,7 @@ class TestSnowflakeConnectionConnectivity:
 class TestSnowflakeConnectionQueries:
     """Test query execution functionality"""
 
-    def test_execute_query_success(
-        self, mock_vault_success, mock_snowflake_connect
-    ):
+    def test_execute_query_success(self, mock_vault_success, mock_snowflake_connect):
         """Test successful query execution"""
         mock_connect, mock_conn, mock_cursor = mock_snowflake_connect
         mock_cursor.fetchall.return_value = [
@@ -269,62 +241,44 @@ class TestSnowflakeConnectionQueries:
             ("row2", "val2"),
         ]
 
-        conn = SnowflakeConnection(
-            account="test_account", vault_secret_path="secret/snowflake"
-        )
+        conn = SnowflakeConnection(account="test_account", vault_secret_path="secret/snowflake")
         conn.connect()
 
         result = conn.execute_query("SELECT * FROM test_table")
 
         assert result == [("row1", "val1"), ("row2", "val2")]
-        mock_cursor.execute.assert_called_once_with(
-            "SELECT * FROM test_table"
-        )
+        mock_cursor.execute.assert_called_once_with("SELECT * FROM test_table")
 
-    def test_execute_query_with_params(
-        self, mock_vault_success, mock_snowflake_connect
-    ):
+    def test_execute_query_with_params(self, mock_vault_success, mock_snowflake_connect):
         """Test query execution with parameters"""
         mock_connect, mock_conn, mock_cursor = mock_snowflake_connect
         mock_cursor.fetchall.return_value = [("filtered_result",)]
 
-        conn = SnowflakeConnection(
-            account="test_account", vault_secret_path="secret/snowflake"
-        )
+        conn = SnowflakeConnection(account="test_account", vault_secret_path="secret/snowflake")
         conn.connect()
 
         params = ("test_value", 123)
-        result = conn.execute_query(
-            "SELECT * FROM test WHERE col1 = %s AND col2 = %s", params
-        )
+        result = conn.execute_query("SELECT * FROM test WHERE col1 = %s AND col2 = %s", params)
 
         assert result == [("filtered_result",)]
-        mock_cursor.execute.assert_called_once_with(
-            "SELECT * FROM test WHERE col1 = %s AND col2 = %s", params
-        )
+        mock_cursor.execute.assert_called_once_with("SELECT * FROM test WHERE col1 = %s AND col2 = %s", params)
 
-    def test_execute_query_error_handling(
-        self, mock_vault_success, mock_snowflake_connect
-    ):
+    def test_execute_query_error_handling(self, mock_vault_success, mock_snowflake_connect):
         """Test query execution error handling"""
         mock_connect, mock_conn, mock_cursor = mock_snowflake_connect
         mock_cursor.execute.side_effect = Exception("Query failed")
 
-        conn = SnowflakeConnection(
-            account="test_account", vault_secret_path="secret/snowflake"
-        )
+        conn = SnowflakeConnection(account="test_account", vault_secret_path="secret/snowflake")
         conn.connect()
 
         # Should raise exception on error
         with pytest.raises(Exception, match="Query failed"):
             conn.execute_query("INVALID SQL")
 
-    def test_execute_query_dict_success(
-        self, mock_vault_success, mock_snowflake_connect
-    ):
+    def test_execute_query_dict_success(self, mock_vault_success, mock_snowflake_connect):
         """Test successful dictionary query execution"""
         mock_connect, mock_conn, mock_cursor = mock_snowflake_connect
-        
+
         # Create a separate mock for DictCursor that returns dicts
         mock_dict_cursor = Mock()
         mock_dict_cursor.fetchall.return_value = [
@@ -333,17 +287,16 @@ class TestSnowflakeConnectionQueries:
         ]
         mock_dict_cursor.execute = Mock()
         mock_dict_cursor.close = Mock()
-        
+
         # Make cursor() return the dict cursor when called with DictCursor
         def cursor_factory(cursor_class=None):
             if cursor_class is not None:
                 return mock_dict_cursor
             return mock_cursor
+
         mock_conn.cursor.side_effect = cursor_factory
 
-        conn = SnowflakeConnection(
-            account="test_account", vault_secret_path="secret/snowflake"
-        )
+        conn = SnowflakeConnection(account="test_account", vault_secret_path="secret/snowflake")
         conn.connect()
 
         result = conn.execute_query_dict("SELECT col1, col2 FROM test")
@@ -354,26 +307,23 @@ class TestSnowflakeConnectionQueries:
         ]
         assert result == expected
 
-    def test_execute_query_dict_error_handling(
-        self, mock_vault_success, mock_snowflake_connect
-    ):
+    def test_execute_query_dict_error_handling(self, mock_vault_success, mock_snowflake_connect):
         """Test dictionary query execution error handling"""
         mock_connect, mock_conn, mock_cursor = mock_snowflake_connect
-        
+
         # Create mock dict cursor that raises exception
         mock_dict_cursor = Mock()
         mock_dict_cursor.execute.side_effect = Exception("Query failed")
         mock_dict_cursor.close = Mock()
-        
+
         def cursor_factory(cursor_class=None):
             if cursor_class is not None:
                 return mock_dict_cursor
             return mock_cursor
+
         mock_conn.cursor.side_effect = cursor_factory
 
-        conn = SnowflakeConnection(
-            account="test_account", vault_secret_path="secret/snowflake"
-        )
+        conn = SnowflakeConnection(account="test_account", vault_secret_path="secret/snowflake")
         conn.connect()
 
         # Should raise exception on error
@@ -384,9 +334,7 @@ class TestSnowflakeConnectionQueries:
 class TestSnowflakeConnectionAdvanced:
     """Test advanced connection functionality"""
 
-    def test_test_connectivity_success(
-        self, mock_vault_success, mock_snowflake_connect
-    ):
+    def test_test_connectivity_success(self, mock_vault_success, mock_snowflake_connect):
         """Test successful connectivity test"""
         mock_connect, mock_conn, mock_cursor = mock_snowflake_connect
         # Return tuple with 7 values matching CURRENT_ACCOUNT(), CURRENT_USER(), CURRENT_ROLE(), CURRENT_WAREHOUSE(), CURRENT_DATABASE(), CURRENT_VERSION(), CURRENT_REGION()
@@ -400,9 +348,7 @@ class TestSnowflakeConnectionAdvanced:
             "us-west-2",  # region
         )
 
-        conn = SnowflakeConnection(
-            account="test_account", vault_secret_path="secret/snowflake"
-        )
+        conn = SnowflakeConnection(account="test_account", vault_secret_path="secret/snowflake")
 
         result = conn.test_connectivity()
 
@@ -417,9 +363,7 @@ class TestSnowflakeConnectionAdvanced:
         with patch("snowflake.connector.connect") as mock_connect:
             mock_connect.side_effect = Exception("Connection timeout")
 
-            conn = SnowflakeConnection(
-                account="test_account", vault_secret_path="secret/snowflake"
-            )
+            conn = SnowflakeConnection(account="test_account", vault_secret_path="secret/snowflake")
 
             result = conn.test_connectivity(timeout_seconds=1)
 
@@ -431,9 +375,7 @@ class TestSnowflakeConnectionAdvanced:
         """Test account switching functionality"""
         mock_connect, mock_conn, _ = mock_snowflake_connect
 
-        conn = SnowflakeConnection(
-            account="test_account", vault_secret_path="secret/snowflake"
-        )
+        conn = SnowflakeConnection(account="test_account", vault_secret_path="secret/snowflake")
         conn.connect()
 
         original_connection = conn.connection
@@ -451,25 +393,19 @@ class TestSnowflakeConnectionAdvanced:
         """Test context manager functionality"""
         mock_connect, mock_conn, _ = mock_snowflake_connect
 
-        with SnowflakeConnection(
-            account="test_account", vault_secret_path="secret/snowflake"
-        ) as conn:
+        with SnowflakeConnection(account="test_account", vault_secret_path="secret/snowflake") as conn:
             assert conn.connection == mock_conn
             assert conn.account == "test_account"
 
         # Should have closed connection when exiting context
         mock_conn.close.assert_called_once()
 
-    def test_context_manager_with_exception(
-        self, mock_vault_success, mock_snowflake_connect
-    ):
+    def test_context_manager_with_exception(self, mock_vault_success, mock_snowflake_connect):
         """Test context manager with exception handling"""
         mock_connect, mock_conn, _ = mock_snowflake_connect
 
         try:
-            with SnowflakeConnection(
-                account="test_account", vault_secret_path="secret/snowflake"
-            ) as conn:
+            with SnowflakeConnection(account="test_account", vault_secret_path="secret/snowflake") as conn:
                 assert conn.connection == mock_conn
                 raise ValueError("Test exception")
         except ValueError:
@@ -485,33 +421,23 @@ class TestSnowflakeConnectionEdgeCases:
     def test_no_vault_path_no_private_key(self):
         """Test error when neither vault path nor private key provided"""
         with patch.dict(os.environ, {}, clear=True):
-            with pytest.raises(
-                RuntimeError, match="Vault secret path must be provided"
-            ):
-                SnowflakeConnection(
-                    account="test_account", user="test_user"
-                )
+            with pytest.raises(RuntimeError, match="Vault secret path must be provided"):
+                SnowflakeConnection(account="test_account", user="test_user")
 
     def test_repr_method(self, mock_vault_success):
         """Test string representation"""
-        conn = SnowflakeConnection(
-            account="test_account", user="test_user", vault_secret_path="secret/snowflake"
-        )
+        conn = SnowflakeConnection(account="test_account", user="test_user", vault_secret_path="secret/snowflake")
 
         repr_str = repr(conn)
         assert "SnowflakeConnection" in repr_str
         # Default repr includes object type and memory address
         assert "0x" in repr_str
 
-    def test_multiple_connections(
-        self, mock_vault_success, mock_snowflake_connect
-    ):
+    def test_multiple_connections(self, mock_vault_success, mock_snowflake_connect):
         """Test handling multiple connection attempts"""
         mock_connect, mock_conn, _ = mock_snowflake_connect
 
-        conn = SnowflakeConnection(
-            account="test_account", vault_secret_path="secret/snowflake"
-        )
+        conn = SnowflakeConnection(account="test_account", vault_secret_path="secret/snowflake")
 
         # Connect multiple times
         conn1 = conn.connect()
@@ -521,15 +447,11 @@ class TestSnowflakeConnectionEdgeCases:
         assert conn1 == conn2
         assert conn.connection == mock_conn
 
-    def test_connection_state_tracking(
-        self, mock_vault_success, mock_snowflake_connect
-    ):
+    def test_connection_state_tracking(self, mock_vault_success, mock_snowflake_connect):
         """Test connection state tracking"""
         mock_connect, mock_conn, _ = mock_snowflake_connect
 
-        conn = SnowflakeConnection(
-            account="test_account", vault_secret_path="secret/snowflake"
-        )
+        conn = SnowflakeConnection(account="test_account", vault_secret_path="secret/snowflake")
 
         # Initially no connection
         assert conn.connection is None
