@@ -1,10 +1,10 @@
-# GDS.Common Module
+# GDS.Logging Module
 
 Common utilities shared across all GDS PowerShell modules.
 
 ## Overview
 
-GDS.Common provides **logging functionality** that is used by all GDS modules:
+GDS.Logging provides **logging functionality** that is used by all GDS modules:
 
 - **PSFramework Logging** - Industry-standard logging with multiple output targets
 - **Cross-Platform Support** - Works on Windows, Linux, and macOS
@@ -45,21 +45,21 @@ $env:GDS_LOG_DIR = "C:\\Logs\\GDS"
 $env:GDS_LOG_DIR = "/var/log/gds"       # Example for Linux/macOS
 ```
 
-### Install GDS.Common
+### Install GDS.Logging
 
 ```powershell
 # From PowerShell Gallery (once published)
-Install-Module -Name GDS.Common -Scope CurrentUser
+Install-Module -Name GDS.Logging -Scope CurrentUser
 
 # Or import from PSModulePath
-Import-Module GDS.Common
+Import-Module GDS.Logging
 ```
 
 ## Quick Start
 
 ```powershell
 # Import module
-Import-Module GDS.Common
+Import-Module GDS.Logging
 
 # Ensure log directory is configured (Windows falls back to M:\GDS\Logs or %ALLUSERSPROFILE%\GDS\Logs)
 $env:GDS_LOG_DIR = "/var/log/gds"  # Example; set per environment
@@ -133,7 +133,7 @@ Set-GDSLogging -ModuleName "MyModule" -EnableEventLog -MinimumLevel "Debug"
 ### Example 1: Basic Logging
 
 ```powershell
-Import-Module GDS.Common
+Import-Module GDS.Logging
 
 # Initialize once
 Initialize-Logging -ModuleName "MyScript"
@@ -163,8 +163,8 @@ catch {
 ```powershell
 # MyModule.psm1
 
-# Import GDS.Common
-Import-Module GDS.Common
+# Import GDS.Logging
+Import-Module GDS.Logging
 
 # Initialize logging at module load
 Initialize-Logging -ModuleName "MyModule"
@@ -241,7 +241,7 @@ PSFramework is the recommended default for GDS modules because it is feature-ric
 # In YourModule.psd1
 @{
     RequiredModules = @(
-        @{ ModuleName = 'GDS.Common'; ModuleVersion = '1.0.0' }
+        @{ ModuleName = 'GDS.Logging'; ModuleVersion = '1.0.0' }
     )
 }
 ```
@@ -264,7 +264,7 @@ function Get-Something {
 # GDS.ActiveDirectory.psd1
 @{
     RequiredModules = @(
-        @{ ModuleName = 'GDS.Common'; ModuleVersion = '1.0.0' }
+        @{ ModuleName = 'GDS.Logging'; ModuleVersion = '1.0.0' }
     )
 }
 
@@ -279,7 +279,7 @@ Write-Log -Message "Starting AD export" -Level Info
 
 ## Cross-Platform Support
 
-GDS.Common works on:
+GDS.Logging works on:
 
 - ✅ Windows (PowerShell 5.1, PowerShell 7+)
 - ✅ Linux (PowerShell 7+)

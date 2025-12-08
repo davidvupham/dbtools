@@ -57,7 +57,7 @@ function Initialize-Logging {
     $ModuleName = Resolve-GDSModuleName -ExplicitName $ModuleName -CallStack $callStack
 
     # Persist module scoped configuration
-    $configPrefix = "GDS.Common.Logging.$ModuleName"
+    $configPrefix = "GDS.Logging.$ModuleName"
     Set-PSFConfig -FullName "$configPrefix.MinimumLevel" -Value $LogLevel -Initialize -Validation 'string' -Description "Minimum log level for $ModuleName module"
 
     # Configure PSFramework logging

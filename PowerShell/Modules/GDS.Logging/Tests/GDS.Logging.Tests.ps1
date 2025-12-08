@@ -15,10 +15,10 @@ if ($modulesRoot) {
     }
 }
 
-$manifestPath = Join-Path $moduleRoot 'GDS.Common.psd1'
+$manifestPath = Join-Path $moduleRoot 'GDS.Logging.psd1'
 Import-Module $manifestPath -Force
 
-InModuleScope 'GDS.Common' {
+InModuleScope 'GDS.Logging' {
 
     Describe 'Initialize-Logging' {
         BeforeEach {
@@ -156,7 +156,7 @@ InModuleScope 'GDS.Common' {
             $logProvider = $script:logProviders | Where-Object { $_.Name -eq 'logfile' }
             $logProvider.InstanceName | Should -Be 'TestHarness'
 
-            $configName = 'GDS.Common.Logging.TestHarness.MinimumLevel'
+            $configName = 'GDS.Logging.TestHarness.MinimumLevel'
             $script:configStore.ContainsKey($configName) | Should -BeTrue
         }
 
@@ -173,14 +173,16 @@ InModuleScope 'GDS.Common' {
 
         It 'uses default Windows log directory when GDS_LOG_DIR is not defined' {
             Remove-Item Env:GDS_LOG_DIR -ErrorAction SilentlyContinue
-            Mock -CommandName Get-GDSLogRoot -MockWith { 'M:\GDS\Logs' }
-            Mock -CommandName Test-Path -MockWith { $true }
+            Mock -CommandName Get-GDSLogRoot -MockWith { 'C:\GDS\Logs' }
+            # Return false so New-Item is called, then GetFullPath is used (line 102)
+            Mock -CommandName Test-Path -MockWith { $false }
+            Mock -CommandName New-Item -MockWith { }
 
             Initialize-Logging -ModuleName 'DefaultModule'
 
             $logProvider = $script:logProviders | Where-Object { $_.Name -eq 'logfile' -and $_.InstanceName -eq 'DefaultModule' }
             $logProvider | Should -Not -BeNullOrEmpty
-            $logProvider.FilePath | Should -Match 'M:(\\|/)GDS(\\|/)Logs'
+            $logProvider.FilePath | Should -Match 'C:(\\|/)GDS(\\|/)Logs'
         }
     }
 
@@ -268,7 +270,7 @@ InModuleScope 'GDS.Common' {
         It 'stores the minimum level configuration scoped to the module' {
             Set-GDSLogging -ModuleName 'TestModule' -MinimumLevel 'Warning' -EnableConsoleLog:$false -EnableFileLog:$false
 
-            $configName = 'GDS.Common.Logging.TestModule.MinimumLevel'
+            $configName = 'GDS.Logging.TestModule.MinimumLevel'
             $script:configStore[$configName] | Should -Be 'Warning'
         }
 
@@ -318,14 +320,16 @@ InModuleScope 'GDS.Common' {
 
         It 'uses default Windows log directory when none is configured' {
             Remove-Item Env:GDS_LOG_DIR -ErrorAction SilentlyContinue
-            Mock -CommandName Get-GDSLogRoot -MockWith { 'M:\GDS\Logs' }
-            Mock -CommandName Test-Path -MockWith { $true }
+            Mock -CommandName Get-GDSLogRoot -MockWith { 'C:\GDS\Logs' }
+            # Return false so New-Item is called, then GetFullPath is used (line 107)
+            Mock -CommandName Test-Path -MockWith { $false }
+            Mock -CommandName New-Item -MockWith { }
 
             Set-GDSLogging -ModuleName 'TestModule'
 
             $logProvider = $script:logProviders | Where-Object { $_.Name -eq 'logfile' -and $_.InstanceName -eq 'TestModule' }
             $logProvider | Should -Not -BeNullOrEmpty
-            $logProvider.FilePath | Should -Match 'M:(\\|/)GDS(\\|/)Logs'
+            $logProvider.FilePath | Should -Match 'C:(\\|/)GDS(\\|/)Logs'
         }
     }
 

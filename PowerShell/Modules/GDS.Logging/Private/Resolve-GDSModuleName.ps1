@@ -8,7 +8,7 @@ function Resolve-GDSModuleName {
         [object[]]$CallStack,
 
         [Parameter(Mandatory = $false)]
-        [string]$DefaultName = 'GDS.Common'
+        [string]$DefaultName = 'GDS.Logging'
     )
 
     if (-not [string]::IsNullOrWhiteSpace($ExplicitName)) {

@@ -1,11 +1,11 @@
 @{
-    RootModule = 'GDS.Common.psm1'
+    RootModule = 'GDS.Logging.psm1'
     ModuleVersion = '1.0.0'
-    GUID = '12345678-1234-1234-1234-123456789000'
+    GUID = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890'
     Author = 'GDS Team'
     CompanyName = 'GDS'
     Copyright = '(c) GDS Team. All rights reserved.'
-    Description = 'Common utilities and shared functions for GDS PowerShell modules'
+    Description = 'Logging utilities for GDS PowerShell modules using PSFramework'
     PowerShellVersion = '5.1'
     RequiredModules = @(
         @{ ModuleName = 'PSFramework'; ModuleVersion = '1.7.0' }
@@ -20,7 +20,7 @@
     AliasesToExport = @()
     PrivateData = @{
         PSData = @{
-            Tags = @('Common', 'Logging', 'GDS')
+            Tags = @('Logging', 'GDS', 'PSFramework')
             LicenseUri = ''
             ProjectUri = ''
             IconUri = ''

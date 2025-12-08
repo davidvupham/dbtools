@@ -8,7 +8,7 @@
     Description = 'Functions for Active Directory management'
     PowerShellVersion = '5.1'
     RequiredModules = @(
-        @{ ModuleName = 'GDS.Common'; ModuleVersion = '1.0.0' }
+        @{ ModuleName = 'GDS.Logging'; ModuleVersion = '1.0.0' }
     )
     FunctionsToExport = @('Export-ADObjectsToDatabase')
     CmdletsToExport = @()

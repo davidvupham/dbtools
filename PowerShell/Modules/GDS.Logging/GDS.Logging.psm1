@@ -1,4 +1,4 @@
-# GDS.Common Module
+# GDS.Logging Module
 
 # Load private functions
 $privatePath = Join-Path -Path $PSScriptRoot -ChildPath 'Private'

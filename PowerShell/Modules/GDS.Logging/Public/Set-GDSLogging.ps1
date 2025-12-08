@@ -63,7 +63,7 @@ function Set-GDSLogging {
     }
 
     # Persist module scoped configuration
-    $configPrefix = "GDS.Common.Logging.$ModuleName"
+    $configPrefix = "GDS.Logging.$ModuleName"
     Set-PSFConfig -FullName "$configPrefix.MinimumLevel" -Value $MinimumLevel -Initialize -Validation 'string' -Description "Minimum log level for $ModuleName module"
 
     try {

@@ -84,7 +84,7 @@ function Write-Log {
     }
 
     # Determine logging threshold
-    $configName = "GDS.Common.Logging.$ModuleName.MinimumLevel"
+    $configName = "GDS.Logging.$ModuleName.MinimumLevel"
     $minimumConfiguredLevel = (Get-PSFConfigValue -FullName $configName -Fallback 'Info')
     if ($null -eq $minimumConfiguredLevel) {
         $minimumConfiguredLevel = 'Info'

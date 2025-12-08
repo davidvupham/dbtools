@@ -8,7 +8,7 @@
     Description = 'NuGet package building and publishing for GDS PowerShell modules'
     PowerShellVersion = '5.1'
     RequiredModules = @(
-        @{ ModuleName = 'GDS.Common'; ModuleVersion = '1.0.0' }
+        @{ ModuleName = 'GDS.Logging'; ModuleVersion = '1.0.0' }
     )
     FunctionsToExport = @(
         'Build-NuGetPackage',
