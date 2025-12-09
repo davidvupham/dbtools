@@ -93,3 +93,19 @@ Making systems reliable usually involves adding more moving parts (redundancy), 
 
 - **Dynamic API Responses:** Caching JSON API responses at the edge is risky (User A sees User B's data). Stick to static assets unless you are an expert.
 - **Intranet Apps:** If all your users are in the same office building as the server, a CDN adds nothing.
+
+---
+
+## 5. High Availability (HA) Strategies
+*Keeping the lights on.*
+
+**The Concept:** Designing systems to remain operational for a high duration of time (e.g., 99.99% uptime).
+
+### Strategies
+- **Active-Passive:** Server A handles all traffic. Server B sits idle, waiting for A to crash. (Simpler, waste of resources).
+- **Active-Active:** Server A and Server B both handle traffic. If A crashes, B takes 100% of the load. (Complex sync required, better resource usage).
+- **Replication:** Database requires a primary (writer) and replicas (readers) to survive disk failures.
+
+### The Tradeoff
+- **Cost:** You are paying for double the infrastructure.
+- **Consistency:** In Active-Active, if User 1 writes to Server A and User 2 reads from Server B, do they see the same data immediately? (See CAP Theorem).
