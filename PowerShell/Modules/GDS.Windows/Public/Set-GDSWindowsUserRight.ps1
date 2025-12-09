@@ -1,16 +1,33 @@
 function Set-GDSWindowsUserRight {
     <#
     .SYNOPSIS
-        Sets a specific User Right for a given account using DSC v3.
+        Sets a specific Windows User Right for a given account using DSC v3 principles with Carbon.
 
     .DESCRIPTION
-        This function leverages the 'UserRightsAssignment' DSC resource from the PSDscResources module
-        to grant or revoke user rights (privileges) to a specified identity (account) on Windows Server.
+        This function grants or revokes Windows User Rights (privileges) to a specified identity
+        (account) on Windows Server.
 
-        This wrapper uses Invoke-DscResource to apply the setting directly without compiling a full configuration.
+        IMPLEMENTATION NOTES:
+        ---------------------
+        This function uses the Carbon PowerShell module (https://get-carbon.org) as its underlying
+        implementation rather than the SecurityPolicyDsc DSC resource. This design decision was made
+        because:
+
+        1. SecurityPolicyDsc requires WinRM to be enabled and configured, even for local operations.
+           This is a significant prerequisite that may not be acceptable in all environments.
+
+        2. Carbon's Grant-CPrivilege and Revoke-CPrivilege functions are IDEMPOTENT - they can be
+           called multiple times without error or side effects, matching DSC's desired state model.
+
+        3. Carbon works in both PowerShell 5.1 and PowerShell 7 without WinRM dependencies.
+
+        This function follows DSC v3 conventions and can be used as a DSC v3 resource adapter or
+        called directly from Ansible, Terraform, or other IaC tools.
 
     .PARAMETER UserRight
-        The constant name of the user right to configure (e.g., 'SeServiceLogonRight', 'SeLockMemoryPrivilege').
+        The user right to configure. Accepts either:
+        - Friendly names: 'Log on as a service', 'Lock pages in memory'
+        - Privilege constants: 'SeServiceLogonRight', 'SeLockMemoryPrivilege'
 
     .PARAMETER ServiceAccount
         The account to grant/revoke the right for (e.g., 'DOMAIN\ServiceAccount', 'NT SERVICE\MSSQLSERVER').
@@ -22,7 +39,7 @@ function Set-GDSWindowsUserRight {
     .EXAMPLE
         Set-GDSWindowsUserRight -UserRight 'Log on as a service' -ServiceAccount 'CONTOSO\svc_sql'
 
-        Grants 'Log on as a service' to the account 'CONTOSO\svc_sql'.
+        Grants 'Log on as a service' to the account 'CONTOSO\svc_sql'. This operation is idempotent.
 
     .EXAMPLE
         Set-GDSWindowsUserRight -UserRight 'Lock pages in memory' -ServiceAccount 'CONTOSO\svc_sql' -Ensure Absent
@@ -32,13 +49,28 @@ function Set-GDSWindowsUserRight {
     .EXAMPLE
         Set-GDSWindowsUserRight -UserRight 'Log on as a service', 'Lock pages in memory' -ServiceAccount 'CONTOSO\svc_sql'
 
-        Grants multiple rights ('Log on as a service' and 'Lock pages in memory') to the account.
+        Grants multiple rights. Each operation is idempotent.
 
     .EXAMPLE
         $rights = @('Log on as a service', 'Log on as a batch job')
         Set-GDSWindowsUserRight -UserRight $rights -ServiceAccount 'CONTOSO\svc_sql'
 
         Grants multiple rights specified in an array variable.
+
+    .NOTES
+        IDEMPOTENCY: This function is idempotent. Running it multiple times with the same parameters
+        will not cause errors or unintended changes. If the right is already granted/revoked, no
+        action is taken.
+
+        DEPENDENCIES: Requires the Carbon PowerShell module.
+        Install with: Install-Module -Name Carbon -Force -Scope CurrentUser
+
+        PERMISSIONS: Requires Administrator privileges to modify User Rights.
+
+    .LINK
+        https://get-carbon.org
+        https://get-carbon.org/Grant-CPrivilege.html
+        https://get-carbon.org/Revoke-CPrivilege.html
     #>
     [CmdletBinding()]
     param (
@@ -56,62 +88,59 @@ function Set-GDSWindowsUserRight {
     )
 
     process {
-        # Ensure PSDscResources module is available
-        if (-not (Get-Module -ListAvailable -Name PSDscResources)) {
-            throw "The 'PSDscResources' module is required but not found. Please install it using 'Install-Module PSDscResources'."
+        # Ensure Carbon module is available
+        if (-not (Get-Module -ListAvailable -Name Carbon)) {
+            throw "The 'Carbon' module is required but not found. Please install it using 'Install-Module Carbon -Force -Scope CurrentUser'."
         }
 
-        # Mapping of friendly names to DSC expected policy names (usually matching secedit output format with underscores)
+        # Import Carbon if not already imported
+        if (-not (Get-Module -Name Carbon)) {
+            Import-Module Carbon -ErrorAction Stop
+        }
+
+        # Mapping of friendly names to privilege constants (Se* format)
         $UserRightMapping = @{
-            'Log on as a service'                           = 'Log_on_as_a_service'
-            'Lock pages in memory'                          = 'Lock_pages_in_memory'
-            'Perform volume maintenance tasks'              = 'Perform_volume_maintenance_tasks'
-            'Log on as a batch job'                         = 'Log_on_as_a_batch_job'
-            'Allow log on locally'                          = 'Allow_log_on_locally'
-            'Deny log on locally'                           = 'Deny_log_on_locally'
-            'Access this computer from the network'         = 'Access_this_computer_from_the_network'
-            'Deny access to this computer from the network' = 'Deny_access_to_this_computer_from_the_network'
+            'Log on as a service'                           = 'SeServiceLogonRight'
+            'Lock pages in memory'                          = 'SeLockMemoryPrivilege'
+            'Perform volume maintenance tasks'              = 'SeManageVolumePrivilege'
+            'Log on as a batch job'                         = 'SeBatchLogonRight'
+            'Allow log on locally'                          = 'SeInteractiveLogonRight'
+            'Deny log on locally'                           = 'SeDenyInteractiveLogonRight'
+            'Access this computer from the network'         = 'SeNetworkLogonRight'
+            'Deny access to this computer from the network' = 'SeDenyNetworkLogonRight'
         }
 
         foreach ($right in $UserRight) {
-            # Check if there is a mapping for the friendly name
+            # Map friendly name to privilege constant if needed
             if ($UserRightMapping.ContainsKey($right)) {
-                $policyName = $UserRightMapping[$right]
-                Write-Verbose "Mapped friendly name '$right' to policy '$policyName'."
+                $privilegeName = $UserRightMapping[$right]
+                Write-Verbose "Mapped friendly name '$right' to privilege '$privilegeName'."
             }
             else {
-                # Assume it's already in the correct format (e.g. SeServiceLogonRight or Log_on_as_a_service)
-                $policyName = $right
+                # Assume it's already a privilege constant (e.g., SeServiceLogonRight)
+                $privilegeName = $right
             }
 
-            $properties = @{
-                Policy   = $policyName
-                Identity = $ServiceAccount
-                Ensure   = $Ensure
-            }
-
-            Write-Verbose "Invoking DSC resource UserRightsAssignment from PSDscResources..."
-            Write-Verbose "Policy: $policyName"
-            Write-Verbose "Identity: $ServiceAccount"
-            Write-Verbose "Ensure: $Ensure"
+            Write-Verbose "Processing privilege '$privilegeName' for account '$ServiceAccount' (Ensure: $Ensure)."
 
             try {
-                # Use Invoke-DscResource (DSC v3 / PS 7+ style invoke)
-                # This requires running as Administrator
-                $result = Invoke-DscResource -Name UserRightsAssignment -ModuleName PSDscResources -Method Set -Property $properties
+                if ($Ensure -eq 'Present') {
+                    # Grant the privilege (idempotent - no error if already granted)
+                    Write-Verbose "Granting '$privilegeName' to '$ServiceAccount'..."
+                    Grant-CPrivilege -Identity $ServiceAccount -Privilege $privilegeName
 
-                # If we get here without error, it succeeded.
-                # We can optionally return the result or just be silent (verb based).
-                # "Set" verb usually doesn't return output unless -PassThru is used, but Invoke-DscResource usually returns an object.
+                    Write-Verbose "Successfully ensured '$right' ($privilegeName) is granted to '$ServiceAccount'."
+                }
+                else {
+                    # Revoke the privilege (idempotent - no error if not present)
+                    Write-Verbose "Revoking '$privilegeName' from '$ServiceAccount'..."
+                    Revoke-CPrivilege -Identity $ServiceAccount -Privilege $privilegeName
 
-                Write-Verbose "Successfully applied user right configuration for $right ($policyName)."
-
-                if ($result.InDesiredState -eq $false) {
-                    Write-Warning "DSC Resource reported that it was not in the desired state for '$right' even after Set execution. Please verify."
+                    Write-Verbose "Successfully ensured '$right' ($privilegeName) is revoked from '$ServiceAccount'."
                 }
             }
             catch {
-                throw "Failed to set user right '$right' for '$ServiceAccount': $_"
+                throw "Failed to set user right '$right' ($privilegeName) for '$ServiceAccount': $_"
             }
         }
     }

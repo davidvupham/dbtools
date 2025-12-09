@@ -7,64 +7,74 @@ Import-Module $modulePath -Force
 
 Describe 'Set-GDSWindowsUserRight' {
 
-    Context 'When calling Invoke-DscResource successfully' {
+    BeforeAll {
+        # Mock Carbon module availability
+        Mock Get-Module { @{ Name = 'Carbon' } } -ModuleName 'GDS.Windows' -ParameterFilter { $ListAvailable -and $Name -eq 'Carbon' }
+        Mock Import-Module { } -ModuleName 'GDS.Windows' -ParameterFilter { $Name -eq 'Carbon' }
+    }
 
-        It 'Calls Invoke-DscResource with correct arguments for Present (using friendly name)' {
-            Mock Get-Module { @{ Name = 'PSDscResources' } } -ModuleName 'GDS.Windows'
-            Mock Invoke-DscResource { return @{ InDesiredState = $true } } -ModuleName 'GDS.Windows'
+    Context 'When granting privileges (Ensure = Present)' {
+
+        It 'Calls Grant-CPrivilege with correct privilege constant (using friendly name)' {
+            Mock Grant-CPrivilege { } -ModuleName 'GDS.Windows'
 
             Set-GDSWindowsUserRight -UserRight 'Log on as a service' -ServiceAccount 'CONTOSO\svc_sql' -Ensure 'Present'
 
-            Should -Invoke Invoke-DscResource -Times 1 -ModuleName 'GDS.Windows' -ParameterFilter {
-                $Name -eq 'UserRightsAssignment' -and
-                $ModuleName -eq 'PSDscResources' -and
-                $Method -eq 'Set' -and
-                $Property.Policy -eq 'Log_on_as_a_service' -and
-                $Property.Identity -eq 'CONTOSO\svc_sql' -and
-                $Property.Ensure -eq 'Present'
+            Should -Invoke Grant-CPrivilege -Times 1 -ModuleName 'GDS.Windows' -ParameterFilter {
+                $Identity -eq 'CONTOSO\svc_sql' -and
+                $Privilege -eq 'SeServiceLogonRight'
             }
         }
 
-        It 'Calls Invoke-DscResource with correct arguments for Absent (using friendly name)' {
-            Mock Get-Module { @{ Name = 'PSDscResources' } } -ModuleName 'GDS.Windows'
-            Mock Invoke-DscResource { return @{ InDesiredState = $true } } -ModuleName 'GDS.Windows'
+        It 'Maps "Lock pages in memory" to SeLockMemoryPrivilege' {
+            Mock Grant-CPrivilege { } -ModuleName 'GDS.Windows'
 
-            Set-GDSWindowsUserRight -UserRight 'Lock pages in memory' -ServiceAccount 'CONTOSO\svc_sql' -Ensure 'Absent'
+            Set-GDSWindowsUserRight -UserRight 'Lock pages in memory' -ServiceAccount 'CONTOSO\svc_sql'
 
-            Should -Invoke Invoke-DscResource -Times 1 -ModuleName 'GDS.Windows' -ParameterFilter {
-                $Name -eq 'UserRightsAssignment' -and
-                $Property.Policy -eq 'Lock_pages_in_memory' -and
-                $Property.Ensure -eq 'Absent'
+            Should -Invoke Grant-CPrivilege -Times 1 -ModuleName 'GDS.Windows' -ParameterFilter {
+                $Privilege -eq 'SeLockMemoryPrivilege'
             }
-        }
-
-        It 'Writes warning if InDesiredState returns false' {
-            Mock Get-Module { @{ Name = 'PSDscResources' } } -ModuleName 'GDS.Windows'
-            Mock Invoke-DscResource { return @{ InDesiredState = $false } } -ModuleName 'GDS.Windows'
-
-            Set-GDSWindowsUserRight -UserRight 'SeBatchLogonRight' -ServiceAccount 'User2'
-
-            Should -Invoke Invoke-DscResource -Times 1 -ModuleName 'GDS.Windows'
         }
 
         It 'Handles multiple user rights in a single call' {
-            Mock Get-Module { @{ Name = 'PSDscResources' } } -ModuleName 'GDS.Windows'
-            Mock Invoke-DscResource { return @{ InDesiredState = $true } } -ModuleName 'GDS.Windows'
+            Mock Grant-CPrivilege { } -ModuleName 'GDS.Windows'
 
             Set-GDSWindowsUserRight -UserRight 'Log on as a service', 'Lock pages in memory' -ServiceAccount 'CONTOSO\svc_sql'
 
-            Should -Invoke Invoke-DscResource -Times 2 -ModuleName 'GDS.Windows'
+            Should -Invoke Grant-CPrivilege -Times 2 -ModuleName 'GDS.Windows'
         }
 
-        It 'Passes through unmapped policy names directly (e.g., SeServiceLogonRight)' {
-            Mock Get-Module { @{ Name = 'PSDscResources' } } -ModuleName 'GDS.Windows'
-            Mock Invoke-DscResource { return @{ InDesiredState = $true } } -ModuleName 'GDS.Windows'
+        It 'Passes through unmapped privilege names directly' {
+            Mock Grant-CPrivilege { } -ModuleName 'GDS.Windows'
 
             Set-GDSWindowsUserRight -UserRight 'SeServiceLogonRight' -ServiceAccount 'User1'
 
-            Should -Invoke Invoke-DscResource -Times 1 -ModuleName 'GDS.Windows' -ParameterFilter {
-                $Property.Policy -eq 'SeServiceLogonRight'
+            Should -Invoke Grant-CPrivilege -Times 1 -ModuleName 'GDS.Windows' -ParameterFilter {
+                $Privilege -eq 'SeServiceLogonRight'
             }
+        }
+    }
+
+    Context 'When revoking privileges (Ensure = Absent)' {
+
+        It 'Calls Revoke-CPrivilege when Ensure is Absent' {
+            Mock Revoke-CPrivilege { } -ModuleName 'GDS.Windows'
+
+            Set-GDSWindowsUserRight -UserRight 'Lock pages in memory' -ServiceAccount 'CONTOSO\svc_sql' -Ensure 'Absent'
+
+            Should -Invoke Revoke-CPrivilege -Times 1 -ModuleName 'GDS.Windows' -ParameterFilter {
+                $Identity -eq 'CONTOSO\svc_sql' -and
+                $Privilege -eq 'SeLockMemoryPrivilege'
+            }
+        }
+    }
+
+    Context 'Module dependency checks' {
+
+        It 'Throws error if Carbon module is not available' {
+            Mock Get-Module { $null } -ModuleName 'GDS.Windows' -ParameterFilter { $ListAvailable -and $Name -eq 'Carbon' }
+
+            { Set-GDSWindowsUserRight -UserRight 'SeServiceLogonRight' -ServiceAccount 'User1' } | Should -Throw -Match "Carbon"
         }
     }
 }

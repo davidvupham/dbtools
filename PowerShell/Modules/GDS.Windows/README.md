@@ -1,12 +1,33 @@
 # GDS.Windows Module
 
-The `GDS.Windows` module provides PowerShell functions for interacting with and managing Windows Operating System components, utilizing PowerShell DSC v3 resources where applicable.
+The `GDS.Windows` module provides PowerShell functions for managing Windows Operating System components, following DSC v3 principles with idempotent operations.
+
+## Dependencies
+
+| Module | Purpose | Install Command |
+|--------|---------|-----------------|
+| **Carbon** | User Rights management | `Install-Module Carbon -Force -Scope CurrentUser` |
+| **Pester** | Unit testing (dev only) | `Install-Module Pester -Force -Scope CurrentUser` |
+
+## Design Decisions
+
+### Why Carbon Instead of SecurityPolicyDsc?
+
+The `Set-GDSWindowsUserRight` function uses the [Carbon](https://get-carbon.org) module instead of DSC's `SecurityPolicyDsc` because:
+
+1. **No WinRM Required**: `SecurityPolicyDsc` requires WinRM to be enabled and configured, even for local operations. Carbon works without WinRM.
+2. **Idempotent**: Carbon's `Grant-CPrivilege` and `Revoke-CPrivilege` are idempotent—safe to run multiple times without errors or side effects.
+3. **Cross-PowerShell**: Works in both PowerShell 5.1 and PowerShell 7.
+
+This follows DSC v3 principles (declarative, idempotent) while avoiding WinRM dependencies.
+
+---
 
 ## Functions
 
 ### `Set-GDSWindowsUserRight`
 
-Sets a specific User Right (Privilege) for a given account using DSC v3 (`PSDscResources`).
+Sets a specific User Right (Privilege) for a given account. **Idempotent**.
 
 **Syntax:**
 
@@ -16,30 +37,26 @@ Set-GDSWindowsUserRight -UserRight <String[]> -ServiceAccount <String> [-Ensure 
 
 **Parameters:**
 
-- `-UserRight`: The constant name of the user right (e.g., `SeServiceLogonRight`, `SeLockMemoryPrivilege`).
+- `-UserRight`: The user right (friendly name or constant, e.g., `'Log on as a service'` or `'SeServiceLogonRight'`).
 - `-ServiceAccount`: The account to configure (e.g., `DOMAIN\User`, `NT SERVICE\MSSQLSERVER`).
-- `-Ensure`: `Present` (default) to grant the right, `Absent` to revoke it.
+- `-Ensure`: `Present` (default) to grant, `Absent` to revoke.
 
 **Examples:**
 
 ```powershell
-# Grant "Log on as a service" to a service account
+# Grant "Log on as a service" (idempotent)
 Set-GDSWindowsUserRight -UserRight 'Log on as a service' -ServiceAccount 'CONTOSO\svc_sql'
 
 # Revoke "Lock pages in memory"
 Set-GDSWindowsUserRight -UserRight 'Lock pages in memory' -ServiceAccount 'CONTOSO\svc_sql' -Ensure Absent
 
-# Grant multiple user rights (comma-separated string array)
+# Grant multiple rights
 Set-GDSWindowsUserRight -UserRight 'Log on as a service', 'Lock pages in memory' -ServiceAccount 'CONTOSO\svc_sql'
-
-# Grant multiple user rights (using array variable)
-$rights = @('Log on as a service', 'Log on as a batch job')
-Set-GDSWindowsUserRight -UserRight $rights -ServiceAccount 'CONTOSO\svc_sql'
 ```
 
 ### `Set-GDSSqlServiceUserRights`
 
-Wrapper function to configure standard SQL Server service account rights (Log on as a service, Lock pages in memory, Perform volume maintenance tasks).
+Wrapper to configure standard SQL Server service account rights. **Idempotent**.
 
 **Syntax:**
 
@@ -47,19 +64,13 @@ Wrapper function to configure standard SQL Server service account rights (Log on
 Set-GDSSqlServiceUserRights -ServiceAccount <String> [-ServiceName <String>] [-Ensure <String>]
 ```
 
-**Parameters:**
-
-- `-ServiceAccount`: The account to configure. If omitted, attempts to find the account from `-ServiceName`.
-- `-ServiceName`: The service name to look up if `-ServiceAccount` is not provided (default: `MSSQLSERVER`).
-- `-Ensure`: `Present` (default) or `Absent`.
-
 **Examples:**
 
 ```powershell
 # Set rights for a specific account
 Set-GDSSqlServiceUserRights -ServiceAccount 'CONTOSO\svc_sql'
 
-# Auto-detect account from default MSSQLSERVER service and set rights
+# Auto-detect from MSSQLSERVER service
 Set-GDSSqlServiceUserRights
 ```
 
@@ -67,48 +78,18 @@ Set-GDSSqlServiceUserRights
 
 Determines if specific User Rights are managed by Group Policy.
 
-**Syntax:**
-
 ```powershell
-Get-GDSUserRightPolicyState -UserRight <String[]>
+Get-GDSUserRightPolicyState -UserRight 'SeServiceLogonRight'
 ```
 
 ---
 
 ## Testing
 
-This module uses [Pester](https://pester.dev/) for unit testing. The tests mock the underlying system calls and DSC resource invocations to ensure logic correctness without modifying the system.
-
-### Prerequisites
-
-1. **Pester Module**: Ensure Pester 5+ is installed.
-
-    ```powershell
-    Install-Module Pester -Force -Scope CurrentUser
-    ```
-
-2. **PSDscResources**: The `Set-GDSWindowsUserRight` function depends on `PSDscResources`.
-
-    ```powershell
-    Install-Module PSDscResources -Force -Scope CurrentUser
-    ```
-
-### Running Tests
-
-To run the tests for this module, execute the following command from the repository root or the module directory:
-
 ```powershell
-# Run all tests in the GDS.Windows module
+# Install Pester
+Install-Module Pester -Force -Scope CurrentUser
+
+# Run tests
 Invoke-Pester -Path ./PowerShell/Modules/GDS.Windows/tests/
-```
-
-Successful output will look like:
-
-```text
-Describing Set-GDSWindowsUserRight
-  Context Parameters and Dependencies
-    [+] Throws error if PSDscResources module is not available 24ms
-  Context When calling Invoke-DscResource successfully
-    [+] Calls Invoke-DscResource with correct arguments for Present 54ms
-    [+] Calls Invoke-DscResource with correct arguments for Absent 18ms
 ```
