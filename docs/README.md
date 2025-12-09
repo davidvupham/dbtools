@@ -70,6 +70,7 @@ Architecture decisions, design records, and conceptual explanations:
   - [Database Instance OO Design](explanation/design-records/database-instance-oo-design.md)
   - [Database Instance Refactor Plan](explanation/design-records/database-instance-refactor-plan.md)
   - [Database Platform OO Design](explanation/design-records/database-platform-oo-design.md)
+- [Secrets Management Comparison](explanation/secrets-management-comparison.md) - Technical analysis of Vault vs Infiscal
 
 ---
 
