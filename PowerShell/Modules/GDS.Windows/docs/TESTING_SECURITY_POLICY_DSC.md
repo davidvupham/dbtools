@@ -49,7 +49,7 @@ Use the `Get` method to test if `Invoke-DscResource` works with `SecurityPolicyD
 # Test reading current state (non-destructive)
 Invoke-DscResource -Name UserRightsAssignment -ModuleName SecurityPolicyDsc -Method Get -Property @{
     Policy   = 'Log_on_as_a_service'
-    Identity = 'NT AUTHORITY\NETWORK SERVICE'
+    Identity = 'NT SERVICE\MSSQLSERVER'
 }
 ```
 
