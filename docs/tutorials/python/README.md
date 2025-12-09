@@ -12,9 +12,29 @@ This directory contains the Python basics for this project.
   - Dataclasses, enums, classmethods, super(), comprehensions, enumerate(), sets, advanced f-strings
 
 Suggested reading order:
+
 1) Part 1 → 2 → 3
 
 Looking for OOP?
+
 - See the OOP guides in [../oop/](../oop/):
   - Foundations: oop_guide.md
   - Deep dives: advanced_oop_concepts.md
+
+---
+
+## Python Modules
+
+Tutorials for popular Python libraries: **[modules/](./modules/)**
+
+| Module | Description |
+|--------|-------------|
+| [Faker](./modules/faker/README.md) | Test data generation |
+| [Prefect](./modules/prefect/README.md) | Workflow orchestration |
+| [SQLModel](./modules/sqlmodel/README.md) | Type-safe ORM |
+| [Litestar](./modules/litestar/README.md) | Async web framework |
+| [Robocorp](./modules/robocorp/README.md) | RPA automation |
+| [DuckDB](./modules/duckdb/README.md) | In-memory analytics |
+| [Jupyter](./modules/jupyter/README.md) | Interactive notebooks |
+| [Pandas](./modules/pandas/README.md) | Data manipulation |
+| [pyodbc](./modules/pyodbc/README.md) | ODBC connectivity |
