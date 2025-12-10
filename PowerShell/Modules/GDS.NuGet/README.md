@@ -231,11 +231,11 @@ $result = Build-NuGetPackage -ModuleName "GDS.Common"
 - [nuget-tutorial.md](../../../docs/tutorials/powershell/nuget-tutorial.md) - Beginner-friendly NuGet packaging tutorial
 
 ### 📖 How-to Guides (Task-oriented)
-- [github-actions-nuget-build.md](../../../docs/how-tos/powershell/github-actions-nuget-build.md) - Build packages with GitHub Actions
-- [nuget-quick-start.md](../../../docs/how-tos/powershell/nuget-quick-start.md) - NuGet build quick reference
-- [nuget-build-howto.md](../../../docs/how-tos/powershell/nuget-build-howto.md) - Step-by-step build guide
-- [jfrog-quick-start.md](../../../docs/how-tos/powershell/jfrog-quick-start.md) - JFrog quick reference
-- [jfrog-cicd-guide.md](../../../docs/how-tos/powershell/jfrog-cicd-guide.md) - Complete JFrog + GitHub Actions guide
+- [github-actions-nuget-build.md](../../../docs/how-to/powershell/github-actions-nuget-build.md) - Build packages with GitHub Actions
+- [nuget-quick-start.md](../../../docs/how-to/powershell/nuget-quick-start.md) - NuGet build quick reference
+- [nuget-build-howto.md](../../../docs/how-to/powershell/nuget-build-howto.md) - Step-by-step build guide
+- [jfrog-quick-start.md](../../../docs/how-to/powershell/jfrog-quick-start.md) - JFrog quick reference
+- [jfrog-cicd-guide.md](../../../docs/how-to/powershell/jfrog-cicd-guide.md) - Complete JFrog + GitHub Actions guide
 
 ### 📋 Reference (Technical details)
 - [nuget-packaging-guide.md](../../../docs/reference/powershell/nuget-packaging-guide.md) - Comprehensive packaging reference

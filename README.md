@@ -67,9 +67,9 @@ See `PowerShell/README.md` for module usage, build instructions, and CI pipeline
   - Database change CI/CD pipelines
   - Liquibase integration patterns
   - OpenTelemetry observability architecture
-- `docs/vscode/` – Dev container setup guides and troubleshooting
+- `docs/vscode/` – Dev container setup guides and troubleshooting. See [docs/development/vscode/README.md](docs/development/vscode/README.md)
 - `docs/runbooks/` – Operational procedures and runbooks
-- `docs/development/` and `docs/coding-standards/` – Development guidelines and standards
+- `docs/development/` – Development guidelines and standards (including Coding Standards)
 - `schemas/` – Avro and JSON schema definitions used by data services
 - `scripts/` and `examples/` – Helper utilities and sample integrations
 - `docker/` – Docker configurations for development and testing environments
@@ -97,9 +97,9 @@ See `PowerShell/README.md` for module usage, build instructions, and CI pipeline
 2. Open the repository in VS Code and choose **Dev Containers: Reopen in Container** (or use `code .` from within an existing container)
 3. The dev container boots with Python, PowerShell 7, PSFramework, and other tooling preinstalled for a consistent environment
 4. For first-time setup, tips, and troubleshooting, reference:
-   - `docs/vscode/DEVCONTAINER_BEGINNERS_GUIDE.md`
-   - `docs/vscode/DEVCONTAINER.md`
-   - `docs/vscode/VSCODE_SETUP.md`
+   - `docs/development/vscode/devcontainer-beginners-guide.md`
+   - `docs/development/vscode/devcontainer.md`
+   - `docs/development/vscode/features.md`
 
 ## Copilot in Dev Containers
 
@@ -135,7 +135,7 @@ echo 'export NODE_EXTRA_CA_CERTS=/usr/local/share/ca-certificates/corp.crt' | su
 - Module and package documentation: see the README within each component directory
 - `PowerShell/FINAL_IMPLEMENTATION_SUMMARY.md` and `PowerShell/MODULE_ORGANIZATION.md` outline the PowerShell architecture
 - Detailed guides in `PowerShell/Modules/GDS.NuGet/` (NuGet build, JFrog publishing) and `PowerShell/Modules/GDS.Logging/` (logging)
-- Dev container guides: `docs/vscode/DEVCONTAINER_BEGINNERS_GUIDE.md`, `docs/vscode/DEVCONTAINER.md`, and `docs/vscode/DEVCONTAINER_SQLTOOLS.md`
+- Dev container guides: `docs/development/vscode/devcontainer-beginners-guide.md`, `docs/development/vscode/devcontainer.md`, and `docs/development/vscode/devcontainer-sqltools.md`
 - Liquibase tutorial: `docs/tutorials/liquibase/sqlserver-liquibase-tutorial.md` – Comprehensive guide with hands-on examples
 - Architecture documentation: `docs/architecture/` covers database change CI/CD, Liquibase patterns, and OpenTelemetry observability
 - Tutorial catalog: `docs/tutorials/README.md` indexes all available learning resources

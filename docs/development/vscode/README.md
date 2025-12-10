@@ -6,7 +6,7 @@ Welcome to the VS Code and Dev Container documentation for the dbtools project. 
 
 ### Getting Started
 
-#### 1. [DEVCONTAINER.md](DEVCONTAINER.md) - Quick Reference
+#### 1. [devcontainer.md](devcontainer.md) - Quick Reference
 
 **Start here for a quick overview**
 
@@ -19,7 +19,7 @@ Welcome to the VS Code and Dev Container documentation for the dbtools project. 
 
 ---
 
-#### 2. [DEVCONTAINER_BEGINNERS_GUIDE.md](DEVCONTAINER_BEGINNERS_GUIDE.md) - Comprehensive Guide
+#### 2. [devcontainer-beginners-guide.md](devcontainer-beginners-guide.md) - Comprehensive Guide
 
 **Detailed walkthrough for beginners**
 
@@ -36,7 +36,7 @@ Welcome to the VS Code and Dev Container documentation for the dbtools project. 
 
 ### Development Workflows
 
-#### 3. [VSCODE_FEATURES.md](VSCODE_FEATURES.md) - VS Code Features Guide
+#### 3. [features.md](features.md) - VS Code Features Guide
 
 **Master VS Code for productive development**
 
@@ -56,7 +56,7 @@ Welcome to the VS Code and Dev Container documentation for the dbtools project. 
 
 ---
 
-#### 4. [DEVCONTAINER_SQLTOOLS.md](DEVCONTAINER_SQLTOOLS.md) - Database Connectivity
+#### 4. [devcontainer-sqltools.md](devcontainer-sqltools.md) - Database Connectivity
 
 **Comprehensive database connectivity guide**
 
@@ -78,7 +78,7 @@ Welcome to the VS Code and Dev Container documentation for the dbtools project. 
 
 ### Platform-Specific Guides
 
-#### 5. [PLATFORM_SPECIFIC.md](PLATFORM_SPECIFIC.md) - Platform Optimization
+#### 5. [platform-specific.md](platform-specific.md) - Platform Optimization
 
 **Platform-specific setup and optimization**
 
@@ -110,7 +110,7 @@ Welcome to the VS Code and Dev Container documentation for the dbtools project. 
 
 ### Advanced Topics
 
-#### 6. [CICD_INTEGRATION.md](CICD_INTEGRATION.md) - CI/CD Integration
+#### 6. [cicd-integration.md](cicd-integration.md) - CI/CD Integration
 
 **Using dev containers in CI/CD pipelines**
 
@@ -127,7 +127,7 @@ Welcome to the VS Code and Dev Container documentation for the dbtools project. 
 
 ---
 
-#### 7. [SECURITY_BEST_PRACTICES.md](SECURITY_BEST_PRACTICES.md) - Security Guide
+#### 7. [security-best-practices.md](security-best-practices.md) - Security Guide
 
 **Security best practices and guidelines**
 
@@ -165,36 +165,36 @@ Welcome to the VS Code and Dev Container documentation for the dbtools project. 
 ### Path 1: Beginner Setup (Recommended for First Time)
 
 ```
-1. Read: DEVCONTAINER_BEGINNERS_GUIDE.md
-2. Setup: PLATFORM_SPECIFIC.md (your platform section)
-3. Security: SECURITY_BEST_PRACTICES.md (create .env file)
-4. Features: VSCODE_FEATURES.md (learn debugging and tasks)
-5. Database: DEVCONTAINER_SQLTOOLS.md (when needed)
+1. Read: devcontainer-beginners-guide.md
+2. Setup: platform-specific.md (your platform section)
+3. Security: security-best-practices.md (create .env file)
+4. Features: features.md (learn debugging and tasks)
+5. Database: devcontainer-sqltools.md (when needed)
 ```
 
 ### Path 2: Quick Start (Experienced Users)
 
 ```
-1. Read: DEVCONTAINER.md
-2. Review: PLATFORM_SPECIFIC.md (platform optimization)
-3. Reference: VSCODE_FEATURES.md (as needed)
+1. Read: devcontainer.md
+2. Review: platform-specific.md (platform optimization)
+3. Reference: features.md (as needed)
 ```
 
 ### Path 3: Security-First Setup
 
 ```
-1. Start: SECURITY_BEST_PRACTICES.md
-2. Setup: DEVCONTAINER_BEGINNERS_GUIDE.md
-3. Platform: PLATFORM_SPECIFIC.md
+1. Start: security-best-practices.md
+2. Setup: devcontainer-beginners-guide.md
+3. Platform: platform-specific.md
 4. Reference: Other docs as needed
 ```
 
 ### Path 4: CI/CD Integration
 
 ```
-1. Start: CICD_INTEGRATION.md
-2. Security: SECURITY_BEST_PRACTICES.md (secrets in CI)
-3. Reference: DEVCONTAINER_BEGINNERS_GUIDE.md (understanding the container)
+1. Start: cicd-integration.md
+2. Security: security-best-practices.md (secrets in CI)
+3. Reference: devcontainer-beginners-guide.md (understanding the container)
 ```
 
 ---
@@ -207,49 +207,49 @@ Welcome to the VS Code and Dev Container documentation for the dbtools project. 
    - Docker Desktop (Windows/Mac) or Docker (Linux)
    - VS Code
    - Dev Containers extension
-   - See: [DEVCONTAINER_BEGINNERS_GUIDE.md](DEVCONTAINER_BEGINNERS_GUIDE.md)
+   - See: [devcontainer-beginners-guide.md](devcontainer-beginners-guide.md)
 
 2. **Platform Optimization**
-   - **WSL2 Users**: Critical to read [PLATFORM_SPECIFIC.md](PLATFORM_SPECIFIC.md) WSL2 section
+   - **WSL2 Users**: Critical to read [platform-specific.md](platform-specific.md) WSL2 section
    - Configure memory and file system properly
 
 3. **Open in Dev Container**
    - Clone repository
    - Open in VS Code
    - Click "Reopen in Container" when prompted
-   - See: [DEVCONTAINER.md](DEVCONTAINER.md)
+   - See: [devcontainer.md](devcontainer.md)
 
 4. **Configure Secrets**
    - Create `.env` file from template
-   - See: [SECURITY_BEST_PRACTICES.md](SECURITY_BEST_PRACTICES.md)
+   - See: [security-best-practices.md](security-best-practices.md)
 
 ### Running Tests
 
 - **Via Task**: Press `Ctrl+Shift+B` → "Run All Tests"
 - **Via Debug**: Press `F5` → Select test configuration
 - **Via Terminal**: `pytest -v`
-- See: [VSCODE_FEATURES.md](VSCODE_FEATURES.md#testing-integration)
+- See: [features.md](features.md#testing-integration)
 
 ### Debugging
 
 - **Current File**: Press `F5`
 - **Specific Module**: F5 → "Python: Module"
 - **Tests**: F5 → "Debug: Current Test File"
-- See: [VSCODE_FEATURES.md](VSCODE_FEATURES.md#debugging)
+- See: [features.md](features.md#debugging)
 
 ### Connecting to Databases
 
-- **PostgreSQL**: See [DEVCONTAINER_SQLTOOLS.md](DEVCONTAINER_SQLTOOLS.md#postgresql-connection)
-- **SQL Server**: See [DEVCONTAINER_SQLTOOLS.md](DEVCONTAINER_SQLTOOLS.md#sql-server-connection)
-- **MongoDB**: See [DEVCONTAINER_SQLTOOLS.md](DEVCONTAINER_SQLTOOLS.md#mongodb-connection)
-- **Snowflake**: See [DEVCONTAINER_SQLTOOLS.md](DEVCONTAINER_SQLTOOLS.md#snowflake-connection)
+- **PostgreSQL**: See [devcontainer-sqltools.md](devcontainer-sqltools.md#postgresql-connection)
+- **SQL Server**: See [devcontainer-sqltools.md](devcontainer-sqltools.md#sql-server-connection)
+- **MongoDB**: See [devcontainer-sqltools.md](devcontainer-sqltools.md#mongodb-connection)
+- **Snowflake**: See [devcontainer-sqltools.md](devcontainer-sqltools.md#snowflake-connection)
 
 ### Performance Issues
 
-- **WSL2**: [PLATFORM_SPECIFIC.md](PLATFORM_SPECIFIC.md#wsl2-best-practices)
-- **macOS**: [PLATFORM_SPECIFIC.md](PLATFORM_SPECIFIC.md#performance-optimization-for-macos)
-- **Linux**: [PLATFORM_SPECIFIC.md](PLATFORM_SPECIFIC.md#performance-optimization-for-linux)
-- **General**: [PLATFORM_SPECIFIC.md](PLATFORM_SPECIFIC.md#performance-optimization)
+- **WSL2**: [platform-specific.md](platform-specific.md#wsl2-best-practices)
+- **macOS**: [platform-specific.md](platform-specific.md#performance-optimization-for-macos)
+- **Linux**: [platform-specific.md](platform-specific.md#performance-optimization-for-linux)
+- **General**: [platform-specific.md](platform-specific.md#performance-optimization)
 
 ---
 
@@ -289,7 +289,7 @@ Welcome to the VS Code and Dev Container documentation for the dbtools project. 
 - Code quality tools
 - And more...
 
-See: [DEVCONTAINER.md](DEVCONTAINER.md#what-you-get)
+See: [devcontainer.md](devcontainer.md#what-you-get)
 
 ---
 
@@ -311,7 +311,7 @@ The project includes a comprehensive VS Code workspace file: `dbtools.code-works
 code dbtools.code-workspace
 ```
 
-See: [VSCODE_FEATURES.md](VSCODE_FEATURES.md)
+See: [features.md](features.md)
 
 ---
 
@@ -321,15 +321,15 @@ See: [VSCODE_FEATURES.md](VSCODE_FEATURES.md)
 
 | Issue | Document | Section |
 |-------|----------|---------|
-| Container won't build | [DEVCONTAINER_BEGINNERS_GUIDE.md](DEVCONTAINER_BEGINNERS_GUIDE.md) | Troubleshooting |
-| Slow performance (WSL2) | [PLATFORM_SPECIFIC.md](PLATFORM_SPECIFIC.md) | WSL2 Best Practices |
-| Database connection fails | [DEVCONTAINER_SQLTOOLS.md](DEVCONTAINER_SQLTOOLS.md) | Troubleshooting |
-| Extension not working | [VSCODE_FEATURES.md](VSCODE_FEATURES.md) | Extensions |
-| Port not forwarding | [VSCODE_FEATURES.md](VSCODE_FEATURES.md) | Port Forwarding |
-| Tests not discovered | [VSCODE_FEATURES.md](VSCODE_FEATURES.md) | Testing Integration |
-| Permission denied errors | [PLATFORM_SPECIFIC.md](PLATFORM_SPECIFIC.md) | Platform-specific issues |
-| CI/CD pipeline failing | [CICD_INTEGRATION.md](CICD_INTEGRATION.md) | Troubleshooting |
-| Secrets exposed | [SECURITY_BEST_PRACTICES.md](SECURITY_BEST_PRACTICES.md) | Incident Response |
+| Container won't build | [devcontainer-beginners-guide.md](devcontainer-beginners-guide.md) | Troubleshooting |
+| Slow performance (WSL2) | [platform-specific.md](platform-specific.md) | WSL2 Best Practices |
+| Database connection fails | [devcontainer-sqltools.md](devcontainer-sqltools.md) | Troubleshooting |
+| Extension not working | [features.md](features.md) | Extensions |
+| Port not forwarding | [features.md](features.md) | Port Forwarding |
+| Tests not discovered | [features.md](features.md) | Testing Integration |
+| Permission denied errors | [platform-specific.md](platform-specific.md) | Platform-specific issues |
+| CI/CD pipeline failing | [cicd-integration.md](cicd-integration.md) | Troubleshooting |
+| Secrets exposed | [security-best-practices.md](security-best-practices.md) | Incident Response |
 
 ---
 
@@ -342,7 +342,7 @@ See: [VSCODE_FEATURES.md](VSCODE_FEATURES.md)
 - ⚠️ Keep SSH keys with correct permissions (600)
 - ⚠️ Enable secret scanning in repository
 
-See: [SECURITY_BEST_PRACTICES.md](SECURITY_BEST_PRACTICES.md)
+See: [security-best-practices.md](security-best-practices.md)
 
 ---
 
@@ -351,13 +351,13 @@ See: [SECURITY_BEST_PRACTICES.md](SECURITY_BEST_PRACTICES.md)
 ```
 docs/development/vscode/
 ├── README.md                           # This file - Start here
-├── DEVCONTAINER.md                     # Quick reference
-├── DEVCONTAINER_BEGINNERS_GUIDE.md     # Detailed guide
-├── DEVCONTAINER_SQLTOOLS.md            # Database connectivity
-├── VSCODE_FEATURES.md                  # VS Code features
-├── PLATFORM_SPECIFIC.md                # Platform optimization
-├── CICD_INTEGRATION.md                 # CI/CD patterns
-├── SECURITY_BEST_PRACTICES.md          # Security guide
+├── devcontainer.md                     # Quick reference
+├── devcontainer-beginners-guide.md     # Detailed guide
+├── devcontainer-sqltools.md            # Database connectivity
+├── features.md                         # VS Code features
+├── platform-specific.md                # Platform optimization
+├── cicd-integration.md                 # CI/CD patterns
+├── security-best-practices.md          # Security guide
 └── REVIEW_SUMMARY.md                   # What changed
 ```
 

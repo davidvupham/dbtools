@@ -6,125 +6,90 @@ This directory contains all project documentation organized by category.
 
 - [Documentation Organization](#documentation-organization)
   - [tutorials/ - Learning-Oriented Guides](#tutorials---learning-oriented-guides)
-  - [explanation/ - Understanding-Oriented Documentation](#explanation---understanding-oriented-documentation)
-  - [development/ - Development Documentation](#development---development-documentation)
-  - [coding-standards/ - Coding Standards](#coding-standards---coding-standards)
-  - [runbooks/ - Operational Runbooks](#runbooks---operational-runbooks)
+  - [projects/ - Project Documentation](#projects---project-documentation)
   - [how-to/ - How-to Guides](#how-to---how-to-guides)
+  - [explanation/ - Understanding-Oriented Documentation](#explanation---understanding-oriented-documentation)
+  - [runbooks/ - Operational Runbooks](#runbooks---operational-runbooks)
+  - [reference/ - Technical Reference](#reference---technical-reference)
+  - [development/ - Development Documentation](#development---development-documentation)
   - [vscode/ - VS Code Setup](#vscode---vs-code-setup)
-  - [archive/ - Archived Files](#archive---archived-files)
 - [Component Documentation](#component-documentation)
 - [Quick Links](#quick-links)
 
 ## 📚 Documentation Organization
 
-This documentation follows the **Diátaxis framework**, organizing content by user intent to help you find what you need based on your goal:
+This documentation follows the **Diátaxis framework**, organizing content by user intent:
 
-- **Tutorials** (Learning-oriented): Step-by-step lessons to help you get started and acquire new skills.
-- **Explanation** (Understanding-oriented): High-level context, architecture decisions, and "why" things work the way they do.
-- **Runbooks** (Goal-oriented): Practical, procedural guides for performing specific operational tasks.
-- **How-to Guides** (Goal-oriented): Directions to solve specific problems or achieve specific configuration goals.
-- **Development** (Contributor-oriented): Standards and guides for working on the codebase itself.
+- **Tutorials** (Learning-oriented): Step-by-step lessons.
+- **Projects** (Project-oriented): Comprehensive documentation for specific projects.
+- **How-to Guides** (Goal-oriented): Directions to solve specific problems.
+- **Explanation** (Understanding-oriented): High-level context and design decisions.
+- **Runbooks** (Goal-oriented): Operational procedures.
+- **Reference** (Information-oriented): Technical details and specifications.
 
-### Diagrams as Code (Mermaid)
-
-This project uses **[Mermaid.js](https://mermaid.js.org/)** for architectural, sequence, and class diagrams. This "diagram-as-code" approach aligns with best practices for engineering documentation:
-
-- **Version Control**: Diagrams are text-based, allowing them to be versioned, diffed, and reviewed in Pull Requests just like code.
-- **Maintainability**: No need for external binary files or proprietary tools; anyone can edit the diagrams using a text editor.
-- **Integration**: GitHub renders Mermaid diagrams natively in markdown files.
-
-Open the architecture files in the GitHub UI to see the diagrams rendered. In local editors (like VS Code), install the **Markdown Preview Mermaid Support** extension.
-
-### [tutorials/](tutorials/) - Learning-Oriented Guides
+### [tutorials/](tutorials/README.md) - Learning-Oriented Guides
 
 Step-by-step tutorials for learning various technologies:
 
-- [Ansible](tutorials/ansible/) - Ansible automation tutorials
-- [Docker](tutorials/docker/) - Container and Docker tutorials
-- [Liquibase](tutorials/liquibase/) - Database change management tutorials
-- [Python](tutorials/python/) - Python programming tutorials
-- [OOP](tutorials/oop/) - Object-oriented programming tutorials
-- [Kafka](tutorials/kafka/) - Apache Kafka tutorials
-- [RabbitMQ](tutorials/rabbitmq/) - RabbitMQ messaging tutorials
-- [**Observability**](tutorials/observability/) - **Comprehensive 9-part tutorial** covering:
-  - OpenTelemetry, distributed tracing, and the three pillars (traces, metrics, logs)
-  - Kafka streaming pipelines and data architecture
-  - Python and PowerShell instrumentation
-  - Alerting, notification, and best practices
-  - Hands-on exercises and quick reference guide
-- [Certificates](tutorials/certs/) - TLS/SSL certificate tutorials
-- [SSH Agent](tutorials/ssh-agent/) - SSH agent configuration
+- **Observability**: [Comprehensive 9-part tutorial](tutorials/observability/README.md)
+- [**Ansible**](tutorials/ansible/README.md)
+- [**Docker**](tutorials/docker/README.md)
+- [**Liquibase**](tutorials/liquibase/README.md)
+- [**Python**](tutorials/python/README.md)
+- [**Kafka**](tutorials/kafka/README.md)
 
----
+### [projects/](projects/README.md) - Project Documentation
 
-### [explanation/](explanation/) - Understanding-Oriented Documentation
+Documentation for large-scale projects:
 
-Architecture decisions, design records, and conceptual explanations:
+- [**Active Directory Password Rotation**](projects/ad-password-rotation/README.md)
+- [**Database Patching & Upgrade**](projects/db-patching-upgrade/README.md)
 
-- [Architecture](explanation/architecture/) - System architecture documentation
-  - [Observability](explanation/architecture/observability/) - Monitoring and metrics architecture
-  - [Liquibase](explanation/architecture/liquibase/) - Liquibase implementation guides
-  - [Database CI/CD](explanation/architecture/database-change-cicd/) - Database change pipeline architecture
-- [Design Records](explanation/design-records/) - Design decisions and refactoring plans
-  - [Database Instance OO Design](explanation/design-records/database-instance-oo-design.md)
-  - [Database Instance Refactor Plan](explanation/design-records/database-instance-refactor-plan.md)
-  - [Database Platform OO Design](explanation/design-records/database-platform-oo-design.md)
-- [Secrets Management Comparison](explanation/secrets-management-comparison.md) - Technical analysis of Vault vs Infiscal
+### [how-to/](how-to/README.md) - How-to Guides
 
----
+Task-oriented guides for solving specific problems:
 
-### [development/](development/) - Development Documentation
+- [**PowerShell Guides**](how-to/powershell/README.md)
+- [**Configure Service Dependencies**](how-to/configure-service-dependencies.md)
+- [**Rotate AD Passwords with Vault**](how-to/rotate-ad-passwords-with-vault.md)
 
-- [TESTING.md](development/testing.md) - Complete testing guide
-- [TESTING_QUICK_REF.md](development/testing-quick-ref.md) - Quick testing reference
-- [UNIT_TESTING_SUMMARY.md](development/unit-testing-summary.md) - Unit testing summary
-- [REFACTORING.md](development/refactoring.md) - Refactoring history
+### [explanation/](explanation/README.md) - Understanding-Oriented Documentation
 
----
+Background, context, and architecture:
 
-### [coding-standards/](development/coding-standards/) - Coding Standards
+- [**Architecture**](explanation/architecture/README.md)
+- [**Design Records**](explanation/design-records/README.md)
+- [**Secrets Management Comparison**](explanation/secrets-management-comparison.md)
 
-- [README.md](development/coding-standards/README.md) - Coding standards overview
-- [Python](development/coding-standards/python-coding-standards.md) - Python coding standards
-- [PowerShell](development/coding-standards/powershell-coding-standards.md) - PowerShell coding standards
-- [Language Agnostic](development/coding-standards/language-agnostic-coding-standards.md) - General coding standards
-- [Systems Design](development/coding-standards/systems-design-best-practices.md) - Systems design best practices
-- [Enforcement Guide](development/coding-standards/enforcement-guide.md) - Guide on enforcing coding standards
-- [General Standards](development/coding-standards/coding-standards.md) - Additional general coding standards
+### [runbooks/](runbooks/README.md) - Operational Runbooks
 
----
+Practical procedures for operations:
 
-### [runbooks/](runbooks/) - Operational Runbooks
+- [**GMSA**](runbooks/gmsa/README.md)
 
-- [README.md](runbooks/README.md) - Runbooks overview
-- [GMSA](runbooks/gmsa/) - Group Managed Service Account runbooks
+### [reference/](reference/README.md) - Technical Reference
 
----
+Technical specifications and reference material:
 
-### [how-to/](how-to/) - How-to Guides
+- [**Linux**](reference/linux/) - Linux tool references.
 
-- [Configure Service Dependencies](how-to/configure-service-dependencies.md) - Ensuring scripts run before services start
+### [development/](development/README.md) - Development Documentation
 
----
+Guides for contributors:
 
-### [vscode/](development/vscode/) - VS Code Setup
+- [**Coding Standards**](development/coding-standards/README.md)
+- [**Testing**](development/testing.md)
 
-- [README.md](development/vscode/README.md) - VS Code documentation index
-- [VSCODE_FEATURES.md](development/vscode/VSCODE_FEATURES.md) - VS Code features guide
-- [DEVCONTAINER.md](development/vscode/DEVCONTAINER.md) - Dev container setup
-- [DEVCONTAINER_BEGINNERS_GUIDE.md](development/vscode/DEVCONTAINER_BEGINNERS_GUIDE.md) - Dev container beginner guide
-- [CICD_INTEGRATION.md](development/vscode/CICD_INTEGRATION.md) - CI/CD integration guide
-- [DEVCONTAINER_SQLTOOLS.md](development/vscode/DEVCONTAINER_SQLTOOLS.md) - SQLTools extension configuration in Dev Container
-- [PLATFORM_SPECIFIC.md](development/vscode/PLATFORM_SPECIFIC.md) - Platform-specific VS Code settings (Windows/Linux/macOS)
-- [SECURITY_BEST_PRACTICES.md](development/vscode/SECURITY_BEST_PRACTICES.md) - Security best practices for VS Code development
+### [vscode/](vscode/README.md) - VS Code Setup
 
----
+Configuration for VS Code and Dev Containers:
 
-### [archive/](archive/) - Archived Files
+- [**Dev Container Setup**](vscode/DEVCONTAINER.md)
+- [**Beginners Guide**](vscode/DEVCONTAINER_BEGINNERS_GUIDE.md)
 
-- [README_old.md](archive/README_old.md) - Original root README
-- [validation-reports/](archive/validation-reports/) - Development validation and implementation reports
+### [archive/](archive/README.md) - Archived Files
+
+Deprecated documentation and reports.
 
 ---
 

@@ -17,7 +17,7 @@ This repository includes a VS Code Dev Container to provide a reproducible Minic
 - ODBC support: unixODBC and development libraries
 
 For a step-by-step beginner's walkthrough (what Docker is, how the Dockerfile and devcontainer.json work, and how to build/run), see:
-- `DEVCONTAINER_BEGINNERS_GUIDE.md`
+- `devcontainer-beginners-guide.md`
 
 ## Open in Dev Container
 
@@ -49,7 +49,7 @@ For a step-by-step beginner's walkthrough (what Docker is, how the Dockerfile an
 ### Kerberos configuration (optional)
 
 - A template is provided at `.devcontainer/krb5/krb5.conf`. Edit this file to set your REALM and KDC.
-- **Note:** Kerberos is not currently configured in the devcontainer.json. To enable it, add the mount and environment variable as described in `DEVCONTAINER_BEGINNERS_GUIDE.md`.
+- **Note:** Kerberos is not currently configured in the devcontainer.json. To enable it, add the mount and environment variable as described in `devcontainer-beginners-guide.md`.
 - To acquire a ticket (once configured):
   ```bash
   kinit user@EXAMPLE.COM

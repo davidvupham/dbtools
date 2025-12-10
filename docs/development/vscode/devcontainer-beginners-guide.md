@@ -546,5 +546,5 @@ echo "[postCreate] Done."
 
 ## Where to go next
 
-- Explore the docs in `docs/vscode/DEVCONTAINER_SQLTOOLS.md` for tool-specific verification and usage.
+- Explore the docs in `devcontainer-sqltools.md` for tool-specific verification and usage.
 - Tell us if you need additional tooling and we'll consider adding it to the Dockerfile.
