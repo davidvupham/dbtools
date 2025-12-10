@@ -23,7 +23,7 @@ A **CSR** is a text file generated on your server that you send to a Certificate
 
 ---
 
-## 2. The Workflow: From CSR to WinRM
+## 2. The Workflow: Certificate Request and Installation
 
 ### Step 1: Create a CSR (Windows)
 You can use the `CertReq` command-line tool or the MMC snap-in. We will use a `request.inf` file with `CertReq` for precision (easier to specify SANs).
@@ -83,23 +83,5 @@ Get-ChildItem Cert:\LocalMachine\My | Select-Object Subject, HasPrivateKey, Thum
 
 ---
 
-## 3. Enable WinRM with the New Certificate
 
-Now that the valid, trusted certificate is installed, bind it to WinRM.
 
-**1. Copy the Thumbprint** from the previous step.
-
-**2. Run the Command:**
-```powershell
-$Thumbprint = "YOUR_THUMBPRINT_HERE_FROM_ABOVE"
-
-# Create/Update the HTTPS Listener
-New-Item -Path WSMan:\localhost\Listener -Transport HTTPS -Address * -CertificateThumbprint $Thumbprint -Force
-```
-
-**3. Update Firewall (if needed):**
-```powershell
-New-NetFirewallRule -Name "WinRM-HTTPS" -DisplayName "Allow WinRM HTTPS" -Protocol TCP -LocalPort 5986 -Action Allow -Profile Any
-```
-
-You are now ready to accept secure WinRM connections.
