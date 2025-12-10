@@ -69,6 +69,7 @@ By default, the script attempts to find a valid existing "Server Authentication"
 - **If NOT found**: It falls back to generating a new self-signed certificate.
 
 ```powershell
+Import-Module GDS.Windows
 Enable-GDSWindowsRemoting
 ```
 
@@ -76,6 +77,7 @@ Enable-GDSWindowsRemoting
 Use this for development or test environments where you want to ensure a fresh, self-signed certificate is generated, ignoring any existing ones.
 
 ```powershell
+Import-Module GDS.Windows
 Enable-GDSWindowsRemoting -ForceNewSSLCert
 ```
 
@@ -88,5 +90,6 @@ If you have multiple certificates and want to explicitly specify which one to us
     ```
 2.  **Run the script with the Thumbprint**:
     ```powershell
+    Import-Module GDS.Windows
     Enable-GDSWindowsRemoting -CertificateThumbprint "A1B2C3D4E5FA6B7C8D..."
     ```
