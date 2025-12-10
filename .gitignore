@@ -1,5 +1,5 @@
 # Environment variables
-.env
+#.env
 .env.local
 config.sh
 
@@ -146,7 +146,7 @@ celerybeat.pid
 *.sage.py
 
 # Environments
-.env
+#.env
 .envrc
 .venv
 env/
@@ -237,4 +237,4 @@ docs/tutorials/liquibase/runner_config/runner.env.local
 
 # (removed) PDF conversion resources and exceptions no longer used
 .liquibase/settings.json
-.gemini/system.md
+#.gemini/system.md
