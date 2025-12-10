@@ -211,6 +211,49 @@ function Enable-GDSWindowsRemoting {
                 return $cert.Thumbprint
             }
 
+            function Get-GDSServerAuthCertificates {
+                [CmdletBinding()]
+                Param(
+                    [string]$ComputerName = $env:COMPUTERNAME
+                )
+
+                Write-Verbose "Scanning for Server Authentication certificates for host: $ComputerName"
+                $certs = Get-ChildItem Cert:\LocalMachine\My
+                $candidates = $certs | Where-Object {
+                    $_.Subject -like "*$ComputerName*" -and
+                    $_.NotAfter -gt (Get-Date) -and
+                    ($_.EnhancedKeyUsageList.FriendlyName -eq "Server Authentication" -or
+                    ($_.Extensions | Where-Object { $_.Oid.Value -eq "1.3.6.1.5.5.7.3.1" }))
+                }
+                return $candidates
+            }
+
+            function Select-GDSBestCertificate {
+                [CmdletBinding()]
+                Param(
+                    [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
+                    [System.Security.Cryptography.X509Certificates.X509Certificate2[]]$Certificates,
+
+                    [Parameter(Mandatory = $true)]
+                    [string]$SubjectName
+                )
+
+                if (-not $Certificates) { return $null }
+
+                # 1. Sort by Expiration Date (Newest first)
+                $sorted = $Certificates | Sort-Object NotAfter -Descending
+
+                # 2. Try to find exact CN match first among sorted
+                $exactMatch = $sorted | Where-Object { $_.Subject -eq "CN=$SubjectName" } | Select-Object -First 1
+
+                if ($exactMatch) {
+                    return $exactMatch
+                }
+
+                # 3. Fallback to best match (newest valid one)
+                return $sorted | Select-Object -First 1
+            }
+
             # --- End Embedded Private Functions ---
 
             # Helper functions for logging
@@ -270,24 +313,23 @@ function Enable-GDSWindowsRemoting {
                 if (-not $CertificateThumbprint -and -not $ForceNewSSLCert) {
                     Write-Verbose "No certificate specified. Attempting to auto-detect a valid Server Authentication certificate..."
 
-                    $certs = Get-ChildItem Cert:\LocalMachine\My
-                    $candidates = $certs | Where-Object {
-                        $_.Subject -like "*$env:COMPUTERNAME*" -and
-                        $_.NotAfter -gt (Get-Date) -and
-                        ($_.EnhancedKeyUsageList.FriendlyName -eq "Server Authentication" -or
-                        ($_.Extensions | Where-Object { $_.Oid.Value -eq "1.3.6.1.5.5.7.3.1" }))
+                    $candidates = Get-GDSServerAuthCertificates -ComputerName $env:COMPUTERNAME
+
+                    if ($candidates) {
+                        $selectedCert = Select-GDSBestCertificate -Certificates $candidates -SubjectName $env:COMPUTERNAME
+
+                        if ($selectedCert) {
+                            $CertificateThumbprint = $selectedCert.Thumbprint
+                            Write-HostLog "Auto-detected valid certificate: $($selectedCert.Subject)"
+                            Write-HostLog "Thumbprint: $CertificateThumbprint (Expires: $($selectedCert.NotAfter))"
+
+                            if ($candidates.Count -gt 1) {
+                                Write-Verbose "Multiple certificates found ($($candidates.Count)). Selected the newest/best match."
+                            }
+                        }
                     }
 
-                    if ($candidates.Count -eq 1) {
-                        $CertificateThumbprint = $candidates[0].Thumbprint
-                        Write-HostLog "Auto-detected valid certificate: $($candidates[0].Subject) (Thumbprint: $CertificateThumbprint)"
-                    }
-                    elseif ($candidates.Count -gt 1) {
-                        $errorMsg = "Multiple valid certificates found matching hostname '$env:COMPUTERNAME'. Please specify -CertificateThumbprint explicitly.`n" +
-                        ($candidates | Format-Table Subject, Thumbprint, NotAfter | Out-String)
-                        throw $errorMsg
-                    }
-                    else {
+                    if (-not $CertificateThumbprint) {
                         Write-Warning "No valid 'Server Authentication' certificate found matching hostname '$env:COMPUTERNAME'. A new self-signed certificate will be generated."
                         $ForceNewSSLCert = $true
                     }

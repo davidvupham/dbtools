@@ -59,9 +59,23 @@ New-NetFirewallRule -Name "WinRM-HTTPS" -DisplayName "Allow WinRM HTTPS" -Protoc
 ```
 
 ## Automating this with `Enable-GDSWindowsRemoting.ps1`
-The `Enable-GDSWindowsRemoting.ps1` script in this repository automates these steps for you, handling certificate detection and legacy OS support automatically.
+The `Enable-GDSWindowsRemoting.ps1` script in this repository automates these steps for you.
 
+### Option A: Auto-Detect or Generate Self-Signed (Default)
+This is useful for new deployments or dev environments.
 ```powershell
-# Example: Auto-detect or generate cert and configure
 Enable-GDSWindowsRemoting -ForceNewSSLCert
 ```
+
+### Option B: Use an Existing Certificate (Production)
+If you already have a trusted certificate (e.g., from an internal CA) installed in `Cert:\LocalMachine\My`:
+
+1.  **Find the Thumbprint**:
+    ```powershell
+    Get-ChildItem Cert:\LocalMachine\My | Format-Table Subject, Thumbprint
+    ```
+2.  **Run the script with the Thumbprint**:
+    ```powershell
+    Enable-GDSWindowsRemoting -CertificateThumbprint "A1B2C3D4E5FA6B7C8D..."
+    ```
+    *Note: The script will validate that the certificate exists before proceeding.*

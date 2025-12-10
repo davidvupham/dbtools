@@ -19,23 +19,25 @@ $certs = Get-ChildItem Cert:\LocalMachine\My | Where-Object { $_.Subject -like "
 if ($certs) { Write-Host "Certificate Found: $($certs[0].Thumbprint)" } else { Write-Warning "No Certificate Found" }
 ```
 - If "No Certificate Found" -> **Action**: Request a certificate from CA or generate Self-Signed (Dev only).
+- If "Certificate Found" -> **Action**: Note the thumbprint and proceed to Step 2 using the `-CertificateThumbprint` parameter.
 
 ### 2. Configure WinRM Service
 **Goal**: Ensure WinRM is running and Listener is active.
 
 **Procedure**:
-```powershell
-# 1. Start Service
-Start-Service WinRM
+Use the `Enable-GDSWindowsRemoting.ps1` script to handle the configuration automatically.
 
-# 2. Check for Listener
-Get-ChildItem WSMan:\localhost\Listener | Where-Object { $_.Keys -like "TRANSPORT=HTTPS" }
+**Scenario A: Certificate Found in Step 1**
+```powershell
+Enable-GDSWindowsRemoting -ComputerName localhost -CertificateThumbprint "THUMBPRINT_FROM_STEP_1"
 ```
-- If no output -> **Action**: Create Listener.
-  ```powershell
-  # Replace THUMBPRINT with the actual thumbprint from Step 1
-  New-Item -Path WSMan:\localhost\Listener -Transport HTTPS -Address * -CertificateThumbprint <THUMBPRINT> -Force
-  ```
+
+**Scenario B: No Certificate (Generate Self-Signed)**
+```powershell
+Enable-GDSWindowsRemoting -ComputerName localhost -ForceNewSSLCert
+```
+
+*This script will ensure the service is running, the HTTPS listener is created with the correct thumbprint, and the firewall rules are set.*
 
 ### 3. Verify Firewall
 **Goal**: Ensure port 5986 is open.
