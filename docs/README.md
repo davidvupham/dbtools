@@ -12,7 +12,7 @@ This directory contains all project documentation organized by category.
   - [runbooks/ - Operational Runbooks](#runbooks---operational-runbooks)
   - [reference/ - Technical Reference](#reference---technical-reference)
   - [development/ - Development Documentation](#development---development-documentation)
-  - [vscode/ - VS Code Setup](#vscode---vs-code-setup)
+
 - [Component Documentation](#component-documentation)
 - [Quick Links](#quick-links)
 
@@ -78,14 +78,8 @@ Technical specifications and reference material:
 Guides for contributors:
 
 - [**Coding Standards**](development/coding-standards/README.md)
-- [**Testing**](development/testing.md)
-
-### [vscode/](vscode/README.md) - VS Code Setup
-
-Configuration for VS Code and Dev Containers:
-
-- [**Dev Container Setup**](vscode/DEVCONTAINER.md)
-- [**Beginners Guide**](vscode/DEVCONTAINER_BEGINNERS_GUIDE.md)
+- [**Testing**](development/testing/README.md)
+- [**VS Code Setup**](development/vscode/README.md)
 
 ### [archive/](archive/README.md) - Archived Files
 
