@@ -74,9 +74,10 @@ function Enable-GDSWindowsRemoting {
         # Enable Basic Auth and Local Admin access (Legacy/Dev scenarios)
         Enable-GDSWindowsRemoting -ForceNewSSLCert -EnableBasicAuth -EnableLocalAccountTokenFilter
     #>
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess = $true)]
     Param (
         [Parameter(ValueFromPipeline = $true)]
+        [ValidateNotNullOrEmpty()]
         [string[]]$ComputerName = "localhost",
 
         [pscredential]$Credential,
@@ -89,15 +90,14 @@ function Enable-GDSWindowsRemoting {
         [string]$CertificateThumbprint,
         [switch]$EnableBasicAuth = $false,
         [switch]$EnableCredSSP,
-        [switch]$EnableLocalAccountTokenFilter
+        [switch]$EnableLocalAccountTokenFilter,
+        [switch]$LogToEventLog
     )
 
     Begin {
-        # Validation: Removed strict check to allow for Auto-Detection.
-        # If neither is provided, we will attempt to find a valid certificate in the script block.
-
         # Define the configuration logic as a script block
         $ConfigurationScript = {
+            [CmdletBinding()]
             Param (
                 $SubjectName,
                 $CertValidityDays,
@@ -107,7 +107,8 @@ function Enable-GDSWindowsRemoting {
                 $CertificateThumbprint,
                 $EnableBasicAuth,
                 $EnableCredSSP,
-                $EnableLocalAccountTokenFilter
+                $EnableLocalAccountTokenFilter,
+                $LogToEventLog
             )
 
             # --- Embedded Private Functions ---
@@ -189,17 +190,48 @@ function Enable-GDSWindowsRemoting {
                 return $parsed_cert.Thumbprint
             }
 
+            function New-GDSModernSelfSignedCert {
+                [CmdletBinding()]
+                Param (
+                    [Parameter(Mandatory = $true)]
+                    [string]$SubjectName,
+
+                    [int]$ValidDays = 1095
+                )
+
+                $certParam = @{
+                    DnsName           = $SubjectName
+                    CertStoreLocation = "Cert:\LocalMachine\My"
+                    NotAfter          = (Get-Date).AddDays($ValidDays)
+                    FriendlyName      = "GDSWinRM-SelfSigned"
+                    TextExtension     = @("2.5.29.37={text}1.3.6.1.5.5.7.3.1") # Server Auth EKU
+                }
+
+                $cert = New-SelfSignedCertificate @certParam
+                return $cert.Thumbprint
+            }
+
             # --- End Embedded Private Functions ---
 
             # Helper functions for logging
             function Write-ProgressLog {
                 $Message = $args[0]
-                $EventSource = "Enable-GDSWindowsRemoting" # Hardcoded for remote execution context
+                $EventSource = "Enable-GDSWindowsRemoting"
 
-                If ([System.Diagnostics.EventLog]::Exists('Application') -eq $False -or [System.Diagnostics.EventLog]::SourceExists($EventSource) -eq $False) {
-                    New-EventLog -LogName Application -Source $EventSource
+                if ($LogToEventLog) {
+                    if ([System.Diagnostics.EventLog]::Exists('Application') -eq $False -or [System.Diagnostics.EventLog]::SourceExists($EventSource) -eq $False) {
+                        try {
+                            New-EventLog -LogName Application -Source $EventSource -ErrorAction Stop
+                        }
+                        catch {
+                            Write-Warning "Could not create EventLog source. Run as Administrator."
+                        }
+                    }
+                    try {
+                        Write-EventLog -LogName Application -Source $EventSource -EntryType Information -EventId 1 -Message $Message -ErrorAction SilentlyContinue
+                    }
+                    catch {}
                 }
-                Write-EventLog -LogName Application -Source $EventSource -EntryType Information -EventId 1 -Message $Message
             }
 
             function Write-VerboseLog {
@@ -214,272 +246,245 @@ function Enable-GDSWindowsRemoting {
                 Write-ProgressLog $Message
             }
 
-            # Setup error handling.
-            Trap {
-                $_
-                Exit 1
-            }
             $ErrorActionPreference = "Stop"
 
-            # Get the ID and security principal of the current user account
-            $myWindowsID = [System.Security.Principal.WindowsIdentity]::GetCurrent()
-            $myWindowsPrincipal = new-object System.Security.Principal.WindowsPrincipal($myWindowsID)
+            try {
+                # Get the ID and security principal of the current user account
+                $myWindowsID = [System.Security.Principal.WindowsIdentity]::GetCurrent()
+                $myWindowsPrincipal = new-object System.Security.Principal.WindowsPrincipal($myWindowsID)
 
-            # Get the security principal for the Administrator role
-            $adminRole = [System.Security.Principal.WindowsBuiltInRole]::Administrator
+                # Get the security principal for the Administrator role
+                $adminRole = [System.Security.Principal.WindowsBuiltInRole]::Administrator
 
-            # Check to see if we are currently running "as Administrator"
-            if (-Not $myWindowsPrincipal.IsInRole($adminRole)) {
-                Write-Output "ERROR: You need elevated Administrator privileges in order to run this script."
-                Write-Output "       Start Windows PowerShell by using the Run as Administrator option."
-                Exit 2
-            }
+                # Check to see if we are currently running "as Administrator"
+                if (-Not $myWindowsPrincipal.IsInRole($adminRole)) {
+                    throw "You need elevated Administrator privileges in order to run this script. Start Windows PowerShell by using the Run as Administrator option."
+                }
 
-            # Detect PowerShell version.
-            If ($PSVersionTable.PSVersion.Major -lt 3) {
-                Write-ProgressLog "PowerShell version 3 or higher is required."
-                Throw "PowerShell version 3 or higher is required."
-            }
+                # Detect PowerShell version.
+                if ($PSVersionTable.PSVersion.Major -lt 3) {
+                    throw "PowerShell version 3 or higher is required."
+                }
 
-            # --- Certificate Auto-Detection Logic ---
-            if (-not $CertificateThumbprint -and -not $ForceNewSSLCert) {
-                Write-Verbose "No certificate specified. Attempting to auto-detect a valid Server Authentication certificate..."
+                # --- Certificate Auto-Detection Logic ---
+                if (-not $CertificateThumbprint -and -not $ForceNewSSLCert) {
+                    Write-Verbose "No certificate specified. Attempting to auto-detect a valid Server Authentication certificate..."
 
-                $candidates = @()
-                $certs = Get-ChildItem Cert:\LocalMachine\My
+                    $certs = Get-ChildItem Cert:\LocalMachine\My
+                    $candidates = $certs | Where-Object {
+                        $_.Subject -like "*$env:COMPUTERNAME*" -and
+                        $_.NotAfter -gt (Get-Date) -and
+                        ($_.EnhancedKeyUsageList.FriendlyName -eq "Server Authentication" -or
+                        ($_.Extensions | Where-Object { $_.Oid.Value -eq "1.3.6.1.5.5.7.3.1" }))
+                    }
 
-                foreach ($cert in $certs) {
-                    # Check 1: Subject matches Computer Name
-                    if ($cert.Subject -like "*$env:COMPUTERNAME*") {
-                        # Check 2: Not Expired
-                        if ($cert.NotAfter -gt (Get-Date)) {
-                            # Check 3: Server Authentication EKU (OID 1.3.6.1.5.5.7.3.1)
-                            $hasServerAuth = $false
-                            $ekuExt = $cert.Extensions | Where-Object { $_.Oid.Value -eq "2.5.29.37" } # Enhanced Key Usage
+                    if ($candidates.Count -eq 1) {
+                        $CertificateThumbprint = $candidates[0].Thumbprint
+                        Write-HostLog "Auto-detected valid certificate: $($candidates[0].Subject) (Thumbprint: $CertificateThumbprint)"
+                    }
+                    elseif ($candidates.Count -gt 1) {
+                        $errorMsg = "Multiple valid certificates found matching hostname '$env:COMPUTERNAME'. Please specify -CertificateThumbprint explicitly.`n" +
+                        ($candidates | Format-Table Subject, Thumbprint, NotAfter | Out-String)
+                        throw $errorMsg
+                    }
+                    else {
+                        Write-Warning "No valid 'Server Authentication' certificate found matching hostname '$env:COMPUTERNAME'. A new self-signed certificate will be generated."
+                        $ForceNewSSLCert = $true
+                    }
+                }
+                # ----------------------------------------
 
-                            if ($ekuExt) {
-                                # Cast to X509EnhancedKeyUsageExtension to access OIDs easily
-                                $ekuObj = [System.Security.Cryptography.X509Certificates.X509EnhancedKeyUsageExtension]$ekuExt
-                                foreach ($oid in $ekuObj.EnhancedKeyUsages) {
-                                    if ($oid.Value -eq "1.3.6.1.5.5.7.3.1") {
-                                        $hasServerAuth = $true
-                                        break
-                                    }
-                                }
-                            }
+                # Find and start the WinRM service.
+                Write-Verbose "Verifying WinRM service."
+                $winrmService = Get-Service "WinRM" -ErrorAction SilentlyContinue
+                if (-not $winrmService) {
+                    throw "Unable to find the WinRM service."
+                }
 
-                            if ($hasServerAuth) {
-                                $candidates += $cert
-                            }
+                if ($winrmService.Status -ne "Running") {
+                    Write-Verbose "Setting WinRM service to start automatically on boot."
+                    Set-Service -Name "WinRM" -StartupType Automatic
+                    Write-Verbose "Starting WinRM service."
+                    Start-Service -Name "WinRM" -ErrorAction Stop
+                    Write-ProgressLog "Started WinRM service."
+                }
+
+                # Make sure there is a SSL listener.
+                $listeners = Get-ChildItem WSMan:\localhost\Listener
+                if (-not ($listeners | Where-Object { $_.Keys -like "TRANSPORT=HTTPS" })) {
+
+                    $thumbprint = $null
+
+                    if ($CertificateThumbprint) {
+                        # Verify certificate exists
+                        $cert = Get-Item "Cert:\LocalMachine\My\$CertificateThumbprint" -ErrorAction SilentlyContinue
+                        if (-not $cert) {
+                            throw "Certificate with thumbprint $CertificateThumbprint not found in Cert:\LocalMachine\My"
+                        }
+                        $thumbprint = $CertificateThumbprint
+                        Write-HostLog "Using existing certificate with thumbprint: $thumbprint"
+                    }
+                    else {
+                        # Generate Self-Signed Cert
+                        if (Get-Command New-SelfSignedCertificate -ErrorAction SilentlyContinue) {
+                            $thumbprint = New-GDSModernSelfSignedCert -SubjectName $SubjectName -ValidDays $CertValidityDays
+                            Write-HostLog "Modern self-signed SSL certificate generated; thumbprint: $thumbprint"
+                        }
+                        else {
+                            $thumbprint = New-GDSLegacySelfSignedCert -SubjectName $SubjectName -ValidDays $CertValidityDays
+                            Write-HostLog "Legacy self-signed SSL certificate generated; thumbprint: $thumbprint"
                         }
                     }
-                }
-
-                if ($candidates.Count -eq 1) {
-                    $CertificateThumbprint = $candidates[0].Thumbprint
-                    Write-HostLog "Auto-detected valid certificate: $($candidates[0].Subject) (Thumbprint: $CertificateThumbprint)"
-                }
-                elseif ($candidates.Count -gt 1) {
-                    Write-Error "Multiple valid certificates found matching hostname '$env:COMPUTERNAME'. Please specify -CertificateThumbprint explicitly."
-                    foreach ($c in $candidates) {
-                        Write-Error "Candidate: Subject=$($c.Subject), Thumbprint=$($c.Thumbprint)"
-                    }
-                    Throw "Ambiguous certificate selection."
-                }
-                else {
-                    Throw "No valid 'Server Authentication' certificate found matching hostname '$env:COMPUTERNAME'. Please specify -CertificateThumbprint or use -ForceNewSSLCert to generate one."
-                }
-            }
-            # ----------------------------------------
-
-            # Find and start the WinRM service.
-            Write-Verbose "Verifying WinRM service."
-            If (!(Get-Service "WinRM")) {
-                Write-ProgressLog "Unable to find the WinRM service."
-                Throw "Unable to find the WinRM service."
-            }
-            ElseIf ((Get-Service "WinRM").Status -ne "Running") {
-                Write-Verbose "Setting WinRM service to start automatically on boot."
-                Set-Service -Name "WinRM" -StartupType Automatic
-                Write-ProgressLog "Set WinRM service to start automatically on boot."
-                Write-Verbose "Starting WinRM service."
-                Start-Service -Name "WinRM" -ErrorAction Stop
-                Write-ProgressLog "Started WinRM service."
-
-            }
-
-            # WinRM should be running; check that we have a PS session config.
-            If (!(Get-PSSessionConfiguration -Verbose:$false) -or (!(Get-ChildItem WSMan:\localhost\Listener))) {
-                If ($SkipNetworkProfileCheck) {
-                    Write-Verbose "Enabling PS Remoting without checking Network profile."
-                    Enable-PSRemoting -SkipNetworkProfileCheck -Force -ErrorAction Stop
-                    Write-ProgressLog "Enabled PS Remoting without checking Network profile."
-                }
-                Else {
-                    Write-Verbose "Enabling PS Remoting."
-                    Enable-PSRemoting -Force -ErrorAction Stop
-                    Write-ProgressLog "Enabled PS Remoting."
-                }
-            }
-            Else {
-                Write-Verbose "PS Remoting is already enabled."
-            }
-
-            # LocalAccountTokenFilterPolicy - Only enable if explicitly requested
-            if ($EnableLocalAccountTokenFilter) {
-                # https://github.com/ansible/ansible/issues/42978
-                $token_path = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System"
-                $token_prop_name = "LocalAccountTokenFilterPolicy"
-                $token_key = Get-Item -Path $token_path
-                $token_value = $token_key.GetValue($token_prop_name, $null)
-                if ($token_value -ne 1) {
-                    Write-Verbose "Setting LocalAccountTokenFilterPolicy to 1"
-                    if ($null -ne $token_value) {
-                        Remove-ItemProperty -Path $token_path -Name $token_prop_name
-                    }
-                    New-ItemProperty -Path $token_path -Name $token_prop_name -Value 1 -PropertyType DWORD > $null
-                }
-            }
-            else {
-                Write-Verbose "Skipping LocalAccountTokenFilterPolicy configuration (default secure behavior)."
-            }
-
-            # Make sure there is a SSL listener.
-            $listeners = Get-ChildItem WSMan:\localhost\Listener
-            If (!($listeners | Where-Object { $_.Keys -like "TRANSPORT=HTTPS" })) {
-
-                $thumbprint = $null
-
-                if ($CertificateThumbprint) {
-                    # Verify certificate exists
-                    $cert = Get-Item "Cert:\LocalMachine\My\$CertificateThumbprint" -ErrorAction SilentlyContinue
-                    if (-not $cert) {
-                        Throw "Certificate with thumbprint $CertificateThumbprint not found in Cert:\LocalMachine\My"
-                    }
-                    $thumbprint = $CertificateThumbprint
-                    Write-HostLog "Using existing certificate with thumbprint: $thumbprint"
-                }
-                else {
-                    # We cannot use New-SelfSignedCertificate on 2012R2 and earlier
-                    $thumbprint = New-GDSLegacySelfSignedCert -SubjectName $SubjectName -ValidDays $CertValidityDays
-                    Write-HostLog "Self-signed SSL certificate generated; thumbprint: $thumbprint"
-                }
-
-                # Create the hashtables of settings to be used.
-                $valueset = @{
-                    Hostname              = $SubjectName
-                    CertificateThumbprint = $thumbprint
-                }
-
-                $selectorset = @{
-                    Transport = "HTTPS"
-                    Address   = "*"
-                }
-
-                Write-Verbose "Enabling SSL listener."
-                New-WSManInstance -ResourceURI 'winrm/config/Listener' -SelectorSet $selectorset -ValueSet $valueset
-                Write-ProgressLog "Enabled SSL listener."
-            }
-            Else {
-                Write-Verbose "SSL listener is already active."
-
-                # Force a new SSL cert on Listener if the $ForceNewSSLCert
-                If ($ForceNewSSLCert) {
-
-                    # We cannot use New-SelfSignedCertificate on 2012R2 and earlier
-                    $thumbprint = New-GDSLegacySelfSignedCert -SubjectName $SubjectName -ValidDays $CertValidityDays
-                    Write-HostLog "Self-signed SSL certificate generated; thumbprint: $thumbprint"
 
                     $valueset = @{
-                        CertificateThumbprint = $thumbprint
                         Hostname              = $SubjectName
+                        CertificateThumbprint = $thumbprint
                     }
 
-                    # Delete the listener for SSL
                     $selectorset = @{
-                        Address   = "*"
                         Transport = "HTTPS"
+                        Address   = "*"
                     }
-                    Remove-WSManInstance -ResourceURI 'winrm/config/Listener' -SelectorSet $selectorset
 
-                    # Add new Listener with new SSL cert
+                    Write-Verbose "Enabling SSL listener."
                     New-WSManInstance -ResourceURI 'winrm/config/Listener' -SelectorSet $selectorset -ValueSet $valueset
+                    Write-ProgressLog "Enabled SSL listener."
                 }
-            }
+                else {
+                    Write-Verbose "SSL listener is already active."
 
-            # Check for basic authentication.
-            $basicAuthSetting = Get-ChildItem WSMan:\localhost\Service\Auth | Where-Object { $_.Name -eq "Basic" }
+                    # Force a new SSL cert on Listener if the $ForceNewSSLCert
+                    if ($ForceNewSSLCert) {
+                        if (Get-Command New-SelfSignedCertificate -ErrorAction SilentlyContinue) {
+                            $thumbprint = New-GDSModernSelfSignedCert -SubjectName $SubjectName -ValidDays $CertValidityDays
+                            Write-HostLog "Modern self-signed SSL certificate generated; thumbprint: $thumbprint"
+                        }
+                        else {
+                            $thumbprint = New-GDSLegacySelfSignedCert -SubjectName $SubjectName -ValidDays $CertValidityDays
+                            Write-HostLog "Legacy self-signed SSL certificate generated; thumbprint: $thumbprint"
+                        }
 
-            If ($EnableBasicAuth) {
-                If (($basicAuthSetting.Value) -eq $false) {
-                    Write-Verbose "Enabling basic auth support."
-                    Set-Item -Path "WSMan:\localhost\Service\Auth\Basic" -Value $true
-                    Write-ProgressLog "Enabled basic auth support."
+                        $valueset = @{
+                            CertificateThumbprint = $thumbprint
+                            Hostname              = $SubjectName
+                        }
+
+                        # Delete the listener for SSL
+                        $selectorset = @{
+                            Address   = "*"
+                            Transport = "HTTPS"
+                        }
+                        Remove-WSManInstance -ResourceURI 'winrm/config/Listener' -SelectorSet $selectorset
+
+                        # Add new Listener with new SSL cert
+                        New-WSManInstance -ResourceURI 'winrm/config/Listener' -SelectorSet $selectorset -ValueSet $valueset
+                    }
                 }
-                Else {
-                    Write-Verbose "Basic auth is already enabled."
-                }
-            }
-            Else {
-                If (($basicAuthSetting.Value) -eq $true) {
-                    Write-Verbose "Disabling basic auth support (Secure Default)."
-                    Set-Item -Path "WSMan:\localhost\Service\Auth\Basic" -Value $false
-                    Write-ProgressLog "Disabled basic auth support."
-                }
-                Else {
-                    Write-Verbose "Basic auth is already disabled."
-                }
-            }
 
-            # If EnableCredSSP if set to true
-            If ($EnableCredSSP) {
-                # Check for CredSSP authentication
-                $credsspAuthSetting = Get-ChildItem WSMan:\localhost\Service\Auth | Where-Object { $_.Name -eq "CredSSP" }
-                If (($credsspAuthSetting.Value) -eq $false) {
-                    Write-Verbose "Enabling CredSSP auth support."
-                    Enable-WSManCredSSP -role server -Force
-                    Write-ProgressLog "Enabled CredSSP auth support."
+                # Check for basic authentication.
+                $basicAuthSetting = Get-ChildItem WSMan:\localhost\Service\Auth | Where-Object { $_.Name -eq "Basic" }
+
+                if ($EnableBasicAuth) {
+                    if (($basicAuthSetting.Value) -eq $false) {
+                        Write-Verbose "Enabling basic auth support."
+                        Set-Item -Path "WSMan:\localhost\Service\Auth\Basic" -Value $true
+                        Write-ProgressLog "Enabled basic auth support."
+                    }
+                    else {
+                        Write-Verbose "Basic auth is already enabled."
+                    }
                 }
-            }
+                else {
+                    if (($basicAuthSetting.Value) -eq $true) {
+                        Write-Verbose "Disabling basic auth support (Secure Default)."
+                        Set-Item -Path "WSMan:\localhost\Service\Auth\Basic" -Value $false
+                        Write-ProgressLog "Disabled basic auth support."
+                    }
+                    else {
+                        Write-Verbose "Basic auth is already disabled."
+                    }
+                }
 
-            # Configure firewall to allow WinRM HTTPS connections.
-            $fwtest1 = netsh advfirewall firewall show rule name="Allow WinRM HTTPS"
-            $fwtest2 = netsh advfirewall firewall show rule name="Allow WinRM HTTPS" profile=any
-            If ($fwtest1.count -lt 5) {
-                Write-Verbose "Adding firewall rule to allow WinRM HTTPS."
-                netsh advfirewall firewall add rule profile=any name="Allow WinRM HTTPS" dir=in localport=5986 protocol=TCP action=allow
-                Write-ProgressLog "Added firewall rule to allow WinRM HTTPS."
-            }
-            ElseIf (($fwtest1.count -ge 5) -and ($fwtest2.count -lt 5)) {
-                Write-Verbose "Updating firewall rule to allow WinRM HTTPS for any profile."
-                netsh advfirewall firewall set rule name="Allow WinRM HTTPS" new profile=any
-                Write-ProgressLog "Updated firewall rule to allow WinRM HTTPS for any profile."
-            }
-            Else {
-                Write-Verbose "Firewall rule already exists to allow WinRM HTTPS."
-            }
+                # If EnableCredSSP if set to true
+                if ($EnableCredSSP) {
+                    # Check for CredSSP authentication
+                    $credsspAuthSetting = Get-ChildItem WSMan:\localhost\Service\Auth | Where-Object { $_.Name -eq "CredSSP" }
+                    if (($credsspAuthSetting.Value) -eq $false) {
+                        Write-Verbose "Enabling CredSSP auth support."
+                        Enable-WSManCredSSP -role server -Force
+                        Write-ProgressLog "Enabled CredSSP auth support."
+                    }
+                }
 
-            $httpsOptions = New-PSSessionOption -SkipCACheck -SkipCNCheck -SkipRevocationCheck
-            $httpsResult = New-PSSession -UseSSL -ComputerName "localhost" -SessionOption $httpsOptions -ErrorVariable httpsError -ErrorAction SilentlyContinue
+                # Configure firewall to allow WinRM HTTPS connections.
+                if (Get-Command New-NetFirewallRule -ErrorAction SilentlyContinue) {
+                    # Modern Windows (Use NetSecurity module)
+                    $fwRule = Get-NetFirewallRule -DisplayName "Allow WinRM HTTPS" -ErrorAction SilentlyContinue
+                    if (-not $fwRule) {
+                        Write-Verbose "Adding firewall rule 'Allow WinRM HTTPS' (NetSecurity)."
+                        New-NetFirewallRule -DisplayName "Allow WinRM HTTPS" -Name "WinRM-HTTPS-Port-5986" -Direction Inbound -LocalPort 5986 -Protocol TCP -Action Allow -Profile Any
+                        Write-ProgressLog "Added firewall rule to allow WinRM HTTPS."
+                    }
+                    else {
+                        Write-Verbose "Firewall rule 'Allow WinRM HTTPS' already exists."
+                    }
+                }
+                else {
+                    # Legacy Windows (Use netsh)
+                    $fwtest1 = netsh advfirewall firewall show rule name="Allow WinRM HTTPS"
+                    $fwtest2 = netsh advfirewall firewall show rule name="Allow WinRM HTTPS" profile=any
+                    if ($fwtest1.count -lt 5) {
+                        Write-Verbose "Adding firewall rule to allow WinRM HTTPS."
+                        netsh advfirewall firewall add rule profile=any name="Allow WinRM HTTPS" dir=in localport=5986 protocol=TCP action=allow
+                        Write-ProgressLog "Added firewall rule to allow WinRM HTTPS."
+                    }
+                    elseif (($fwtest1.count -ge 5) -and ($fwtest2.count -lt 5)) {
+                        Write-Verbose "Updating firewall rule to allow WinRM HTTPS for any profile."
+                        netsh advfirewall firewall set rule name="Allow WinRM HTTPS" new profile=any
+                        Write-ProgressLog "Updated firewall rule to allow WinRM HTTPS for any profile."
+                    }
+                    else {
+                        Write-Verbose "Firewall rule already exists to allow WinRM HTTPS."
+                    }
+                }
 
-            If ($httpsResult) {
-                Write-Verbose "HTTPS: Enabled"
+                $httpsOptions = New-PSSessionOption -SkipCACheck -SkipCNCheck -SkipRevocationCheck
+                $httpsResult = New-PSSession -UseSSL -ComputerName "localhost" -SessionOption $httpsOptions -ErrorVariable httpsError -ErrorAction SilentlyContinue
+
+                if ($httpsResult) {
+                    Write-Verbose "HTTPS: Enabled"
+                    Remove-PSSession $httpsResult
+                }
+                else {
+                    throw "Unable to establish an HTTPS remoting session to localhost."
+                }
+                Write-VerboseLog "PS Remoting has been successfully configured for Ansible."
+
             }
-            Else {
-                Write-ProgressLog "Unable to establish an HTTPS remoting session."
-                Throw "Unable to establish an HTTPS remoting session."
+            catch {
+                Write-Error "Configuration failed: $($_.Exception.Message)"
+                throw $_
             }
-            Write-VerboseLog "PS Remoting has been successfully configured for Ansible."
         }
     }
 
     Process {
-        foreach ($Computer in $ComputerName) {
-            Write-Verbose "Processing target: $Computer"
+        $localTargets = @()
+        $remoteTargets = @()
 
+        foreach ($Computer in $ComputerName) {
             if ($Computer -eq "localhost" -or $Computer -eq $env:COMPUTERNAME) {
-                # Execute locally
-                Write-Verbose "Executing locally on $Computer"
+                $localTargets += $Computer
+            }
+            else {
+                $remoteTargets += $Computer
+            }
+        }
+
+        # 1. Process Local Targets (Sequential)
+        foreach ($Computer in $localTargets) {
+            Write-Verbose "Processing target (Local): $Computer"
+            try {
                 & $ConfigurationScript -SubjectName $SubjectName `
                     -CertValidityDays $CertValidityDays `
                     -SkipNetworkProfileCheck:$SkipNetworkProfileCheck `
@@ -488,37 +493,44 @@ function Enable-GDSWindowsRemoting {
                     -CertificateThumbprint $CertificateThumbprint `
                     -EnableBasicAuth:$EnableBasicAuth `
                     -EnableCredSSP:$EnableCredSSP `
-                    -EnableLocalAccountTokenFilter:$EnableLocalAccountTokenFilter
+                    -EnableLocalAccountTokenFilter:$EnableLocalAccountTokenFilter `
+                    -LogToEventLog:$LogToEventLog
             }
-            else {
-                # Execute remotely
-                Write-Verbose "Executing remotely on $Computer"
-                $InvokeParams = @{
-                    ComputerName = $Computer
-                    ScriptBlock  = $ConfigurationScript
-                    ArgumentList = @(
-                        $SubjectName,
-                        $CertValidityDays,
-                        $SkipNetworkProfileCheck,
-                        $CreateSelfSignedCert,
-                        $ForceNewSSLCert,
-                        $CertificateThumbprint,
-                        $EnableBasicAuth,
-                        $EnableCredSSP,
-                        $EnableLocalAccountTokenFilter
-                    )
-                }
+            catch {
+                Write-Error "Failed to configure local machine: $_"
+            }
+        }
 
-                if ($Credential) {
-                    $InvokeParams.Credential = $Credential
-                }
+        # 2. Process Remote Targets (Batched/Parallel)
+        if ($remoteTargets.Count -gt 0) {
+            Write-Verbose "Processing targets (Remote): $($remoteTargets -join ', ')"
 
-                try {
-                    Invoke-Command @InvokeParams -ErrorAction Stop
-                }
-                catch {
-                    Write-Error "Failed to execute on $Computer : $_"
-                }
+            $InvokeParams = @{
+                ComputerName = $remoteTargets
+                ScriptBlock  = $ConfigurationScript
+                ArgumentList = @(
+                    $SubjectName,
+                    $CertValidityDays,
+                    $SkipNetworkProfileCheck,
+                    $CreateSelfSignedCert,
+                    $ForceNewSSLCert,
+                    $CertificateThumbprint,
+                    $EnableBasicAuth,
+                    $EnableCredSSP,
+                    $EnableLocalAccountTokenFilter,
+                    $LogToEventLog
+                )
+            }
+
+            if ($Credential) {
+                $InvokeParams.Credential = $Credential
+            }
+
+            try {
+                Invoke-Command @InvokeParams -ErrorAction Stop
+            }
+            catch {
+                Write-Error "Failed to execute on remote targets: $_"
             }
         }
     }
