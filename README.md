@@ -59,6 +59,10 @@ See `PowerShell/README.md` for module usage, build instructions, and CI pipeline
   - Docker containerization
   - PowerShell beginners guide
   - Vault secret management
+- `docs/how-to/` – Task-oriented guides:
+  - Configure WinRM over HTTPS (`docs/how-to/Configure-WinRM-HTTPS.md`)
+- `docs/explanation/` – Background and concepts:
+  - Windows Certificates and CSRs (`docs/explanation/Windows-Certificates-and-CSRs.md`)
 - `docs/architecture/` – Architecture documentation for:
   - Database change CI/CD pipelines
   - Liquibase integration patterns
