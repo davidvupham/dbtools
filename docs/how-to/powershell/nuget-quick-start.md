@@ -90,6 +90,7 @@ Publish-NuGetPackage -ModuleName "GDS.Common" -NuGetApiKey $apiKey
 
 ```powershell
 # Build single module
+Import-Module GDS.NuGet
 Build-NuGetPackage -ModuleName "GDS.Common"
 
 # Build all modules

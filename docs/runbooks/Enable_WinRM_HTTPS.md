@@ -31,11 +31,13 @@ Use the `Enable-GDSWindowsRemoting.ps1` script to handle the configuration autom
 
 **Scenario A: Certificate Found in Step 1**
 ```powershell
+Import-Module GDS.Windows
 Enable-GDSWindowsRemoting -ComputerName localhost -CertificateThumbprint "THUMBPRINT_FROM_STEP_1"
 ```
 
 **Scenario B: No Certificate (Generate Self-Signed)**
 ```powershell
+Import-Module GDS.Windows
 Enable-GDSWindowsRemoting -ComputerName localhost -ForceNewSSLCert
 ```
 

@@ -214,6 +214,7 @@ function Get-RedactedContext {
 }
 
 # Usage in logging
+Import-Module GDS.Logging
 $safeContext = Get-RedactedContext -OriginalContext @{
     SqlInstance = "prod-sql-01"
     Database = "CustomerDB"
@@ -249,6 +250,7 @@ Measure logging overhead systematically:
 ```powershell
 # Benchmark logging overhead
 function Measure-LoggingOverhead {
+    Import-Module GDS.Logging
     param(
         [int]$Iterations = 1000,
         [string]$LogLevel = 'Information'
@@ -300,6 +302,7 @@ Measure-LoggingOverhead -Iterations 1000
 $script:logCounter = 0
 
 function Write-SampledLog {
+    Import-Module GDS.Logging
     param($Level, $Message, $Context, [int]$SampleRate = 100)
 
     $script:logCounter++

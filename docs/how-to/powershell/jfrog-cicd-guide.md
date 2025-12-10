@@ -610,8 +610,8 @@ Publish-Module -Path ".\Modules\GDS.Common" `
 ### Using GDS.Common Function
 
 ```powershell
-# Import GDS.Common
-Import-Module GDS.Common
+# Import GDS.NuGet
+Import-Module GDS.NuGet
 
 # Build package first
 Build-NuGetPackage -ModuleName "GDS.Common"
@@ -633,7 +633,7 @@ Publish-NuGetPackage -ModuleName "GDS.Common" `
 
 ```powershell
 # Build all modules
-Import-Module GDS.Common
+Import-Module GDS.NuGet
 $results = Build-AllNuGetPackages -Parallel
 
 # Configure JFrog

@@ -153,7 +153,7 @@ Look for a certificate where:
 If a valid certificate exists, proceed to enable WinRM:
 
 ```powershell
-Import-Module GDS.WindowsOS
+Import-Module GDS.Windows
 Enable-GDSWindowsRemoting  # Auto-detects the certificate
 ```
 
@@ -173,7 +173,7 @@ Import-PfxCertificate -FilePath $pfxPath `
 Then enable WinRM:
 
 ```powershell
-Import-Module GDS.WindowsOS
+Import-Module GDS.Windows
 Enable-GDSWindowsRemoting  # Auto-detects the imported certificate
 ```
 
@@ -182,7 +182,7 @@ Enable-GDSWindowsRemoting  # Auto-detects the imported certificate
 For development or testing, you can generate a self-signed certificate. **Do not use this in production.**
 
 ```powershell
-Import-Module GDS.WindowsOS
+Import-Module GDS.Windows
 Enable-GDSWindowsRemoting -ForceNewSSLCert
 ```
 

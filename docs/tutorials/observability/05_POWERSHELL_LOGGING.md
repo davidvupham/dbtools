@@ -140,7 +140,9 @@ throw "Configuration file not found - cannot start application"
 ### Basic JSON Logger
 
 ```powershell
+```powershell
 function Write-StructuredLog {
+    Import-Module GDS.Logging
     [CmdletBinding()]
     param(
         [Parameter(Mandatory)]

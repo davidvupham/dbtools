@@ -5,8 +5,8 @@
 ### 1. Build a Single Module
 
 ```powershell
-# Import GDS.Common
-Import-Module GDS.Common
+# Import GDS.NuGet
+Import-Module GDS.NuGet
 
 # Build the package
 Build-NuGetPackage -ModuleName "GDS.Common"
@@ -18,6 +18,7 @@ Build-NuGetPackage -ModuleName "GDS.Common"
 
 ```powershell
 # Build all GDS modules at once
+Import-Module GDS.NuGet
 Build-AllNuGetPackages
 
 # Or build in parallel for speed
@@ -31,6 +32,7 @@ Build-AllNuGetPackages -Parallel
 $apiKey = "your-api-key-here"
 
 # Publish
+Import-Module GDS.NuGet
 Publish-NuGetPackage -ModuleName "GDS.Common" -NuGetApiKey $apiKey
 ```
 
@@ -79,8 +81,8 @@ Get-Command -Module GDS.Common
 ### Step 3: Build the Package
 
 ```powershell
-# Import GDS.Common
-Import-Module GDS.Common
+# Import GDS.NuGet
+Import-Module GDS.NuGet
 
 # Build with validation and tests
 Build-NuGetPackage -ModuleName "GDS.Common" -Verbose
@@ -137,8 +139,8 @@ Unregister-PSRepository -Name "TestRepo"
 #### Option A: PowerShell Gallery (Public)
 
 ```powershell
-# Import GDS.Common
-Import-Module GDS.Common
+# Import GDS.NuGet
+Import-Module GDS.NuGet
 
 # Get API key from https://www.powershellgallery.com/
 $apiKey = Read-Host "Enter PowerShell Gallery API Key" -AsSecureString
@@ -163,6 +165,7 @@ $feedUrl = "https://pkgs.dev.azure.com/$organization/_packaging/$feed/nuget/v2"
 $pat = "your-personal-access-token"
 
 # Publish
+Import-Module GDS.NuGet
 Publish-NuGetPackage -ModuleName "GDS.Common" `
     -Repository "AzureArtifacts" `
     -FeedUrl $feedUrl `
@@ -206,12 +209,14 @@ Invoke-ScriptAnalyzer -Path .\ -Recurse
 Invoke-Pester .\tests\
 
 # 3. Build package
+Import-Module GDS.NuGet
 Build-NuGetPackage -ModuleName "GDS.Common"
 
 # 4. Test locally
 # ... (see Step 5 above)
 
 # 5. Publish to gallery
+Import-Module GDS.NuGet
 Publish-NuGetPackage -ModuleName "GDS.Common" -NuGetApiKey $apiKey
 ```
 
@@ -222,6 +227,7 @@ Publish-NuGetPackage -ModuleName "GDS.Common" -NuGetApiKey $apiKey
 Update-ModuleManifest -Path .\GDS.Common.psd1 -ModuleVersion "1.0.1"
 
 # 2. Build and publish quickly
+Import-Module GDS.NuGet
 Build-NuGetPackage -ModuleName "GDS.Common" -SkipTests
 Publish-NuGetPackage -ModuleName "GDS.Common" -NuGetApiKey $apiKey
 ```
@@ -236,6 +242,7 @@ Update-ModuleManifest -Path .\GDS.Common.psd1 -ModuleVersion "1.1.0"
 Invoke-Pester .\tests\ -CodeCoverage
 
 # 3. Build with validation
+Import-Module GDS.NuGet
 Build-NuGetPackage -ModuleName "GDS.Common" -Verbose
 
 # 4. Publish
@@ -261,6 +268,7 @@ Invoke-ScriptAnalyzer -Path .\ -Recurse
 Invoke-Pester .\tests\
 
 # 4. Build and publish
+Import-Module GDS.NuGet
 Build-NuGetPackage -ModuleName "GDS.Common"
 Publish-NuGetPackage -ModuleName "GDS.Common" -NuGetApiKey $apiKey
 ```
@@ -278,6 +286,7 @@ foreach ($module in $modules) {
 }
 
 # 2. Build all in parallel
+Import-Module GDS.NuGet
 Build-AllNuGetPackages -Parallel -Verbose
 
 # 3. Review results
@@ -285,6 +294,7 @@ $results = Build-AllNuGetPackages -Parallel
 $results | Format-Table ModuleName, Version, Success, @{L='Errors';E={$_.Errors.Count}}
 
 # 4. Publish successful builds
+Import-Module GDS.NuGet
 $results | Where-Object { $_.Success } | ForEach-Object {
     Publish-NuGetPackage -ModuleName $_.ModuleName -NuGetApiKey $apiKey
 }
@@ -312,6 +322,7 @@ try {
     }
 
     # 2. Build all
+    Import-Module GDS.NuGet
     $results = Build-AllNuGetPackages -Verbose
 
     # 3. Check for failures
@@ -325,6 +336,7 @@ try {
     if ($ApiKey) {
         foreach ($result in $results) {
             if ($result.Success) {
+                Import-Module GDS.NuGet
                 Publish-NuGetPackage -ModuleName $result.ModuleName -NuGetApiKey $ApiKey
             }
         }
@@ -375,6 +387,7 @@ Compare-Object (Get-ChildItem .\temp\v1 -Recurse) (Get-ChildItem .\temp\v2 -Recu
 $modulesToBuild = @("GDS.Common", "GDS.ActiveDirectory", "GDS.MSSQL.Core")
 
 foreach ($moduleName in $modulesToBuild) {
+    Import-Module GDS.NuGet
     Build-NuGetPackage -ModuleName $moduleName -SkipTests
 }
 ```
@@ -405,6 +418,7 @@ function Update-ModuleVersion {
 
 # Usage
 Update-ModuleVersion -ModulePath .\Modules\GDS.Common -BumpType Patch
+Import-Module GDS.NuGet
 Build-NuGetPackage -ModuleName "GDS.Common"
 ```
 
@@ -430,6 +444,7 @@ $versionSuffix = switch ($Environment) {
 }
 
 # Build all modules
+Import-Module GDS.NuGet
 $results = Build-AllNuGetPackages -SkipTests:($Environment -eq 'Development')
 
 # Display summary
@@ -437,6 +452,7 @@ $results | Format-Table ModuleName, Version, Success
 
 # Publish if production
 if ($Environment -eq 'Production' -and $ApiKey) {
+    Import-Module GDS.NuGet
     $results | Where-Object { $_.Success } | ForEach-Object {
         Publish-NuGetPackage -ModuleName $_.ModuleName -NuGetApiKey $ApiKey
     }
@@ -465,6 +481,7 @@ Get-ChildItem .\Modules\GDS.Common
 Invoke-Pester .\Modules\GDS.Common\tests\ -Output Detailed
 
 # Or skip tests during build
+Import-Module GDS.NuGet
 Build-NuGetPackage -ModuleName "GDS.Common" -SkipTests
 ```
 
@@ -472,10 +489,12 @@ Build-NuGetPackage -ModuleName "GDS.Common" -SkipTests
 
 ```powershell
 # Force rebuild
+Import-Module GDS.NuGet
 Build-NuGetPackage -ModuleName "GDS.Common" -Force
 
 # Or increment version
 Update-ModuleManifest -Path .\Modules\GDS.Common\GDS.Common.psd1 -ModuleVersion "1.0.1"
+Import-Module GDS.NuGet
 Build-NuGetPackage -ModuleName "GDS.Common"
 ```
 
@@ -484,6 +503,7 @@ Build-NuGetPackage -ModuleName "GDS.Common"
 ```powershell
 # Run PowerShell as Administrator, or
 # Use a different output path
+Import-Module GDS.NuGet
 Build-NuGetPackage -ModuleName "GDS.Common" -OutputPath "$env:USERPROFILE\Downloads\packages"
 ```
 
@@ -518,6 +538,7 @@ Invoke-Pester .\Modules\GDS.Common\tests\
 
 # 6. Build package
 Write-Host "`nBuilding package..." -ForegroundColor Yellow
+Import-Module GDS.NuGet
 $buildResult = Build-NuGetPackage -ModuleName "GDS.Common" -Verbose
 
 # 7. Check build result
@@ -556,6 +577,7 @@ if ($publish -eq 'Y') {
         [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($apiKey)
     )
 
+    Import-Module GDS.NuGet
     Publish-NuGetPackage -ModuleName "GDS.Common" -NuGetApiKey $apiKeyPlain
     Write-Host "✓ Published to PowerShell Gallery!" -ForegroundColor Green
 }
@@ -571,12 +593,15 @@ Write-Host "`n✓ Complete end-to-end workflow finished!" -ForegroundColor Green
 
 ```powershell
 # Build single module
+Import-Module GDS.NuGet
 Build-NuGetPackage -ModuleName "GDS.Common"
 
 # Build all modules
+Import-Module GDS.NuGet
 Build-AllNuGetPackages
 
 # Build in parallel
+Import-Module GDS.NuGet
 Build-AllNuGetPackages -Parallel
 
 # Skip tests

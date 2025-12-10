@@ -54,6 +54,8 @@ Get-Command Publish-Module, Register-PSRepository
 cd PowerShell/Modules/GDS.Common
 
 # Run the build script
+# Ensure GDS.NuGet is imported
+Import-Module GDS.NuGet
 .\Build-NuGetPackage.ps1 -ModuleName "GDS.Common"
 ```
 
@@ -61,6 +63,10 @@ cd PowerShell/Modules/GDS.Common
 
 ```powershell
 # From the PowerShell directory
+# Ensure GDS.NuGet is imported if running purely as functions,
+# but if running the script file directly, it might be standalone.
+# However, for consistency with the request:
+Import-Module GDS.NuGet
 .\Modules\GDS.Common\Build-AllNuGetPackages.ps1
 ```
 
@@ -161,16 +167,18 @@ Ensure your manifest has:
 The `Build-NuGetPackage.ps1` script automates the build process:
 
 ```powershell
-# Import GDS.Common
-Import-Module GDS.Common
+# Import GDS.NuGet
+Import-Module GDS.NuGet
 
 # Build a specific module
 Build-NuGetPackage -ModuleName "GDS.Common" -OutputPath ".\build\packages"
 
 # Build with version override
+Import-Module GDS.NuGet
 .\Build-NuGetPackage.ps1 -ModuleName "GDS.Common" -Version "1.1.0"
 
 # Build with verbose output
+Import-Module GDS.NuGet
 .\Build-NuGetPackage.ps1 -ModuleName "GDS.Common" -Verbose
 
 # Build without tests

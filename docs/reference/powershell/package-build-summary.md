@@ -78,20 +78,21 @@ Comprehensive NuGet package building capabilities have been added to GDS.Common 
 ### Build Single Module
 
 ```powershell
-Import-Module GDS.Common
+Import-Module GDS.NuGet
 Build-NuGetPackage -ModuleName "GDS.ActiveDirectory"
 ```
 
 ### Build All Modules
 
 ```powershell
-Import-Module GDS.Common
+Import-Module GDS.NuGet
 Build-AllNuGetPackages -Parallel
 ```
 
 ### Publish to PowerShell Gallery
 
 ```powershell
+Import-Module GDS.NuGet
 $apiKey = "your-api-key"
 Publish-NuGetPackage -ModuleName "GDS.Common" -NuGetApiKey $apiKey
 ```
@@ -158,6 +159,7 @@ PowerShell/
 Import-Module .\Modules\GDS.Common\GDS.Common.psd1 -Force
 
 # 3. Quick build (no tests)
+Import-Module GDS.NuGet
 Build-NuGetPackage -ModuleName "GDS.Common" -SkipTests
 
 # 4. Test package
@@ -177,9 +179,11 @@ Update-ModuleManifest -Path .\Modules\GDS.Common\GDS.Common.psd1 -ReleaseNotes "
 Invoke-Pester .\Modules\GDS.Common\tests\
 
 # 4. Build
+Import-Module GDS.NuGet
 Build-NuGetPackage -ModuleName "GDS.Common" -Verbose
 
 # 5. Publish
+Import-Module GDS.NuGet
 Publish-NuGetPackage -ModuleName "GDS.Common" -NuGetApiKey $apiKey
 ```
 

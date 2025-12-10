@@ -85,6 +85,7 @@ Import-Module GDS.NuGet
 Build-AllNuGetPackages -Parallel
 
 $creds = "${jfrogUser}:${jfrogToken}"
+Import-Module GDS.NuGet
 Publish-NuGetPackage -ModuleName "GDS.Common" -Repository 'JFrog' -NuGetApiKey $creds
 ```
 
