@@ -341,6 +341,14 @@ function Enable-GDSWindowsRemoting {
 
                         if ($selectedCert) {
                             $CertificateThumbprint = $selectedCert.Thumbprint
+
+                            # Extract CN from certificate subject for listener hostname
+                            # This ensures the listener hostname matches the certificate CN
+                            if ($selectedCert.Subject -match 'CN=([^,]+)') {
+                                $SubjectName = $matches[1]
+                                Write-Verbose "Using certificate CN as hostname: $SubjectName"
+                            }
+
                             Write-HostLog "Auto-detected valid certificate: $($selectedCert.Subject)"
                             Write-HostLog "Thumbprint: $CertificateThumbprint (Expires: $($selectedCert.NotAfter))"
 
@@ -388,6 +396,14 @@ function Enable-GDSWindowsRemoting {
                             throw "Certificate with thumbprint $CertificateThumbprint not found in Cert:\LocalMachine\My"
                         }
                         $thumbprint = $CertificateThumbprint
+
+                        # Extract CN from certificate subject for listener hostname
+                        # This ensures the listener hostname matches the certificate CN
+                        if ($cert.Subject -match 'CN=([^,]+)') {
+                            $SubjectName = $matches[1]
+                            Write-Verbose "Using certificate CN as hostname: $SubjectName"
+                        }
+
                         Write-HostLog "Using existing certificate with thumbprint: $thumbprint"
                     }
                     else {
