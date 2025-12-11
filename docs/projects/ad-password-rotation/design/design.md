@@ -40,23 +40,29 @@ graph LR
 
 ## 3. Data Flows
 
-### 3.1 Password Rotation Flow
+### 3.1 Password Rotation Flow (Lazy Rotation)
+
+> [!NOTE]
+> Vault uses **lazy rotation**: passwords are rotated on the next credential request *after* TTL expires, not automatically at TTL expiry.
 
 ```mermaid
 sequenceDiagram
-    participant TTL as TTL Timer
+    participant Agent as Vault Agent
     participant Vault as Vault Server
     participant AD as Active Directory
-    participant Agent as Vault Agent
     participant DB as Database Service
 
-    TTL->>Vault: TTL Expired for Role
-    Vault->>AD: Reset Password (LDAPS)
-    AD-->>Vault: Success + New Password Hash
-    Vault->>Vault: Store New Password (Memory)
     Note over Agent: Polling every 5 minutes
     Agent->>Vault: GET /ad/creds/role
-    Vault-->>Agent: New Password
+    Vault->>Vault: Check: TTL Expired?
+    alt TTL Not Expired
+        Vault-->>Agent: Current Password
+    else TTL Expired (Lazy Rotation)
+        Vault->>AD: Reset Password (LDAPS)
+        AD-->>Vault: Success + New Password
+        Vault->>Vault: Store New Password
+        Vault-->>Agent: New Password
+    end
     Agent->>Agent: Render Config Template
     Agent->>DB: Execute Restart Command
     DB-->>Agent: Service Started
@@ -76,7 +82,7 @@ flowchart TD
     G -->|No| H[Alert: Permission Denied]
     G -->|Yes| I[Store New Password]
     I --> J{Agent Retrieved?}
-    J -->|No| K[Old Password Still Valid]
+    J -->|No| K[Alert: Credential Sync Failed]
     J -->|Yes| L[Service Restarted]
 ```
 

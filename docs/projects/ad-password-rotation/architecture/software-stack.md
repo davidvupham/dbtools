@@ -45,3 +45,63 @@ To support the rotation, several "Glue" scripts are required:
 For a deep dive into the trade-offs between GitHub Actions, Temporal, Airflow, and others, please refer to the [Workflow Engine Comparison](../../explanation/workflow-engine-comparison.md).
 
 ## 4. Proposed CI/CD Process
+
+```mermaid
+flowchart LR
+    subgraph GitHub["GitHub Repository"]
+        TF["Terraform HCL"]
+        Policy["Vault Policies"]
+    end
+
+    subgraph Actions["GitHub Actions"]
+        Plan["terraform plan"]
+        Apply["terraform apply"]
+    end
+
+    subgraph Vault["Vault Cluster"]
+        AD_Engine["AD Secrets Engine"]
+        Roles["Roles & Policies"]
+    end
+
+    TF --> Plan
+    Policy --> Plan
+    Plan -->|"PR Review"| Apply
+    Apply --> AD_Engine
+    Apply --> Roles
+```
+
+### Workflow Steps
+
+1. **Infrastructure as Code**: All Vault configurations (roles, policies, engine settings) stored in Git.
+2. **Pull Request**: Changes require PR with review from Security team.
+3. **Terraform Plan**: GitHub Actions runs `terraform plan` and posts diff as PR comment.
+4. **Apply on Merge**: After approval, merge triggers `terraform apply` to update Vault.
+5. **Audit Trail**: All changes tracked in Git history and Vault audit logs.
+
+### Secret ID Rotation
+
+Secret IDs for AppRoles should be rotated every 30 days:
+
+```bash
+# Automated via GitHub Actions scheduled workflow
+vault write -f auth/approle/role/<role-name>/secret-id
+```
+
+## 5. TLS and Security Configuration
+
+### Certificate Requirements
+
+| Connection | Protocol | Certificate |
+|------------|----------|-------------|
+| Vault → AD | LDAPS (636) | AD CA certificate required |
+| Agent → Vault | HTTPS (8200) | Vault CA certificate |
+| Vault API | HTTPS | Valid TLS certificate |
+
+### Vault Bind Account Permissions
+
+The AD service account used by Vault requires these delegated permissions on the target OU:
+
+- Reset Password
+- Change Password
+- Read userAccountControl
+- Write userAccountControl

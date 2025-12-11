@@ -81,9 +81,75 @@ graph TD
     1. **Keytabs**: If using Kerberos, a scripted process must regenerate the keytab using `ktutil` with the new password fetched from Vault.
     2. **LDAP Bind**: `pg_hba.conf` or `mongod.conf` updated by Vault Agent templates => `SIGHUP` to reload.
 
+### 5. Docker Containers
+
+For containerized workloads, Vault Agent runs as a **sidecar container** or uses **init container** pattern.
+
+```mermaid
+graph LR
+    subgraph Pod["Kubernetes Pod / Docker Compose"]
+        Init["Init Container<br/>(Vault Agent)"]
+        Sidecar["Sidecar Container<br/>(Vault Agent)"]
+        App["Application Container"]
+        Volume["Shared Volume<br/>/vault/secrets"]
+    end
+
+    subgraph External["External Services"]
+        Vault["Vault Server"]
+        AD["Active Directory"]
+    end
+
+    Init -->|"1. Fetch Initial Creds"| Vault
+    Init -->|"2. Write to Volume"| Volume
+    Sidecar -->|"3. Watch for TTL"| Vault
+    Sidecar -->|"4. Update Secrets"| Volume
+    App -->|"5. Read Creds"| Volume
+    App -->|"6. Connect with AD Auth"| AD
+```
+
+#### Deployment Patterns
+
+| Pattern | Use Case | Pros | Cons |
+|---------|----------|------|------|
+| **Init Container** | One-time secret fetch at startup | Simple, no sidecar overhead | No rotation during container lifetime |
+| **Sidecar Container** | Long-running apps needing rotation | Continuous sync, handles TTL | Extra resource overhead |
+| **Vault Agent Injector** | Kubernetes with mutating webhook | Automatic injection, minimal config | Requires Kubernetes |
+
+#### Docker Compose Example
+
+```yaml
+services:
+  vault-agent:
+    image: hashicorp/vault:latest
+    command: ["vault", "agent", "-config=/etc/vault/agent.hcl"]
+    volumes:
+      - vault-secrets:/vault/secrets
+      - ./agent.hcl:/etc/vault/agent.hcl:ro
+    environment:
+      VAULT_ADDR: https://vault.example.com:8200
+
+  app:
+    image: my-app:latest
+    volumes:
+      - vault-secrets:/vault/secrets:ro
+    depends_on:
+      - vault-agent
+
+volumes:
+  vault-secrets:
+```
+
+#### Container-Specific Considerations
+
+1. **No Service Restart**: Containers cannot restart themselves; application must reload credentials from file/env.
+2. **File Watching**: Application should watch `/vault/secrets/creds.json` for changes or poll periodically.
+3. **Graceful Reload**: Implement `SIGHUP` handler or config reload endpoint in application.
+4. **Keytab in Containers**: Mount keytab to shared volume; ensure container user has read access (UID/GID mapping).
+
 ## Security Controls
 
 1. **Least Privilege**: The `svc_vault` account only has permissions on the specific OU containing rotatable accounts.
 2. **Audit Logs**: Vault audit logs capture every access and rotation event.
 3. **Transit Encryption**: All traffic between Vault, AD, and Agents is encrypted (TLS 1.2+).
 4. **Access Control**: Only authorized AppRoles can request credentials for specific AD Roles.
+5. **Container Secrets**: Secrets written to `tmpfs` or ephemeral volumes; never baked into images.

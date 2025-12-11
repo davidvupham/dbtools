@@ -10,6 +10,7 @@ This directory contains all project documentation organized by category.
   - [how-to/ - How-to Guides](#how-to---how-to-guides)
   - [explanation/ - Understanding-Oriented Documentation](#explanation---understanding-oriented-documentation)
   - [runbooks/ - Operational Runbooks](#runbooks---operational-runbooks)
+  - [best-practices/ - Standards & Best Practices](#best-practices---standards--best-practices)
   - [reference/ - Technical Reference](#reference---technical-reference)
   - [development/ - Development Documentation](#development---development-documentation)
 
@@ -66,6 +67,12 @@ Background, context, and architecture:
 Practical procedures for operations:
 
 - [**GMSA**](runbooks/gmsa/README.md)
+
+### [best-practices/](best-practices/README.md) - Standards & Best Practices
+
+Organizational standards and recommended practices:
+
+- [**Technical Project Management**](best-practices/technical-project-management.md) - Project documentation framework
 
 ### [reference/](reference/README.md) - Technical Reference
 

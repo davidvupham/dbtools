@@ -29,6 +29,7 @@ vault write ad/config \
     bindpass="$VAULT_BIND_PASSWORD" \
     url="ldaps://dc01.example.com" \
     userdn="OU=ServiceAccounts,DC=example,DC=com" \
+    certificate=@/path/to/ad-ca.pem \
     insecure_tls=false
 ```
 
@@ -270,6 +271,210 @@ vault write -f ad/rotate-role/mssql-prod-svc
 sqlcmd -S localhost -E -Q "SELECT SYSTEM_USER"
 ```
 
+## Phase 5: GitHub Actions CI/CD
+
+### Step 5.1: Repository Structure
+
+Organize your Vault configuration as code:
+
+```
+vault-config/
+├── .github/
+│   └── workflows/
+│       ├── terraform-plan.yml
+│       ├── terraform-apply.yml
+│       └── rotate-secret-ids.yml
+├── terraform/
+│   ├── main.tf
+│   ├── variables.tf
+│   ├── ad-engine.tf
+│   ├── roles.tf
+│   └── policies.tf
+└── README.md
+```
+
+### Step 5.2: Terraform Plan Workflow (PR Validation)
+
+Create `.github/workflows/terraform-plan.yml`:
+
+```yaml
+name: Terraform Plan
+
+on:
+  pull_request:
+    paths:
+      - 'terraform/**'
+
+env:
+  VAULT_ADDR: ${{ secrets.VAULT_ADDR }}
+  VAULT_TOKEN: ${{ secrets.VAULT_TOKEN }}
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.6.0
+
+      - name: Terraform Init
+        working-directory: terraform
+        run: terraform init
+
+      - name: Terraform Validate
+        working-directory: terraform
+        run: terraform validate
+
+      - name: Terraform Plan
+        id: plan
+        working-directory: terraform
+        run: terraform plan -no-color -out=tfplan
+        continue-on-error: true
+
+      - name: Post Plan to PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const output = `#### Terraform Plan 📋
+            \`\`\`
+            ${{ steps.plan.outputs.stdout }}
+            \`\`\`
+            `;
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output
+            });
+```
+
+### Step 5.3: Terraform Apply Workflow (On Merge)
+
+Create `.github/workflows/terraform-apply.yml`:
+
+```yaml
+name: Terraform Apply
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'terraform/**'
+
+env:
+  VAULT_ADDR: ${{ secrets.VAULT_ADDR }}
+  VAULT_TOKEN: ${{ secrets.VAULT_TOKEN }}
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    environment: production  # Requires manual approval
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.6.0
+
+      - name: Terraform Init
+        working-directory: terraform
+        run: terraform init
+
+      - name: Terraform Apply
+        working-directory: terraform
+        run: terraform apply -auto-approve
+
+      - name: Notify on Success
+        if: success()
+        run: echo "✅ Vault configuration updated successfully"
+
+      - name: Notify on Failure
+        if: failure()
+        run: echo "❌ Vault configuration update failed"
+```
+
+### Step 5.4: Scheduled Secret ID Rotation
+
+Create `.github/workflows/rotate-secret-ids.yml`:
+
+```yaml
+name: Rotate AppRole Secret IDs
+
+on:
+  schedule:
+    - cron: '0 6 1 * *'  # Monthly on the 1st at 6 AM UTC
+  workflow_dispatch:  # Allow manual trigger
+
+env:
+  VAULT_ADDR: ${{ secrets.VAULT_ADDR }}
+  VAULT_TOKEN: ${{ secrets.VAULT_TOKEN }}
+
+jobs:
+  rotate:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        role:
+          - mssql-server-prod
+          - postgres-server-prod
+          - mongodb-server-prod
+    steps:
+      - name: Install Vault CLI
+        run: |
+          curl -fsSL https://releases.hashicorp.com/vault/1.15.0/vault_1.15.0_linux_amd64.zip -o vault.zip
+          unzip vault.zip
+          sudo mv vault /usr/local/bin/
+
+      - name: Generate New Secret ID
+        id: secret
+        run: |
+          vault write -f -format=json auth/approle/role/${{ matrix.role }}/secret-id > secret.json
+          echo "secret_id=$(jq -r '.data.secret_id' secret.json)" >> $GITHUB_OUTPUT
+          rm secret.json
+
+      - name: Store in Vault KV (for distribution)
+        run: |
+          vault kv put secret/approle-secrets/${{ matrix.role }} \
+            secret_id="${{ steps.secret.outputs.secret_id }}" \
+            rotated_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+
+      - name: Log Rotation
+        run: echo "✅ Rotated Secret ID for ${{ matrix.role }}"
+```
+
+### Step 5.5: Configure GitHub Secrets
+
+Add these secrets in your repository settings:
+
+| Secret | Description |
+|--------|-------------|
+| `VAULT_ADDR` | Vault server URL (e.g., `https://vault.example.com:8200`) |
+| `VAULT_TOKEN` | Token with permissions to manage AD engine, roles, policies |
+
+> [!CAUTION]
+> The `VAULT_TOKEN` should be a short-lived token or use GitHub OIDC authentication for production. Never use root tokens.
+
+### Step 5.6: (Optional) GitHub OIDC Authentication
+
+For production, replace static tokens with OIDC:
+
+```yaml
+- name: Authenticate to Vault
+  uses: hashicorp/vault-action@v2
+  with:
+    url: ${{ secrets.VAULT_ADDR }}
+    method: jwt
+    role: github-actions-role
+    jwtGithubAudience: https://github.com/my-org
+```
+
 ## Troubleshooting
 
 | Issue | Cause | Solution |
@@ -278,6 +483,8 @@ sqlcmd -S localhost -E -Q "SELECT SYSTEM_USER"
 | "Access denied" | Insufficient AD permissions | Verify "Reset Password" delegation |
 | "Template rendering failed" | Invalid secret path | Check `vault read ad/creds/<role>` manually |
 | "Service restart failed" | Permission issue | Run script as Administrator/root |
+| "Terraform plan failed" | Missing Vault token | Verify `VAULT_TOKEN` secret is set |
+| "OIDC auth failed" | Trust not configured | Configure Vault JWT auth with GitHub OIDC |
 
 ## Next Steps
 
@@ -287,3 +494,5 @@ After completing this implementation:
 2. Set up regular Secret ID rotation (every 30 days)
 3. Document break-glass procedures for emergency access
 4. Train operations team on troubleshooting steps
+5. Consider migrating to GitHub OIDC for Vault authentication
+

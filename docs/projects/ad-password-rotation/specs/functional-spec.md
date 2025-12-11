@@ -88,7 +88,7 @@ This document defines the functional requirements for automating Active Director
 | ID | Requirement |
 |----|-------------|
 | SEC-001 | All communication over TLS 1.2+ |
-| SEC-002 | Vault bind account has minimal AD permissions (Reset Password only) |
+| SEC-002 | Vault bind account has minimal AD permissions: Reset Password, Change Password, Read/Write userAccountControl |
 | SEC-003 | AppRole credentials rotated every 30 days |
 | SEC-004 | No plaintext passwords in logs or config files |
 

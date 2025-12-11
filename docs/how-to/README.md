@@ -5,5 +5,6 @@ How-to guides are goal-oriented directions to help you solve a specific problem.
 ## Guides
 
 - [**PowerShell**](powershell/README.md) - Guides related to PowerShell modules and tooling.
+- [**Vault**](vault/) - Guides related to HashiCorp Vault secrets management.
+  - [Rotate AD Passwords](vault/rotate-ad-passwords.md) - Procedure for rotating Active Directory passwords using HashiCorp Vault.
 - [**Configure Service Dependencies**](configure-service-dependencies.md) - How to ensure your scripts run before Windows services start.
-- [**Rotate AD Passwords with Vault**](rotate-ad-passwords-with-vault.md) - Procedure for rotating Active Directory passwords using HashiCorp Vault.
