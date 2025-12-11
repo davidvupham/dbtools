@@ -25,6 +25,50 @@ This follows DSC v3 principles (declarative, idempotent) while avoiding WinRM de
 
 ## Functions
 
+### `Enable-GDSWindowsRemoting`
+
+Configures Windows Remote Management (WinRM) with HTTPS for secure remote access. **Idempotent**.
+
+This function configures a Windows host for secure remote management by:
+- Enabling the WinRM service
+- Creating a WinRM HTTPS listener
+- Configuring firewall rules for WinRM HTTPS (port 5986)
+- Optionally enabling Basic Authentication, CredSSP, or Local Account Token Filter
+
+**Syntax:**
+
+```powershell
+Enable-GDSWindowsRemoting [-ComputerName <String[]>] [-Credential <PSCredential>]
+    [-SubjectName <String>] [-CertValidityDays <Int32>] [-SkipNetworkProfileCheck]
+    [-CreateSelfSignedCert] [-ForceNewSSLCert] [-CertificateThumbprint <String>]
+    [-EnableBasicAuth] [-EnableCredSSP] [-EnableLocalAccountTokenFilter] [-LogToEventLog]
+```
+
+**Parameters:**
+
+- `-ComputerName`: Computer names to configure. Defaults to `localhost`.
+- `-Credential`: Credentials for remote execution.
+- `-CertificateThumbprint`: Thumbprint of an existing certificate to use.
+- `-ForceNewSSLCert`: Force creation of a new self-signed certificate.
+- `-EnableBasicAuth`: Enable Basic authentication (disabled by default).
+- `-EnableCredSSP`: Enable CredSSP authentication.
+- `-EnableLocalAccountTokenFilter`: Enable LocalAccountTokenFilterPolicy.
+
+**Examples:**
+
+```powershell
+# Configure with an existing certificate
+Enable-GDSWindowsRemoting -CertificateThumbprint "ABC123..."
+
+# Create a new self-signed certificate
+Enable-GDSWindowsRemoting -ForceNewSSLCert
+
+# Enable Basic Auth and Local Admin access (Legacy/Dev scenarios)
+Enable-GDSWindowsRemoting -ForceNewSSLCert -EnableBasicAuth -EnableLocalAccountTokenFilter
+```
+
+---
+
 ### `Set-GDSWindowsUserRight`
 
 Sets a specific User Right (Privilege) for a given account. **Idempotent**.
