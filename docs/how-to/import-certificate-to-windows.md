@@ -39,6 +39,41 @@ The Windows Certificate Store requires a single file containing both the Public 
 1.  **Double-click** the file to open the Certificate Import Wizard.
 2.  Select **Current User** -> **Personal** store.
 3.  Enter the password when prompted.
+4.  Choose your import options (see below).
+
+#### Import Options
+
+When importing, you'll see these options:
+
+| Option | Description |
+|--------|-------------|
+| **Enable strong private key protection** | Prompts for a password every time the private key is used. Adds security but inconvenient for automation. |
+| **Mark this key as exportable** | Allows exporting the certificate (with private key) back to `.pfx` later. If unchecked, the key is locked to this machine. |
+| **Protect private key using virtualization-based security** | Uses Windows VBS (hardware isolation). Only available on Windows 10/11 with Secure Boot. Very secure but may not work with older apps. |
+| **Include all extended properties** | Preserves metadata like friendly name and key usage. Generally leave checked. |
+
+> [!TIP]
+> **For dev machines**: Check "Mark this key as exportable" (for backups), leave strong protection off.
+> **For production**: Uncheck "exportable" to prevent theft; consider strong protection.
+
+#### Certificate Store Selection
+
+After the import options, you'll choose where to store the certificate:
+
+| Option | Description |
+|--------|-------------|
+| **Automatically select the certificate store based on the type of certificate** | Windows reads the certificate's properties and places it in the appropriate store. Convenient but less control. |
+| **Place all certificates in the following store** | You manually pick the store. Use this for precise control. |
+
+**Common stores:**
+| Store | Path | Use Case |
+|-------|------|----------|
+| **Personal** | `Cert:\CurrentUser\My` | Your certificates with private keys. Used for code signing, SSL client auth. |
+| **Trusted Root Certification Authorities** | `Cert:\CurrentUser\Root` | Root CA certs that establish trust chains. |
+| **Trusted Publishers** | `Cert:\CurrentUser\TrustedPublisher` | Code signing certs you explicitly trust (for `AllSigned` execution policy). |
+
+> [!TIP]
+> **For code signing**: Choose "Place all certificates in the following store" → **Personal**.
 
 ### Scenario B: You have separate files (.crt/.cert, .key, .pass)
 You must **merge** them into a `.pfx` file.
