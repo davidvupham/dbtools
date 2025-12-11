@@ -39,8 +39,7 @@ This function configures a Windows host for secure remote management by:
 
 ```powershell
 Enable-GDSWindowsRemoting [-ComputerName <String[]>] [-Credential <PSCredential>]
-    [-SubjectName <String>] [-CertValidityDays <Int32>] [-SkipNetworkProfileCheck]
-    [-CreateSelfSignedCert] [-ForceNewSSLCert] [-CertificateThumbprint <String>]
+    [-CertificateThumbprint <String>]
     [-EnableBasicAuth] [-EnableCredSSP] [-EnableLocalAccountTokenFilter] [-LogToEventLog]
 ```
 
@@ -49,7 +48,7 @@ Enable-GDSWindowsRemoting [-ComputerName <String[]>] [-Credential <PSCredential>
 - `-ComputerName`: Computer names to configure. Defaults to `localhost`.
 - `-Credential`: Credentials for remote execution.
 - `-CertificateThumbprint`: Thumbprint of an existing certificate to use.
-- `-ForceNewSSLCert`: Force creation of a new self-signed certificate.
+
 - `-EnableBasicAuth`: Enable Basic authentication (disabled by default).
 - `-EnableCredSSP`: Enable CredSSP authentication.
 - `-EnableLocalAccountTokenFilter`: Enable LocalAccountTokenFilterPolicy.
@@ -57,14 +56,14 @@ Enable-GDSWindowsRemoting [-ComputerName <String[]>] [-Credential <PSCredential>
 **Examples:**
 
 ```powershell
-# Configure with an existing certificate
+# Configure with an existing certificate (Thumbprint optional if only one valid cert exists)
 Enable-GDSWindowsRemoting -CertificateThumbprint "ABC123..."
 
-# Create a new self-signed certificate
-Enable-GDSWindowsRemoting -ForceNewSSLCert
+# Configure locally using auto-detected valid certificate
+Enable-GDSWindowsRemoting
 
 # Enable Basic Auth and Local Admin access (Legacy/Dev scenarios)
-Enable-GDSWindowsRemoting -ForceNewSSLCert -EnableBasicAuth -EnableLocalAccountTokenFilter
+Enable-GDSWindowsRemoting -EnableBasicAuth -EnableLocalAccountTokenFilter
 ```
 
 ---

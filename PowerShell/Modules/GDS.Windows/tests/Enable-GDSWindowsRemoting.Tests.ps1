@@ -25,12 +25,7 @@ Describe 'Enable-GDSWindowsRemoting' {
 
         Context 'Parameter Validation' {
 
-            It 'Accepts ForceNewSSLCert switch parameter' {
-                $cmd = Get-Command Enable-GDSWindowsRemoting
-                $param = $cmd.Parameters['ForceNewSSLCert']
-                $param | Should -Not -BeNullOrEmpty
-                $param.ParameterType.Name | Should -Be 'SwitchParameter'
-            }
+
 
             It 'Accepts CertificateThumbprint string parameter' {
                 $cmd = Get-Command Enable-GDSWindowsRemoting
@@ -71,12 +66,6 @@ Describe 'Enable-GDSWindowsRemoting' {
                 $param.ParameterType.Name | Should -Be 'PSCredential'
             }
 
-            It 'Has CertValidityDays default of 1095 (3 years)' {
-                $cmd = Get-Command Enable-GDSWindowsRemoting
-                $param = $cmd.Parameters['CertValidityDays']
-                $param | Should -Not -BeNullOrEmpty
-                # Note: Default values are in the function definition
-            }
         }
 
         Context 'Certificate Auto-Detection Logic' {
@@ -141,6 +130,13 @@ Describe 'Enable-GDSWindowsRemoting' {
                 # Verify the mocks are available
                 $startMock = Get-Command Start-Service
                 $startMock | Should -Not -BeNullOrEmpty
+            }
+            It 'Throws error if no valid certificate found (SRP enforcement)' {
+                # Mock Get-ChildItem to return no certificates
+                Mock Get-ChildItem { return @() } -ParameterFilter { $Path -like 'Cert:*' }
+
+                # We expect an error because no cert is found and none can be generated
+                { Enable-GDSWindowsRemoting -ErrorAction Stop } | Should -Throw
             }
         }
 
@@ -234,46 +230,9 @@ Describe 'Enable-GDSWindowsRemoting' {
                 $funcContent | Should -Match '\$InvokeParams\.Credential'
             }
 
-            It 'SubjectName parameter has no hardcoded default for remote execution compatibility' {
-                # SubjectName should NOT default to $env:COMPUTERNAME at parameter level
-                # because that would use the local machine name when executing remotely
-                $cmd = Get-Command Enable-GDSWindowsRemoting
-                $param = $cmd.Parameters['SubjectName']
-                $param | Should -Not -BeNullOrEmpty
-
-                # Verify parameter type is string
-                $param.ParameterType.Name | Should -Be 'String'
-
-                # Verify defaulting happens inside the script block, not at parameter level
-                $funcContent = (Get-Command Enable-GDSWindowsRemoting).ScriptBlock.ToString()
-                $funcContent | Should -Match 'if \(-not \$SubjectName\)'
-                $funcContent | Should -Match '\$SubjectName = \$env:COMPUTERNAME'
-            }
-
-            It 'Defaults SubjectName to target machine hostname inside configuration script' {
-                # The defaulting logic must be inside the ConfigurationScript block
-                # so it resolves $env:COMPUTERNAME on the target machine, not the caller
-                $funcContent = (Get-Command Enable-GDSWindowsRemoting).ScriptBlock.ToString()
-
-                # This pattern should appear inside the script block, after embedded functions
-                # but before the main configuration logic
-                $funcContent | Should -Match 'Default SubjectName to the target machine'
-            }
         }
 
-        Context 'ForceNewSSLCert Behavior' {
 
-            It 'Generates new self-signed certificate when ForceNewSSLCert is specified' {
-                # Verify the function calls the cert generation function
-                $funcContent = (Get-Command Enable-GDSWindowsRemoting).ScriptBlock.ToString()
-                $funcContent | Should -Match 'New-GDSLegacySelfSignedCert'
-            }
-
-            It 'Removes existing HTTPS listener before creating new one' {
-                $funcContent = (Get-Command Enable-GDSWindowsRemoting).ScriptBlock.ToString()
-                $funcContent | Should -Match 'Remove-WSManInstance'
-            }
-        }
 
         Context 'Security Enforcement' {
 

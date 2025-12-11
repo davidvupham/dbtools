@@ -40,26 +40,10 @@ function Enable-GDSWindowsRemoting {
     .PARAMETER Credential
         The credentials to use when connecting to remote computers.
 
-    .PARAMETER SubjectName
-        The subject name for the self-signed certificate (if generated). Defaults to the target computer's name.
-
-    .PARAMETER CertValidityDays
-        The validity period in days for the self-signed certificate. Defaults to 1095 days (3 years
-
-    .PARAMETER SkipNetworkProfileCheck
-        If specified, enables PS Remoting without checking the network profile (useful for Public networks).
-
-    .PARAMETER CreateSelfSignedCert
-        Deprecated. Use -ForceNewSSLCert to generate a self-signed certificate.
-
-    .PARAMETER ForceNewSSLCert
-        If specified, forces the generation of a new self-signed certificate, even if a listener exists.
-        You must specify either this parameter OR -CertificateThumbprint.
-
     .PARAMETER CertificateThumbprint
-        The thumbprint of an existing certificate to use for the WinRM HTTPS listener.
-        The certificate must exist in the LocalMachine\My store.
-        You must specify either this parameter OR -ForceNewSSLCert.
+        The thumbprint of an existing "Server Authentication" certificate to use for the WinRM HTTPS listener.
+        If not specified, the function attempts to auto-detect a valid certificate matching the hostname.
+        If no valid certificate is found, the function will throw an error.
 
     .PARAMETER EnableBasicAuth
         If specified, enables Basic authentication. Defaults to $false (Basic auth DISABLED).
@@ -75,8 +59,8 @@ function Enable-GDSWindowsRemoting {
         Defaults to $false.
 
     .EXAMPLE
-        # Generate a new self-signed certificate and configure locally (Secure Defaults)
-        Enable-GDSWindowsRemoting -ForceNewSSLCert
+        # Configure locally using an auto-detected valid certificate
+        Enable-GDSWindowsRemoting
 
     .EXAMPLE
         # Use an existing certificate from an internal CA
@@ -88,7 +72,7 @@ function Enable-GDSWindowsRemoting {
 
     .EXAMPLE
         # Enable Basic Auth and Local Admin access (Legacy/Dev scenarios)
-        Enable-GDSWindowsRemoting -ForceNewSSLCert -EnableBasicAuth -EnableLocalAccountTokenFilter
+        Enable-GDSWindowsRemoting -EnableBasicAuth -EnableLocalAccountTokenFilter
     #>
     [CmdletBinding(SupportsShouldProcess = $true)]
     Param (
@@ -98,11 +82,6 @@ function Enable-GDSWindowsRemoting {
 
         [pscredential]$Credential,
 
-        [string]$SubjectName,
-        [int]$CertValidityDays = 1095,
-        [switch]$SkipNetworkProfileCheck,
-        [bool]$CreateSelfSignedCert = $false,
-        [switch]$ForceNewSSLCert,
         [string]$CertificateThumbprint,
         [switch]$EnableBasicAuth = $false,
         [switch]$EnableCredSSP,
@@ -115,11 +94,6 @@ function Enable-GDSWindowsRemoting {
         $ConfigurationScript = {
             [CmdletBinding()]
             Param (
-                $SubjectName,
-                $CertValidityDays,
-                $SkipNetworkProfileCheck,
-                $CreateSelfSignedCert,
-                $ForceNewSSLCert,
                 $CertificateThumbprint,
                 $EnableBasicAuth,
                 $EnableCredSSP,
@@ -128,104 +102,6 @@ function Enable-GDSWindowsRemoting {
             )
 
             # --- Embedded Private Functions ---
-
-            function New-GDSLegacySelfSignedCert {
-                [CmdletBinding()]
-                Param (
-                    [Parameter(Mandatory = $true)]
-                    [string]$SubjectName,
-
-                    [int]$ValidDays = 1095
-                )
-
-                $hostnonFQDN = $env:computerName
-                $hostFQDN = [System.Net.Dns]::GetHostByName(($env:computerName)).Hostname
-                $SignatureAlgorithm = "SHA256"
-
-                $name = New-Object -COM "X509Enrollment.CX500DistinguishedName.1"
-                $name.Encode("CN=$SubjectName", 0)
-
-                $key = New-Object -COM "X509Enrollment.CX509PrivateKey.1"
-                $key.ProviderName = "Microsoft Enhanced RSA and AES Cryptographic Provider"
-                $key.KeySpec = 1
-                $key.Length = 4096
-                $key.SecurityDescriptor = "D:PAI(A;;0xd01f01ff;;;SY)(A;;0xd01f01ff;;;BA)(A;;0x80120089;;;NS)"
-                $key.MachineContext = 1
-                $key.Create()
-
-                $serverauthoid = New-Object -COM "X509Enrollment.CObjectId.1"
-                $serverauthoid.InitializeFromValue("1.3.6.1.5.5.7.3.1")
-                $ekuoids = New-Object -COM "X509Enrollment.CObjectIds.1"
-                $ekuoids.Add($serverauthoid)
-                $ekuext = New-Object -COM "X509Enrollment.CX509ExtensionEnhancedKeyUsage.1"
-                $ekuext.InitializeEncode($ekuoids)
-
-                $cert = New-Object -COM "X509Enrollment.CX509CertificateRequestCertificate.1"
-                $cert.InitializeFromPrivateKey(2, $key, "")
-                $cert.Subject = $name
-                $cert.Issuer = $cert.Subject
-                $cert.NotBefore = (Get-Date).AddDays(-1)
-                $cert.NotAfter = $cert.NotBefore.AddDays($ValidDays)
-
-                $SigOID = New-Object -ComObject X509Enrollment.CObjectId
-                $SigOID.InitializeFromValue(([Security.Cryptography.Oid]$SignatureAlgorithm).Value)
-
-                [string[]] $AlternativeName += $hostnonFQDN
-                $AlternativeName += $hostFQDN
-                $IAlternativeNames = New-Object -ComObject X509Enrollment.CAlternativeNames
-
-                foreach ($AN in $AlternativeName) {
-                    $AltName = New-Object -ComObject X509Enrollment.CAlternativeName
-                    $AltName.InitializeFromString(0x3, $AN)
-                    $IAlternativeNames.Add($AltName)
-                }
-
-                $SubjectAlternativeName = New-Object -ComObject X509Enrollment.CX509ExtensionAlternativeNames
-                $SubjectAlternativeName.InitializeEncode($IAlternativeNames)
-
-                [String[]]$KeyUsage = ("DigitalSignature", "KeyEncipherment")
-                $KeyUsageObj = New-Object -ComObject X509Enrollment.CX509ExtensionKeyUsage
-                $KeyUsageObj.InitializeEncode([int][Security.Cryptography.X509Certificates.X509KeyUsageFlags]($KeyUsage))
-                $KeyUsageObj.Critical = $true
-
-                $cert.X509Extensions.Add($KeyUsageObj)
-                $cert.X509Extensions.Add($ekuext)
-                $cert.SignatureInformation.HashAlgorithm = $SigOID
-                $CERT.X509Extensions.Add($SubjectAlternativeName)
-                $cert.Encode()
-
-                $enrollment = New-Object -COM "X509Enrollment.CX509Enrollment.1"
-                $enrollment.InitializeFromRequest($cert)
-                $certdata = $enrollment.CreateRequest(0)
-                $enrollment.InstallResponse(2, $certdata, 0, "")
-
-                # extract/return the thumbprint from the generated cert
-                $parsed_cert = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2
-                $parsed_cert.Import([System.Text.Encoding]::UTF8.GetBytes($certdata))
-
-                return $parsed_cert.Thumbprint
-            }
-
-            function New-GDSModernSelfSignedCert {
-                [CmdletBinding()]
-                Param (
-                    [Parameter(Mandatory = $true)]
-                    [string]$SubjectName,
-
-                    [int]$ValidDays = 1095
-                )
-
-                $certParam = @{
-                    DnsName           = $SubjectName
-                    CertStoreLocation = "Cert:\LocalMachine\My"
-                    NotAfter          = (Get-Date).AddDays($ValidDays)
-                    FriendlyName      = "GDSWinRM-SelfSigned"
-                    TextExtension     = @("2.5.29.37={text}1.3.6.1.5.5.7.3.1") # Server Auth EKU
-                }
-
-                $cert = New-SelfSignedCertificate @certParam
-                return $cert.Thumbprint
-            }
 
             function Get-GDSServerAuthCertificates {
                 [CmdletBinding()]
@@ -306,9 +182,8 @@ function Enable-GDSWindowsRemoting {
             }
 
             # Default SubjectName to the target machine's hostname if not specified
-            if (-not $SubjectName) {
-                $SubjectName = $env:COMPUTERNAME
-            }
+            # Default SubjectName to the target machine's hostname if not specified
+            $SubjectName = $env:COMPUTERNAME
 
             $ErrorActionPreference = "Stop"
 
@@ -331,7 +206,8 @@ function Enable-GDSWindowsRemoting {
                 }
 
                 # --- Certificate Auto-Detection Logic ---
-                if (-not $CertificateThumbprint -and -not $ForceNewSSLCert) {
+                # --- Certificate Auto-Detection Logic ---
+                if (-not $CertificateThumbprint) {
                     Write-Verbose "No certificate specified. Attempting to auto-detect a valid Server Authentication certificate..."
 
                     $candidates = Get-GDSServerAuthCertificates -ComputerName $env:COMPUTERNAME
@@ -359,10 +235,10 @@ function Enable-GDSWindowsRemoting {
                     }
 
                     if (-not $CertificateThumbprint) {
-                        Write-Warning "No valid 'Server Authentication' certificate found matching hostname '$env:COMPUTERNAME'. A new self-signed certificate will be generated."
-                        $ForceNewSSLCert = $true
+                        throw "No valid 'Server Authentication' certificate found matching hostname '$env:COMPUTERNAME'. Please ensure a valid certificate exists or specify one using -CertificateThumbprint."
                     }
                 }
+                # ----------------------------------------
                 # ----------------------------------------
 
                 # Find and start the WinRM service.
@@ -387,35 +263,8 @@ function Enable-GDSWindowsRemoting {
                 $listeners = Get-ChildItem WSMan:\localhost\Listener
                 if (-not ($listeners | Where-Object { $_.Keys -like "TRANSPORT=HTTPS" })) {
 
-                    $thumbprint = $null
-
-                    if ($CertificateThumbprint) {
-                        # Verify certificate exists
-                        $cert = Get-Item "Cert:\LocalMachine\My\$CertificateThumbprint" -ErrorAction SilentlyContinue
-                        if (-not $cert) {
-                            throw "Certificate with thumbprint $CertificateThumbprint not found in Cert:\LocalMachine\My"
-                        }
-                        $thumbprint = $CertificateThumbprint
-
-                        # Extract CN from certificate subject for listener hostname
-                        # This ensures the listener hostname matches the certificate CN
-                        if ($cert.Subject -match 'CN=([^,]+)') {
-                            $SubjectName = $matches[1]
-                            Write-Verbose "Using certificate CN as hostname: $SubjectName"
-                        }
-
-                        Write-HostLog "Using existing certificate with thumbprint: $thumbprint"
-                    }
                     else {
-                        # Generate Self-Signed Cert
-                        if (Get-Command New-SelfSignedCertificate -ErrorAction SilentlyContinue) {
-                            $thumbprint = New-GDSModernSelfSignedCert -SubjectName $SubjectName -ValidDays $CertValidityDays
-                            Write-HostLog "Modern self-signed SSL certificate generated; thumbprint: $thumbprint"
-                        }
-                        else {
-                            $thumbprint = New-GDSLegacySelfSignedCert -SubjectName $SubjectName -ValidDays $CertValidityDays
-                            Write-HostLog "Legacy self-signed SSL certificate generated; thumbprint: $thumbprint"
-                        }
+                        throw "Failed to find or generate a valid certificate for the HTTPS listener."
                     }
 
                     $valueset = @{
@@ -434,33 +283,6 @@ function Enable-GDSWindowsRemoting {
                 }
                 else {
                     Write-Verbose "SSL listener is already active."
-
-                    # Force a new SSL cert on Listener if the $ForceNewSSLCert
-                    if ($ForceNewSSLCert) {
-                        if (Get-Command New-SelfSignedCertificate -ErrorAction SilentlyContinue) {
-                            $thumbprint = New-GDSModernSelfSignedCert -SubjectName $SubjectName -ValidDays $CertValidityDays
-                            Write-HostLog "Modern self-signed SSL certificate generated; thumbprint: $thumbprint"
-                        }
-                        else {
-                            $thumbprint = New-GDSLegacySelfSignedCert -SubjectName $SubjectName -ValidDays $CertValidityDays
-                            Write-HostLog "Legacy self-signed SSL certificate generated; thumbprint: $thumbprint"
-                        }
-
-                        $valueset = @{
-                            CertificateThumbprint = $thumbprint
-                            Hostname              = $SubjectName
-                        }
-
-                        # Delete the listener for SSL
-                        $selectorset = @{
-                            Address   = "*"
-                            Transport = "HTTPS"
-                        }
-                        Remove-WSManInstance -ResourceURI 'winrm/config/Listener' -SelectorSet $selectorset
-
-                        # Add new Listener with new SSL cert
-                        New-WSManInstance -ResourceURI 'winrm/config/Listener' -SelectorSet $selectorset -ValueSet $valueset
-                    }
                 }
 
                 # Check for basic authentication.
@@ -575,12 +397,7 @@ function Enable-GDSWindowsRemoting {
         foreach ($Computer in $localTargets) {
             Write-Verbose "Processing target (Local): $Computer"
             try {
-                & $ConfigurationScript -SubjectName $SubjectName `
-                    -CertValidityDays $CertValidityDays `
-                    -SkipNetworkProfileCheck:$SkipNetworkProfileCheck `
-                    -CreateSelfSignedCert:$CreateSelfSignedCert `
-                    -ForceNewSSLCert:$ForceNewSSLCert `
-                    -CertificateThumbprint $CertificateThumbprint `
+                & $ConfigurationScript -CertificateThumbprint $CertificateThumbprint `
                     -EnableBasicAuth:$EnableBasicAuth `
                     -EnableCredSSP:$EnableCredSSP `
                     -EnableLocalAccountTokenFilter:$EnableLocalAccountTokenFilter `
@@ -599,11 +416,6 @@ function Enable-GDSWindowsRemoting {
                 ComputerName = $remoteTargets
                 ScriptBlock  = $ConfigurationScript
                 ArgumentList = @(
-                    $SubjectName,
-                    $CertValidityDays,
-                    $SkipNetworkProfileCheck,
-                    $CreateSelfSignedCert,
-                    $ForceNewSSLCert,
                     $CertificateThumbprint,
                     $EnableBasicAuth,
                     $EnableCredSSP,
