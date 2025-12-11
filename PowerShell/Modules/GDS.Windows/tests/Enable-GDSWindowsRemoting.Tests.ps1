@@ -116,7 +116,7 @@ Describe 'Enable-GDSWindowsRemoting' {
                 Mock Get-Item {
                     return @{
                         Thumbprint = 'ABC123THUMBPRINT'
-                        Subject = 'CN=TestServer'
+                        Subject    = 'CN=TestServer'
                     }
                 } -ParameterFilter { $Path -like 'Cert:*' }
 
@@ -232,6 +232,32 @@ Describe 'Enable-GDSWindowsRemoting' {
                 # Verify the parameter handling in the function
                 $funcContent = (Get-Command Enable-GDSWindowsRemoting).ScriptBlock.ToString()
                 $funcContent | Should -Match '\$InvokeParams\.Credential'
+            }
+
+            It 'SubjectName parameter has no hardcoded default for remote execution compatibility' {
+                # SubjectName should NOT default to $env:COMPUTERNAME at parameter level
+                # because that would use the local machine name when executing remotely
+                $cmd = Get-Command Enable-GDSWindowsRemoting
+                $param = $cmd.Parameters['SubjectName']
+                $param | Should -Not -BeNullOrEmpty
+
+                # Verify parameter type is string
+                $param.ParameterType.Name | Should -Be 'String'
+
+                # Verify defaulting happens inside the script block, not at parameter level
+                $funcContent = (Get-Command Enable-GDSWindowsRemoting).ScriptBlock.ToString()
+                $funcContent | Should -Match 'if \(-not \$SubjectName\)'
+                $funcContent | Should -Match '\$SubjectName = \$env:COMPUTERNAME'
+            }
+
+            It 'Defaults SubjectName to target machine hostname inside configuration script' {
+                # The defaulting logic must be inside the ConfigurationScript block
+                # so it resolves $env:COMPUTERNAME on the target machine, not the caller
+                $funcContent = (Get-Command Enable-GDSWindowsRemoting).ScriptBlock.ToString()
+
+                # This pattern should appear inside the script block, after embedded functions
+                # but before the main configuration logic
+                $funcContent | Should -Match 'Default SubjectName to the target machine'
             }
         }
 

@@ -1,21 +1,37 @@
 function Enable-GDSWindowsRemoting {
     <#
     .SYNOPSIS
-        Configures Windows Remote Management (WinRM) for Ansible connectivity.
+        Configures Windows Remote Management (WinRM) with HTTPS for secure remote access.
 
     .DESCRIPTION
-        This function configures a Windows host for Ansible management by:
+        This function configures a Windows host for secure remote management by:
         - Enabling the WinRM service.
         - Creating a WinRM HTTPS listener.
         - Configuring firewall rules for WinRM HTTPS (port 5986).
-        - Configuring authentication methods (Basic, CredSSP).
+        - Configuring authentication methods.
+
+        Use cases include PowerShell remoting, Ansible, SCCM, and other management tools.
 
         It supports both local execution and remote execution on a list of servers via Invoke-Command.
 
-        SECURITY NOTE:
-        - HTTPS is enforced. HTTP (Port 5985) is NOT supported.
-        - Basic Authentication is DISABLED by default.
-        - LocalAccountTokenFilterPolicy is NOT enabled by default.
+        BEHAVIOR:
+
+        WinRM Service:
+        - If WinRM is already running: No changes to service or authentication settings.
+        - If WinRM is not running: Service is started, set to automatic, and secure defaults applied.
+
+        Listeners (always ensured, independent of WinRM state):
+        - HTTPS listener on port 5986 is always ensured (created if missing).
+        - Existing HTTP listeners are never modified or removed.
+
+        Firewall (always ensured, independent of WinRM state):
+        - Firewall rule for port 5986 is always ensured (added if missing).
+
+        Authentication (only applied on fresh WinRM setup):
+        - Kerberos and Negotiate: Enabled by default (no action needed).
+        - Basic: DISABLED by default. Use -EnableBasicAuth to enable.
+        - CredSSP: Disabled. Use -EnableCredSSP to enable.
+        - LocalAccountTokenFilterPolicy: Not set. Use -EnableLocalAccountTokenFilter to enable.
 
     .PARAMETER ComputerName
         An array of computer names to configure. Defaults to 'localhost'.
@@ -25,10 +41,10 @@ function Enable-GDSWindowsRemoting {
         The credentials to use when connecting to remote computers.
 
     .PARAMETER SubjectName
-        The subject name for the self-signed certificate (if generated). Defaults to the computer name.
+        The subject name for the self-signed certificate (if generated). Defaults to the target computer's name.
 
     .PARAMETER CertValidityDays
-        The validity period in days for the self-signed certificate. Defaults to 1095 days (3 years).
+        The validity period in days for the self-signed certificate. Defaults to 1095 days (3 years
 
     .PARAMETER SkipNetworkProfileCheck
         If specified, enables PS Remoting without checking the network profile (useful for Public networks).
@@ -82,7 +98,7 @@ function Enable-GDSWindowsRemoting {
 
         [pscredential]$Credential,
 
-        [string]$SubjectName = $env:COMPUTERNAME,
+        [string]$SubjectName,
         [int]$CertValidityDays = 1095,
         [switch]$SkipNetworkProfileCheck,
         [bool]$CreateSelfSignedCert = $false,
@@ -289,6 +305,11 @@ function Enable-GDSWindowsRemoting {
                 Write-ProgressLog $Message
             }
 
+            # Default SubjectName to the target machine's hostname if not specified
+            if (-not $SubjectName) {
+                $SubjectName = $env:COMPUTERNAME
+            }
+
             $ErrorActionPreference = "Stop"
 
             try {
@@ -343,7 +364,10 @@ function Enable-GDSWindowsRemoting {
                     throw "Unable to find the WinRM service."
                 }
 
-                if ($winrmService.Status -ne "Running") {
+                # Track if WinRM was already configured (for idempotent auth behavior)
+                $winrmWasAlreadyRunning = ($winrmService.Status -eq "Running")
+
+                if (-not $winrmWasAlreadyRunning) {
                     Write-Verbose "Setting WinRM service to start automatically on boot."
                     Set-Service -Name "WinRM" -StartupType Automatic
                     Write-Verbose "Starting WinRM service."
@@ -424,9 +448,12 @@ function Enable-GDSWindowsRemoting {
                 }
 
                 # Check for basic authentication.
+                # Only enforce secure defaults if WinRM was not already running (fresh setup).
+                # If WinRM was already configured, only change auth if explicitly requested.
                 $basicAuthSetting = Get-ChildItem WSMan:\localhost\Service\Auth | Where-Object { $_.Name -eq "Basic" }
 
                 if ($EnableBasicAuth) {
+                    # Explicitly requested to enable Basic auth
                     if (($basicAuthSetting.Value) -eq $false) {
                         Write-Verbose "Enabling basic auth support."
                         Set-Item -Path "WSMan:\localhost\Service\Auth\Basic" -Value $true
@@ -436,15 +463,20 @@ function Enable-GDSWindowsRemoting {
                         Write-Verbose "Basic auth is already enabled."
                     }
                 }
-                else {
+                elseif (-not $winrmWasAlreadyRunning) {
+                    # Fresh WinRM setup: enforce secure default (disable Basic auth)
                     if (($basicAuthSetting.Value) -eq $true) {
-                        Write-Verbose "Disabling basic auth support (Secure Default)."
+                        Write-Verbose "Disabling basic auth support (Secure Default for fresh setup)."
                         Set-Item -Path "WSMan:\localhost\Service\Auth\Basic" -Value $false
                         Write-ProgressLog "Disabled basic auth support."
                     }
                     else {
                         Write-Verbose "Basic auth is already disabled."
                     }
+                }
+                else {
+                    # WinRM was already running: leave existing auth settings alone (idempotent)
+                    Write-Verbose "WinRM was already configured. Leaving Basic auth setting unchanged (current: $($basicAuthSetting.Value))."
                 }
 
                 # If EnableCredSSP if set to true

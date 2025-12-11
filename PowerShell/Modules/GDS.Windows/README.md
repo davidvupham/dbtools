@@ -87,9 +87,32 @@ Get-GDSUserRightPolicyState -UserRight 'SeServiceLogonRight'
 ## Testing
 
 ```powershell
-# Install Pester
+# Install Pester (if not already installed)
 Install-Module Pester -Force -Scope CurrentUser
-
-# Run tests
-Invoke-Pester -Path ./PowerShell/Modules/GDS.Windows/tests/
 ```
+
+### Run All Module Tests
+
+```powershell
+Invoke-Pester -Path ./Powershell/Modules/GDS.Windows/tests/ -Output Detailed
+```
+
+### Test a Specific Function
+
+```powershell
+# Test Enable-GDSWindowsRemoting
+Invoke-Pester -Path ./Powershell/Modules/GDS.Windows/tests/Enable-GDSWindowsRemoting.Tests.ps1 -Output Detailed
+
+# Test Set-GDSWindowsUserRight
+Invoke-Pester -Path ./Powershell/Modules/GDS.Windows/tests/Set-GDSWindowsUserRight.Tests.ps1 -Output Detailed
+```
+
+### Run Tests with Code Coverage
+
+Code coverage measures what percentage of your code is executed during tests. It helps identify untested code paths.
+
+```powershell
+Invoke-Pester -Path ./Powershell/Modules/GDS.Windows/tests/ -CodeCoverage ./Powershell/Modules/GDS.Windows/Public/*.ps1
+```
+
+The output shows which lines were hit, missed, and the overall coverage percentage for each file.
