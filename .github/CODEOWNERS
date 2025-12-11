@@ -1,0 +1,6 @@
+# CODEOWNERS for documentation governance
+# Require reviews from owners on project docs changes
+
+/docs/projects/** @davidvupham
+/docs/best-practices/** @davidvupham
+/docs/templates/** @davidvupham

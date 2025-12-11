@@ -365,7 +365,7 @@ docs/projects/<project-name>/
 
 ## Document Templates
 
-### Project Plan Template
+### Project Plan Template {#project-plan-template}
 
 ```markdown
 # Project Plan: [Project Name]
@@ -443,7 +443,18 @@ docs/projects/<project-name>/
 
 ---
 
-### Decision Log Template
+### Additional Templates
+
+- [Project Charter](../templates/project-charter.md)
+- [RACI Matrix](../templates/raci-matrix.md)
+- [Communications Plan](../templates/communications-plan.md)
+- [RAID Log](../templates/raid-log.md)
+- [Decision Log](../templates/decision-log.md)
+- [Status Report](../templates/status-report.md)
+- [Change Request](../templates/change-request.md)
+- [Release Readiness Checklist](../templates/release-readiness-checklist.md)
+
+### Decision Log Template {#decision-log-template}
 
 ```markdown
 # Decision Log: [Project Name]
@@ -512,7 +523,7 @@ Copy this template for new decisions:
 
 ---
 
-### Functional Specification Template
+### Functional Specification Template {#functional-specification-template}
 
 ```markdown
 # Functional Specification: [Feature/Project Name]
@@ -583,7 +594,7 @@ Copy this template for new decisions:
 
 ---
 
-### Technical Architecture Template
+### Technical Architecture Template {#technical-architecture-template}
 
 ```markdown
 # Technical Architecture: [Project Name]
@@ -614,11 +625,13 @@ graph TB
 ## 3. Component Descriptions
 
 ### Component 1
+
 - **Purpose:** [What it does]
 - **Technology:** [Stack/tools used]
 - **Interfaces:** [APIs, protocols]
 
 ### Component 2
+
 - **Purpose:** [What it does]
 - **Technology:** [Stack/tools used]
 - **Interfaces:** [APIs, protocols]
@@ -649,11 +662,12 @@ sequenceDiagram
 - **Redundancy:** [Approach]
 - **Failover:** [Mechanism]
 - **Recovery:** [RTO/RPO targets]
+
 ```
 
 ---
 
-### Test Plan Template
+### Test Plan Template {#test-plan-template}
 
 ```markdown
 # Test Plan: [Project Name]
@@ -722,7 +736,7 @@ sequenceDiagram
 
 ---
 
-### Runbook Template
+### Runbook Template {#runbook-template}
 
 ```markdown
 # Runbook: [System/Project Name]
@@ -860,3 +874,111 @@ See [AD Password Rotation Project](../projects/ad-password-rotation/README.md) f
 - [Project Management Institute (PMI) Standards](https://www.pmi.org/)
 - [Architecture Decision Records](https://adr.github.io/)
 - [Markdown Guide](https://www.markdownguide.org/)
+
+---
+
+## Delivery Models
+
+Choose a delivery model that matches team size, release cadence, and compliance needs. Use the guidance below to decide and tailor ceremonies and artifacts accordingly.
+
+### Scrum (Iterations)
+
+- **Best for:** Feature delivery with regular increments, cross-functional teams.
+- **Cadence:** Fixed-length sprints (1–2 weeks), Sprint Planning/Review/Retro, Daily Standups.
+- **Artifacts:** Product Backlog, Sprint Backlog, Definition of Done, Increment.
+- **Pros:** Predictable cadence, clear goals, built-in inspection/adaptation.
+- **Cons:** Timeboxing overhead; can feel heavy for ops/maintenance work.
+
+### Kanban (Flow)
+
+- **Best for:** Ops/maintenance, platform teams, continuous flow work.
+- **Cadence:** Continuous; pull-based; WIP limits; service classes.
+- **Artifacts:** Board, WIP policies, service-level expectations (SLEs).
+- **Pros:** Low overhead, great for unplanned work and variability.
+- **Cons:** Less emphasis on timeboxed planning/milestones unless added explicitly.
+
+### Hybrid (ScrumBan / SDLC + Agile)
+
+- **Best for:** Projects with formal gates (security, change advisory) but iterative build.
+- **Cadence:** Sprints for build/test; stage gates for design, security, and go-live.
+- **Artifacts:** ADRs, gated reviews (security/design), test plan before build, release checklist.
+- **Pros:** Balances governance and agility; fits infra-heavy or regulated environments.
+- **Cons:** More process to manage; requires clear accountability for gates.
+
+### Selection Guidance
+
+- **Greenfield feature work:** Prefer Scrum; add Kanban lane for interrupts.
+- **Platform/ops and Ansible/Powershell automation:** Prefer Kanban; add monthly planning/milestones.
+- **Regulated changes (DB, security, vault, AWX):** Prefer Hybrid with formal gates and change control.
+- **Small team or solo:** Kanban with lightweight weekly goals; avoid ceremony overhead.
+
+> Decision tip: Document the chosen model in the Project Plan and reference the cadence, ceremonies, and required artifacts. If Hybrid, list the required gates and approvers.
+
+---
+
+## Tooling Alignment
+
+Standardize on a single source of truth for work tracking and documentation.
+
+### Preferred Setup for This Repo
+
+- **Work tracking:** GitHub Issues/Projects as default.
+- **Documentation:** This repository under `docs/projects/<project>/`.
+- **Version control & approvals:** Git + Pull Requests with required reviewers.
+- **CI/CD & automation:** GitHub Actions (where applicable), Ansible/AWX for infra.
+
+### Jira vs GitHub Comparison
+
+| Area | Jira (Cloud/Data Center) | GitHub (Issues/Projects/PRs) |
+|------|---------------------------|------------------------------|
+| **Workflow** | Highly customizable workflows, states, transitions, validators | Simple states; automation via actions/bots; fewer workflow guards |
+| **Hierarchy** | Projects → Epics → Stories/Tasks → Sub-tasks | Projects/Iterations → Issues (labels for Epics) → Checklist/sub-issues |
+| **Planning** | Agile boards, advanced roadmaps (portfolio), story points | Projects v2 boards, iterations, custom fields; lightweight roadmaps |
+| **Reporting** | Burndown/up, velocity, SLA, custom reports | Basic charts; custom via queries/Insights; PR-based metrics |
+| **Governance** | Fine-grained approvals, change control plugins | Use PR reviews, CODEOWNERS, branch protection, change manifests |
+| **Integrations** | Enterprise plugins (CMDB, ITSM, compliance) | Native dev-centric integrations; Actions/Apps for extensibility |
+| **Best Fit** | Large programs, formal workflows, ITSM/enterprise governance | Developer-first teams, infra-as-code, code-centric collaboration |
+
+### Recommendation
+
+- Use **GitHub** by default for most dbtools projects to keep work tracking close to code, improve PR-driven governance, and simplify automation.
+- Use **Jira** where organizational mandates require enterprise workflows, ITSM alignment, or portfolio rollups. If Jira is used, link issues to GitHub PRs and documents, and keep requirements/design content in GitHub docs to avoid duplication.
+
+### Minimum Tooling Practices
+
+- Maintain a single authoritative backlog (GitHub Issues or Jira).
+- Link PRs to issues; require reviews via `CODEOWNERS` and branch protection.
+- Track ADRs in `docs/projects/<project>/management/decision-log.md` and reference issue IDs.
+- Keep statuses consistent: map tool states to the Status Definitions in this document.
+
+---
+
+## Security & Compliance
+
+Embed security and compliance gates throughout the lifecycle.
+
+### Controls and Reviews
+
+- **Least privilege and secrets handling:** Use Vault; do not store secrets in code or config. Rotate regularly; audit usage.
+- **Threat modeling:** Perform during design; record in `technical-architecture.md` under Security Architecture.
+- **Secure build and deploy:** Use signed artifacts; restrict runner permissions; review Actions/AWX job scopes.
+- **Change control:** For production-impacting changes, record change requests and approvals; link to PRs.
+- **Audit logging:** Enable and document logs for access, changes, and deployments.
+
+### Required Artifacts
+
+- Security requirements in Functional Spec (SEC-XXX items).
+- Security review sign-off recorded in Project Plan and Test Plan results.
+- Release Readiness Checklist including backups, rollback plan, monitoring alerts.
+
+### Gates in Hybrid Delivery
+
+- Design Review (Tech + Security), Test Plan approval before build, Pre-Go-Live CAB approval, Post-deploy verification.
+
+### Windows/PowerShell/Ansible Notes
+
+- Use signed PowerShell scripts where feasible; document execution policies.
+- Parameterize Ansible playbooks; store secrets in Vault; validate with `ansible-lint`.
+- Document Windows service accounts rights and rotation processes in runbooks.
+
+> Compliance tip: Keep an auditable trail by referencing issue IDs and PRs in ADRs, Test Plan results, and Runbooks.

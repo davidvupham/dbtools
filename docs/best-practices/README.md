@@ -8,6 +8,13 @@ This directory contains organizational standards and best practices documentatio
 |----------|---------|
 | [Technical Project Management](technical-project-management.md) | Template and framework for managing technical projects |
 
+### Quick Links
+
+- [Delivery Models](technical-project-management.md#delivery-models)
+- [Tooling Alignment](technical-project-management.md#tooling-alignment)
+- [Security & Compliance](technical-project-management.md#security--compliance)
+- [Templates](technical-project-management.md#additional-templates)
+
 ## What Belongs Here
 
 **Best Practices** are prescriptive standards that define *how* things should be done across the organization:

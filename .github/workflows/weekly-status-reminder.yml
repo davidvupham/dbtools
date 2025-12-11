@@ -1,0 +1,41 @@
+name: Weekly Status Reminder
+
+on:
+  schedule:
+    - cron: '0 15 * * 4'  # Every Thursday at 15:00 UTC
+  workflow_dispatch:
+
+jobs:
+  remind:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Create issue reminder
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const title = `Weekly Status Reminder - ${new Date().toISOString().slice(0,10)}`;
+            const body = [
+              'Please file this week\'s status report using the template:',
+              '- Location: docs/projects/sample-project/management/status-YYYY-MM-DD.md',
+              '- Template: docs/templates/status-report-weekly.md',
+              '',
+              'Suggested steps:',
+              '1. Run scripts/new-weekly-status.ps1 locally (Windows PowerShell).',
+              '2. Update progress, risks, decisions, metrics.',
+              '3. Commit and open PR for review.'
+            ].join('\n');
+
+            // Create issue (ignore if duplicate title exists)
+            const issues = await github.rest.search.issuesAndPullRequests({
+              q: `repo:${owner}/${repo} is:issue in:title "${title}"`
+            });
+            if (issues.data.total_count > 0) {
+              core.info('Reminder issue already exists.');
+            } else {
+              await github.rest.issues.create({ owner, repo, title, body });
+              core.info('Reminder issue created.');
+            }
