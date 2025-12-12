@@ -31,7 +31,7 @@ function Enable-GDSWindowsRemoting {
         - Kerberos and Negotiate: Enabled by default (no action needed).
         - Basic: DISABLED by default. Use -EnableBasicAuth to enable.
         - CredSSP: Disabled. Use -EnableCredSSP to enable.
-        - LocalAccountTokenFilterPolicy: Not set. Use -EnableLocalAccountTokenFilter to enable.
+        - CredSSP: Disabled. Use -EnableCredSSP to enable.
 
     .PARAMETER ComputerName
         An array of computer names to configure. Defaults to 'localhost'.
@@ -51,6 +51,9 @@ function Enable-GDSWindowsRemoting {
 
     .PARAMETER EnableCredSSP
         If specified, enables CredSSP authentication.
+
+    .PARAMETER LogToEventLog
+        If specified, writes configuration progress and errors to the Windows Event Log (Application log, Source: Enable-GDSWindowsRemoting).
 
     .EXAMPLE
         # Configure locally using an auto-detected valid certificate
@@ -111,6 +114,23 @@ function Enable-GDSWindowsRemoting {
                 return $candidates
             }
 
+            function Write-CandidateDetails {
+                param($Certs)
+                if ($Certs) {
+                    Write-Verbose "Found $($Certs.Count) candidate certificate(s):"
+                    foreach ($c in $Certs) {
+                        Write-Verbose "  - Thumbprint: $($c.Thumbprint)"
+                        Write-Verbose "    Subject:    $($c.Subject)"
+                        Write-Verbose "    Issuer:     $($c.Issuer)"
+                        Write-Verbose "    Expires:    $($c.NotAfter)"
+                        Write-Verbose "    --------------------------------"
+                    }
+                }
+                else {
+                    Write-Verbose "No candidate certificates found matching criteria."
+                }
+            }
+
             function Select-GDSBestCertificate {
                 [CmdletBinding()]
                 Param(
@@ -168,7 +188,7 @@ function Enable-GDSWindowsRemoting {
 
             function Write-HostLog {
                 $Message = $args[0]
-                Write-Output $Message
+                Write-Host $Message
                 Write-ProgressLog $Message
             }
 
@@ -179,6 +199,8 @@ function Enable-GDSWindowsRemoting {
             $ErrorActionPreference = "Stop"
 
             try {
+                Write-HostLog "Starting configuration for host: $env:COMPUTERNAME..."
+
                 # Get the ID and security principal of the current user account
                 $myWindowsID = [System.Security.Principal.WindowsIdentity]::GetCurrent()
                 $myWindowsPrincipal = new-object System.Security.Principal.WindowsPrincipal($myWindowsID)
@@ -201,7 +223,9 @@ function Enable-GDSWindowsRemoting {
                 if (-not $CertificateThumbprint) {
                     Write-Verbose "No certificate specified. Attempting to auto-detect a valid Server Authentication certificate..."
 
+
                     $candidates = Get-GDSServerAuthCertificates -ComputerName $env:COMPUTERNAME
+                    Write-CandidateDetails -Certs $candidates
 
                     if ($candidates) {
                         $selectedCert = Select-GDSBestCertificate -Certificates $candidates -SubjectName $env:COMPUTERNAME
@@ -243,11 +267,15 @@ function Enable-GDSWindowsRemoting {
                 $winrmWasAlreadyRunning = ($winrmService.Status -eq "Running")
 
                 if (-not $winrmWasAlreadyRunning) {
+                    Write-HostLog "WinRM service is not running. Starting service..."
                     Write-Verbose "Setting WinRM service to start automatically on boot."
                     Set-Service -Name "WinRM" -StartupType Automatic
                     Write-Verbose "Starting WinRM service."
                     Start-Service -Name "WinRM" -ErrorAction Stop
                     Write-ProgressLog "Started WinRM service."
+                }
+                else {
+                    Write-Verbose "WinRM service is already running."
                 }
 
                 # Make sure there is a SSL listener.
@@ -264,6 +292,7 @@ function Enable-GDSWindowsRemoting {
                         Address   = "*"
                     }
 
+                    Write-HostLog "HTTPS Listener not found. Creating listener on port 5986..."
                     Write-Verbose "Enabling SSL listener."
                     New-WSManInstance -ResourceURI 'winrm/config/Listener' -SelectorSet $selectorset -ValueSet $valueset
                     Write-ProgressLog "Enabled SSL listener."
@@ -322,6 +351,7 @@ function Enable-GDSWindowsRemoting {
                     # Modern Windows (Use NetSecurity module)
                     $fwRule = Get-NetFirewallRule -DisplayName "Allow WinRM HTTPS" -ErrorAction SilentlyContinue
                     if (-not $fwRule) {
+                        Write-HostLog "Firewall rule 'Allow WinRM HTTPS' not found. Creating rule..."
                         Write-Verbose "Adding firewall rule 'Allow WinRM HTTPS' (NetSecurity)."
                         New-NetFirewallRule -DisplayName "Allow WinRM HTTPS" -Name "WinRM-HTTPS-Port-5986" -Direction Inbound -LocalPort 5986 -Protocol TCP -Action Allow -Profile Any
                         Write-ProgressLog "Added firewall rule to allow WinRM HTTPS."
@@ -335,6 +365,7 @@ function Enable-GDSWindowsRemoting {
                     $fwtest1 = netsh advfirewall firewall show rule name="Allow WinRM HTTPS"
                     $fwtest2 = netsh advfirewall firewall show rule name="Allow WinRM HTTPS" profile=any
                     if ($fwtest1.count -lt 5) {
+                        Write-HostLog "Firewall rule 'Allow WinRM HTTPS' not found. Creating rule..."
                         Write-Verbose "Adding firewall rule to allow WinRM HTTPS."
                         netsh advfirewall firewall add rule profile=any name="Allow WinRM HTTPS" dir=in localport=5986 protocol=TCP action=allow
                         Write-ProgressLog "Added firewall rule to allow WinRM HTTPS."
@@ -360,6 +391,7 @@ function Enable-GDSWindowsRemoting {
                     throw "Unable to establish an HTTPS remoting session to localhost."
                 }
                 Write-VerboseLog "PS Remoting has been successfully configured for Ansible."
+                Write-HostLog "Configuration completed successfully for host: $env:COMPUTERNAME."
 
             }
             catch {
