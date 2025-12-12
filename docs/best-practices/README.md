@@ -6,6 +6,7 @@ This directory contains organizational standards and best practices documentatio
 
 | Document | Purpose |
 |----------|---------|
+| [PowerShell Best Practices](powershell/) | Standards for writing effective PowerShell scripts |
 | [Technical Project Management](technical-project-management.md) | Template and framework for managing technical projects |
 
 ### Quick Links
