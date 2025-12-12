@@ -3696,7 +3696,7 @@ class SLOMonitor:
 - Example alert rules: `examples/monitoring/rules.yaml`
 - Synthetic metrics generator: `examples/monitoring/generate_synthetic_metrics.py`
 - Schema registry stub: `schemas/metrics-value.avsc` with notes in `schemas/README.md`
-- E2E tutorial: `docs/tutorials/monitoring_e2e_synthetic_metrics.md`
+- E2E tutorial: `docs/tutorials/observability/e2e-synthetic-metrics.md`
 
 ### Industry Standards and Best Practices
 
