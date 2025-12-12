@@ -79,7 +79,8 @@ See `PowerShell/README.md` for module usage, build instructions, and CI pipeline
 ## Development Quick Start
 
 ### Python workflow
-1. Install Python 3.9+ and create a virtual environment: `python -m venv .venv && source .venv/bin/activate`
+1. **Prerequisite**: Configure your Docker client for the corporate registry. See [Configure Corporate Docker Registry](docs/how-to/configure-corporate-docker-registry.md).
+2. Install Python 3.9+ and create a virtual environment: `python -m venv .venv && source .venv/bin/activate`
 2. Navigate into the target package (for example `cd gds_database`) and install dev extras: `pip install -e .[dev]`
 3. Run tests with `pytest` (most packages provide additional examples under `tests/` or `examples/`)
 4. Lint and format code using `ruff` via the repo helper: `./lint.sh`, `./lint.sh --fix`, or run `ruff check .`
