@@ -2,6 +2,9 @@
 
 Welcome to the dbtools tutorials library. These guides are designed to help you learn by doing, covering our core technologies, infrastructure, and development practices.
 
+> [!IMPORTANT]
+> **Corporate Registry Requirement**: All Docker images must be pulled via the corporate JFrog registry. Before starting any Docker-based tutorial, please configure your client: [Configure Corporate Docker Registry](../how-to/configure-corporate-docker-registry.md).
+
 ## ⭐ Featured Courses
 
 - **[Python & Snowflake Course](courses/python-snowflake-monitoring.md)**
