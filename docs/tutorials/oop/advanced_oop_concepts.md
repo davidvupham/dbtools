@@ -481,6 +481,7 @@ class AsyncDatabasePool:
 ---
 
 ## Multiple Inheritance and the Diamond Problem
+> **Note:** For a dedicated conceptual guide on **Composition** using Mixins, see **[Understanding Mixins](./mixins.md)**. This section focuses on the underlying mechanics (MRO, Diamond Problem).
 
 Multiple inheritance allows a class to inherit from multiple parent classes, but it can create the "diamond problem" where method resolution order becomes ambiguous.
 

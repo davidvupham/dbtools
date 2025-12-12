@@ -765,7 +765,9 @@ print(duck.fly())    # From Flyable
 print(duck.swim())   # From Swimmable
 ```
 
-Note: For diamond-problem details and cooperative multiple inheritance with `super()`, see the advanced guide `advanced_oop_concepts.md`.
+Note:
+- For a deeper dive into **Mixins**, including best practices and pitfalls, see the new **[Mixins Guide](./mixins.md)**.
+- For complex Multiple Inheritance mechanics (Diamond Problem, MRO), see `advanced_oop_concepts.md`.
 
 ### Method Resolution Order (MRO)
 

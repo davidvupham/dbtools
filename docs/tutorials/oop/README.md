@@ -96,6 +96,7 @@ pytest tests/test_oop_exercises.py -v
 
 **What you'll learn:**
 - Async/await with classes, cooperative multiple inheritance, MRO
+- [Mixins & Composition](./mixins.md) - **NEW!** (Understanding logical code reuse)
 - Monkey patching, descriptors, metaclasses (pragmatic usage)
 - Serialization strategies, performance profiling, memory/weakrefs
 
