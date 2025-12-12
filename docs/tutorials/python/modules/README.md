@@ -15,6 +15,21 @@ Comprehensive tutorials for popular Python libraries and tools.
 | [Jupyter](jupyter/README.md) | Data Science | Interactive notebooks |
 | [Pandas](pandas/README.md) | Data Science | Data manipulation and analysis |
 | [pyodbc](pyodbc/README.md) | Database | ODBC database connectivity |
+| [Sweetviz](sweetviz/README.md) | Data Science | Beautiful EDA visualizations |
+| [Rich](rich/README.md) | CLI / UX | Beautiful terminal formatting |
+| [Lux](lux/README.md) | Data Science | Automated visualization |
+| [Dython](dython/README.md) | Data Analysis | Categorical correlations |
+| [Featuretools](featuretools/README.md) | Machine Learning | Automated feature engineering |
+| [PyOD](pyod/README.md) | Machine Learning | Anomaly detection |
+| [TextAttack](textattack/README.md) | NLP | Adversarial attacks & augmentation |
+| [Streamlit](streamlit/README.md) | Web Apps | Data apps in pure Python |
+| [Watchfiles](watchfiles/README.md) | Utilities | File watching and reloading |
+
+
+## 📖 Articles & Collections
+
+* [9 Python Libraries That Make You Look Like a Data Scientist](data_science_power_ups.md)
+
 
 ## 🎯 Learning Paths
 
