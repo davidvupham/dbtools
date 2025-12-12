@@ -53,11 +53,7 @@ Describe 'Enable-GDSWindowsRemoting' {
                 $param | Should -Not -BeNullOrEmpty
             }
 
-            It 'Accepts EnableLocalAccountTokenFilter switch parameter' {
-                $cmd = Get-Command Enable-GDSWindowsRemoting
-                $param = $cmd.Parameters['EnableLocalAccountTokenFilter']
-                $param | Should -Not -BeNullOrEmpty
-            }
+
 
             It 'Accepts Credential parameter' {
                 $cmd = Get-Command Enable-GDSWindowsRemoting
@@ -149,15 +145,6 @@ Describe 'Enable-GDSWindowsRemoting' {
                 $mock = Get-Command New-WSManInstance
                 $mock | Should -Not -BeNullOrEmpty
             }
-
-            It 'Removes and recreates listener when ForceNewSSLCert is specified' {
-                Mock Remove-WSManInstance { } -Verifiable
-                Mock New-WSManInstance { } -Verifiable
-
-                # Verify mocks exist
-                Get-Command Remove-WSManInstance | Should -Not -BeNullOrEmpty
-                Get-Command New-WSManInstance | Should -Not -BeNullOrEmpty
-            }
         }
 
         Context 'Authentication Configuration' {
@@ -183,26 +170,7 @@ Describe 'Enable-GDSWindowsRemoting' {
             }
         }
 
-        Context 'LocalAccountTokenFilterPolicy Configuration' {
 
-            It 'Does not enable LocalAccountTokenFilterPolicy by default' {
-                # Default is secure - not enabled
-                $cmd = Get-Command Enable-GDSWindowsRemoting
-                $param = $cmd.Parameters['EnableLocalAccountTokenFilter']
-                $param.SwitchParameter | Should -Be $true
-            }
-
-            It 'Sets registry key when EnableLocalAccountTokenFilter is specified' {
-                Mock New-ItemProperty { } -ParameterFilter {
-                    $Name -eq 'LocalAccountTokenFilterPolicy' -and
-                    $Value -eq 1
-                } -Verifiable
-
-                # Verify the function contains the registry path
-                $funcContent = (Get-Command Enable-GDSWindowsRemoting).ScriptBlock.ToString()
-                $funcContent | Should -Match 'LocalAccountTokenFilterPolicy'
-            }
-        }
 
         Context 'Firewall Configuration' {
 

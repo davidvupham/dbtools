@@ -51,7 +51,6 @@ Enable-GDSWindowsRemoting [-ComputerName <String[]>] [-Credential <PSCredential>
 
 - `-EnableBasicAuth`: Enable Basic authentication (disabled by default).
 - `-EnableCredSSP`: Enable CredSSP authentication.
-- `-EnableLocalAccountTokenFilter`: Enable LocalAccountTokenFilterPolicy.
 
 **Examples:**
 
@@ -62,8 +61,8 @@ Enable-GDSWindowsRemoting -CertificateThumbprint "ABC123..."
 # Configure locally using auto-detected valid certificate
 Enable-GDSWindowsRemoting
 
-# Enable Basic Auth and Local Admin access (Legacy/Dev scenarios)
-Enable-GDSWindowsRemoting -EnableBasicAuth -EnableLocalAccountTokenFilter
+# Enable Basic Auth (Legacy/Dev scenarios)
+Enable-GDSWindowsRemoting -EnableBasicAuth
 ```
 
 ---

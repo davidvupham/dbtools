@@ -52,12 +52,6 @@ function Enable-GDSWindowsRemoting {
     .PARAMETER EnableCredSSP
         If specified, enables CredSSP authentication.
 
-    .PARAMETER EnableLocalAccountTokenFilter
-        If specified, sets the LocalAccountTokenFilterPolicy to 1.
-        This is REQUIRED if you are using a LOCAL Administrator account for remote access.
-        It is NOT required for Domain accounts.
-        Defaults to $false.
-
     .EXAMPLE
         # Configure locally using an auto-detected valid certificate
         Enable-GDSWindowsRemoting
@@ -71,8 +65,7 @@ function Enable-GDSWindowsRemoting {
         Enable-GDSWindowsRemoting -ComputerName "Server01" -Credential (Get-Credential) -CertificateThumbprint "A1B2C3D4E5F6..."
 
     .EXAMPLE
-        # Enable Basic Auth and Local Admin access (Legacy/Dev scenarios)
-        Enable-GDSWindowsRemoting -EnableBasicAuth -EnableLocalAccountTokenFilter
+        Enable-GDSWindowsRemoting -EnableBasicAuth
     #>
     [CmdletBinding(SupportsShouldProcess = $true)]
     Param (
@@ -85,7 +78,6 @@ function Enable-GDSWindowsRemoting {
         [string]$CertificateThumbprint,
         [switch]$EnableBasicAuth = $false,
         [switch]$EnableCredSSP,
-        [switch]$EnableLocalAccountTokenFilter,
         [switch]$LogToEventLog
     )
 
@@ -97,7 +89,6 @@ function Enable-GDSWindowsRemoting {
                 $CertificateThumbprint,
                 $EnableBasicAuth,
                 $EnableCredSSP,
-                $EnableLocalAccountTokenFilter,
                 $LogToEventLog
             )
 
@@ -263,13 +254,9 @@ function Enable-GDSWindowsRemoting {
                 $listeners = Get-ChildItem WSMan:\localhost\Listener
                 if (-not ($listeners | Where-Object { $_.Keys -like "TRANSPORT=HTTPS" })) {
 
-                    else {
-                        throw "Failed to find or generate a valid certificate for the HTTPS listener."
-                    }
-
                     $valueset = @{
                         Hostname              = $SubjectName
-                        CertificateThumbprint = $thumbprint
+                        CertificateThumbprint = $CertificateThumbprint
                     }
 
                     $selectorset = @{
@@ -327,6 +314,8 @@ function Enable-GDSWindowsRemoting {
                         Write-ProgressLog "Enabled CredSSP auth support."
                     }
                 }
+
+
 
                 # Configure firewall to allow WinRM HTTPS connections.
                 if (Get-Command New-NetFirewallRule -ErrorAction SilentlyContinue) {
@@ -400,7 +389,6 @@ function Enable-GDSWindowsRemoting {
                 & $ConfigurationScript -CertificateThumbprint $CertificateThumbprint `
                     -EnableBasicAuth:$EnableBasicAuth `
                     -EnableCredSSP:$EnableCredSSP `
-                    -EnableLocalAccountTokenFilter:$EnableLocalAccountTokenFilter `
                     -LogToEventLog:$LogToEventLog
             }
             catch {
@@ -419,7 +407,6 @@ function Enable-GDSWindowsRemoting {
                     $CertificateThumbprint,
                     $EnableBasicAuth,
                     $EnableCredSSP,
-                    $EnableLocalAccountTokenFilter,
                     $LogToEventLog
                 )
             }
