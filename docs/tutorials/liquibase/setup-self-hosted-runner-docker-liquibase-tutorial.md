@@ -1575,7 +1575,7 @@ Congratulations! You've set up a complete local CI/CD environment with:
 
 1. Follow the main tutorial: [sqlserver-liquibase-github-actions-tutorial.md](./sqlserver-liquibase-github-actions-tutorial.md)
 2. Add cloud staging environment (hybrid approach)
-3. Implement advanced workflows from [github-actions-liquibase-best-practices.md](./github-actions-liquibase-best-practices.md)
+3. Implement advanced workflows from [github-actions-liquibase-best-practices.md](../../best-practices/liquibase/github-actions.md)
 
 **For Production:**
 

@@ -768,8 +768,8 @@ Now that you understand GitHub Actions basics, you're ready to:
 ### Recommended Learning Path
 
 1. ✅ Read this primer (you are here!)
-2. ➡️ Follow: [SQL Server + Liquibase + GitHub Actions Tutorial](./sqlserver-liquibase-github-actions-tutorial.md)
-3. ➡️ Review: [GitHub Actions Best Practices for Liquibase](./github-actions-liquibase-best-practices.md)
+2. ➡️ Follow: [SQL Server + Liquibase + GitHub Actions Tutorial](../../../../tutorials/liquibase/sqlserver-liquibase-github-actions-tutorial.md)
+3. ➡️ Review: [GitHub Actions Best Practices for Liquibase](../../../../best-practices/liquibase/github-actions.md)
 4. ➡️ Explore: [GitHub Actions Documentation](https://docs.github.com/en/actions)
 
 ### Additional Resources

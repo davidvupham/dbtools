@@ -10,7 +10,7 @@ Follow these tutorials in order for the best learning experience:
 
 ### 1. 📚 GitHub Actions Primer (Start Here!)
 
-**File**: [github-actions-primer.md](./github-actions-primer.md)
+**File**: [github-actions-primer.md](../../explanation/architecture/database-change-cicd/github-actions-primer.md)
 **Duration**: 45 minutes
 **Prerequisites**: None
 
@@ -33,7 +33,7 @@ Follow these tutorials in order for the best learning experience:
 
 ### 2. 🔍 Research Findings: Best Practices
 
-**File**: [github-actions-liquibase-best-practices.md](./github-actions-liquibase-best-practices.md)
+**File**: [github-actions-liquibase-best-practices.md](../../best-practices/liquibase/github-actions.md)
 **Duration**: 60 minutes
 **Prerequisites**: Basic understanding of GitHub Actions
 
@@ -91,7 +91,7 @@ A complete CI/CD pipeline that automatically deploys database changes through de
 
 ### 4. ⚖️ Comparison: Local Docker vs GitHub Actions
 
-**File**: [local-vs-github-actions-comparison.md](./local-vs-github-actions-comparison.md)
+**File**: [local-vs-github-actions-comparison.md](../../explanation/architecture/database-change-cicd/local-vs-github-actions-comparison.md)
 **Duration**: 30 minutes
 **Prerequisites**: Understanding of both approaches
 
@@ -117,10 +117,10 @@ A complete CI/CD pipeline that automatically deploys database changes through de
 
 ### If you're brand new to GitHub Actions:
 
-1. ✅ Start with [GitHub Actions Primer](./github-actions-primer.md) - 45 minutes
-2. ✅ Skim [Best Practices](./github-actions-liquibase-best-practices.md) - 15 minutes
+1. ✅ Start with [GitHub Actions Primer](../../explanation/architecture/database-change-cicd/github-actions-primer.md) - 45 minutes
+2. ✅ Skim [Best Practices](../../best-practices/liquibase/github-actions.md) - 15 minutes
 3. ✅ Follow [Hands-On Tutorial](./sqlserver-liquibase-github-actions-tutorial.md) - 4-5 hours
-4. ✅ Reference [Comparison Guide](./local-vs-github-actions-comparison.md) as needed
+4. ✅ Reference [Comparison Guide](../../explanation/architecture/database-change-cicd/local-vs-github-actions-comparison.md) as needed
 
 **Total time**: 1 day
 
@@ -129,9 +129,9 @@ A complete CI/CD pipeline that automatically deploys database changes through de
 ### If you already know GitHub Actions:
 
 1. ⏭️ Skip the primer
-2. ✅ Review [Best Practices](./github-actions-liquibase-best-practices.md) - 30 minutes
+2. ✅ Review [Best Practices](../../best-practices/liquibase/github-actions.md) - 30 minutes
 3. ✅ Complete [Hands-On Tutorial](./sqlserver-liquibase-github-actions-tutorial.md) - 3-4 hours
-4. ✅ Reference [Comparison Guide](./local-vs-github-actions-comparison.md) for team discussions
+4. ✅ Reference [Comparison Guide](../../explanation/architecture/database-change-cicd/local-vs-github-actions-comparison.md) for team discussions
 
 **Total time**: Half day
 
@@ -139,10 +139,10 @@ A complete CI/CD pipeline that automatically deploys database changes through de
 
 ### If you're planning team implementation:
 
-1. ✅ Read [Comparison Guide](./local-vs-github-actions-comparison.md) first - 30 minutes
-2. ✅ Review [Best Practices](./github-actions-liquibase-best-practices.md) - 60 minutes
+1. ✅ Read [Comparison Guide](../../explanation/architecture/database-change-cicd/local-vs-github-actions-comparison.md) first - 30 minutes
+2. ✅ Review [Best Practices](../../best-practices/liquibase/github-actions.md) - 60 minutes
 3. ✅ Complete [Hands-On Tutorial](./sqlserver-liquibase-github-actions-tutorial.md) - 4-5 hours
-4. ✅ Share [GitHub Actions Primer](./github-actions-primer.md) with team
+4. ✅ Share [GitHub Actions Primer](../../explanation/architecture/database-change-cicd/github-actions-primer.md) with team
 
 **Total time**: 1-2 days (individual), 1 week (team)
 
@@ -206,7 +206,7 @@ A complete CI/CD pipeline that automatically deploys database changes through de
 - **If you already know Liquibase**: You can start directly with GitHub Actions tutorials
 - **If you're implementing for a team**: Learn both approaches and use hybrid model
 
-See the [Comparison Guide](./local-vs-github-actions-comparison.md) for detailed decision framework.
+See the [Comparison Guide](../../explanation/architecture/database-change-cicd/local-vs-github-actions-comparison.md) for detailed decision framework.
 
 ### Q: Can I use both local Docker and GitHub Actions?
 
@@ -227,7 +227,7 @@ This is actually the recommended approach. See [Hybrid Approach section](./local
 1. **Self-hosted GitHub Actions runners**: Run workflows on your own infrastructure within your private network (covered in Advanced section)
 2. **Use local Docker approach**: Deploy from within your network
 
-See [Best Practices - Network Security](./github-actions-liquibase-best-practices.md#3-network-security) for details.
+See [Best Practices - Network Security](../../best-practices/liquibase/github-actions.md#3-network-security) for details.
 
 ### Q: How long does it take to implement this for my team?
 
@@ -240,7 +240,7 @@ See [Best Practices - Network Security](./github-actions-liquibase-best-practice
 
 Total: **6-8 weeks** for full implementation
 
-See [Transition Strategy](./local-vs-github-actions-comparison.md#transition-strategy) for detailed phased approach.
+See [Transition Strategy](../../explanation/architecture/database-change-cicd/local-vs-github-actions-comparison.md#transition-strategy) for detailed phased approach.
 
 ### Q: Is this secure enough for production?
 
@@ -261,7 +261,7 @@ See [Part 10: Production Best Practices](./sqlserver-liquibase-github-actions-tu
 - **Typical deployment**: 2-5 minutes
 - **50 deployments/month**: ~250 minutes (well within free tier)
 
-See [Cost Comparison](./local-vs-github-actions-comparison.md#cost-comparison) for detailed analysis.
+See [Cost Comparison](../../explanation/architecture/database-change-cicd/local-vs-github-actions-comparison.md#cost-comparison) for detailed analysis.
 
 ### Q: Can I use this with other databases (not SQL Server)?
 
@@ -326,16 +326,16 @@ Found an issue or have suggestions?
 Choose your path:
 
 🎯 **Beginner (Never used GitHub Actions)**
-→ Start with [GitHub Actions Primer](./github-actions-primer.md)
+→ Start with [GitHub Actions Primer](../../explanation/architecture/database-change-cicd/github-actions-primer.md)
 
 🚀 **Intermediate (Some GitHub Actions experience)**
 → Jump to [Hands-On Tutorial](./sqlserver-liquibase-github-actions-tutorial.md)
 
 🏢 **Team Lead (Planning implementation)**
-→ Read [Comparison Guide](./local-vs-github-actions-comparison.md) and [Best Practices](./github-actions-liquibase-best-practices.md)
+→ Read [Comparison Guide](../../explanation/architecture/database-change-cicd/local-vs-github-actions-comparison.md) and [Best Practices](../../best-practices/liquibase/github-actions.md)
 
 📖 **Want to understand best practices first**
-→ Review [Best Practices](./github-actions-liquibase-best-practices.md)
+→ Review [Best Practices](../../best-practices/liquibase/github-actions.md)
 
 ---
 

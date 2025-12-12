@@ -1594,7 +1594,7 @@ Main branch      → Staging (auto) → Production (approval)
 **Related Documents**:
 - [Repository Strategy Guide](./repository-strategies-for-database-cicd.md)
 - [GitHub Actions Tutorial](./sqlserver-liquibase-github-actions-tutorial.md)
-- [Best Practices](./github-actions-liquibase-best-practices.md)
+- [Best Practices](../../../best-practices/liquibase/github-actions.md)
 
 **Questions?** Review the FAQ or discuss with your team lead.
 

@@ -17,7 +17,7 @@ This is a **comprehensive tutorial series** on implementing database CI/CD with 
 - Quick start guides
 - Comprehensive FAQ
 
-**[repository-strategies-for-database-cicd.md](./repository-strategies-for-database-cicd.md)** - Repository Strategy
+**[repository-strategies-for-database-cicd.md](../../explanation/architecture/database-change-cicd/repository-strategies-for-database-cicd.md)** - Repository Strategy
 
 - Single vs multiple repositories explained
 - Decision framework for teams
@@ -35,14 +35,14 @@ This is a **comprehensive tutorial series** on implementing database CI/CD with 
 
 #### 2. GitHub Actions Fundamentals
 
-**[github-actions-primer.md](./github-actions-primer.md)** - Beginner's Guide
+**[github-actions-primer.md](../../explanation/architecture/database-change-cicd/github-actions-primer.md)** - Beginner's Guide
 
 - Complete introduction to GitHub Actions
 - No prior knowledge needed
 - All concepts explained in plain language
 - 45 minutes reading time
 
-**[github-actions-liquibase-best-practices.md](./github-actions-liquibase-best-practices.md)** - Best Practices
+**[github-actions-liquibase-best-practices.md](../../best-practices/liquibase/github-actions.md)** - Best Practices
 
 - Research findings from Liquibase official docs
 - Architecture patterns
@@ -63,7 +63,7 @@ This is a **comprehensive tutorial series** on implementing database CI/CD with 
 - Every command provided with explanations
 - 5-6 hours (can do over multiple sessions)
 
-**[database-testing-strategies.md](./database-testing-strategies.md)** - Testing Guide ⭐ NEW
+**[database-testing-strategies.md](../../explanation/architecture/database-change-cicd/database-testing-strategies.md)** - Testing Guide ⭐ NEW
 
 - Comprehensive database testing for CI/CD
 - 8 types of database tests explained
@@ -82,7 +82,7 @@ This is a **comprehensive tutorial series** on implementing database CI/CD with 
 
 #### 4. Decision Guides
 
-**[local-vs-github-actions-comparison.md](./local-vs-github-actions-comparison.md)** - Approach Comparison
+**[local-vs-github-actions-comparison.md](../../explanation/architecture/database-change-cicd/local-vs-github-actions-comparison.md)** - Approach Comparison
 
 - When to use local Docker vs GitHub Actions
 - Feature comparison and trade-offs
@@ -500,7 +500,7 @@ Open [README-GITHUB-ACTIONS.md](./README-GITHUB-ACTIONS.md) for:
 
 Before implementing, understand your options:
 
-**Repository Strategy**: [repository-strategies-for-database-cicd.md](./repository-strategies-for-database-cicd.md)
+**Repository Strategy**: [repository-strategies-for-database-cicd.md](../../explanation/architecture/database-change-cicd/repository-strategies-for-database-cicd.md)
 
 - Should database changes be in the same repo as app code?
 - **Recommendation for teams under 20**: Single repository
@@ -514,8 +514,8 @@ Before implementing, understand your options:
 
 Pick based on your experience:
 
-- **New to GitHub Actions?** → Start with [github-actions-primer.md](./github-actions-primer.md)
-- **Already know basics?** → Review [github-actions-liquibase-best-practices.md](./github-actions-liquibase-best-practices.md)
+- **New to GitHub Actions?** → Start with [github-actions-primer.md](../../explanation/architecture/database-change-cicd/github-actions-primer.md)
+- **Already know basics?** → Review [github-actions-liquibase-best-practices.md](../../best-practices/liquibase/github-actions.md)
 
 ### Step 4: Build Your Pipeline
 
@@ -531,7 +531,7 @@ Build a production-ready CI/CD pipeline with:
 ### Step 5: Compare Approaches (Optional)
 
 If deciding between local Docker and GitHub Actions:
-[local-vs-github-actions-comparison.md](./local-vs-github-actions-comparison.md)
+[local-vs-github-actions-comparison.md](../../explanation/architecture/database-change-cicd/local-vs-github-actions-comparison.md)
 
 ## 📝 Document Quality
 

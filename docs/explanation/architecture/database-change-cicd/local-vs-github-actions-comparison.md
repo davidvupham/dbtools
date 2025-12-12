@@ -1044,6 +1044,6 @@ Week 5+: Use hybrid approach
 **Document Version**: 1.0
 **Last Updated**: November 2025
 **Related Tutorials**:
-- [Local Docker Tutorial](./sqlserver-liquibase-tutorial.md)
-- [GitHub Actions Tutorial](./sqlserver-liquibase-github-actions-tutorial.md)
-- [GitHub Actions Best Practices](./github-actions-liquibase-best-practices.md)
+- [Local Docker Tutorial](../../../../tutorials/liquibase/sqlserver-liquibase-tutorial.md)
+- [GitHub Actions Tutorial](../../../../tutorials/liquibase/sqlserver-liquibase-github-actions-tutorial.md)
+- [GitHub Actions Best Practices](../../../../best-practices/liquibase/github-actions.md)
