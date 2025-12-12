@@ -10,6 +10,8 @@ This directory contains the Python basics for this project.
 
 - Part 3: Missing Concepts — [01_PYTHON_BASICS_PART3.md](./01_PYTHON_BASICS_PART3.md)
   - Dataclasses, enums, classmethods, super(), comprehensions, enumerate(), sets, advanced f-strings
+- **Concurrency** — [concepts/concurrency.md](./concepts/concurrency.md)
+  - Threading (I/O), Asyncio (High-volume I/O), Multiprocessing (CPU)
 
 Suggested reading order:
 
