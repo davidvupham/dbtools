@@ -2,7 +2,7 @@
 
 This how-to guide explains the steps required to secure Windows Remoting (WinRM) using HTTPS and SSL/TLS certificates.
 
-For a deeper understanding of certificates, see [Windows Certificates and CSRs](../explanation/Windows-Certificates-and-CSRs.md).
+For a deeper understanding of certificates, see [Windows Certificates and CSRs](../explanation/windows-certificate-and-csr.md).
 
 ## Prerequisites
 - A Windows machine (Server or Desktop)

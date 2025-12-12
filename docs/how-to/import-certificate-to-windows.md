@@ -21,9 +21,11 @@ A valid Code Signing certificate can come from:
 If you are requesting a certificate from your security team or a Public CA, use these values:
 
 *   **Common Name (CN)**: This represents the **Publisher's Identity**, not a server name.
-    *   *Examples*: "GDS DevOps Team", "Contoso IT".
+    *   *Examples*: "My Team", "My Company".
     *   *Why it matters*: This name appears in the User Account Control (UAC) prompt or PowerShell trust error: *"Do you trust software signed by 'GDS DevOps Team'?"*
-*   **Subject Alternative Name (SAN)**: **Not required** for code signing.
+*   **Subject Alternative Name (SAN)**:
+    *   **For Code Signing**: Not required.
+    *   **For Server Auth / WinRM**: **Required**. Must generally include the **DNS Hostname** (e.g., `myserver`, `myserver.corp.net`) and optionally the **IP Address** if accessing by IP. Modern clients (Chrome, newer PowerShell) ignore the Common Name and validate the SAN.
     *   *If strictly required by your CA software*: Use your **Email Address** (UPN) or repeat the Common Name.
 *   **Key Type**: RSA 2048-bit (minimum) or 4096-bit.
 *   **Extended Key Usage (EKU)**: Must include **Code Signing** (`1.3.6.1.5.5.7.3.3`).
@@ -125,5 +127,5 @@ If you do not see this, the Private Key is missing, and signing will fail.
 
 Once your certificate is imported, you can use it for:
 - **Code Signing**: See [Sign and Deploy PowerShell Modules](powershell/sign-and-deploy-modules.md)
-- **WinRM over HTTPS**: See [Configure WinRM HTTPS](Configure-WinRM-HTTPS.md)
+- **WinRM over HTTPS**: See [Configure WinRM HTTPS](configure-winrm-https.md)
 - **SSL/TLS**: Configure your application to use the certificate from the store

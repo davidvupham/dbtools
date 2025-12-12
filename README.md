@@ -60,9 +60,9 @@ See `PowerShell/README.md` for module usage, build instructions, and CI pipeline
   - PowerShell beginners guide
   - Vault secret management
 - `docs/how-to/` – Task-oriented guides:
-  - Configure WinRM over HTTPS (`docs/how-to/Configure-WinRM-HTTPS.md`)
+  - Configure WinRM over HTTPS (`docs/how-to/configure-winrm-https.md`)
 - `docs/explanation/` – Background and concepts:
-  - Windows Certificates and CSRs (`docs/explanation/Windows-Certificates-and-CSRs.md`)
+  - Windows Certificates and CSRs (`docs/explanation/windows-certificate-and-csr.md`)
 - `docs/architecture/` – Architecture documentation for:
   - Database change CI/CD pipelines
   - Liquibase integration patterns

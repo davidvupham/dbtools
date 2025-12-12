@@ -1,8 +1,8 @@
 # Runbook: Enabling WinRM HTTPS
 
 **Objective**: Configure Windows Remote Management (WinRM) to accept HTTPS connections on Port 5986.
-- [How-to Guide: Configure WinRM HTTPS](../how-to/Configure-WinRM-HTTPS.md)
-- [Explanation: Certificates & CSRs](../explanation/Windows-Certificates-and-CSRs.md)
+- [How-to Guide: Configure WinRM HTTPS](../how-to/configure-winrm-https.md)
+- [Explanation: Certificates & CSRs](../explanation/windows-certificate-and-csr.md)
 
 ## Pre-Flight Checks
 - [ ] User has LOCAL Administrator privileges.
