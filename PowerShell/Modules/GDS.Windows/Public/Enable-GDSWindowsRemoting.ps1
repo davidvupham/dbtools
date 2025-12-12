@@ -31,7 +31,6 @@ function Enable-GDSWindowsRemoting {
         - Kerberos and Negotiate: Enabled by default (no action needed).
         - Basic: DISABLED by default. Use -EnableBasicAuth to enable.
         - CredSSP: Disabled. Use -EnableCredSSP to enable.
-        - CredSSP: Disabled. Use -EnableCredSSP to enable.
 
     .PARAMETER ComputerName
         An array of computer names to configure. Defaults to 'localhost'.
@@ -92,7 +91,8 @@ function Enable-GDSWindowsRemoting {
                 $CertificateThumbprint,
                 $EnableBasicAuth,
                 $EnableCredSSP,
-                $LogToEventLog
+                $LogToEventLog,
+                $WhatIfMode = $false
             )
 
             # --- Embedded Private Functions ---
@@ -193,7 +193,6 @@ function Enable-GDSWindowsRemoting {
             }
 
             # Default SubjectName to the target machine's hostname if not specified
-            # Default SubjectName to the target machine's hostname if not specified
             $SubjectName = $env:COMPUTERNAME
 
             $ErrorActionPreference = "Stop"
@@ -218,7 +217,6 @@ function Enable-GDSWindowsRemoting {
                     throw "PowerShell version 3 or higher is required."
                 }
 
-                # --- Certificate Auto-Detection Logic ---
                 # --- Certificate Auto-Detection Logic ---
                 if (-not $CertificateThumbprint) {
                     Write-Verbose "No certificate specified. Attempting to auto-detect a valid Server Authentication certificate..."
@@ -254,7 +252,6 @@ function Enable-GDSWindowsRemoting {
                     }
                 }
                 # ----------------------------------------
-                # ----------------------------------------
 
                 # Find and start the WinRM service.
                 Write-Verbose "Verifying WinRM service."
@@ -268,11 +265,17 @@ function Enable-GDSWindowsRemoting {
 
                 if (-not $winrmWasAlreadyRunning) {
                     Write-HostLog "WinRM service is not running. Starting service..."
-                    Write-Verbose "Setting WinRM service to start automatically on boot."
-                    Set-Service -Name "WinRM" -StartupType Automatic
-                    Write-Verbose "Starting WinRM service."
-                    Start-Service -Name "WinRM" -ErrorAction Stop
-                    Write-ProgressLog "Started WinRM service."
+                    if ($WhatIfMode) {
+                        Write-Host "What if: Performing the operation 'Set-Service' on target 'WinRM' (StartupType: Automatic)."
+                        Write-Host "What if: Performing the operation 'Start-Service' on target 'WinRM'."
+                    }
+                    else {
+                        Write-Verbose "Setting WinRM service to start automatically on boot."
+                        Set-Service -Name "WinRM" -StartupType Automatic
+                        Write-Verbose "Starting WinRM service."
+                        Start-Service -Name "WinRM" -ErrorAction Stop
+                        Write-ProgressLog "Started WinRM service."
+                    }
                 }
                 else {
                     Write-Verbose "WinRM service is already running."
@@ -293,9 +296,14 @@ function Enable-GDSWindowsRemoting {
                     }
 
                     Write-HostLog "HTTPS Listener not found. Creating listener on port 5986..."
-                    Write-Verbose "Enabling SSL listener."
-                    New-WSManInstance -ResourceURI 'winrm/config/Listener' -SelectorSet $selectorset -ValueSet $valueset
-                    Write-ProgressLog "Enabled SSL listener."
+                    if ($WhatIfMode) {
+                        Write-Host "What if: Performing the operation 'New-WSManInstance' on target 'HTTPS Listener' (Hostname: $SubjectName, Port: 5986)."
+                    }
+                    else {
+                        Write-Verbose "Enabling SSL listener."
+                        New-WSManInstance -ResourceURI 'winrm/config/Listener' -SelectorSet $selectorset -ValueSet $valueset
+                        Write-ProgressLog "Enabled SSL listener."
+                    }
                 }
                 else {
                     Write-Verbose "SSL listener is already active."
@@ -309,9 +317,14 @@ function Enable-GDSWindowsRemoting {
                 if ($EnableBasicAuth) {
                     # Explicitly requested to enable Basic auth
                     if (($basicAuthSetting.Value) -eq $false) {
-                        Write-Verbose "Enabling basic auth support."
-                        Set-Item -Path "WSMan:\localhost\Service\Auth\Basic" -Value $true
-                        Write-ProgressLog "Enabled basic auth support."
+                        if ($WhatIfMode) {
+                            Write-Host "What if: Performing the operation 'Set-Item' on target 'WSMan:\localhost\Service\Auth\Basic' (Value: True)."
+                        }
+                        else {
+                            Write-Verbose "Enabling basic auth support."
+                            Set-Item -Path "WSMan:\localhost\Service\Auth\Basic" -Value $true
+                            Write-ProgressLog "Enabled basic auth support."
+                        }
                     }
                     else {
                         Write-Verbose "Basic auth is already enabled."
@@ -320,9 +333,14 @@ function Enable-GDSWindowsRemoting {
                 elseif (-not $winrmWasAlreadyRunning) {
                     # Fresh WinRM setup: enforce secure default (disable Basic auth)
                     if (($basicAuthSetting.Value) -eq $true) {
-                        Write-Verbose "Disabling basic auth support (Secure Default for fresh setup)."
-                        Set-Item -Path "WSMan:\localhost\Service\Auth\Basic" -Value $false
-                        Write-ProgressLog "Disabled basic auth support."
+                        if ($WhatIfMode) {
+                            Write-Host "What if: Performing the operation 'Set-Item' on target 'WSMan:\localhost\Service\Auth\Basic' (Value: False)."
+                        }
+                        else {
+                            Write-Verbose "Disabling basic auth support (Secure Default for fresh setup)."
+                            Set-Item -Path "WSMan:\localhost\Service\Auth\Basic" -Value $false
+                            Write-ProgressLog "Disabled basic auth support."
+                        }
                     }
                     else {
                         Write-Verbose "Basic auth is already disabled."
@@ -338,9 +356,14 @@ function Enable-GDSWindowsRemoting {
                     # Check for CredSSP authentication
                     $credsspAuthSetting = Get-ChildItem WSMan:\localhost\Service\Auth | Where-Object { $_.Name -eq "CredSSP" }
                     if (($credsspAuthSetting.Value) -eq $false) {
-                        Write-Verbose "Enabling CredSSP auth support."
-                        Enable-WSManCredSSP -role server -Force
-                        Write-ProgressLog "Enabled CredSSP auth support."
+                        if ($WhatIfMode) {
+                            Write-Host "What if: Performing the operation 'Enable-WSManCredSSP' on target 'Server Role'."
+                        }
+                        else {
+                            Write-Verbose "Enabling CredSSP auth support."
+                            Enable-WSManCredSSP -role server -Force
+                            Write-ProgressLog "Enabled CredSSP auth support."
+                        }
                     }
                 }
 
@@ -352,9 +375,14 @@ function Enable-GDSWindowsRemoting {
                     $fwRule = Get-NetFirewallRule -DisplayName "Allow WinRM HTTPS" -ErrorAction SilentlyContinue
                     if (-not $fwRule) {
                         Write-HostLog "Firewall rule 'Allow WinRM HTTPS' not found. Creating rule..."
-                        Write-Verbose "Adding firewall rule 'Allow WinRM HTTPS' (NetSecurity)."
-                        New-NetFirewallRule -DisplayName "Allow WinRM HTTPS" -Name "WinRM-HTTPS-Port-5986" -Direction Inbound -LocalPort 5986 -Protocol TCP -Action Allow -Profile Any
-                        Write-ProgressLog "Added firewall rule to allow WinRM HTTPS."
+                        if ($WhatIfMode) {
+                            Write-Host "What if: Performing the operation 'New-NetFirewallRule' on target 'Allow WinRM HTTPS' (Port: 5986, Profile: Any)."
+                        }
+                        else {
+                            Write-Verbose "Adding firewall rule 'Allow WinRM HTTPS' (NetSecurity)."
+                            New-NetFirewallRule -DisplayName "Allow WinRM HTTPS" -Name "WinRM-HTTPS-Port-5986" -Direction Inbound -LocalPort 5986 -Protocol TCP -Action Allow -Profile Any
+                            Write-ProgressLog "Added firewall rule to allow WinRM HTTPS."
+                        }
                     }
                     else {
                         Write-Verbose "Firewall rule 'Allow WinRM HTTPS' already exists."
@@ -366,32 +394,48 @@ function Enable-GDSWindowsRemoting {
                     $fwtest2 = netsh advfirewall firewall show rule name="Allow WinRM HTTPS" profile=any
                     if ($fwtest1.count -lt 5) {
                         Write-HostLog "Firewall rule 'Allow WinRM HTTPS' not found. Creating rule..."
-                        Write-Verbose "Adding firewall rule to allow WinRM HTTPS."
-                        netsh advfirewall firewall add rule profile=any name="Allow WinRM HTTPS" dir=in localport=5986 protocol=TCP action=allow
-                        Write-ProgressLog "Added firewall rule to allow WinRM HTTPS."
+                        if ($WhatIfMode) {
+                            Write-Host "What if: Performing the operation 'netsh advfirewall' on target 'Allow WinRM HTTPS' (Port: 5986, Profile: Any)."
+                        }
+                        else {
+                            Write-Verbose "Adding firewall rule to allow WinRM HTTPS."
+                            netsh advfirewall firewall add rule profile=any name="Allow WinRM HTTPS" dir=in localport=5986 protocol=TCP action=allow
+                            Write-ProgressLog "Added firewall rule to allow WinRM HTTPS."
+                        }
                     }
                     elseif (($fwtest1.count -ge 5) -and ($fwtest2.count -lt 5)) {
-                        Write-Verbose "Updating firewall rule to allow WinRM HTTPS for any profile."
-                        netsh advfirewall firewall set rule name="Allow WinRM HTTPS" new profile=any
-                        Write-ProgressLog "Updated firewall rule to allow WinRM HTTPS for any profile."
+                        if ($WhatIfMode) {
+                            Write-Host "What if: Performing the operation 'netsh advfirewall set rule' on target 'Allow WinRM HTTPS' (Profile: Any)."
+                        }
+                        else {
+                            Write-Verbose "Updating firewall rule to allow WinRM HTTPS for any profile."
+                            netsh advfirewall firewall set rule name="Allow WinRM HTTPS" new profile=any
+                            Write-ProgressLog "Updated firewall rule to allow WinRM HTTPS for any profile."
+                        }
                     }
                     else {
                         Write-Verbose "Firewall rule already exists to allow WinRM HTTPS."
                     }
                 }
 
-                $httpsOptions = New-PSSessionOption -SkipCACheck -SkipCNCheck -SkipRevocationCheck
-                $httpsResult = New-PSSession -UseSSL -ComputerName "localhost" -SessionOption $httpsOptions -ErrorVariable httpsError -ErrorAction SilentlyContinue
-
-                if ($httpsResult) {
-                    Write-Verbose "HTTPS: Enabled"
-                    Remove-PSSession $httpsResult
+                if ($WhatIfMode) {
+                    Write-Host "What if: Skipping HTTPS connection verification."
+                    Write-HostLog "WhatIf mode: Configuration preview completed for host: $env:COMPUTERNAME."
                 }
                 else {
-                    throw "Unable to establish an HTTPS remoting session to localhost."
+                    $httpsOptions = New-PSSessionOption -SkipCACheck -SkipCNCheck -SkipRevocationCheck
+                    $httpsResult = New-PSSession -UseSSL -ComputerName "localhost" -SessionOption $httpsOptions -ErrorVariable httpsError -ErrorAction SilentlyContinue
+
+                    if ($httpsResult) {
+                        Write-Verbose "HTTPS: Enabled"
+                        Remove-PSSession $httpsResult
+                    }
+                    else {
+                        throw "Unable to establish an HTTPS remoting session to localhost."
+                    }
+                    Write-VerboseLog "PS Remoting has been successfully configured."
+                    Write-HostLog "Configuration completed successfully for host: $env:COMPUTERNAME."
                 }
-                Write-VerboseLog "PS Remoting has been successfully configured for Ansible."
-                Write-HostLog "Configuration completed successfully for host: $env:COMPUTERNAME."
 
             }
             catch {
@@ -421,7 +465,8 @@ function Enable-GDSWindowsRemoting {
                 & $ConfigurationScript -CertificateThumbprint $CertificateThumbprint `
                     -EnableBasicAuth:$EnableBasicAuth `
                     -EnableCredSSP:$EnableCredSSP `
-                    -LogToEventLog:$LogToEventLog
+                    -LogToEventLog:$LogToEventLog `
+                    -WhatIfMode:$WhatIfPreference
             }
             catch {
                 Write-Error "Failed to configure local machine: $_"
@@ -439,7 +484,8 @@ function Enable-GDSWindowsRemoting {
                     $CertificateThumbprint,
                     $EnableBasicAuth,
                     $EnableCredSSP,
-                    $LogToEventLog
+                    $LogToEventLog,
+                    $WhatIfPreference
                 )
             }
 

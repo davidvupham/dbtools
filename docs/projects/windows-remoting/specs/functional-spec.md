@@ -94,7 +94,7 @@ If no certificate is explicitly provided via parameters, the tool automatically 
 | SEC-001 | **Transport Encryption** | All remote management traffic MUST be encrypted via HTTPS (TLS 1.2+). HTTP listeners should not be created. |
 | SEC-002 | **Certificate Validation** | The bound certificate MUST be valid (not expired) and formatted for "Server Authentication". |
 | SEC-003 | **Secure Defaults** | Basic Authentication MUST be disabled by default to prevent cleartext credential transmission, unless explicitly overridden. |
-| SEC-004 | **Least Privilege** | Firewall rules should be scoped as narrowly as possible (Standard Windows "Public/Private/Domain" profile support). |
+| SEC-004 | **Least Privilege** | Firewall rules should be scoped as narrowly as possible. **Design Decision**: The tool uses `-Profile Any` to ensure connectivity regardless of network profile changes (e.g., when a server moves between domain/private/public networks). Administrators requiring stricter scoping should manually modify the rule post-configuration. |
 
 ## 6. Constraints
 
