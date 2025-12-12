@@ -25,7 +25,7 @@ This is a **comprehensive tutorial series** on implementing database CI/CD with 
 - Real-world scenarios
 - 60 minutes reading time
 
-**[branch-strategies-for-database-cicd.md](./branch-strategies-for-database-cicd.md)** - Branch Strategy
+**[branch-strategies-for-database-cicd.md](../../explanation/architecture/database-change-cicd/branch-strategies-for-database-cicd.md)** - Branch Strategy
 
 - Git branching fundamentals
 - Branch-based deployment workflows
@@ -505,7 +505,7 @@ Before implementing, understand your options:
 - Should database changes be in the same repo as app code?
 - **Recommendation for teams under 20**: Single repository
 
-**Branch Strategy**: [branch-strategies-for-database-cicd.md](./branch-strategies-for-database-cicd.md)
+**Branch Strategy**: [branch-strategies-for-database-cicd.md](../../explanation/architecture/database-change-cicd/branch-strategies-for-database-cicd.md)
 
 - How to use branches for dev → staging → production?
 - **Recommendation for teams under 20**: GitHub Flow
@@ -634,7 +634,7 @@ This tutorial series provides everything you need to implement professional data
 ---
 
 **Created**: November 2025
-**Version**: 2.0
+**Version**: 1.0
 **Last Updated**: November 20, 2025
 **Maintained By**: Database DevOps Team
 **Status**: 92% Complete, 100% Accurate (Phase 1A complete)

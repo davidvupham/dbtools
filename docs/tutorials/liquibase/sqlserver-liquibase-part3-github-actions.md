@@ -194,7 +194,7 @@ For this combined tutorial we will:
 
 ### Step 10: Set Up a Self-Hosted Runner in a Docker Container
 
- > **If you already completed this:** If you followed START-HERE.md "Path 4: Self-Hosted Runner" and set up your runner environment, you can skip this step—just verify your runner shows as "Online" in GitHub Settings → Actions → Runners.
+ > **If you already completed this:** If you followed README.md "Path 4: Self-Hosted Runner" and set up your runner environment, you can skip this step—just verify your runner shows as "Online" in GitHub Settings → Actions → Runners.
 
  > **Execution timing:** Complete the actions below now (before pushing any workflow files in Steps 12–13). The runner must be online and your secrets defined or initial workflow runs will queue indefinitely. If you are only reading ahead, you may delay the runner start until just before adding `.github/workflows`, but do not push workflow YAML until the runner shows as "Online" in GitHub.
 

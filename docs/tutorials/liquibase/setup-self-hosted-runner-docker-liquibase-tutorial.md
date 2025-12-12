@@ -1691,6 +1691,6 @@ steps:
 **Document Version:** 1.0
 **Last Updated:** November 20, 2025
 **Author:** Database DevOps Team
-**Related Tutorials:** [START-HERE.md](./START-HERE.md) for complete series
+**Related Tutorials:** [README.md](./README.md) for complete series
 
 **Happy automating!** 🚀

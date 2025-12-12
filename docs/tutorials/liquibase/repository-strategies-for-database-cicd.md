@@ -1940,7 +1940,7 @@ Choose MULTIPLE repositories if:
 **Last Updated**: November 2025
 **For Teams**: Under 20 people
 **Related Documents**:
-- [Branch Strategy Guide](./branch-strategies-for-database-cicd.md)
+- [Branch Strategy Guide](../../explanation/architecture/database-change-cicd/branch-strategies-for-database-cicd.md)
 - [GitHub Actions Tutorial](./sqlserver-liquibase-github-actions-tutorial.md)
 - [Best Practices](./github-actions-liquibase-best-practices.md)
 
