@@ -14,6 +14,21 @@ Data manipulation and analysis for Python.
 
 ---
 
+## Table of Contents
+- [Overview](#overview)
+- [Quick Start](#quick-start)
+- [Reading Data](#reading-data)
+- [Selection](#selection)
+- [Data Cleaning](#data-cleaning)
+- [Transformations](#transformations)
+- [GroupBy](#groupby)
+- [Merging](#merging)
+- [Time Series](#time-series)
+- [Performance Tips](#performance-tips)
+- [Quick Reference](#quick-reference)
+
+---
+
 ## Quick Start
 
 ```python
@@ -170,16 +185,75 @@ df['ma_7'] = df['value'].rolling(7).mean()
 
 ## Performance Tips
 
+Optimizing pandas for speed and memory efficiency is critical for larger datasets.
+
+### 1. Speed Up read_csv
+- **Specify dtypes**: Helps pandas avoid scanning the whole file to guess types.
+- **Use `usecols`**: Load only what you need.
+- **Chunking**: Process massive files in pieces.
+
 ```python
-# Use category for repeated strings
-df['status'] = df['status'].astype('category')
-
-# Read only needed columns
-df = pd.read_csv('large.csv', usecols=['id', 'name'])
-
-# Vectorized operations (fast)
-df['total'] = df['a'] * df['b']  # Not loops!
+# Efficient loading
+df = pd.read_csv('large_data.csv',
+    usecols=['date', 'store_id', 'sales'],
+    dtype={'store_id': 'int32', 'sales': 'float32'},
+    chunksize=50_000
+)
 ```
+
+### 2. Efficient Data Types
+Downcast numeric types and use `category` for low-cardinality string columns to save memory.
+
+```python
+df['id'] = df['id'].astype('int32')          # vs int64
+df['price'] = df['price'].astype('float32')  # vs float64
+df['status'] = df['status'].astype('category') # Awesome for repeated strings
+```
+
+### 3. Vectorization (Stop Looping)
+Avoid `for` loops and `.apply()` when possible. Pandas vectorized operations run in C and are much faster.
+
+```python
+# SLOW
+df['tax'] = df['price'].apply(lambda x: x * 0.1)
+
+# FAST (Vectorized)
+df['tax'] = df['price'] * 0.1
+```
+
+### 4. Proper Indexing
+- **`loc`**: Label-based (safer, clearer).
+- **`iloc`**: Position-based.
+- Avoid chained indexing `df[mask]['col'] = 1` which causes `SettingWithCopyWarning`.
+
+```python
+# Good
+df.loc[df['price'] > 100, 'category'] = 'premium'
+```
+
+### 5. Query for Clean Filtering
+`query()` allows for SQL-like syntax which is often cleaner and can be optimized.
+
+```python
+# Complex boolean indexing
+df_high = df[(df['price'] > 100) & (df['quantity'] < 5)]
+
+# Clean query
+df_high = df.query('price > 100 and quantity < 5')
+```
+
+### 6. Aggregations (Categoricals)
+Converting strings to categories speeds up GroupBy operations significantly because pandas groups by the underlying integer codes, not the strings.
+
+### 7. Process in Chunks
+For files larger than memory, process row-by-row or chunk-by-chunk.
+
+```python
+total_sales = 0
+for chunk in pd.read_csv('massive_log.csv', chunksize=100000):
+    total_sales += chunk['sales'].sum()
+```
+
 
 ---
 
