@@ -40,9 +40,9 @@ All content is original and tailored to practical, runnable examples in this rep
 - Part V — Real‑World Practice and Hardening
   - Chapter 15: Docker‑Driven Dev Workflow (live reload, local stacks)
   - Chapter 16: CI/CD for Containers (buildx, multi‑arch, push, scan)
-  - Chapter 17: Security Hardening (least privilege, capabilities, scanning)
+  - Chapter 17: Security Hardening (least privilege, userns-remap, capabilities, scanning)
   - Chapter 18: Troubleshooting & Debugging (logs, events, stats, common issues)
-  - Chapter 19: Ecosystem Tools (registries, scanners, rootless, contexts)
+  - Chapter 19: Ecosystem Tools (distributing CLI tools, registries, scanners, rootless)
   - Chapter 20: Beyond the Basics (performance, content trust, SBOM, next steps)
   - Chapter 21: JFrog Artifactory as Docker Registry (enterprise registry setup, advanced features)
 
@@ -69,9 +69,9 @@ All content is original and tailored to practical, runnable examples in this rep
 - [Chapter 15: Docker‑Driven Dev Workflow](./chapter15_dev_workflow.md) — live reload, bind mounts, local stacks via Compose, and productive inner loops.
 - [Chapter 16: CI/CD for Containers](./chapter16_cicd.md) — Buildx multi‑arch builds, registry pushes, caching, and scanning. See the Buildx example:
   - Examples (Buildx multi‑arch demo): `docs/tutorials/docker/examples/buildx/`
-- [Chapter 17: Security Hardening](./chapter17_security.md) — run as non‑root, drop capabilities, read‑only filesystems, secrets management, and image scanning.
+- [Chapter 17: Security Hardening](./chapter17_security.md) — run as non‑root, user namespace remapping, drop capabilities, read‑only filesystems, and secrets management.
 - [Chapter 18: Troubleshooting & Debugging](./chapter18_troubleshooting.md) — logs, events, stats, common networking issues, and safe cleanup.
-- [Chapter 19: Ecosystem Tools](./chapter19_ecosystem_tools.md) — registries (Hub/GHCR/ECR/ACR/Harbor), contexts and remote builders, rootless mode, scanners (Trivy/Grype/Snyk), and SBOMs (Syft).
+- [Chapter 19: Ecosystem Tools](./chapter19_ecosystem_tools.md) — pattern: distributing CLI tools, registries (Hub/GHCR/ECR/ACR/Harbor), contexts, and SBOMs.
 - [Chapter 20: Beyond the Basics](./chapter20_beyond_the_basics.md) — BuildKit cache export/import and mounts, advanced multi‑stage patterns, reproducible builds, provenance/attestations, and signing (cosign/OCI artifacts). See also Buildx example:
   - Examples (Buildx multi‑arch demo): `docs/tutorials/docker/examples/buildx/`
 - [Chapter 21: JFrog Artifactory as Docker Registry](./chapter21_jfrog_artifactory.md) — Enterprise Docker registry with JFrog Artifactory: setup, repository types (local/remote/virtual), authentication, vulnerability scanning with Xray, CI/CD integration, and best practices.
@@ -82,18 +82,21 @@ All content is original and tailored to practical, runnable examples in this rep
 
 ### Learning Paths
 
-**Path 1: Complete Beginner (Quickstart First)**
+### Path 1: Complete Beginner (Quickstart First)
+
 1. [Quickstart Guide](./quickstart.md) - Get hands-on in 15 minutes
 2. [Chapter 1](./chapter01_why_and_how.md) - Understand the concepts
 3. [Chapter 2-3](./chapter02_setup.md) - Setup and CLI essentials
 4. Continue with Chapters 4-21 as needed
 
-**Path 2: Methodical Learner (Start from Foundations)**
+### Path 2: Methodical Learner (Start from Foundations)
+
 1. Start at [Chapter 1](./chapter01_why_and_how.md) and progress linearly
 2. Complete hands-on exercises in each chapter
 3. Build example projects as you learn
 
-**Path 3: Targeted Learning (Jump to Topics)**
+### Path 3: Targeted Learning (Jump to Topics)
+
 - **Building Images?** → Chapters 4-6
 - **Multi-container Apps?** → Chapters 11-12
 - **Production/CI/CD?** → Chapters 15-17
@@ -136,5 +139,6 @@ All content is original and tailored to practical, runnable examples in this rep
 - Chapter 17: Security Hardening → `chapter17_security.md`
 - Chapter 18: Troubleshooting & Debugging → `chapter18_troubleshooting.md`
 - Chapter 19: Ecosystem Tools → `chapter19_ecosystem_tools.md`
-- Chapter 20: Beyond the Basics → `chapter20_beyond_the_basics.md`
-- Chapter 21: JFrog Artifactory as Docker Registry → `chapter21_jfrog_artifactory.md`
+- [Chapter 20: Beyond the Basics](chapter20_beyond_the_basics.md)
+- [Best Practices Guide](best-practices.md) [NEW!]
+- [JFrog Artifactory Registry](chapter21_jfrog_artifactory.md)

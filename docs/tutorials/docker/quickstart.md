@@ -1,10 +1,11 @@
 # Docker Quickstart Guide for Absolute Beginners
 
-## Welcome to Docker!
+## Welcome to Docker
 
 This quickstart guide will have you running Docker containers in **under 15 minutes**. No prior knowledge required!
 
 **What you'll do**:
+
 1. ✅ Install Docker
 2. ✅ Run your first container
 3. ✅ Build a simple application
@@ -78,6 +79,7 @@ docker run hello-world
 ```
 
 **What happened?**
+
 1. Docker looked for an image called `hello-world` on your computer
 2. Didn't find it, so downloaded it from Docker Hub (the Docker "app store")
 3. Created a container from the image
@@ -111,6 +113,7 @@ exit
 ```
 
 **What just happened?**
+
 - `-it` = Interactive Terminal (lets you type commands)
 - `ubuntu` = The image name (a minimal Ubuntu Linux)
 - `bash` = The command to run (a shell)
@@ -126,6 +129,7 @@ Now open your browser and visit: [http://localhost:8080](http://localhost:8080)
 **You should see the nginx welcome page!** 🚀
 
 **Command breakdown**:
+
 - `docker run` = Create and start a container
 - `-d` = Detached mode (runs in background)
 - `-p 8080:80` = Map port 8080 on your computer to port 80 in the container
@@ -189,7 +193,7 @@ if __name__ == '__main__':
 
 **3. Create requirements file** (`requirements.txt`):
 
-```
+```text
 Flask==3.0.0
 ```
 
@@ -223,6 +227,7 @@ docker build -t my-first-app .
 ```
 
 **What happened?**
+
 - `docker build` = Build an image
 - `-t my-first-app` = Tag (name) the image
 - `.` = Use current directory (where Dockerfile is)
@@ -347,6 +352,7 @@ docker compose up -d
 ```
 
 **What happened?**
+
 - Downloaded WordPress and MySQL images
 - Created a network for them to communicate
 - Created a volume to persist database data
@@ -448,6 +454,7 @@ docker volume prune              # Remove unused volumes
 ### Run a Database for Development
 
 **PostgreSQL**:
+
 ```bash
 docker run -d \
   --name dev-postgres \
@@ -461,6 +468,7 @@ docker run -d \
 ```
 
 **MongoDB**:
+
 ```bash
 docker run -d \
   --name dev-mongo \
@@ -474,6 +482,7 @@ docker run -d \
 ```
 
 **Redis**:
+
 ```bash
 docker run -d \
   --name dev-redis \
@@ -519,6 +528,7 @@ docker run -d \
 **Windows/Mac**: Ensure Docker Desktop is running (check system tray/menu bar)
 
 **Linux**:
+
 ```bash
 sudo systemctl start docker
 ```
@@ -526,6 +536,7 @@ sudo systemctl start docker
 ### "Permission denied" (Linux only)
 
 Add your user to the docker group:
+
 ```bash
 sudo usermod -aG docker $USER
 newgrp docker
@@ -534,6 +545,7 @@ newgrp docker
 ### "Port is already in use"
 
 Use a different port:
+
 ```bash
 # Instead of -p 8080:80
 docker run -p 8081:80 nginx:alpine
@@ -542,6 +554,7 @@ docker run -p 8081:80 nginx:alpine
 ### Container Exits Immediately
 
 View logs to see why:
+
 ```bash
 docker logs CONTAINER_NAME
 ```
@@ -549,6 +562,7 @@ docker logs CONTAINER_NAME
 ### Out of Disk Space
 
 Clean up unused resources:
+
 ```bash
 docker system prune -a --volumes
 ```
@@ -556,6 +570,7 @@ docker system prune -a --volumes
 ### Forgot Container Name
 
 List all containers:
+
 ```bash
 docker ps -a
 ```
@@ -567,6 +582,7 @@ docker ps -a
 Congratulations on completing the quickstart! 🎉
 
 **You now know how to**:
+
 - ✅ Run containers
 - ✅ Build images
 - ✅ Push to Docker Hub
@@ -596,6 +612,7 @@ Congratulations on completing the quickstart! 🎉
    - [Chapter 16: CI/CD](./chapter16_cicd.md)
    - [Chapter 17: Security](./chapter17_security.md)
    - [Chapter 21: JFrog Artifactory](./chapter21_jfrog_artifactory.md)
+   - [**New!** Best Practices Guide](./best-practices.md)
 
 ### Practice Projects
 
@@ -608,7 +625,7 @@ Try building these applications:
 
 ### Recommended Learning Path
 
-```
+```text
 Week 1: Chapters 1-6  (Foundations and building images)
 Week 2: Chapters 7-10 (Containers, networking, data)
 Week 3: Chapters 11-14 (Compose and orchestration)

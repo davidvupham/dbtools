@@ -119,15 +119,33 @@ docker top my-container
 
 ---
 
+---
+
+## Graceful Shutdowns (STOPSIGNAL)
+
+When you run `docker stop`, Docker sends a `SIGTERM` signal to the main process (PID 1). If your application doesn't handle this signal, Docker waits 10 seconds and then force-kills it (`SIGKILL`), potentially corrupting data or leaving requests hanging.
+
+Some apps (like Nginx) expect a different signal (e.g., `SIGQUIT`) to shut down gracefully. You can define this in the Dockerfile:
+
+```dockerfile
+STOPSIGNAL SIGQUIT
+```
+
+> [!TIP]
+> Always handle termination signals in your code to ensure clean disconnects from databases and services.
+
+---
+
 ## Health Checks
 
-Health checks tell Docker whether your application inside the container is working.
+Health checks are critical for production. They tell orchestrators (like Swarm or Kubernetes) if your application is actually *working*, not just *running*.
 
 ### Define in Dockerfile
 
 ```dockerfile
 FROM nginx:alpine
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+# Check every 30s, timeout after 5s, fail after 3 retries
+HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
   CMD curl -f http://localhost/ || exit 1
 ```
 
@@ -140,6 +158,8 @@ docker ps
 docker inspect my-container --format '{{.State.Health.Status}}'
 # Output: healthy, unhealthy, or starting
 ```
+
+For more details on production health checks, see the **[Best Practices Guide](best-practices.md)**.
 
 ---
 

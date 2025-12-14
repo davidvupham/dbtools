@@ -5,6 +5,7 @@
 The Docker command-line interface (CLI) is your primary tool for interacting with Docker. In this chapter, you'll learn the essential commands for working with images and containers, from pulling images to running containers, viewing logs, and managing their lifecycle.
 
 **What you'll learn**:
+
 - How to work with Docker images (pull, list, inspect)
 - How to run containers in different modes
 - How to manage container lifecycle (start, stop, restart, remove)
@@ -21,11 +22,13 @@ docker [OBJECT] [COMMAND] [OPTIONS]
 ```
 
 **Examples**:
+
 - `docker container run` - Run a container
 - `docker image ls` - List images
 - `docker network create` - Create a network
 
 **Shorthand forms** (older style, still widely used):
+
 - `docker run` instead of `docker container run`
 - `docker ps` instead of `docker container ls`
 - `docker images` instead of `docker image ls`
@@ -54,6 +57,7 @@ docker pull ghcr.io/user/myapp:v1.0
 ```
 
 **What happens when you pull**:
+
 1. Docker checks if the image exists locally
 2. If not, it contacts the registry (default: Docker Hub)
 3. Downloads the image layers
@@ -76,6 +80,7 @@ docker.io/library/nginx:alpine
 ```
 
 **Understanding the output**:
+
 - Each line is a **layer** of the image
 - Layers are cached (if you pull another image that shares layers, they're reused)
 - **Digest**: Unique identifier for this exact image version
@@ -103,6 +108,7 @@ alpine        latest    c1aabb73d233   2 months ago   7.3MB
 ```
 
 **Column explanations**:
+
 - **REPOSITORY**: Image name
 - **TAG**: Version/variant (default: `latest`)
 - **IMAGE ID**: Unique identifier (first 12 chars of full hash)
@@ -203,6 +209,7 @@ docker run alpine echo "Hello from Alpine!"
 ```
 
 **What happened**:
+
 1. Docker looked for `alpine:latest` image locally
 2. Didn't find it, so pulled from Docker Hub
 3. Created a container from the image
@@ -235,6 +242,7 @@ PRETTY_NAME="Alpine Linux v3.19"
 ```
 
 **Key points**:
+
 - You're root inside the container (but isolated from host)
 - The filesystem is the container's filesystem, not your host
 - Changes inside the container are lost when it's removed (unless you save them)
@@ -364,6 +372,7 @@ docker run -d --name my-web nginx:alpine
 ```
 
 **Why use names?**
+
 - Easier to reference: `docker logs my-web` vs `docker logs quirky_tesla`
 - More readable: `docker stop my-web`
 - Required for linking containers in Docker Compose
@@ -381,11 +390,13 @@ docker ps -a
 ```
 
 **When to use `--rm`**:
+
 - Short-lived containers
 - Testing and development
 - One-off tasks
 
 **When NOT to use `--rm`**:
+
 - Production services (you want to inspect logs/state after failure)
 - Containers with important data
 - When debugging
@@ -420,6 +431,7 @@ CONTAINER ID   IMAGE          COMMAND                  CREATED         STATUS   
 ```
 
 **Column explanations**:
+
 - **CONTAINER ID**: First 12 chars of unique ID
 - **IMAGE**: Image used to create the container
 - **COMMAND**: Command running in the container
@@ -459,6 +471,7 @@ docker stop --time=30 web
 ```
 
 **What happens**:
+
 1. Docker sends SIGTERM to the main process
 2. Waits for timeout (default 10 seconds)
 3. If still running, sends SIGKILL (force stop)
@@ -493,6 +506,7 @@ docker start -i my-alpine-shell
 ```
 
 **Difference between `docker run` and `docker start`**:
+
 - `docker run`: Creates a NEW container from an image
 - `docker start`: Starts an EXISTING stopped container
 
@@ -527,6 +541,7 @@ docker run -d --restart=unless-stopped nginx:alpine
 ```
 
 **When to use restart policies**:
+
 - `always`: Production services
 - `unless-stopped`: Services you want to stay up, but respect manual stops
 - `on-failure`: Services that might have transient failures
@@ -636,6 +651,7 @@ docker attach web
 ```
 
 **Detach without stopping** (keyboard shortcut):
+
 - Press `Ctrl+P` then `Ctrl+Q`
 
 ### Executing Commands in Running Containers
@@ -687,6 +703,7 @@ docker exec web sh -c "echo 'Hello' > /usr/share/nginx/html/hello.txt"
 ```
 
 **Difference between `docker exec` and `docker attach`**:
+
 - `docker exec`: Runs a NEW command in the container
 - `docker attach`: Attaches to the EXISTING main process
 
@@ -740,6 +757,7 @@ CONTAINER ID   NAME   CPU %     MEM USAGE / LIMIT     MEM %     NET I/O         
 ```
 
 **Column explanations**:
+
 - **CPU %**: CPU usage percentage
 - **MEM USAGE / LIMIT**: Current memory / maximum allowed
 - **MEM %**: Memory usage percentage
@@ -786,6 +804,7 @@ docker cp web:/var/log/nginx ./nginx-logs
 ```
 
 **Use cases**:
+
 - Debugging: Extract logs or config files
 - Hot fixes: Copy updated files (not recommended for production!)
 - Backup: Extract data from containers
@@ -1039,6 +1058,71 @@ docker rm -f db
 
 ---
 
+---
+
+### Exercise 4: Environment Variable Challenge (Advanced)
+
+**Goal**: Understand environment isolation and how to configure containers securely.
+
+**The Challenge**:
+Many developers assume variables from their host shell (like `AWS_ACCESS_KEY_ID`) automatically exist in the container. They don't. Containers are isolated. You must explicitly pass them.
+
+**Steps**:
+
+1. **Verify Isolation**:
+   Set a variable on your host:
+
+   ```bash
+   export SECRET_KEY="my_secret_value"
+   ```
+
+   Run a container and try to print it:
+
+   ```bash
+   docker run --rm alpine printenv SECRET_KEY
+   # Output is empty! The container doesn't know about host variables.
+   ```
+
+2. **Pass Explicitly**:
+   Pass it securely using `-e`:
+
+   ```bash
+   docker run --rm -e SECRET_KEY alpine printenv SECRET_KEY
+   # Output: my_secret_value
+   ```
+
+   *Note: If you don't provide a value (like `-e SECRET_KEY` instead of `-e SECRET_KEY=value`), Docker passes the current host value.*
+
+3. **Production Challenge (Postgres)**:
+   Launch a Postgres container with a custom user and password. If you fail to pass these, the container will exit (Postgres 15+ requires a password or a specific config).
+
+   ```bash
+   # Challenge: Run this command and make it work
+   docker run -d \
+     --name challenge-db \
+     -e POSTGRES_USER=admin \
+     -e POSTGRES_PASSWORD=production_secret \
+     postgres:15-alpine
+   ```
+
+   **Verify it works**:
+
+   ```bash
+   # Check logs (should show "database system is ready to accept connections")
+   docker logs challenge-db
+
+   # Verify environment inside
+   docker exec challenge-db env | grep POSTGRES
+   ```
+
+4. **Clean up**:
+
+   ```bash
+   docker rm -f challenge-db
+   ```
+
+---
+
 ## Quick Reference
 
 ### Most Used Commands
@@ -1099,6 +1183,7 @@ You've learned:
 ✅ Essential Docker CLI patterns and best practices
 
 **Next steps**:
+
 1. Practice these commands with different images
 2. Experiment with port mapping and environment variables
 3. Try the hands-on exercises

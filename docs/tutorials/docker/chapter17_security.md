@@ -39,7 +39,30 @@ docker run --user 1000:1000 myapp
 
 ---
 
-## 2. Use Read-Only Filesystems
+## 2. Advanced: User Namespace Remapping (`userns-remap`)
+
+While running as a non-root user in the Dockerfile is best practice, you can adds an extra layer of security by configuring the Docker Daemon to use **User Namespaces**.
+
+This maps the `root` user *inside* the container to a non-privileged user *outside* the container. Even if an attacker breaks out of the container as root, they are a nobody on the host.
+
+### Enable Remapping
+
+Edit `/etc/docker/daemon.json`:
+
+```json
+{
+  "userns-remap": "default"
+}
+```
+
+Restart Docker. It will create a user `dockremap` and map container IDs to high-range host IDs (e.g., container UID 0 maps to host UID 165536).
+
+> [!NOTE]
+> This applies to **all** containers on the daemon and can complicate volume permissions (files created by containers will be owned by high UIDs on the host).
+
+---
+
+## 3. Use Read-Only Filesystems
 
 Prevent malicious writes by making the container filesystem read-only.
 
@@ -65,7 +88,7 @@ services:
 
 ---
 
-## 3. Drop Capabilities
+## 4. Drop Capabilities
 
 Linux capabilities grant fine-grained root-like powers. Drop all and add back only what you need.
 
@@ -90,7 +113,7 @@ docker run -d \
 
 ---
 
-## 4. Prevent Privilege Escalation
+## 5. Prevent Privilege Escalation
 
 Block processes from gaining additional privileges:
 
@@ -104,7 +127,7 @@ This prevents setuid binaries and other privilege escalation techniques.
 
 ---
 
-## 5. Secrets Management
+## 6. Secrets Management
 
 **Never bake secrets into images.** They end up in layers and are visible with `docker history`.
 
@@ -140,7 +163,7 @@ secrets:
 
 ---
 
-## 6. Use Minimal Base Images
+## 7. Use Minimal Base Images
 
 Fewer packages = smaller attack surface.
 
@@ -165,7 +188,7 @@ CMD ["/myapp"]
 
 ---
 
-## 7. Scan Images for Vulnerabilities
+## 8. Scan Images for Vulnerabilities
 
 Regularly scan your images for known CVEs.
 
@@ -196,7 +219,7 @@ docker scout cves myapp:latest
 
 ---
 
-## 8. Network Isolation
+## 9. Network Isolation
 
 - Don't expose ports unless necessary.
 - Use user-defined networks to isolate services.
@@ -224,7 +247,7 @@ networks:
 
 ---
 
-## 9. Resource Limits
+## 10. Resource Limits
 
 Prevent denial-of-service by limiting CPU and memory.
 

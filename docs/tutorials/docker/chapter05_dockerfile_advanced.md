@@ -69,14 +69,27 @@ CMD ["./myapp"]
 
 ---
 
-## 3. Build Arguments (ARG)
+## 3. Build Arguments (ARG) vs Runtime Variables (ENV)
 
-Sometimes you need to pass variables at build time (e.g., version numbers) that shouldn't persist as environment variables in the final container.
+It is crucial to understand the difference between build-time and run-time variables.
+
+| Feature | `ARG` | `ENV` |
+| :--- | :--- | :--- |
+| **Scope** | Build-time only | Build-time + Run-time |
+| **Persistence** | Disappears in final image | Persists in final image |
+| **Usage** | Specifying versions, build flags | App config, database URLs |
+
+### Usage Example
 
 ```dockerfile
 FROM python:3.9-slim
+
+# ARG: Only available during build
 ARG VERSION=1.0.0
 RUN echo "Building version $VERSION" > version.txt
+
+# ENV: Available to the running application
+ENV APP_MODE=production
 ```
 
 Build with:
@@ -162,13 +175,56 @@ CMD ["node", "index.js"]
 
 ---
 
-## 5. Summary Checklist for Production Images
+---
+
+## 5. Metadata (LABEL)
+
+Labels allow you to attach key-value metadata to your images. This is essential for automation tools, auditing, and helping other developers understand what your image is for.
+
+```dockerfile
+LABEL org.opencontainers.image.title="My App"
+LABEL org.opencontainers.image.version="1.2.3"
+LABEL org.opencontainers.image.authors="support@example.com"
+```
+
+---
+
+## 6. Custom Shells (SHELL)
+
+The default shell for `RUN` instructions is `/bin/sh -c`. If you need a different shell (e.g., `bash` for pipefail support or managing complex logic), use the `SHELL` instruction.
+
+```dockerfile
+# Use bash with pipefail to ensure pipelines fail if any command fails
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
+RUN wget -O - https://example.com/install.sh | bash
+```
+
+---
+
+## 7. Downstream Builds (ONBUILD)
+
+The `ONBUILD` instruction registers a command to run *only when another image is built using this image as a base*. It is useful for building framework images (like a standard Python wrapper) but can be confusing if overused.
+
+```dockerfile
+# In the base image
+ONBUILD COPY requirements.txt .
+ONBUILD RUN pip install -r requirements.txt
+```
+
+When a user writes `FROM my-base-image`, these commands execute immediately.
+
+---
+
+## 8. Summary Checklist for Production Images
 
 1. **Use specific tags** (`python:3.9-slim`), never just `latest`.
 2. **Optimize caching** by copying dependency files first.
 3. **Use Multi-Stage Builds** for compiled languages or frontend builds.
 4. **Add `.dockerignore`** to keep junk out.
 5. **Run as non-root** for security.
-6. **Scan your images** for vulnerabilities (Chapter 17).
+6. **Add Labels** for metadata.
+7. **Define `SHELL`** for safer execution if needed.
+8. **Scan your images** for vulnerabilities (Chapter 17).
 
 **Next Chapter:** Learn how to manage the images you've built in **Chapter 6: Managing Images**.

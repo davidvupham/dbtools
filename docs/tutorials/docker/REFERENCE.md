@@ -73,6 +73,8 @@ See `docker-compose.yml` structure.
 
 ## Dos and Don'ts
 
+For a detailed explanation, see the **[Best Practices Guide](best-practices.md)**.
+
 | Category | Do ✅ | Don't ❌ |
 | :--- | :--- | :--- |
 | **Images** | Use specific tags (`node:18`) | Use `latest` tag in production |
@@ -124,4 +126,5 @@ See `docker-compose.yml` structure.
 
 - **Capability:** Linux kernel permissions (e.g., `NET_BIND_SERVICE`). Drop unused ones.
 - **Seccomp:** Secure computing mode that restricts system calls.
+- **User Namespace Remapping:** Maps container root to a non-privileged host user (`userns-remap`).
 - **Non-root User:** Running containers as a user other than root for security.

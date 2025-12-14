@@ -27,7 +27,7 @@ Pushing to AWS ECR (example):
 ```bash
 # 1) Authenticate the Docker client to ECR (region-specific)
 aws ecr get-login-password --region us-east-1 \
-	| docker login --username AWS --password-stdin 123456789012.dkr.ecr.us-east-1.amazonaws.com
+ | docker login --username AWS --password-stdin 123456789012.dkr.ecr.us-east-1.amazonaws.com
 
 # 2) Tag and push
 docker tag myapp:1.0 123456789012.dkr.ecr.us-east-1.amazonaws.com/myapp:1.0
@@ -35,6 +35,7 @@ docker push 123456789012.dkr.ecr.us-east-1.amazonaws.com/myapp:1.0
 ```
 
 Notes
+
 - Prefer immutable digests in deployment manifests. Resolve a tag’s digest with: `docker inspect <image:tag> --format '{{index .RepoDigests 0}}'`.
 - Consider retention policies and vulnerability scanning features offered by the registry.
 
@@ -64,7 +65,7 @@ Buildx with a dedicated remote builder:
 ```bash
 # Create and use a remote builder over SSH
 docker buildx create --name remote-builder --driver docker-container \
-	--use ssh://user@my.docker.host
+ --use ssh://user@my.docker.host
 
 # Inspect builder capabilities
 docker buildx inspect --bootstrap
@@ -74,11 +75,13 @@ docker buildx build --platform linux/amd64,linux/arm64 -t myorg/app:1.0 --push .
 ```
 
 Why use contexts/builders?
+
 - Offload heavy builds to stronger machines (or ephemeral builders in CI)
 - Build once and push multi‑arch images with consistent caching
 - Centralize Docker daemon access control
 
 Cross‑links
+
 - See the Buildx example in `docs/tutorials/docker/examples/buildx/`.
 
 ---
@@ -88,19 +91,23 @@ Cross‑links
 Rootless mode runs the Docker daemon and containers without root privileges on the host, reducing risk.
 
 Benefits
+
 - Smaller attack surface on the host
 - Containers map container‑root to an unprivileged host user via user namespaces
 
 Considerations
+
 - Not all features are available (e.g., some storage/network drivers)
 - Port binding below 1024 and cgroup interactions differ; read the official docs
 
 Quick start (Linux, high‑level)
+
 - Install `uidmap`, ensure subuid/subgid ranges in `/etc/subuid` and `/etc/subgid`
 - Follow Docker’s Rootless guide to run `dockerd-rootless-setuptool.sh install`
 - Use `export DOCKER_HOST=unix:///run/user/$(id -u)/docker.sock` to target the rootless daemon
 
 Even without full rootless mode, you should:
+
 - Use non‑root `USER` in your images
 - Drop capabilities and set `--security-opt no-new-privileges`
 
@@ -139,6 +146,7 @@ docker scout quickview myorg/app:1.0
 ```
 
 Tips
+
 - Scan both base images and your final images
 - Keep base images updated and pin versions (e.g., `python:3.12-slim`)
 - Use multi‑stage builds to avoid shipping compilers and package managers
@@ -162,6 +170,7 @@ syft packages docker:myorg/app:1.0 -o spdx-json > sbom.spdx.json
 CycloneDX CLI can validate/transform SBOMs across ecosystems. Some registries support storing SBOMs as OCI artifacts alongside the image.
 
 Pro tips
+
 - Automate SBOM generation during CI build and attach to releases
 - Sign SBOMs (see the next chapter for signing/attestation)
 
@@ -191,6 +200,7 @@ Secure with TLS and auth in production; evaluate Harbor if you need UI, policies
 For enterprise environments requiring advanced features, **JFrog Artifactory** provides a universal artifact repository that supports Docker alongside other package formats.
 
 **Key features**:
+
 - Universal repository (Docker, Maven, npm, PyPI, etc.)
 - Fine-grained access control (RBAC)
 - Repository replication and high availability
@@ -214,24 +224,69 @@ docker push mycompany.jfrog.io/docker-local/myapp:1.0
 ```
 
 **Repository types in Artifactory**:
+
 1. **Local**: Your own images (builds)
 2. **Remote**: Cache of external registries (Docker Hub, GHCR, etc.)
 3. **Virtual**: Aggregates local and remote (single endpoint)
 
 **Example virtual repository setup**:
-```
+
+```text
 docker-virtual (developers use this)
   ├── docker-local (internal images)
   └── docker-hub-remote (cached external images)
 ```
 
 **When pulling `mycompany.jfrog.io/docker/nginx:alpine`**:
+
 1. Checks `docker-local` (not found)
 2. Checks `docker-hub-remote` (downloads from Docker Hub, caches locally)
 3. Returns image
 4. Next pull is instant (served from cache)
 
 **For comprehensive JFrog Artifactory guide**: See [Chapter 21: JFrog Artifactory as Docker Registry](./chapter21_jfrog_artifactory.md)
+
+---
+
+## Pattern: Distributing CLI Tools with Docker
+
+A powerful use case for Docker is packaging complex command-line tools (like `aws-cli`, `terraform`, or `node`) so users don't need to manage local versions or dependencies.
+
+### Concept
+
+Package the tool in an image and use a shell alias to run it as if it were a local binary.
+
+#### 1. Create the Image (or use an official one)
+
+```dockerfile
+# Dockerfile for a custom tool
+FROM python:3.11-alpine
+RUN pip install --no-cache-dir awscli
+ENTRYPOINT ["aws"]
+CMD ["--help"]
+```
+
+#### 2. Create a Shell Alias
+
+Add this to your `~/.bashrc` or `~/.zshrc`:
+
+```bash
+# Run AWS CLI inside a container, mapping current dir and credentials
+alias aws='docker run --rm -it -v $(pwd):/data -v $HOME/.aws:/root/.aws -w /data amazon/aws-cli'
+```
+
+#### 3. Use the Tool
+
+```bash
+# Looks like a local command, but runs in Docker!
+aws s3 ls
+```
+
+**Benefits:**
+
+- **Zero Install:** Users just need Docker.
+- **Isolation:** Dependencies don't conflict with your host.
+- **Versioning:** Switch versions easily (`alias aws-v1='docker run ... aws:v1'`).
 
 ---
 
@@ -249,4 +304,5 @@ Next: "Beyond the Basics" digs into cache performance, reproducible builds, and 
 ---
 
 **Related Chapters**:
+
 - [Chapter 21: JFrog Artifactory as Docker Registry](./chapter21_jfrog_artifactory.md) - Comprehensive guide to using Artifactory
