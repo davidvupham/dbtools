@@ -198,6 +198,7 @@ sequenceDiagram
     UI->>API: POST /requests/{id}/start (with confirmation)
     API->>AUD: Append execution start
     API->>W: Enqueue execution job
+    API->>N: Notify execution started
 
     W->>C: Prechecks
     C->>T: Validate readiness (read-only)
