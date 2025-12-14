@@ -13,6 +13,9 @@ This directory contains the Python basics for this project.
 - **Concurrency** — [concepts/concurrency.md](./concepts/concurrency.md)
   - Threading (I/O), Asyncio (High-volume I/O), Multiprocessing (CPU)
 
+- **Functional Programming** — [functional_programming/README.md](./functional_programming/README.md)
+  - Pure functions, Immutability, Map/Filter/Reduce, Best Practices
+
 Suggested reading order:
 
 1) Part 1 → 2 → 3
