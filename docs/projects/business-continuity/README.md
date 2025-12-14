@@ -7,15 +7,15 @@ This project monitors Disaster Recovery (DR) readiness for IT systems and provid
 | # | Phase | Document | Purpose | Status |
 |---|-------|----------|---------|--------|
 | 1 | Initiation | [Project Plan](management/project-plan.md) | Timeline, effort, resources | ⬜ |
-| 2 | Initiation | [Decision Log](management/decision-log.md) | ADRs | ⬜ |
+| 2 | Initiation | [Decision Log](management/decision-log.md) | ADRs | 📝 |
 | 3 | Requirements | [Functional Spec](specs/functional-spec.md) | User stories, acceptance criteria | ⬜ |
 | 4 | Design | [Technical Architecture](architecture/technical-architecture.md) | High-level design | 📝 |
-| 5 | Design | [Software Stack](architecture/software-stack.md) | Technology choices | ⬜ |
-| 6 | Design | [Detailed Design](design/design.md) | Data flows, schemas | ⬜ |
+| 5 | Design | [Software Stack](architecture/software-stack.md) | Technology choices | 📝 |
+| 6 | Design | [Detailed Design](design/design.md) | Data flows, schemas | 📝 |
 | 7 | Validation | [Test Plan](testing/test-plan.md) | Test cases | 📝 |
-| 8 | Build | [Implementation Guide](implementation/implementation-guide.md) | Build instructions | ⬜ |
-| 9 | Operations | [Procedures](operations/procedures.md) | Operational steps | ⬜ |
-| 10 | Operations | [Runbook](operations/runbook.md) | Incident response | ⬜ |
+| 8 | Build | [Implementation Guide](implementation/implementation-guide.md) | Build instructions | 📝 |
+| 9 | Operations | [Procedures](operations/procedures.md) | Operational steps | 📝 |
+| 10 | Operations | [Runbook](operations/runbook.md) | Incident response | 📝 |
 
 ## Quick Links
 
