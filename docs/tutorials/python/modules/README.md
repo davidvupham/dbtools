@@ -10,6 +10,7 @@ Comprehensive tutorials for popular Python libraries and tools.
 | [Prefect](prefect/README.md) | Data Engineering | Workflow orchestration |
 | [SQLModel](sqlmodel/README.md) | Database | Type-safe ORM (Pydantic + SQLAlchemy) |
 | [Litestar](litestar/README.md) | Web Development | High-performance async web framework |
+| [Loguru](loguru/README.md) | Logging / Utilities | Sane logging for Python |
 | [Robocorp](robocorp/README.md) | Automation | Robotic Process Automation (RPA) |
 | [DuckDB](duckdb/README.md) | Analytics | In-memory analytics database |
 | [Jupyter](jupyter/README.md) | Data Science | Interactive notebooks |
@@ -25,11 +26,9 @@ Comprehensive tutorials for popular Python libraries and tools.
 | [Streamlit](streamlit/README.md) | Web Apps | Data apps in pure Python |
 | [Watchfiles](watchfiles/README.md) | Utilities | File watching and reloading |
 
-
 ## 📖 Articles & Collections
 
 * [9 Python Libraries That Make You Look Like a Data Scientist](data_science_power_ups.md)
-
 
 ## 🎯 Learning Paths
 
