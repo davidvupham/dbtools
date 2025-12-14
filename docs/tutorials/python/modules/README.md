@@ -9,6 +9,7 @@ Comprehensive tutorials for popular Python libraries and tools.
 | [Faker](faker/README.md) | Testing | Generate realistic test data |
 | [Prefect](prefect/README.md) | Data Engineering | Workflow orchestration |
 | [SQLModel](sqlmodel/README.md) | Database | Type-safe ORM (Pydantic + SQLAlchemy) |
+| [FastAPI](fastapi/README.md) | Web Development | Modern, fast web framework |
 | [Litestar](litestar/README.md) | Web Development | High-performance async web framework |
 | [Loguru](loguru/README.md) | Logging / Utilities | Sane logging for Python |
 | [Robocorp](robocorp/README.md) | Automation | Robotic Process Automation (RPA) |
