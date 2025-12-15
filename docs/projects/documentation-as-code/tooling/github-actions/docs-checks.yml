@@ -1,0 +1,53 @@
+# Example GitHub Actions workflow for docs-as-code checks
+#
+# Copy to target repo as:
+#   .github/workflows/docs-checks.yml
+
+name: docs-checks
+
+on:
+  pull_request:
+  push:
+    branches: [ main ]
+
+jobs:
+  docs:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Node dev dependencies
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci
+          else
+            npm install --save-dev markdownlint-cli2 cspell
+          fi
+
+      - name: Markdown lint
+        run: npx markdownlint-cli2 "docs/**/*.md"
+
+      - name: Spellcheck
+        run: npx cspell --config cspell.json "docs/**/*.md"
+
+      - name: Install Vale
+        run: |
+          curl -fsSL https://github.com/errata-ai/vale/releases/latest/download/vale_Linux_64-bit.tar.gz -o vale.tar.gz
+          tar -xzf vale.tar.gz vale
+          sudo mv vale /usr/local/bin/vale
+          vale --version
+
+      - name: Vale (style/terminology)
+        run: vale --config .vale.ini docs
+
+      - name: Link check (Lychee)
+        uses: lycheeverse/lychee-action@v2
+        with:
+          args: --config lychee.toml "docs/**/*.md"

@@ -1,0 +1,24 @@
+# Example Lychee configuration
+# Copy to target repo root as: lychee.toml
+
+# Consider internal environments:
+# - some links may be inaccessible from CI; exclude or accept those explicitly.
+
+verbose = "warn"
+no_progress = true
+max_retries = 2
+retry_wait_time = 2
+
+# Only check markdown by default (CI can pass globs explicitly too)
+include = ["docs/**/*.md"]
+
+# Exclusions (tune for your environment)
+exclude = [
+  "https://localhost",
+  "http://localhost"
+]
+
+# Ignore common patterns
+exclude_path = [
+  "**/node_modules/**"
+]

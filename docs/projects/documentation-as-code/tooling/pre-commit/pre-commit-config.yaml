@@ -1,0 +1,82 @@
+# Example pre-commit config for documentation-as-code
+#
+# Copy into the root of your target repository as:
+#   .pre-commit-config.yaml
+#
+# Notes:
+# - Docs are assumed to live under ./docs
+# - The hook commands call the provided helper scripts so teams have one interface.
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        args: ["--maxkb=1024"]
+
+  - repo: local
+    hooks:
+      # Linux/WSL default (bash)
+      - id: docs-markdownlint
+        name: "docs: markdownlint"
+        entry: bash tooling/scripts/run-doc-checks.sh --markdownlint
+        language: system
+        files: ^docs/.*\.md$
+        pass_filenames: false
+
+      - id: docs-cspell
+        name: "docs: cspell"
+        entry: bash tooling/scripts/run-doc-checks.sh --cspell
+        language: system
+        files: ^docs/.*\.md$
+        pass_filenames: false
+
+      # Optional locally (often better in CI):
+      - id: docs-vale
+        name: "docs: vale"
+        entry: bash tooling/scripts/run-doc-checks.sh --vale
+        language: system
+        files: ^docs/.*\.md$
+        pass_filenames: false
+
+      - id: docs-lychee
+        name: "docs: lychee"
+        entry: bash tooling/scripts/run-doc-checks.sh --lychee
+        language: system
+        files: ^docs/.*\.md$
+        pass_filenames: false
+
+      # Windows-first alternative (pwsh)
+      # Disable the bash hooks above and enable these instead.
+      #
+      # - id: docs-markdownlint-pwsh
+      #   name: docs: markdownlint (pwsh)
+      #   entry: pwsh -NoProfile -File tooling/scripts/run-doc-checks.ps1 -MarkdownLint
+      #   language: system
+      #   files: ^docs/.*\.md$
+      #   pass_filenames: false
+      #
+      # - id: docs-cspell-pwsh
+      #   name: docs: cspell (pwsh)
+      #   entry: pwsh -NoProfile -File tooling/scripts/run-doc-checks.ps1 -CSpell
+      #   language: system
+      #   files: ^docs/.*\.md$
+      #   pass_filenames: false
+      #
+      # - id: docs-vale-pwsh
+      #   name: docs: vale (pwsh)
+      #   entry: pwsh -NoProfile -File tooling/scripts/run-doc-checks.ps1 -Vale
+      #   language: system
+      #   files: ^docs/.*\.md$
+      #   pass_filenames: false
+      #
+      # - id: docs-lychee-pwsh
+      #   name: docs: lychee (pwsh)
+      #   entry: pwsh -NoProfile -File tooling/scripts/run-doc-checks.ps1 -Lychee
+      #   language: system
+      #   files: ^docs/.*\.md$
+      #   pass_filenames: false

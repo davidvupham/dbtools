@@ -1,0 +1,36 @@
+{
+  "version": "0.2",
+  "language": "en",
+  "dictionaries": [
+    "companies",
+    "softwareTerms",
+    "bash",
+    "powershell"
+  ],
+  "ignorePaths": [
+    "**/node_modules/**",
+    "**/.git/**",
+    "**/dist/**",
+    "**/build/**"
+  ],
+  "words": [
+    "Ansible",
+    "CODEOWNERS",
+    "cspell",
+    "Docusaurus",
+    "HCL",
+    "IaC",
+    "KPI",
+    "lychee",
+    "markdownlint",
+    "MkDocs",
+    "runbook",
+    "runbooks",
+    "Terraform",
+    "Vault"
+  ],
+  "ignoreRegExpList": [
+    "/`[^`]*`/g",
+    "/\\b[0-9a-f]{7,40}\\b/g"
+  ]
+}

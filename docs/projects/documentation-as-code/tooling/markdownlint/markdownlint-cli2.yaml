@@ -1,0 +1,24 @@
+# Example markdownlint-cli2 config
+#
+# Copy into the root of your target repository as:
+#   .markdownlint-cli2.yaml
+
+globs:
+  - "docs/**/*.md"
+
+config:
+  default: true
+
+  # Line length: allow a bit longer for URLs and tables.
+  MD013:
+    line_length: 120
+    tables: false
+    code_blocks: false
+
+  # Duplicate headings are common across templates.
+  MD024:
+    allow_different_nesting: true
+
+  # Prefer fenced code blocks.
+  MD046:
+    style: fenced
