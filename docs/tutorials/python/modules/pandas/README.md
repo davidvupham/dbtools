@@ -1,273 +1,81 @@
-# Pandas Tutorial
+# Pandas Course (Beginner → Intermediate → Advanced, Pandas 2.x)
 
-Data manipulation and analysis for Python.
-
-## Overview
-
-**Pandas** provides DataFrames for tabular data, powerful I/O, and expressive operations for data analysis.
+This is a progressive pandas course: **read the chapters in order**, run the **companion notebooks**, then do the **exercises** (solutions included).
 
 | | |
 |---|---|
 | **Package** | `pandas` |
-| **Install** | `pip install pandas` |
-| **Docs** | [pandas.pydata.org](https://pandas.pydata.org/docs/) |
+| **Install** | `python -m pip install pandas` |
+| **Official docs** | [pandas.pydata.org](https://pandas.pydata.org/docs/) |
+
+### How to use this course
+
+- **Read**: `chapters/*.md`
+- **Run**: `notebooks/*.ipynb` (same examples, runnable top-to-bottom)
+- **Practice**: `exercises/*` then check `solutions/*`
+
+### Running the notebooks
+
+Common options:
+
+- **JupyterLab**: `python -m pip install jupyterlab` then `jupyter lab`
+- **VS Code**: install the Python + Jupyter extensions and open the notebook
+
+### Sources we intentionally incorporated (for topic coverage + example themes)
+
+We used these to ensure the course covers common real-world pandas workflows, while validating APIs and recommendations against official pandas docs:
+
+- Video baseline: [Learn Pandas in 30 Minutes - Python Pandas Tutorial](https://youtu.be/EXIgjIBu4EU?si=UwcisJQy1bgW6cRC) (+ companion repo: `https://github.com/techwithtim/PanadasTutorial`)
+- Real Python (structured beginner flow): `https://realpython.com/courses/introduction-pandas/?utm_source=notification_summary&utm_medium=email&utm_campaign=2025-12-02`
+- Task-oriented manipulation examples (avocados): `https://www.howtogeek.com/my-favorite-pandas-data-manipulation-tasks-and-also-avocados/`
+- Cleaning one-liners (used carefully; not all are “one-size-fits-all”): `https://www.kdnuggets.com/10-pandas-one-liners-for-data-cleaning`
+- Time-series feature engineering patterns: `https://machinelearningmastery.com/7-pandas-tricks-for-time-series-feature-engineering/`
+- Coverage checklist inspiration (what people are expected to know): `https://www.projectpro.io/article/pandas-interview-questions-and-answers/985`
 
 ---
 
-## Table of Contents
-- [Overview](#overview)
-- [Quick Start](#quick-start)
-- [Reading Data](#reading-data)
-- [Selection](#selection)
-- [Data Cleaning](#data-cleaning)
-- [Transformations](#transformations)
-- [GroupBy](#groupby)
-- [Merging](#merging)
-- [Time Series](#time-series)
-- [Performance Tips](#performance-tips)
-- [Quick Reference](#quick-reference)
+## Course map (chapters, notebooks, exercises)
+
+| Chapter | Notebook | Exercises | Solutions |
+|---|---|---|---|
+| 00. Setup + mental model | [`notebooks/00_setup.ipynb`](notebooks/00_setup.ipynb) | [`exercises/ex_00_setup.md`](exercises/ex_00_setup.md) | [`solutions/sol_00_setup.md`](solutions/sol_00_setup.md) |
+| 01. Series + DataFrame fundamentals | [`notebooks/01_series_dataframe.ipynb`](notebooks/01_series_dataframe.ipynb) | [`exercises/ex_01_series_dataframe.md`](exercises/ex_01_series_dataframe.md) | [`solutions/sol_01_series_dataframe.md`](solutions/sol_01_series_dataframe.md) |
+| 02. I/O (CSV/Excel/Parquet/JSON/SQL) + dtypes | [`notebooks/02_io.ipynb`](notebooks/02_io.ipynb) | [`exercises/ex_02_io.md`](exercises/ex_02_io.md) | [`solutions/sol_02_io.md`](solutions/sol_02_io.md) |
+| 03. Explore + inspect (EDA essentials) | [`notebooks/03_explore_inspect.ipynb`](notebooks/03_explore_inspect.ipynb) | [`exercises/ex_03_explore_inspect.md`](exercises/ex_03_explore_inspect.md) | [`solutions/sol_03_explore_inspect.md`](solutions/sol_03_explore_inspect.md) |
+| 04. Indexing + selection (`loc/iloc/at/iat`, MultiIndex) | [`notebooks/04_indexing_selection.ipynb`](notebooks/04_indexing_selection.ipynb) | [`exercises/ex_04_indexing_selection.md`](exercises/ex_04_indexing_selection.md) | [`solutions/sol_04_indexing_selection.md`](solutions/sol_04_indexing_selection.md) |
+| 05. Filtering + `query()` | [`notebooks/05_filtering_query.ipynb`](notebooks/05_filtering_query.ipynb) | [`exercises/ex_05_filtering_query.md`](exercises/ex_05_filtering_query.md) | [`solutions/sol_05_filtering_query.md`](solutions/sol_05_filtering_query.md) |
+| 06. Transformations (`assign`, vectorization, `pipe`) | [`notebooks/06_transform_assign.ipynb`](notebooks/06_transform_assign.ipynb) | [`exercises/ex_06_transform_assign.md`](exercises/ex_06_transform_assign.md) | [`solutions/sol_06_transform_assign.md`](solutions/sol_06_transform_assign.md) |
+| 07. Cleaning + data quality | [`notebooks/07_cleaning_quality.ipynb`](notebooks/07_cleaning_quality.ipynb) | [`exercises/ex_07_cleaning_quality.md`](exercises/ex_07_cleaning_quality.md) | [`solutions/sol_07_cleaning_quality.md`](solutions/sol_07_cleaning_quality.md) |
+| 08. `groupby` + aggregations | [`notebooks/08_groupby_agg.ipynb`](notebooks/08_groupby_agg.ipynb) | [`exercises/ex_08_groupby_agg.md`](exercises/ex_08_groupby_agg.md) | [`solutions/sol_08_groupby_agg.md`](solutions/sol_08_groupby_agg.md) |
+| 09. `merge/join/concat` | [`notebooks/09_merge_join_concat.ipynb`](notebooks/09_merge_join_concat.ipynb) | [`exercises/ex_09_merge_join_concat.md`](exercises/ex_09_merge_join_concat.md) | [`solutions/sol_09_merge_join_concat.md`](solutions/sol_09_merge_join_concat.md) |
+| 10. Reshaping (`pivot`, `melt`, `stack/unstack`) | [`notebooks/10_reshape.ipynb`](notebooks/10_reshape.ipynb) | [`exercises/ex_10_reshape.md`](exercises/ex_10_reshape.md) | [`solutions/sol_10_reshape.md`](solutions/sol_10_reshape.md) |
+| 11. Datetime + time series (resample/rolling/features) | [`notebooks/11_datetime_timeseries.ipynb`](notebooks/11_datetime_timeseries.ipynb) | [`exercises/ex_11_datetime_timeseries.md`](exercises/ex_11_datetime_timeseries.md) | [`solutions/sol_11_datetime_timeseries.md`](solutions/sol_11_datetime_timeseries.md) |
+| 12. Performance + memory + Copy-on-Write | [`notebooks/12_performance_memory.ipynb`](notebooks/12_performance_memory.ipynb) | [`exercises/ex_12_performance_memory.md`](exercises/ex_12_performance_memory.md) | [`solutions/sol_12_performance_memory.md`](solutions/sol_12_performance_memory.md) |
+| 13. Case studies (task-first workflows) | [`notebooks/13_case_studies.ipynb`](notebooks/13_case_studies.ipynb) | [`exercises/ex_13_case_studies.md`](exercises/ex_13_case_studies.md) | [`solutions/sol_13_case_studies.md`](solutions/sol_13_case_studies.md) |
+
+### Capstone
+
+- Capstone notebook: [`notebooks/99_capstone.ipynb`](notebooks/99_capstone.ipynb)
 
 ---
 
-## Quick Start
-
-```python
-import pandas as pd
-
-df = pd.DataFrame({
-    'name': ['Alice', 'Bob', 'Charlie'],
-    'age': [25, 30, 35],
-})
-
-print(df.head())
-print(df.describe())
-```
-
----
-
-## Reading Data
-
-```python
-# CSV
-df = pd.read_csv('data.csv')
-df.to_csv('output.csv', index=False)
-
-# Excel
-df = pd.read_excel('data.xlsx')
-df.to_excel('output.xlsx', index=False)
-
-# Parquet
-df = pd.read_parquet('data.parquet')
-df.to_parquet('output.parquet')
-
-# SQL
-from sqlalchemy import create_engine
-engine = create_engine('postgresql://user:pass@localhost/db')
-df = pd.read_sql('SELECT * FROM users', engine)
-df.to_sql('users', engine, if_exists='replace', index=False)
-```
-
----
-
-## Selection
-
-```python
-# Columns
-df['name']              # Series
-df[['name', 'age']]     # DataFrame
-
-# Rows by position
-df.iloc[0]              # First row
-df.iloc[0:5]            # First 5 rows
-
-# Rows by label
-df.loc[0, 'name']       # Single value
-df.loc[df['age'] > 25]  # Filter
-
-# Boolean filtering
-df[df['age'] > 25]
-df[(df['age'] > 25) & (df['city'] == 'NYC')]
-df[df['city'].isin(['NYC', 'LA'])]
-```
-
----
-
-## Data Cleaning
-
-```python
-# Missing values
-df.isna().sum()                  # Count missing
-df.dropna()                      # Drop rows with NaN
-df.fillna(0)                     # Fill with value
-df['col'].fillna(df['col'].mean())  # Fill with mean
-
-# Duplicates
-df.drop_duplicates()
-
-# Data types
-df['age'] = df['age'].astype(int)
-df['date'] = pd.to_datetime(df['date'])
-
-# String cleaning
-df['name'] = df['name'].str.strip().str.lower()
-```
-
----
-
-## Transformations
-
-```python
-# New columns
-df['total'] = df['price'] * df['quantity']
-
-# Apply function
-df['age_group'] = df['age'].apply(lambda x: 'senior' if x > 60 else 'adult')
-
-# Conditional
-import numpy as np
-df['status'] = np.where(df['age'] >= 18, 'adult', 'minor')
-
-# Rename
-df = df.rename(columns={'old': 'new'})
-
-# Sort
-df = df.sort_values('age', ascending=False)
-```
-
----
-
-## GroupBy
-
-```python
-# Basic aggregation
-df.groupby('city')['sales'].sum()
-df.groupby('city')['sales'].agg(['sum', 'mean', 'count'])
-
-# Named aggregations
-df.groupby('city').agg(
-    total=('sales', 'sum'),
-    average=('sales', 'mean'),
-)
-
-# Transform (same-size output)
-df['city_avg'] = df.groupby('city')['sales'].transform('mean')
-```
-
----
-
-## Merging
-
-```python
-# Merge (SQL-style join)
-merged = pd.merge(df1, df2, on='id', how='left')
-
-# Concat
-combined = pd.concat([df1, df2], ignore_index=True)
-```
-
----
-
-## Time Series
-
-```python
-# DateTime index
-df['date'] = pd.to_datetime(df['date'])
-df = df.set_index('date')
-
-# Resample
-monthly = df.resample('M').sum()
-
-# Rolling average
-df['ma_7'] = df['value'].rolling(7).mean()
-```
-
----
-
-## Performance Tips
-
-Optimizing pandas for speed and memory efficiency is critical for larger datasets.
-
-### 1. Speed Up read_csv
-- **Specify dtypes**: Helps pandas avoid scanning the whole file to guess types.
-- **Use `usecols`**: Load only what you need.
-- **Chunking**: Process massive files in pieces.
-
-```python
-# Efficient loading
-df = pd.read_csv('large_data.csv',
-    usecols=['date', 'store_id', 'sales'],
-    dtype={'store_id': 'int32', 'sales': 'float32'},
-    chunksize=50_000
-)
-```
-
-### 2. Efficient Data Types
-Downcast numeric types and use `category` for low-cardinality string columns to save memory.
-
-```python
-df['id'] = df['id'].astype('int32')          # vs int64
-df['price'] = df['price'].astype('float32')  # vs float64
-df['status'] = df['status'].astype('category') # Awesome for repeated strings
-```
-
-### 3. Vectorization (Stop Looping)
-Avoid `for` loops and `.apply()` when possible. Pandas vectorized operations run in C and are much faster.
-
-```python
-# SLOW
-df['tax'] = df['price'].apply(lambda x: x * 0.1)
-
-# FAST (Vectorized)
-df['tax'] = df['price'] * 0.1
-```
-
-### 4. Proper Indexing
-- **`loc`**: Label-based (safer, clearer).
-- **`iloc`**: Position-based.
-- Avoid chained indexing `df[mask]['col'] = 1` which causes `SettingWithCopyWarning`.
-
-```python
-# Good
-df.loc[df['price'] > 100, 'category'] = 'premium'
-```
-
-### 5. Query for Clean Filtering
-`query()` allows for SQL-like syntax which is often cleaner and can be optimized.
-
-```python
-# Complex boolean indexing
-df_high = df[(df['price'] > 100) & (df['quantity'] < 5)]
-
-# Clean query
-df_high = df.query('price > 100 and quantity < 5')
-```
-
-### 6. Aggregations (Categoricals)
-Converting strings to categories speeds up GroupBy operations significantly because pandas groups by the underlying integer codes, not the strings.
-
-### 7. Process in Chunks
-For files larger than memory, process row-by-row or chunk-by-chunk.
-
-```python
-total_sales = 0
-for chunk in pd.read_csv('massive_log.csv', chunksize=100000):
-    total_sales += chunk['sales'].sum()
-```
-
-
----
-
-## Quick Reference
-
-| Operation | Code |
-|-----------|------|
-| Shape | `df.shape` |
-| Columns | `df.columns` |
-| Types | `df.dtypes` |
-| First N | `df.head(n)` |
-| Stats | `df.describe()` |
-| Missing | `df.isna().sum()` |
-| Unique | `df['col'].nunique()` |
+## Chapters (reading order)
+
+1. [`chapters/00_setup.md`](chapters/00_setup.md)
+2. [`chapters/01_series_dataframe.md`](chapters/01_series_dataframe.md)
+3. [`chapters/02_io.md`](chapters/02_io.md)
+4. [`chapters/03_explore_inspect.md`](chapters/03_explore_inspect.md)
+5. [`chapters/04_indexing_selection.md`](chapters/04_indexing_selection.md)
+6. [`chapters/05_filtering_query.md`](chapters/05_filtering_query.md)
+7. [`chapters/06_transform_assign.md`](chapters/06_transform_assign.md)
+8. [`chapters/07_cleaning_quality.md`](chapters/07_cleaning_quality.md)
+9. [`chapters/08_groupby_agg.md`](chapters/08_groupby_agg.md)
+10. [`chapters/09_merge_join_concat.md`](chapters/09_merge_join_concat.md)
+11. [`chapters/10_reshape.md`](chapters/10_reshape.md)
+12. [`chapters/11_datetime_timeseries.md`](chapters/11_datetime_timeseries.md)
+13. [`chapters/12_performance_memory.md`](chapters/12_performance_memory.md)
+14. [`chapters/13_case_studies.md`](chapters/13_case_studies.md)
+15. [`chapters/14_coverage_checklist.md`](chapters/14_coverage_checklist.md)
 
 ---
 
