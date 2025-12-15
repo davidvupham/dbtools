@@ -390,5 +390,6 @@ function Get-SystemInfo {
    - [Microsoft PowerShell Documentation](https://docs.microsoft.com/en-us/powershell/)
    - [PowerShell Gallery](https://www.powershellgallery.com/)
    - [PowerShell.org](https://powershell.org/)
+   - [How-To Geek: The 10 Best Commands for Getting Started with PowerShell](https://www.howtogeek.com/these-are-the-10-best-commands-for-getting-started-with-powershell/)
 
 Remember, PowerShell is powerful because it works with objects. Embrace the object-oriented nature and you'll unlock its full potential!
