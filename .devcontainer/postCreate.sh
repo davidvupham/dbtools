@@ -18,6 +18,26 @@ cd /workspaces/dbtools || {
 echo "[postCreate] Python: $(python -V)"
 echo "[postCreate] Pip: $(python -m pip -V)"
 
+# --- Register Jupyter kernel for 'gds' conda environment ---
+# Registers a kernelspec so VS Code can reliably find and use the gds environment
+# This is idempotent - safe to re-run if the kernelspec already exists
+echo "[postCreate] Registering Jupyter kernel for 'gds' environment..."
+if python -c "import ipykernel" >/dev/null 2>&1; then
+  # Check if kernelspec already exists to avoid re-registration
+  KERNEL_DIR="$HOME/.local/share/jupyter/kernels/gds"
+  if [[ ! -d "$KERNEL_DIR" ]]; then
+    if python -m ipykernel install --user --name gds --display-name "Python (gds)" >/dev/null 2>&1; then
+      echo "[postCreate] ✓ Registered Jupyter kernel 'Python (gds)'"
+    else
+      echo "[postCreate] ⚠ Failed to register Jupyter kernel (continuing anyway)"
+    fi
+  else
+    echo "[postCreate] Jupyter kernel 'Python (gds)' already registered"
+  fi
+else
+  echo "[postCreate] ⚠ ipykernel not available; skipping kernel registration"
+fi
+
 # Verify Docker CLI and socket access
 echo "[postCreate] Docker CLI version: $(docker --version 2>/dev/null || echo 'not available')"
 if docker version >/dev/null 2>&1; then

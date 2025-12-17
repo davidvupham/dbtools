@@ -76,9 +76,24 @@ Welcome to the VS Code and Dev Container documentation for the dbtools project. 
 
 ---
 
+#### 5. [jupyter-validation.md](jupyter-validation.md) - Jupyter Notebook Validation
+
+**Step-by-step guide to validate Jupyter notebook setup**
+
+- Verify Jupyter packages installation
+- Check kernel registration
+- Test notebook execution
+- Validate Python environment
+- Test JupyterLab server (optional)
+- Troubleshooting common issues
+
+**Best for**: Validating Jupyter setup, troubleshooting notebook issues
+
+---
+
 ### Platform-Specific Guides
 
-#### 5. [platform-specific.md](platform-specific.md) - Platform Optimization
+#### 6. [platform-specific.md](platform-specific.md) - Platform Optimization
 
 **Platform-specific setup and optimization**
 
@@ -110,7 +125,7 @@ Welcome to the VS Code and Dev Container documentation for the dbtools project. 
 
 ### Advanced Topics
 
-#### 6. [cicd-integration.md](cicd-integration.md) - CI/CD Integration
+#### 7. [cicd-integration.md](cicd-integration.md) - CI/CD Integration
 
 **Using dev containers in CI/CD pipelines**
 
@@ -127,7 +142,7 @@ Welcome to the VS Code and Dev Container documentation for the dbtools project. 
 
 ---
 
-#### 7. [security-best-practices.md](security-best-practices.md) - Security Guide
+#### 8. [security-best-practices.md](security-best-practices.md) - Security Guide
 
 **Security best practices and guidelines**
 
@@ -146,7 +161,7 @@ Welcome to the VS Code and Dev Container documentation for the dbtools project. 
 
 ### Reference
 
-#### 8. [REVIEW_SUMMARY.md](REVIEW_SUMMARY.md) - Documentation Review
+#### 9. [REVIEW_SUMMARY.md](REVIEW_SUMMARY.md) - Documentation Review
 
 **Summary of documentation improvements**
 
@@ -244,6 +259,12 @@ Welcome to the VS Code and Dev Container documentation for the dbtools project. 
 - **MongoDB**: See [devcontainer-sqltools.md](devcontainer-sqltools.md#mongodb-connection)
 - **Snowflake**: See [devcontainer-sqltools.md](devcontainer-sqltools.md#snowflake-connection)
 
+### Validating Jupyter Notebooks
+
+- **Quick validation**: See [jupyter-validation.md](jupyter-validation.md#quick-validation-checklist)
+- **Step-by-step guide**: See [jupyter-validation.md](jupyter-validation.md)
+- **Troubleshooting**: See [jupyter-validation.md](jupyter-validation.md#common-issues-and-solutions)
+
 ### Performance Issues
 
 - **WSL2**: [platform-specific.md](platform-specific.md#wsl2-best-practices)
@@ -327,6 +348,8 @@ See: [features.md](features.md)
 | Extension not working | [features.md](features.md) | Extensions |
 | Port not forwarding | [features.md](features.md) | Port Forwarding |
 | Tests not discovered | [features.md](features.md) | Testing Integration |
+| Jupyter kernel not found | [jupyter-validation.md](jupyter-validation.md) | Common Issues |
+| Notebook using wrong Python | [jupyter-validation.md](jupyter-validation.md) | Common Issues |
 | Permission denied errors | [platform-specific.md](platform-specific.md) | Platform-specific issues |
 | CI/CD pipeline failing | [cicd-integration.md](cicd-integration.md) | Troubleshooting |
 | Secrets exposed | [security-best-practices.md](security-best-practices.md) | Incident Response |
@@ -354,6 +377,7 @@ docs/development/vscode/
 ├── devcontainer.md                     # Quick reference
 ├── devcontainer-beginners-guide.md     # Detailed guide
 ├── devcontainer-sqltools.md            # Database connectivity
+├── jupyter-validation.md               # Jupyter notebook validation
 ├── features.md                         # VS Code features
 ├── platform-specific.md                # Platform optimization
 ├── cicd-integration.md                 # CI/CD patterns

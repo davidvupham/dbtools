@@ -264,7 +264,8 @@
     27017, // MongoDB (if running)
     3000, // Common web dev port
     5000, // Common API port
-    8000 // Common dev server port
+    8000, // Common dev server port
+    8888 // Jupyter (if running jupyter lab)
   ],
   // "portsAttributes": Configure how forwarded ports behave
   "portsAttributes": {
@@ -282,6 +283,10 @@
     },
     "8000": {
       "label": "Dev Server",
+      "onAutoForward": "notify"
+    },
+    "8888": {
+      "label": "Jupyter",
       "onAutoForward": "notify"
     }
   },
