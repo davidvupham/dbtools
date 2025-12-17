@@ -1,4 +1,5 @@
 # Complete Python Tutorial for Beginners - Part 2
+
 ## Advanced Concepts: Decorators, Context Managers, and Design Patterns
 
 This is Part 2 of the Python tutorial. Make sure you've completed [Part 1](01_PYTHON_BASICS_FOR_THIS_PROJECT.md) first!
@@ -7,12 +8,116 @@ This is Part 2 of the Python tutorial. Make sure you've completed [Part 1](01_PY
 
 ## Table of Contents
 
-1. [Decorators](#decorators)
-2. [Context Managers](#context-managers)
-3. [Logging](#logging)
-4. [Modules and Packages](#modules-and-packages)
-5. [Design Patterns](#design-patterns)
-6. [Putting It All Together](#putting-it-all-together)
+1. [Inner Functions and Closures](#inner-functions-and-closures)
+2. [Decorators](#decorators)
+3. [Context Managers](#context-managers)
+4. [Logging](#logging)
+5. [Modules and Packages](#modules-and-packages)
+6. [Design Patterns](#design-patterns)
+7. [Putting It All Together](#putting-it-all-together)
+
+---
+
+---
+
+## Inner Functions and Closures
+
+### What is an Inner Function?
+
+An **inner function** (or nested function) is simply a function defined inside another function.
+
+```python
+def outer_function():
+    print("This is the outer function")
+
+    def inner_function():
+        print("This is the inner function")
+
+    inner_function()
+
+outer_function()
+# Output:
+# This is the outer function
+# This is the inner function
+```
+
+Inner functions are not accessible from outside the outer function. They are hidden and protected.
+
+### Encapsulation: Hiding Helpers
+
+One primary use of inner functions is **encapsulation**. If a helper function is only used by one parent function, you can define it inside to "hide" it from the rest of the module.
+
+```python
+def process_data(data):
+    """Process a list of numbers."""
+
+    # This helper is only needed here
+    def clean(item):
+        if item < 0:
+            return 0
+        return item * 2
+
+    return [clean(x) for x in data]
+
+print(process_data([10, -5, 3]))  # [20, 0, 6]
+# clean(10)  # Error! inner function is hidden
+```
+
+**Why do this?**
+
+- **Cleaner namespace**: The global scope isn't cluttered with tiny helper functions.
+- **Context**: The code clearly shows that `clean` belongs only to `process_data`.
+
+### Closures: Remembering State
+
+A **closure** is a special kind of inner function that remembers values from its enclosing scope **even after the outer function has finished executing**.
+
+```python
+def make_multiplier(factor):
+    """Returns a function that multiplies by the given factor."""
+
+    def multiplier(number):
+        # 'factor' comes from the outer scope
+        return number * factor
+
+    return multiplier  # Return the function itself, don't call it!
+
+# Create different functions
+doubler = make_multiplier(2)
+tripler = make_multiplier(3)
+
+print(doubler(10))  # 20
+print(tripler(10))  # 30
+```
+
+**How does this work?**
+
+1. `make_multiplier(2)` runs and finishes.
+2. Usually, local variables (`factor`) are destroyed when a function finishes.
+3. But `multiplier` is a **closure**—it "closes over" and captures the variable `factor`.
+4. So `doubler` remembers that `factor` was 2, and `tripler` remembers it was 3.
+
+### Why Closures Matter
+
+Closures are the foundation of **Decorators** (which acts as wrappers) and **Factory Functions** (functions that create other functions).
+
+They allow you to create **stateful functions** without using classes:
+
+```python
+def counter(start=0):
+    count = start
+
+    def increment():
+        nonlocal count  # Modify variable in outer scope
+        count += 1
+        return count
+
+    return increment
+
+my_count = counter(10)
+print(my_count())  # 11
+print(my_count())  # 12
+```
 
 ---
 
@@ -48,6 +153,7 @@ print(say_hello())  # "<b>Hello!</b>"
 ```
 
 **What happened?**
+
 1. `@make_bold` is decorator syntax
 2. It wraps `say_hello()` with the `wrapper()` function
 3. When you call `say_hello()`, you're actually calling `wrapper()`
@@ -76,6 +182,7 @@ print(greet("Alice"))
 ```
 
 **Understanding the layers:**
+
 1. `repeat(3)` returns `decorator`
 2. `decorator` wraps the function
 3. `wrapper` does the actual work
@@ -108,11 +215,12 @@ print(result)  # "Done!"
 ### Example from Our Code
 
 From `vault.py`:
+
 ```python
 def with_retry(max_attempts=3, backoff_factor=2.0):
     """
     Decorator that retries a function if it fails.
-    
+
     Args:
         max_attempts: Maximum number of retry attempts
         backoff_factor: Exponential backoff multiplier
@@ -121,18 +229,18 @@ def with_retry(max_attempts=3, backoff_factor=2.0):
         @wraps(func)  # Preserves original function's metadata
         def wrapper(*args, **kwargs):
             last_exception = None
-            
+
             for attempt in range(max_attempts):
                 try:
                     # Try to execute the function
                     return func(*args, **kwargs)
                 except Exception as e:
                     last_exception = e
-                    
+
                     if attempt == max_attempts - 1:
                         # Last attempt failed, give up
                         break
-                    
+
                     # Calculate delay with exponential backoff
                     delay = min(backoff_factor ** attempt, 60)
                     logger.warning(
@@ -140,10 +248,10 @@ def with_retry(max_attempts=3, backoff_factor=2.0):
                         attempt + 1, max_attempts, e, delay
                     )
                     time.sleep(delay)
-            
+
             # All attempts failed
             raise last_exception
-        
+
         return wrapper
     return decorator
 
@@ -158,6 +266,7 @@ def fetch_secret_from_vault(secret_path):
 ```
 
 **Why this design?**
+
 - **Automatic retry**: Don't need to write retry logic everywhere
 - **Configurable**: Can set max attempts and backoff
 - **Reusable**: Can apply to any function
@@ -168,27 +277,27 @@ def fetch_secret_from_vault(secret_path):
 ```python
 class Temperature:
     """Temperature with automatic conversion."""
-    
+
     def __init__(self, celsius):
         self._celsius = celsius
-    
+
     @property
     def celsius(self):
         """Get temperature in Celsius."""
         return self._celsius
-    
+
     @celsius.setter
     def celsius(self, value):
         """Set temperature in Celsius."""
         if value < -273.15:
             raise ValueError("Temperature below absolute zero!")
         self._celsius = value
-    
+
     @property
     def fahrenheit(self):
         """Get temperature in Fahrenheit."""
         return self._celsius * 9/5 + 32
-    
+
     @fahrenheit.setter
     def fahrenheit(self, value):
         """Set temperature in Fahrenheit."""
@@ -204,6 +313,7 @@ print(temp.celsius)     # 0.0
 ```
 
 **Why @property?**
+
 - Access like an attribute: `temp.celsius` instead of `temp.get_celsius()`
 - Can add validation when setting
 - Can compute values on-the-fly
@@ -249,18 +359,18 @@ with open("data.txt", "r") as file:
 ```python
 class MyFile:
     """Simple file context manager."""
-    
+
     def __init__(self, filename, mode):
         self.filename = filename
         self.mode = mode
         self.file = None
-    
+
     def __enter__(self):
         """Called when entering 'with' block."""
         print(f"Opening {self.filename}")
         self.file = open(self.filename, self.mode)
         return self.file  # This is what 'as' gets
-    
+
     def __exit__(self, exc_type, exc_val, exc_tb):
         """Called when exiting 'with' block."""
         print(f"Closing {self.filename}")
@@ -275,22 +385,24 @@ with MyFile("data.txt", "r") as file:
 ```
 
 **The magic methods:**
+
 - `__enter__`: Runs when entering the `with` block
 - `__exit__`: Runs when leaving the `with` block (even if error!)
 
 ### Example from Our Code
 
 From `connection.py`:
+
 ```python
 class SnowflakeConnection(DatabaseConnection, ConfigurableComponent, ResourceManager):
     """Snowflake connection with context manager support."""
-    
+
     def __enter__(self):
         """Context manager entry - establish connection."""
         self.initialize()  # Setup
         self.connect()     # Connect to Snowflake
         return self
-    
+
     def __exit__(self, exc_type, exc_val, exc_tb):
         """Context manager exit - close connection."""
         self.cleanup()  # Close connection and cleanup
@@ -313,6 +425,7 @@ except Exception as e:
 ```
 
 **Why context managers?**
+
 - **Automatic cleanup**: Never forget to close resources
 - **Exception safe**: Cleanup happens even if there's an error
 - **Cleaner code**: No try/finally blocks everywhere
@@ -328,7 +441,7 @@ def timer(name):
     """Context manager to time code execution."""
     start = time.time()
     print(f"Starting {name}...")
-    
+
     try:
         yield  # Code in 'with' block runs here
     finally:
@@ -361,6 +474,7 @@ with open("input.txt", "r") as infile, open("output.txt", "w") as outfile:
 ### Why Logging?
 
 **Logging** records what your program is doing. It's essential for:
+
 - **Debugging**: Find out what went wrong
 - **Monitoring**: Track program behavior in production
 - **Auditing**: Record important events
@@ -405,6 +519,7 @@ logger.critical("Serious error")                  # Program might crash
 ```
 
 **When to use each level:**
+
 - **DEBUG**: Detailed information for diagnosing problems
 - **INFO**: Confirmation that things are working
 - **WARNING**: Something unexpected, but program continues
@@ -420,20 +535,20 @@ logger = logging.getLogger(__name__)
 
 def connect_to_database(server, port):
     """Connect to database with proper logging."""
-    
+
     # Log start of operation
     logger.info("Attempting to connect to %s:%d", server, port)
-    
+
     try:
         # Log detailed debug info
         logger.debug("Connection parameters: server=%s, port=%d, timeout=30", server, port)
-        
+
         connection = establish_connection(server, port)
-        
+
         # Log success
         logger.info("Successfully connected to %s:%d", server, port)
         return connection
-        
+
     except ConnectionError as e:
         # Log error with details
         logger.error("Failed to connect to %s:%d: %s", server, port, e)
@@ -459,6 +574,7 @@ logger.debug("User %s data: %s", user_id, expensive_function())
 ### Example from Our Code
 
 From `connection.py`:
+
 ```python
 import logging
 
@@ -469,21 +585,21 @@ class SnowflakeConnection:
         """Establish connection to Snowflake."""
         # Log start of operation
         logger.info("Connecting to Snowflake account: %s", self.account)
-        
+
         try:
             # Log debug details
             logger.debug(
                 "Connection parameters: account=%s, user=%s, warehouse=%s",
                 self.account, self.user, self.warehouse
             )
-            
+
             # Attempt connection
             self.connection = snowflake.connector.connect(**connection_params)
-            
+
             # Log success
             logger.info("Successfully connected to Snowflake account: %s", self.account)
             return self.connection
-            
+
         except Exception as e:
             # Log error
             logger.error(
@@ -493,7 +609,7 @@ class SnowflakeConnection:
             raise SnowflakeConnectionError(
                 f"Failed to connect to Snowflake account {self.account}: {str(e)}"
             ) from e
-    
+
     def close(self):
         """Close connection."""
         if self.connection is not None:
@@ -505,6 +621,7 @@ class SnowflakeConnection:
 ```
 
 **Why this logging strategy?**
+
 - **INFO level**: Track major operations (connect, close)
 - **DEBUG level**: Detailed information for troubleshooting
 - **ERROR level**: Problems that need attention
@@ -621,6 +738,7 @@ __version__ = '1.0.0'
 ### Example from Our Code
 
 From `gds_snowflake/__init__.py`:
+
 ```python
 """
 GDS Snowflake Package
@@ -680,6 +798,7 @@ __all__ = [
 ```
 
 **Why this structure?**
+
 - **Clean imports**: Users don't need to know internal structure
 - **Public API**: `__all__` defines what's public
 - **Version tracking**: `__version__` for package version
@@ -739,6 +858,7 @@ conn = create_database_connection("snowflake", account="prod", user="admin")
 ```
 
 **Example from Our Code** (`enhanced_vault.py`):
+
 ```python
 def create_vault_client(
     vault_addr: Optional[str] = None,
@@ -748,13 +868,13 @@ def create_vault_client(
 ) -> Any:
     """
     Factory function to create Vault client.
-    
+
     Args:
         vault_addr: Vault server address
         role_id: AppRole role_id
         secret_id: AppRole secret_id
         enhanced: Whether to use enhanced client with OOP features
-    
+
     Returns:
         Vault client instance
     """
@@ -778,6 +898,7 @@ client = create_vault_client(enhanced=False)  # Get basic version
 ```
 
 **Why factory pattern?**
+
 - **Centralized creation**: All creation logic in one place
 - **Flexibility**: Easy to change what gets created
 - **Abstraction**: Users don't need to know implementation details
@@ -792,13 +913,13 @@ client = create_vault_client(enhanced=False)  # Get basic version
 class DatabasePool:
     """Singleton database connection pool."""
     _instance = None
-    
+
     def __new__(cls):
         if cls._instance is None:
             cls._instance = super().__new__(cls)
             cls._instance.connections = []
         return cls._instance
-    
+
     def get_connection(self):
         # Return a connection from the pool
         pass
@@ -835,7 +956,7 @@ class GzipCompression(CompressionStrategy):
 class FileCompressor:
     def __init__(self, strategy: CompressionStrategy):
         self.strategy = strategy
-    
+
     def compress_file(self, filename):
         data = read_file(filename)
         return self.strategy.compress(data)
@@ -860,11 +981,11 @@ class Subject:
     """Object being observed."""
     def __init__(self):
         self._observers = []
-    
+
     def attach(self, observer):
         """Subscribe an observer."""
         self._observers.append(observer)
-    
+
     def notify(self, event):
         """Notify all observers."""
         for observer in self._observers:
@@ -898,28 +1019,28 @@ from abc import ABC, abstractmethod
 
 class DataProcessor(ABC):
     """Template for processing data."""
-    
+
     def process(self):
         """Template method - defines the algorithm."""
         data = self.read_data()
         validated = self.validate_data(data)
         processed = self.process_data(validated)
         self.save_data(processed)
-    
+
     @abstractmethod
     def read_data(self):
         """Subclasses must implement."""
         pass
-    
+
     def validate_data(self, data):
         """Default validation."""
         return data
-    
+
     @abstractmethod
     def process_data(self, data):
         """Subclasses must implement."""
         pass
-    
+
     @abstractmethod
     def save_data(self, data):
         """Subclasses must implement."""
@@ -929,10 +1050,10 @@ class CSVProcessor(DataProcessor):
     """Process CSV files."""
     def read_data(self):
         return read_csv("data.csv")
-    
+
     def process_data(self, data):
         return transform_csv(data)
-    
+
     def save_data(self, data):
         write_csv("output.csv", data)
 
@@ -942,20 +1063,21 @@ processor.process()  # Follows the template!
 ```
 
 **Example from Our Code** (`base.py`):
+
 ```python
 class BaseMonitor(ABC):
     """Template for all monitors."""
-    
+
     @abstractmethod
     def check(self) -> Dict[str, Any]:
         """Subclasses must implement the check logic."""
         pass
-    
+
     def _log_result(self, result: Dict[str, Any]) -> None:
         """Template method - logs results (same for all monitors)."""
         status = "SUCCESS" if result.get('success', False) else "FAILED"
         duration = result.get('duration_ms', 0)
-        
+
         self.logger.info(
             "%s check %s in %dms - %s",
             self.name,
@@ -963,7 +1085,7 @@ class BaseMonitor(ABC):
             duration,
             result.get('message', 'No message')
         )
-    
+
     def _record_check(self, result: Dict[str, Any]) -> None:
         """Template method - records statistics (same for all monitors)."""
         self._check_count += 1
@@ -974,23 +1096,23 @@ class SnowflakeMonitor(BaseMonitor):
     def check(self) -> Dict[str, Any]:
         """Snowflake-specific monitoring."""
         start_time = time.time()
-        
+
         try:
             results = self.monitor_all()  # Snowflake-specific
-            
+
             duration_ms = (time.time() - start_time) * 1000
-            
+
             result = {
                 'success': results['summary']['connectivity_ok'],
                 'message': f"Monitoring completed for {self.account}",
                 'duration_ms': duration_ms,
                 'data': results
             }
-            
+
             # Use inherited template methods
             self._log_result(result)
             self._record_check(result)
-            
+
             return result
         except Exception as e:
             # Handle error...
@@ -998,6 +1120,7 @@ class SnowflakeMonitor(BaseMonitor):
 ```
 
 **Why template method?**
+
 - **Code reuse**: Common logic in base class
 - **Consistency**: All subclasses follow same structure
 - **Flexibility**: Subclasses customize specific steps
@@ -1029,7 +1152,7 @@ logger = logging.getLogger(__name__)
 class SnowflakeConnection(DatabaseConnection, ConfigurableComponent, ResourceManager):
     """
     Manages Snowflake database connections.
-    
+
     This class demonstrates:
     - Multiple inheritance (3 base classes)
     - Type hints
@@ -1038,7 +1161,7 @@ class SnowflakeConnection(DatabaseConnection, ConfigurableComponent, ResourceMan
     - Context manager
     - Encapsulation
     """
-    
+
     def __init__(
         self,
         account: str,                      # Type hints
@@ -1050,7 +1173,7 @@ class SnowflakeConnection(DatabaseConnection, ConfigurableComponent, ResourceMan
     ):
         """
         Initialize connection.
-        
+
         Args:
             account: Snowflake account name
             user: Username (optional)
@@ -1061,7 +1184,7 @@ class SnowflakeConnection(DatabaseConnection, ConfigurableComponent, ResourceMan
         """
         # Initialize base classes
         ConfigurableComponent.__init__(self, config)
-        
+
         # Public attributes
         self.account = account
         self.user = user or os.getenv("SNOWFLAKE_USER")
@@ -1069,26 +1192,26 @@ class SnowflakeConnection(DatabaseConnection, ConfigurableComponent, ResourceMan
         self.role = role
         self.database = database
         self.connection = None
-        
+
         # Private attributes (convention)
         self._initialized = False
-        
+
         # Log initialization
         logger.debug("Initialized SnowflakeConnection for account: %s", account)
-    
+
     # Implement abstract methods from DatabaseConnection
     def connect(self) -> snowflake.connector.SnowflakeConnection:
         """
         Establish connection to Snowflake.
-        
+
         Returns:
             Snowflake connection object
-            
+
         Raises:
             SnowflakeConnectionError: If connection fails
         """
         logger.info("Connecting to Snowflake account: %s", self.account)
-        
+
         try:
             # Build connection parameters
             connection_params = {
@@ -1096,7 +1219,7 @@ class SnowflakeConnection(DatabaseConnection, ConfigurableComponent, ResourceMan
                 "user": self.user,
                 "private_key": self.private_key,
             }
-            
+
             # Add optional parameters
             if self.warehouse:
                 connection_params["warehouse"] = self.warehouse
@@ -1104,13 +1227,13 @@ class SnowflakeConnection(DatabaseConnection, ConfigurableComponent, ResourceMan
                 connection_params["role"] = self.role
             if self.database:
                 connection_params["database"] = self.database
-            
+
             # Establish connection
             self.connection = snowflake.connector.connect(**connection_params)
-            
+
             logger.info("Successfully connected to Snowflake account: %s", self.account)
             return self.connection
-            
+
         except Exception as e:
             # Log error
             logger.error(
@@ -1121,44 +1244,44 @@ class SnowflakeConnection(DatabaseConnection, ConfigurableComponent, ResourceMan
             raise SnowflakeConnectionError(
                 f"Failed to connect to Snowflake account {self.account}: {str(e)}"
             ) from e
-    
+
     def disconnect(self) -> None:
         """Close database connection."""
         self.close()
-    
+
     def execute_query(
-        self, 
-        query: str, 
+        self,
+        query: str,
         params: Optional[tuple] = None
     ) -> List[Any]:
         """
         Execute a SQL query.
-        
+
         Args:
             query: SQL query to execute
             params: Query parameters (optional)
-            
+
         Returns:
             List of query results
         """
         logger.debug("Executing query: %s", query[:100])  # Log first 100 chars
-        
+
         try:
             with self.connection.cursor() as cursor:
                 cursor.execute(query, params)
                 results = cursor.fetchall()
-                
+
             logger.debug("Query returned %d rows", len(results))
             return results
-            
+
         except Exception as e:
             logger.error("Query execution failed: %s", e)
             raise
-    
+
     def is_connected(self) -> bool:
         """Check if connection is active."""
         return self.connection is not None and not self.connection.is_closed()
-    
+
     def get_connection_info(self) -> Dict[str, Any]:
         """Get connection information."""
         return {
@@ -1169,7 +1292,7 @@ class SnowflakeConnection(DatabaseConnection, ConfigurableComponent, ResourceMan
             'database': self.database,
             'connected': self.is_connected()
         }
-    
+
     # Implement abstract methods from ConfigurableComponent
     def validate_config(self) -> bool:
         """Validate the current configuration."""
@@ -1178,35 +1301,35 @@ class SnowflakeConnection(DatabaseConnection, ConfigurableComponent, ResourceMan
             if not hasattr(self, field) or getattr(self, field) is None:
                 return False
         return True
-    
+
     # Implement abstract methods from ResourceManager
     def initialize(self) -> None:
         """Initialize resources."""
         self._initialized = True
         logger.debug("Resources initialized")
-    
+
     def cleanup(self) -> None:
         """Clean up resources."""
         self.close()
         self._initialized = False
         logger.debug("Resources cleaned up")
-    
+
     def is_initialized(self) -> bool:
         """Check if resources are initialized."""
         return self._initialized
-    
+
     # Context manager methods (from ResourceManager)
     def __enter__(self):
         """Context manager entry."""
         self.initialize()
         self.connect()
         return self
-    
+
     def __exit__(self, exc_type, exc_val, exc_tb):
         """Context manager exit."""
         self.cleanup()
         return False  # Don't suppress exceptions
-    
+
     def close(self):
         """Close the connection."""
         if self.connection is not None:
@@ -1223,12 +1346,12 @@ if __name__ == "__main__":
     conn.connect()
     results = conn.execute_query("SELECT * FROM users LIMIT 10")
     conn.close()
-    
+
     # Example 2: Context manager (recommended)
     with SnowflakeConnection(account="prod", user="admin") as conn:
         results = conn.execute_query("SELECT * FROM users LIMIT 10")
         # Connection automatically closed
-    
+
     # Example 3: Error handling
     try:
         with SnowflakeConnection(account="invalid") as conn:
@@ -1283,6 +1406,7 @@ Now that you understand Python fundamentals, continue with:
 Try these to reinforce your learning:
 
 **Exercise 1: Create a Decorator**
+
 ```python
 # Create a decorator that logs function calls
 def log_calls(func):
@@ -1297,6 +1421,7 @@ result = add(5, 3)  # Should log "Calling add with args: (5, 3)"
 ```
 
 **Exercise 2: Create a Context Manager**
+
 ```python
 # Create a context manager that times code execution
 class Timer:
@@ -1310,6 +1435,7 @@ with Timer():
 ```
 
 **Exercise 3: Use Design Patterns**
+
 ```python
 # Create a factory function for different types of loggers
 def create_logger(logger_type, name):

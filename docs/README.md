@@ -21,12 +21,22 @@ This directory contains all project documentation organized by category.
 
 This documentation follows the **Diátaxis framework**, organizing content by user intent:
 
-- **Tutorials** (Learning-oriented): Step-by-step lessons.
-- **Projects** (Project-oriented): Comprehensive documentation for specific projects.
+- **Courses** (Learning-oriented): Comprehensive curriculums with a defined learning path and projects.
+  - *Example:* [Python Engineering Course](courses/python/README.md) - A structured path to master Python engineering.
+- **Tutorials** (Learning-oriented): Step-by-step lessons for specific tasks or quick starts.
+  - *Example:* [Python Basics Tutorial](tutorials/python/01_PYTHON_BASICS_FOR_THIS_PROJECT.md) - A quick "hello world" introduction.
+- **Reference** (Information-oriented): Technical details, syntax, and API specifications.
+  - *Example:* [Python Control Flow](reference/python/syntax/control_flow.md) - Encyclopedic lookup for `if`, `for`, `match`.
+- **Projects** (Project-oriented): Comprehensive documentation for real-world projects in this repo.
 - **How-to Guides** (Goal-oriented): Directions to solve specific problems.
 - **Explanation** (Understanding-oriented): High-level context and design decisions.
 - **Runbooks** (Goal-oriented): Operational procedures.
-- **Reference** (Information-oriented): Technical details and specifications.
+
+### [courses/](courses/python/README.md) - Curriculums
+
+Deep-dive, project-based engineering courses.
+
+- [**Python Engineering Course**](courses/python/README.md) - From zero to production engineer.
 
 ### [tutorials/](tutorials/README.md) - Learning-Oriented Guides
 
