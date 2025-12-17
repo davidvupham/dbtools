@@ -184,6 +184,10 @@ BASH
 # Layer 10: Install Python packages in conda environment
 RUN conda run -n ${CONDA_ENV_NAME} python -m pip install --upgrade pip && \
     conda run -n ${CONDA_ENV_NAME} pip install --no-cache-dir \
+    ipykernel \
+    jupyterlab \
+    numpy \
+    pandas \
     ruff \
     pytest \
     pytest-cov \
