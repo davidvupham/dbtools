@@ -1,0 +1,599 @@
+{
+  "folders": [
+    {
+      "name": "gds-dev-container",
+      "path": "."
+    }
+  ],
+  "settings": {
+    // Color Theme (Peacock extension)
+    "workbench.colorCustomizations": {
+      "activityBar.activeBackground": "#65c89b",
+      "activityBar.background": "#65c89b",
+      "activityBar.foreground": "#15202b",
+      "activityBar.inactiveForeground": "#15202b99",
+      "activityBarBadge.background": "#945bc4",
+      "activityBarBadge.foreground": "#e7e7e7",
+      "commandCenter.border": "#15202b99",
+      "sash.hoverBorder": "#65c89b",
+      "statusBar.background": "#42b883",
+      "statusBar.foreground": "#15202b",
+      "statusBarItem.hoverBackground": "#359268",
+      "statusBarItem.remoteBackground": "#42b883",
+      "statusBarItem.remoteForeground": "#15202b",
+      "titleBar.activeBackground": "#42b883",
+      "titleBar.activeForeground": "#15202b",
+      "titleBar.inactiveBackground": "#42b88399",
+      "titleBar.inactiveForeground": "#15202b99"
+    },
+    "peacock.remoteColor": "#42b883",
+    // Python Settings
+    "python.defaultInterpreterPath": "/usr/bin/python3",
+    "python.terminal.activateEnvironment": true,
+    "python.analysis.autoImportCompletions": true,
+    "python.analysis.typeCheckingMode": "basic",
+    "python.analysis.diagnosticMode": "workspace",
+    // Testing
+    "python.testing.pytestEnabled": true,
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestArgs": [
+      ".",
+      "-v",
+      "--tb=short"
+    ],
+    "python.testing.autoTestDiscoverOnSaveEnabled": true,
+    // Formatting and Linting
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.organizeImports": "explicit"
+    },
+    "ruff.enable": true,
+    "ruff.organizeImports": true,
+    "ruff.fixAll": true,
+    // Editor
+    "editor.rulers": [
+      88,
+      120
+    ],
+    "editor.tabSize": 4,
+    "editor.insertSpaces": true,
+    "files.trimTrailingWhitespace": true,
+    "files.insertFinalNewline": true,
+    "files.encoding": "utf8",
+    // File Exclusions
+    "search.exclude": {
+      "**/__pycache__": true,
+      "**/.pytest_cache": true,
+      "**/*.pyc": true,
+      "**/htmlcov": true,
+      "**/.coverage": true,
+      "**/dist": true,
+      "**/*.egg-info": true,
+      "**/build": true
+    },
+    "files.watcherExclude": {
+      "**/__pycache__/**": true,
+      "**/.pytest_cache/**": true,
+      "**/htmlcov/**": true,
+      "**/.git/objects/**": true,
+      "**/dist/**": true,
+      "**/*.egg-info/**": true
+    },
+    // Git
+    "git.autofetch": true,
+    "git.confirmSync": false,
+    "git.enableSmartCommit": true,
+    // Terminal
+    "terminal.integrated.defaultProfile.linux": "bash",
+    "terminal.integrated.profiles.linux": {
+      "bash": {
+        "path": "/bin/bash",
+        "args": [
+          "-l"
+        ]
+      },
+      "pwsh": {
+        "path": "/usr/bin/pwsh",
+        "args": [
+          "-NoLogo"
+        ]
+      }
+    }
+  },
+  "launch": {
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "name": "Python: Current File",
+        "type": "debugpy",
+        "request": "launch",
+        "program": "${file}",
+        "console": "integratedTerminal",
+        "cwd": "${workspaceFolder}",
+        "justMyCode": false
+      },
+      {
+        "name": "Python: Module",
+        "type": "debugpy",
+        "request": "launch",
+        "module": "${input:moduleName}",
+        "console": "integratedTerminal",
+        "cwd": "${workspaceFolder}",
+        "justMyCode": false
+      },
+      {
+        "name": "Python: Current File with Args",
+        "type": "debugpy",
+        "request": "launch",
+        "program": "${file}",
+        "console": "integratedTerminal",
+        "cwd": "${workspaceFolder}",
+        "args": [
+          "${input:scriptArgs}"
+        ],
+        "justMyCode": false
+      },
+      {
+        "name": "Debug: gds_database Tests",
+        "type": "debugpy",
+        "request": "launch",
+        "module": "pytest",
+        "args": [
+          "gds_database/tests",
+          "-v",
+          "--tb=short"
+        ],
+        "console": "integratedTerminal",
+        "cwd": "${workspaceFolder}",
+        "justMyCode": false
+      },
+      {
+        "name": "Debug: gds_postgres Tests",
+        "type": "debugpy",
+        "request": "launch",
+        "module": "pytest",
+        "args": [
+          "gds_postgres/tests",
+          "-v",
+          "--tb=short"
+        ],
+        "console": "integratedTerminal",
+        "cwd": "${workspaceFolder}",
+        "justMyCode": false
+      },
+      {
+        "name": "Debug: gds_snowflake Tests",
+        "type": "debugpy",
+        "request": "launch",
+        "module": "pytest",
+        "args": [
+          "gds_snowflake/tests",
+          "-v",
+          "--tb=short"
+        ],
+        "console": "integratedTerminal",
+        "cwd": "${workspaceFolder}",
+        "justMyCode": false
+      },
+      {
+        "name": "Debug: Current Test File",
+        "type": "debugpy",
+        "request": "launch",
+        "module": "pytest",
+        "args": [
+          "${file}",
+          "-v",
+          "--tb=short"
+        ],
+        "console": "integratedTerminal",
+        "cwd": "${workspaceFolder}",
+        "justMyCode": false
+      },
+      {
+        "name": "Debug: All Tests with Coverage",
+        "type": "debugpy",
+        "request": "launch",
+        "module": "pytest",
+        "args": [
+          ".",
+          "-v",
+          "--cov=.",
+          "--cov-report=html",
+          "--cov-report=term"
+        ],
+        "console": "integratedTerminal",
+        "cwd": "${workspaceFolder}",
+        "justMyCode": false
+      },
+      {
+        "name": "Debug: Specific Test",
+        "type": "debugpy",
+        "request": "launch",
+        "module": "pytest",
+        "args": [
+          "-v",
+          "${input:testPath}"
+        ],
+        "console": "integratedTerminal",
+        "cwd": "${workspaceFolder}",
+        "justMyCode": false
+      },
+      {
+        "name": "PowerShell: Current File",
+        "type": "PowerShell",
+        "request": "launch",
+        "script": "${file}",
+        "cwd": "${workspaceFolder}"
+      },
+      {
+        "name": "PowerShell: Interactive",
+        "type": "PowerShell",
+        "request": "launch",
+        "cwd": "${workspaceFolder}",
+        "createTemporaryIntegratedConsole": true
+      },
+      {
+        "name": "Python: Attach to Remote",
+        "type": "debugpy",
+        "request": "attach",
+        "connect": {
+          "host": "localhost",
+          "port": 5678
+        },
+        "pathMappings": [
+          {
+            "localRoot": "${workspaceFolder}",
+            "remoteRoot": "/app"
+          }
+        ]
+      }
+    ],
+    "inputs": [
+      {
+        "id": "moduleName",
+        "type": "promptString",
+        "description": "Enter module name to debug (e.g., gds_database.connection)",
+        "default": "gds_database"
+      },
+      {
+        "id": "scriptArgs",
+        "type": "promptString",
+        "description": "Enter script arguments (space-separated)",
+        "default": "--help"
+      },
+      {
+        "id": "testPath",
+        "type": "promptString",
+        "description": "Enter test path (e.g., tests/test_file.py::test_function)",
+        "default": "tests/"
+      }
+    ]
+  },
+  "tasks": {
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "label": "Run All Tests",
+        "type": "shell",
+        "command": "pytest",
+        "args": [
+          "-v",
+          "--tb=short"
+        ],
+        "group": {
+          "kind": "test",
+          "isDefault": true
+        },
+        "presentation": {
+          "reveal": "always",
+          "panel": "dedicated"
+        },
+        "problemMatcher": []
+      },
+      {
+        "label": "Run Tests with Coverage",
+        "type": "shell",
+        "command": "pytest",
+        "args": [
+          "-v",
+          "--cov=.",
+          "--cov-report=html",
+          "--cov-report=term-missing"
+        ],
+        "group": "test",
+        "presentation": {
+          "reveal": "always",
+          "panel": "dedicated"
+        },
+        "problemMatcher": []
+      },
+      {
+        "label": "Run Package Tests",
+        "type": "shell",
+        "command": "pytest",
+        "args": [
+          "${input:packageName}/tests",
+          "-v",
+          "--tb=short"
+        ],
+        "group": "test",
+        "presentation": {
+          "reveal": "always"
+        },
+        "problemMatcher": []
+      },
+      {
+        "label": "Format Code (Ruff)",
+        "type": "shell",
+        "command": "ruff",
+        "args": [
+          "format",
+          "."
+        ],
+        "group": "build",
+        "presentation": {
+          "reveal": "always"
+        },
+        "problemMatcher": []
+      },
+      {
+        "label": "Lint with Ruff",
+        "type": "shell",
+        "command": "ruff",
+        "args": [
+          "check",
+          ".",
+          "--fix"
+        ],
+        "group": "build",
+        "presentation": {
+          "reveal": "always"
+        },
+        "problemMatcher": {
+          "owner": "ruff",
+          "fileLocation": [
+            "relative",
+            "${workspaceFolder}"
+          ],
+          "pattern": {
+            "regexp": "^(.+):(\\d+):(\\d+):\\s+(\\w+):\\s+(.+)$",
+            "file": 1,
+            "line": 2,
+            "column": 3,
+            "severity": 4,
+            "message": 5
+          }
+        }
+      },
+      {
+        "label": "Lint Check (No Fix)",
+        "type": "shell",
+        "command": "ruff",
+        "args": [
+          "check",
+          "."
+        ],
+        "group": "build",
+        "presentation": {
+          "reveal": "always"
+        },
+        "problemMatcher": []
+      },
+      {
+        "label": "Type Check (mypy)",
+        "type": "shell",
+        "command": "mypy",
+        "args": [
+          ".",
+          "--ignore-missing-imports"
+        ],
+        "group": "build",
+        "presentation": {
+          "reveal": "always"
+        },
+        "problemMatcher": []
+      },
+      {
+        "label": "Build Package",
+        "type": "shell",
+        "command": "python",
+        "args": [
+          "-m",
+          "build",
+          "${input:packageName}"
+        ],
+        "group": "build",
+        "presentation": {
+          "reveal": "always"
+        },
+        "problemMatcher": []
+      },
+      {
+        "label": "Build All Packages",
+        "type": "shell",
+        "command": "bash",
+        "args": [
+          "-c",
+          "for pkg in gds_database gds_postgres gds_snowflake gds_vault gds_mongodb gds_mssql gds_notification gds_snmp_receiver; do echo \"Building $pkg...\"; cd $pkg && python -m build && cd ..; done"
+        ],
+        "group": "build",
+        "presentation": {
+          "reveal": "always",
+          "panel": "dedicated"
+        },
+        "problemMatcher": []
+      },
+      {
+        "label": "Install Package in Editable Mode",
+        "type": "shell",
+        "command": "pip",
+        "args": [
+          "install",
+          "-e",
+          "${input:packageName}"
+        ],
+        "group": "build",
+        "presentation": {
+          "reveal": "always"
+        },
+        "problemMatcher": []
+      },
+      {
+        "label": "Open Coverage Report",
+        "type": "shell",
+        "command": "bash",
+        "args": [
+          "-c",
+          "if [ -f htmlcov/index.html ]; then xdg-open htmlcov/index.html 2>/dev/null || open htmlcov/index.html 2>/dev/null || echo 'Open htmlcov/index.html manually'; else echo 'Coverage report not found. Run tests with coverage first.'; fi"
+        ],
+        "group": "test",
+        "presentation": {
+          "reveal": "never"
+        },
+        "problemMatcher": []
+      },
+      {
+        "label": "Clean Build Artifacts",
+        "type": "shell",
+        "command": "bash",
+        "args": [
+          "-c",
+          "find . -type d -name '__pycache__' -exec rm -rf {} + 2>/dev/null; find . -type d -name '*.egg-info' -exec rm -rf {} + 2>/dev/null; find . -type d -name 'dist' -exec rm -rf {} + 2>/dev/null; find . -type d -name 'build' -exec rm -rf {} + 2>/dev/null; find . -type f -name '*.pyc' -delete; find . -type d -name '.pytest_cache' -exec rm -rf {} + 2>/dev/null; echo 'Cleaned build artifacts'"
+        ],
+        "group": "build",
+        "presentation": {
+          "reveal": "always"
+        },
+        "problemMatcher": []
+      },
+      {
+        "label": "Run Pre-commit Hooks",
+        "type": "shell",
+        "command": "pre-commit",
+        "args": [
+          "run",
+          "--all-files"
+        ],
+        "group": "build",
+        "presentation": {
+          "reveal": "always"
+        },
+        "problemMatcher": []
+      },
+      {
+        "label": "Test PostgreSQL Connection",
+        "type": "shell",
+        "command": "python",
+        "args": [
+          "-c",
+          "from gds_postgres import PostgresConnection; print('PostgreSQL module OK')"
+        ],
+        "group": "test",
+        "presentation": {
+          "reveal": "always"
+        },
+        "problemMatcher": []
+      },
+      {
+        "label": "Test All Package Imports",
+        "type": "shell",
+        "command": "python",
+        "args": [
+          "-c",
+          "import gds_database, gds_postgres, gds_snowflake, gds_vault, gds_mongodb, gds_mssql, gds_notification, gds_snmp_receiver; print('All packages imported successfully')"
+        ],
+        "group": "test",
+        "presentation": {
+          "reveal": "always"
+        },
+        "problemMatcher": []
+      },
+      {
+        "label": "Run PowerShell Script",
+        "type": "shell",
+        "command": "pwsh",
+        "args": [
+          "-NoProfile",
+          "-File",
+          "${file}"
+        ],
+        "group": "build",
+        "presentation": {
+          "reveal": "always"
+        },
+        "problemMatcher": []
+      },
+      {
+        "label": "Run Pester Tests",
+        "type": "shell",
+        "command": "pwsh",
+        "args": [
+          "-NoProfile",
+          "-Command",
+          "Invoke-Pester -Path ./PowerShell/tests -Output Detailed"
+        ],
+        "group": "test",
+        "presentation": {
+          "reveal": "always"
+        },
+        "problemMatcher": []
+      },
+      {
+        "label": "Verify Dev Environment",
+        "type": "shell",
+        "command": "bash",
+        "args": [
+          "-c",
+          "echo '=== Python ===' && python -V && which python && echo '=== Conda ===' && conda env list && echo '=== PowerShell ===' && pwsh -version && echo '=== Docker ===' && docker --version && echo '=== Packages ===' && python -c 'import gds_database, gds_postgres, gds_snowflake, gds_vault, gds_mongodb, gds_mssql, gds_notification, gds_snmp_receiver; print(\"All packages OK\")' && echo '=== Environment Verified ==='"
+        ],
+        "group": "test",
+        "presentation": {
+          "reveal": "always",
+          "panel": "dedicated"
+        },
+        "problemMatcher": []
+      }
+    ],
+    "inputs": [
+      {
+        "id": "packageName",
+        "type": "pickString",
+        "description": "Select package",
+        "options": [
+          "gds_database",
+          "gds_postgres",
+          "gds_snowflake",
+          "gds_vault",
+          "gds_mongodb",
+          "gds_mssql",
+          "gds_notification",
+          "gds_snmp_receiver"
+        ],
+        "default": "gds_database"
+      }
+    ]
+  },
+  "extensions": {
+    "recommendations": [
+      "ms-python.python",
+      "ms-python.vscode-pylance",
+      "ms-python.debugpy",
+      "charliermarsh.ruff",
+      "ms-vscode.powershell",
+      "littlefoxteam.vscode-python-test-adapter",
+      "ryanluker.vscode-coverage-gutters",
+      "mtxr.sqltools",
+      "mtxr.sqltools-driver-pg",
+      "mtxr.sqltools-driver-mssql",
+      "ms-toolsai.jupyter",
+      "ms-azuretools.vscode-docker",
+      "eamodio.gitlens",
+      "editorconfig.editorconfig",
+      "davidanson.vscode-markdownlint",
+      "visualstudioexptteam.vscodeintellicode",
+      "streetsidesoftware.code-spell-checker",
+      "redhat.vscode-yaml",
+      "tamasfe.even-better-toml"
+    ]
+  }
+}
