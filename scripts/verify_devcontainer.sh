@@ -14,23 +14,24 @@ NOTE() { LOG "NOTE: $*"; }
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")"/.. && pwd)"
 cd "$ROOT_DIR" || exit 1
 
-VENV_PY="${VENV_PY:-.venv/bin/python}"
-if [[ ! -x "$VENV_PY" ]]; then
-  VENV_PY="$(command -v python || true)"
+VENV_PY="${VENV_PY:-$ROOT_DIR/.venv/bin/python}"
+
+if [[ -x "$VENV_PY" ]]; then
+  PYTHON_BIN="$VENV_PY"
+else
+  PYTHON_BIN="${PYTHON_BIN:-python3}"
+  if [[ ! -x "$(command -v "$PYTHON_BIN" || true)" ]]; then
+    PYTHON_BIN="$(command -v python || true)"
+  fi
 fi
 
 LOG "Starting devcontainer verification..."
 
-# 1) Venv presence and Python version
-if [[ -x .venv/bin/python ]]; then
-  PASS "Found venv: .venv/bin/python"
-else
-  FAIL ".venv missing or not executable"
-fi
-"$VENV_PY" --version && PASS "Python version reported" || FAIL "Python not runnable"
+# 1) Python version
+"$PYTHON_BIN" --version && PASS "Python version reported" || FAIL "Python not runnable"
 
 # 2) ipykernel and kernelspec
-"$VENV_PY" - <<'PY'
+"$PYTHON_BIN" - <<'PY'
 import sys
 try:
     import ipykernel
@@ -52,7 +53,7 @@ else
 fi
 
 # 3) pyodbc import and ODBC driver listing
-"$VENV_PY" - <<'PY'
+"$PYTHON_BIN" - <<'PY'
 try:
     import pyodbc
     print("pyodbc:", pyodbc.version)
@@ -84,7 +85,7 @@ fi
 
 # 5) PowerShell 7
 if command -v pwsh >/dev/null 2>&1; then
-  if pwsh -NoLogo -NoProfile -Command "$PSVersionTable.PSVersion.ToString()" >/dev/null 2>&1; then
+  if pwsh -NoLogo -NoProfile -Command '$PSVersionTable.PSVersion.ToString()' >/dev/null 2>&1; then
     PASS "PowerShell 7 available"
   else
     FAIL "pwsh present but failed to run"
@@ -95,7 +96,7 @@ fi
 
 # 6) Optional: JupyterLab
 if [[ "${ENABLE_JUPYTERLAB:-0}" == "1" ]] || command -v jupyter-lab >/dev/null 2>&1; then
-  "$VENV_PY" - <<'PY'
+  "$PYTHON_BIN" - <<'PY'
 try:
     import jupyterlab
     print("jupyterlab:", jupyterlab.__version__)

@@ -1,18 +1,18 @@
-# Dev Container (Red Hat UBI 9, Python venv, Multi-Repo)
+# Dev Container (Red Hat UBI 9, System Python, Multi-Repo)
 
-This workspace ships a simplified dev container based on Red Hat UBI 9, designed for Python venv (no Conda), Docker access, and multi-repo development.
+This workspace ships a simplified dev container based on Red Hat UBI 9, using the system Python (/usr/bin/python3) with no pyenv or workspace venv. It targets Docker access and multi-repo development.
 
 Related docs: [Technical Architecture](devcontainer-architecture.md) · [Functional Spec](devcontainer-functional-spec.md)
 
 ## Highlights
 
-- Python via `venv`: created in `.venv` at the repo root.
+- Python via the system interpreter (`/usr/bin/python3`); no pyenv or `.venv` is created by default.
 - Docker access: uses the host Docker daemon via socket mount.
-- Multi-repo: mounts the parent folder so sibling repos under `/workspaces` are available.
+- Multi-repo: mounts the parent folder so sibling repos under `/workspaces/devcontainer` are available (workspace opens at `/workspaces/devcontainer/dbtools`).
 
 ## Additional Repos (Optional)
 
-You can auto-clone extra repos into `/workspaces` using a per-developer config:
+You can auto-clone extra repos into `/workspaces/devcontainer` using a per-developer config:
 
 1. Create `.devcontainer/additional-repos.json` in your workspace with:
 
@@ -42,7 +42,7 @@ bash .devcontainer/scripts/clone-additional-repos.sh
 
 1. Open the folder in VS Code.
 2. Run “Dev Containers: Rebuild and Reopen in Container”.
-3. Wait for `postCreate` to finish (venv + base tools).
+3. Wait for `postCreate` to finish (kernel registration + editable installs).
 
 ## Verify
 
@@ -70,46 +70,30 @@ make verify-devcontainer
 
 ## Multi-Repo Workflow
 
-The container mounts your parent folder to `/workspaces`. Your current repo is at `/workspaces/dbtools`; sibling repos under the same parent are accessible, e.g. `/workspaces/other-repo`. You can `pip install -e` any local package as needed.
+The container mounts your parent folder to `/workspaces/devcontainer`. Your current repo is at `/workspaces/devcontainer/dbtools`; sibling repos under the same parent are accessible, e.g. `/workspaces/devcontainer/other-repo`. You can `pip install -e` any local package as needed.
 
 ## Local Packages
 
-If present, the container attempts to install local packages in editable mode on start. Adjust `postStartCommand` in `.devcontainer/devcontainer.json` or remove it if you prefer manual installs.
+Editable installs are handled during `postCreate` via `.devcontainer/postCreate.sh`. There is no venv activation step; re-run `postCreate` or install manually if needed.
 
 ## Notes
 
-- The previous Conda-based configuration is superseded. This setup uses `python3 -m venv .venv` for simplicity and portability.
+- This setup uses the system Python `/usr/bin/python3` without a workspace venv.
 - If you need additional system libraries (e.g., database clients), add them in `.devcontainer/Dockerfile` and rebuild.
 - Prefer VS Code notebooks with `ipykernel` over embedding JupyterLab to keep the image small.
 - The container joins the shared Docker network `devcontainer-network` (created via `initializeCommand`).
 - Environment flags: `PIP_DISABLE_PIP_VERSION_CHECK=1` (speed up pip) and `ENABLE_JUPYTERLAB=0` (opt-in JupyterLab during postCreate).
-- OS packages are installed via `microdnf`/`dnf` (UBI 9); Python packages via `pip` into `.venv`.
+- OS packages are installed via `microdnf`/`dnf` (UBI 9); Python packages are installed globally during image build.
 
 ## Shell Prompt Customization
 
-- The devcontainer uses `bash` by default; the prompt (`PS1`) comes from UBI 9 and your `~/.bashrc`.
-- A post-start hook sources `~/.set_prompt` if present, so you can customize your prompt per-user.
-- On first create, a default `~/.set_prompt` is generated with a venv-aware, colored prompt and optional git branch display.
-
-To customize:
-
-```bash
-cat > ~/.set_prompt <<'EOF'
-# Example: venv name + user@host:path + git branch
-venv_prefix=''
-[ -n "$VIRTUAL_ENV" ] && venv_prefix="($(basename "$VIRTUAL_ENV")) "
-GREEN='\[\e[32m\]'; BLUE='\[\e[34m\]'; CYAN='\[\e[36m\]'; RESET='\[\e[0m\]'
-export PS1="${venv_prefix}${GREEN}\u@\h${RESET}:${BLUE}\w${RESET}\$(type __git_ps1 >/dev/null 2>&1 && __git_ps1 ' (%s)') ${CYAN}\$${RESET} "
-EOF
-source ~/.set_prompt
-```
-
-The hook is idempotent and only appends sourcing logic to `~/.bashrc` if missing.
+- The devcontainer uses `bash` by default. `postCreate` appends a colored prompt directly into `~/.bashrc` (with the `$` on its own line) and avoids any `~/.set_prompt` file dependency.
+- The snippet includes optional git branch display via `__git_ps1`. To change it, edit the injected block in your `~/.bashrc` after the `# dbtools devcontainer prompt` marker and reopen the shell (or `source ~/.bashrc`).
 
 ## Jupyter Support
 
 - VS Code Jupyter and Python extensions provide Notebook support.
-- `ipykernel` is installed in `.venv` and registered as `Python (gds)`.
+- `ipykernel` is installed globally and registered as `Python (gds)`.
 - Port 8888 is forwarded and labeled "Jupyter".
 
 ### JupyterLab (Optional)
@@ -120,7 +104,7 @@ Example `devcontainer.local.json` override:
 
 ```
 {
- "name": "dbtools (venv, local)",
+ "name": "dbtools (system Python, local)",
  "containerEnv": {
   "ENABLE_JUPYTERLAB": "1"
  }
@@ -130,32 +114,5 @@ Example `devcontainer.local.json` override:
 After rebuild/reopen in container, you can launch JupyterLab if desired:
 
 ```
-source .venv/bin/activate
+$ python3 -m pip install --user --upgrade jupyterlab
 jupyter lab --no-browser --ip=0.0.0.0 --port=8888
-
-## Python 3.14 via Pyenv (Optional)
-
-The base image (UBI 9) uses system `python3`. To use Python 3.14 without changing the base image, enable the guarded pyenv path:
-
-- In `.devcontainer/devcontainer.json` under `build.args`, set:
-
-```
-
-"USE_PYENV": "1",
-"PYENV_PYTHON_VERSION": "3.14.0"
-
-```
-
-- Rebuild the container (Dev Containers: Rebuild and Reopen in Container).
-- Verify inside the container:
-
-```bash
-python --version
-python3 --version
-which python
-which python3
-```
-
-When `USE_PYENV=1`, the Dockerfile installs pyenv and sets the global Python to `PYENV_PYTHON_VERSION`. The `postCreateCommand` will create `.venv` from this Python, keeping VS Code pointing at `/workspaces/dbtools/.venv/bin/python`.
-
-```

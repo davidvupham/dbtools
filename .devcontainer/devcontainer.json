@@ -31,7 +31,7 @@
   // ---------------------------------------------------------------------------
   // "name": Display name shown in VS Code UI
   // This helps identify which dev container you're working in
-  "name": "dbtools (venv)",
+  "name": "GDS Dev Container",
   // ---------------------------------------------------------------------------
   // Build Configuration
   // ---------------------------------------------------------------------------
@@ -41,8 +41,6 @@
   // "context": Build context directory (parent of .devcontainer)
   //   - This allows Dockerfile to access files in the project root
   // "args": Build-time variables passed to the Dockerfile
-  //   - PYTHON_VERSION: Python version to install (3.14)
-  //   - CONDA_ENV_NAME: Name of the conda environment (gds)
   //   - DEVCONTAINER_USER: Username to create in container (defaults to host user)
   //   - DEVCONTAINER_UID: User ID (defaults to host user ID)
   //   - DEVCONTAINER_GID: Group ID (defaults to host group ID)
@@ -50,9 +48,7 @@
     "dockerfile": "Dockerfile",
     "context": "..",
     "args": {
-      "DEVCONTAINER_USER": "${localEnv:USER}",
-      "USE_PYENV": "0",
-      "PYENV_PYTHON_VERSION": "3.14.0"
+      "DEVCONTAINER_USER": "${localEnv:USER}"
     }
   },
   // ---------------------------------------------------------------------------
@@ -70,12 +66,7 @@
   // They're maintained by Microsoft and the community
   //
   // Available features: https://containers.dev/features
-  "features": {
-    "ghcr.io/devcontainers/features/common-utils:2": {
-      "installZsh": false
-    },
-    "ghcr.io/devcontainers/features/git:1": {}
-  },
+  "features": {},
   // ---------------------------------------------------------------------------
   // VS Code Customizations
   // ---------------------------------------------------------------------------
@@ -121,8 +112,8 @@
       // These override user settings and ensure consistency
       "settings": {
         // Python Configuration (venv)
-        "python.defaultInterpreterPath": "/workspaces/dbtools/.venv/bin/python",
-        "python.terminal.activateEnvironment": true,
+        "python.defaultInterpreterPath": "/usr/bin/python3",
+        "python.terminal.activateEnvironment": false,
         "python.analysis.autoImportCompletions": true,
         "python.analysis.typeCheckingMode": "basic",
         // Testing Configuration
@@ -222,9 +213,9 @@
   //     other-repo-2/
   //
   // NOTE: VS Code still opens /workspaces/dbtools as the workspaceFolder.
-  "workspaceMount": "source=${localWorkspaceFolder}/..,target=/workspaces,type=bind",
+  "workspaceMount": "source=${localWorkspaceFolder}/..,target=/workspaces/devcontainer,type=bind",
   // "workspaceFolder": Where the project is opened inside the container
-  "workspaceFolder": "/workspaces/dbtools",
+  "workspaceFolder": "/workspaces/devcontainer/dbtools",
   // ---------------------------------------------------------------------------
   // Initialize Command (Runs on HOST before container starts)
   // ---------------------------------------------------------------------------
@@ -298,10 +289,9 @@
   // These commands run at different stages of the dev container lifecycle
   // "postCreateCommand": Runs ONCE after the container is first created
   // Used for one-time setup: install dependencies, configure environment
-  "postCreateCommand": "bash -lc 'python3 -m venv .venv && ln -sf /workspaces/dbtools/.venv/bin/python /workspaces/dbtools/.venv/bin/python3 && . .venv/bin/activate && pip install --upgrade pip && pip install ruff pytest pytest-cov pyright pyodbc ipykernel && python -m ipykernel install --user --name gds --display-name \"Python (gds)\" && if [ \"${ENABLE_JUPYTERLAB:-0}\" = \"1\" ]; then pip install --upgrade jupyterlab && python -c \"import jupyterlab; print('jupyterlab:', jupyterlab.__version__)\"; fi'",
+  "postCreateCommand": "bash -lc '.devcontainer/postCreate.sh'",
   // "postStartCommand": Runs EVERY TIME the container starts
   // Used for recurring setup: ensure directories exist, fix permissions, install local packages
-  "postStartCommand": "bash -lc 'mkdir -p ~/.vscode-server/extensions ~/.vscode-server/extensionsCache && chmod -R 775 ~/.vscode-server && chown -R ${USER}:${USER} ~/.vscode-server || true; for f in ~/.bashrc ~/.profile ~/.zshrc; do [ -f \"$f\" ] && sed -i \"/conda activate/d;/miniconda3/d\" \"$f\" || true; done; if [ -L .venv/bin/python3 ]; then T=$(readlink .venv/bin/python3 || true); if echo \"$T\" | grep -q miniconda3 || [ -n \"$T\" -a ! -e \"$T\" ]; then echo \"[postStart] Detected bad python3 symlink ($T); rebuilding venv...\"; rm -rf .venv; fi; fi; if [ ! -d .venv ]; then echo \"[postStart] Creating Python venv...\"; python3 -m venv .venv; fi; ln -sf /workspaces/dbtools/.venv/bin/python /workspaces/dbtools/.venv/bin/python3 || true; echo \"[postStart] Ensuring venv auto-activation for interactive shells...\"; grep -q \"/workspaces/dbtools/.venv/bin/activate\" ~/.bashrc || echo \"source /workspaces/dbtools/.venv/bin/activate\" >> ~/.bashrc; echo \"[postStart] Sourcing ~/.set_prompt if present...\"; grep -q \"source ~/.set_prompt\|\\. ~/.set_prompt\" ~/.bashrc || echo \"[[ -f ~/.set_prompt ]] && . ~/.set_prompt\" >> ~/.bashrc; echo \"[postStart] Purging stale caches referencing miniconda...\"; find . -type d \( -name .mypy_cache -o -name __pycache__ -o -name .pytest_cache \) -prune -exec rm -rf {} + || true; echo \"[postStart] Installing local packages in editable mode...\"; . .venv/bin/activate && pip install -q -e ./gds_database -e ./gds_postgres -e ./gds_mssql -e ./gds_mongodb -e ./gds_liquibase -e ./gds_vault -e ./gds_snowflake -e ./gds_snmp_receiver 2>/dev/null || echo \"[postStart] Some packages failed to install (dependencies may be missing)\"'",
   // ---------------------------------------------------------------------------
   // Container Environment Variables
   // ---------------------------------------------------------------------------
@@ -311,6 +301,9 @@
     // Prevents pip from checking for newer versions on every command
     // Speeds up pip operations slightly
     "PIP_DISABLE_PIP_VERSION_CHECK": "1",
+    "WORKSPACE_PARENT": "/workspaces/devcontainer",
+    "WORKSPACE_REPO": "dbtools",
+    "WORKSPACE_ROOT": "/workspaces/devcontainer/dbtools",
     // Optional: set to "1" to install JupyterLab during postCreate
     "ENABLE_JUPYTERLAB": "0"
   },

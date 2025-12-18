@@ -6,51 +6,90 @@ FROM registry.access.redhat.com/ubi9/ubi
 ARG DEVCONTAINER_USER=vscode
 ARG DEVCONTAINER_UID=1000
 ARG DEVCONTAINER_GID=1000
-ARG USE_PYENV=0
-ARG PYENV_PYTHON_VERSION=3.14.0
 
 ENV ACCEPT_EULA=Y
 
 # Minimal layers: install base deps with microdnf, add Microsoft repo, install SQL tools & PowerShell
-RUN set -eux; \
+RUN --mount=type=cache,target=/var/cache/dnf set -eux; \
     if command -v microdnf >/dev/null 2>&1; then \
     PM=microdnf; \
-    UPDATE_CMD="$PM -y --refresh update"; \
     INSTALL_CMD="$PM -y --refresh install"; \
     CLEAN_CMD="$PM -y clean all"; \
     MAKECACHE_CMD="true"; \
     else \
     PM=dnf; \
-    UPDATE_CMD="$PM -y --setopt=timeout=300 --setopt=retries=10 update"; \
+    # Keep dnf options conservative; rely on explicit retries below.
     INSTALL_CMD="$PM -y --setopt=timeout=300 --setopt=retries=10 --best --allowerasing install"; \
     CLEAN_CMD="$PM -y clean all"; \
     MAKECACHE_CMD="$PM -y makecache --refresh"; \
     fi; \
-    # Update with retries to mitigate flaky mirrors
+    # Refresh metadata (required for dnf; harmless for microdnf branch)
+    success=0; \
     for i in 1 2 3 4 5; do \
-    sh -xc "$UPDATE_CMD" && break || (echo "[base] update failed (try $i)"; sh -xc "$CLEAN_CMD"; sh -xc "$MAKECACHE_CMD" || true; sleep 3); \
+    if sh -xc "$MAKECACHE_CMD"; then success=1; break; fi; \
+    echo "[base] makecache failed (try $i)"; \
+    sh -xc "$CLEAN_CMD" || true; \
+    find /var/cache/dnf /var/cache/yum -mindepth 1 -maxdepth 1 -exec rm -rf {} + 2>/dev/null || true; \
+    sleep 3; \
     done; \
-    # Base packages with retries
+    [ "$success" -eq 1 ]; \
+    # Install base packages with retries. IMPORTANT: fail the build if we cannot install.
+    success=0; \
     for i in 1 2 3 4 5; do \
-    sh -xc "$INSTALL_CMD curl-minimal gnupg2 ca-certificates git gcc gcc-c++ make python3 python3-pip python3-devel shadow-utils unixODBC unixODBC-devel" && break || (echo "[base] install failed (try $i)"; sh -xc "$CLEAN_CMD"; sh -xc "$MAKECACHE_CMD" || true; sleep 3); \
-    done; \
-    # Optional pyenv build deps with retries
-    if [ "$USE_PYENV" = "1" ]; then \
-    for i in 1 2 3 4 5; do \
-    sh -xc "$INSTALL_CMD zlib-devel bzip2 bzip2-devel readline-devel sqlite sqlite-devel openssl-devel tk tk-devel libffi-devel xz xz-devel" && break || (echo "[pyenv] deps install failed (try $i)"; sh -xc "$CLEAN_CMD"; sh -xc "$MAKECACHE_CMD" || true; sleep 3); \
-    done; \
+    if sh -xc "$INSTALL_CMD \
+    ca-certificates curl-minimal gnupg2 shadow-utils \
+    python3 python3-pip \
+    unixODBC unixODBC-devel \
+    git bash-completion openssh-clients jq"; then \
+    success=1; break; \
     fi; \
+    echo "[base] install failed (try $i)"; \
+    sh -xc "$CLEAN_CMD" || true; \
+    find /var/cache/dnf /var/cache/yum -mindepth 1 -maxdepth 1 -exec rm -rf {} + 2>/dev/null || true; \
+    sh -xc "$MAKECACHE_CMD" || true; \
+    sleep 3; \
+    done; \
+    [ "$success" -eq 1 ]; \
     # Microsoft repo and tools (with retries)
     curl -fsSL https://packages.microsoft.com/config/rhel/9/packages-microsoft-prod.rpm -o /tmp/packages-microsoft-prod.rpm; \
     rpm -Uvh /tmp/packages-microsoft-prod.rpm; \
+    rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-Microsoft || true; \
+    success=0; \
     for i in 1 2 3 4 5; do \
-    sh -xc "ACCEPT_EULA=Y $INSTALL_CMD msodbcsql18 mssql-tools18 powershell" && break || (echo "[ms] tools install failed (try $i)"; sh -xc "$CLEAN_CMD"; sh -xc "$MAKECACHE_CMD" || true; sleep 3); \
+    if sh -xc "ACCEPT_EULA=Y $INSTALL_CMD msodbcsql18 mssql-tools18"; then success=1; break; fi; \
+    echo "[ms] tools install failed (try $i)"; \
+    sh -xc "$CLEAN_CMD" || true; \
+    find /var/cache/dnf /var/cache/yum -mindepth 1 -maxdepth 1 -exec rm -rf {} + 2>/dev/null || true; \
+    sh -xc "$MAKECACHE_CMD" || true; \
+    sleep 3; \
     done; \
+    [ "$success" -eq 1 ]; \
     ln -sf /opt/mssql-tools18/bin/sqlcmd /usr/local/bin/sqlcmd || true; \
+    # Avoid unrelated build failures later (e.g., devcontainer features running dnf check-update)
+    # by removing the Microsoft repo definition after we've installed the needed packages.
+    # (The repo has intermittently served metadata with a bad GPG signature, which breaks unrelated installs.)
+    if [ -f /etc/yum.repos.d/microsoft-prod.repo ]; then \
+    rm -f /etc/yum.repos.d/microsoft-prod.repo; \
+    fi; \
+    if [ -f /etc/yum.repos.d/packages-microsoft-com-prod.repo ]; then \
+    rm -f /etc/yum.repos.d/packages-microsoft-com-prod.repo; \
+    fi; \
     sh -xc "$CLEAN_CMD"; \
-    rm -rf /var/cache/dnf /var/cache/yum /tmp/*
+    find /var/cache/dnf /var/cache/yum -mindepth 1 -maxdepth 1 -exec rm -rf {} + 2>/dev/null || true; \
+    rm -rf /tmp/*
+
+# Create non-root user aligned with host
+RUN set -eux; \
+    DEV_GID="${DEVCONTAINER_GID:-1000}"; DEV_UID="${DEVCONTAINER_UID:-1000}"; \
+    getent group "$DEV_GID" >/dev/null 2>&1 || groupadd -g "$DEV_GID" "$DEVCONTAINER_USER"; \
+    id -u "$DEVCONTAINER_USER" >/dev/null 2>&1 || useradd -m -u "$DEV_UID" -g "$DEV_GID" -s /bin/bash "$DEVCONTAINER_USER"; \
+    mkdir -p /workspaces/dbtools; \
+    chown -R "$DEVCONTAINER_USER":"$DEVCONTAINER_USER" /workspaces
 
 ENV PATH=/opt/mssql-tools18/bin:/opt/mssql-tools/bin:$PATH
+
+# NOTE: Python tooling (ruff, pytest, etc.) is installed via postCreate.sh
+# using the OS-provided Python (/usr/bin/python3).
 
 # Install Docker CLI and Compose plugin (always latest stable) for RHEL/UBI base
 RUN set -eux; \
@@ -76,36 +115,12 @@ RUN set -eux; \
     docker --version; \
     docker compose version || true
 
-# Create non-root user aligned with host
-RUN set -eux; \
-    DEV_GID="${DEVCONTAINER_GID:-1000}"; DEV_UID="${DEVCONTAINER_UID:-1000}"; \
-    getent group "$DEV_GID" >/dev/null 2>&1 || groupadd -g "$DEV_GID" "$DEVCONTAINER_USER"; \
-    id -u "$DEVCONTAINER_USER" >/dev/null 2>&1 || useradd -m -u "$DEV_UID" -g "$DEV_GID" -s /bin/bash "$DEVCONTAINER_USER"; \
-    mkdir -p /workspaces/dbtools; \
-    chown -R "$DEVCONTAINER_USER":"$DEVCONTAINER_USER" /workspaces
-
 USER ${DEVCONTAINER_USER}
 WORKDIR /workspaces/dbtools
 
-# Optional: install pyenv and Python ${PYENV_PYTHON_VERSION} for Red Hat base
-ENV PYENV_ROOT=/home/${DEVCONTAINER_USER}/.pyenv
-ENV PATH=${PYENV_ROOT}/bin:${PYENV_ROOT}/shims:$PATH
-RUN set -eux; \
-    if [ "$USE_PYENV" = "1" ]; then \
-    echo "[pyenv] Installing pyenv for ${DEVCONTAINER_USER}..."; \
-    curl -fsSL https://pyenv.run | bash; \
-    /bin/bash -lc "pyenv --version"; \
-    echo "[pyenv] Installing Python ${PYENV_PYTHON_VERSION}..."; \
-    /bin/bash -lc "pyenv install -s ${PYENV_PYTHON_VERSION}"; \
-    /bin/bash -lc "pyenv global ${PYENV_PYTHON_VERSION}"; \
-    /bin/bash -lc "python --version"; \
-    else \
-    echo "[pyenv] Skipped (USE_PYENV=0)"; \
-    fi
-
 # Lightweight container healthcheck: verifies core tooling is on PATH
 HEALTHCHECK --interval=60s --timeout=10s --start-period=10s --retries=3 \
-    CMD bash -lc 'command -v python3 >/dev/null && command -v pwsh >/dev/null && command -v sqlcmd >/dev/null || exit 1'
+    CMD bash -lc 'command -v python3 >/dev/null && command -v sqlcmd >/dev/null || exit 1'
 
 # Keep container alive for VS Code to attach
 CMD ["sleep", "infinity"]

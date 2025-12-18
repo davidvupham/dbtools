@@ -5,9 +5,9 @@ This document explains how the dbtools dev container works, including lifecycle,
 ## Overview
 
 - Base image: `registry.access.redhat.com/ubi9/ubi`
-- Python via `venv` in `.venv`; VS Code uses `/workspaces/dbtools/.venv/bin/python`
+- Python uses system `/usr/bin/python3`; no pyenv or workspace venv.
 - System tooling: `msodbcsql18`, `mssql-tools18` (`sqlcmd`), `unixodbc` dev headers, PowerShell 7
-- Multi-repo: parent folder mounted at `/workspaces`, workspace at `/workspaces/dbtools`
+- Multi-repo: parent folder mounted at `/workspaces/devcontainer`, workspace at `/workspaces/devcontainer/dbtools`
 - Network: container connects to `devcontainer-network` (created if missing)
 - Security: non-root `vscode` user; read-only SSH key mount; Docker socket mount
 
@@ -18,10 +18,12 @@ This document explains how the dbtools dev container works, including lifecycle,
 3. Container starts with `runArgs` (joins shared network).
 4. VS Code installs extensions listed in `customizations.vscode.extensions`.
 5. `postCreateCommand`:
-   - Create `.venv`, upgrade pip, install dev tools and `pyodbc`.
-   - Install `ipykernel`; register kernelspec `gds` (Python (gds)).
-   - If `ENABLE_JUPYTERLAB=1`, install JupyterLab.
-6. `postStartCommand` (each start): ensure VS Code server dirs; install local packages in editable mode.
+
+- Register kernelspec `gds`; editable installs happen in postCreate via user-site packages.
+- Append custom prompt to `~/.bashrc`.
+- If `ENABLE_JUPYTERLAB=1`, install JupyterLab.
+
+6. `postStartCommand`: none (not used).
 7. VS Code forwards ports (5432, 1433, 27017, 3000, 5000, 8000, 8888) with labels.
 
 ## Diagram
@@ -40,7 +42,6 @@ flowchart TD
 
   subgraph Container[/dbtools dev container/]
     WS[/ /workspaces/dbtools /]
-    VENV[.venv Python env]
     EXT[VS Code Server + Extensions]
     TOOLS[unixODBC, msodbcsql18, mssql-tools18]
     PWSH[PowerShell 7]
@@ -52,7 +53,7 @@ flowchart TD
   VS -- initializeCommand: create NET --> DK
   DK -- connect to --> NET
   Container -- mount parent --> WS
-  VS -- postCreate: venv, ipykernel, optional JupyterLab --> VENV
+  VS -- postCreate: kernel registration, optional JupyterLab --> WS
   VS -- install --> EXT
   TOOLS --> Container
   PWSH --> Container
@@ -64,14 +65,9 @@ flowchart TD
 - `workspaceMount`: Mounts the parent folder at `/workspaces` for multi-repo workflows.
 - `runArgs`: Joins `devcontainer-network` for shared dev DB services.
 
-## Python Versions (Pyenv Optional)
+## Python Versions
 
-The base uses system `python3` on UBI 9. To use Python 3.14, the Dockerfile supports a guarded pyenv path controlled via build args:
-
-- `USE_PYENV`: `0` (default) disables pyenv; `1` enables pyenv installation.
-- `PYENV_PYTHON_VERSION`: desired version (e.g., `3.14.0`).
-
-When enabled, pyenv installs the specified Python and sets it as global. The devcontainer `postCreateCommand` builds `.venv` from whichever `python3` is active (pyenv when enabled, system otherwise).
+The image relies on the system Python `/usr/bin/python3`; `postCreate` registers the kernel and installs editable packages without creating a workspace venv.
 
 - `containerEnv`:
   - `PIP_DISABLE_PIP_VERSION_CHECK=1` to speed up pip.

@@ -22,7 +22,8 @@ set -euo pipefail
 #   ]
 # }
 
-ROOT="/workspaces"
+# Default parent for multi-repo clones; override via WORKSPACE_PARENT
+ROOT="${WORKSPACE_PARENT:-/workspaces/devcontainer}"
 # Use the current workspace folder generically
 CONFIG="$(pwd)/.devcontainer/additional-repos.json"
 

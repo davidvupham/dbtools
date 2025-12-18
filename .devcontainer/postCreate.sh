@@ -1,58 +1,53 @@
 #!/usr/bin/env bash
 
-# postCreate script for the dbtools dev container (venv-only)
-# - Activates project venv and installs local packages in editable mode
-# - Registers a Jupyter kernel for this venv
+# postCreate script for the dev container (system Python)
+# - Installs dev tools (ruff, pytest, pyright, etc.)
+# - Registers a Jupyter kernel
+# - Installs local packages in editable mode (user site)
 # - Sets up pre-commit hooks if configured
 # - Verifies pyodbc import (no OS package changes here)
 
 set -euo pipefail
 
-echo "[postCreate] Starting setup (venv)..."
+echo "[postCreate] Starting setup (system Python)..."
 
 # Ensure we're at the workspace root expected by devcontainer.json
-cd /workspaces/dbtools || {
-  echo "[postCreate] Workspace folder /workspaces/dbtools not found" >&2
+WORKSPACE_ROOT=${WORKSPACE_ROOT:-/workspaces/dbtools}
+cd "$WORKSPACE_ROOT" || {
+  echo "[postCreate] Workspace folder $WORKSPACE_ROOT not found" >&2
   exit 1
 }
 
-VENVPATH="/workspaces/dbtools/.venv"
+# Use OS-provided Python
+PYTHON=python3
+PIP="$PYTHON -m pip"
 
-# Detect and repair broken venvs or bad python3 symlinks (e.g., miniconda leftovers)
-if [[ -e "$VENVPATH/bin/python3" ]]; then
-  # Resolve symlink target if present; empty if readlink fails
-  SYMTARGET="$(readlink "$VENVPATH/bin/python3" 2>/dev/null || true)"
-  if [[ -n "$SYMTARGET" ]]; then
-    if [[ "$SYMTARGET" == *"/miniconda3/"* ]]; then
-      echo "[postCreate] Detected python3 symlink pointing to miniconda ($SYMTARGET); recreating venv..."
-      rm -rf "$VENVPATH"
-    elif [[ ! -e "$SYMTARGET" ]]; then
-      echo "[postCreate] Detected broken python3 symlink target ($SYMTARGET); recreating venv..."
-      rm -rf "$VENVPATH"
-    fi
-  fi
+if ! $PIP -V >/dev/null 2>&1; then
+  echo "[postCreate] pip not available; trying ensurepip..."
+  $PYTHON -m ensurepip --upgrade >/dev/null 2>&1 || true
 fi
 
-# Ensure venv exists (fresh) and activate it
-if [[ ! -d "$VENVPATH" ]]; then
-  echo "[postCreate] Creating Python venv..."
-  /usr/bin/python3 -m venv "$VENVPATH"
+echo "[postCreate] Python: $($PYTHON -V)"
+echo "[postCreate] Pip: $($PIP -V)"
+
+# Install dev tools with feature-provided Python
+echo "[postCreate] Installing dev tools..."
+$PIP install --no-cache-dir ruff pytest pytest-cov pyright pyodbc ipykernel pre-commit || {
+  echo "[postCreate] ⚠ Failed to install some dev tools (continuing anyway)"
+}
+
+# Clone additional repos if configured (optional)
+if [[ -f .devcontainer/additional-repos.json ]]; then
+  echo "[postCreate] Cloning additional repos..."
+  bash .devcontainer/scripts/clone-additional-repos.sh || echo "[postCreate] ⚠ Failed to clone additional repos"
 fi
-
-# Ensure python3 inside venv points to venv's python
-ln -sf "$VENVPATH/bin/python" "$VENVPATH/bin/python3"
-
-. "$VENVPATH/bin/activate"
-
-echo "[postCreate] Python: $(python -V)"
-echo "[postCreate] Pip: $(python -m pip -V)"
 
 # Register Jupyter kernel for this venv (idempotent)
-echo "[postCreate] Registering Jupyter kernel for venv..."
-if python -c "import ipykernel" >/dev/null 2>&1; then
+echo "[postCreate] Registering Jupyter kernel..."
+if $PYTHON -c "import ipykernel" >/dev/null 2>&1; then
   KERNEL_DIR="$HOME/.local/share/jupyter/kernels/gds"
   if [[ ! -d "$KERNEL_DIR" ]]; then
-    if python -m ipykernel install --user --name gds --display-name "Python (gds)" >/dev/null 2>&1; then
+    if $PYTHON -m ipykernel install --user --name gds --display-name "Python (gds)" >/dev/null 2>&1; then
       echo "[postCreate] ✓ Registered Jupyter kernel 'Python (gds)'"
     else
       echo "[postCreate] ⚠ Failed to register Jupyter kernel (continuing anyway)"
@@ -64,19 +59,38 @@ else
   echo "[postCreate] ⚠ ipykernel not available; skipping kernel registration"
 fi
 
-# Ensure interactive shells auto-activate the venv
-if [[ -f ~/.bashrc ]] && ! grep -q "/workspaces/dbtools/.venv/bin/activate" ~/.bashrc; then
-  echo "[postCreate] Enabling venv auto-activation for interactive shells..."
-  echo "source /workspaces/dbtools/.venv/bin/activate" >> ~/.bashrc
+# Ensure prompt customization is present directly in ~/.bashrc (no external file dependency)
+if [[ -f ~/.bashrc ]] && ! grep -q "dbtools devcontainer prompt" ~/.bashrc; then
+  echo "[postCreate] Adding custom prompt to ~/.bashrc..."
+  cat <<'EOP' >> ~/.bashrc
+# dbtools devcontainer prompt
+# Try to load git prompt helpers if available
+for p in \
+  /usr/share/git-core/contrib/completion/git-prompt.sh \
+  /usr/share/bash-completion/completions/git-prompt \
+  /etc/bash_completion.d/git-prompt; do
+  [ -f "$p" ] && . "$p" && break
+done
+
+# colors
+GREEN='\[\e[32m\]'
+BLUE='\[\e[34m\]'
+CYAN='\[\e[36m\]'
+RESET='\[\e[0m\]'
+
+# PS1 with user@host:path and optional git branch; place $ on the next line
+export PS1="${GREEN}\u@\h${RESET}:${BLUE}\w${RESET}\$(type __git_ps1 >/dev/null 2>&1 && __git_ps1 ' (%s)')\n${CYAN}\$${RESET} "
+
+EOP
 fi
 
 install_editable() {
   local pkg_dir="$1"
   if [[ -d "$pkg_dir" ]] && [[ -f "$pkg_dir/pyproject.toml" || -f "$pkg_dir/setup.py" ]]; then
-    echo "[postCreate] Installing $pkg_dir in editable mode..."
-    if python -m pip install -q -e "$pkg_dir[dev]" 2>/dev/null; then
+    echo "[postCreate] Installing $pkg_dir in editable mode (user site)..."
+    if $PYTHON -m pip install --user -q -e "$pkg_dir[dev]" 2>/dev/null; then
       echo "[postCreate] ✓ Installed $pkg_dir[dev]"
-    elif python -m pip install -q -e "$pkg_dir" 2>/dev/null; then
+    elif $PYTHON -m pip install --user -q -e "$pkg_dir" 2>/dev/null; then
       echo "[postCreate] ✓ Installed $pkg_dir"
     else
       echo "[postCreate] ⚠ Failed to install $pkg_dir (continuing anyway)"
@@ -115,7 +129,7 @@ echo "[postCreate] Setup complete!"
 
 # --- Verify pyodbc import (no OS package changes here) ---
 echo "[postCreate] Verifying pyodbc..."
-python - <<'PY' || true
+$PYTHON - <<'PY' || true
 import sys
 try:
     import pyodbc
@@ -129,33 +143,3 @@ try:
 except Exception as e:
     print("[postCreate] pyodbc not importable:", e)
 PY
-
-# --- Create default ~/.set_prompt if missing (optional custom prompt) ---
-if [[ ! -f "$HOME/.set_prompt" ]]; then
-  echo "[postCreate] Creating default ~/.set_prompt..."
-  cat > "$HOME/.set_prompt" <<'EOP'
-# ~/.set_prompt - default bash prompt for dbtools devcontainer
-
-# Try to load git prompt helpers if available
-for p in \
-  /usr/share/git-core/contrib/completion/git-prompt.sh \
-  /usr/share/bash-completion/completions/git-prompt \
-  /etc/bash_completion.d/git-prompt; do
-  [ -f "$p" ] && . "$p" && break
-done
-
-# venv prefix
-venv_prefix=''
-[ -n "$VIRTUAL_ENV" ] && venv_prefix="($(basename \"$VIRTUAL_ENV\")) "
-
-# colors
-GREEN='\[\e[32m\]'
-BLUE='\[\e[34m\]'
-CYAN='\[\e[36m\]'
-RESET='\[\e[0m\]'
-
-# PS1 with user@host:path and optional git branch
-export PS1="${venv_prefix}${GREEN}\u@\h${RESET}:${BLUE}\w${RESET}\$(type __git_ps1 >/dev/null 2>&1 && __git_ps1 ' (%s)')
-${CYAN}\$${RESET} "
-EOP
-fi

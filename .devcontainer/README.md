@@ -8,12 +8,12 @@ Quick links:
 - Technical architecture (diagram): [docs/development/devcontainer-architecture.md](../docs/development/devcontainer-architecture.md)
 - Maintainers: [.devcontainer/MAINTAINERS.md](MAINTAINERS.md)
 
-## Canonical Configuration (Red Hat UBI 9)
+## Canonical Configuration (Red Hat UBI 9 + Python 3.14.2)
 
 - Base image: Red Hat UBI 9 (`registry.access.redhat.com/ubi9/ubi`).
-- Python via `venv` in `.venv`; VS Code uses `/workspaces/<repo>/.venv/bin/python`.
+- Python 3.14.2 is installed via the `ghcr.io/devcontainers/features/python` feature at `/usr/local/python/current/bin/python`; no pyenv or workspace venv is created by default.
 - System tooling: `msodbcsql18`, `mssql-tools18` (`sqlcmd`), `unixODBC` dev headers, PowerShell 7 (installed via Microsoft RHEL 9 repo).
-- Multi-repo: parent folder mounted at `/workspaces`; workspace at `/workspaces/<repo>`.
+- Multi-repo: parent folder mounted at `/workspaces/devcontainer`; workspace at `/workspaces/devcontainer/<repo>`.
 - Optional JupyterLab: set `ENABLE_JUPYTERLAB=1` to install during `postCreate`.
 
 ### Rebuild & Verify
