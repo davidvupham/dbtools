@@ -102,6 +102,7 @@ guiApplications=false
 ```
 
 Apply changes:
+
 ```powershell
 wsl --shutdown
 ```
@@ -305,7 +306,7 @@ Keep default settings, Docker will use Rosetta 2 translation.
 
 Volumes are faster than bind mounts on macOS.
 
-4. **Enable VirtioFS** (Docker Desktop 4.6+)
+1. **Enable VirtioFS** (Docker Desktop 4.6+)
 
    - Settings → General → "Enable VirtioFS accelerated directory sharing"
    - Significantly improves file system performance
@@ -627,7 +628,7 @@ RUN apt-get update && apt-get install -y ...
 RUN conda create -n gds python=3.13 -y
 
 # Python packages (occasionally change)
-RUN pip install ruff pytest pyodbc
+RUN pip install -e ".[devcontainer]"
 
 # Copy code (frequently changes)
 COPY . /workspaces/dbtools

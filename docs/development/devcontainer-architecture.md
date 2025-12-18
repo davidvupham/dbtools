@@ -5,7 +5,7 @@ This document explains how the dbtools dev container works, including lifecycle,
 ## Overview
 
 - Base image: `registry.access.redhat.com/ubi9/ubi`
-- Python uses system `/usr/bin/python3`; no pyenv or workspace venv.
+- Python 3.14 is provisioned during `postCreate` via `uv` into a workspace venv at `.venv/` (system `/usr/bin/python3` remains available as fallback).
 - System tooling: `msodbcsql18`, `mssql-tools18` (`sqlcmd`), `unixodbc` dev headers, PowerShell 7
 - Multi-repo: parent folder mounted at `/workspaces/devcontainer`, workspace at `/workspaces/devcontainer/dbtools`
 - Network: container connects to `devcontainer-network` (created if missing)
@@ -19,12 +19,12 @@ This document explains how the dbtools dev container works, including lifecycle,
 4. VS Code installs extensions listed in `customizations.vscode.extensions`.
 5. `postCreateCommand`:
 
-- Register kernelspec `gds`; editable installs happen in postCreate via user-site packages.
+- Register kernelspec `gds`; tooling is installed from `pyproject.toml` optional dependencies (`.[devcontainer]`) into `.venv/`.
 - Append custom prompt to `~/.bashrc`.
-- If `ENABLE_JUPYTERLAB=1`, install JupyterLab.
+- If `ENABLE_JUPYTERLAB=1`, install optional Jupyter packages from `pyproject.toml` (`.[devcontainer-jupyter]`).
 
-6. `postStartCommand`: none (not used).
-7. VS Code forwards ports (5432, 1433, 27017, 3000, 5000, 8000, 8888) with labels.
+1. `postStartCommand`: none (not used).
+2. VS Code forwards ports (5432, 1433, 27017, 3000, 5000, 8000, 8888) with labels.
 
 ## Diagram
 
@@ -67,7 +67,12 @@ flowchart TD
 
 ## Python Versions
 
-The image relies on the system Python `/usr/bin/python3`; `postCreate` registers the kernel and installs editable packages without creating a workspace venv.
+The image includes the system Python `/usr/bin/python3`, but the devcontainer is designed to use a repo-local venv at `.venv/`.
+
+- `postCreate` installs `uv`, installs Python `3.14` (default) via `uv`, and creates/updates `.venv/`.
+- VS Code is configured to default to `.venv/bin/python`.
+- `postCreate` registers the `gds` Jupyter kernel pointing at the active interpreter.
+- Override Python version by setting `DEVCONTAINER_PYTHON_VERSION`.
 
 - `containerEnv`:
   - `PIP_DISABLE_PIP_VERSION_CHECK=1` to speed up pip.
@@ -103,7 +108,7 @@ To apply changes and validate the environment:
 Dev Containers: Rebuild and Reopen in Container
 ```
 
-2. Run verification tasks:
+1. Run verification tasks:
 
 - Dev: Verify Dev Container
 - Dev: Verify pyodbc

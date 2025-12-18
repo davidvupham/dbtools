@@ -14,6 +14,35 @@ authors = [{ name = "GDS Team" }]
 requires-python = ">=3.9"
 dependencies = []
 
+[project.optional-dependencies]
+# Tooling installed by the VS Code dev container into the repo-local .venv.
+devcontainer = [
+    "aiohttp",
+    "ansible",
+    "build",
+    "grafana-api",
+    "hvac",
+    "ipykernel",
+    "kafka-python",
+    "pika",
+    "pre-commit",
+    "prometheus-client",
+    "psycopg2-binary",
+    "pulumi",
+    "pysnmp",
+    "pyodbc",
+    "pyright",
+    "pytest",
+    "pytest-asyncio",
+    "pytest-cov",
+    "ruff",
+    "snowflake-connector-python",
+    "wheel",
+]
+
+# Optional Jupyter/Notebook-heavy packages (installed only when ENABLE_JUPYTERLAB=1).
+devcontainer-jupyter = ["jupyterlab", "numpy", "pandas"]
+
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["gds_*"]

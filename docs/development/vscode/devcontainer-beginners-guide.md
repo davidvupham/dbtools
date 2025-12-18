@@ -28,11 +28,11 @@ Optional but helpful:
 We've designed a streamlined environment focused on Python and PowerShell development with database connectivity. Key highlights:
 
 - **Red Hat UBI 9** base image for enterprise stability
-- **Python 3** via system interpreter (`/usr/bin/python3`) – no conda, no pyenv
+- **Python 3.14** provisioned via `uv` into `.venv/` (system `/usr/bin/python3` remains available)
 - **PowerShell 7+** for database and automation scripts
 - **SQL Server tools**: `msodbcsql18`, `mssql-tools18` (`sqlcmd`)
 - **ODBC support**: `unixODBC` and development headers for `pyodbc`
-- Essential Python development tools: ruff, pytest, pytest-cov, pyright, pyodbc, pre-commit
+- Python development tools are installed from `pyproject.toml` optional deps: `.[devcontainer]`
 - VS Code extensions auto-install in the container: Python, Pylance, Jupyter, Ruff, Docker, GitLens
 - Docker CLI access via host socket mount
 - SSH key mounting for Git authentication (read-only)
@@ -64,8 +64,9 @@ This file defines how to build the image. Major steps:
 5. **Create non-root user**: Uses `${localEnv:USER}` to match your host username
    - Enables proper file ownership when editing on host
 
-6. **Install Python tools globally**:
-   - `ruff`, `pytest`, `pytest-cov`, `pyright`, `pyodbc`, `ipykernel`, `pre-commit`
+6. **Python runtime**:
+   - System Python is installed in the image.
+   - Project Python (3.14 by default) is provisioned during `postCreate` via `uv` into `.venv/`.
 
 7. **Install Docker CLI**: Latest stable Docker CLI and Compose plugin
 
@@ -85,7 +86,7 @@ Key fields explained:
   - `ghcr.io/devcontainers/features/common-utils`: Basic utilities
   - `ghcr.io/devcontainers/features/git`: Git version control
 - `customizations.vscode.extensions`: Extensions auto-installed (Python, Pylance, Jupyter, Ruff, Docker, GitLens, etc.)
-- `customizations.vscode.settings`: VS Code settings (Python interpreter at `/usr/bin/python3`, testing, formatting)
+- `customizations.vscode.settings`: VS Code settings (Python interpreter at `.venv/bin/python`, testing, formatting)
 - `workspaceMount`: Mounts parent folder at `/workspaces/devcontainer` for multi-repo workflows
 - `workspaceFolder`: Opens at `/workspaces/devcontainer/dbtools`
 - `initializeCommand`: Creates shared `devcontainer-network` Docker network
@@ -102,7 +103,7 @@ This script runs once after the container is first created:
 2. **Additional repos**: Optionally clones extra repos from `.devcontainer/additional-repos.json`
 3. **Jupyter kernel**: Registers `gds` kernel for notebooks
 4. **Shell prompt**: Adds colorful git-aware prompt to `~/.bashrc`
-5. **Editable installs**: Installs local packages with `pip install --user -e`
+5. **Editable installs**: Installs local packages into `.venv/` with `pip -e`
 6. **Pre-commit**: Installs git hooks if `.pre-commit-config.yaml` exists
 7. **Docker verification**: Checks Docker daemon reachability
 8. **pyodbc verification**: Validates ODBC driver installation
@@ -153,15 +154,15 @@ Run these in the container terminal:
 ### Python and interpreter
 
 ```bash
-python3 -V
-which python3
-# Expected: /usr/bin/python3
+python -V
+which python
+# Expected: .../dbtools/.venv/bin/python
 ```
 
 ### Python development tools
 
 ```bash
-python3 -c "import ruff, pytest, pyodbc; print('Development tools OK')"
+python -c "import ruff, pytest, pyodbc; print('Development tools OK')"
 ruff --version
 pytest --version
 ```
@@ -176,7 +177,7 @@ pwsh -NoProfile -Command '$PSVersionTable'
 ### ODBC and SQL Server connectivity
 
 ```bash
-python3 -c "import pyodbc; print('pyodbc version:', pyodbc.version)"
+python -c "import pyodbc; print('pyodbc version:', pyodbc.version)"
 odbcinst -q -d
 # Should show: [ODBC Driver 18 for SQL Server]
 sqlcmd -?
@@ -185,7 +186,7 @@ sqlcmd -?
 ### Local packages (installed via postCreate)
 
 ```bash
-python3 -c "import gds_database, gds_postgres, gds_mssql; print('Local packages OK')"
+python -c "import gds_database, gds_postgres, gds_mssql; print('Local packages OK')"
 ```
 
 ### Docker CLI

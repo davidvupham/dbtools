@@ -112,7 +112,8 @@
       // These override user settings and ensure consistency
       "settings": {
         // Python Configuration (venv)
-        "python.defaultInterpreterPath": "/usr/bin/python3",
+        // Provisioned during postCreate via uv (fallback remains /usr/bin/python3).
+        "python.defaultInterpreterPath": "/workspaces/devcontainer/dbtools/.venv/bin/python",
         "python.terminal.activateEnvironment": false,
         "python.analysis.autoImportCompletions": true,
         "python.analysis.typeCheckingMode": "basic",

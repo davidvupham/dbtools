@@ -5,13 +5,13 @@ This repository includes a VS Code Dev Container to provide a reproducible Pytho
 ## What you get
 
 - Base image: Red Hat UBI 9 (`registry.access.redhat.com/ubi9/ubi`)
-- Python: System Python `/usr/bin/python3` (no pyenv, no conda, no venv)
+- Python: `.venv/` provisioned during `postCreate` via `uv` (default Python `3.14`; system `/usr/bin/python3` remains available)
 - Dynamic user: Container user matches your host user via `${localEnv:USER}`
 - **PowerShell 7+** for database/automation scripts
 - **SQL Server tools**: `msodbcsql18`, `mssql-tools18` (`sqlcmd`)
 - **ODBC support**: `unixODBC` and development headers
 - Python extensions preinstalled (Python, Pylance, Jupyter, Ruff, Docker)
-- Python tools: ruff, pytest, pytest-cov, pyright, pyodbc, pre-commit
+- Python tools installed via `pyproject.toml` optional deps: `.[devcontainer]`
 - Post-create command installs local editable packages: gds_database, gds_postgres, gds_mssql, gds_mongodb, gds_liquibase, gds_vault, gds_snowflake, gds_snmp_receiver
 - Docker CLI access via host socket mount
 - SSH key mounting for Git authentication (read-only)
@@ -33,12 +33,21 @@ For detailed documentation, see:
 
 ## Notes
 
-- Default interpreter is `/usr/bin/python3`
+- Default interpreter is `.venv/bin/python`
+
+### Troubleshooting
+
+If Python still shows the old version after a devcontainer rebuild, you likely have a stale `.venv/` directory from a previous setup. Delete it and rebuild the dev container so `postCreate` can reprovision it:
+
+```bash
+rm -rf .venv
+```
+
 - To verify Python setup:
 
   ```bash
-  python3 -V
-  which python3
+  python -V
+  which python
   ```
 
 - To verify PowerShell setup:
@@ -58,7 +67,7 @@ For detailed documentation, see:
 - To verify installed packages:
 
   ```bash
-  python3 -c "import gds_database, gds_postgres, gds_mssql; print('Packages OK')"
+  python -c "import gds_database, gds_postgres, gds_mssql; print('Packages OK')"
   ```
 
 - Update `.devcontainer/devcontainer.json` or `.devcontainer/postCreate.sh` if you want to customize the setup.

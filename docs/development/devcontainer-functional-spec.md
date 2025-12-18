@@ -5,7 +5,7 @@ Status: Implemented (Red Hat UBI 9 base). Legacy cleanup/removals pending approv
 ## Goals & Non‑Goals
 
 - **Goals:**
-  - Small image; use system Python with user-site packages.
+  - Small image; keep system Python available but use a workspace venv for tooling.
   - Support multi‑repo development via parent folder mount.
   - Provide reliable SQL Server tooling (`msodbcsql18`, `sqlcmd`) and `pyodbc`.
   - Docker access via host socket; shared network for local services.
@@ -18,7 +18,7 @@ Status: Implemented (Red Hat UBI 9 base). Legacy cleanup/removals pending approv
 ## Architecture Overview
 
 - **Base Image:** `registry.access.redhat.com/ubi9/ubi` (corporate-aligned Red Hat UBI 9).
-- **Python Runtime:** system Python `/usr/bin/python3` (no pyenv, no workspace venv).
+- **Python Runtime:** workspace venv at `.venv/` provisioned during `postCreate` via `uv` (default Python `3.14`). System `/usr/bin/python3` remains available as a fallback.
 - **Workspace Layout:** Parent directory bind-mounted to `/workspaces/devcontainer`, opening `/workspaces/devcontainer/dbtools`; sibling repos are accessible for editable installs.
 - **System Tooling:** `unixODBC`/`unixODBC-devel`, `msodbcsql18`, `mssql-tools18` (`sqlcmd`), `powershell` (PS7), and core build tools.
 - **Install Method:** `microdnf`/`dnf` for OS packages; Microsoft RHEL 9 RPM repo for SQL Server tooling.
@@ -34,14 +34,15 @@ Status: Implemented (Red Hat UBI 9 base). Legacy cleanup/removals pending approv
   - Clean package caches to keep the image small.
   - Symlink `sqlcmd` into PATH for convenience.
   - **Python Environment:**
-    - `postCreate`: registers the `gds` kernelspec, installs editable local packages with user-site installs, and leaves Python at the system interpreter. Optional JupyterLab installs when `ENABLE_JUPYTERLAB=1`.
-    - VS Code setting `python.defaultInterpreterPath` points to `/usr/bin/python3`.
+    - `postCreate`: installs `uv`, installs Python `3.14` via `uv`, creates/updates `.venv/`, installs dev tools + editable local packages into the venv, and registers the `gds` kernelspec pointing at the venv.
+    - VS Code setting `python.defaultInterpreterPath` points to `/workspaces/devcontainer/dbtools/.venv/bin/python`.
+    - Override: set `DEVCONTAINER_PYTHON_VERSION` to change the version `uv` installs.
   - **Multi‑Repo Workflow:**
     - `workspaceMount: source=${localWorkspaceFolder}/..,target=/workspaces/devcontainer,type=bind`.
   - Optional script to clone additional repos: see [.devcontainer/scripts/clone-additional-repos.sh](../../.devcontainer/scripts/clone-additional-repos.sh) using [.devcontainer/additional-repos.json](../../.devcontainer/additional-repos.json).
   - **Lifecycle:**
     - `initializeCommand`: create `devcontainer-network` on host.
-    - `postCreate`: bootstrap environment and base packages; installs editable local packages (user-site); registers kernel; optional JupyterLab if enabled; appends activation and custom prompt to `~/.bashrc`.
+    - `postCreate`: installs `uv`, provisions Python, creates/updates `.venv/`, installs tooling from `pyproject.toml` optional dependencies (`.[devcontainer]`), installs local packages in editable mode, registers kernel; optional JupyterLab if enabled.
     - `postStart`: not used (kept empty).
 - **Security & Compliance:**
   - Least privilege (non‑root), minimal mounts (SSH RO; Docker socket only), no embedded secrets.
@@ -70,7 +71,7 @@ Apply changes and run the verification suite:
 Dev Containers: Rebuild and Reopen in Container
 ```
 
-2. Run verification tasks:
+1. Run verification tasks:
 
 - Dev: Verify Dev Container
 - Dev: Verify pyodbc
@@ -93,9 +94,9 @@ make verify-devcontainer
 File: [.devcontainer/postCreate.sh](../../.devcontainer/postCreate.sh)
 
 - **Environment checks:** Logs Python/pip versions; verifies Docker daemon reachability.
-- **Venv lifecycle:** Not used; system Python with user-site installs.
+- **Venv lifecycle:** Creates/uses `.venv/` (default Python `3.14`) via `uv`; falls back to system Python if provisioning fails.
 - **Prompt:** Appends a git-branch-aware prompt directly into `~/.bashrc` (no `~/.set_prompt` dependency; `$` on its own line).
-- **Jupyter kernel:** Registers kernelspec `gds` ("Python (gds)") after installing `ipykernel` during `postCreate`.
+- **Jupyter kernel:** Registers kernelspec `gds` ("Python (gds)") pointing at the venv interpreter.
 - **Editable installs:** Installs local packages in editable mode (prefers `[dev]` extras) for: `gds_database`, `gds_postgres`, `gds_mssql`, `gds_mongodb`, `gds_liquibase`, `gds_vault`, `gds_snowflake`, `gds_snmp_receiver`.
 - **pre-commit hooks:** If `.pre-commit-config.yaml` exists and `pre-commit` is available, installs hooks.
 - **pyodbc verification:** Pure import/driver check; prints version and drivers. No OS package installs or other fallbacks.
@@ -113,7 +114,7 @@ Items retained:
 
 - Active devcontainer files: `.devcontainer/devcontainer.json`, `.devcontainer/Dockerfile`
 - Repo cloning: `.devcontainer/additional-repos.json` (optional), `.devcontainer/scripts/clone-additional-repos.sh`
-- postCreate lifecycle: `.devcontainer/postCreate.sh` — system Python with user-site installs; legacy venv references have been removed.
+- postCreate lifecycle: `.devcontainer/postCreate.sh` — provisions `.venv/` via `uv` and installs tooling from `pyproject.toml` optional dependencies (`.[devcontainer]`).
 
 ## Open Questions
 

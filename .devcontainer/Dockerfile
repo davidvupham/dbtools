@@ -19,9 +19,10 @@ RUN --mount=type=cache,target=/var/cache/dnf set -eux; \
     else \
     PM=dnf; \
     # Keep dnf options conservative; rely on explicit retries below.
-    INSTALL_CMD="$PM -y --setopt=timeout=300 --setopt=retries=10 --best --allowerasing install"; \
+    # Limit parallel downloads to reduce partial-download failures from flaky networks.
+    INSTALL_CMD="$PM -y --setopt=timeout=600 --setopt=retries=10 --setopt=max_parallel_downloads=1 --best --allowerasing install"; \
     CLEAN_CMD="$PM -y clean all"; \
-    MAKECACHE_CMD="$PM -y makecache --refresh"; \
+    MAKECACHE_CMD="$PM -y --setopt=timeout=600 --setopt=retries=10 --setopt=max_parallel_downloads=1 makecache --refresh"; \
     fi; \
     # Refresh metadata (required for dnf; harmless for microdnf branch)
     success=0; \
@@ -64,6 +65,8 @@ RUN --mount=type=cache,target=/var/cache/dnf set -eux; \
     sleep 3; \
     done; \
     [ "$success" -eq 1 ]; \
+    # Provide a `python` entrypoint for scripts that don't call python3 explicitly.
+    ln -sf /usr/bin/python3 /usr/local/bin/python || true; \
     ln -sf /opt/mssql-tools18/bin/sqlcmd /usr/local/bin/sqlcmd || true; \
     # Avoid unrelated build failures later (e.g., devcontainer features running dnf check-update)
     # by removing the Microsoft repo definition after we've installed the needed packages.

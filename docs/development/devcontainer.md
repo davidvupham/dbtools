@@ -1,12 +1,12 @@
-# Dev Container (Red Hat UBI 9, System Python, Multi-Repo)
+# Dev Container (Red Hat UBI 9, Python 3.14 via uv, Multi-Repo)
 
-This workspace ships a simplified dev container based on Red Hat UBI 9, using the system Python (/usr/bin/python3) with no pyenv or workspace venv. It targets Docker access and multi-repo development.
+This workspace ships a simplified dev container based on Red Hat UBI 9. During `postCreate`, it provisions **Python 3.14** via `uv` and creates a repo-local virtual environment at `.venv/` (fallback: system `/usr/bin/python3`). It targets Docker access and multi-repo development.
 
 Related docs: [Technical Architecture](devcontainer-architecture.md) · [Functional Spec](devcontainer-functional-spec.md)
 
 ## Highlights
 
-- Python via the system interpreter (`/usr/bin/python3`); no pyenv or `.venv` is created by default.
+- Python 3.14 provisioned via `uv` into `.venv/` during `postCreate` (system `/usr/bin/python3` remains available as a fallback).
 - Docker access: uses the host Docker daemon via socket mount.
 - Multi-repo: mounts the parent folder so sibling repos under `/workspaces/devcontainer` are available (workspace opens at `/workspaces/devcontainer/dbtools`).
 
@@ -25,7 +25,7 @@ You can auto-clone extra repos into `/workspaces/devcontainer` using a per-devel
 }
 ```
 
-2. From inside the devcontainer, run:
+1. From inside the devcontainer, run:
 
 ```
 bash .devcontainer/scripts/clone-additional-repos.sh
@@ -43,6 +43,12 @@ bash .devcontainer/scripts/clone-additional-repos.sh
 1. Open the folder in VS Code.
 2. Run “Dev Containers: Rebuild and Reopen in Container”.
 3. Wait for `postCreate` to finish (kernel registration + editable installs).
+
+If you already had a `.venv/` directory from an older setup, rebuild may not replace it. To force reprovisioning on the next `postCreate`, remove it first:
+
+```bash
+rm -rf .venv
+```
 
 ## Verify
 
@@ -74,16 +80,25 @@ The container mounts your parent folder to `/workspaces/devcontainer`. Your curr
 
 ## Local Packages
 
-Editable installs are handled during `postCreate` via `.devcontainer/postCreate.sh`. There is no venv activation step; re-run `postCreate` or install manually if needed.
+Editable installs are handled during `postCreate` via `.devcontainer/postCreate.sh` into `.venv/`.
+
+Devcontainer tooling (ruff/pytest/pyright/pyodbc/ipykernel/pre-commit, etc.) is installed from `pyproject.toml` optional dependencies: `.[devcontainer]`.
+
+- VS Code uses `.venv/bin/python` by default.
+- In terminals, you can optionally activate the venv with `source .venv/bin/activate`.
 
 ## Notes
 
-- This setup uses the system Python `/usr/bin/python3` without a workspace venv.
+- Default devcontainer Python is `.venv/bin/python` (created during `postCreate`).
 - If you need additional system libraries (e.g., database clients), add them in `.devcontainer/Dockerfile` and rebuild.
 - Prefer VS Code notebooks with `ipykernel` over embedding JupyterLab to keep the image small.
 - The container joins the shared Docker network `devcontainer-network` (created via `initializeCommand`).
 - Environment flags: `PIP_DISABLE_PIP_VERSION_CHECK=1` (speed up pip) and `ENABLE_JUPYTERLAB=0` (opt-in JupyterLab during postCreate).
-- OS packages are installed via `microdnf`/`dnf` (UBI 9); Python packages are installed globally during image build.
+- OS packages are installed via `microdnf`/`dnf` (UBI 9); Python tooling is installed into `.venv/` from `pyproject.toml` optional dependencies (`.[devcontainer]`).
+
+### Python version override
+
+`postCreate` defaults to Python `3.14`. To override, set `DEVCONTAINER_PYTHON_VERSION` in your devcontainer override (e.g., `devcontainer.local.json`).
 
 ## Shell Prompt Customization
 
@@ -93,7 +108,7 @@ Editable installs are handled during `postCreate` via `.devcontainer/postCreate.
 ## Jupyter Support
 
 - VS Code Jupyter and Python extensions provide Notebook support.
-- `ipykernel` is installed globally and registered as `Python (gds)`.
+- `ipykernel` is installed in `.venv/` and registered as `Python (gds)`.
 - Port 8888 is forwarded and labeled "Jupyter".
 
 ### JupyterLab (Optional)
@@ -114,5 +129,4 @@ Example `devcontainer.local.json` override:
 After rebuild/reopen in container, you can launch JupyterLab if desired:
 
 ```
-$ python3 -m pip install --user --upgrade jupyterlab
 jupyter lab --no-browser --ip=0.0.0.0 --port=8888
