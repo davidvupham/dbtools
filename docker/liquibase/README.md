@@ -95,7 +95,7 @@ Using the canonical `/data/liquibase` path:
 
 ```bash
 docker run --rm \
-  --network tool-library-network \
+  --network devcontainer-network \
   -v "$(pwd)/db":/data/liquibase:ro \
   liquibase-custom:latest \
   --defaults-file /data/liquibase/liquibase.properties \
@@ -118,7 +118,7 @@ Liquibase will print the SQL it would execute, without touching the database.
 
 ```bash
 docker run --rm \
-  --network tool-library-network \
+  --network devcontainer-network \
   -v "$(pwd)/db":/data/liquibase:ro \
   liquibase-custom:latest \
   --defaults-file /data/liquibase/liquibase.properties \
@@ -130,7 +130,7 @@ Environment variables override properties if needed:
 
 ```bash
 docker run --rm \
-  --network tool-library-network \
+  --network devcontainer-network \
   -e LIQUIBASE_URL="jdbc:postgresql://postgres:5432/demo" \
   -e LIQUIBASE_USERNAME=demo \
   -e LIQUIBASE_PASSWORD=secret \
@@ -144,11 +144,10 @@ Validate without applying changes:
 
 ```bash
 docker run --rm \
-  --network tool-library-network \
+  --network devcontainer-network \
   -v "$(pwd)/db":/data/liquibase:ro \
   liquibase-custom:latest \
   --defaults-file /data/liquibase/liquibase.properties \
-  --changelog-file /data/liquibase/changelog/changelog.xml \
   validate
 ```
 
@@ -171,6 +170,7 @@ docker run -d --name mssql \
   -e MSSQL_PID=Developer \
   -e SA_PASSWORD="YourStrong!Passw0rd" \
   -p 1433:1433 \
+  --network devcontainer-network \
   mcr.microsoft.com/mssql/server:2022-latest
 
 docker run -d --name postgres \
@@ -178,12 +178,11 @@ docker run -d --name postgres \
   -e POSTGRES_USER=demo \
   -e POSTGRES_PASSWORD=secret \
   -p 5432:5432 \
+  --network devcontainer-network \
   postgres:latest
 ```
 
-Point your `liquibase.properties` at the running container (host `host.docker.internal` on macOS/Windows, `localhost` on Linux if using bridge networking). If the database runs in another compose stack, ensure both are on a shared network (e.g., `tool-library-network`).
-
-## Running Liquibase interactively
+Point your `liquibase.properties` at the running container (host `host.docker.internal` on macOS/Windows, `localhost` on Linux if using bridge networking). If the database runs in another compose stack, ensure both are on a shared network (e.g., `devcontainer-network`).
 
 To explore inside the container:
 

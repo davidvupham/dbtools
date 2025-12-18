@@ -32,7 +32,11 @@ if [[ -n "$SQLCMD_BIN" ]]; then
 fi
 
 echo "[verify_sqlserver] Checking pyodbc connectivity..."
-python - <<'PY'
+PY_BIN="${PY_BIN:-.venv/bin/python}"
+if [[ ! -x "$PY_BIN" ]]; then
+  PY_BIN="$(command -v python || true)"
+fi
+"${PY_BIN}" - <<'PY'
 import os
 import sys
 

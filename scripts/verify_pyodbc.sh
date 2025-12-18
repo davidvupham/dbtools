@@ -3,11 +3,15 @@ set -euo pipefail
 
 echo "[verify_pyodbc] Starting verification..."
 
-echo "[verify_pyodbc] Python executable: $(command -v python || true)"
-python --version || true
+PY_BIN="${PY_BIN:-.venv/bin/python}"
+if [[ ! -x "$PY_BIN" ]]; then
+    PY_BIN="$(command -v python || true)"
+fi
+echo "[verify_pyodbc] Python executable: ${PY_BIN}"
+"${PY_BIN}" --version || true
 
 echo "[verify_pyodbc] Importing pyodbc and printing version..."
-python - <<'PY'
+"${PY_BIN}" - <<'PY'
 import sys
 try:
     import pyodbc
@@ -26,7 +30,7 @@ else
 fi
 
 echo "[verify_pyodbc] Optional: attempting quick pyodbc connection if MSSQL_SA_PASSWORD is set..."
-python - <<'PY'
+"${PY_BIN}" - <<'PY'
 import os
 try:
     import pyodbc

@@ -56,7 +56,7 @@ services:
     # Network Configuration
     # Allows Liquibase to connect to database containers
     networks:
-      - tool-library-network
+      - devcontainer-network
 
     # Environment Variables
     # These can be referenced in your liquibase.properties or changelogs
@@ -96,7 +96,7 @@ services:
 # Connect to existing database network
 # Network is shared with dev container and all database services
 networks:
-  tool-library-network:
+  devcontainer-network:
     external: true
 # ==============================================================================
 # USAGE EXAMPLES:

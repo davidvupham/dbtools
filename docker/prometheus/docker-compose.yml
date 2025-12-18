@@ -17,7 +17,7 @@ services:
       - "--web.enable-lifecycle"
     restart: unless-stopped
     networks:
-      - tool-library-network
+      - devcontainer-network
 
   # Optional: Grafana for visualization
   grafana:
@@ -38,12 +38,12 @@ services:
       - prometheus
     restart: unless-stopped
     networks:
-      - tool-library-network
+      - devcontainer-network
 
 volumes:
   prometheus_data:
   grafana_data:
 
 networks:
-  tool-library-network:
+  devcontainer-network:
     external: true

@@ -149,7 +149,7 @@ print(f"Findings: {analysis['findings']}")
 docker build -t gds-hammerdb -f docker/hammerdb/Dockerfile .
 
 # Run with network access to databases
-docker run --network=tool-library-network gds-hammerdb auto /benchmarks/script.tcl
+docker run --network=devcontainer-network gds-hammerdb auto /benchmarks/script.tcl
 ```
 
 ## Configuration Reference

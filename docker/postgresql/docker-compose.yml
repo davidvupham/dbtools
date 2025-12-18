@@ -19,7 +19,7 @@ services:
       - /data/postgresql/psql1:/var/lib/postgresql
     restart: unless-stopped
     networks:
-      - tool-library-network
+      - devcontainer-network
 
   psql2:
     build: .
@@ -41,8 +41,8 @@ services:
       - /data/postgresql/psql2:/var/lib/postgresql
     restart: unless-stopped
     networks:
-      - tool-library-network
+      - devcontainer-network
 
 networks:
-  tool-library-network:
+  devcontainer-network:
     external: true

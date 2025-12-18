@@ -18,7 +18,7 @@ services:
       - /data/mongodb:/data/mongodb
     restart: unless-stopped
     networks:
-      - tool-library-network
+      - devcontainer-network
 
   mongodb2:
     build:
@@ -39,7 +39,7 @@ services:
       - /data/mongodb:/data/mongodb
     restart: unless-stopped
     networks:
-      - tool-library-network
+      - devcontainer-network
 
   mongodb3:
     build:
@@ -60,8 +60,8 @@ services:
       - /data/mongodb:/data/mongodb
     restart: unless-stopped
     networks:
-      - tool-library-network
+      - devcontainer-network
 
 networks:
-  tool-library-network:
+  devcontainer-network:
     external: true

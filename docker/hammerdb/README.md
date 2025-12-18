@@ -36,18 +36,18 @@ runner = PostgresRunner()
 
 ## Network Configuration
 
-This container uses the `tool-library-network` shared by other project containers:
+This container uses the `devcontainer-network` shared by other project containers:
 
 ```bash
 # Create the network (if not exists)
-docker network create tool-library-network
+docker network create devcontainer-network
 
 # Run with docker-compose (recommended)
 cd docker/hammerdb
 docker-compose up -d
 
 # Or run standalone with the network
-docker run --network=tool-library-network gds-hammerdb ...
+docker run --network=devcontainer-network gds-hammerdb ...
 ```
 
 ## Environment Variables

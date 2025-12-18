@@ -81,7 +81,7 @@ services:
     restart: unless-stopped
 
     networks:
-      - tool-library-network
+      - devcontainer-network
 
   vault2:
     build:
@@ -160,8 +160,8 @@ services:
     restart: unless-stopped
 
     networks:
-      - tool-library-network
+      - devcontainer-network
 
 networks:
-  tool-library-network:
+  devcontainer-network:
     external: true

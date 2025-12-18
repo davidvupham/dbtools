@@ -23,4 +23,4 @@ docker build \
 ## Run via Compose
 
 See `docker/docker-compose.ansible-awx.yml` for a ready-to-run service that mounts the repository into
-`/workspace` and reuses the shared `tool-library-network` bridge.
+`/workspace` and reuses the shared `devcontainer-network` bridge.

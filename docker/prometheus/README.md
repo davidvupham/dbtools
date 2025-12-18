@@ -31,7 +31,7 @@ Use this when running Docker directly on your machine. This is the **recommended
 cd docker/prometheus
 
 # Create shared network (one-time setup)
-docker network create tool-library-network 2>/dev/null || true
+docker network create devcontainer-network 2>/dev/null || true
 
 # Start services
 docker compose up -d
@@ -99,7 +99,7 @@ docker compose -f docker-compose.yml -f docker-compose.devcontainer.yml up -d
 │  └─────────────────────────│───────────────────────────────┘ │
 │                            │                                 │
 │  ┌─────────────────────────│───────────────────────────────┐ │
-│  │  Docker Network (tool-library-network)                  │ │
+│  │  Docker Network (devcontainer-network)                  │ │
 │  │  ┌──────────────────────▼──────────────────────────┐   │ │
 │  │  │  Prometheus (localhost:9090)                     │   │ │
 │  │  │  Scrapes host.docker.internal:8080/metrics      │   │ │

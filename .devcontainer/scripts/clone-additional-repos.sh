@@ -23,7 +23,8 @@ set -euo pipefail
 # }
 
 ROOT="/workspaces"
-CONFIG="/workspaces/dbtools/.devcontainer/additional-repos.json"
+# Use the current workspace folder generically
+CONFIG="$(pwd)/.devcontainer/additional-repos.json"
 
 if [ ! -f "$CONFIG" ]; then
   echo "[clone-additional-repos] No config file found at $CONFIG; nothing to do."

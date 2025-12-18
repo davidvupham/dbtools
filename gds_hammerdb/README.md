@@ -112,8 +112,8 @@ print(analysis["status"])  # PASS, REGRESSION, or IMPROVED
 # Build container
 docker build -t gds-hammerdb -f docker/hammerdb/Dockerfile .
 
-# Run on tool-library-network
-docker run --network=tool-library-network gds-hammerdb auto /benchmarks/script.tcl
+# Run on devcontainer-network
+docker run --network=devcontainer-network gds-hammerdb auto /benchmarks/script.tcl
 ```
 
 ## Documentation

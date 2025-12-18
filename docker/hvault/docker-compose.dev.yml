@@ -29,8 +29,8 @@ services:
     command: server -dev -dev-root-token-id=root
 
     networks:
-      - tool-library-network
+      - devcontainer-network
 
 networks:
-  tool-library-network:
+  devcontainer-network:
     external: true

@@ -87,10 +87,10 @@ services:
     restart: unless-stopped
 
     # Network configuration
-    # - Connects to tool-library-network for inter-service communication
+    # - Connects to devcontainer-network for inter-service communication
     # - Kafka can reach Zookeeper using service name 'zookeeper'
     networks:
-      - tool-library-network
+      - devcontainer-network
 
     # Health check to monitor Zookeeper status
     # - Docker can restart service if unhealthy
@@ -222,7 +222,7 @@ services:
 
     # Network configuration
     networks:
-      - tool-library-network
+      - devcontainer-network
 
     # Health check to monitor Kafka status
     healthcheck:
@@ -254,7 +254,7 @@ services:
 #   - Provides network isolation from other containers
 #
 networks:
-  tool-library-network:
+  devcontainer-network:
     # External network shared by all services
     #   - Created by dev container initializeCommand
     #   - Enables communication between dev container and all services

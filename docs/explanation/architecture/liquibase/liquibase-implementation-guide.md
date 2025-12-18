@@ -873,7 +873,7 @@ Run Liquibase in Docker while keeping paths consistent by mounting host `/data/l
 
 ```bash
 docker run --rm \
-  --network tool-library-network \
+  --network devcontainer-network \
   -v /data/liquibase:/data/liquibase:ro \
   liquibase:latest \
   --defaults-file /data/liquibase/env/liquibase.dev.properties \
@@ -893,7 +893,7 @@ services:
       - /data/liquibase:/data/liquibase:ro
     working_dir: /data/liquibase
     networks:
-      - tool-library-network
+      - devcontainer-network
 ```
 
 This keeps examples in this document valid both on host and in container.

@@ -17,8 +17,8 @@ services:
       - /data/mssql/mssql1:/var/opt/mssql
     restart: unless-stopped
     networks:
-      - tool-library-network
+      - devcontainer-network
 
 networks:
-  tool-library-network:
+  devcontainer-network:
     external: true

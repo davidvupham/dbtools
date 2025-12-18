@@ -157,3 +157,6 @@ pre-commit: ## Run pre-commit hooks on all files
 	pre-commit run --all-files
 
 ci: lint test ## Run all CI checks (lint + test)
+
+verify-devcontainer: ## Run the unified devcontainer verification suite
+	bash scripts/verify_devcontainer.sh

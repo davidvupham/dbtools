@@ -9,8 +9,8 @@ services:
     volumes:
       - ./hammerdb/scripts:/benchmarks
     networks:
-      - tool-library-network
+      - devcontainer-network
 
 networks:
-  tool-library-network:
+  devcontainer-network:
     external: true

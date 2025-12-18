@@ -15,8 +15,8 @@ services:
       - ./hvault/data:/vault/file
     restart: unless-stopped
     networks:
-      - tool-library-network
+      - devcontainer-network
 
 networks:
-  tool-library-network:
+  devcontainer-network:
     external: true
