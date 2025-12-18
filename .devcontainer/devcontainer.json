@@ -31,7 +31,7 @@
   // ---------------------------------------------------------------------------
   // "name": Display name shown in VS Code UI
   // This helps identify which dev container you're working in
-  "name": "dbtools",
+  "name": "dbtools (venv)",
   // ---------------------------------------------------------------------------
   // Build Configuration
   // ---------------------------------------------------------------------------
@@ -50,12 +50,9 @@
     "dockerfile": "Dockerfile",
     "context": "..",
     "args": {
-      "PYTHON_VERSION": "3.14",
-      "CONDA_ENV_NAME": "gds",
       "DEVCONTAINER_USER": "${localEnv:USER}",
-      "DEVCONTAINER_GROUP": "${localEnv:USER}",
-      "DEVCONTAINER_UID": "1000",
-      "DEVCONTAINER_GID": "1000"
+      "USE_PYENV": "0",
+      "PYENV_PYTHON_VERSION": "3.14.0"
     }
   },
   // ---------------------------------------------------------------------------
@@ -74,20 +71,10 @@
   //
   // Available features: https://containers.dev/features
   "features": {
-    // common-utils: Basic development utilities (curl, git, etc.)
     "ghcr.io/devcontainers/features/common-utils:2": {
-      "installZsh": false, // Don't install Zsh (we use Bash)
-      "username": "${localEnv:USER}", // User to configure (from host)
-      "userUid": "1000", // User ID
-      "userGid": "1000" // Group ID
+      "installZsh": false
     },
-    // git: Git version control (already in base image, ensures it's configured)
-    "ghcr.io/devcontainers/features/git:1": {},
-    // Docker Outside-of-Docker feature installs Docker CLI and configures access
-    // to the host daemon via the mounted socket.
-    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {
-      "version": "latest"
-    }
+    "ghcr.io/devcontainers/features/git:1": {}
   },
   // ---------------------------------------------------------------------------
   // VS Code Customizations
@@ -133,8 +120,8 @@
       // Settings applied to VS Code when running in this dev container
       // These override user settings and ensure consistency
       "settings": {
-        // Python Configuration
-        "python.defaultInterpreterPath": "/opt/conda/envs/gds/bin/python",
+        // Python Configuration (venv)
+        "python.defaultInterpreterPath": "/workspaces/dbtools/.venv/bin/python",
         "python.terminal.activateEnvironment": true,
         "python.analysis.autoImportCompletions": true,
         "python.analysis.typeCheckingMode": "basic",
@@ -241,9 +228,9 @@
   // ---------------------------------------------------------------------------
   // Initialize Command (Runs on HOST before container starts)
   // ---------------------------------------------------------------------------
-  // Creates the tool-library-network if it doesn't exist
+  // Creates the devcontainer-network if it doesn't exist
   // This network is shared by all database containers and the dev container
-  "initializeCommand": "docker network inspect tool-library-network >/dev/null 2>&1 || docker network create --driver bridge tool-library-network",
+  "initializeCommand": "docker network inspect devcontainer-network >/dev/null 2>&1 || docker network create --driver bridge devcontainer-network",
   // ---------------------------------------------------------------------------
   // Port Forwarding (VS Code Feature)
   // ---------------------------------------------------------------------------
@@ -300,54 +287,10 @@
   // The -p flags here publish ports from the dev container to the WSL host
   // This enables connecting to databases from outside VS Code
   "runArgs": [
-    // Environment variable to prevent Python output buffering
-    // Makes print() statements appear immediately in terminal
     "--env",
     "PYTHONUNBUFFERED=1",
-    // Mount a Docker volume for VS Code server cache
-    // Speeds up dev container rebuilds by preserving VS Code's files
-    "--mount",
-    "type=volume,source=vscode-server-cache,target=/home/${localEnv:USER}/.vscode-server,consistency=cached",
-    // =========================================================================
-    // NETWORK: Connect to tool-library-network
-    // =========================================================================
-    // This connects the dev container to the same Docker network as the
-    // database containers (mssql1, mongodb1-3, etc.)
-    //
-    // CRITICAL for docker-outside-of-docker:
-    // - Dev container and database containers run on the same Docker daemon
-    // - They need to be on the same network to communicate by container name
-    // - Without this, you can't connect to mongodb1, mssql1, etc. from code
-    // =========================================================================
     "--network",
-    "tool-library-network"
-    // =========================================================================
-    // PORT PUBLISHING: Not Needed with docker-outside-of-docker
-    // =========================================================================
-    // With docker-outside-of-docker, database containers run directly on the
-    // WSL Docker daemon (not inside the dev container). They publish their own
-    // ports via their docker-compose files:
-    //
-    // CONNECTIVITY:
-    // - Dev container → Database containers: Use container names on network
-    //   Example: mongodb://mongodb1:27017, Server=mssql1,1433
-    //
-    // - WSL host → Database containers: Use localhost with published ports
-    //   Example: mongodb://localhost:27017, Server=localhost,1433
-    //
-    // - Windows host → Databases: Windows can access WSL localhost
-    //   Example: Same as WSL host (localhost:27017, localhost:1433)
-    //
-    // Port mappings are handled by each service's docker-compose.yml:
-    //   - mssql1: 1433:1433
-    //   - mongodb1: 27017:27017
-    //   - mongodb2: 27018:27017
-    //   - mongodb3: 27019:27017
-    //   - psql1: 5432:5432
-    //   - psql2: 5433:5432
-    //   - kafka1: 9092:9092
-    //   - rabbitmq1: 5672:5672, 15672:15672
-    // =========================================================================
+    "devcontainer-network"
   ],
   // ---------------------------------------------------------------------------
   // Lifecycle Commands
@@ -355,10 +298,10 @@
   // These commands run at different stages of the dev container lifecycle
   // "postCreateCommand": Runs ONCE after the container is first created
   // Used for one-time setup: install dependencies, configure environment
-  "postCreateCommand": "bash .devcontainer/postCreate.sh && bash .devcontainer/scripts/clone-additional-repos.sh",
+  "postCreateCommand": "bash -lc 'python3 -m venv .venv && ln -sf /workspaces/dbtools/.venv/bin/python /workspaces/dbtools/.venv/bin/python3 && . .venv/bin/activate && pip install --upgrade pip && pip install ruff pytest pytest-cov pyright pyodbc ipykernel && python -m ipykernel install --user --name gds --display-name \"Python (gds)\" && if [ \"${ENABLE_JUPYTERLAB:-0}\" = \"1\" ]; then pip install --upgrade jupyterlab && python -c \"import jupyterlab; print('jupyterlab:', jupyterlab.__version__)\"; fi'",
   // "postStartCommand": Runs EVERY TIME the container starts
   // Used for recurring setup: ensure directories exist, fix permissions, install local packages
-  "postStartCommand": "bash -lc 'mkdir -p ~/.vscode-server/extensions ~/.vscode-server/extensionsCache && chmod -R 775 ~/.vscode-server && chown -R ${USER}:${USER} ~/.vscode-server || true; PY=\"$(command -v python || true)\"; if [ \"$PY\" != \"/opt/conda/envs/gds/bin/python\" ]; then echo \"[postStart] WARNING: default python is $PY; expected /opt/conda/envs/gds/bin/python. New terminals will auto-activate gds; for current shell run: source /opt/conda/etc/profile.d/conda.sh && conda activate gds\"; fi; echo \"[postStart] Installing local packages in editable mode...\"; pip install -q -e ./gds_database -e ./gds_postgres -e ./gds_mssql -e ./gds_mongodb -e ./gds_liquibase -e ./gds_vault -e ./gds_snowflake -e ./gds_snmp_receiver 2>/dev/null || echo \"[postStart] Some packages failed to install (dependencies may be missing)\"'",
+  "postStartCommand": "bash -lc 'mkdir -p ~/.vscode-server/extensions ~/.vscode-server/extensionsCache && chmod -R 775 ~/.vscode-server && chown -R ${USER}:${USER} ~/.vscode-server || true; for f in ~/.bashrc ~/.profile ~/.zshrc; do [ -f \"$f\" ] && sed -i \"/conda activate/d;/miniconda3/d\" \"$f\" || true; done; if [ -L .venv/bin/python3 ]; then T=$(readlink .venv/bin/python3 || true); if echo \"$T\" | grep -q miniconda3 || [ -n \"$T\" -a ! -e \"$T\" ]; then echo \"[postStart] Detected bad python3 symlink ($T); rebuilding venv...\"; rm -rf .venv; fi; fi; if [ ! -d .venv ]; then echo \"[postStart] Creating Python venv...\"; python3 -m venv .venv; fi; ln -sf /workspaces/dbtools/.venv/bin/python /workspaces/dbtools/.venv/bin/python3 || true; echo \"[postStart] Ensuring venv auto-activation for interactive shells...\"; grep -q \"/workspaces/dbtools/.venv/bin/activate\" ~/.bashrc || echo \"source /workspaces/dbtools/.venv/bin/activate\" >> ~/.bashrc; echo \"[postStart] Sourcing ~/.set_prompt if present...\"; grep -q \"source ~/.set_prompt\|\\. ~/.set_prompt\" ~/.bashrc || echo \"[[ -f ~/.set_prompt ]] && . ~/.set_prompt\" >> ~/.bashrc; echo \"[postStart] Purging stale caches referencing miniconda...\"; find . -type d \( -name .mypy_cache -o -name __pycache__ -o -name .pytest_cache \) -prune -exec rm -rf {} + || true; echo \"[postStart] Installing local packages in editable mode...\"; . .venv/bin/activate && pip install -q -e ./gds_database -e ./gds_postgres -e ./gds_mssql -e ./gds_mongodb -e ./gds_liquibase -e ./gds_vault -e ./gds_snowflake -e ./gds_snmp_receiver 2>/dev/null || echo \"[postStart] Some packages failed to install (dependencies may be missing)\"'",
   // ---------------------------------------------------------------------------
   // Container Environment Variables
   // ---------------------------------------------------------------------------
@@ -367,7 +310,9 @@
   "containerEnv": {
     // Prevents pip from checking for newer versions on every command
     // Speeds up pip operations slightly
-    "PIP_DISABLE_PIP_VERSION_CHECK": "1"
+    "PIP_DISABLE_PIP_VERSION_CHECK": "1",
+    // Optional: set to "1" to install JupyterLab during postCreate
+    "ENABLE_JUPYTERLAB": "0"
   },
   // ---------------------------------------------------------------------------
   // Volume Mounts
@@ -377,44 +322,8 @@
   //
   // THESE ARE CRITICAL FOR PERSISTENCE AND FUNCTIONALITY
   "mounts": [
-    // SSH Keys Mount (Read-only)
-    // Maps your WSL/host SSH keys into the container
-    // Enables: git operations, SSH connections to remote servers
-    // Read-only for security (container can't modify your SSH keys)
     "source=${localEnv:HOME}/.ssh,target=/home/${localEnv:USER}/.ssh,type=bind,consistency=cached,readonly",
-    // /data Persistent Storage Mount
-    // Maps /data from host to /data in dev container
-    // This is WHERE ALL PERSISTENT DATA LIVES:
-    //   - /data/mssql/mssql1 → SQL Server databases
-    //   - /data/mongodb → MongoDB replica set data
-    //
-    // WHY THIS IS CRITICAL:
-    // 1. Database containers run INSIDE dev container
-    // 2. They write to /data paths INSIDE dev container
-    // 3. This mount ensures those writes go to host /data
-    // 4. Data survives dev container rebuilds and deletions
-    // 5. Data is accessible from host directly
-    //
-    // EXAMPLE FLOW:
-    // SQL Server writes to /var/opt/mssql (inside mssql1 container)
-    //   → Mapped to /data/mssql/mssql1 (in dev container)
-    //   → This mount maps to /data/mssql/mssql1 (on host)
-    //   → Result: Database files persist on host filesystem
-    "source=/data,target=/data,type=bind,consistency=cached",
-    // /logs Persistent Storage Mount
-    // Maps /logs from host to /logs in dev container
-    // This is WHERE ALL PERSISTENT LOGS LIVE:
-    //   - /logs → Database logs and application logs
-    //
-    // EXAMPLE FLOW:
-    // Database writes to logs (inside database container)
-    //   → Mapped to /logs (in dev container)
-    //   → This mount maps to /logs (on host)
-    //   → Result: Log files persist on host filesystem
-    "source=/logs,target=/logs,type=bind,consistency=cached",
-    // Docker Socket Mount
-    // Mount the host's Docker socket to use Docker from inside the container
-    // This allows running Docker commands without starting a daemon inside
+    "source=${localEnv:HOME}/.ssh,target=/home/vscode/.ssh,type=bind,consistency=cached,readonly",
     "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind"
   ]
   // ===========================================================================
