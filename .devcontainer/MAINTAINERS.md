@@ -12,9 +12,9 @@ This document is for maintainers of the dev container configuration. It compleme
 ## Lifecycle expectations
 
 - Image: Red Hat UBI 9 base; installs `unixODBC`, `msodbcsql18`, `mssql-tools18`, PowerShell 7 via Microsoft RHEL 9 repo.
-- postCreate: creates `.venv`, installs base tooling + `pyodbc`, registers `ipykernel` as `gds`.
+- postCreate: registers `ipykernel` as `gds` and installs local packages (user site) using system Python.
 - Optional JupyterLab: controlled by `ENABLE_JUPYTERLAB=1` (default off).
-- postStart: installs local packages in editable mode, keeps VS Code server dirs sane.
+- postStart: not used (kept empty); VS Code server dirs are handled by VS Code itself.
 
 ## Verification
 
@@ -25,26 +25,22 @@ This document is for maintainers of the dev container configuration. It compleme
 ## Change guidelines
 
 - Favor a single consolidated `microdnf`/`dnf` RUN in Dockerfile; keep packages minimal.
-- Preserve non-root `vscode` user, read-only SSH mount, and `docker.sock` mount only if needed.
+- Use dynamic `${localEnv:USER}` for container user to match host user and enable proper file ownership.
 - Keep multi-repo mount via `workspaceMount` to `/workspaces`.
 - Avoid embedding secrets; use VS Code tasks or environment variables.
 
 ## Legacy status
 
-- Conda-based variants and troubleshooting artifacts under `.devcontainer/` have been removed.
-- `.devcontainer/postCreate.sh` should remain venv-only; remove any remaining Conda fallbacks if discovered.
+- Legacy variant-specific artifacts under `.devcontainer/` have been removed.
+- `.devcontainer/postCreate.sh` should remain system-Python-only; remove any legacy venv references if discovered.
 
 ## Common operations
 
 - Rebuild container: VS Code → “Dev Containers: Rebuild and Reopen in Container”.
-- Force venv refresh:
+- Register kernelspec manually (if needed):
 
   ```bash
-  rm -rf .venv
-  python3 -m venv .venv
-  source .venv/bin/activate
-  pip install --upgrade pip ruff pytest pytest-cov pyright pyodbc ipykernel
-  python -m ipykernel install --user --name gds --display-name "Python (gds)"
+  python3 -m ipykernel install --user --name gds --display-name "Python (gds)"
   ```
 
 - Enable JupyterLab for a session:

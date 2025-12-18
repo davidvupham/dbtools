@@ -6,7 +6,7 @@ Welcome to the VS Code and Dev Container documentation for the dbtools project. 
 
 ### Getting Started
 
-#### 1. [devcontainer.md](devcontainer.md) - Quick Reference
+#### 1. [DEVCONTAINER.md](DEVCONTAINER.md) - Quick Reference
 
 **Start here for a quick overview**
 
@@ -159,22 +159,6 @@ Welcome to the VS Code and Dev Container documentation for the dbtools project. 
 
 ---
 
-### Reference
-
-#### 9. [REVIEW_SUMMARY.md](REVIEW_SUMMARY.md) - Documentation Review
-
-**Summary of documentation improvements**
-
-- Issues identified and resolved
-- New documentation created
-- Changes made to existing docs
-- Testing recommendations
-- Maintenance guidelines
-
-**Best for**: Understanding what changed, maintenance planning
-
----
-
 ## 🚀 Quick Start Paths
 
 ### Path 1: Beginner Setup (Recommended for First Time)
@@ -278,24 +262,25 @@ Welcome to the VS Code and Dev Container documentation for the dbtools project. 
 
 ### Core Tools
 
-- **Python 3.13** via Miniconda (conda environment: `gds`)
-- **PowerShell 7+** with database administration modules
-- **Docker-in-Docker** for container operations
+- **Red Hat UBI 9** base image for enterprise stability
+- **Python 3** via system interpreter (`/usr/bin/python3`)
+- **PowerShell 7+** for database and automation scripts
+- **SQL Server tools**: `msodbcsql18`, `mssql-tools18` (`sqlcmd`)
+- **Docker CLI** access via host socket mount
 - **Git** with SSH key support
 
 ### Python Tools
 
 - **Testing**: pytest, pytest-cov
 - **Linting/Formatting**: ruff
-- **Building**: wheel, build
-- **Database**: pyodbc
+- **Type checking**: pyright
+- **Database**: pyodbc (ODBC Driver 18 for SQL Server)
 - **Packages**: gds_database, gds_postgres, gds_snowflake, gds_vault, gds_mongodb, gds_mssql, gds_notification, gds_snmp_receiver
 
-### PowerShell Modules
+### Local Packages
 
-- **dbatools**: Database administration toolkit
-- **Pester**: Testing framework
-- **PSFramework**: Logging and configuration
+- gds_database, gds_postgres, gds_mssql, gds_mongodb
+- gds_liquibase, gds_vault, gds_snowflake, gds_snmp_receiver
 
 ### VS Code Extensions (20+)
 
@@ -310,7 +295,7 @@ Welcome to the VS Code and Dev Container documentation for the dbtools project. 
 - Code quality tools
 - And more...
 
-See: [devcontainer.md](devcontainer.md#what-you-get)
+See: [DEVCONTAINER.md](DEVCONTAINER.md)
 
 ---
 
@@ -381,8 +366,7 @@ docs/development/vscode/
 ├── features.md                         # VS Code features
 ├── platform-specific.md                # Platform optimization
 ├── cicd-integration.md                 # CI/CD patterns
-├── security-best-practices.md          # Security guide
-└── REVIEW_SUMMARY.md                   # What changed
+└── security-best-practices.md          # Security guide
 ```
 
 ---
@@ -390,7 +374,7 @@ docs/development/vscode/
 ## 💡 Tips
 
 1. **Use the workspace file**: `code dbtools.code-workspace` for best experience
-2. **Learn keyboard shortcuts**: See [VSCODE_FEATURES.md](VSCODE_FEATURES.md#keyboard-shortcuts)
+2. **Learn keyboard shortcuts**: See [features.md](features.md)
 3. **Optimize for your platform**: Critical for WSL2 users
 4. **Use tasks**: Press `Ctrl+Shift+B` for quick access
 5. **Debug don't print**: Use VS Code debugging instead of print statements
@@ -413,8 +397,7 @@ When updating tools or configurations:
 
 1. Update relevant documentation
 2. Test changes in fresh container
-3. Update [REVIEW_SUMMARY.md](REVIEW_SUMMARY.md) if significant
-4. Consider updating this README if structure changes
+3. Consider updating this README if structure changes
 
 ---
 

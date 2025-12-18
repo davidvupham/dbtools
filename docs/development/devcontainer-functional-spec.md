@@ -5,7 +5,7 @@ Status: Implemented (Red Hat UBI 9 base). Legacy cleanup/removals pending approv
 ## Goals & Non‑Goals
 
 - **Goals:**
-  - Small image (no Miniconda); use Python `venv`.
+  - Small image; use system Python with user-site packages.
   - Support multi‑repo development via parent folder mount.
   - Provide reliable SQL Server tooling (`msodbcsql18`, `sqlcmd`) and `pyodbc`.
   - Docker access via host socket; shared network for local services.
@@ -18,17 +18,14 @@ Status: Implemented (Red Hat UBI 9 base). Legacy cleanup/removals pending approv
 ## Architecture Overview
 
 - **Base Image:** `registry.access.redhat.com/ubi9/ubi` (corporate-aligned Red Hat UBI 9).
-- **Python Runtime:** System `python3` with `python3-venv`; workspace `.venv` created on `postCreate`.
-- **Workspace Layout:** Parent directory bind‑mounted to `/workspaces`, opening `/workspaces/dbtools`; sibling repos are accessible for editable installs.
+- **Python Runtime:** system Python `/usr/bin/python3` (no pyenv, no workspace venv).
+- **Workspace Layout:** Parent directory bind-mounted to `/workspaces/devcontainer`, opening `/workspaces/devcontainer/dbtools`; sibling repos are accessible for editable installs.
 - **System Tooling:** `unixODBC`/`unixODBC-devel`, `msodbcsql18`, `mssql-tools18` (`sqlcmd`), `powershell` (PS7), and core build tools.
 - **Install Method:** `microdnf`/`dnf` for OS packages; Microsoft RHEL 9 RPM repo for SQL Server tooling.
-- **Docker Access:** Mount `/var/run/docker.sock` (Docker Outside‑of‑Docker); no daemon inside container.
- **Networking:** Ensure `devcontainer-network` exists (host initialize); container joins for name‑based connectivity to local services.
- **User & Permissions:** Non‑root user aligned to host via build args; host SSH keys mounted read‑only for Git.
- **Ports & Forwarding:** VS Code forwards 5432, 1433, 27017, 3000, 5000, 8000, 8888 (Jupyter). Labels defined for discoverability.
- **Python Runtime:** System `python3` with `python3-venv`; workspace `.venv` created on `postCreate`. Optional guarded pyenv path to install Python 3.14 via build args (`USE_PYENV=1`, `PYENV_PYTHON_VERSION=3.14.0`).
+- **Networking:** Ensure `devcontainer-network` exists (host initialize); container joins for name‑based connectivity to local services.
+- **Ports & Forwarding:** VS Code forwards 5432, 1433, 27017, 3000, 5000, 8000, 8888 (Jupyter). Labels defined for discoverability.
 - **Container Env Flags:** `PIP_DISABLE_PIP_VERSION_CHECK=1` (faster pip); `ENABLE_JUPYTERLAB=0` by default (opt-in install during postCreate).
-  - `initializeCommand`: create `devcontainer-network` on host.
+- `initializeCommand`: create `devcontainer-network` on host.
 
 ## Detailed Components
 
@@ -36,22 +33,21 @@ Status: Implemented (Red Hat UBI 9 base). Legacy cleanup/removals pending approv
   - Single consolidated `microdnf`/`dnf` `RUN` to install base tooling, add Microsoft RHEL 9 repo, and install SQL Server packages and PowerShell.
   - Clean package caches to keep the image small.
   - Symlink `sqlcmd` into PATH for convenience.
-- **Python Environment:**
-  - `postCreate`: `python3 -m venv .venv`, upgrade `pip`, install base dev tools (e.g., `ruff`, `pytest`, `pytest-cov`, `pyright`, `pyodbc`).
-  - VS Code setting `python.defaultInterpreterPath` points to `/workspaces/dbtools/.venv/bin/python`.
-  - Jupyter support: installs `ipykernel` and registers kernelspec `gds` ("Python (gds)"). If `ENABLE_JUPYTERLAB=1`, installs JupyterLab during `postCreate`.
-- **Multi‑Repo Workflow:**
-  - `workspaceMount: source=${localWorkspaceFolder}/..,target=/workspaces,type=bind`.
+  - **Python Environment:**
+    - `postCreate`: registers the `gds` kernelspec, installs editable local packages with user-site installs, and leaves Python at the system interpreter. Optional JupyterLab installs when `ENABLE_JUPYTERLAB=1`.
+    - VS Code setting `python.defaultInterpreterPath` points to `/usr/bin/python3`.
+  - **Multi‑Repo Workflow:**
+    - `workspaceMount: source=${localWorkspaceFolder}/..,target=/workspaces/devcontainer,type=bind`.
   - Optional script to clone additional repos: see [.devcontainer/scripts/clone-additional-repos.sh](../../.devcontainer/scripts/clone-additional-repos.sh) using [.devcontainer/additional-repos.json](../../.devcontainer/additional-repos.json).
-- **Lifecycle:**
-  - `initializeCommand`: create `devcontainer-network` on host.
-  - `postCreate`: bootstrap venv and base packages; installs `ipykernel` and registers kernel; optional JupyterLab if enabled.
-  - `postStart`: optional editable installs across sibling repos; VS Code server directory sanity (kept minimal).
+  - **Lifecycle:**
+    - `initializeCommand`: create `devcontainer-network` on host.
+    - `postCreate`: bootstrap environment and base packages; installs editable local packages (user-site); registers kernel; optional JupyterLab if enabled; appends activation and custom prompt to `~/.bashrc`.
+    - `postStart`: not used (kept empty).
 - **Security & Compliance:**
   - Least privilege (non‑root), minimal mounts (SSH RO; Docker socket only), no embedded secrets.
   - Use environment variables or VS Code tasks to prompt for sensitive values; avoid baking secrets in image.
 - **Image Optimization:**
-  - Consolidated apt operations; minimal package set; defer heavy Python deps to `postCreate` to avoid increasing build layers.
+  - Consolidated dnf/microdnf operations; minimal package set; defer heavy Python deps to `postCreate` to avoid increasing build layers.
 
 ## Verification & Tasks
 
@@ -86,34 +82,29 @@ CLI alternative:
 make verify-devcontainer
 ```
 
-## Migration Plan (Conda → venv)
+## Migration Plan (legacy → venv)
 
 - **Phase 1 (Planning):** Adopt venv‑based devcontainer without removing existing files; draft removal plan.
-- **Phase 2 (Execution after approval):** Enable venv devcontainer; remove legacy Conda variant and unused troubleshooting/variant sync artifacts.
-- **Phase 3 (Post‑migration):** Update docs and ensure tasks/scripts no longer assume Conda activation.
+- **Phase 2 (Execution after approval):** Enable venv devcontainer; remove legacy variant and unused troubleshooting/variant sync artifacts.
+- **Phase 3 (Post‑migration):** Update docs and ensure tasks/scripts no longer assume legacy activation.
 
 ## `postCreate.sh` Behavior (Extracted Summary)
 
 File: [.devcontainer/postCreate.sh](../../.devcontainer/postCreate.sh)
 
-- **Environment checks:** Logs Python and pip versions; verifies Docker daemon reachability.
+- **Environment checks:** Logs Python/pip versions; verifies Docker daemon reachability.
+- **Venv lifecycle:** Not used; system Python with user-site installs.
+- **Prompt:** Appends a git-branch-aware prompt directly into `~/.bashrc` (no `~/.set_prompt` dependency; `$` on its own line).
 - **Jupyter kernel:** Registers kernelspec `gds` ("Python (gds)") after installing `ipykernel` during `postCreate`.
-- **Editable installs:** Installs local packages in editable mode (tries `[dev]` extras first) for: `gds_database`, `gds_postgres`, `gds_snowflake`, `gds_vault`, `gds_mongodb`, `gds_mssql`, `gds_notification`, `gds_snmp_receiver`.
-- **pre‑commit hooks:** If `.pre-commit-config.yaml` exists and `pre-commit` is available, installs hooks.
-- **pyodbc verification:**
-  - Checks if `pyodbc` imports; if not, ensures Microsoft repo and installs `msodbcsql18`, `unixodbc-dev` as needed.
-  - Upgrades `pip`/`setuptools`/`wheel`, attempts `pyodbc` install (site, falls back to `--user`).
-  - Prints `pyodbc` version and filtered ODBC drivers.
-- **Conda auto‑activation (legacy):** If Conda exists and `gds` env present, tries installing `pyodbc` there and appends Conda activation to `~/.bashrc`.
-- **Base interpreter fallback:** If `/opt/conda/bin/python` exists, attempts `pyodbc` install there as well.
-
-Observation: Much of the script is Conda‑specific fallback logic; in the venv design, we keep editable installs and `pyodbc` verification and will drop Conda activation/install paths.
+- **Editable installs:** Installs local packages in editable mode (prefers `[dev]` extras) for: `gds_database`, `gds_postgres`, `gds_mssql`, `gds_mongodb`, `gds_liquibase`, `gds_vault`, `gds_snowflake`, `gds_snmp_receiver`.
+- **pre-commit hooks:** If `.pre-commit-config.yaml` exists and `pre-commit` is available, installs hooks.
+- **pyodbc verification:** Pure import/driver check; prints version and drivers. No OS package installs or other fallbacks.
 
 ## Legacy Cleanup (Completed)
 
-Removed legacy or unused items tied to prior Conda-based variants and troubleshooting artifacts:
+Removed legacy or unused items tied to prior variants and troubleshooting artifacts:
 
-- Conda Ubuntu variant: `.devcontainer/ubuntu/` (Dockerfile and `devcontainer.json`)
+- Ubuntu legacy variant: `.devcontainer/ubuntu/` (Dockerfile and `devcontainer.json`)
 - Red Hat variant directory: `.devcontainer/redhat/`
 - Variant management scripts: `.devcontainer/switch-variant.sh`, `.devcontainer/scripts/sync_devcontainers.py`, `.devcontainer/scripts/sync-devcontainers.sh`
 - Troubleshooting artifacts: `.devcontainer/troubleshooting/`
@@ -122,7 +113,7 @@ Items retained:
 
 - Active devcontainer files: `.devcontainer/devcontainer.json`, `.devcontainer/Dockerfile`
 - Repo cloning: `.devcontainer/additional-repos.json` (optional), `.devcontainer/scripts/clone-additional-repos.sh`
-- postCreate lifecycle: `.devcontainer/postCreate.sh` — slated to remain venv‑only; Conda fallbacks removed in documentation and will be pruned as needed.
+- postCreate lifecycle: `.devcontainer/postCreate.sh` — system Python with user-site installs; legacy venv references have been removed.
 
 ## Open Questions
 
