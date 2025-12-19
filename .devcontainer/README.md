@@ -30,3 +30,11 @@ make verify-devcontainer
 
 - Use Docker Desktop with WSL2 backend, and keep the repo under the WSL Linux filesystem for best performance.
 - The same UBI 9 image runs in WSL; verification tasks and port forwarding work identically.
+
+### Troubleshooting: `invalid option name...: pipefail`
+
+If the dev container build fails with an error like `invalid option name...: pipefail` and the logs show `pipefail\r`, your checkout likely has Windows (CRLF) line endings and a stray `\r` is getting injected into bash scripts during the build.
+
+- Ensure Git is honoring the repo's `.gitattributes` and renormalize once: `git add --renormalize .`
+- If you're on Windows/WSL, consider setting `git config --global core.autocrlf false` (or `input`) and re-checking out the repo.
+- Then run “Dev Containers: Rebuild and Reopen in Container”.

@@ -1,0 +1,12 @@
+# Enforce LF line endings for files consumed by Docker/devcontainers.
+# This prevents stray CR (\r) characters from breaking bash (e.g. `set -euo pipefail`).
+
+# Dev container config + scripts
+.devcontainer/** text eol=lf
+
+# Dockerfiles anywhere in the repo
+**/Dockerfile* text eol=lf
+
+# Shell scripts (Linux container tooling)
+*.sh text eol=lf
+
