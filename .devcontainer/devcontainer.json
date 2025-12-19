@@ -321,14 +321,13 @@
   // "containerEnv": Environment variables set in the container
   // Available to all processes running inside the dev container
   "containerEnv": {
-    // Prevents pip from checking for newer versions on every command
-    // Speeds up pip operations slightly
-    "PIP_DISABLE_PIP_VERSION_CHECK": "1",
     "WORKSPACE_PARENT": "/workspaces/devcontainer",
     "WORKSPACE_REPO": "dbtools",
     "WORKSPACE_ROOT": "/workspaces/devcontainer/dbtools",
     // Optional: set to "1" to install JupyterLab during postCreate
-    "ENABLE_JUPYTERLAB": "0"
+    "ENABLE_JUPYTERLAB": "0",
+    // Optional: set to "1" to install dbatools PowerShell module during postCreate
+    "ENABLE_DBATOOLS": "0"
   },
   // ---------------------------------------------------------------------------
   // Volume Mounts

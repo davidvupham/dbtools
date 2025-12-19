@@ -6,7 +6,7 @@ This document explains how the dbtools dev container works, including lifecycle,
 
 - Base image: `registry.access.redhat.com/ubi9/ubi`
 - Python 3.13 is provisioned during `postCreate` via `uv` into a workspace venv at `.venv/` (system `/usr/bin/python3` remains available as fallback).
-- System tooling: `msodbcsql18`, `mssql-tools18` (`sqlcmd`), `unixodbc` dev headers
+- System tooling: `msodbcsql18`, `mssql-tools18` (`sqlcmd`), `unixodbc` dev headers, PowerShell 7
 - Multi-repo: parent folder mounted at `/workspaces/devcontainer`, workspace at `/workspaces/devcontainer/dbtools`
 - Network: container connects to `devcontainer-network` (created if missing)
 - Security: non-root host-aligned user (fallback: `vscode`); read-only SSH key mount; Docker socket mount

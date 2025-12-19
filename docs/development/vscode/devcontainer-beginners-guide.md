@@ -29,7 +29,7 @@ We've designed a streamlined environment focused on Python and PowerShell develo
 
 - **Red Hat UBI 9** base image for enterprise stability
 - **Python 3.13** provisioned via `uv` into `.venv/` (system `/usr/bin/python3` remains available)
-- **PowerShell 7+** for database and automation scripts
+- **PowerShell 7** for database and automation scripts
 - **SQL Server tools**: `msodbcsql18`, `mssql-tools18` (`sqlcmd`)
 - **ODBC support**: `unixODBC` and development headers for `pyodbc`
 - Python development tools are installed from `pyproject.toml` optional deps: `.[devcontainer]`
@@ -53,9 +53,9 @@ This file defines how to build the image. Major steps:
    - Includes retry logic for resilience against mirror issues.
 
 3. **Install base packages**:
-   - `curl-minimal`, `gnupg2`, `ca-certificates`, `git` – essential tools
-   - `gcc`, `gcc-c++`, `make`, `python3-devel` – build dependencies
+   - `curl-minimal`, `gnupg2`, `ca-certificates`, `git`, `jq` – essential tools
    - `unixODBC`, `unixODBC-devel` – ODBC connectivity for databases
+   - `python3`, `python3-pip` – system Python (bootstrap only)
 
 4. **Install Microsoft tools**:
    - Add Microsoft RHEL 9 RPM repository
@@ -70,7 +70,7 @@ This file defines how to build the image. Major steps:
 
 7. **Install Docker CLI**: Latest stable Docker CLI and Compose plugin
 
-8. **Healthcheck**: Verifies `python3`, `pwsh`, and `sqlcmd` are available
+8. **Healthcheck**: Verifies `python3`, `sqlcmd`, and `pwsh` are available
 
 ### 2) `.devcontainer/devcontainer.json` (VS Code instructions)
 
@@ -82,9 +82,7 @@ Key fields explained:
 - `build`: Specifies the Dockerfile and build arguments
   - `DEVCONTAINER_USER`: Uses `${localEnv:USER}` to match host user
 - `remoteUser`: User inside the container (matches host user for file permissions)
-- `features`: Additional dev container features:
-  - `ghcr.io/devcontainers/features/common-utils`: Basic utilities
-  - `ghcr.io/devcontainers/features/git`: Git version control
+- `features`: Empty (all tooling installed via Dockerfile and postCreate)
 - `customizations.vscode.extensions`: Extensions auto-installed (Python, Pylance, Jupyter, Ruff, Docker, GitLens, etc.)
 - `customizations.vscode.settings`: VS Code settings (Python interpreter at `.venv/bin/python`, testing, formatting)
 - `workspaceMount`: Mounts parent folder at `/workspaces/devcontainer` for multi-repo workflows
@@ -103,7 +101,7 @@ This script runs once after the container is first created:
 2. **Additional repos**: Optionally clones extra repos from `.devcontainer/additional-repos.json`
 3. **Jupyter kernel**: Registers `gds` kernel for notebooks
 4. **Shell prompt**: Adds colorful git-aware prompt to `~/.bashrc`
-5. **Editable installs**: Installs local packages into `.venv/` with `pip -e`
+5. **Editable installs**: All workspace packages auto-installed in editable mode via `uv sync`
 6. **Pre-commit**: Installs git hooks if `.pre-commit-config.yaml` exists
 7. **Docker verification**: Checks Docker daemon reachability
 8. **pyodbc verification**: Validates ODBC driver installation

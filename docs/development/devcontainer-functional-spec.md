@@ -97,7 +97,7 @@ File: [.devcontainer/postCreate.sh](../../.devcontainer/postCreate.sh)
 - **Venv lifecycle:** Creates/uses `.venv/` (default Python `3.13`) via `uv`; falls back to system Python if provisioning fails.
 - **Prompt:** Appends a git-branch-aware prompt directly into `~/.bashrc` (no `~/.set_prompt` dependency; `$` on its own line).
 - **Jupyter kernel:** Registers kernelspec `gds` ("Python (gds)") pointing at the venv interpreter.
-- **Editable installs:** Installs local packages in editable mode (prefers `[dev]` extras) for: `gds_database`, `gds_postgres`, `gds_mssql`, `gds_mongodb`, `gds_liquibase`, `gds_vault`, `gds_snowflake`, `gds_snmp_receiver`.
+- **Editable installs:** All `gds_*` workspace packages are automatically installed in editable mode via `uv sync`.
 - **pre-commit hooks:** If `.pre-commit-config.yaml` exists and `pre-commit` is available, installs hooks.
 - **pyodbc verification:** Pure import/driver check; prints version and drivers. No OS package installs or other fallbacks.
 
@@ -118,15 +118,6 @@ Items retained:
 
 ## Open Questions
 
-- **PowerShell:** The VS Code extension is installed, but the container does not currently include the `pwsh` binary. Should we add PowerShell 7 to the image, or keep it out to slim the image?
 - **Jupyter:** Keep `ipykernel` by default; JupyterLab via opt-in flag `ENABLE_JUPYTERLAB=1` during `postCreate` (current behavior).
 - **DB tooling:** Keep SQLTools PostgreSQL driver or trim to MSSQL‑only?
 - **PostgreSQL client libs:** Any need for `libpq-dev`/`psql`?
-
-## Next Steps
-
-- Review and approve the spec and the removal plan.
-- Once approved, I will:
-  - Simplify `postCreate.sh` to venv‑only flows.
-  - Remove the listed legacy `.devcontainer` files.
-  - Rebuild the dev container and run verification tasks.

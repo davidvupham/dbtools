@@ -166,6 +166,13 @@ if [[ "${ENABLE_JUPYTERLAB:-0}" == "1" ]]; then
     LOG "WARN: Failed to install jupyter group (continuing anyway)"
 fi
 
+# Optional dbatools PowerShell module for SQL Server management
+if [[ "${ENABLE_DBATOOLS:-0}" == "1" ]] && command -v pwsh >/dev/null 2>&1; then
+  LOG "ENABLE_DBATOOLS=1: Installing dbatools PowerShell module..."
+  pwsh -NoProfile -Command 'Install-Module -Name dbatools -Scope CurrentUser -Force -AcceptLicense' || \
+    LOG "WARN: Failed to install dbatools module (continuing anyway)"
+fi
+
 LOG "Python: $($PYTHON --version)"
 LOG "UV: $(uv --version)"
 

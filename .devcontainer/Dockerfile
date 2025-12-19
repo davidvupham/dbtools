@@ -70,7 +70,7 @@ RUN --mount=type=cache,target=/var/cache/dnf set -eux; \
     rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-Microsoft || true; \
     success=0; \
     for i in 1 2 3 4 5; do \
-    if sh -xc "ACCEPT_EULA=Y $INSTALL_CMD msodbcsql18 mssql-tools18"; then success=1; break; fi; \
+    if sh -xc "ACCEPT_EULA=Y $INSTALL_CMD msodbcsql18 mssql-tools18 powershell"; then success=1; break; fi; \
     echo "[ms] tools install failed (try $i)"; \
     sh -xc "$CLEAN_CMD" || true; \
     find /var/cache/dnf /var/cache/yum -mindepth 1 -maxdepth 1 -exec rm -rf {} + 2>/dev/null || true; \
@@ -178,7 +178,7 @@ EOF
 # Lightweight container healthcheck: verifies core tooling is on PATH.
 # This helps surface broken builds early without assuming any databases are running.
 HEALTHCHECK --interval=60s --timeout=10s --start-period=10s --retries=3 \
-    CMD bash -lc 'command -v python3 >/dev/null && command -v sqlcmd >/dev/null || exit 1'
+    CMD bash -lc 'command -v python3 >/dev/null && command -v sqlcmd >/dev/null && command -v pwsh >/dev/null || exit 1'
 
 # Keep container alive for VS Code to attach.
 ENTRYPOINT ["/usr/local/bin/devcontainer-init"]

@@ -34,7 +34,7 @@ bash .devcontainer/scripts/clone-additional-repos.sh
 - The file is git-ignored; each developer can maintain their own list.
 - Existing clones under `/workspaces` are detected and skipped.
 - SQL Server tools: `msodbcsql18` and `sqlcmd` preinstalled for `pyodbc` and diagnostics (installed via the Microsoft RHEL 9 repo).
-- PowerShell: the VS Code PowerShell extension is installed, but the container does not currently ship with the `pwsh` binary. If you need PowerShell, add it to `.devcontainer/Dockerfile` and rebuild.
+- PowerShell 7: Installed from the Microsoft RHEL 9 repository for database and automation scripts.
 - No JupyterLab baked in by default; use VS Code notebooks via the Jupyter extension, or enable an optional flag to install JupyterLab.
 - Docker-level healthcheck: verifies `python3` and `sqlcmd` are available on PATH.
 
@@ -76,7 +76,7 @@ make verify-devcontainer
 
 ## Multi-Repo Workflow
 
-The container mounts your parent folder to `/workspaces/devcontainer`. Your current repo is at `/workspaces/devcontainer/dbtools`; sibling repos under the same parent are accessible, e.g. `/workspaces/devcontainer/other-repo`. You can `pip install -e` any local package as needed.
+The container mounts your parent folder to `/workspaces/devcontainer`. Your current repo is at `/workspaces/devcontainer/dbtools`; sibling repos under the same parent are accessible, e.g. `/workspaces/devcontainer/other-repo`.
 
 ## Local Packages
 
@@ -130,4 +130,25 @@ After rebuild/reopen in container, you can launch JupyterLab if desired:
 
 ```bash
 jupyter lab --no-browser --ip=0.0.0.0 --port=8888
+```
+
+## dbatools PowerShell Module (Optional)
+
+The [dbatools](https://dbatools.io/) PowerShell module for SQL Server management is not installed by default. Opt-in by setting `ENABLE_DBATOOLS=1`:
+
+Example `devcontainer.local.json` override:
+
+```json
+{
+ "name": "dbtools (with dbatools)",
+ "containerEnv": {
+  "ENABLE_DBATOOLS": "1"
+ }
+}
+```
+
+After rebuild, verify installation:
+
+```bash
+pwsh -Command 'Get-Module -ListAvailable dbatools'
 ```
