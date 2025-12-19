@@ -5,7 +5,7 @@ This repository includes a VS Code Dev Container to provide a reproducible Pytho
 ## What you get
 
 - Base image: Red Hat UBI 9 (`registry.access.redhat.com/ubi9/ubi`)
-- Python: `.venv/` provisioned during `postCreate` via `uv` (default Python `3.14`; system `/usr/bin/python3` remains available)
+- Python: `.venv/` provisioned during `postCreate` via `uv` (default Python `3.13`; system `/usr/bin/python3` remains available)
 - Dynamic user: Container user matches your host user via `${localEnv:USER}`
 - **PowerShell 7+** for database/automation scripts
 - **SQL Server tools**: `msodbcsql18`, `mssql-tools18` (`sqlcmd`)

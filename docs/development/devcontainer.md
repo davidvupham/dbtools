@@ -1,12 +1,12 @@
-# Dev Container (Red Hat UBI 9, Python 3.14 via uv, Multi-Repo)
+# Dev Container (Red Hat UBI 9, Python 3.13 via uv, Multi-Repo)
 
-This workspace ships a simplified dev container based on Red Hat UBI 9. During `postCreate`, it provisions **Python 3.14** via `uv` and creates a repo-local virtual environment at `.venv/` (fallback: system `/usr/bin/python3`). It targets Docker access and multi-repo development.
+This workspace ships a simplified dev container based on Red Hat UBI 9. During `postCreate`, it provisions **Python 3.13** via `uv` and creates a repo-local virtual environment at `.venv/` (fallback: system `/usr/bin/python3`). It targets Docker access and multi-repo development.
 
 Related docs: [Technical Architecture](devcontainer-architecture.md) · [Functional Spec](devcontainer-functional-spec.md)
 
 ## Highlights
 
-- Python 3.14 provisioned via `uv` into `.venv/` during `postCreate` (system `/usr/bin/python3` remains available as a fallback).
+- Python 3.13 provisioned via `uv` into `.venv/` during `postCreate` (system `/usr/bin/python3` remains available as a fallback).
 - Docker access: uses the host Docker daemon via socket mount.
 - Multi-repo: mounts the parent folder so sibling repos under `/workspaces/devcontainer` are available (workspace opens at `/workspaces/devcontainer/dbtools`).
 
@@ -16,7 +16,7 @@ You can auto-clone extra repos into `/workspaces/devcontainer` using a per-devel
 
 1. Create `.devcontainer/additional-repos.json` in your workspace with:
 
-```
+```json
 {
     "repos": [
         "git@github.com:your-org/sqlserver.git",
@@ -27,16 +27,16 @@ You can auto-clone extra repos into `/workspaces/devcontainer` using a per-devel
 
 1. From inside the devcontainer, run:
 
-```
+```bash
 bash .devcontainer/scripts/clone-additional-repos.sh
 ```
 
 - The file is git-ignored; each developer can maintain their own list.
 - Existing clones under `/workspaces` are detected and skipped.
 - SQL Server tools: `msodbcsql18` and `sqlcmd` preinstalled for `pyodbc` and diagnostics (installed via the Microsoft RHEL 9 repo).
-- PowerShell 7 installed for database/automation scripts.
+- PowerShell: the VS Code PowerShell extension is installed, but the container does not currently ship with the `pwsh` binary. If you need PowerShell, add it to `.devcontainer/Dockerfile` and rebuild.
 - No JupyterLab baked in by default; use VS Code notebooks via the Jupyter extension, or enable an optional flag to install JupyterLab.
-- Docker-level healthcheck: verifies `python3`, `pwsh`, and `sqlcmd` are available on PATH.
+- Docker-level healthcheck: verifies `python3` and `sqlcmd` are available on PATH.
 
 ## Rebuild & Start
 
@@ -55,7 +55,7 @@ rm -rf .venv
 - Full suite: run the default task “Dev: Verify Dev Container”.
 - PyODBC: run the task “Dev: Verify pyodbc”.
 - SQL Server: run the task “MSSQL: Health Check” or “Dev: Verify SQL Server (sqlcmd + pyodbc)”.
-- Docs formatting: run the task “Docs: Markdown Lint (Docker)”.
+- Docs formatting: run the task “Docs: Markdown Lint (Docker)” (requires Docker socket access inside the dev container).
 
 Prerequisites for SQL Server checks:
 
@@ -98,7 +98,7 @@ Devcontainer tooling (ruff/pytest/pyright/pyodbc/ipykernel/pre-commit, etc.) is 
 
 ### Python version override
 
-`postCreate` defaults to Python `3.14`. To override, set `DEVCONTAINER_PYTHON_VERSION` in your devcontainer override (e.g., `devcontainer.local.json`).
+`postCreate` defaults to Python `3.13`. To override, set `DEVCONTAINER_PYTHON_VERSION` in your devcontainer override (e.g., `devcontainer.local.json`).
 
 ## Shell Prompt Customization
 
@@ -117,7 +117,7 @@ JupyterLab is not installed by default. You can opt-in by setting `ENABLE_JUPYTE
 
 Example `devcontainer.local.json` override:
 
-```
+```json
 {
  "name": "dbtools (system Python, local)",
  "containerEnv": {
@@ -128,5 +128,6 @@ Example `devcontainer.local.json` override:
 
 After rebuild/reopen in container, you can launch JupyterLab if desired:
 
-```
+```bash
 jupyter lab --no-browser --ip=0.0.0.0 --port=8888
+```

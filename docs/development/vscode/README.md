@@ -263,7 +263,7 @@ Welcome to the VS Code and Dev Container documentation for the dbtools project. 
 ### Core Tools
 
 - **Red Hat UBI 9** base image for enterprise stability
-- **Python 3.14** via `uv` into `.venv/` (system `/usr/bin/python3` also available)
+- **Python 3.13** via `uv` into `.venv/` (system `/usr/bin/python3` also available)
 - **PowerShell 7+** for database and automation scripts
 - **SQL Server tools**: `msodbcsql18`, `mssql-tools18` (`sqlcmd`)
 - **Docker CLI** access via host socket mount

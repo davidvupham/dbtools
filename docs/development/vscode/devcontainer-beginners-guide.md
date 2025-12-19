@@ -28,7 +28,7 @@ Optional but helpful:
 We've designed a streamlined environment focused on Python and PowerShell development with database connectivity. Key highlights:
 
 - **Red Hat UBI 9** base image for enterprise stability
-- **Python 3.14** provisioned via `uv` into `.venv/` (system `/usr/bin/python3` remains available)
+- **Python 3.13** provisioned via `uv` into `.venv/` (system `/usr/bin/python3` remains available)
 - **PowerShell 7+** for database and automation scripts
 - **SQL Server tools**: `msodbcsql18`, `mssql-tools18` (`sqlcmd`)
 - **ODBC support**: `unixODBC` and development headers for `pyodbc`
@@ -66,7 +66,7 @@ This file defines how to build the image. Major steps:
 
 6. **Python runtime**:
    - System Python is installed in the image.
-   - Project Python (3.14 by default) is provisioned during `postCreate` via `uv` into `.venv/`.
+   - Project Python (3.13 by default) is provisioned during `postCreate` via `uv` into `.venv/`.
 
 7. **Install Docker CLI**: Latest stable Docker CLI and Compose plugin
 

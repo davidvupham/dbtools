@@ -5,11 +5,11 @@ This document explains how the dbtools dev container works, including lifecycle,
 ## Overview
 
 - Base image: `registry.access.redhat.com/ubi9/ubi`
-- Python 3.14 is provisioned during `postCreate` via `uv` into a workspace venv at `.venv/` (system `/usr/bin/python3` remains available as fallback).
-- System tooling: `msodbcsql18`, `mssql-tools18` (`sqlcmd`), `unixodbc` dev headers, PowerShell 7
+- Python 3.13 is provisioned during `postCreate` via `uv` into a workspace venv at `.venv/` (system `/usr/bin/python3` remains available as fallback).
+- System tooling: `msodbcsql18`, `mssql-tools18` (`sqlcmd`), `unixodbc` dev headers
 - Multi-repo: parent folder mounted at `/workspaces/devcontainer`, workspace at `/workspaces/devcontainer/dbtools`
 - Network: container connects to `devcontainer-network` (created if missing)
-- Security: non-root `vscode` user; read-only SSH key mount; Docker socket mount
+- Security: non-root host-aligned user (fallback: `vscode`); read-only SSH key mount; Docker socket mount
 
 ## Lifecycle (Sequence)
 
@@ -41,10 +41,9 @@ flowchart TD
   end
 
   subgraph Container[/dbtools dev container/]
-    WS[/ /workspaces/dbtools /]
+    WS[/ /workspaces/devcontainer/dbtools /]
     EXT[VS Code Server + Extensions]
     TOOLS[unixODBC, msodbcsql18, mssql-tools18]
-    PWSH[PowerShell 7]
   end
 
   VS -- build --> IMG
@@ -56,20 +55,19 @@ flowchart TD
   VS -- postCreate: kernel registration, optional JupyterLab --> WS
   VS -- install --> EXT
   TOOLS --> Container
-  PWSH --> Container
 
 ```
 
 ## Configuration Knobs
 
-- `workspaceMount`: Mounts the parent folder at `/workspaces` for multi-repo workflows.
+- `workspaceMount`: Mounts the parent folder at `/workspaces/devcontainer` for multi-repo workflows.
 - `runArgs`: Joins `devcontainer-network` for shared dev DB services.
 
 ## Python Versions
 
 The image includes the system Python `/usr/bin/python3`, but the devcontainer is designed to use a repo-local venv at `.venv/`.
 
-- `postCreate` installs `uv`, installs Python `3.14` (default) via `uv`, and creates/updates `.venv/`.
+- `postCreate` installs `uv`, installs Python `3.13` (default) via `uv`, and creates/updates `.venv/`.
 - VS Code is configured to default to `.venv/bin/python`.
 - `postCreate` registers the `gds` Jupyter kernel pointing at the active interpreter.
 - Override Python version by setting `DEVCONTAINER_PYTHON_VERSION`.
@@ -85,7 +83,7 @@ The image includes the system Python `/usr/bin/python3`, but the devcontainer is
 - Non-root host-aligned user for daily operations.
 - Minimal mounts: read-only SSH keys, Docker socket (necessary for local DB containers).
 - No secrets baked into the image; use environment variables and VS Code tasks for secrets like `MSSQL_SA_PASSWORD`.
-- Keep apt packages minimal and clean cache to reduce surface area.
+- Keep OS packages minimal and clean dnf caches to reduce surface area.
 
 ## Verification
 

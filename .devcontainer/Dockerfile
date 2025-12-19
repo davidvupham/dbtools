@@ -2,14 +2,26 @@
 
 FROM registry.access.redhat.com/ubi9/ubi
 
-# Build-time overrides to align container user with host VS Code user
+# Build-time overrides to align the container user with the host VS Code user.
+#
+# Why this matters:
+# - The repo is bind-mounted from the host.
+# - Matching UID/GID avoids permission issues on created/modified files.
+#
+# These build args are provided by .devcontainer/devcontainer.json.
 ARG DEVCONTAINER_USER=vscode
 ARG DEVCONTAINER_UID=1000
 ARG DEVCONTAINER_GID=1000
 
+# Persist the chosen devcontainer user name for runtime scripts.
+ENV DEVCONTAINER_USER=${DEVCONTAINER_USER}
+
 ENV ACCEPT_EULA=Y
 
-# Minimal layers: install base deps with microdnf, add Microsoft repo, install SQL tools & PowerShell
+# Install base dependencies.
+# - Use microdnf when available (smaller UBI images).
+# - Fall back to dnf with retries to reduce transient network failures.
+# - Add Microsoft packages only long enough to install SQL Server tooling.
 RUN --mount=type=cache,target=/var/cache/dnf set -eux; \
     if command -v microdnf >/dev/null 2>&1; then \
     PM=microdnf; \
@@ -39,6 +51,7 @@ RUN --mount=type=cache,target=/var/cache/dnf set -eux; \
     for i in 1 2 3 4 5; do \
     if sh -xc "$INSTALL_CMD \
     ca-certificates curl-minimal gnupg2 shadow-utils \
+    sudo \
     python3 python3-pip \
     unixODBC unixODBC-devel \
     git bash-completion openssh-clients jq"; then \
@@ -81,11 +94,16 @@ RUN --mount=type=cache,target=/var/cache/dnf set -eux; \
     find /var/cache/dnf /var/cache/yum -mindepth 1 -maxdepth 1 -exec rm -rf {} + 2>/dev/null || true; \
     rm -rf /tmp/*
 
-# Create non-root user aligned with host
+# Create a non-root user aligned with the host user.
+# VS Code runs as this user inside the container.
 RUN set -eux; \
     DEV_GID="${DEVCONTAINER_GID:-1000}"; DEV_UID="${DEVCONTAINER_UID:-1000}"; \
     getent group "$DEV_GID" >/dev/null 2>&1 || groupadd -g "$DEV_GID" "$DEVCONTAINER_USER"; \
     id -u "$DEVCONTAINER_USER" >/dev/null 2>&1 || useradd -m -u "$DEV_UID" -g "$DEV_GID" -s /bin/bash "$DEVCONTAINER_USER"; \
+    # Allow the dev user to run a small set of administrative commands without a password.
+    # This is used by postCreate.sh to align docker socket group permissions at runtime.
+    echo "$DEVCONTAINER_USER ALL=(root) NOPASSWD:/usr/sbin/groupadd,/usr/sbin/usermod" > /etc/sudoers.d/90-devcontainer; \
+    chmod 0440 /etc/sudoers.d/90-devcontainer; \
     mkdir -p /workspaces/dbtools; \
     chown -R "$DEVCONTAINER_USER":"$DEVCONTAINER_USER" /workspaces
 
@@ -94,7 +112,9 @@ ENV PATH=/opt/mssql-tools18/bin:/opt/mssql-tools/bin:$PATH
 # NOTE: Python tooling (ruff, pytest, etc.) is installed via postCreate.sh
 # using the OS-provided Python (/usr/bin/python3).
 
-# Install Docker CLI and Compose plugin (always latest stable) for RHEL/UBI base
+# Install Docker CLI and Compose plugin for the RHEL/UBI base image.
+# This enables running `docker` commands inside the dev container when the host
+# Docker socket is mounted.
 RUN set -eux; \
     ARCH_RAW="$(uname -m)"; \
     case "$ARCH_RAW" in \
@@ -121,9 +141,45 @@ RUN set -eux; \
 USER ${DEVCONTAINER_USER}
 WORKDIR /workspaces/dbtools
 
-# Lightweight container healthcheck: verifies core tooling is on PATH
+# Startup hook (runs as containerUser). When containerUser=root, this aligns
+# Docker socket group membership before VS Code starts the remote server.
+USER root
+RUN <<'EOF'
+set -eux
+
+cat > /usr/local/bin/devcontainer-init <<'SCRIPT'
+#!/usr/bin/env bash
+set -euo pipefail
+
+USER_NAME="${DEVCONTAINER_USER:-vscode}"
+
+if [[ -S /var/run/docker.sock ]]; then
+    sock_gid="$(stat -c %g /var/run/docker.sock 2>/dev/null || true)"
+    if [[ -n "${sock_gid}" ]]; then
+        group_name="$(getent group "${sock_gid}" | cut -d: -f1 || true)"
+        if [[ -z "${group_name}" ]]; then
+            group_name="docker-host"
+            groupadd -g "${sock_gid}" "${group_name}" 2>/dev/null || true
+            group_name="$(getent group "${sock_gid}" | cut -d: -f1 || true)"
+        fi
+
+        if [[ -n "${group_name}" ]] && id -u "${USER_NAME}" >/dev/null 2>&1; then
+            usermod -aG "${group_name}" "${USER_NAME}" 2>/dev/null || true
+        fi
+    fi
+fi
+
+exec "$@"
+SCRIPT
+
+chmod 0755 /usr/local/bin/devcontainer-init
+EOF
+
+# Lightweight container healthcheck: verifies core tooling is on PATH.
+# This helps surface broken builds early without assuming any databases are running.
 HEALTHCHECK --interval=60s --timeout=10s --start-period=10s --retries=3 \
     CMD bash -lc 'command -v python3 >/dev/null && command -v sqlcmd >/dev/null || exit 1'
 
-# Keep container alive for VS Code to attach
+# Keep container alive for VS Code to attach.
+ENTRYPOINT ["/usr/local/bin/devcontainer-init"]
 CMD ["sleep", "infinity"]

@@ -8,13 +8,14 @@ Quick links:
 - Technical architecture (diagram): [docs/development/devcontainer-architecture.md](../docs/development/devcontainer-architecture.md)
 - Maintainers: [.devcontainer/MAINTAINERS.md](MAINTAINERS.md)
 
-## Canonical Configuration (Red Hat UBI 9 + Python 3.14 via uv)
+## Canonical Configuration (Red Hat UBI 9 + Python 3.13 via uv)
 
 - Base image: Red Hat UBI 9 (`registry.access.redhat.com/ubi9/ubi`).
-- Python `3.14` is provisioned during `postCreate` via `uv` into a repo-local venv at `.venv/` (system `/usr/bin/python3` remains available as fallback).
+- Python `3.13` is provisioned during `postCreate` via `uv` into a repo-local venv at `.venv/` (system `/usr/bin/python3` remains available as fallback).
 - System tooling: `msodbcsql18`, `mssql-tools18` (`sqlcmd`), `unixODBC` dev headers, PowerShell 7 (installed via Microsoft RHEL 9 repo).
 - Multi-repo: parent folder mounted at `/workspaces/devcontainer`; workspace at `/workspaces/devcontainer/<repo>`.
 - Optional JupyterLab: set `ENABLE_JUPYTERLAB=1` to install during `postCreate`.
+- Docker access: the host Docker socket is mounted at `/var/run/docker.sock`. During `postCreate`, we automatically add the devcontainer user to the socket's group so `docker` commands work. If you still see "permission denied", reopen your terminals (group membership is picked up on new shells).
 
 ### Rebuild & Verify
 

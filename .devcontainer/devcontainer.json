@@ -23,7 +23,7 @@
   // 2. Start a container from that image
   // 3. Install VS Code extensions inside the container
   // 4. Connect your VS Code window to the running container
-  // 5. All terminal commands, file edits, and debugging happen inside container
+  // 5. All terminal commands, file edits, and debugging happen inside the container
   //
   // ===========================================================================
   // ---------------------------------------------------------------------------
@@ -40,25 +40,45 @@
   // "dockerfile": Path to Dockerfile (relative to this .devcontainer directory)
   // "context": Build context directory (parent of .devcontainer)
   //   - This allows Dockerfile to access files in the project root
-  // "args": Build-time variables passed to the Dockerfile
-  //   - DEVCONTAINER_USER: Username to create in container (defaults to host user)
-  //   - DEVCONTAINER_UID: User ID (defaults to host user ID)
-  //   - DEVCONTAINER_GID: Group ID (defaults to host group ID)
+  // "args": Build-time variables passed to the Dockerfile.
+  // These are used to create a non-root user inside the container that matches
+  // your host user.
+  //
+  // Why this matters:
+  // - File permissions stay consistent between host and container.
+  // - Files created in the container are editable from the host without `sudo`.
+  //
+  // Notes:
+  // - On Linux/macOS these typically exist as environment variables.
+  // - On Windows, ${localEnv:UID}/${localEnv:GID} may be empty. In that case the
+  //   Dockerfile defaults (1000/1000) are used.
+  //
+  // Variables:
+  // - DEVCONTAINER_USER: Username created in the container (defaults to host USER)
+  // - DEVCONTAINER_UID: Numeric user id (defaults to 1000)
+  // - DEVCONTAINER_GID: Numeric group id (defaults to 1000)
   "build": {
     "dockerfile": "Dockerfile",
     "context": "..",
     "args": {
-      "DEVCONTAINER_USER": "${localEnv:USER}"
+      "DEVCONTAINER_USER": "${localEnv:USER}",
+      "DEVCONTAINER_UID": "${localEnv:UID}",
+      "DEVCONTAINER_GID": "${localEnv:GID}"
     }
   },
   // ---------------------------------------------------------------------------
   // User Configuration
   // ---------------------------------------------------------------------------
-  // "remoteUser": User account to use inside the container
-  // - All VS Code operations run as this user
-  // - Matches the user created in Dockerfile (uses host user)
-  // - Files created will be owned by this user
+  // "remoteUser": User account to use inside the container.
+  // - VS Code terminals/debugging run as this user.
+  // - Matches the user created in the Dockerfile.
+  // - Files created in the workspace are owned by this user.
   "remoteUser": "${localEnv:USER}",
+  // "containerUser": User to run the container as (PID 1).
+  // We start as root so the container can align Docker socket group permissions
+  // before VS Code attaches (docker.sock is a host-mounted file owned by root).
+  // Day-to-day work still runs as remoteUser.
+  "containerUser": "root",
   // ---------------------------------------------------------------------------
   // Features (Pre-built Capabilities)
   // ---------------------------------------------------------------------------
@@ -108,11 +128,12 @@
         "redhat.vscode-yaml", // YAML language support
         "tamasfe.even-better-toml" // TOML language support
       ],
-      // Settings applied to VS Code when running in this dev container
-      // These override user settings and ensure consistency
+      // Settings applied to VS Code when running in this dev container.
+      // These override your local VS Code settings for this workspace.
       "settings": {
         // Python Configuration (venv)
-        // Provisioned during postCreate via uv (fallback remains /usr/bin/python3).
+        // Provisioned during postCreate via uv. If provisioning fails, the container
+        // still has /usr/bin/python3 available.
         "python.defaultInterpreterPath": "/workspaces/devcontainer/dbtools/.venv/bin/python",
         "python.terminal.activateEnvironment": false,
         "python.analysis.autoImportCompletions": true,
@@ -197,8 +218,8 @@
   // Workspace Configuration
   // ---------------------------------------------------------------------------
   // "workspaceMount": Override the default mount so that we mount the *parent*
-  // directory of the dbtools repo as /workspaces. This allows additional
-  // repositories to be cloned as siblings of dbtools (e.g. /workspaces/other-repo)
+  // directory of this repo into the container. This allows additional repositories
+  // to be cloned as siblings of dbtools (e.g. /workspaces/devcontainer/other-repo)
   // instead of nested inside the dbtools repo.
   //
   // Example host layout:
@@ -208,12 +229,12 @@
   //     other-repo-2/
   //
   // Inside the container:
-  //   /workspaces/
+  //   /workspaces/devcontainer/
   //     dbtools/
   //     other-repo-1/
   //     other-repo-2/
   //
-  // NOTE: VS Code still opens /workspaces/dbtools as the workspaceFolder.
+  // NOTE: VS Code still opens /workspaces/devcontainer/dbtools as the workspaceFolder.
   "workspaceMount": "source=${localWorkspaceFolder}/..,target=/workspaces/devcontainer,type=bind",
   // "workspaceFolder": Where the project is opened inside the container
   "workspaceFolder": "/workspaces/devcontainer/dbtools",
@@ -275,9 +296,10 @@
   // "runArgs": Arguments passed to 'docker run' when starting the container
   // These are Docker-level configurations that affect the container itself
   //
-  // CRITICAL FOR DATABASE CONNECTIVITY:
-  // The -p flags here publish ports from the dev container to the WSL host
-  // This enables connecting to databases from outside VS Code
+  // Note on ports:
+  // - This dev container does NOT publish ports to the host by default.
+  // - VS Code can still forward ports you open inside the container via "forwardPorts".
+  // - If you need host-level port publishing, add `-p host:container` entries here.
   "runArgs": [
     "--env",
     "PYTHONUNBUFFERED=1",
@@ -316,6 +338,9 @@
   //
   // THESE ARE CRITICAL FOR PERSISTENCE AND FUNCTIONALITY
   "mounts": [
+    // Read-only SSH keys for git operations.
+    // We mount both the host-aligned user home and /home/vscode for compatibility
+    // (in case DEVCONTAINER_USER falls back to vscode).
     "source=${localEnv:HOME}/.ssh,target=/home/${localEnv:USER}/.ssh,type=bind,consistency=cached,readonly",
     "source=${localEnv:HOME}/.ssh,target=/home/vscode/.ssh,type=bind,consistency=cached,readonly",
     "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind"

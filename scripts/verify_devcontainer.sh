@@ -83,15 +83,16 @@ else
   FAIL "sqlcmd not found; ensure mssql-tools18 installed"
 fi
 
-# 5) PowerShell 7
+# 5) PowerShell (optional)
+# The VS Code PowerShell extension may be installed even if the pwsh binary is not.
 if command -v pwsh >/dev/null 2>&1; then
   if pwsh -NoLogo -NoProfile -Command '$PSVersionTable.PSVersion.ToString()' >/dev/null 2>&1; then
-    PASS "PowerShell 7 available"
+    PASS "PowerShell available"
   else
     FAIL "pwsh present but failed to run"
   fi
 else
-  FAIL "pwsh not found"
+  SKIP "PowerShell check (pwsh not installed)"
 fi
 
 # 6) Optional: JupyterLab

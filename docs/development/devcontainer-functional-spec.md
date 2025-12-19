@@ -18,9 +18,9 @@ Status: Implemented (Red Hat UBI 9 base). Legacy cleanup/removals pending approv
 ## Architecture Overview
 
 - **Base Image:** `registry.access.redhat.com/ubi9/ubi` (corporate-aligned Red Hat UBI 9).
-- **Python Runtime:** workspace venv at `.venv/` provisioned during `postCreate` via `uv` (default Python `3.14`). System `/usr/bin/python3` remains available as a fallback.
+- **Python Runtime:** workspace venv at `.venv/` provisioned during `postCreate` via `uv` (default Python `3.13`). System `/usr/bin/python3` remains available as a fallback.
 - **Workspace Layout:** Parent directory bind-mounted to `/workspaces/devcontainer`, opening `/workspaces/devcontainer/dbtools`; sibling repos are accessible for editable installs.
-- **System Tooling:** `unixODBC`/`unixODBC-devel`, `msodbcsql18`, `mssql-tools18` (`sqlcmd`), `powershell` (PS7), and core build tools.
+- **System Tooling:** `unixODBC`/`unixODBC-devel`, `msodbcsql18`, `mssql-tools18` (`sqlcmd`), plus core CLI tools (git/curl/jq).
 - **Install Method:** `microdnf`/`dnf` for OS packages; Microsoft RHEL 9 RPM repo for SQL Server tooling.
 - **Networking:** Ensure `devcontainer-network` exists (host initialize); container joins for name‑based connectivity to local services.
 - **Ports & Forwarding:** VS Code forwards 5432, 1433, 27017, 3000, 5000, 8000, 8888 (Jupyter). Labels defined for discoverability.
@@ -30,11 +30,11 @@ Status: Implemented (Red Hat UBI 9 base). Legacy cleanup/removals pending approv
 ## Detailed Components
 
 - **Container Image Build:**
-  - Single consolidated `microdnf`/`dnf` `RUN` to install base tooling, add Microsoft RHEL 9 repo, and install SQL Server packages and PowerShell.
+  - Single consolidated `microdnf`/`dnf` `RUN` to install base tooling, add Microsoft RHEL 9 repo, and install SQL Server packages.
   - Clean package caches to keep the image small.
   - Symlink `sqlcmd` into PATH for convenience.
   - **Python Environment:**
-    - `postCreate`: installs `uv`, installs Python `3.14` via `uv`, creates/updates `.venv/`, installs dev tools + editable local packages into the venv, and registers the `gds` kernelspec pointing at the venv.
+    - `postCreate`: installs `uv`, installs Python `3.13` via `uv`, creates/updates `.venv/`, installs dev tools + editable local packages into the venv, and registers the `gds` kernelspec pointing at the venv.
     - VS Code setting `python.defaultInterpreterPath` points to `/workspaces/devcontainer/dbtools/.venv/bin/python`.
     - Override: set `DEVCONTAINER_PYTHON_VERSION` to change the version `uv` installs.
   - **Multi‑Repo Workflow:**
@@ -94,7 +94,7 @@ make verify-devcontainer
 File: [.devcontainer/postCreate.sh](../../.devcontainer/postCreate.sh)
 
 - **Environment checks:** Logs Python/pip versions; verifies Docker daemon reachability.
-- **Venv lifecycle:** Creates/uses `.venv/` (default Python `3.14`) via `uv`; falls back to system Python if provisioning fails.
+- **Venv lifecycle:** Creates/uses `.venv/` (default Python `3.13`) via `uv`; falls back to system Python if provisioning fails.
 - **Prompt:** Appends a git-branch-aware prompt directly into `~/.bashrc` (no `~/.set_prompt` dependency; `$` on its own line).
 - **Jupyter kernel:** Registers kernelspec `gds` ("Python (gds)") pointing at the venv interpreter.
 - **Editable installs:** Installs local packages in editable mode (prefers `[dev]` extras) for: `gds_database`, `gds_postgres`, `gds_mssql`, `gds_mongodb`, `gds_liquibase`, `gds_vault`, `gds_snowflake`, `gds_snmp_receiver`.
@@ -118,7 +118,7 @@ Items retained:
 
 ## Open Questions
 
-- **PowerShell:** Retain by default or make optional to slim the image? (Currently retained by default.)
+- **PowerShell:** The VS Code extension is installed, but the container does not currently include the `pwsh` binary. Should we add PowerShell 7 to the image, or keep it out to slim the image?
 - **Jupyter:** Keep `ipykernel` by default; JupyterLab via opt-in flag `ENABLE_JUPYTERLAB=1` during `postCreate` (current behavior).
 - **DB tooling:** Keep SQLTools PostgreSQL driver or trim to MSSQL‑only?
 - **PostgreSQL client libs:** Any need for `libpq-dev`/`psql`?
