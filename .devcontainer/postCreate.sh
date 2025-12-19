@@ -103,6 +103,10 @@ DEVCONTAINER_PYTHON_VERSION="${DEVCONTAINER_PYTHON_VERSION:-3.13}"
 # Ensure user-local bin is on PATH for uv.
 export PATH="$HOME/.local/bin:$PATH"
 
+# Put UV cache in workspace so hardlinks work (cache and .venv on same filesystem).
+# This also means the cache persists across container rebuilds.
+export UV_CACHE_DIR="$WORKSPACE_ROOT/.uv-cache"
+
 # =============================================================================
 # UV Setup
 # =============================================================================
