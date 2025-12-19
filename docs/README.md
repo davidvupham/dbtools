@@ -97,6 +97,7 @@ Guides for contributors:
 - [**Coding Standards**](development/coding-standards/README.md)
 - [**Testing**](development/testing/README.md)
 - [**VS Code Setup**](development/vscode/README.md)
+- [**Developer Onboarding (Linux: WSL2/RHEL)**](development/developer-onboarding.md)
 
 ### [archive/](archive/README.md) - Archived Files
 
