@@ -117,6 +117,30 @@ CMD ["python", "main.py"]
 | `--no-dev` | Exclude development dependencies |
 | Separate COPY for deps | Maximize Docker layer cache hits |
 
+### Why Use `python` Directly (Not `uv run`) in Production
+
+Notice the production image runs `python main.py` directly, not `uv run python main.py`:
+
+```dockerfile
+# Production: run Python directly
+CMD ["python", "main.py"]
+
+# NOT this:
+# CMD ["uv", "run", "python", "main.py"]
+```
+
+**Reasons:**
+
+| Concern | Why avoid `uv run` in production |
+|---------|----------------------------------|
+| **Startup time** | `uv run` checks if sync is needed on every invocation |
+| **Determinism** | Production environment should be frozen at build time |
+| **Image size** | Production image doesn't need UV binary at all |
+| **Security** | Fewer binaries = smaller attack surface |
+
+> [!TIP]
+> The pattern is: use **UV at build time** to install everything (`uv sync`), then use **Python directly at runtime** (`python app.py`). This is the same pattern used with pip—you don't run `pip install` at container startup.
+
 ---
 
 ## Development Dockerfile
@@ -333,6 +357,100 @@ RUN python manage.py collectstatic --noinput
 EXPOSE 8000
 CMD ["gunicorn", "--bind", "0.0.0.0:8000", "myproject.wsgi:application"]
 ```
+
+---
+
+## Deploying Workspace Packages
+
+When deploying a UV workspace (multiple related packages) to Docker:
+
+### Option 1: Install All Workspace Members
+
+Copy all workspace members and let UV install them:
+
+```dockerfile
+FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim AS builder
+ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy
+WORKDIR /app
+
+# Copy workspace root and all packages
+COPY pyproject.toml uv.lock ./
+COPY gds_database/ gds_database/
+COPY gds_mssql/ gds_mssql/
+COPY gds_postgres/ gds_postgres/
+# ... other workspace members
+
+RUN uv sync --frozen --no-dev
+
+FROM python:3.12-slim-bookworm
+COPY --from=builder /app/.venv /app/.venv
+ENV PATH="/app/.venv/bin:$PATH"
+WORKDIR /app
+COPY --from=builder /app .
+CMD ["python", "app.py"]
+```
+
+### How UV Finds Workspace Packages
+
+UV reads the root `pyproject.toml` to discover workspace members:
+
+```toml
+# pyproject.toml
+[tool.uv.workspace]
+members = ["gds_*"]   # Pattern tells UV where to look
+```
+
+This means UV looks for any directory matching `gds_*` that contains a `pyproject.toml`:
+
+```
+/app/                           ← WORKDIR in Docker
+├── pyproject.toml              ← Root config with [tool.uv.workspace]
+├── uv.lock                     ← Lock file
+├── gds_database/               ← Matches "gds_*" pattern
+│   ├── pyproject.toml          ← UV finds this → installs as package
+│   └── src/gds_database/
+├── gds_mssql/
+│   ├── pyproject.toml
+│   └── src/gds_mssql/
+└── gds_postgres/
+    ├── pyproject.toml
+    └── src/gds_postgres/
+```
+
+> [!IMPORTANT]
+> The `gds_*` directories must be copied to the **same relative paths** as defined in your workspace config. If the root config says `members = ["gds_*"]`, then UV expects `/app/gds_database/pyproject.toml`, `/app/gds_mssql/pyproject.toml`, etc.
+
+### Option 2: Build and Install Specific Wheels
+
+For more control, build only the packages you need:
+
+```dockerfile
+FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim AS builder
+WORKDIR /app
+COPY . .
+
+# Build only the packages you need
+RUN uv build --package gds-database --out-dir dist/
+RUN uv build --package gds-mssql --out-dir dist/
+
+FROM python:3.12-slim-bookworm
+WORKDIR /app
+COPY --from=builder /app/dist/*.whl ./
+RUN pip install --no-cache-dir *.whl
+```
+
+### Where Are Packages Installed?
+
+After `uv sync`, packages are installed in the virtual environment's site-packages:
+
+| Container Path | Contents |
+|----------------|----------|
+| `/app/.venv/bin/` | Python executable, scripts |
+| `/app/.venv/lib/python3.x/site-packages/` | All installed packages |
+| `/app/.venv/lib/python3.x/site-packages/gds_database/` | Your workspace package |
+
+> [!TIP]
+> The virtual environment's site-packages location is the same as pip's—UV just manages it differently during development.
 
 ---
 

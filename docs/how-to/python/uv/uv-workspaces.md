@@ -118,6 +118,55 @@ This creates a single `.venv` and `uv.lock` at the workspace root.
 
 ---
 
+## Importing Workspace Packages
+
+After running `uv sync`, all workspace member packages are installed in **editable mode** automatically. This means you can import them in Python scripts exactly like any other installed package:
+
+```python
+# Import workspace packages just like any installed package
+from my_core import BaseModel
+from my_api import create_app
+from my_cli import run_command
+
+# Changes to source code are reflected immediately—no reinstall needed
+```
+
+### How It Works
+
+When you run `uv sync`:
+
+1. **Creates a virtual environment** at the workspace root (`.venv`)
+2. **Installs all external dependencies** from `uv.lock`
+3. **Installs all workspace members in editable mode** (equivalent to `pip install -e`)
+
+This is controlled by the `package = true` setting in the root `pyproject.toml`:
+
+```toml
+[tool.uv]
+package = true  # Treat workspace members as installable packages
+```
+
+### Verifying Package Installation
+
+```bash
+# Check that packages are importable
+uv run python -c "from my_core import something; print('OK')"
+
+# List installed packages
+uv run pip list | grep my-
+```
+
+### Key Difference from pip
+
+| pip workflow | UV workflow |
+|--------------|-------------|
+| `pip install -e ./packages/core` | `uv sync` |
+| `pip install -e ./packages/api` | (installs all at once) |
+| `pip install -e ./packages/cli` | |
+| Repeat for each package... | |
+
+---
+
 ## Working with Workspaces
 
 ### Running Commands in Specific Packages

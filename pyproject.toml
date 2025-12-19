@@ -14,8 +14,41 @@ authors = [{ name = "GDS Team" }]
 requires-python = ">=3.9"
 dependencies = []
 
-[project.optional-dependencies]
-# Tooling installed by the VS Code dev container into the repo-local .venv.
+# =============================================================================
+# UV Configuration
+# =============================================================================
+# UV is the primary package manager for this repository.
+# See: https://docs.astral.sh/uv/
+
+[tool.uv]
+# Treat root as an installable package
+package = true
+
+# Prefer UV-managed Python over system Python
+python-preference = "managed"
+
+# Workspace configuration: all gds_* packages are members
+[tool.uv.workspace]
+members = ["gds_*"]
+
+# =============================================================================
+# Dependency Groups (UV-native format)
+# =============================================================================
+# Use `uv sync --group <name>` to install specific groups.
+# See: https://docs.astral.sh/uv/concepts/projects/dependencies/#dependency-groups
+
+[dependency-groups]
+# Core development tools
+dev = [
+    "pre-commit",
+    "pyright",
+    "pytest",
+    "pytest-asyncio",
+    "pytest-cov",
+    "ruff",
+]
+
+# Full devcontainer tooling (includes dev group)
 devcontainer = [
     "aiohttp",
     "ansible",
@@ -25,23 +58,22 @@ devcontainer = [
     "ipykernel",
     "kafka-python",
     "pika",
-    "pre-commit",
     "prometheus-client",
     "psycopg2-binary",
     "pulumi",
     "pysnmp",
     "pyodbc",
-    "pyright",
-    "pytest",
-    "pytest-asyncio",
-    "pytest-cov",
-    "ruff",
     "snowflake-connector-python",
     "wheel",
+    { include-group = "dev" },
 ]
 
-# Optional Jupyter/Notebook-heavy packages (installed only when ENABLE_JUPYTERLAB=1).
-devcontainer-jupyter = ["jupyterlab", "numpy", "pandas"]
+# Optional Jupyter stack (install with: uv sync --group jupyter)
+jupyter = [
+    "jupyterlab",
+    "numpy",
+    "pandas",
+]
 
 [tool.setuptools.packages.find]
 where = ["."]

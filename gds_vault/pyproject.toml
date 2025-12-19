@@ -1,3 +1,23 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gds-vault"
+version = "1.0.0"
+description = "HashiCorp Vault integration library for GDS services"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [{ name = "GDS Team", email = "gds@example.com" }]
+dependencies = ["hvac>=2.0.0"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0", "pytest-asyncio>=0.23"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 markers = ["asyncio: mark a test as a asyncio test."]

@@ -486,6 +486,100 @@ Ensure the lock file is up to date:
 
 ---
 
+## Production Deployment
+
+### Building Wheels for Deployment
+
+Build Python packages as wheels for deployment to production environments:
+
+```yaml
+name: Build and Deploy
+
+on:
+  push:
+    tags: ['v*']
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+      
+      # Build wheels for all packages
+      - name: Build packages
+        run: |
+          for pkg in gds-database gds-mssql gds-postgres gds-snowflake; do
+            uv build --package "$pkg" --out-dir dist/
+          done
+      
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wheels
+          path: dist/*.whl
+```
+
+### Publishing to Private PyPI
+
+```yaml
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: wheels
+          path: dist/
+      
+      - uses: astral-sh/setup-uv@v4
+      
+      - name: Publish to private PyPI
+        run: uv publish dist/*.whl
+        env:
+          UV_PUBLISH_URL: ${{ secrets.PYPI_URL }}
+          UV_PUBLISH_USERNAME: ${{ secrets.PYPI_USER }}
+          UV_PUBLISH_PASSWORD: ${{ secrets.PYPI_TOKEN }}
+```
+
+### Deploying with pip (Traditional)
+
+If your production environment requires pip:
+
+```yaml
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      # Download built wheels
+      - uses: actions/download-artifact@v4
+        with:
+          name: wheels
+          path: dist/
+      
+      # Deploy to server
+      - name: Deploy
+        run: |
+          scp dist/*.whl user@server:/tmp/
+          ssh user@server "pip install /tmp/*.whl"
+```
+
+### Where Packages Are Installed
+
+| Environment | Package Location |
+|-------------|------------------|
+| UV with venv | `.venv/lib/python3.x/site-packages/` |
+| pip (system) | `/usr/local/lib/python3.x/site-packages/` |
+| pip (user) | `~/.local/lib/python3.x/site-packages/` |
+| Docker with UV | `/app/.venv/lib/python3.x/site-packages/` |
+
+> [!TIP]
+> UV is primarily a development and build tool. For production, you can either:
+>
+> 1. Use `uv sync --frozen` in containers (consistent with development)
+> 2. Build wheels with `uv build` and deploy with pip (traditional approach)
+
+---
+
 ## Troubleshooting
 
 ### "Lock file is out of date"

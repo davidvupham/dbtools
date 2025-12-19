@@ -7,10 +7,8 @@ name = "gds-postgres"
 version = "1.0.0"
 description = "PostgreSQL database connection library built on gds-database"
 readme = "README.md"
-license = {text = "MIT"}
-authors = [
-    {name = "GDS Team", email = "gds-team@example.com"},
-]
+license = { text = "MIT" }
+authors = [{ name = "GDS Team", email = "gds-team@example.com" }]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
@@ -28,10 +26,10 @@ classifiers = [
 ]
 keywords = ["postgresql", "postgres", "database", "connection", "gds"]
 requires-python = ">=3.8"
-dependencies = [
-    "gds-database>=1.0.0",
-    "psycopg2-binary>=2.8.0",
-]
+dependencies = ["gds-database>=1.0.0", "psycopg2-binary>=2.8.0"]
+
+[tool.uv.sources]
+gds-database = { workspace = true }
 
 [project.optional-dependencies]
 dev = [
@@ -42,12 +40,8 @@ dev = [
     "ruff>=0.1.0",
     "mypy>=1.0",
 ]
-async = [
-    "asyncpg>=0.27.0",
-]
-pool = [
-    "psycopg2-pool>=1.0.0",
-]
+async = ["asyncpg>=0.27.0"]
+pool = ["psycopg2-pool>=1.0.0"]
 
 [project.urls]
 Homepage = "https://github.com/davidvupham/dbtools"
