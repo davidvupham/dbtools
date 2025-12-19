@@ -65,16 +65,17 @@ flowchart TD
 
 ## Python Versions
 
-The image includes the system Python `/usr/bin/python3`, but the devcontainer is designed to use a repo-local venv at `.venv/`.
+The image includes the system Python `/usr/bin/python3`, but the devcontainer uses UV for Python management.
 
-- `postCreate` installs `uv`, installs Python `3.13` (default) via `uv`, and creates/updates `.venv/`.
-- VS Code is configured to default to `.venv/bin/python`.
-- `postCreate` registers the `gds` Jupyter kernel pointing at the active interpreter.
+- `postCreate` installs `uv`, provisions Python `3.13` (default), and runs `uv sync --group devcontainer`.
+- VS Code interpreter is set to `.venv/bin/python`.
+- Run commands with `uv run <command>` (no manual activation needed).
+- `postCreate` registers the `gds` Jupyter kernel.
 - Override Python version by setting `DEVCONTAINER_PYTHON_VERSION`.
 
 - `containerEnv`:
-  - `PIP_DISABLE_PIP_VERSION_CHECK=1` to speed up pip.
   - `ENABLE_JUPYTERLAB=0` (set to `1` to install JupyterLab during postCreate).
+  - `ENABLE_DBATOOLS=0` (set to `1` to install dbatools PowerShell module).
 - `customizations.vscode.settings`: Sets interpreter path, testing, and linting options.
 - `forwardPorts` and `portsAttributes`: Labels for discoverability (Jupyter at 8888).
 

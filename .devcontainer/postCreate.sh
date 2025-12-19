@@ -217,20 +217,6 @@ BLUE='\[\e[34m\]'
 CYAN='\[\e[36m\]'
 RESET='\[\e[0m\]'
 
-# Auto-activate workspace venv (if present) for interactive shells.
-# Uses WORKSPACE_ROOT if exported in the environment; otherwise uses a safe
-# default for this repository.
-if [[ -n "${PS1:-}" ]] && [[ -z "${VIRTUAL_ENV:-}" ]]; then
-  __ws_root="${WORKSPACE_ROOT:-/workspaces/devcontainer/dbtools}"
-  if [[ -f "${__ws_root}/.venv/bin/activate" ]]; then
-    case "${PWD:-}" in
-      "${__ws_root}"|"${__ws_root}"/*)
-        . "${__ws_root}/.venv/bin/activate"
-        ;;
-    esac
-  fi
-fi
-
 # PS1 with user@host:path and optional git branch; place $ on the next line
 export PS1="${GREEN}\u@\h${RESET}:${BLUE}\w${RESET}\$(type __git_ps1 >/dev/null 2>&1 && __git_ps1 ' (%s)')\n${CYAN}\$${RESET} "
 

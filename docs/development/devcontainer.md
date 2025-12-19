@@ -80,21 +80,21 @@ The container mounts your parent folder to `/workspaces/devcontainer`. Your curr
 
 ## Local Packages
 
-Editable installs are handled during `postCreate` via `.devcontainer/postCreate.sh` into `.venv/`.
+All workspace packages are automatically installed in editable mode via `uv sync` during `postCreate`.
 
-Devcontainer tooling (ruff/pytest/pyright/pyodbc/ipykernel/pre-commit, etc.) is installed from `pyproject.toml` optional dependencies: `.[devcontainer]`.
+Devcontainer tooling (ruff/pytest/pyright/pyodbc/ipykernel/pre-commit, etc.) is installed from `pyproject.toml` dependency groups.
 
-- VS Code uses `.venv/bin/python` by default.
-- In terminals, you can optionally activate the venv with `source .venv/bin/activate`.
+- VS Code uses `.venv/bin/python` as the interpreter.
+- Run commands using `uv run <command>` (e.g., `uv run pytest`, `uv run python script.py`).
 
 ## Notes
 
-- Default devcontainer Python is `.venv/bin/python` (created during `postCreate`).
+- VS Code Python interpreter is set to `.venv/bin/python` (created during `postCreate`).
 - If you need additional system libraries (e.g., database clients), add them in `.devcontainer/Dockerfile` and rebuild.
 - Prefer VS Code notebooks with `ipykernel` over embedding JupyterLab to keep the image small.
 - The container joins the shared Docker network `devcontainer-network` (created via `initializeCommand`).
-- Environment flags: `PIP_DISABLE_PIP_VERSION_CHECK=1` (speed up pip) and `ENABLE_JUPYTERLAB=0` (opt-in JupyterLab during postCreate).
-- OS packages are installed via `microdnf`/`dnf` (UBI 9); Python tooling is installed into `.venv/` from `pyproject.toml` optional dependencies (`.[devcontainer]`).
+- Optional installs via environment flags: `ENABLE_JUPYTERLAB=0`, `ENABLE_DBATOOLS=0`.
+- OS packages are installed via `dnf` (UBI 9); Python tooling via `uv sync --group devcontainer`.
 
 ### Python version override
 

@@ -11,10 +11,10 @@ This document is for maintainers of the dev container configuration. It compleme
 
 ## Lifecycle expectations
 
-- Image: Red Hat UBI 9 base; installs `unixODBC`, `msodbcsql18`, and `mssql-tools18` via the Microsoft RHEL 9 repo.
-- postCreate: uses system `/usr/bin/python3` only to bootstrap `uv`, then provisions/uses a repo-local `.venv/` and installs tooling + local packages into that venv; registers `ipykernel` as `gds`.
-- Optional JupyterLab: controlled by `ENABLE_JUPYTERLAB=1` (default off).
-- postStart: not used (kept empty); VS Code server dirs are handled by VS Code itself.
+- Image: Red Hat UBI 9 base; installs `unixODBC`, `msodbcsql18`, `mssql-tools18`, and PowerShell 7 via the Microsoft RHEL 9 repo.
+- postCreate: installs `uv`, provisions Python 3.13, runs `uv sync --group devcontainer` to install all workspace packages and tooling; registers `ipykernel` as `gds`.
+- Optional: `ENABLE_JUPYTERLAB=1` for JupyterLab, `ENABLE_DBATOOLS=1` for dbatools module.
+- postStart: not used (kept empty).
 
 ## Verification
 
@@ -32,7 +32,7 @@ This document is for maintainers of the dev container configuration. It compleme
 ## Legacy status
 
 - Legacy variant-specific artifacts under `.devcontainer/` have been removed.
-- `.devcontainer/postCreate.sh` should keep the uv + repo-local `.venv/` approach as the canonical path; system Python is a bootstrap fallback only.
+- Use `uv run <command>` for all Python commands (no manual venv activation needed).
 
 ## Common operations
 
@@ -40,7 +40,7 @@ This document is for maintainers of the dev container configuration. It compleme
 - Register kernelspec manually (if needed):
 
   ```bash
-  python -m ipykernel install --user --name gds --display-name "Python (gds)"
+  uv run python -m ipykernel install --user --name gds --display-name "Python (gds)"
   ```
 
 - Enable JupyterLab for a session:

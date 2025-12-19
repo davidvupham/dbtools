@@ -11,11 +11,11 @@ Quick links:
 ## Canonical Configuration (Red Hat UBI 9 + Python 3.13 via uv)
 
 - Base image: Red Hat UBI 9 (`registry.access.redhat.com/ubi9/ubi`).
-- Python `3.13` is provisioned during `postCreate` via `uv` into a repo-local venv at `.venv/` (system `/usr/bin/python3` remains available as fallback).
-- System tooling: `msodbcsql18`, `mssql-tools18` (`sqlcmd`), `unixODBC` dev headers, PowerShell 7 (installed via Microsoft RHEL 9 repo).
+- Python `3.13` provisioned via `uv` during `postCreate`. Run commands with `uv run <command>`.
+- System tooling: `msodbcsql18`, `mssql-tools18` (`sqlcmd`), `unixODBC` dev headers, PowerShell 7.
 - Multi-repo: parent folder mounted at `/workspaces/devcontainer`; workspace at `/workspaces/devcontainer/<repo>`.
-- Optional JupyterLab: set `ENABLE_JUPYTERLAB=1` to install during `postCreate`.
-- Docker access: the host Docker socket is mounted at `/var/run/docker.sock`. During `postCreate`, we automatically add the devcontainer user to the socket's group so `docker` commands work. If you still see "permission denied", reopen your terminals (group membership is picked up on new shells).
+- Optional: `ENABLE_JUPYTERLAB=1` for JupyterLab, `ENABLE_DBATOOLS=1` for dbatools PowerShell module.
+- Docker access: host socket mounted; user auto-added to docker group during `postCreate`.
 
 ### Rebuild & Verify
 

@@ -34,15 +34,16 @@ Status: Implemented (Red Hat UBI 9 base). Legacy cleanup/removals pending approv
   - Clean package caches to keep the image small.
   - Symlink `sqlcmd` into PATH for convenience.
   - **Python Environment:**
-    - `postCreate`: installs `uv`, installs Python `3.13` via `uv`, creates/updates `.venv/`, installs dev tools + editable local packages into the venv, and registers the `gds` kernelspec pointing at the venv.
+    - `postCreate`: installs `uv`, provisions Python `3.13`, runs `uv sync --group devcontainer` to install all packages.
     - VS Code setting `python.defaultInterpreterPath` points to `/workspaces/devcontainer/dbtools/.venv/bin/python`.
-    - Override: set `DEVCONTAINER_PYTHON_VERSION` to change the version `uv` installs.
+    - Run commands with `uv run <command>` (no manual activation needed).
+    - Override: set `DEVCONTAINER_PYTHON_VERSION` to change the Python version.
   - **Multi‑Repo Workflow:**
     - `workspaceMount: source=${localWorkspaceFolder}/..,target=/workspaces/devcontainer,type=bind`.
   - Optional script to clone additional repos: see [.devcontainer/scripts/clone-additional-repos.sh](../../.devcontainer/scripts/clone-additional-repos.sh) using [.devcontainer/additional-repos.json](../../.devcontainer/additional-repos.json).
   - **Lifecycle:**
     - `initializeCommand`: create `devcontainer-network` on host.
-    - `postCreate`: installs `uv`, provisions Python, creates/updates `.venv/`, installs tooling from `pyproject.toml` optional dependencies (`.[devcontainer]`), installs local packages in editable mode, registers kernel; optional JupyterLab if enabled.
+    - `postCreate`: installs `uv`, provisions Python, runs `uv sync`, registers kernel; optional JupyterLab/dbatools if enabled.
     - `postStart`: not used (kept empty).
 - **Security & Compliance:**
   - Least privilege (non‑root), minimal mounts (SSH RO; Docker socket only), no embedded secrets.
@@ -93,10 +94,10 @@ make verify-devcontainer
 
 File: [.devcontainer/postCreate.sh](../../.devcontainer/postCreate.sh)
 
-- **Environment checks:** Logs Python/pip versions; verifies Docker daemon reachability.
-- **Venv lifecycle:** Creates/uses `.venv/` (default Python `3.13`) via `uv`; falls back to system Python if provisioning fails.
-- **Prompt:** Appends a git-branch-aware prompt directly into `~/.bashrc` (no `~/.set_prompt` dependency; `$` on its own line).
-- **Jupyter kernel:** Registers kernelspec `gds` ("Python (gds)") pointing at the venv interpreter.
+- **Environment checks:** Logs Python/UV versions; verifies Docker daemon reachability.
+- **UV sync:** Runs `uv sync --group devcontainer` to install all packages and dependencies.
+- **Prompt:** Appends a git-branch-aware prompt directly into `~/.bashrc`.
+- **Jupyter kernel:** Registers kernelspec `gds` ("Python (gds)").
 - **Editable installs:** All `gds_*` workspace packages are automatically installed in editable mode via `uv sync`.
 - **pre-commit hooks:** If `.pre-commit-config.yaml` exists and `pre-commit` is available, installs hooks.
 - **pyodbc verification:** Pure import/driver check; prints version and drivers. No OS package installs or other fallbacks.
