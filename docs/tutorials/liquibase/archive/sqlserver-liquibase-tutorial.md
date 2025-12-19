@@ -156,7 +156,7 @@ docker ps | grep mssql_liquibase_tutorial
 **Expected output:**
 
 ```text
-mssql_liquibase_tutorial   mcr.microsoft.com/mssql/server:2022-latest   Up X seconds (healthy)   0.0.0.0:14333->1433/tcp
+mssql_liquibase_tutorial   mcr.microsoft.com/mssql/server:2025-latest   Up X seconds (healthy)   0.0.0.0:14333->1433/tcp
 ```
 
 **What this does:**

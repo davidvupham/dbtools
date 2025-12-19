@@ -126,7 +126,7 @@ You should see `mssql_liquibase_tutorial` listening on host port `14333` and mar
 **Expected output:**
 
 ```text
-mssql_liquibase_tutorial   mcr.microsoft.com/mssql/server:2022-latest   Up X seconds (healthy)   0.0.0.0:14333->1433/tcp
+mssql_liquibase_tutorial   mcr.microsoft.com/mssql/server:2025-latest   Up X seconds (healthy)   0.0.0.0:14333->1433/tcp
 ```
 
 **What this does:**
@@ -229,7 +229,7 @@ sqlcmd-tutorial verify_dev_objects.sql
 sqlcmd-tutorial verify_dev_data.sql
 ```
 
-2. Create `env/liquibase.dev.properties`, `env/liquibase.stage.properties`, and `env/liquibase.prod.properties`:
+1. Create `env/liquibase.dev.properties`, `env/liquibase.stage.properties`, and `env/liquibase.prod.properties`:
 
 ```bash
 # Development properties
@@ -268,6 +268,7 @@ EOF
 # Verify files were created
 ls -la /data/liquibase-tutorial/env/
 ```
+
 3. Generate the **baseline** changelog from dev using the `lb` helper:
 
 ```bash
@@ -287,7 +288,7 @@ lb -e dev -- \
 cat database/changelog/baseline/V0000__baseline.xml
 ```
 
-4. Create `database/changelog/changelog.xml` that includes the baseline (and later includes incremental changes):
+1. Create `database/changelog/changelog.xml` that includes the baseline (and later includes incremental changes):
 
 ```bash
 # Create master changelog that includes baseline
@@ -441,9 +442,9 @@ For this combined tutorial we will:
 docker network create liquibase_tutorial 2>/dev/null || true
 ```
 
-4. Ensure your `mssql_liquibase_tutorial` container is attached to that network (it should be if you followed the first tutorial’s `docker compose` file).
+1. Ensure your `mssql_liquibase_tutorial` container is attached to that network (it should be if you followed the first tutorial’s `docker compose` file).
 
-5. **Run a self-hosted runner container** attached to the same network. One common pattern is to use the official Actions runner image and environment variables:
+2. **Run a self-hosted runner container** attached to the same network. One common pattern is to use the official Actions runner image and environment variables:
 
 ```bash
 docker run -d --restart unless-stopped \
@@ -464,7 +465,7 @@ Key points:
 - The **label** `liquibase-tutorial` lets you target this runner from workflows.
 - Mounting `/var/run/docker.sock` is optional if you need the runner to start other containers; for basic Liquibase CLI use you can omit it.
 
-6. In the Actions UI, you should now see a **self-hosted runner** registered for your repo with labels like `self-hosted`, `linux`, and `liquibase-tutorial`.
+1. In the Actions UI, you should now see a **self-hosted runner** registered for your repo with labels like `self-hosted`, `linux`, and `liquibase-tutorial`.
 
 ### Step 10: Configure GitHub Secrets
 

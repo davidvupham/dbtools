@@ -9,7 +9,7 @@ set -euo pipefail
 #   LB_PROJECT_DIR=/some/dir lb.sh -e dev -- updateSQL
 #
 # Requirements:
-#   - Docker image 'liquibase:latest' built via /workspaces/dbtools/docker/liquibase
+#   - Docker image 'liquibase:latest' built via the repo's docker/liquibase directory
 #   - SQL Server container running on network 'liquibase_tutorial'
 #   - env files at $LB_PROJECT_DIR/env/liquibase.<env>.properties
 #   - MSSQL_LIQUIBASE_TUTORIAL_PWD exported in the shell

@@ -15,6 +15,7 @@ Follow these tutorials in order for the best learning experience:
 **Prerequisites**: None
 
 **What you'll learn:**
+
 - What GitHub Actions is and why use it
 - Core concepts: workflows, jobs, steps, runners
 - Working with secrets
@@ -23,6 +24,7 @@ Follow these tutorials in order for the best learning experience:
 - Best practices and troubleshooting
 
 **Who should read this:**
+
 - Anyone new to GitHub Actions
 - Developers wanting to understand CI/CD
 - Teams implementing automation
@@ -38,6 +40,7 @@ Follow these tutorials in order for the best learning experience:
 **Prerequisites**: Basic understanding of GitHub Actions
 
 **What you'll learn:**
+
 - Official Liquibase GitHub Actions support
 - Industry best practices
 - Architecture patterns for CI/CD pipelines
@@ -47,6 +50,7 @@ Follow these tutorials in order for the best learning experience:
 - Error handling strategies
 
 **Who should read this:**
+
 - Teams planning CI/CD implementation
 - Architects designing database pipelines
 - DevOps engineers
@@ -58,9 +62,10 @@ Follow these tutorials in order for the best learning experience:
 
 ### 3. 🚀 Hands-On Tutorial: SQL Server + Liquibase + GitHub Actions
 
-**File**: [sqlserver-liquibase-github-actions-tutorial.md](./sqlserver-liquibase-github-actions-tutorial.md)
+**File**: [sqlserver-liquibase-github-actions-tutorial.md](./archive/sqlserver-liquibase-github-actions-tutorial.md)
 **Duration**: 4-5 hours (can be completed over multiple sessions)
 **Prerequisites**:
+
 - GitHub account
 - SQL Server database (Azure SQL, local, or AWS RDS)
 - Basic Git knowledge
@@ -69,6 +74,7 @@ Follow these tutorials in order for the best learning experience:
 A complete CI/CD pipeline that automatically deploys database changes through dev → staging → production with approval gates.
 
 **Tutorial parts:**
+
 1. **Part 1**: Local setup and project structure
 2. **Part 2**: GitHub repository setup
 3. **Part 3**: Configure secrets
@@ -81,6 +87,7 @@ A complete CI/CD pipeline that automatically deploys database changes through de
 10. **Part 10**: Production best practices
 
 **Who should complete this:**
+
 - Developers implementing database CI/CD
 - Teams transitioning from manual deployments
 - Anyone wanting hands-on experience
@@ -96,6 +103,7 @@ A complete CI/CD pipeline that automatically deploys database changes through de
 **Prerequisites**: Understanding of both approaches
 
 **What you'll learn:**
+
 - When to use local Docker development
 - When to use GitHub Actions CI/CD
 - Detailed feature comparison
@@ -104,6 +112,7 @@ A complete CI/CD pipeline that automatically deploys database changes through de
 - Real-world scenarios by company size
 
 **Who should read this:**
+
 - Teams deciding on approach
 - Developers wondering "which should I use?"
 - Managers planning implementation
@@ -115,33 +124,33 @@ A complete CI/CD pipeline that automatically deploys database changes through de
 
 ## Quick Start Guide
 
-### If you're brand new to GitHub Actions:
+### If you're brand new to GitHub Actions
 
 1. ✅ Start with [GitHub Actions Primer](../../explanation/architecture/database-change-cicd/github-actions-primer.md) - 45 minutes
 2. ✅ Skim [Best Practices](../../best-practices/liquibase/github-actions.md) - 15 minutes
-3. ✅ Follow [Hands-On Tutorial](./sqlserver-liquibase-github-actions-tutorial.md) - 4-5 hours
+3. ✅ Follow [Hands-On Tutorial](./archive/sqlserver-liquibase-github-actions-tutorial.md) - 4-5 hours
 4. ✅ Reference [Comparison Guide](../../explanation/architecture/database-change-cicd/local-vs-github-actions-comparison.md) as needed
 
 **Total time**: 1 day
 
 ---
 
-### If you already know GitHub Actions:
+### If you already know GitHub Actions
 
 1. ⏭️ Skip the primer
 2. ✅ Review [Best Practices](../../best-practices/liquibase/github-actions.md) - 30 minutes
-3. ✅ Complete [Hands-On Tutorial](./sqlserver-liquibase-github-actions-tutorial.md) - 3-4 hours
+3. ✅ Complete [Hands-On Tutorial](./archive/sqlserver-liquibase-github-actions-tutorial.md) - 3-4 hours
 4. ✅ Reference [Comparison Guide](../../explanation/architecture/database-change-cicd/local-vs-github-actions-comparison.md) for team discussions
 
 **Total time**: Half day
 
 ---
 
-### If you're planning team implementation:
+### If you're planning team implementation
 
 1. ✅ Read [Comparison Guide](../../explanation/architecture/database-change-cicd/local-vs-github-actions-comparison.md) first - 30 minutes
 2. ✅ Review [Best Practices](../../best-practices/liquibase/github-actions.md) - 60 minutes
-3. ✅ Complete [Hands-On Tutorial](./sqlserver-liquibase-github-actions-tutorial.md) - 4-5 hours
+3. ✅ Complete [Hands-On Tutorial](./archive/sqlserver-liquibase-github-actions-tutorial.md) - 4-5 hours
 4. ✅ Share [GitHub Actions Primer](../../explanation/architecture/database-change-cicd/github-actions-primer.md) with team
 
 **Total time**: 1-2 days (individual), 1 week (team)
@@ -192,16 +201,17 @@ A complete CI/CD pipeline that automatically deploys database changes through de
 
 ### External Resources
 
-- **GitHub Actions**: https://docs.github.com/en/actions
-- **Liquibase**: https://docs.liquibase.com/
-- **Liquibase GitHub Actions**: https://github.com/liquibase/setup-liquibase
-- **SQL Server on Azure**: https://learn.microsoft.com/en-us/azure/azure-sql/
+- **GitHub Actions**: <https://docs.github.com/en/actions>
+- **Liquibase**: <https://docs.liquibase.com/>
+- **Liquibase GitHub Actions**: <https://github.com/liquibase/setup-liquibase>
+- **SQL Server on Azure**: <https://learn.microsoft.com/en-us/azure/azure-sql/>
 
 ## Frequently Asked Questions
 
 ### Q: Should I learn the local Docker approach first?
 
 **A**: It depends on your goals:
+
 - **If you're new to Liquibase**: Yes, start with [local Docker tutorial](./sqlserver-liquibase-tutorial.md) to learn Liquibase basics
 - **If you already know Liquibase**: You can start directly with GitHub Actions tutorials
 - **If you're implementing for a team**: Learn both approaches and use hybrid model
@@ -211,6 +221,7 @@ See the [Comparison Guide](../../explanation/architecture/database-change-cicd/l
 ### Q: Can I use both local Docker and GitHub Actions?
 
 **A**: Absolutely! Most teams use a hybrid approach:
+
 - **Local Docker**: For rapid development and testing
 - **GitHub Actions**: For deployments to shared environments
 
@@ -245,17 +256,19 @@ See [Transition Strategy](../../explanation/architecture/database-change-cicd/lo
 ### Q: Is this secure enough for production?
 
 **A**: Yes, when properly configured! The tutorials cover production best practices including:
+
 - ✅ Encrypted secrets
 - ✅ Approval workflows
 - ✅ Least privilege database access
 - ✅ Audit trails
 - ✅ Environment protection rules
 
-See [Part 10: Production Best Practices](./sqlserver-liquibase-github-actions-tutorial.md#part-10-production-best-practices) for comprehensive security guidance.
+See [Part 10: Production Best Practices](./archive/sqlserver-liquibase-github-actions-tutorial.md#part-10-production-best-practices) for comprehensive security guidance.
 
 ### Q: What about costs?
 
 **A**: GitHub Actions costs:
+
 - **Free tier**: 2,000 minutes/month for private repos
 - **Public repos**: Unlimited free
 - **Typical deployment**: 2-5 minutes
@@ -266,6 +279,7 @@ See [Cost Comparison](../../explanation/architecture/database-change-cicd/local-
 ### Q: Can I use this with other databases (not SQL Server)?
 
 **A**: The concepts and workflows apply to any database! You'll just need to:
+
 - Change the JDBC connection string
 - Use appropriate database driver
 - Adjust SQL syntax for your database
@@ -275,6 +289,7 @@ Liquibase supports: PostgreSQL, MySQL, Oracle, DB2, and many others.
 ### Q: What if I get stuck?
 
 **A**: Resources for help:
+
 - **Tutorial troubleshooting sections**: Each tutorial has extensive troubleshooting
 - **GitHub Actions logs**: Detailed logs for each workflow run
 - **Community forums**:
@@ -308,6 +323,7 @@ Liquibase supports: PostgreSQL, MySQL, Oracle, DB2, and many others.
 ## Contributing
 
 Found an issue or have suggestions?
+
 - Open an issue in the repository
 - Submit a pull request
 - Contact the database DevOps team
@@ -329,7 +345,7 @@ Choose your path:
 → Start with [GitHub Actions Primer](../../explanation/architecture/database-change-cicd/github-actions-primer.md)
 
 🚀 **Intermediate (Some GitHub Actions experience)**
-→ Jump to [Hands-On Tutorial](./sqlserver-liquibase-github-actions-tutorial.md)
+→ Jump to [Hands-On Tutorial](./archive/sqlserver-liquibase-github-actions-tutorial.md)
 
 🏢 **Team Lead (Planning implementation)**
 → Read [Comparison Guide](../../explanation/architecture/database-change-cicd/local-vs-github-actions-comparison.md) and [Best Practices](../../best-practices/liquibase/github-actions.md)

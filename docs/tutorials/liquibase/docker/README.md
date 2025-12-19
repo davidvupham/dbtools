@@ -5,7 +5,7 @@ This directory contains the Docker configuration for a dedicated SQL Server inst
 ## Container Details
 
 - **Container Name**: `mssql_liquibase_tutorial`
-- **Image**: `mcr.microsoft.com/mssql/server:2022-latest`
+- **Image**: `mcr.microsoft.com/mssql/server:2025-latest`
 - **Port**: `1433`
 - **Network**: `liquibase_tutorial`
 - **Volume**: `mssql_liquibase_tutorial_data`
@@ -19,6 +19,7 @@ export MSSQL_LIQUIBASE_TUTORIAL_PWD='YourStrong!Passw0rd'
 ```
 
 **Important**: The password must meet SQL Server complexity requirements:
+
 - At least 8 characters
 - Contains uppercase and lowercase letters
 - Contains numbers
@@ -27,7 +28,7 @@ export MSSQL_LIQUIBASE_TUTORIAL_PWD='YourStrong!Passw0rd'
 ## Starting the Container
 
 ```bash
-cd /workspaces/dbtools/docs/tutorials/liquibase/docker
+cd "$LIQUIBASE_TUTORIAL_DIR/docker"
 docker compose up -d
 ```
 
@@ -57,6 +58,7 @@ docker network rm liquibase_tutorial
 The container includes a health check that verifies SQL Server is ready to accept connections.
 
 Check the health status:
+
 ```bash
 docker ps
 ```

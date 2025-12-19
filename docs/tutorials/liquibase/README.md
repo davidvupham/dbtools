@@ -54,7 +54,7 @@ This is a **comprehensive tutorial series** on implementing database CI/CD with 
 
 #### 3. Hands-On Implementation
 
-**[sqlserver-liquibase-github-actions-tutorial.md](./sqlserver-liquibase-github-actions-tutorial.md)** - Complete Tutorial
+**[sqlserver-liquibase-github-actions-tutorial.md](./archive/sqlserver-liquibase-github-actions-tutorial.md)** - Complete Tutorial
 
 - Step-by-step implementation guide
 - Build production-ready CI/CD pipeline
@@ -92,14 +92,14 @@ This is a **comprehensive tutorial series** on implementing database CI/CD with 
 
 #### 5. Reference & Quality Assurance
 
-**[GITHUB-ACTIONS-TUTORIAL-SUMMARY.md](./GITHUB-ACTIONS-TUTORIAL-SUMMARY.md)** - Executive Overview
+**[GITHUB-ACTIONS-TUTORIAL-SUMMARY.md](../../archive/validation-reports/liquibase/GITHUB-ACTIONS-TUTORIAL-SUMMARY.md)** - Executive Overview
 
 - Summary of all documents
 - How they work together
 - Implementation timelines
 - Success metrics
 
-**[VALIDATION_REPORT_2025-11-20.md](./VALIDATION_REPORT_2025-11-20.md)** - Quality Assessment ⭐ NEW
+**[VALIDATION_REPORT_2025-11-20.md](../../archive/validation-reports/liquibase/VALIDATION_REPORT_2025-11-20.md)** - Quality Assessment ⭐ NEW
 
 - Comprehensive validation of tutorial series
 - Comparison against industry standards
@@ -107,7 +107,7 @@ This is a **comprehensive tutorial series** on implementing database CI/CD with 
 - Assessment: "EXCELLENT (89% complete, 98% accurate)"
 - 45 minutes reading time
 
-**[ROADMAP_TO_100_PERCENT_2025-11-20.md](./ROADMAP_TO_100_PERCENT_2025-11-20.md)** - Enhancement Roadmap ⭐ NEW
+**[ROADMAP_TO_100_PERCENT_2025-11-20.md](../../archive/validation-reports/liquibase/ROADMAP_TO_100_PERCENT_2025-11-20.md)** - Enhancement Roadmap ⭐ NEW
 
 - Plan to achieve 100% completeness and accuracy
 - 16 detailed enhancements with priorities
@@ -115,7 +115,7 @@ This is a **comprehensive tutorial series** on implementing database CI/CD with 
 - Implementation phases and success criteria
 - 30 minutes reading time
 
-**[IMPLEMENTATION_PLAN_100_PERCENT_2025-11-20.md](./IMPLEMENTATION_PLAN_100_PERCENT_2025-11-20.md)** - Implementation Guide ⭐ NEW
+**[IMPLEMENTATION_PLAN_100_PERCENT_2025-11-20.md](../../archive/validation-reports/liquibase/IMPLEMENTATION_PLAN_100_PERCENT_2025-11-20.md)** - Implementation Guide ⭐ NEW
 
 - Phased implementation plan for enhancements
 - Detailed tasks and timelines
