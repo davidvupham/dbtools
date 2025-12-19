@@ -54,6 +54,7 @@ RUN --mount=type=cache,target=/var/cache/dnf set -eux; \
     sudo \
     python3 python3-pip \
     unixODBC unixODBC-devel \
+    postgresql \
     git bash-completion openssh-clients jq"; then \
     success=1; break; \
     fi; \
