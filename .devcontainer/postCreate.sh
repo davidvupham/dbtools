@@ -7,14 +7,13 @@
 # container.
 #
 # What this script does:
-# - Provisions Python via `uv` into a repo-local virtual environment (./.venv)
-#   (falls back to the system Python if that fails)
-# - Installs project tooling from pyproject.toml extras (ruff, pytest, pyright, etc.)
+# - Provisions Python and dependencies via `uv` into a repo-local virtual
+#   environment (./.venv) using the lock file for reproducibility
+# - Installs all workspace packages (gds_*) in editable mode automatically
 # - Optionally installs Jupyter extras when ENABLE_JUPYTERLAB=1
 # - Registers a Jupyter kernel pointing at the workspace virtual environment
-# - Installs local packages in editable mode (so edits take effect immediately)
 # - Installs pre-commit hooks (if .pre-commit-config.yaml exists)
-# - Performs a quick pyodbc import sanity check (no OS package changes here)
+# - Performs a quick pyodbc import sanity check
 #
 # Environment variables you can override:
 # - WORKSPACE_ROOT: Absolute path to the repo root inside the container.
@@ -96,95 +95,75 @@ cd "$WORKSPACE_ROOT" || {
 
 LOG "Workspace root: $WORKSPACE_ROOT"
 
-# Prefer a workspace virtual environment managed by uv, fall back to system Python.
 # Default to Python 3.13 to maximize availability of prebuilt wheels
 # (for example, snowflake-connector-python).
 # Override with DEVCONTAINER_PYTHON_VERSION if desired.
 DEVCONTAINER_PYTHON_VERSION="${DEVCONTAINER_PYTHON_VERSION:-3.13}"
 
-# IMPORTANT: use the OS Python explicitly.
-# In this repo, `python3` may resolve to the workspace virtual environment
-# (e.g., via PATH or shell activation), which breaks `pip --user` installs.
-SYSTEM_PYTHON=/usr/bin/python3
-
-# Ensure user-local bin is on PATH for uv (installed via `pip --user`).
+# Ensure user-local bin is on PATH for uv.
 export PATH="$HOME/.local/bin:$PATH"
 
-PYTHON="$SYSTEM_PYTHON"
-PIP="$PYTHON -m pip"
+# =============================================================================
+# UV Setup
+# =============================================================================
+# UV is the single tool for Python version management, virtual environments,
+# and dependency installation. No pip required.
 
-setup_uv_venv() {
-  local venv_dir=".venv"
-
-  if ! "$SYSTEM_PYTHON" -m pip -V >/dev/null 2>&1; then
-    LOG "pip not available; trying ensurepip..."
-    "$SYSTEM_PYTHON" -m ensurepip --upgrade >/dev/null 2>&1 || true
-  fi
-
-  LOG "Installing uv (user site)..."
-  if ! "$SYSTEM_PYTHON" -m pip install --user --no-cache-dir -q -U uv; then
-    LOG "WARN: Failed to install uv; continuing with system Python"
-    return 1
-  fi
-
-  if ! command -v uv >/dev/null 2>&1; then
-    LOG "WARN: uv not on PATH after install; continuing with system Python"
-    return 1
-  fi
-
-  LOG "Installing Python ${DEVCONTAINER_PYTHON_VERSION} via uv..."
-  if ! uv python install "$DEVCONTAINER_PYTHON_VERSION"; then
-    LOG "WARN: Failed to install Python ${DEVCONTAINER_PYTHON_VERSION}; continuing with system Python"
-    return 1
-  fi
-
-  LOG "Creating/updating venv at ${venv_dir} (Python ${DEVCONTAINER_PYTHON_VERSION})..."
-  # --clear avoids interactive prompts when .venv already exists.
-  if ! uv venv --clear --python "$DEVCONTAINER_PYTHON_VERSION" "$venv_dir"; then
-    LOG "WARN: Failed to create venv; continuing with system Python"
-    return 1
-  fi
-
-  if [[ -x "${venv_dir}/bin/python" ]]; then
-    PYTHON="${venv_dir}/bin/python"
-    PIP="$PYTHON -m pip"
+setup_uv() {
+  # Check if uv is already available
+  if command -v uv >/dev/null 2>&1; then
+    LOG "UV already available: $(uv --version)"
     return 0
   fi
 
-  LOG "WARN: venv python not found; continuing with system Python"
+  # Install UV via the official installer
+  LOG "Installing UV..."
+  if curl -LsSf https://astral.sh/uv/install.sh | sh; then
+    # Reload PATH to pick up uv
+    export PATH="$HOME/.local/bin:$PATH"
+    if command -v uv >/dev/null 2>&1; then
+      LOG "UV installed: $(uv --version)"
+      return 0
+    fi
+  fi
+
+  LOG "ERROR: Failed to install UV"
   return 1
 }
 
-if setup_uv_venv; then
-  LOG "Using venv interpreter: $PYTHON"
-else
-  LOG "Using system interpreter: $PYTHON"
+if ! setup_uv; then
+  echo "[postCreate] FATAL: UV installation failed" >&2
+  exit 1
 fi
 
-if ! $PIP -V >/dev/null 2>&1; then
-  LOG "pip not available; trying ensurepip..."
-  $PYTHON -m ensurepip --upgrade >/dev/null 2>&1 || true
+# =============================================================================
+# Install Python and Sync Dependencies
+# =============================================================================
+# uv sync reads pyproject.toml and uv.lock, creates .venv, and installs:
+# - All external dependencies from the lock file
+# - All workspace packages (gds_*) in editable mode automatically
+
+LOG "Installing Python ${DEVCONTAINER_PYTHON_VERSION} via UV..."
+uv python install "$DEVCONTAINER_PYTHON_VERSION"
+
+LOG "Syncing dependencies (this installs all gds_* packages automatically)..."
+if ! uv sync --python "$DEVCONTAINER_PYTHON_VERSION" --group devcontainer; then
+  LOG "ERROR: uv sync failed"
+  exit 1
 fi
 
-LOG "Python: $($PYTHON -V)"
-LOG "Pip: $($PIP -V)"
+# Set PYTHON to the venv interpreter for subsequent commands
+PYTHON=".venv/bin/python"
 
-# Install dev tools (single source of truth: pyproject.toml optional deps)
-LOG "Installing dev tools (.[devcontainer])..."
-$PIP install --no-cache-dir -q -U pip setuptools wheel || true
-if ! $PIP install --no-cache-dir -q -e ".[devcontainer]"; then
-  LOG "WARN: Failed to install devcontainer tooling extras (continuing anyway)"
-fi
-
-# Optional Jupyter stack (kept behind the existing flag).
-# Note: This installs the *Python* Jupyter packages. The VS Code Jupyter extension
-# is installed via devcontainer.json.
+# Optional Jupyter stack (install additional group)
 if [[ "${ENABLE_JUPYTERLAB:-0}" == "1" ]]; then
-  LOG "ENABLE_JUPYTERLAB=1: Installing optional Jupyter tooling (.[devcontainer-jupyter])..."
-  if ! $PIP install --no-cache-dir -q -e ".[devcontainer-jupyter]"; then
-    LOG "WARN: Failed to install devcontainer-jupyter extras (continuing anyway)"
-  fi
+  LOG "ENABLE_JUPYTERLAB=1: Installing Jupyter tooling..."
+  uv sync --python "$DEVCONTAINER_PYTHON_VERSION" --group devcontainer --group jupyter || \
+    LOG "WARN: Failed to install jupyter group (continuing anyway)"
 fi
+
+LOG "Python: $($PYTHON --version)"
+LOG "UV: $(uv --version)"
 
 # Clone additional repos if configured (optional)
 if [[ -f .devcontainer/additional-repos.json ]]; then
@@ -247,33 +226,11 @@ export PS1="${GREEN}\u@\h${RESET}:${BLUE}\w${RESET}\$(type __git_ps1 >/dev/null 
 EOP
 fi
 
-install_editable() {
-  local pkg_dir="$1"
-  if [[ -d "$pkg_dir" ]] && [[ -f "$pkg_dir/pyproject.toml" || -f "$pkg_dir/setup.py" ]]; then
-    LOG "Installing $pkg_dir in editable mode..."
-    if $PYTHON -m pip install -q -e "$pkg_dir[dev]" 2>/dev/null; then
-      LOG "OK: Installed $pkg_dir[dev]"
-    elif $PYTHON -m pip install -q -e "$pkg_dir" 2>/dev/null; then
-      LOG "OK: Installed $pkg_dir"
-    else
-      LOG "WARN: Failed to install $pkg_dir (continuing anyway)"
-    fi
-  else
-    LOG "Skipping $pkg_dir (no project files)."
-  fi
-}
-
-# Install local packages
-LOG "Installing local packages..."
-for pkg in gds_database gds_postgres gds_mssql gds_mongodb gds_liquibase gds_vault gds_snowflake gds_snmp_receiver; do
-  install_editable "$pkg"
-done
-
 # Install pre-commit hooks if .pre-commit-config.yaml exists
 if [[ -f .pre-commit-config.yaml ]]; then
   LOG "Installing pre-commit hooks..."
-  if $PYTHON -c "import pre_commit" >/dev/null 2>&1; then
-    $PYTHON -m pre_commit install || LOG "⚠ Failed to install pre-commit hooks"
+  if uv run python -c "import pre_commit" >/dev/null 2>&1; then
+    uv run pre-commit install || LOG "⚠ Failed to install pre-commit hooks"
   else
     LOG "WARN: pre-commit not installed, skipping hook installation"
   fi
@@ -291,9 +248,9 @@ fi
 
 LOG "Setup complete!"
 
-# --- Verify pyodbc import (no OS package changes here) ---
+# --- Verify pyodbc import ---
 LOG "Verifying pyodbc..."
-$PYTHON - <<'PY' || true
+uv run python - <<'PY' || true
 import sys
 try:
     import pyodbc
@@ -307,3 +264,4 @@ try:
 except Exception as e:
     print("[postCreate] pyodbc not importable:", e)
 PY
+
