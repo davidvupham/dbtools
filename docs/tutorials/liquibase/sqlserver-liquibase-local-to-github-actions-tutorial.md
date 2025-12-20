@@ -23,7 +23,7 @@
 - [Phase 4: Integrating Local Helper Scripts with CI/CD Practices](#phase-4-integrating-local-helper-scripts-with-cicd-practices)
   - [Step 13: Using `lb` and `sqlcmd-tutorial` Alongside GitHub Actions](#step-13-using-lb-and-sqlcmd-tutorial-alongside-github-actions)
   - [Step 14: Recommended Daily Workflow](#step-14-recommended-daily-workflow)
-- [Phase 5: Best Practices and Improvements Over the Original Tutorials](#phase-5-best-practices-and-improvements-over-the-original-tutorials)
+- [Phase 5: Best Practices and Improvements](#phase-5-best-practices-and-improvements)
   - [Security and Accounts](#security-and-accounts)
   - [Rollback and Safety](#rollback-and-safety)
   - [Drift Detection and Environments](#drift-detection-and-environments)
@@ -35,35 +35,32 @@
 
 This tutorial is for developers and DBAs who:
 
-- Want to **start locally** with SQL Server + Liquibase using the **helper scripts and dedicated tutorial container** from `sqlserver-liquibase-tutorial.md`.
+- Want to **start locally** with SQL Server + Liquibase using the **helper scripts and dedicated tutorial container** from the 3-part local tutorial series.
 - Then **add a proper CI/CD pipeline in GitHub Actions** that deploys those same Liquibase changes to dev/staging/production databases.
 
 It assumes you are comfortable with basic Git and GitHub, but you can be new to Liquibase, CI/CD, and GitHub Actions.
 
 ---
 
-## How This Tutorial Relates to the Other Two
+## How This Tutorial Relates to the Other Tutorials
 
-- `sqlserver-liquibase-tutorial.md`
-  - Deep, hands-on guide for **local-only Liquibase** using:
-    - A dedicated SQL Server Docker container (`mssql_liquibase_tutorial`)
-    - Helper scripts like `setup_tutorial.sh`, `sqlcmd-tutorial`, and the `lb` wrapper
-    - Three local databases: `testdbdev`, `testdbstg`, `testdbprd`
-  - Focuses on **change management, baselining, rollback, and drift**.
+This tutorial is a 3-part series:
 
-- `sqlserver-liquibase-github-actions-tutorial.md`
-  - End-to-end tutorial for **Liquibase + GitHub Actions CI/CD**, focusing on:
-    - GitHub-hosted runners
-    - Internet-accessible SQL Server (Azure SQL, RDS, etc.)
-    - Multi-environment pipelines, approvals, and rollbacks in Actions.
+- [sqlserver-liquibase-part1-baseline.md](./sqlserver-liquibase-part1-baseline.md)
+  - Local-only foundation: containers + helper scripts + project structure.
+  - Establishes a baseline and explains core Liquibase concepts.
 
-- **This document (the third tutorial)**:
-  - Uses the **local environment and helper scripts** from `sqlserver-liquibase-tutorial.md` as the foundation.
-  - Adds **CI/CD with GitHub Actions** using patterns from `sqlserver-liquibase-github-actions-tutorial.md`.
-  - Clarifies best practices and fills gaps so you have a **single, opinionated “start local → push to GitHub → CI/CD” story**.
-  - Leaves the original two tutorials unchanged.
+- [sqlserver-liquibase-part2-manual-deploy.md](./sqlserver-liquibase-part2-manual-deploy.md)
+  - Local workflow for making changes and deploying manually.
+  - Reinforces changeset discipline, rollback thinking, and safe iteration.
 
-If you have not run the scripts from `sqlserver-liquibase-tutorial.md` at least once, skim that file first; this tutorial will reference its helpers directly.
+- [sqlserver-liquibase-part3-github-actions.md](./sqlserver-liquibase-part3-github-actions.md)
+  - Adds CI/CD patterns and GitHub Actions concepts on top of the local project.
+  - Introduces environment promotion and automation practices.
+
+**This document (local → GitHub Actions end-to-end)** builds on those three parts and gives you a single, opinionated “start local → push to GitHub → CI/CD” flow.
+
+If you have not run Part 1 at least once, skim it first; this tutorial will reference the same helper scripts and container setup.
 
 ---
 
@@ -86,7 +83,7 @@ If you have not run the scripts from `sqlserver-liquibase-tutorial.md` at least 
 
 ## Phase 1: Local Environment Using the Helper Scripts
 
-This phase is a structured recap of `sqlserver-liquibase-tutorial.md`, focusing only on what you need to bridge into CI/CD. For deeper explanations or troubleshooting, refer back to that tutorial.
+This phase walks you through the local container + helper-script setup you’ll use throughout the rest of this tutorial.
 
 ### Step 1: Run the One-Time Setup Helper
 
@@ -269,7 +266,7 @@ EOF
 ls -la /data/liquibase-tutorial/env/
 ```
 
-3. Generate the **baseline** changelog from dev using the `lb` helper:
+1. Generate the **baseline** changelog from dev using the `lb` helper:
 
 ```bash
 # Change to project directory
@@ -337,7 +334,7 @@ You now have:
 - Three aligned environments (dev/stage/prod) managed by Liquibase.
 - Helper commands (`lb`, `sqlcmd-tutorial`) for all local operations.
 
-Everything up to here is a compressed version of `sqlserver-liquibase-tutorial.md`. The rest of this document adds GitHub Actions CI/CD on top of this state.
+Everything up to here establishes your local baseline (dev/stage/prod databases + a Liquibase project). The rest of this document adds GitHub Actions CI/CD on top of that state.
 
 ---
 
@@ -480,7 +477,7 @@ For each environment (dev, stage, prod):
 - `STAGE_DB_URL`, `STAGE_DB_USERNAME`, `STAGE_DB_PASSWORD`
 - `PROD_DB_URL`, `PROD_DB_USERNAME`, `PROD_DB_PASSWORD`
 
-These `*_DB_PASSWORD` secrets will be mapped into the **same environment variable** used by the local tutorial helpers, `MSSQL_LIQUIBASE_TUTORIAL_PWD`, so the pattern from `sqlserver-liquibase-tutorial.md` stays consistent between local commands and CI/CD.
+These `*_DB_PASSWORD` secrets will be mapped into the **same environment variable** used by the local tutorial helpers, `MSSQL_LIQUIBASE_TUTORIAL_PWD`, so local commands and CI/CD follow the same pattern.
 
 Example JDBC URLs (adapt from the GitHub Actions tutorial):
 
@@ -735,7 +732,7 @@ You now have a pipeline that:
 
 ### Step 13: Using `lb` and `sqlcmd-tutorial` Alongside GitHub Actions
 
-Even after you add CI/CD, the helper scripts from `sqlserver-liquibase-tutorial.md` remain extremely valuable:
+Even after you add CI/CD, the helper scripts in this tutorial remain extremely valuable:
 
 - **`lb` wrapper**
   - Local “single command” runner for Liquibase against `testdbdev`, `testdbstg`, `testdbprd`.
@@ -770,13 +767,14 @@ Even after you add CI/CD, the helper scripts from `sqlserver-liquibase-tutorial.
    - Production deployments require approval via the `production` environment.
 
 5. **If something goes wrong**
-   - Use the rollback strategies and workflows from `sqlserver-liquibase-github-actions-tutorial.md` and from the rollback section in `sqlserver-liquibase-tutorial.md`.
+
+- Use the rollback guidance in [sqlserver-liquibase-part2-manual-deploy.md](./sqlserver-liquibase-part2-manual-deploy.md) and [sqlserver-liquibase-part3-github-actions.md](./sqlserver-liquibase-part3-github-actions.md).
 
 ---
 
-## Phase 5: Best Practices and Improvements Over the Original Tutorials
+## Phase 5: Best Practices and Improvements
 
-This section summarizes best practices and gently tightens a few areas so this combined tutorial is stricter than either original on its own.
+This section summarizes best practices and tightens a few areas so the end-to-end flow is safer and more consistent.
 
 ### Security and Accounts
 
@@ -814,9 +812,9 @@ This section summarizes best practices and gently tightens a few areas so this c
 For more detail on any single area:
 
 - **Local architecture, rollback strategies, drift detection, and advanced change scenarios**
-  See `sqlserver-liquibase-tutorial.md`.
+  See [sqlserver-liquibase-part1-baseline.md](./sqlserver-liquibase-part1-baseline.md) for the local baseline setup.
 
 - **Cloud-facing GitHub Actions workflows, environment protection, and secrets**
   See `sqlserver-liquibase-github-actions-tutorial.md`.
 
-This third tutorial is designed to be your **end-to-end “happy path”**: start with the containerized helper-based environment, build a robust Liquibase project, and then wire it into a production-grade GitHub Actions pipeline using the best practices from both original tutorials.
+This tutorial is designed to be your **end-to-end “happy path”**: start with the containerized helper-based environment, build a robust Liquibase project, and then wire it into a production-grade GitHub Actions pipeline.
