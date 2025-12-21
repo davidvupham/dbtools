@@ -1,6 +1,6 @@
 # Engineering Monorepo
 
-This repository is the shared engineering workspace for the GDS team. It combines production-grade Python packages, PowerShell automation modules, operational runbooks, and supporting assets for building and operating database-centric solutions across multiple environments.
+This repository is the shared engineering workspace for the Global Data Services team. It combines production-grade Python packages, PowerShell automation modules, operational runbooks, and supporting assets for building and operating database-centric solutions across multiple environments.
 
 ## Key Capabilities
 
@@ -87,10 +87,10 @@ See `PowerShell/README.md` for module usage, build instructions, and CI pipeline
 
 1. **Prerequisite**: Configure your Docker client for the corporate registry. See [Configure Corporate Docker Registry](docs/how-to/configure-corporate-docker-registry.md).
 2. Install Python 3.9+ and create a virtual environment: `python -m venv .venv && source .venv/bin/activate`
-2. Navigate into the target package (for example `cd gds_database`) and install dev extras: `pip install -e .[dev]`
-3. Run tests with `pytest` (most packages provide additional examples under `tests/` or `examples/`)
-4. Lint and format code using `ruff` via the repo helper: `./lint.sh`, `./lint.sh --fix`, or run `ruff check .`
-5. Build distributions when needed with `python -m build` or the package-specific build scripts
+3. Navigate into the target package (for example `cd gds_database`) and install dev extras: `pip install -e .[dev]`
+4. Run tests with `pytest` (most packages provide additional examples under `tests/` or `examples/`)
+5. Lint and format code using `ruff` via the repo helper: `./lint.sh`, `./lint.sh --fix`, or run `ruff check .`
+6. Build distributions when needed with `python -m build` or the package-specific build scripts
 
 ### PowerShell workflow
 
@@ -157,7 +157,7 @@ echo 'export NODE_EXTRA_CA_CERTS=/usr/local/share/ca-certificates/corp.crt' | su
 - `PowerShell/FINAL_IMPLEMENTATION_SUMMARY.md` and `PowerShell/MODULE_ORGANIZATION.md` outline the PowerShell architecture
 - Detailed guides in `PowerShell/Modules/GDS.NuGet/` (NuGet build, JFrog publishing) and `PowerShell/Modules/GDS.Logging/` (logging)
 - Dev container guides: `docs/development/vscode/devcontainer-beginners-guide.md`, `docs/development/vscode/devcontainer.md`, and `docs/development/vscode/devcontainer-sqltools.md`
-- Liquibase tutorial: `docs/tutorials/liquibase/sqlserver-liquibase-tutorial.md` – Comprehensive guide with hands-on examples
+- Liquibase tutorial: `docs/tutorials/liquibase/learning-paths/series-part1-baseline.md` – Comprehensive guide with hands-on examples
 - Architecture documentation: `docs/architecture/` covers database change CI/CD, Liquibase patterns, and OpenTelemetry observability
 - Tutorial catalog: `docs/tutorials/README.md` indexes all available learning resources
 - Implementation reports in the repo root (e.g., `PACKAGE_CREATION_SUMMARY.md`, `SNOWFLAKE_CONNECTIVITY_TESTING_GUIDE.md`)

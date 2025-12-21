@@ -1,0 +1,481 @@
+# Tutorial Part 2: Manual Liquibase Deployment Lifecycle
+
+This Part 2 assumes you have completed **Part 1: Baseline SQL Server + Liquibase Setup** and have:
+
+- A working SQL Server tutorial container (`mssql_liquibase_tutorial`)
+- Three databases: `testdbdev`, `testdbstg`, `testdbprd`
+- A Liquibase project at `/data/liquibase-tutorial` with:
+  - `database/changelog/baseline/V0000__baseline.xml`
+  - `database/changelog/changelog.xml` including the baseline
+  - `env/liquibase.dev.properties`, `env/liquibase.stage.properties`, `env/liquibase.prod.properties`
+- Baseline deployed and tagged as `baseline` in all three environments
+
+From here we’ll walk through making changes, deploying them through dev → stage → prod, and handling rollback and drift manually.
+
+## Step 6: Making Your First Change
+
+Now let's make a new database change: add an `orders` table.
+
+### Create the Change File
+
+**Choosing between SQL and YAML format:**
+
+- **SQL format**: Best for complex queries, views, and SQL Server-specific features
+- **YAML/XML format**: Best for tables, indexes, constraints (database-agnostic)
+- You can mix both formats in the same project
+
+For this tutorial, we'll use **SQL format** for simplicity and readability.
+
+```bash
+# Create the change file
+cat > /data/liquibase-tutorial/database/changelog/changes/V0001__add_orders_table.sql << 'EOF'
+--changeset tutorial:V0001-add-orders-table
+-- Purpose: Add orders table to track customer purchases
+-- This change creates:
+--   - orders table with 5 columns (order_id, customer_id, order_total, order_date, status)
+--   - Primary key constraint (PK_orders)
+--   - Foreign key constraint to customer table (FK_orders_customer)
+--   - Two default constraints (DF_orders_date for order_date, inline default for status)
+
+IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID(N'[app].[orders]') AND type = 'U')
+BEGIN
+    CREATE TABLE app.orders (
+        order_id INT IDENTITY(1,1) CONSTRAINT PK_orders PRIMARY KEY,
+        customer_id INT NOT NULL,
+        order_total DECIMAL(18,2) NOT NULL,
+        order_date DATETIME2(3) NOT NULL CONSTRAINT DF_orders_date DEFAULT (SYSUTCDATETIME()),
+        status NVARCHAR(50) NOT NULL DEFAULT 'pending',
+        CONSTRAINT FK_orders_customer FOREIGN KEY (customer_id)
+            REFERENCES app.customer(customer_id)
+    );
+END
+GO
+EOF
+```
+
+### Include the Change in `changelog.xml`
+
+Update the master changelog to include this new change. One common pattern is to use an XML wrapper with `<sqlFile>` so you can add rollback later:
+
+```bash
+cat > /data/liquibase-tutorial/database/changelog/changelog.xml << 'EOF'
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <!-- Baseline: initial database state -->
+    <include file="baseline/V0000__baseline.xml" relativeToChangelogFile="true"/>
+
+    <!-- V0001: Add orders table -->
+    <changeSet id="V0001-add-orders-table" author="tutorial">
+        <sqlFile
+            path="database/changelog/changes/V0001__add_orders_table.sql"
+            relativeToChangelogFile="false"/>
+    </changeSet>
+
+</databaseChangeLog>
+EOF
+```
+
+> In later steps you will refine this pattern to add explicit `<rollback>` blocks for safer deployments.
+
+### Deploy to Development
+
+```bash
+cd /data/liquibase-tutorial
+
+# See what will run
+lb -e dev -- updateSQL
+
+# Deploy change to development
+lb -e dev -- update
+```
+
+Verify in dev:
+
+```bash
+sqlcmd-tutorial -Q "
+USE testdbdev;
+SELECT
+    SCHEMA_NAME(schema_id) AS SchemaName,
+    name AS ObjectName,
+    type_desc AS ObjectType
+FROM sys.objects
+WHERE schema_id = SCHEMA_ID('app')
+ORDER BY type_desc, name;
+"
+```
+
+**Expected output:**
+
+You should see 10 rows total. The V0001 changeset adds the `orders` table plus 3 new constraints (DF__orders__status, DF_orders_date, FK_orders_customer, PK_orders), bringing the total to 10 objects in the app schema:
+
+```text
+SchemaName  ObjectName                  ObjectType
+----------- --------------------------- --------------------------
+app         DF__orders__status__534...  DEFAULT_CONSTRAINT
+app         DF_customer_created_at      DEFAULT_CONSTRAINT
+app         DF_orders_date              DEFAULT_CONSTRAINT
+app         FK_orders_customer          FOREIGN_KEY_CONSTRAINT
+app         PK_customer                 PRIMARY_KEY_CONSTRAINT
+app         PK_orders                   PRIMARY_KEY_CONSTRAINT
+app         UQ_customer_email           UNIQUE_CONSTRAINT
+app         customer                    USER_TABLE
+app         orders                      USER_TABLE
+app         v_customer_basic            VIEW
+
+(10 rows affected)
+```
+
+**New objects from V0001 changeset:**
+
+- `orders` table
+- `DF__orders__status__534...` (default constraint for status column)
+  - **Note:** The suffix `__534...` is a unique identifier automatically generated by SQL Server when you create an inline default constraint without explicitly naming it (`DEFAULT 'pending'` in the SQL). SQL Server ensures uniqueness by appending a hex object ID. Named constraints like `DF_orders_date` (using `CONSTRAINT DF_orders_date DEFAULT ...`) have predictable names.
+- `DF_orders_date` (default constraint for order_date column, explicitly named)
+- `FK_orders_customer` (foreign key to customer table)
+- `PK_orders` (primary key on order_id)
+
+**Existing baseline objects:**
+
+- `customer` table, `v_customer_basic` view
+- `DF_customer_created_at`, `PK_customer`, `UQ_customer_email` constraints
+
+## Step 7: Promoting Changes to Staging and Production
+
+Once the change is validated in development, promote it to staging and production.
+
+### Deploy to Staging
+
+```bash
+cd /data/liquibase-tutorial
+
+# Preview what will run
+lb -e stage -- updateSQL
+
+# Deploy to staging
+lb -e stage -- update
+```
+
+Verify in staging:
+
+```bash
+sqlcmd-tutorial -Q "
+USE testdbstg;
+SELECT
+    SCHEMA_NAME(schema_id) AS SchemaName,
+    name AS ObjectName,
+    type_desc AS ObjectType
+FROM sys.objects
+WHERE schema_id = SCHEMA_ID('app')
+ORDER BY type_desc, name;
+"
+```
+
+### Deploy to Production
+
+```bash
+cd /data/liquibase-tutorial
+
+# Preview what will run
+lb -e prod -- updateSQL
+
+# Deploy to production
+lb -e prod -- update
+```
+
+Verify in production:
+
+```bash
+sqlcmd-tutorial -Q "
+USE testdbprd;
+SELECT
+    SCHEMA_NAME(schema_id) AS SchemaName,
+    name AS ObjectName,
+    type_desc AS ObjectType
+FROM sys.objects
+WHERE schema_id = SCHEMA_ID('app')
+ORDER BY type_desc, name;
+"
+```
+
+
+At this point all three environments have the new `orders` table.
+
+## Step 8: Tags and Release Management
+
+Tags create named checkpoints in your deployment history for easy rollback targeting.
+
+### Create a Release Tag
+
+After deploying V0001, tag the current state as a release:
+
+```bash
+cd /data/liquibase-tutorial
+
+# Tag all environments with the release version
+lb -e dev -- tag release-v1.0
+lb -e stage -- tag release-v1.0
+lb -e prod -- tag release-v1.0
+```
+
+### Query DATABASECHANGELOG
+
+View what's been deployed and when:
+
+```bash
+sqlcmd-tutorial -Q "
+USE testdbdev;
+SELECT 
+    ID,
+    AUTHOR,
+    FILENAME,
+    DATEEXECUTED,
+    TAG,
+    EXECTYPE
+FROM DATABASECHANGELOG
+ORDER BY ORDEREXECUTED DESC;
+"
+```
+
+**Expected output:**
+
+```text
+ID                        AUTHOR    FILENAME                                    DATEEXECUTED             TAG           EXECTYPE
+------------------------- --------- ------------------------------------------- ------------------------ ------------- --------
+V0001-add-orders-table    tutorial  database/changelog/changes/V0001...sql      2025-11-16 03:15:00.000  release-v1.0  EXECUTED
+<baseline entries...>                                                                                    baseline      MARK_RAN
+```
+
+---
+
+## Step 9: Rollback Strategies
+
+### Understanding Rollback Types
+
+| Type | Command | Use When |
+|------|---------|----------|
+| **Tag-based** | `rollback <tag>` | Rolling back to a known release |
+| **Count-based** | `rollbackCount <n>` | Undoing the last N changesets |
+| **Date-based** | `rollbackToDate <date>` | Reverting to a point in time |
+
+### Add Rollback Blocks to Changesets
+
+When using SQL files, you need explicit rollback instructions. Update your `changelog.xml`:
+
+```bash
+cat > /data/liquibase-tutorial/database/changelog/changelog.xml << 'EOF'
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <!-- Baseline: initial database state -->
+    <include file="baseline/V0000__baseline.xml" relativeToChangelogFile="true"/>
+
+    <!-- V0001: Add orders table -->
+    <changeSet id="V0001-add-orders-table" author="tutorial">
+        <sqlFile
+            path="database/changelog/changes/V0001__add_orders_table.sql"
+            relativeToChangelogFile="false"/>
+        <rollback>
+            DROP TABLE IF EXISTS app.orders;
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>
+EOF
+```
+
+### Practice Rollback (Development Only)
+
+> **Warning:** Only practice rollback in development. Never rollback production without proper change management.
+
+```bash
+cd /data/liquibase-tutorial
+
+# Preview what rollback will do
+lb -e dev -- rollbackSQL release-v1.0
+
+# Execute rollback to baseline (removes V0001 orders table)
+lb -e dev -- rollback baseline
+
+# Verify the orders table is gone
+sqlcmd-tutorial -Q "
+USE testdbdev;
+SELECT name FROM sys.objects 
+WHERE schema_id = SCHEMA_ID('app') AND type = 'U';
+"
+```
+
+### Re-apply After Rollback
+
+```bash
+# Re-deploy V0001
+lb -e dev -- update
+
+# Re-tag the release
+lb -e dev -- tag release-v1.0
+```
+
+---
+
+## Step 10: Drift Detection
+
+Drift occurs when someone makes direct database changes outside of Liquibase. Detecting drift early prevents deployment surprises.
+
+### Simulate Drift
+
+Create an untracked change directly in the database:
+
+```bash
+sqlcmd-tutorial -Q "
+USE testdbdev;
+-- Someone adds a column without using Liquibase
+ALTER TABLE app.customer ADD loyalty_points INT DEFAULT 0;
+"
+```
+
+### Detect Drift with diff
+
+Compare the database against your changelog:
+
+```bash
+cd /data/liquibase-tutorial
+
+# Compare dev database to what Liquibase thinks it should be
+lb -e dev -- diff \
+    --referenceUrl="offline:mssql?changeLogFile=database/changelog/changelog.xml"
+```
+
+**Expected output will show:**
+
+```text
+Missing Column(s):
+  app.customer.loyalty_points
+```
+
+### Generate a Changelog from Drift
+
+Capture the drift as a proper changeset:
+
+```bash
+# Generate a changelog capturing the drift
+lb -e dev -- diffChangeLog \
+    --referenceUrl="offline:mssql?changeLogFile=database/changelog/changelog.xml" \
+    --changelogFile=/workspace/database/changelog/changes/V0002__drift_loyalty_points.xml
+```
+
+Review and edit the generated file, then include it in your master changelog.
+
+### Best Practice: Regular Drift Checks
+
+Add drift detection to your CI/CD pipeline before deployments:
+
+```bash
+# In CI/CD, fail the build if drift is detected
+lb -e stage -- diff --reportFile=drift-report.txt
+if [ -s drift-report.txt ]; then
+    echo "ERROR: Drift detected in staging!"
+    cat drift-report.txt
+    exit 1
+fi
+```
+
+---
+
+## Step 11: Additional Changesets
+
+Now add more changes following the established pattern.
+
+### V0002: Add Index to Orders
+
+```bash
+cat > /data/liquibase-tutorial/database/changelog/changes/V0002__add_orders_index.sql << 'EOF'
+--changeset tutorial:V0002-add-orders-date-index
+-- Purpose: Add performance index on order_date for reporting queries
+
+IF NOT EXISTS (
+    SELECT 1 FROM sys.indexes 
+    WHERE name = 'IX_orders_order_date' 
+    AND object_id = OBJECT_ID('app.orders')
+)
+BEGIN
+    CREATE INDEX IX_orders_order_date ON app.orders(order_date DESC);
+END
+GO
+EOF
+```
+
+### Update Master Changelog
+
+```bash
+cat > /data/liquibase-tutorial/database/changelog/changelog.xml << 'EOF'
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <!-- Baseline -->
+    <include file="baseline/V0000__baseline.xml" relativeToChangelogFile="true"/>
+
+    <!-- V0001: Add orders table -->
+    <changeSet id="V0001-add-orders-table" author="tutorial">
+        <sqlFile path="database/changelog/changes/V0001__add_orders_table.sql"
+                 relativeToChangelogFile="false"/>
+        <rollback>DROP TABLE IF EXISTS app.orders;</rollback>
+    </changeSet>
+
+    <!-- V0002: Add orders index -->
+    <changeSet id="V0002-add-orders-date-index" author="tutorial">
+        <sqlFile path="database/changelog/changes/V0002__add_orders_index.sql"
+                 relativeToChangelogFile="false"/>
+        <rollback>DROP INDEX IF EXISTS app.orders.IX_orders_order_date;</rollback>
+    </changeSet>
+
+</databaseChangeLog>
+EOF
+```
+
+### Deploy Through Environments
+
+```bash
+# Deploy to dev
+lb -e dev -- update
+lb -e dev -- tag release-v1.1
+
+# Deploy to staging (after dev validation)
+lb -e stage -- update
+lb -e stage -- tag release-v1.1
+
+# Deploy to production (after staging validation)
+lb -e prod -- update
+lb -e prod -- tag release-v1.1
+```
+
+---
+
+## Summary
+
+In Part 2, you learned:
+
+| Topic | Key Commands |
+|-------|--------------|
+| **Make changes** | Create SQL files, update `changelog.xml` |
+| **Deploy** | `lb -e <env> -- update` |
+| **Tags** | `lb -e <env> -- tag <name>` |
+| **Rollback** | `lb -e dev -- rollback <tag>` |
+| **Drift detection** | `lb -e <env> -- diff` |
+| **Drift capture** | `lb -e <env> -- diffChangeLog` |
+
+## Next Steps
+
+- **[Part 3: CI/CD Automation](./series-part3-cicd.md)** - Wire everything into GitHub Actions for automated deployments.
+- **[Runner Setup Guide](./guide-runner-setup.md)** - Set up a self-hosted runner for local CI/CD testing.

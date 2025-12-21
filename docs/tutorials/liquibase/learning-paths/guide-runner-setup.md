@@ -35,7 +35,7 @@ By the end of this guide, you'll have a complete local CI/CD environment that mi
 
 ### What You'll Build
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────┐
 │  Windows 11                                                 │
 │                                                             │
@@ -113,25 +113,25 @@ By the end of this guide, you'll have a complete local CI/CD environment that mi
 
 ### Components
 
-**1. WSL 2 (Windows Subsystem for Linux)**
+### 1. WSL 2 (Windows Subsystem for Linux)
 
 - Linux environment on Windows
 - Runs Docker daemon
 - Hosts runner and SQL Server containers
 
-**2. Docker**
+### 2. Docker
 
 - Container runtime
 - Isolates runner and database
 - Easy cleanup and reset
 
-**3. GitHub Actions Runner Container**
+### 3. GitHub Actions Runner Container
 
 - Connects to GitHub.com
 - Pulls workflow jobs
 - Executes steps locally
 
-**4. SQL Server Container**
+### 4. SQL Server Container
 
 - Local database instance
 - Accessible to runner
@@ -139,7 +139,7 @@ By the end of this guide, you'll have a complete local CI/CD environment that mi
 
 ### How It Works
 
-```
+```text
 1. You push code to GitHub
    ↓
 2. GitHub creates workflow job
@@ -1573,9 +1573,9 @@ Congratulations! You've set up a complete local CI/CD environment with:
 
 **Continue Learning:**
 
-1. Follow the main tutorial: [sqlserver-liquibase-github-actions-tutorial.md](./sqlserver-liquibase-github-actions-tutorial.md)
+1. Follow the main tutorial: [Part 3: CI/CD Automation](./series-part3-cicd.md)
 2. Add cloud staging environment (hybrid approach)
-3. Implement advanced workflows from [github-actions-liquibase-best-practices.md](../../best-practices/liquibase/github-actions.md)
+3. Implement advanced workflows from [github-actions-liquibase-best-practices.md](../../../best-practices/liquibase/github-actions.md)
 
 **For Production:**
 

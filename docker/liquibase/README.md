@@ -23,7 +23,7 @@ The custom image bundles the JDBC drivers so you do not need to add them at runt
 ## Repository layout
 
 - `docker/liquibase/Dockerfile`: builds Liquibase on `eclipse-temurin:21-jre`, installs the JDBC drivers, and sets `liquibase` as the entrypoint.
-- `docs/tutorials/liquibase/sqlserver-liquibase-tutorial.md`: contains a complete Liquibase walk-through you can pair with this Docker workflow.
+- `docs/tutorials/liquibase/learning-paths/series-part1-baseline.md`: contains a complete Liquibase walk-through you can pair with this Docker workflow.
 
 ## Build the image
 

@@ -281,5 +281,5 @@ Recommended workflow:
 
 ## See Also
 
-- [SQL Server Liquibase Tutorial](../docs/tutorials/liquibase/sqlserver-liquibase-tutorial.md)
+- [SQL Server Liquibase Tutorial (Part 1)](../docs/tutorials/liquibase/learning-paths/series-part1-baseline.md)
 - [Liquibase Documentation](https://docs.liquibase.com/)

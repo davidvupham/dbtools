@@ -3,7 +3,7 @@
 ## Table of Contents
 
 - [Who This Tutorial Is For](#who-this-tutorial-is-for)
-- [How This Tutorial Relates to the Other Two](#how-this-tutorial-relates-to-the-other-two)
+- [How This Tutorial Relates to the Other Tutorials](#how-this-tutorial-relates-to-the-other-tutorials)
 - [Prerequisites](#prerequisites)
 - [Phase 1: Local Environment Using the Helper Scripts](#phase-1-local-environment-using-the-helper-scripts)
   - [Step 1: Run the One-Time Setup Helper](#step-1-run-the-one-time-setup-helper)
@@ -15,7 +15,7 @@
   - [Step 6: Create a GitHub Repository](#step-6-create-a-github-repository)
   - [Step 7: Add Liquibase Project Files to Git](#step-7-add-liquibase-project-files-to-git)
   - [Step 8: Push the Project to GitHub](#step-8-push-the-project-to-github)
-- [Phase 3: CI/CD with GitHub Actions](#phase-3-cicd-with-github-actions)
+- [Phase 3: CI/CD with GitHub Actions (Self-Hosted Runner)](#phase-3-cicd-with-github-actions-self-hosted-runner-in-docker)
   - [Step 9: Decide Where Your Databases Live for CI/CD](#step-9-decide-where-your-databases-live-for-cicd)
   - [Step 10: Configure GitHub Secrets](#step-10-configure-github-secrets)
   - [Step 11: First CI Workflow – Deploy to Development](#step-11-first-ci-workflow--deploy-to-development)
@@ -46,15 +46,15 @@ It assumes you are comfortable with basic Git and GitHub, but you can be new to 
 
 This tutorial is a 3-part series:
 
-- [sqlserver-liquibase-part1-baseline.md](./sqlserver-liquibase-part1-baseline.md)
+- [series-part1-baseline.md](./series-part1-baseline.md)
   - Local-only foundation: containers + helper scripts + project structure.
   - Establishes a baseline and explains core Liquibase concepts.
 
-- [sqlserver-liquibase-part2-manual-deploy.md](./sqlserver-liquibase-part2-manual-deploy.md)
+- [series-part2-manual.md](./series-part2-manual.md)
   - Local workflow for making changes and deploying manually.
   - Reinforces changeset discipline, rollback thinking, and safe iteration.
 
-- [sqlserver-liquibase-part3-github-actions.md](./sqlserver-liquibase-part3-github-actions.md)
+- [series-part3-cicd.md](./series-part3-cicd.md)
   - Adds CI/CD patterns and GitHub Actions concepts on top of the local project.
   - Introduces environment promotion and automation practices.
 
@@ -128,7 +128,7 @@ mssql_liquibase_tutorial   mcr.microsoft.com/mssql/server:2025-latest   Up X sec
 
 **What this does:**
 
-- Downloads the SQL Server 2022 image (if not already present).
+- Downloads the SQL Server 2025 image (if not already present).
 - Creates a container named `mssql_liquibase_tutorial`.
 - Starts SQL Server on port `1433` (exposed as `14333` on the host).
 - Uses the password from `$MSSQL_LIQUIBASE_TUTORIAL_PWD`.
@@ -768,7 +768,7 @@ Even after you add CI/CD, the helper scripts in this tutorial remain extremely v
 
 5. **If something goes wrong**
 
-- Use the rollback guidance in [sqlserver-liquibase-part2-manual-deploy.md](./sqlserver-liquibase-part2-manual-deploy.md) and [sqlserver-liquibase-part3-github-actions.md](./sqlserver-liquibase-part3-github-actions.md).
+- Use the rollback guidance in [Part 2](./series-part2-manual.md) and [Part 3](./series-part3-cicd.md).
 
 ---
 
@@ -812,9 +812,9 @@ This section summarizes best practices and tightens a few areas so the end-to-en
 For more detail on any single area:
 
 - **Local architecture, rollback strategies, drift detection, and advanced change scenarios**
-  See [sqlserver-liquibase-part1-baseline.md](./sqlserver-liquibase-part1-baseline.md) for the local baseline setup.
+  See [Part 1: Baseline](./series-part1-baseline.md) for the local baseline setup.
 
 - **Cloud-facing GitHub Actions workflows, environment protection, and secrets**
-  See `sqlserver-liquibase-github-actions-tutorial.md`.
+  See [Part 3: CI/CD Automation](./series-part3-cicd.md).
 
 This tutorial is designed to be your **end-to-end “happy path”**: start with the containerized helper-based environment, build a robust Liquibase project, and then wire it into a production-grade GitHub Actions pipeline.
