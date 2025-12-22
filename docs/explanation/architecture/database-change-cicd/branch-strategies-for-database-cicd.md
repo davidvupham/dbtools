@@ -44,6 +44,7 @@ This document explains branch strategies in simple terms for teams new to Git wo
 A **branch** is like a **separate copy** of your code where you can make changes without affecting the main codebase.
 
 **Think of it like:**
+
 - Making a copy of a Word document to experiment with changes
 - Working on a rough draft before finalizing
 - Having multiple versions of the same project
@@ -133,6 +134,7 @@ git push origin main
 ### Branches in GitHub
 
 On GitHub, branches appear in:
+
 - **Dropdown menu** at top of file browser
 - **Pull Requests** (proposals to merge branches)
 - **Branches page** (list of all branches)
@@ -192,12 +194,14 @@ Automatically deploys to PRODUCTION
 **What it is**: The "official" version of your code.
 
 **Rules:**
+
 - ✅ Always works (should never be broken)
 - ✅ Always ready for production
 - ✅ Protected (can't push directly)
 - ✅ Requires pull request + review
 
 **Common names:**
+
 - `main` (modern standard)
 - `master` (older standard)
 
@@ -206,16 +210,19 @@ Automatically deploys to PRODUCTION
 **What it is**: Temporary branches for new work.
 
 **Purpose:**
+
 - Develop new features
 - Fix bugs
 - Make database changes
 
 **Naming:**
+
 - `feature/description`
 - `database/description`
 - `bugfix/description`
 
 **Lifecycle:**
+
 ```
 Create → Work → Test → Review → Merge → Delete
 ```
@@ -225,6 +232,7 @@ Create → Work → Test → Review → Merge → Delete
 **What it is**: Branches representing environments.
 
 **Examples:**
+
 - `develop` → Development environment
 - `staging` → Staging environment
 - `main` → Production environment
@@ -236,6 +244,7 @@ Create → Work → Test → Review → Merge → Delete
 Good naming makes branches easy to understand:
 
 **Good Examples:**
+
 ```
 feature/add-customer-status
 database/add-orders-table
@@ -245,11 +254,13 @@ release/v1.2.0
 ```
 
 **Why good:**
+
 - ✅ Prefix shows purpose
 - ✅ Description is clear
 - ✅ Easy to understand at a glance
 
 **Bad Examples:**
+
 ```
 johns-branch
 test
@@ -259,6 +270,7 @@ database-changes-v2-final-FINAL
 ```
 
 **Why bad:**
+
 - ❌ No context
 - ❌ Unclear purpose
 - ❌ Hard to understand
@@ -280,11 +292,13 @@ Release     release/        release/v1.2.0
 ### Strategy 1: Simple Main Branch (Recommended for Small Teams)
 
 **Structure:**
+
 ```
 feature branches  →  main  →  Production
 ```
 
 **How it works:**
+
 1. Create feature branch from main
 2. Develop and test
 3. Create pull request to main
@@ -293,27 +307,32 @@ feature branches  →  main  →  Production
 6. Main deploys to dev → staging → production
 
 **Best for:**
+
 - ✅ Teams under 10 people
 - ✅ Simple projects
 - ✅ Starting with CI/CD
 
 **Pros:**
+
 - ✅ Very simple
 - ✅ Easy to understand
 - ✅ Low overhead
 
 **Cons:**
+
 - ⚠️ Main branch is busy
 - ⚠️ Less control over environments
 
 ### Strategy 2: GitFlow (Feature + Develop + Main)
 
 **Structure:**
+
 ```
 feature branches  →  develop  →  release  →  main
 ```
 
 **How it works:**
+
 1. Create feature branch from develop
 2. Develop and test
 3. Merge to develop (deploys to dev environment)
@@ -322,16 +341,19 @@ feature branches  →  develop  →  release  →  main
 6. Merge release to main (deploys to production)
 
 **Best for:**
+
 - ✅ Teams 10-30 people
 - ✅ Scheduled releases
 - ✅ Multiple features in flight
 
 **Pros:**
+
 - ✅ Clear separation
 - ✅ Batch releases
 - ✅ Stable main branch
 
 **Cons:**
+
 - ⚠️ More complex
 - ⚠️ More branches to manage
 - ⚠️ Longer to production
@@ -339,11 +361,13 @@ feature branches  →  develop  →  release  →  main
 ### Strategy 3: GitHub Flow (Recommended for Most Teams)
 
 **Structure:**
+
 ```
 feature branches  →  main (with environments)
 ```
 
 **How it works:**
+
 1. Create feature branch from main
 2. Develop and test locally
 3. Push feature branch (deploys to dev)
@@ -353,17 +377,20 @@ feature branches  →  main (with environments)
 7. Main deploys through environments with approvals
 
 **Best for:**
+
 - ✅ Teams 5-20 people (YOUR SIZE!)
 - ✅ Continuous deployment
 - ✅ Modern CI/CD
 
 **Pros:**
+
 - ✅ Simple and powerful
 - ✅ Fast to production
 - ✅ Industry standard
 - ✅ Good balance
 
 **Cons:**
+
 - ⚠️ Requires good testing
 
 ### Strategy Comparison
@@ -384,6 +411,7 @@ feature branches  →  main (with environments)
 This is the **best balance** of simplicity and power for your team size.
 
 **Branch Structure:**
+
 ```
 feature/*, database/*, bugfix/*  →  main
                                       ↓
@@ -431,6 +459,7 @@ git push origin database/add-customer-status
 ```
 
 **What happens:**
+
 - Pushing feature branch triggers dev deployment
 - You can test immediately
 - No manual deployment needed
@@ -702,6 +731,7 @@ Developer's Branch Workflow:
 **Set up environments in GitHub:**
 
 1. **Development Environment**
+
    ```
    Name: development
    Protection rules: None
@@ -709,6 +739,7 @@ Developer's Branch Workflow:
    ```
 
 2. **Staging Environment**
+
    ```
    Name: staging
    Protection rules: None (or optional approval)
@@ -716,6 +747,7 @@ Developer's Branch Workflow:
    ```
 
 3. **Production Environment**
+
    ```
    Name: production
    Protection rules:
@@ -878,6 +910,7 @@ git push origin database/add-order-notes
 ### Why Protect Branches?
 
 Branch protection prevents:
+
 - ❌ Accidental direct pushes to main
 - ❌ Bypassing code review
 - ❌ Deploying untested code
@@ -911,6 +944,7 @@ Branch protection prevents:
 ### Recommended Protection Levels
 
 **For main branch:**
+
 ```
 Team size 1-5:   1 reviewer required
 Team size 6-10:  1 reviewer required
@@ -918,6 +952,7 @@ Team size 11-20: 2 reviewers required
 ```
 
 **For database changes (using CODEOWNERS):**
+
 ```
 # .github/CODEOWNERS
 
@@ -933,6 +968,7 @@ database/** @yourcompany/senior-developers
 ### 1. Keep Branches Short-Lived
 
 **Good:**
+
 ```
 Create branch Monday
 Work 1-3 days
@@ -943,6 +979,7 @@ Branch lifetime: 1-3 days
 ```
 
 **Bad:**
+
 ```
 Create branch Monday
 Work for 2 weeks
@@ -954,6 +991,7 @@ Branch lifetime: 2+ weeks ❌
 ```
 
 **Why:** Long-lived branches:
+
 - Accumulate conflicts
 - Get out of sync with main
 - Harder to review
@@ -978,6 +1016,7 @@ git rebase origin/main
 ### 3. One Feature Per Branch
 
 **Good:**
+
 ```
 Branch: database/add-orders-table
 Changes:
@@ -989,6 +1028,7 @@ Clear, focused changes
 ```
 
 **Bad:**
+
 ```
 Branch: database/various-changes
 Changes:
@@ -1004,6 +1044,7 @@ Too much, hard to review
 ### 4. Write Descriptive Commit Messages
 
 **Good:**
+
 ```bash
 git commit -m "Add orders table with customer relationship"
 git commit -m "Add index on order_date for performance"
@@ -1011,6 +1052,7 @@ git commit -m "Fix NOT NULL constraint on orders.total_amount"
 ```
 
 **Bad:**
+
 ```bash
 git commit -m "updates"
 git commit -m "fix"
@@ -1050,6 +1092,7 @@ git push origin --delete database/add-orders-table
 ### 7. Use Branch Naming Conventions
 
 **Follow team convention:**
+
 ```
 feature/    - New features
 database/   - Database changes
@@ -1059,6 +1102,7 @@ release/    - Release branches (if using GitFlow)
 ```
 
 **Benefits:**
+
 - Easy to understand purpose
 - Can filter in GitHub
 - Can apply different CI/CD rules
@@ -1067,6 +1111,7 @@ release/    - Release branches (if using GitFlow)
 ### 8. Never Commit Secrets
 
 **Never:**
+
 ```bash
 # BAD - contains password
 git add liquibase.properties
@@ -1077,6 +1122,7 @@ password=MySecretPassword123  ❌
 ```
 
 **Always:**
+
 ```bash
 # GOOD - use example file
 git add liquibase.properties.example
@@ -1091,6 +1137,7 @@ echo "liquibase.properties" >> .gitignore
 ### 9. Write Helpful PR Descriptions
 
 **Good PR description:**
+
 ```
 ## Summary
 Adds orders table to support order management feature
@@ -1113,6 +1160,7 @@ Ticket: JIRA-1234
 ```
 
 **Bad PR description:**
+
 ```
 add orders table
 ```
@@ -1120,6 +1168,7 @@ add orders table
 ### 10. Review Your Own PR First
 
 Before requesting review:
+
 ```
 1. Look at the PR yourself
 2. Check for:
@@ -1138,6 +1187,7 @@ Before requesting review:
 ### Scenario 1: Oops, Pushed to Wrong Branch
 
 **Problem:**
+
 ```bash
 # Meant to push to feature branch
 # Accidentally pushed to main
@@ -1145,6 +1195,7 @@ git push origin main  ❌
 ```
 
 **Solution:**
+
 ```bash
 # If you haven't pushed yet:
 git reset HEAD~1  # Undo last commit
@@ -1164,6 +1215,7 @@ git push origin feature/my-feature
 ### Scenario 2: Merge Conflicts
 
 **Problem:**
+
 ```bash
 # Trying to merge to main
 git merge origin/main
@@ -1174,6 +1226,7 @@ Automatic merge failed; fix conflicts and then commit the result.
 ```
 
 **Solution:**
+
 ```bash
 # 1. Open conflicted file
 vim database/changelog/changelog.xml
@@ -1200,6 +1253,7 @@ git push origin database/my-feature
 ### Scenario 3: Need to Undo Last Commit
 
 **Before pushing:**
+
 ```bash
 # Undo last commit, keep changes
 git reset --soft HEAD~1
@@ -1209,6 +1263,7 @@ git reset --hard HEAD~1
 ```
 
 **After pushing:**
+
 ```bash
 # Create new commit that undoes previous
 git revert HEAD
@@ -1218,6 +1273,7 @@ git push origin database/my-feature
 ### Scenario 4: Multiple Features Depend on Each Other
 
 **Problem:**
+
 ```
 Feature A: Add customers table
 Feature B: Add orders table (needs customers)
@@ -1226,6 +1282,7 @@ How to handle dependency?
 ```
 
 **Solution:**
+
 ```bash
 # Option 1: Work sequentially
 1. Finish Feature A
@@ -1246,12 +1303,14 @@ How to handle dependency?
 ### Scenario 5: Emergency Production Fix
 
 **Problem:**
+
 ```
 Production is down!
 Need to fix database issue immediately!
 ```
 
 **Recommended process:**
+
 ```bash
 # 1. Create hotfix branch from main
 git checkout main
@@ -1281,12 +1340,14 @@ git push origin hotfix/urgent-fix
 ### Problem: Can't Push to Main
 
 **Error:**
+
 ```
 remote: error: GH006: Protected branch update failed
 remote: error: Required status check "validate" is pending
 ```
 
 **Solution:**
+
 ```
 ✅ This is correct behavior!
 ✅ Main branch is protected
@@ -1302,11 +1363,13 @@ Steps:
 ### Problem: Feature Branch Is Behind Main
 
 **Warning:**
+
 ```
 This branch is 12 commits behind main
 ```
 
 **Solution:**
+
 ```bash
 # Update your feature branch
 git checkout database/my-feature
@@ -1323,12 +1386,14 @@ git push origin database/my-feature
 ### Problem: Accidentally Committed to Main
 
 **If protected:**
+
 ```
 ✅ Can't push to main
 ✅ Protection saved you!
 ```
 
 **If not protected and already pushed:**
+
 ```bash
 # Contact team immediately
 # May need to revert:
@@ -1339,11 +1404,13 @@ git push origin main
 ### Problem: Branch Name Typo
 
 **Wrong:**
+
 ```bash
 git checkout -b databse/add-orders  # Typo!
 ```
 
 **Fix:**
+
 ```bash
 # Rename branch
 git branch -m database/add-orders
@@ -1356,11 +1423,13 @@ git push origin database/add-orders  # Push new name
 ### Problem: Forgot to Pull Before Starting
 
 **Result:**
+
 ```
 Your branch and main have diverged
 ```
 
 **Solution:**
+
 ```bash
 # Pull with rebase
 git pull --rebase origin main
@@ -1377,6 +1446,7 @@ git push origin database/my-feature
 ### Q1: Should every database change have its own branch?
 
 **A:** Generally yes:
+
 ```
 ✅ Each logical change gets its own branch
 ✅ Makes review easier
@@ -1391,6 +1461,7 @@ Exception:
 ### Q2: How long should branches stay open?
 
 **A:** As short as possible:
+
 ```
 ✅ Ideal: 1-3 days
 ⚠️ Acceptable: Up to 1 week
@@ -1405,6 +1476,7 @@ Long branches:
 ### Q3: Can I work on multiple branches at once?
 
 **A:** Yes, but be careful:
+
 ```bash
 # Switch between branches
 git checkout database/feature-a
@@ -1420,6 +1492,7 @@ git checkout database/feature-b
 ### Q4: What if I forget which branch I'm on?
 
 **A:** Check current branch:
+
 ```bash
 # Show current branch
 git branch
@@ -1436,6 +1509,7 @@ git branch
 ### Q5: Should I delete branches after merging?
 
 **A:** Yes, always:
+
 ```
 ✅ Delete after successful merge
 ✅ Keeps repository clean
@@ -1448,6 +1522,7 @@ GitHub offers "Delete branch" button after merge
 ### Q6: Can I deploy from any branch?
 
 **A:** Depends on your workflow:
+
 ```
 Feature branches → DEV only (automatic)
 Main branch → All environments (with approvals)
@@ -1457,6 +1532,7 @@ Hotfix branches → Can deploy anywhere (manual)
 ### Q7: What if two people create branches with same name?
 
 **A:** Git allows it, but avoid:
+
 ```
 Use unique names:
 ✅ database/john-add-orders
@@ -1469,6 +1545,7 @@ This rarely happens with good naming conventions
 ### Q8: How do I know what's deployed where?
 
 **A:** Check GitHub:
+
 ```
 1. Go to Environments in repository
 2. See deployment history per environment
@@ -1483,6 +1560,7 @@ ORDER BY DATEEXECUTED DESC;
 ### Q9: Can I skip staging and go straight to production?
 
 **A:** Technically yes, but **don't**:
+
 ```
 ❌ Bad idea - no testing in staging
 ✅ Always test in staging first
@@ -1496,6 +1574,7 @@ But still test if possible
 ### Q10: What if main branch gets broken?
 
 **A:** Fix immediately:
+
 ```
 Option 1: Revert the breaking commit
 git revert <commit-sha>
@@ -1545,6 +1624,7 @@ For daily work:
 ### Quick Reference
 
 **Branch Commands:**
+
 ```bash
 # Create and switch to new branch
 git checkout -b database/my-feature
@@ -1563,6 +1643,7 @@ git branch -d database/my-feature
 ```
 
 **Branch Patterns:**
+
 ```
 feature/*    - New features
 database/*   - Database changes
@@ -1571,6 +1652,7 @@ hotfix/*     - Urgent fixes
 ```
 
 **Environment Mapping:**
+
 ```
 Feature branches → Development (auto)
 Main branch      → Staging (auto) → Production (approval)
@@ -1592,10 +1674,11 @@ Main branch      → Staging (auto) → Production (approval)
 **For Teams**: Under 20 people
 **Strategy**: GitHub Flow with Environment Deployment
 **Related Documents**:
+
 - [Repository Strategy Guide](./repository-strategies-for-database-cicd.md)
-- [GitHub Actions Tutorial](./sqlserver-liquibase-github-actions-tutorial.md)
+- [CI/CD Tutorial (Part 3)](../../../../tutorials/liquibase/learning-paths/series-part3-cicd.md)
 - [Best Practices](../../../best-practices/liquibase/github-actions.md)
 
 **Questions?** Review the FAQ or discuss with your team lead.
 
-**Ready to implement?** Follow the [GitHub Actions Tutorial](./sqlserver-liquibase-github-actions-tutorial.md) to set up your workflows!
+**Ready to implement?** Follow the [CI/CD Tutorial (Part 3)](../../../../tutorials/liquibase/learning-paths/series-part3-cicd.md) to set up your workflows!

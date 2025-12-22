@@ -29,6 +29,7 @@
 ### Real-World Example
 
 **Without GitHub Actions:**
+
 1. Developer makes a database schema change
 2. Developer manually connects to dev database
 3. Developer manually runs Liquibase update
@@ -40,6 +41,7 @@
 9. If something goes wrong, developer must manually rollback
 
 **With GitHub Actions:**
+
 1. Developer makes a database schema change
 2. Developer commits and pushes to GitHub
 3. GitHub Actions automatically:
@@ -66,6 +68,7 @@
 ### When to Use GitHub Actions
 
 ✅ **Good Use Cases:**
+
 - Automated testing of database changes
 - Multi-environment deployments (dev → stage → prod)
 - Enforcing code review before production changes
@@ -74,6 +77,7 @@
 - Generating documentation
 
 ❌ **When NOT to Use:**
+
 - One-off manual database fixes (use local tools)
 - Learning Liquibase basics (start locally first)
 - Emergency hotfixes requiring immediate action
@@ -100,6 +104,7 @@ on:
 An **event** is something that triggers a workflow to run.
 
 **Common Events:**
+
 - `push`: Code is pushed to a branch
 - `pull_request`: A pull request is opened or updated
 - `workflow_dispatch`: Manual trigger from GitHub UI
@@ -143,6 +148,7 @@ jobs:
 ### 4. Steps
 
 **Steps** are individual tasks within a job. Each step can:
+
 - Run a command
 - Use a pre-built action from the GitHub Marketplace
 - Run a script
@@ -168,6 +174,7 @@ steps:
 A **runner** is a server that executes your workflows. GitHub provides hosted runners (free tier available) or you can use self-hosted runners.
 
 **Available Runners:**
+
 - `ubuntu-latest` (most common)
 - `windows-latest`
 - `macos-latest`
@@ -177,6 +184,7 @@ A **runner** is a server that executes your workflows. GitHub provides hosted ru
 **Actions** are reusable units of code that can be shared and used in workflows. They're like functions in programming.
 
 **Popular Actions:**
+
 - `actions/checkout@v3`: Checks out your repository code
 - `actions/setup-java@v3`: Installs Java
 - `liquibase/setup-liquibase@v2`: Installs Liquibase
@@ -319,12 +327,14 @@ Notification sent (email/Slack)
 ### Secret Best Practices
 
 ✅ **Do:**
+
 - Use secrets for ALL sensitive data
 - Use descriptive names: `PROD_DB_PASSWORD` not just `PASSWORD`
 - Create separate secrets for each environment
 - Rotate secrets regularly
 
 ❌ **Don't:**
+
 - Print secrets in logs: `echo ${{ secrets.PASSWORD }}`
 - Commit secrets to version control
 - Share secrets between environments
@@ -356,6 +366,7 @@ PROD_DB_PASSWORD
 ### What are Environments?
 
 Environments represent deployment targets like:
+
 - `development`
 - `staging`
 - `production`
@@ -427,11 +438,13 @@ Deploy to production
 Each environment can have its own secrets:
 
 **Development Environment:**
+
 - `DB_URL`: `jdbc:sqlserver://dev-server:1433;databaseName=mydb_dev`
 - `DB_USERNAME`: `dev_user`
 - `DB_PASSWORD`: `dev_password`
 
 **Production Environment:**
+
 - `DB_URL`: `jdbc:sqlserver://prod-server:1433;databaseName=mydb_prod`
 - `DB_USERNAME`: `prod_user`
 - `DB_PASSWORD`: `prod_password_very_secure`
@@ -638,11 +651,13 @@ jobs:
 ### 5. Enable Notifications
 
 Configure notifications so you know when:
+
 - ✅ Deployment succeeds
 - ❌ Deployment fails
 - ⏸️ Approval required
 
 **Options:**
+
 - Email (built-in)
 - Slack integration
 - Microsoft Teams integration
@@ -683,6 +698,7 @@ permissions:
 ### 9. Use Environment Protection
 
 For production:
+
 - ✅ Require 2 approvers
 - ✅ Add a 5-minute wait timer
 - ✅ Only allow deploys from `main` branch
@@ -691,6 +707,7 @@ For production:
 ### 10. Monitor and Review
 
 Regularly review:
+
 - Deployment history
 - Failed deployments
 - Approval patterns
@@ -768,16 +785,16 @@ Now that you understand GitHub Actions basics, you're ready to:
 ### Recommended Learning Path
 
 1. ✅ Read this primer (you are here!)
-2. ➡️ Follow: [SQL Server + Liquibase + GitHub Actions Tutorial](../../../../tutorials/liquibase/sqlserver-liquibase-github-actions-tutorial.md)
+2. ➡️ Follow: [CI/CD Tutorial (Part 3)](../../../../tutorials/liquibase/learning-paths/series-part3-cicd.md)
 3. ➡️ Review: [GitHub Actions Best Practices for Liquibase](../../../../best-practices/liquibase/github-actions.md)
 4. ➡️ Explore: [GitHub Actions Documentation](https://docs.github.com/en/actions)
 
 ### Additional Resources
 
-- **GitHub Actions Documentation**: https://docs.github.com/en/actions
-- **Liquibase GitHub Actions**: https://github.com/liquibase/setup-liquibase
-- **GitHub Actions Marketplace**: https://github.com/marketplace?type=actions
-- **YAML Syntax Guide**: https://yaml.org/
+- **GitHub Actions Documentation**: <https://docs.github.com/en/actions>
+- **Liquibase GitHub Actions**: <https://github.com/liquibase/setup-liquibase>
+- **GitHub Actions Marketplace**: <https://github.com/marketplace?type=actions>
+- **YAML Syntax Guide**: <https://yaml.org/>
 
 ---
 

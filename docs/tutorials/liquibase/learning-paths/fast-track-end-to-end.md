@@ -417,7 +417,7 @@ Verify on GitHub that you see:
 
 ## Phase 3: CI/CD with GitHub Actions (Self-Hosted Runner in Docker)
 
-This phase adapts the CI/CD structure from `sqlserver-liquibase-github-actions-tutorial.md`, but assumes you are running a **self-hosted GitHub Actions runner inside a Docker container** on the same Docker network as your tutorial SQL Server container.
+This phase follows the same CI/CD patterns as Part 3 (CI/CD), but assumes you are running a **self-hosted GitHub Actions runner inside a Docker container** on the same Docker network as your tutorial SQL Server container.
 
 ### Step 9: Where the Databases Live for CI/CD
 
@@ -577,7 +577,7 @@ On GitHub:
 
 ### Step 12: Multi-Environment Pipeline (Dev → Staging → Production)
 
-Now replace the single-env workflow with a pipeline similar to the one in `sqlserver-liquibase-github-actions-tutorial.md`, but still targeting the self-hosted runner container.
+Now replace the single-env workflow with a multi-environment pipeline similar to the one in Part 3 (CI/CD), but still targeting the self-hosted runner container.
 
 Create `.github/workflows/deploy-pipeline.yml`:
 

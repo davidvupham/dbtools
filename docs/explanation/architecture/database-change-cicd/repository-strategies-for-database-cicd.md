@@ -44,12 +44,14 @@ Before we dive in, let's clarify what a repository (or "repo") is.
 ### Simple Explanation
 
 A **repository** is like a **project folder** that contains:
+
 - Your code files
 - History of all changes (who changed what, when)
 - Version history (like track changes in Word)
 - Configuration for automated processes
 
 **Think of it like:**
+
 - A Google Drive folder with complete history
 - A project folder with built-in time travel
 - A shared workspace where everyone's changes are tracked
@@ -57,6 +59,7 @@ A **repository** is like a **project folder** that contains:
 ### Repository in GitHub
 
 When using GitHub, a repository:
+
 - Lives at a URL: `https://github.com/yourcompany/yourproject`
 - Contains all files for a project
 - Tracks every change ever made
@@ -64,6 +67,7 @@ When using GitHub, a repository:
 - Triggers automated workflows (CI/CD)
 
 **Example Repository Structure:**
+
 ```
 my-application/
 ├── src/                    # Application source code
@@ -82,6 +86,7 @@ my-application/
 ### Why Repository Structure Matters
 
 The way you organize repositories affects:
+
 - **How team members collaborate** - Who can see and change what
 - **How deployments work** - What gets deployed together
 - **How changes are reviewed** - What changes are reviewed together
@@ -112,6 +117,7 @@ my-application-db/         # Repository 2
 ### Why This Matters for CI/CD
 
 Your repository structure determines:
+
 - **When deployments happen** - Together or independently
 - **Who can approve changes** - Same people or different teams
 - **How changes are coordinated** - Automatic or manual
@@ -124,6 +130,7 @@ Your repository structure determines:
 **Definition**: All code for a project lives in ONE repository - application code, database changes, tests, configuration, everything.
 
 **Visual:**
+
 ```
 https://github.com/yourcompany/customer-service
 │
@@ -213,6 +220,7 @@ jobs:
 ```
 
 **What happens:**
+
 1. Developer pushes code to main branch
 2. GitHub Actions deploys database changes
 3. GitHub Actions waits for database to complete
@@ -226,11 +234,13 @@ jobs:
 **What it means**: App and database changes happen together as one unit.
 
 **Why it's good:**
+
 - No version mismatch between app and database
 - Can't deploy app without matching database changes
 - Can't deploy database without matching app changes
 
 **Example scenario:**
+
 ```
 Your app adds a new feature that requires a new database column.
 
@@ -246,11 +256,13 @@ Single repo:
 **What it means**: No need to sync between multiple repositories.
 
 **Why it's good:**
+
 - Don't need to track "which app version needs which database version"
 - One commit SHA represents complete state
 - Rollback is simple - everything goes back together
 
 **Example scenario:**
+
 ```
 Bug found in production!
 
@@ -265,11 +277,13 @@ Single repo:
 **What it means**: Reviewers see complete picture in one pull request.
 
 **Why it's good:**
+
 - See how app uses database changes
 - Understand complete feature
 - Better context for review
 
 **Example PR view:**
+
 ```
 Pull Request #123: Add customer loyalty program
 
@@ -286,12 +300,14 @@ Reviewer can see: "Ah, the app expects this column, and here's where it's create
 **What it means**: Less overhead, fewer repositories to manage.
 
 **Why it's good:**
+
 - One repository to clone
 - One set of issues/PRs
 - One place to look for everything
 - Less context switching
 
 **Daily work:**
+
 ```
 Developer's morning:
 ✅ Open one repository
@@ -306,12 +322,14 @@ Developer's morning:
 **What it means**: Everything you need is in one place.
 
 **Why it's good:**
+
 - Clone once, have everything
 - Run full stack locally
 - Test app with database together
 - Simpler setup for new developers
 
 **New developer onboarding:**
+
 ```
 Day 1:
 ✅ Clone one repository
@@ -325,6 +343,7 @@ Day 1:
 **What it means**: One place to look for current state.
 
 **Why it's good:**
+
 - No confusion about versions
 - One commit history
 - One place for documentation
@@ -337,11 +356,13 @@ Day 1:
 **What it means**: Application and database code live together.
 
 **Why it can be bad:**
+
 - Less clear separation of responsibilities
 - Database code mixed with application code
 - Harder to apply different standards to each
 
 **Example issue:**
+
 ```
 Your team has different rules for app vs database:
 
@@ -356,11 +377,13 @@ Single repo makes this harder to enforce
 **What it means**: Everyone with repo access can see and change everything.
 
 **Why it can be bad:**
+
 - Can't restrict database access to specific people
 - All developers see database credentials in CI/CD
 - Harder to implement separation of duties
 
 **Example issue:**
+
 ```
 Security requirement:
 "Only DBAs should approve production database changes"
@@ -376,11 +399,13 @@ Single repo:
 **What it means**: Database and app deploy together always.
 
 **Why it can be bad:**
+
 - Can't deploy database fixes without deploying app
 - Can't deploy app fixes without triggering database pipeline
 - Less flexibility in deployment timing
 
 **Example issue:**
+
 ```
 Scenario: Bug in application, database is fine
 
@@ -396,12 +421,14 @@ Single repo:
 **What it means**: Repository grows with all code.
 
 **Why it can be bad:**
+
 - Slower to clone
 - More files to navigate
 - Longer build times
 - More complex CI/CD
 
 **Example issue:**
+
 ```
 After 2 years:
 - App code: 10,000 files
@@ -419,11 +446,13 @@ After 2 years:
 **What it means**: CI/CD needs to handle different types of code.
 
 **Why it can be bad:**
+
 - Workflows need to detect what changed
 - Different tools for app vs database
 - More complex pipeline logic
 
 **Example workflow complexity:**
+
 ```yaml
 jobs:
   detect-changes:
@@ -442,6 +471,7 @@ jobs:
 ### When to Use Single Repository
 
 ✅ **Best for:**
+
 - **Small teams** (under 20 people)
 - **Tightly coupled** app and database changes
 - **Rapid development** environments
@@ -450,6 +480,7 @@ jobs:
 - **Microservices** (one repo per service)
 
 ✅ **Use when:**
+
 - Most changes affect both app and database
 - Team members work on both app and database
 - Deployment happens at same time
@@ -463,6 +494,7 @@ jobs:
 **Definition**: Application code and database changes live in SEPARATE repositories.
 
 **Visual:**
+
 ```
 Repository 1: Application
 https://github.com/yourcompany/customer-service
@@ -552,6 +584,7 @@ git push origin feature/add-customer-status
 #### 2. CI/CD Workflow
 
 **Database Repository:**
+
 ```yaml
 # customer-service-database/.github/workflows/database-deploy.yml
 name: Database Deployment
@@ -576,6 +609,7 @@ jobs:
 ```
 
 **Application Repository:**
+
 ```yaml
 # customer-service/.github/workflows/app-deploy.yml
 name: Application Deployment
@@ -594,6 +628,7 @@ jobs:
 ```
 
 **What happens:**
+
 1. Database changes deployed independently
 2. Application changes deployed independently
 3. Need to coordinate versions manually
@@ -606,12 +641,14 @@ jobs:
 **What it means**: Database and application are truly separate.
 
 **Why it's good:**
+
 - Clear boundaries
 - Different teams can own different repos
 - Easier to apply different standards
 - Better organization
 
 **Example:**
+
 ```
 Team structure:
 - App Team owns: customer-service repo
@@ -627,12 +664,14 @@ Team structure:
 **What it means**: Different people can access different repositories.
 
 **Why it's good:**
+
 - Restrict database access to DBAs only
 - Developers can't see production database credentials
 - Separation of duties for compliance
 - Fine-grained permissions
 
 **Example:**
+
 ```
 Repository permissions:
 
@@ -653,12 +692,14 @@ Better security and compliance!
 **What it means**: Deploy database and application separately.
 
 **Why it's good:**
+
 - Fix database issues without deploying app
 - Fix app issues without touching database
 - Different deployment schedules
 - More flexibility
 
 **Example scenarios:**
+
 ```
 Scenario 1: Database performance issue
 ✅ Deploy database index fix
@@ -677,12 +718,14 @@ Scenario 2: Application bug
 **What it means**: Each repo can have workflows specific to its needs.
 
 **Why it's good:**
+
 - Database workflows can enforce DBA review
 - App workflows can be faster/simpler
 - Different testing strategies
 - Different deployment strategies
 
 **Example:**
+
 ```
 Database repo workflow:
 ✅ Requires 2 DBA approvals
@@ -703,12 +746,14 @@ App repo workflow:
 **What it means**: Each repo contains less code.
 
 **Why it's good:**
+
 - Faster to clone
 - Easier to navigate
 - Faster builds
 - Simpler structure
 
 **Example:**
+
 ```
 Database repo:
 - Only 500 changelog files
@@ -726,12 +771,14 @@ App repo:
 **What it means**: Database and app can release at different frequencies.
 
 **Why it's good:**
+
 - Database changes: Weekly (planned)
 - App changes: Daily (as needed)
 - Flexibility in timing
 - Reduced coordination
 
 **Example:**
+
 ```
 Release schedule:
 
@@ -753,12 +800,14 @@ Application:
 **What it means**: Need to manually coordinate between repositories.
 
 **Why it's bad:**
+
 - Track which app version needs which database version
 - Manually sync deployments
 - More planning required
 - Higher cognitive load
 
 **Example issue:**
+
 ```
 Developer needs to remember:
 ❌ "This app feature requires database v0023"
@@ -774,12 +823,14 @@ More things to track and remember!
 **What it means**: Hard to know which versions work together.
 
 **Why it's bad:**
+
 - Need external tracking
 - Risk of version mismatch
 - Deployment order matters
 - Rollback is complex
 
 **Example issue:**
+
 ```
 Production issue:
 
@@ -800,12 +851,14 @@ Multiple repos:
 **What it means**: One feature requires PRs in multiple repositories.
 
 **Why it's bad:**
+
 - Reviewers need to look at multiple PRs
 - Lose context switching between repos
 - Harder to see complete picture
 - More administrative overhead
 
 **Example:**
+
 ```
 Adding customer loyalty feature:
 
@@ -829,12 +882,14 @@ Reviewer must:
 **What it means**: New developers need to clone multiple repositories.
 
 **Why it's bad:**
+
 - Longer onboarding
 - More setup steps
 - Need to understand multiple repos
 - Easy to miss a repository
 
 **Example onboarding:**
+
 ```
 New developer setup:
 
@@ -859,12 +914,14 @@ vs Single repo:
 **What it means**: Must deploy in correct order.
 
 **Why it's bad:**
+
 - Database must deploy first
 - App must wait for database
 - Manual coordination required
 - Risk of partial deployments
 
 **Example issue:**
+
 ```
 Deployment day:
 
@@ -887,12 +944,14 @@ More points of failure!
 **What it means**: Need to set up similar things in each repository.
 
 **Why it's bad:**
+
 - Duplicate CI/CD setup
 - Duplicate documentation
 - Duplicate issue tracking
 - More maintenance
 
 **Example:**
+
 ```
 Things to maintain in EACH repo:
 
@@ -916,6 +975,7 @@ Everything is duplicated!
 ### When to Use Multiple Repositories
 
 ✅ **Best for:**
+
 - **Large teams** (20+ people)
 - **Separate teams** (developers vs DBAs)
 - **Shared database** (multiple applications)
@@ -924,6 +984,7 @@ Everything is duplicated!
 - **Enterprise** organizations
 
 ✅ **Use when:**
+
 - Need different access controls
 - Database and app deploy independently
 - Multiple applications share one database
@@ -954,6 +1015,7 @@ Everything is duplicated!
 #### Scenario: Add New Feature
 
 **Single Repository:**
+
 ```
 Time: 2 hours total
 
@@ -972,6 +1034,7 @@ Time: 2 hours total
 ```
 
 **Multiple Repositories:**
+
 ```
 Time: 3-4 hours total
 
@@ -1000,6 +1063,7 @@ Time: 3-4 hours total
 #### Time Investment
 
 **Single Repository:**
+
 ```
 Setup: 1 day
 Maintenance: 2 hours/month
@@ -1014,6 +1078,7 @@ Total: ~75 hours/year
 ```
 
 **Multiple Repositories:**
+
 ```
 Setup: 3 days (multiple repos)
 Maintenance: 4 hours/month (per repo)
@@ -1034,6 +1099,7 @@ Total: ~320 hours/year
 ### Scenario 1: Small Startup (5 developers)
 
 **Situation:**
+
 - 5 full-stack developers
 - Everyone works on everything
 - Rapid development
@@ -1046,6 +1112,7 @@ Total: ~320 hours/year
 **Recommendation: SINGLE REPOSITORY**
 
 **Why:**
+
 ```
 ✅ Everyone works on app and database
 ✅ Deploy together constantly
@@ -1055,6 +1122,7 @@ Total: ~320 hours/year
 ```
 
 **Implementation:**
+
 ```
 customer-app/
 ├── frontend/
@@ -1066,6 +1134,7 @@ customer-app/
 ```
 
 **Results:**
+
 ```
 ✅ Developers productive from day 1
 ✅ Features ship faster
@@ -1076,6 +1145,7 @@ customer-app/
 ### Scenario 2: Growing Company (15 developers)
 
 **Situation:**
+
 - 12 developers, 3 senior developers who handle database
 - Still one product
 - Deploy app daily, database weekly
@@ -1087,6 +1157,7 @@ customer-app/
 **Recommendation: SINGLE REPOSITORY with protection**
 
 **Why:**
+
 ```
 ✅ Still one team, one product
 ✅ Can use branch protection for database
@@ -1096,6 +1167,7 @@ customer-app/
 ```
 
 **Implementation:**
+
 ```
 customer-app/
 ├── src/
@@ -1107,6 +1179,7 @@ customer-app/
 ```
 
 **CODEOWNERS file:**
+
 ```
 # Default: Any developer can approve
 *  @yourcompany/developers
@@ -1116,6 +1189,7 @@ database/**  @yourcompany/senior-developers
 ```
 
 **Results:**
+
 ```
 ✅ Database changes have oversight
 ✅ Still simple one-repo workflow
@@ -1126,6 +1200,7 @@ database/**  @yourcompany/senior-developers
 ### Scenario 3: Medium Company (25 developers, 2 DBAs)
 
 **Situation:**
+
 - 25 application developers
 - 2 dedicated DBAs
 - Multiple applications share same database
@@ -1138,6 +1213,7 @@ database/**  @yourcompany/senior-developers
 **Recommendation: MULTIPLE REPOSITORIES**
 
 **Why:**
+
 ```
 ✅ Multiple apps need same database
 ✅ DBAs own database repository
@@ -1147,6 +1223,7 @@ database/**  @yourcompany/senior-developers
 ```
 
 **Implementation:**
+
 ```
 customer-app/          # App team owns
 ├── src/
@@ -1167,6 +1244,7 @@ shared-database/       # DBA team owns
 ```
 
 **Access Control:**
+
 ```
 customer-app:
 ✅ App developers: Full access
@@ -1181,6 +1259,7 @@ shared-database:
 ```
 
 **Results:**
+
 ```
 ✅ Clear ownership
 ✅ DBAs control database
@@ -1192,6 +1271,7 @@ shared-database:
 ### Scenario 4: Enterprise (100+ developers)
 
 **Situation:**
+
 - 100+ developers across multiple teams
 - Dedicated DBA team (10 DBAs)
 - Dozens of applications
@@ -1205,6 +1285,7 @@ shared-database:
 **Recommendation: MULTIPLE REPOSITORIES with governance**
 
 **Why:**
+
 ```
 ✅ Must have separation of duties
 ✅ Audit requirements
@@ -1214,6 +1295,7 @@ shared-database:
 ```
 
 **Implementation:**
+
 ```
 app-team-1/repos/
   ├── service-a/
@@ -1232,6 +1314,7 @@ dba-team/repos/
 ```
 
 **Governance:**
+
 ```
 Database repositories:
 ✅ DBAs: Full access
@@ -1244,6 +1327,7 @@ Database repositories:
 ```
 
 **Results:**
+
 ```
 ✅ Meets compliance requirements
 ✅ Clear audit trail
@@ -1268,6 +1352,7 @@ my-app/
 ```
 
 **Best Practices:**
+
 - ✅ Keep it simple
 - ✅ Deploy app and database together
 - ✅ One approval workflow
@@ -1275,6 +1360,7 @@ my-app/
 - ✅ Everyone can approve changes
 
 **Avoid:**
+
 - ❌ Don't overcomplicate
 - ❌ Don't create separate repos (overkill)
 - ❌ Don't add heavy approval processes
@@ -1294,6 +1380,7 @@ my-app/
 ```
 
 **Best Practices:**
+
 - ✅ Use CODEOWNERS for database folder
 - ✅ Require senior developer approval for database
 - ✅ Still keep everything in one repo
@@ -1301,6 +1388,7 @@ my-app/
 - ✅ Separate workflows for app vs database
 
 **Configuration:**
+
 ```yaml
 # .github/CODEOWNERS
 database/**  @yourcompany/senior-devs
@@ -1319,18 +1407,21 @@ main branch:
 At this size, either approach works. Choose based on:
 
 **Choose Single Repository If:**
+
 - ✅ One product/service
 - ✅ Tightly coupled app and database
 - ✅ Deploy together frequently
 - ✅ Team prefers simplicity
 
 **Choose Multiple Repositories If:**
+
 - ✅ Multiple apps share database
 - ✅ Database team emerging
 - ✅ Need stronger access control
 - ✅ Different deployment schedules
 
 **Best Practices (Either Approach):**
+
 - ✅ Clear approval workflows
 - ✅ Automated testing
 - ✅ Code review required
@@ -1354,6 +1445,7 @@ database-repos/
 ```
 
 **Best Practices:**
+
 - ✅ Separate repositories by ownership
 - ✅ DBAs own database repositories
 - ✅ Different access controls per repo
@@ -1362,6 +1454,7 @@ database-repos/
 - ✅ Formal change management
 
 **Governance:**
+
 ```
 Database repositories:
 - Require 2 approvals (DBAs)
@@ -1597,6 +1690,7 @@ Update documentation, train team on new structure.
 ### Pitfall 1: Starting Too Complex
 
 **Mistake:**
+
 ```
 Team of 5 people creates:
 - Application repository
@@ -1609,6 +1703,7 @@ Team of 5 people creates:
 ```
 
 **Solution:**
+
 ```
 Start simple:
 ✅ One repository with everything
@@ -1618,6 +1713,7 @@ Start simple:
 ### Pitfall 2: Poor Documentation
 
 **Mistake:**
+
 ```
 Multiple repositories with no documentation of:
 ❌ Which app version needs which database version
@@ -1626,6 +1722,7 @@ Multiple repositories with no documentation of:
 ```
 
 **Solution:**
+
 ```
 Document clearly:
 ✅ Version compatibility matrix
@@ -1637,6 +1734,7 @@ Document clearly:
 ### Pitfall 3: Inconsistent Naming
 
 **Mistake:**
+
 ```
 customer-service/        (App)
 CustomerDB/              (Database)
@@ -1646,6 +1744,7 @@ customer_infrastructure/ (Infrastructure)
 ```
 
 **Solution:**
+
 ```
 Use consistent naming:
 ✅ customer-service/
@@ -1656,12 +1755,14 @@ Use consistent naming:
 ### Pitfall 4: No Version Tracking
 
 **Mistake:**
+
 ```
 Multiple repos, no way to track what works together
 ❌ "Which database version does app v2.3.1 need?"
 ```
 
 **Solution:**
+
 ```
 Document versions:
 ✅ Add DATABASE_VERSION file in app repo
@@ -1672,6 +1773,7 @@ Document versions:
 ### Pitfall 5: Forgetting About New Developers
 
 **Mistake:**
+
 ```
 Multiple repositories, no onboarding documentation
 New developer:
@@ -1681,6 +1783,7 @@ New developer:
 ```
 
 **Solution:**
+
 ```
 Create onboarding guide:
 ✅ List of all repositories
@@ -1698,6 +1801,7 @@ Based on your team size, here are my recommendations:
 #### Recommendation: START with Single Repository
 
 **Why:**
+
 ```
 ✅ Your team is under 20 people (perfect size)
 ✅ Simpler to implement and maintain
@@ -1744,6 +1848,7 @@ your-application/
 As your team grows, add these protections:
 
 **At 10 people:**
+
 ```yaml
 # .github/CODEOWNERS
 database/**  @yourcompany/senior-developers
@@ -1752,6 +1857,7 @@ database/**  @yourcompany/senior-developers
 ```
 
 **At 15 people:**
+
 ```yaml
 # Add separate workflows
 .github/workflows/
@@ -1760,6 +1866,7 @@ database/**  @yourcompany/senior-developers
 ```
 
 **At 20+ people:**
+
 ```
 Consider splitting if:
 ✅ You have dedicated DBA team
@@ -1792,6 +1899,7 @@ Phase 3 (Months 12-18, if needed):
 ### Q1: Can I change my mind later?
 
 **A:** Yes! You can always:
+
 - Split single repository into multiple
 - Combine multiple repositories into single
 - Git preserves full history in either case
@@ -1801,11 +1909,13 @@ It's work, but it's doable.
 ### Q2: What if different developers have different permissions?
 
 **A:** In single repository, use:
+
 - **CODEOWNERS file** to require specific approvers for database folder
 - **Branch protection rules** to enforce reviews
 - **GitHub Teams** for different permission levels
 
 Example:
+
 ```
 # .github/CODEOWNERS
 * @yourcompany/developers
@@ -1815,6 +1925,7 @@ database/** @yourcompany/database-team
 ### Q3: Can we have some apps in single repo, others separate?
 
 **A:** Yes! Common patterns:
+
 - **Microservices**: Each service has its own repo (app + database)
 - **Shared database**: Database in separate repo, multiple app repos
 - **Hybrid**: Core app in single repo, microservices separate
@@ -1824,6 +1935,7 @@ Choose what makes sense for each component.
 ### Q4: How do we handle database shared by multiple apps?
 
 **A:** Multiple repositories:
+
 ```
 app-1/              # Application 1
 app-2/              # Application 2
@@ -1837,6 +1949,7 @@ shared-database/    # Shared by all
 ### Q5: What about infrastructure code?
 
 **A:** Options:
+
 - **Single repo**: Add infrastructure/ folder
 - **Separate repo**: Create infrastructure repository
 - **Hybrid**: Infrastructure per application
@@ -1846,6 +1959,7 @@ For teams under 20: Keep infrastructure with application.
 ### Q6: How do we track which versions work together?
 
 **Multiple repositories:**
+
 ```
 # In application repository
 # Add file: database-version.txt
@@ -1862,6 +1976,7 @@ App v2.1.0 requires Database v0.23.5
 ### Q7: What if we need stricter compliance later?
 
 **A:** You can always:
+
 1. Add more approval workflows
 2. Split into multiple repositories
 3. Add automated compliance checks
@@ -1872,6 +1987,7 @@ Start simple, add governance as needed.
 ### Q8: How do rollbacks work?
 
 **Single repository:**
+
 ```bash
 # Rollback to previous version
 git revert <commit-sha>
@@ -1881,6 +1997,7 @@ git push
 ```
 
 **Multiple repositories:**
+
 ```bash
 # Must coordinate both:
 # 1. Rollback database
@@ -1940,8 +2057,9 @@ Choose MULTIPLE repositories if:
 **Last Updated**: November 2025
 **For Teams**: Under 20 people
 **Related Documents**:
+
 - [Branch Strategy Guide](./branch-strategies-for-database-cicd.md)
-- [GitHub Actions Tutorial](../../../../tutorials/liquibase/sqlserver-liquibase-github-actions-tutorial.md)
+- [CI/CD Tutorial (Part 3)](../../../../tutorials/liquibase/learning-paths/series-part3-cicd.md)
 - [Best Practices](../../../../best-practices/liquibase/github-actions.md)
 
 **Questions?** Review the FAQ or consult with your team lead.
