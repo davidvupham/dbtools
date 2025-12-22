@@ -13,6 +13,7 @@ This document provides an overview of the comprehensive GitHub Actions tutorial 
 **Target Audience**: Anyone new to GitHub Actions or CI/CD concepts
 
 **Key Content:**
+
 - What GitHub Actions is and why use it
 - Core concepts explained in plain language:
   - Workflows, events, jobs, steps, runners, actions
@@ -23,6 +24,7 @@ This document provides an overview of the comprehensive GitHub Actions tutorial 
 - Troubleshooting guide
 
 **Learning Approach:**
+
 - No prior knowledge assumed
 - Every concept explained with real-world analogies
 - Side-by-side comparisons (good vs bad examples)
@@ -30,6 +32,7 @@ This document provides an overview of the comprehensive GitHub Actions tutorial 
 - Practical examples throughout
 
 **Key Features:**
+
 - ✅ Complete glossary of terms
 - ✅ Visual workflow execution flows
 - ✅ Common patterns (auto-deploy, manual, PR validation, multi-env)
@@ -43,6 +46,7 @@ This document provides an overview of the comprehensive GitHub Actions tutorial 
 **Target Audience**: Teams planning implementations, architects, DevOps engineers
 
 **Key Content:**
+
 - Research findings from official Liquibase documentation
 - Architecture patterns:
   - Branch-based deployment
@@ -76,6 +80,7 @@ This document provides an overview of the comprehensive GitHub Actions tutorial 
 - Migration strategies from other CI/CD systems
 
 **Key Features:**
+
 - ✅ Official Liquibase action documentation
 - ✅ Industry best practices synthesis
 - ✅ Complete security model
@@ -83,7 +88,7 @@ This document provides an overview of the comprehensive GitHub Actions tutorial 
 - ✅ Multiple architecture patterns
 - ✅ SQL Server specific guidance
 
-### 3. Hands-On Tutorial (`sqlserver-liquibase-github-actions-tutorial.md`)
+### 3. Hands-On Tutorial (`series-part3-cicd.md`)
 
 **Length**: ~1,100 lines
 **Purpose**: Complete step-by-step tutorial from zero to production
@@ -92,6 +97,7 @@ This document provides an overview of the comprehensive GitHub Actions tutorial 
 **Key Content:**
 
 **Part 1: Local Setup**
+
 - Project directory structure
 - Liquibase configuration
 - Master changelog creation
@@ -99,36 +105,42 @@ This document provides an overview of the comprehensive GitHub Actions tutorial 
 - Local testing
 
 **Part 2: GitHub Repository Setup**
+
 - Git initialization
 - Creating GitHub repository
 - Pushing initial code
 - Verifying structure
 
 **Part 3: Configure Secrets**
+
 - Understanding secret types
 - Adding repository secrets
 - Connection string configuration
 - Security best practices
 
 **Part 4: Create First Workflow**
+
 - Workflow basics explained
 - Simple development deployment
 - Watching workflow execute
 - Manual trigger testing
 
 **Part 5: Set Up Environments**
+
 - Understanding GitHub Environments
 - Creating dev/staging/production environments
 - Configuring protection rules
 - Adding approval gates
 
 **Part 6: Multi-Environment Pipeline**
+
 - Building dev → staging → production pipeline
 - Job dependencies
 - Approval workflow
 - End-to-end testing
 
 **Part 7: Making Database Changes**
+
 - Creating new changelog
 - Committing and pushing
 - Watching automated deployment
@@ -136,12 +148,14 @@ This document provides an overview of the comprehensive GitHub Actions tutorial 
 - Approving production
 
 **Part 8: Advanced Workflows**
+
 - Pull request validation
 - Manual deployment with environment selection
 - Testing workflows
 - Creating and merging PRs
 
 **Part 9: Monitoring and Troubleshooting**
+
 - Viewing workflow runs
 - Deployment history
 - Reading logs
@@ -150,6 +164,7 @@ This document provides an overview of the comprehensive GitHub Actions tutorial 
 - Failure notifications
 
 **Part 10: Production Best Practices**
+
 - Security hardening
 - Deployment best practices
 - Performance optimization
@@ -158,6 +173,7 @@ This document provides an overview of the comprehensive GitHub Actions tutorial 
 - Team processes
 
 **Key Features:**
+
 - ✅ Complete hands-on tutorial (4-5 hours)
 - ✅ Every step explained with commands
 - ✅ Expected outputs shown
@@ -175,6 +191,7 @@ This document provides an overview of the comprehensive GitHub Actions tutorial 
 **Target Audience**: Decision makers, team leads, anyone choosing an approach
 
 **Key Content:**
+
 - Overview of both approaches (local Docker vs GitHub Actions)
 - When to use each approach:
   - Learning and experimentation
@@ -202,6 +219,7 @@ This document provides an overview of the comprehensive GitHub Actions tutorial 
 - Recommendations by team size and requirements
 
 **Key Features:**
+
 - ✅ Unbiased comparison
 - ✅ Clear decision criteria
 - ✅ Real-world scenarios
@@ -217,6 +235,7 @@ This document provides an overview of the comprehensive GitHub Actions tutorial 
 **Target Audience**: All users (starting point)
 
 **Key Content:**
+
 - Overview of all tutorials
 - Recommended learning paths for different personas:
   - Brand new to GitHub Actions
@@ -230,6 +249,7 @@ This document provides an overview of the comprehensive GitHub Actions tutorial 
 - Ready to start paths
 
 **Key Features:**
+
 - ✅ Clear learning paths
 - ✅ Tutorial comparison
 - ✅ FAQ covering common questions
@@ -249,7 +269,7 @@ Choose your path:
 │       ↓
 │   github-actions-liquibase-best-practices.md (skim 15 min)
 │       ↓
-│   sqlserver-liquibase-github-actions-tutorial.md (4-5 hours)
+│   series-part3-cicd.md (4-5 hours)
 │       ↓
 │   local-vs-github-actions-comparison.md (reference)
 │
@@ -257,7 +277,7 @@ Choose your path:
 │       ↓
 │   github-actions-liquibase-best-practices.md (30 min)
 │       ↓
-│   sqlserver-liquibase-github-actions-tutorial.md (3-4 hours)
+│   series-part3-cicd.md (3-4 hours)
 │       ↓
 │   local-vs-github-actions-comparison.md (reference)
 │
@@ -267,7 +287,7 @@ Choose your path:
         ↓
     github-actions-liquibase-best-practices.md (60 min)
         ↓
-    sqlserver-liquibase-github-actions-tutorial.md (4-5 hours)
+    series-part3-cicd.md (4-5 hours)
         ↓
     Share github-actions-primer.md with team
 ```
@@ -275,30 +295,35 @@ Choose your path:
 ## Target Audiences and Personas
 
 ### 1. Beginner Developer (Sarah)
+
 **Background**: Junior developer, knows SQL and Git basics, never used CI/CD
 **Goal**: Learn database automation
 **Path**: Primer → Tutorial → Reference comparison as needed
 **Time**: 1 day
 
 ### 2. Experienced Developer (Mike)
+
 **Background**: Senior developer, used Jenkins before, new to GitHub Actions
 **Goal**: Implement database CI/CD for team project
 **Path**: Best Practices → Tutorial → Reference comparison for team discussions
 **Time**: Half day
 
 ### 3. Team Lead (Jessica)
+
 **Background**: Tech lead, responsible for team processes
 **Goal**: Decide on approach and plan implementation
 **Path**: Comparison → Best Practices → Tutorial → Share primer with team
 **Time**: 1-2 days for planning, 1 week for team implementation
 
 ### 4. DevOps Engineer (Alex)
+
 **Background**: Infrastructure focus, familiar with CI/CD but not Liquibase
 **Goal**: Set up enterprise-grade database pipeline
 **Path**: Best Practices → Tutorial (focus on security/monitoring) → Reference all docs
 **Time**: 2-3 days including security hardening
 
 ### 5. Manager/Decision Maker (Robert)
+
 **Background**: Non-technical manager, needs to understand costs and benefits
 **Goal**: Evaluate if team should adopt this approach
 **Path**: Comparison → FAQ section → Best Practices (skim) → Cost analysis
@@ -307,25 +332,30 @@ Choose your path:
 ## Key Educational Principles Used
 
 ### 1. Progressive Disclosure
+
 Start simple, add complexity gradually:
+
 - Primer: Basic concepts
 - Tutorial: Hands-on practice
 - Best Practices: Advanced patterns
 - Comparison: Strategic thinking
 
 ### 2. Multiple Learning Styles
+
 - **Visual learners**: Diagrams, workflow flows, tables
 - **Hands-on learners**: Complete tutorial with every command
 - **Reading learners**: Detailed explanations
 - **Example learners**: Real-world scenarios throughout
 
 ### 3. Beginner-Friendly Language
+
 - Avoid jargon (or explain it)
 - Use analogies and real-world comparisons
 - Define every acronym
 - Explain "why" not just "how"
 
 ### 4. Production-Ready Focus
+
 - Not just "hello world"
 - Real security practices
 - Complete error handling
@@ -333,7 +363,9 @@ Start simple, add complexity gradually:
 - Production deployment patterns
 
 ### 5. Self-Contained Documents
+
 Each document can stand alone:
+
 - Complete context provided
 - Links to other docs for deep dives
 - No required reading order (though recommended)
@@ -341,23 +373,30 @@ Each document can stand alone:
 ## What Makes These Tutorials Unique
 
 ### 1. Complete Coverage
+
 From absolute beginner to production deployment in one series.
 
 ### 2. GitHub Actions First-Class
+
 Most Liquibase tutorials focus on local development. This series treats GitHub Actions as a primary approach.
 
 ### 3. SQL Server Specific
+
 Includes SQL Server specifics often missing from generic tutorials:
+
 - JDBC connection strings
 - Azure SQL configuration
 - Windows authentication considerations
 - SQL Server best practices
 
 ### 4. Beginner Focused
+
 Assumes no prior CI/CD knowledge. Explains everything.
 
 ### 5. Real-World Oriented
+
 Not just theory - includes:
+
 - Common pitfalls
 - Troubleshooting guides
 - Real-world scenarios
@@ -365,10 +404,13 @@ Not just theory - includes:
 - Cost analysis
 
 ### 6. Decision Support
+
 Doesn't just show how - helps decide when and why.
 
 ### 7. Comprehensive Security
+
 Production-grade security practices throughout:
+
 - Secret management
 - Least privilege access
 - Approval workflows
@@ -380,30 +422,35 @@ Production-grade security practices throughout:
 After completing these tutorials, users will be able to:
 
 ✅ **Understand GitHub Actions**
+
 - Explain what CI/CD means
 - Create workflows from scratch
 - Configure secrets and environments
 - Troubleshoot workflow issues
 
 ✅ **Implement Database CI/CD**
+
 - Set up automated database deployments
 - Configure multi-environment pipelines
 - Implement approval workflows
 - Monitor deployments
 
 ✅ **Apply Best Practices**
+
 - Secure sensitive credentials
 - Implement least privilege access
 - Set up approval gates
 - Create audit trails
 
 ✅ **Make Strategic Decisions**
+
 - Choose appropriate approach for team size
 - Plan implementation timeline
 - Balance local development with automation
 - Understand trade-offs
 
 ✅ **Troubleshoot Issues**
+
 - Debug workflow failures
 - Fix connection problems
 - Resolve authentication issues
@@ -412,11 +459,13 @@ After completing these tutorials, users will be able to:
 ## Implementation Timeline
 
 ### For Individual Developer
+
 - **Week 1**: Read all tutorials, complete hands-on tutorial
 - **Week 2**: Implement for personal project
 - **Total**: 2 weeks
 
 ### For Small Team (2-5 people)
+
 - **Week 1**: Team learning (share docs)
 - **Week 2**: Set up basic pipeline
 - **Week 3**: Add approvals and production
@@ -424,6 +473,7 @@ After completing these tutorials, users will be able to:
 - **Total**: 4 weeks
 
 ### For Medium Team (5-20 people)
+
 - **Week 1-2**: Planning and learning
 - **Week 3-4**: Pilot implementation
 - **Week 5-6**: Team rollout
@@ -431,6 +481,7 @@ After completing these tutorials, users will be able to:
 - **Total**: 8 weeks
 
 ### For Enterprise (20+ people)
+
 - **Week 1-2**: Architecture and planning
 - **Week 3-4**: Pilot with small team
 - **Week 5-8**: Gradual rollout
@@ -453,7 +504,7 @@ These tutorials should be updated when:
 
 These tutorials complement existing documentation:
 
-1. **Original Local Docker Tutorial** (`sqlserver-liquibase-tutorial.md`)
+1. **Local Tutorial (Part 1: Baseline)** (`series-part1-baseline.md`)
    - Comprehensive local development approach
    - Still relevant for learning Liquibase basics
    - Reference for local testing
@@ -481,6 +532,7 @@ To improve these tutorials, collect feedback on:
 5. **Depth**: Right level of detail?
 
 **Feedback channels**:
+
 - GitHub issues
 - Team surveys
 - Usage analytics
@@ -506,6 +558,7 @@ The result is a complete learning resource that takes users from "What is CI/CD?
 **Created**: November 2025
 **Total Content**: 4,000+ lines across 5 documents
 **Estimated Learning Time**:
+
 - Individual: 6-10 hours
 - Team implementation: 4-12 weeks
 
