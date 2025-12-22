@@ -28,6 +28,7 @@ Both approaches are valid and serve different purposes. Understanding when to us
 **What it is**: Running Liquibase commands on your local machine using Docker containers to deploy changes to databases.
 
 **Typical workflow:**
+
 ```bash
 # 1. Create changelog
 vim database/changelog/changes/V0001__add_table.sql
@@ -43,6 +44,7 @@ docker run --rm liquibase:latest history
 ```
 
 **Key characteristics:**
+
 - ✅ Immediate feedback
 - ✅ Full control over execution
 - ✅ Interactive debugging
@@ -56,6 +58,7 @@ docker run --rm liquibase:latest history
 **What it is**: Automated deployment pipeline that runs when code is pushed to GitHub.
 
 **Typical workflow:**
+
 ```bash
 # 1. Create changelog
 vim database/changelog/changes/V0001__add_table.sql
@@ -76,6 +79,7 @@ git push origin main
 ```
 
 **Key characteristics:**
+
 - ✅ Automated deployments
 - ✅ Consistent process
 - ✅ Built-in audit trail
@@ -86,13 +90,14 @@ git push origin main
 
 ## When to Use Each Approach
 
-### Use Local Docker Development For:
+### Use Local Docker Development For
 
 #### 1. Learning and Experimentation
 
 **Scenario**: You're new to Liquibase and want to learn how it works.
 
 **Why local is better:**
+
 - Immediate feedback
 - Can experiment without consequences
 - See real-time output
@@ -100,6 +105,7 @@ git push origin main
 - No need to understand GitHub Actions first
 
 **Example:**
+
 ```bash
 # Try different Liquibase commands
 liquibase status
@@ -116,12 +122,14 @@ liquibase rollback-count 1
 **Scenario**: You're creating a complex database change and need to iterate quickly.
 
 **Why local is better:**
+
 - Rapid iteration (seconds, not minutes)
 - Test rollback procedures
 - Debug SQL syntax errors
 - Verify before committing
 
 **Example:**
+
 ```bash
 # Development cycle
 vim V0001__add_table.sql
@@ -134,6 +142,7 @@ liquibase update         # Try again
 ```
 
 **With CI/CD, this would take:**
+
 - Edit → commit → push → wait for workflow → check logs → repeat
 - Each iteration: 2-5 minutes
 - With local: Each iteration: 10-30 seconds
@@ -143,12 +152,14 @@ liquibase update         # Try again
 **Scenario**: Production is down, and you need to fix a database issue immediately.
 
 **Why local is better:**
+
 - No approval workflow delays
 - Deploy immediately
 - Full control over execution
 - Can skip environments if needed
 
 **Example:**
+
 ```bash
 # Emergency: Fix broken constraint in production
 docker run --rm \
@@ -168,6 +179,7 @@ docker run --rm \
 **Scenario**: You need a local development database for testing application code.
 
 **Why local is better:**
+
 - Complete control over local database
 - Can reset and recreate easily
 - No network latency
@@ -175,6 +187,7 @@ docker run --rm \
 - No need for remote database access
 
 **Example:**
+
 ```bash
 # Set up local dev database
 docker run -d --name local-db mcr.microsoft.com/mssql/server:2022-latest
@@ -190,12 +203,14 @@ liquibase update
 **Scenario**: A deployment failed in CI/CD and you need to understand why.
 
 **Why local is better:**
+
 - Interactive debugging
 - Can add debug flags
 - Test different scenarios
 - Examine database state directly
 
 **Example:**
+
 ```bash
 # Debug failed deployment
 liquibase update --log-level=DEBUG --log-file=debug.log
@@ -203,13 +218,14 @@ liquibase update --log-level=DEBUG --log-file=debug.log
 # Test fix locally before pushing
 ```
 
-### Use GitHub Actions CI/CD For:
+### Use GitHub Actions CI/CD For
 
 #### 1. Shared Environment Deployments
 
 **Scenario**: Deploying to dev, staging, or production environments used by the team.
 
 **Why CI/CD is better:**
+
 - Consistent deployment process
 - Audit trail (who deployed what, when)
 - Approval workflow for production
@@ -217,6 +233,7 @@ liquibase update --log-level=DEBUG --log-file=debug.log
 - Everyone uses same process
 
 **Example:**
+
 ```yaml
 # Consistent deployment every time
 deploy-staging:
@@ -231,6 +248,7 @@ deploy-staging:
 **Scenario**: Deploying changes to production database.
 
 **Why CI/CD is required:**
+
 - ✅ Approval workflow (require multiple reviewers)
 - ✅ Audit trail (compliance requirement)
 - ✅ Standardized process (no shortcuts)
@@ -238,6 +256,7 @@ deploy-staging:
 - ✅ Rollback tracking
 
 **Example workflow:**
+
 ```
 Change pushed to main
     ↓
@@ -257,6 +276,7 @@ Complete audit trail recorded
 **Scenario**: Multiple developers making database changes.
 
 **Why CI/CD is better:**
+
 - Everyone follows same process
 - Pull request review before deployment
 - Prevents conflicting changes
@@ -264,6 +284,7 @@ Complete audit trail recorded
 - Clear responsibility
 
 **Example:**
+
 ```
 Developer A: Creates PR for table change
     ↓
@@ -281,6 +302,7 @@ Team: Notified of deployment
 **Scenario**: You need to prove who deployed what and when for compliance (SOX, HIPAA, etc.).
 
 **Why CI/CD is required:**
+
 - Immutable audit trail
 - Timestamped deployments
 - Approval records
@@ -288,6 +310,7 @@ Team: Notified of deployment
 - Workflow logs (retained)
 
 **Example audit trail:**
+
 ```
 Deployment Record:
 - Who: john.doe@company.com
@@ -304,12 +327,14 @@ Deployment Record:
 **Scenario**: You need to ensure changes flow through dev → staging → production consistently.
 
 **Why CI/CD is better:**
+
 - Same process for all environments
 - Automated progression
 - No environment skipped
 - No manual errors
 
 **Example:**
+
 ```yaml
 # Guaranteed progression
 deploy-dev:
@@ -382,6 +407,7 @@ git push
 ```
 
 **Risks:**
+
 - ❌ Might forget to commit
 - ❌ Might deploy to prod without testing in staging
 - ❌ No approval workflow
@@ -428,6 +454,7 @@ git push origin feature/add-orders
 ```
 
 **Benefits:**
+
 - ✅ Automatic validation
 - ✅ Team review
 - ✅ Consistent deployment
@@ -440,12 +467,14 @@ git push origin feature/add-orders
 #### Local Docker
 
 **Costs:**
+
 - ✅ Free (uses local computer resources)
 - ✅ No cloud costs
 - ❌ Developer time (manual process)
 - ❌ Potential errors (manual process)
 
 **Best for:**
+
 - Small teams
 - Individual developers
 - Development environments
@@ -454,23 +483,27 @@ git push origin feature/add-orders
 #### GitHub Actions
 
 **Costs (as of 2025):**
+
 - ✅ Free tier: 2,000 minutes/month (private repos)
 - ✅ Free: Unlimited for public repos
 - ✅ After free tier: $0.008/minute (~$0.48/hour)
 
 **Typical usage:**
+
 - Simple deployment: ~2-3 minutes
 - Multi-environment: ~5-10 minutes
 - 50 deployments/month: ~250 minutes
 - Cost: **FREE** (under 2,000 minute limit)
 
 **Benefits:**
+
 - ✅ Saves developer time
 - ✅ Reduces errors
 - ✅ Provides audit trail
 - ✅ Enables compliance
 
 **Best for:**
+
 - Production environments
 - Team projects
 - Compliance requirements
@@ -481,6 +514,7 @@ git push origin feature/add-orders
 #### Local Docker
 
 **Security considerations:**
+
 - ⚠️ Credentials stored locally (in properties file)
 - ⚠️ Risk of accidental commits with passwords
 - ⚠️ No approval workflow
@@ -489,11 +523,13 @@ git push origin feature/add-orders
 - ✅ Complete control
 
 **Security model:**
+
 - Trust individual developers
 - Developers have direct database access
 - Manual security practices
 
 **Best for:**
+
 - Development environments
 - Trusted small teams
 - Internal networks
@@ -501,6 +537,7 @@ git push origin feature/add-orders
 #### GitHub Actions
 
 **Security considerations:**
+
 - ✅ Credentials stored securely (GitHub Secrets)
 - ✅ Encrypted at rest and in transit
 - ✅ Approval workflow for sensitive environments
@@ -510,12 +547,14 @@ git push origin feature/add-orders
 - ⚠️ Database must be accessible from internet (or use self-hosted runners)
 
 **Security model:**
+
 - Least privilege access
 - Multiple approval layers
 - Automated security practices
 - Centralized secret management
 
 **Best for:**
+
 - Production environments
 - Compliance requirements
 - Large teams
@@ -536,6 +575,7 @@ git push origin feature/add-orders
 ```
 
 **Deliverables:**
+
 - ✅ Liquibase project structure
 - ✅ Sample changelogs
 - ✅ Local development workflow
@@ -553,6 +593,7 @@ git push origin feature/add-orders
 ```
 
 **Deliverables:**
+
 - ✅ GitHub repository
 - ✅ Team using Git for changelogs
 - ✅ PR review process
@@ -570,6 +611,7 @@ git push origin feature/add-orders
 ```
 
 **Deliverables:**
+
 - ✅ PR validation workflow
 - ✅ Team comfortable with GitHub Actions
 - ✅ Catching errors earlier
@@ -585,6 +627,7 @@ git push origin feature/add-orders
 ```
 
 **Deliverables:**
+
 - ✅ Automated dev deployments
 - ✅ Team monitoring workflows
 - ✅ Troubleshooting experience
@@ -601,6 +644,7 @@ git push origin feature/add-orders
 ```
 
 **Deliverables:**
+
 - ✅ Complete automation
 - ✅ Production approvals
 - ✅ Team fully transitioned
@@ -660,6 +704,7 @@ git push origin feature/new-feature
 ```
 
 **Best of both worlds:**
+
 - ✅ Fast local iteration
 - ✅ Automated deployment to shared environments
 - ✅ Approval workflow for production
@@ -677,6 +722,7 @@ git push origin feature/new-feature
 ### When to Use Which
 
 **Use local Docker when:**
+
 - Developing new changes
 - Testing rollback procedures
 - Debugging issues
@@ -684,6 +730,7 @@ git push origin feature/new-feature
 - Emergency hotfixes (with proper documentation)
 
 **Use GitHub Actions when:**
+
 - Deploying to shared environments
 - Production deployments
 - Team collaboration
@@ -695,6 +742,7 @@ git push origin feature/new-feature
 ### Scenario 1: Startup (2-5 people)
 
 **Situation:**
+
 - Small team
 - Rapid development
 - Cost-sensitive
@@ -709,12 +757,14 @@ GitHub Actions: Optional, for production only
 ```
 
 **Rationale:**
+
 - Team is small, coordination is easy
 - Speed matters more than process
 - Can implement full CI/CD later as team grows
 - Saves time on setup
 
 **Implementation:**
+
 ```bash
 # Developers use local Docker for dev/staging
 lb -e dev -- update
@@ -727,6 +777,7 @@ lb -e stage -- update
 ### Scenario 2: Growing Company (10-30 people)
 
 **Situation:**
+
 - Multiple developers
 - Coordination challenges
 - Basic compliance needs
@@ -741,12 +792,14 @@ GitHub Actions: Dev → Staging → Production
 ```
 
 **Rationale:**
+
 - Need consistency across team
 - Prevent conflicting changes
 - Basic audit trail required
 - Still allow rapid local development
 
 **Implementation:**
+
 ```yaml
 # Local for development
 # GitHub Actions for all shared environments
@@ -761,6 +814,7 @@ deploy-prod:
 ### Scenario 3: Enterprise (50+ people)
 
 **Situation:**
+
 - Large teams
 - Strict compliance (SOX, HIPAA)
 - Complex approval workflows
@@ -777,12 +831,14 @@ Additional: Self-hosted runners
 ```
 
 **Rationale:**
+
 - Complete audit trail required
 - Multiple approval layers
 - No exceptions to process
 - Security is paramount
 
 **Implementation:**
+
 ```yaml
 # Everything through GitHub Actions
 # Multiple required approvers
@@ -798,6 +854,7 @@ deploy-prod:
 ### Scenario 4: Regulated Industry (Healthcare, Finance)
 
 **Situation:**
+
 - Strict compliance (FDA, SOX, HIPAA)
 - External audits
 - Change control board
@@ -817,12 +874,14 @@ Additional:
 ```
 
 **Rationale:**
+
 - Regulatory requirements
 - Auditor expectations
 - Risk management
 - Compliance evidence
 
 **Implementation:**
+
 ```yaml
 # Strict CI/CD only
 deploy-prod:
@@ -900,10 +959,10 @@ Use this framework to decide which approach to use:
 
 **Then add GitHub Actions:**
 
-5. Set up simple validation workflow
-6. Add automated dev deployments
-7. Gradually add more environments
-8. Finally, full CI/CD pipeline
+1. Set up simple validation workflow
+2. Add automated dev deployments
+3. Gradually add more environments
+4. Finally, full CI/CD pipeline
 
 **Timeline**: 4-8 weeks
 
@@ -922,6 +981,7 @@ Use this framework to decide which approach to use:
   - Audit trail
 
 **Setup priority:**
+
 1. Local development workflow (Week 1)
 2. Git version control (Week 1)
 3. Simple production workflow (Week 2)
@@ -941,6 +1001,7 @@ Use this framework to decide which approach to use:
   - Team collaboration
 
 **Setup priority:**
+
 1. Complete CI/CD pipeline (Week 1-2)
 2. PR validation (Week 2)
 3. Approval workflows (Week 3)
@@ -960,6 +1021,7 @@ Use this framework to decide which approach to use:
   - Integration with change management
 
 **Additional requirements:**
+
 - Self-hosted runners (security)
 - Multiple approval layers
 - Automated compliance checks
@@ -980,6 +1042,7 @@ Use this framework to decide which approach to use:
   - Compliance evidence
 
 **Additional requirements:**
+
 - Change control board approval
 - Automated compliance validation
 - Immutable audit logs
@@ -1000,6 +1063,7 @@ Use this framework to decide which approach to use:
 ### Quick Decision Guide
 
 **Choose Local Docker if:**
+
 - ✅ You're learning Liquibase
 - ✅ Developing new changes
 - ✅ Need rapid iteration
@@ -1007,6 +1071,7 @@ Use this framework to decide which approach to use:
 - ✅ Deploying to local environment
 
 **Choose GitHub Actions if:**
+
 - ✅ Deploying to shared environments
 - ✅ Working in a team
 - ✅ Need audit trail
@@ -1015,6 +1080,7 @@ Use this framework to decide which approach to use:
 - ✅ Production deployments
 
 **Use Both (Hybrid) if:**
+
 - ✅ You want fast development AND safe production
 - ✅ You have 3+ team members
 - ✅ You need some automation but not everything
@@ -1033,6 +1099,7 @@ Week 5+: Use hybrid approach
 ```
 
 **Remember:**
+
 - Start simple
 - Automate gradually
 - Match process to team size
@@ -1044,6 +1111,7 @@ Week 5+: Use hybrid approach
 **Document Version**: 1.0
 **Last Updated**: November 2025
 **Related Tutorials**:
-- [Local Docker Tutorial](../../../../tutorials/liquibase/sqlserver-liquibase-tutorial.md)
-- [GitHub Actions Tutorial](../../../../tutorials/liquibase/sqlserver-liquibase-github-actions-tutorial.md)
+
+- [Local Tutorial (Part 1: Baseline)](../../../../tutorials/liquibase/learning-paths/series-part1-baseline.md)
+- [CI/CD Tutorial (Part 3)](../../../../tutorials/liquibase/learning-paths/series-part3-cicd.md)
 - [GitHub Actions Best Practices](../../../../best-practices/liquibase/github-actions.md)
