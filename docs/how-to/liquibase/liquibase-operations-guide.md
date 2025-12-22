@@ -178,7 +178,7 @@ A baseline is an initial schema snapshot capturing the existing database state b
 ```bash
 # Generate baseline from existing database
 liquibase \
-  --defaults-file=env/liquibase.prod.properties \
+  --defaults-file=properties/liquibase.prod.properties \
   --changelog-file=applications/payments_api/postgres/orders/baseline/db.changelog-baseline-2025-11-14.yaml \
   generateChangeLog
 ```
@@ -188,13 +188,13 @@ Mark it as executed without running the SQL (since schema already exists):
 
 ```bash
 liquibase \
-  --defaults-file=env/liquibase.prod.properties \
+  --defaults-file=properties/liquibase.prod.properties \
   --changelog-file=applications/payments_api/postgres/orders/baseline/db.changelog-baseline.yaml \
   changelogSync
 
 # Tag it
 liquibase \
-  --defaults-file=env/liquibase.prod.properties \
+  --defaults-file=properties/liquibase.prod.properties \
   --changelog-file=applications/payments_api/postgres/orders/db.changelog-master.yaml \
   tag baseline
 ```
@@ -215,7 +215,7 @@ Over time, changelogs accumulate. For new database instances, you can consolidat
 
     ```bash
     liquibase \
-      --defaults-file=env/liquibase.prod.properties \
+      --defaults-file=properties/liquibase.prod.properties \
       --changelog-file=applications/payments_api/postgres/orders/baseline/db.changelog-baseline-v2.yaml \
       generateChangeLog
     ```
@@ -238,7 +238,7 @@ Over time, changelogs accumulate. For new database instances, you can consolidat
 
     ```bash
     liquibase \
-      --defaults-file=env/liquibase.new-instance.properties \
+      --defaults-file=properties/liquibase.new-instance.properties \
       --changelog-file=applications/payments_api/postgres/orders/db.changelog-master-v2.yaml \
       changelogSync
     ```
@@ -253,7 +253,7 @@ Always validate before applying:
 
 ```bash
 liquibase \
-  --defaults-file env/liquibase.dev.properties \
+  --defaults-file properties/liquibase.dev.properties \
   --changelog-file platforms/postgres/databases/app/db.changelog-master.yaml \
   updateSQL
 ```
@@ -269,7 +269,7 @@ for db in app analytics; do
   cf="platforms/$platform/databases/$db/db.changelog-master.yaml"
 
   # Apply
-  liquibase --defaults-file env/liquibase.dev.properties \
+  liquibase --defaults-file properties/liquibase.dev.properties \
     --changelog-file "$cf" update
 done
 ```
@@ -280,7 +280,7 @@ Detect drift between two environments:
 
 ```bash
 liquibase \
-  --defaults-file env/liquibase.stage.properties \
+  --defaults-file properties/liquibase.stage.properties \
   --changelog-file platforms/postgres/databases/app/drift/db.changelog-drift.yaml \
   diffChangeLog \
   --referenceUrl="${DEV_JDBC_URL}" \
@@ -327,7 +327,7 @@ docker run --rm \
   -v $(pwd):/liquibase/changelog:ro \
   -e LIQUIBASE_SEARCH_PATH=/liquibase/changelog \
   liquibase:latest \
-  --defaults-file env/liquibase.dev.properties \
+  --defaults-file properties/liquibase.dev.properties \
   --changelog-file platforms/postgres/databases/app/db.changelog-master.yaml \
   update
 ```
@@ -341,7 +341,7 @@ docker run --rm \
 Roll back to a specific release tag:
 
 ```bash
-liquibase --defaults-file env/liquibase.prod.properties \
+liquibase --defaults-file properties/liquibase.prod.properties \
   --changelog-file platforms/postgres/databases/app/db.changelog-master.yaml \
   rollback v1.0
 ```

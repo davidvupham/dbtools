@@ -247,7 +247,7 @@ If a deployment crashes, the lock may remain held.
 
 ```bash
 # Release stuck lock
-liquibase --defaults-file env/liquibase.dev.properties releaseLocks
+liquibase --defaults-file properties/liquibase.dev.properties releaseLocks
 ```
 
 ### Checksum Mismatches
@@ -257,7 +257,7 @@ Occurs when a changeSet is edited *after* it has been deployed.
 
 ```bash
 # Clear checksums (use with caution - forces re-validation)
-liquibase --defaults-file env/liquibase.dev.properties clearCheckSums
+liquibase --defaults-file properties/liquibase.dev.properties clearCheckSums
 ```
 
 ### Manual Interventions
@@ -265,7 +265,7 @@ liquibase --defaults-file env/liquibase.dev.properties clearCheckSums
 To mark changeSets as executed without actually running the SQL (e.g., fixing a hotfix mismatch):
 
 ```bash
-liquibase --defaults-file env/properties changelogSync
+liquibase --defaults-file properties/liquibase.env.properties changelogSync
 ```
 
 [↑ Back to Table of Contents](#table-of-contents)

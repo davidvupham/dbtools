@@ -120,7 +120,7 @@ Changes are written once and promoted through environments using environment-spe
 ### Release-Driven Versioning
 
 - Changes organized into `releases/<version>/` folders
-- Each release ends with a `tagDatabase` for rollback points (tags can correspond to Jira tickets, e.g., `PROJ-123`)
+- Each release ends with a `tagDatabase` for rollback points (tags can correspond to Jira tickets, e.g., `GE-NNNN`)
 - Numbered files within releases ensure deterministic order
 
 ### Baseline Strategy
@@ -197,7 +197,7 @@ This ensures `include file="applications/..."` works identically everywhere.
 
 ```text
 . (Repository Root)
-├── env/                                 # properties templates (no secrets)
+├── properties/                          # properties templates (no secrets)
 │   ├── liquibase.dev.properties.template
 │   ├── liquibase.prod.properties.template
 ├── shared/
@@ -342,7 +342,7 @@ databaseChangeLog:
 
 **4. Properties Files:**
 
-Properties files are stored in the `env/` directory relative to the repository root.
+Properties files are stored in the `properties/` directory relative to the repository root.
 
 **Naming Convention:**
 
@@ -368,7 +368,7 @@ Since each team has its own repository, team name is implicit. The naming conven
 
 ```text
 # In team-alpha's repo
-env/
+properties/
   liquibase.payments_api.postgres.orders.dbinstance1.dev.properties
   liquibase.inventory_svc.postgres.catalog.dbinstance1.prod.properties
 ```
@@ -417,7 +417,7 @@ shared/                              # Git submodule: liquibase-shared
   modules/
     dbadmin/
       db.changelog-dbadmin-common.yaml
-env/
+properties/
   liquibase.payments_api.postgres.orders.dbinstance1.dev.properties.template
 ```
 
@@ -545,7 +545,7 @@ changeSet:
 Changes are environment-agnostic. Environment details are injected via properties files.
 
 ```text
-env/
+properties/
   liquibase.dev.properties.template
   liquibase.stage.properties.template
   liquibase.prod.properties.template
