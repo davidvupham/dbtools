@@ -1,23 +1,30 @@
 ---
 # defaults file for windows_service_account_rights
 
-# Name of the Windows service to query (e.g., MSSQLSERVER for default SQL Server instance)
-service_name: MSSQLSERVER
+# Manage Windows user rights for the account running one or more Windows services.
+#
+# Variable schema:
+#   windows_service_account_rights_assignments:
+#     - service_name: <Windows service name>
+#       state: present|absent            # present=grant, absent=revoke (default: present)
+#       rights: [SeServiceLogonRight, ...]  # one or more user rights to manage
+#       service_account: ""             # optional override (DOMAIN\\user, .\\user, HOST\\user)
+#       fail_on_builtin_account: true   # fail if service runs as LocalSystem/LocalService/NetworkService
 
-# Action to perform: 'add' or 'remove'
-# Default is 'add' - grants the user rights
-# Set to 'remove' to revoke the user rights
-user_rights_action: add
+windows_service_account_rights_assignments:
+  - service_name: MSSQLSERVER
+    state: present
+    rights:
+      - SeServiceLogonRight
+      - SeManageVolumePrivilege
+      - SeLockMemoryPrivilege
 
-# List of user rights to grant/remove for the service account
-# Available options:
-#   - SeServiceLogonRight: Log on as a service
-#   - SeManageVolumePrivilege: Perform volume maintenance tasks
-#   - SeLockMemoryPrivilege: Lock pages in memory
-user_rights_to_grant:
-  - SeServiceLogonRight
-  - SeManageVolumePrivilege
-  - SeLockMemoryPrivilege
-# Optional: Override the service account if you don't want to query it from the service
-# Leave empty to auto-detect from the service
-# service_account_override: ""
+  - service_name: SQLSentryServer
+    state: present
+    rights:
+      - SeServiceLogonRight
+
+  - service_name: IgnitePl
+    state: present
+    rights:
+      - SeServiceLogonRight

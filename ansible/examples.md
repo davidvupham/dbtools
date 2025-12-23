@@ -2,14 +2,14 @@
 
 ## Example 1: Production Environment
 
-> **Note:** The default SQL Server instance service name is `MSSQLSERVER`. This is the standard configuration for Windows servers with a single SQL Server installation.
+> **Note:** You can manage multiple services in one run using `windows_service_account_rights_assignments`.
 
 ```yaml
 ---
 - name: Configure SQL Server service account rights in production
   hosts: windows
   roles:
-    - windows_service_account_rights  # Uses default: service_name=MSSQLSERVER
+    - windows_service_account_rights
 ```
 
 ## Example 2: All SQL Server Hosts (Using Parent Group)
@@ -34,7 +34,7 @@
     - windows_service_account_rights
 ```
 
-## Example 3: Staging Environment with Specific Rights
+## Example 4: Staging Environment with Specific Rights
 
 ```yaml
 ---
@@ -43,13 +43,16 @@
   roles:
     - role: windows_service_account_rights
       vars:
-        user_rights_to_grant:
-          - SeServiceLogonRight
-          - SeManageVolumePrivilege
-          - SeLockMemoryPrivilege
+        windows_service_account_rights_assignments:
+          - service_name: MSSQLSERVER
+            state: present
+            rights:
+              - SeServiceLogonRight
+              - SeManageVolumePrivilege
+              - SeLockMemoryPrivilege
 ```
 
-## Example 4: Development Environment - Limited Rights
+## Example 5: Development Environment - Limited Rights
 
 ```yaml
 ---
@@ -58,24 +61,31 @@
   roles:
     - role: windows_service_account_rights
       vars:
-        user_rights_to_grant:
-          - SeServiceLogonRight
-          - SeManageVolumePrivilege
+        windows_service_account_rights_assignments:
+          - service_name: MSSQLSERVER
+            state: present
+            rights:
+              - SeServiceLogonRight
+              - SeManageVolumePrivilege
 ```
 
-## Example 5: SQL Server Agent Across Environments
+## Example 6: Additional Windows Service
 
 ```yaml
 ---
-- name: Configure SQL Server Agent service account
+- name: Configure a custom application service
   hosts: windows
   roles:
     - role: windows_service_account_rights
       vars:
-        service_name: SQLSERVERAGENT
+        windows_service_account_rights_assignments:
+          - service_name: MyCustomService
+            state: present
+            rights:
+              - SeServiceLogonRight
 ```
 
-## Example 6: Environment-Specific Configuration
+## Example 7: Environment-Specific Configuration
 
 ```yaml
 ---
@@ -84,36 +94,46 @@
   roles:
     - role: windows_service_account_rights
       vars:
-        service_name: MSSQLSERVER
-        user_rights_to_grant: >-
-          {{
-            ['SeServiceLogonRight', 'SeManageVolumePrivilege', 'SeLockMemoryPrivilege']
-            if inventory_hostname in groups['production']
-            else ['SeServiceLogonRight', 'SeManageVolumePrivilege']
-          }}
+        windows_service_account_rights_assignments:
+          - service_name: MSSQLSERVER
+            state: present
+            rights: >-
+              {{
+                ['SeServiceLogonRight', 'SeManageVolumePrivilege', 'SeLockMemoryPrivilege']
+                if inventory_hostname in groups['production']
+                else ['SeServiceLogonRight', 'SeManageVolumePrivilege']
+              }}
 ```
 
-## Example 7: Multiple Services in Production
+## Example 8: Multiple Services in Production
 
 ```yaml
 ---
 - name: Configure multiple SQL Server services in production
   hosts: windows
-  tasks:
-    - name: Configure SQL Server default instance
-      ansible.builtin.include_role:
-        name: windows_service_account_rights
+  roles:
+    - role: windows_service_account_rights
       vars:
-        service_name: MSSQLSERVER
+        windows_service_account_rights_assignments:
+          - service_name: MSSQLSERVER
+            state: present
+            rights:
+              - SeServiceLogonRight
+              - SeManageVolumePrivilege
+              - SeLockMemoryPrivilege
 
-    - name: Configure SQL Server Agent
-      ansible.builtin.include_role:
-        name: windows_service_account_rights
-      vars:
-        service_name: SQLSERVERAGENT
+          - service_name: SQLSentryServer
+            state: present
+            rights:
+              - SeServiceLogonRight
+
+          - service_name: IgnitePl
+            state: present
+            rights:
+              - SeServiceLogonRight
 ```
 
-## Example 8: Remove User Rights
+## Example 9: Remove User Rights
 
 ```yaml
 ---
@@ -122,11 +142,12 @@
   roles:
     - role: windows_service_account_rights
       vars:
-        service_name: MSSQLSERVER
-        user_rights_action: remove
-        user_rights_to_grant:
-          - SeManageVolumePrivilege
-          - SeLockMemoryPrivilege
+        windows_service_account_rights_assignments:
+          - service_name: MSSQLSERVER
+            state: absent
+            rights:
+              - SeManageVolumePrivilege
+              - SeLockMemoryPrivilege
 ```
 
 ---
@@ -144,7 +165,13 @@
   roles:
     - role: windows_service_account_rights
       vars:
-        service_name: "MSSQL$PRODUCTION"  # Named instance format
+        windows_service_account_rights_assignments:
+          - service_name: "MSSQL$PRODUCTION"  # Named instance format
+            state: present
+            rights:
+              - SeServiceLogonRight
+              - SeManageVolumePrivilege
+              - SeLockMemoryPrivilege
 ```
 
 ### Custom Windows Service Across Environments
@@ -156,7 +183,34 @@
   roles:
     - role: windows_service_account_rights
       vars:
-        service_name: MyCustomService
-        user_rights_to_grant:
-          - SeServiceLogonRight
+        windows_service_account_rights_assignments:
+          - service_name: MyCustomService
+            state: present
+            rights:
+              - SeServiceLogonRight
+```
+
+---
+
+## How to add additional services and rights
+
+Add another item under `windows_service_account_rights_assignments`:
+
+```yaml
+windows_service_account_rights_assignments:
+  - service_name: AnotherService
+    state: present
+    rights:
+      - SeServiceLogonRight
+      - SeLockMemoryPrivilege
+```
+
+To remove rights, change `state` to `absent`:
+
+```yaml
+windows_service_account_rights_assignments:
+  - service_name: AnotherService
+    state: absent
+    rights:
+      - SeLockMemoryPrivilege
 ```

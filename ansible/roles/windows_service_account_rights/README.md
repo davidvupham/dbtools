@@ -1,18 +1,15 @@
 # Windows Service Account Rights
 
-An Ansible role to retrieve the 'Log On As' account for a Windows service and grant it specific user rights assignments.
+An Ansible role to retrieve the "Log On As" account for one or more Windows services and add/remove Windows user rights assignments for those accounts.
 
 ## Description
 
 This role automates the process of:
 
-1. Querying a Windows service to identify its service account
-2. Adding or removing specific user rights assignments for the service account:
-   - **SeServiceLogonRight**: Log on as a service
-   - **SeManageVolumePrivilege**: Perform volume maintenance tasks
-   - **SeLockMemoryPrivilege**: Lock pages in memory
+1. Querying Windows services to identify their service accounts (or using an explicit override)
+2. Adding or removing user rights assignments for each service account
 
-This is particularly useful for SQL Server installations where these rights are required for optimal performance and functionality.
+This is useful for SQL Server, monitoring agents, and any other service that runs under a domain/local user and needs specific privileges.
 
 ## Requirements
 
@@ -26,25 +23,35 @@ This is particularly useful for SQL Server installations where these rights are 
 
 ### Required Variables
 
-None - the role uses sensible defaults.
+You must provide (or accept the defaults for) `windows_service_account_rights_assignments`.
 
-### Optional Variables
+### Primary Variable: `windows_service_account_rights_assignments`
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `service_name` | `MSSQLSERVER` | Name of the Windows service to query |
-| `user_rights_action` | `add` | Action to perform: `add` or `remove` |
-| `user_rights_to_grant` | See below | List of user rights to add/remove |
-| `service_account_override` | `""` | Override auto-detection and specify account manually |
+This is a list of "assignments". Each assignment describes:
 
-**Default `user_rights_to_grant`:**
+- which Windows service to look up (`service_name`)
+- whether to grant or revoke rights (`state: present|absent`)
+- which rights to manage (`rights` list)
 
 ```yaml
-user_rights_to_grant:
-  - SeServiceLogonRight
-  - SeManageVolumePrivilege
-  - SeLockMemoryPrivilege
+windows_service_account_rights_assignments:
+  - service_name: MSSQLSERVER
+    state: present
+    rights:
+      - SeServiceLogonRight
+      - SeManageVolumePrivilege
+      - SeLockMemoryPrivilege
 ```
+
+### Assignment fields
+
+| Field | Required | Default | Description |
+| ------ | -------- | ------- | ----------- |
+| `service_name` | Yes | n/a | Windows service name (e.g., `MSSQLSERVER`, `SQLSentryServer`, `IgnitePl`) |
+| `state` | No | `present` | `present` grants rights; `absent` removes rights |
+| `rights` | Yes | n/a | One or more user rights to manage (e.g., `SeServiceLogonRight`) |
+| `service_account` | No | empty | If set, skip auto-detection and manage rights for this account directly |
+| `fail_on_builtin_account` | No | `true` | Fail if service runs as LocalSystem/LocalService/NetworkService |
 
 ## Dependencies
 
@@ -52,44 +59,68 @@ None
 
 ## Example Playbook
 
-### Basic Usage (SQL Server Default Instance)
+### Basic Usage (defaults)
+
+By default, the role is configured with these services:
+
+- `MSSQLSERVER` (3 rights)
+- `SQLSentryServer` (SeServiceLogonRight)
+- `IgnitePl` (SeServiceLogonRight)
 
 ```yaml
 ---
-- name: Configure SQL Server service account rights
+- name: Configure service account user rights
   hosts: sql_servers
   roles:
     - windows_service_account_rights
 ```
 
-### Custom Service Name
+### Configure multiple services (recommended)
 
 ```yaml
 ---
-- name: Configure custom service account rights
+- name: Configure multiple services in one run
   hosts: windows_servers
   roles:
     - role: windows_service_account_rights
       vars:
-        service_name: "MSSQL$INSTANCE01"
+        windows_service_account_rights_assignments:
+          - service_name: MSSQLSERVER
+            state: present
+            rights:
+              - SeServiceLogonRight
+              - SeManageVolumePrivilege
+              - SeLockMemoryPrivilege
+
+          - service_name: SQLSentryServer
+            state: present
+            rights:
+              - SeServiceLogonRight
+
+          - service_name: IgnitePl
+            state: present
+            rights:
+              - SeServiceLogonRight
 ```
 
-### Grant Specific Rights Only
+### Remove rights (state: absent)
 
 ```yaml
 ---
-- name: Grant only volume maintenance rights
+- name: Remove rights from a service account
   hosts: sql_servers
   roles:
     - role: windows_service_account_rights
       vars:
-        service_name: MSSQLSERVER
-        user_rights_to_grant:
-          - SeManageVolumePrivilege
-          - SeLockMemoryPrivilege
+        windows_service_account_rights_assignments:
+          - service_name: MSSQLSERVER
+            state: absent
+            rights:
+              - SeManageVolumePrivilege
+              - SeLockMemoryPrivilege
 ```
 
-### Named SQL Server Instance
+### Named SQL Server instance
 
 ```yaml
 ---
@@ -98,24 +129,52 @@ None
   roles:
     - role: windows_service_account_rights
       vars:
-        service_name: "MSSQL$PROD"
+        windows_service_account_rights_assignments:
+          - service_name: "MSSQL$PROD"
+            state: present
+            rights:
+              - SeServiceLogonRight
+              - SeManageVolumePrivilege
+              - SeLockMemoryPrivilege
 ```
 
-### Remove User Rights
+### Override the service account (skip auto-detection)
+
+Use this when you want to manage rights for a specific account directly.
 
 ```yaml
 ---
-- name: Remove user rights from service account
-  hosts: sql_servers
+- name: Override service account
+  hosts: windows
   roles:
     - role: windows_service_account_rights
       vars:
-        service_name: MSSQLSERVER
-        user_rights_action: remove
-        user_rights_to_grant:
-          - SeManageVolumePrivilege
-          - SeLockMemoryPrivilege
+        windows_service_account_rights_assignments:
+          - service_name: MSSQLSERVER
+            state: present
+            service_account: "DOMAIN\\sqlsvc"
+            rights:
+              - SeServiceLogonRight
 ```
+
+## How to add additional services / rights
+
+1. Identify the Windows service name:
+   - Use `services.msc` on the host, or PowerShell: `Get-Service`.
+2. Decide the desired `state`:
+   - `present` to grant
+   - `absent` to remove
+3. Add an item under `windows_service_account_rights_assignments`:
+
+```yaml
+windows_service_account_rights_assignments:
+  - service_name: MyCustomService
+    state: present
+    rights:
+      - SeServiceLogonRight
+```
+
+
 
 ## User Rights Explained
 
@@ -133,10 +192,9 @@ Prevents the operating system from paging SQL Server memory to disk, which can i
 
 ## Notes
 
-- The role will fail if the specified service does not exist
-- The role will fail if the service runs as a built-in system account (LocalSystem, LocalService, NetworkService)
-- The `user_rights_action` parameter controls whether rights are added or removed
-- Default action is `add` - set to `remove` to revoke user rights
+- The role fails if a specified service does not exist (unless you provide `service_account` override)
+- The role fails by default if the service runs as a built-in account (LocalSystem, LocalService, NetworkService)
+  - Set `fail_on_builtin_account: false` per assignment to bypass this guard
 - Changes take effect immediately and do not require a service restart
 
 ## License

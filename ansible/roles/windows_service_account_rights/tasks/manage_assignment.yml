@@ -1,0 +1,122 @@
+---
+# This task file is executed once per item in windows_service_account_rights_assignments.
+#
+# The current assignment is available as the variable named "assignment".
+# Example assignment structure:
+#   - service_name: MSSQLSERVER
+#     state: present
+#     rights:
+#       - SeServiceLogonRight
+#       - SeManageVolumePrivilege
+#     service_account: ""             # optional override
+#     fail_on_builtin_account: true   # optional safety check
+
+# ---
+# Validate the assignment structure
+# ---
+
+- name: Validate assignment has required fields
+  ansible.builtin.assert:
+    that:
+      - assignment is mapping
+      - assignment.service_name is defined
+      - (assignment.service_name | string | length) > 0
+      - assignment.rights is defined
+      - assignment.rights is iterable
+      - (assignment.rights | length) > 0
+    fail_msg: >-
+      Each item in windows_service_account_rights_assignments must be a dict like:
+        - service_name: <service>
+          state: present|absent
+          rights: [SeServiceLogonRight, ...]
+
+# Normalize the desired state. We use Ansible-style "state" (present/absent) in the role
+# input, and translate it to the win_user_right module's "action" (add/remove).
+- name: Normalize assignment state and compute module action
+  ansible.builtin.set_fact:
+    _wsar_state: "{{ assignment.state | default('present') | lower }}"
+    _wsar_action: "{{ 'add' if (assignment.state | default('present') | lower) == 'present' else 'remove' }}"
+
+- name: Validate assignment state
+  ansible.builtin.assert:
+    that:
+      - _wsar_state in ['present', 'absent']
+    fail_msg: >-
+      Invalid state for service '{{ assignment.service_name }}': '{{ assignment.state | default('present') }}'.
+      Allowed values: present, absent.
+
+# ---
+# Determine the service account
+# ---
+#
+# Most of the time, you want the role to auto-detect the account the service runs as.
+#
+# If you have a special case (for example, you want to manage rights for a known account
+# even if the service is temporarily stopped or not installed yet), you can set:
+#   service_account: "DOMAIN\\user"  (or ".\\user")
+
+- name: Use explicit service_account override when provided
+  ansible.builtin.set_fact:
+    _wsar_service_account: "{{ assignment.service_account }}"
+  when:
+    - assignment.service_account is defined
+    - (assignment.service_account | string | length) > 0
+
+- name: Query Windows service to auto-detect the running account
+  ansible.windows.win_service_info:
+    name: "{{ assignment.service_name }}"
+  register: _wsar_service_info
+  when: _wsar_service_account is not defined
+
+- name: Fail if service does not exist (auto-detect mode)
+  ansible.builtin.fail:
+    msg: "Service '{{ assignment.service_name }}' not found on {{ inventory_hostname }}"
+  when:
+    - _wsar_service_account is not defined
+    - _wsar_service_info.services | length == 0
+
+- name: Extract service account from service info (auto-detect mode)
+  ansible.builtin.set_fact:
+    _wsar_service_account: "{{ _wsar_service_info.services[0].username }}"
+  when: _wsar_service_account is not defined
+
+- name: Display detected/selected service account
+  ansible.builtin.debug:
+    msg: "Service '{{ assignment.service_name }}' runs as: {{ _wsar_service_account }}"
+
+# Safety: built-in accounts are usually not what you want to modify via this role.
+# This check is enabled by default but can be disabled per assignment.
+- name: Fail if service runs as a built-in system account (default safety)
+  ansible.builtin.fail:
+    msg: >-
+      Service '{{ assignment.service_name }}' runs as '{{ _wsar_service_account }}'.
+      This role is intended for domain/local user accounts, not built-in accounts.
+      If you really want to allow this, set fail_on_builtin_account: false for this service.
+  when:
+    - assignment.fail_on_builtin_account | default(true) | bool
+    - _wsar_service_account in ['LocalSystem', 'NT AUTHORITY\\LocalService', 'NT AUTHORITY\\NetworkService',
+      'LocalService', 'NetworkService', '.\\LocalSystem']
+
+# ---
+# Apply the rights
+# ---
+#
+# We loop each right name and call win_user_right once per right.
+# This makes the role work for *any* supported user right, not only SQL Server rights.
+
+- name: "{{ _wsar_action | upper }} user rights for '{{ assignment.service_name }}' service account"
+  ansible.windows.win_user_right:
+    name: "{{ right }}"
+    users:
+      - "{{ _wsar_service_account }}"
+    action: "{{ _wsar_action }}"
+  loop: "{{ assignment.rights }}"
+  loop_control:
+    loop_var: right
+
+# Friendly summary output for humans reviewing play output.
+- name: Display assignment summary
+  ansible.builtin.debug:
+    msg: >-
+      For service '{{ assignment.service_name }}' (account '{{ _wsar_service_account }}')
+      state={{ _wsar_state }}: processed rights: {{ assignment.rights | join(', ') }}

@@ -1,61 +1,34 @@
 ---
 # tasks file for windows_service_account_rights
-# This role retrieves the service account for a Windows service and manages user rights
+#
+# This role manages Windows User Rights Assignments for the account that runs one (or more)
+# Windows services.
+#
+# Key idea for beginners:
+# 1) You provide a list of service "assignments" (service name + rights + desired state).
+# 2) For each assignment, the role detects which account the service runs under.
+# 3) The role adds/removes the specified rights for that account.
 
-- name: Validate user_rights_action parameter
-  ansible.builtin.fail:
-    msg: "user_rights_action must be 'add' or 'remove', got: {{ user_rights_action }}"
-  when: user_rights_action not in ['add', 'remove']
+# Basic input validation so mistakes fail fast with a clear message.
+- name: Validate windows_service_account_rights_assignments
+  ansible.builtin.assert:
+    that:
+      - windows_service_account_rights_assignments is defined
+      - windows_service_account_rights_assignments is iterable
+      - windows_service_account_rights_assignments | length > 0
+    fail_msg: >-
+      windows_service_account_rights_assignments must be a non-empty list.
+      Example:
+        windows_service_account_rights_assignments:
+          - service_name: MSSQLSERVER
+            state: present
+            rights: [SeServiceLogonRight]
 
-- name: Get service information
-  ansible.windows.win_service_info:
-    name: "{{ service_name }}"
-  register: service_info
-
-- name: Fail if service does not exist
-  ansible.builtin.fail:
-    msg: "Service '{{ service_name }}' not found on {{ inventory_hostname }}"
-  when: service_info.services | length == 0
-
-- name: Extract service account from service info
-  ansible.builtin.set_fact:
-    service_account: "{{ service_info.services[0].username }}"
-
-- name: Display service account
-  ansible.builtin.debug:
-    msg: "Service '{{ service_name }}' runs as: {{ service_account }}"
-
-- name: Fail if service runs as LocalSystem, LocalService, or NetworkService
-  ansible.builtin.fail:
-    msg: "Service runs as {{ service_account }}. This role is designed for domain/local user accounts, not built-in system accounts."
-  when: >
-    service_account in ['LocalSystem', 'NT AUTHORITY\\LocalService', 'NT AUTHORITY\\NetworkService',
-                        'LocalService', 'NetworkService', '.\\LocalSystem']
-
-- name: "{{ user_rights_action | capitalize }} 'Log on as a service' right"
-  ansible.windows.win_user_right:
-    name: SeServiceLogonRight
-    users:
-      - "{{ service_account }}"
-    action: "{{ user_rights_action }}"
-  when: "'SeServiceLogonRight' in user_rights_to_grant"
-
-- name: "{{ user_rights_action | capitalize }} 'Perform volume maintenance tasks' right"
-  ansible.windows.win_user_right:
-    name: SeManageVolumePrivilege
-    users:
-      - "{{ service_account }}"
-    action: "{{ user_rights_action }}"
-  when: "'SeManageVolumePrivilege' in user_rights_to_grant"
-
-- name: "{{ user_rights_action | capitalize }} 'Lock pages in memory' right"
-  ansible.windows.win_user_right:
-    name: SeLockMemoryPrivilege
-    users:
-      - "{{ service_account }}"
-    action: "{{ user_rights_action }}"
-  when: "'SeLockMemoryPrivilege' in user_rights_to_grant"
-
-- name: Display action summary
-  ansible.builtin.debug:
-    msg: "Successfully {{ 'granted' if user_rights_action == 'add' else 'removed' }} the following rights {{ 'to' if user_rights_action == 'add' else 'from' }} {{ service_account }}: {{ user_rights_to_grant | join(', ') }}"
+# We keep the per-service logic in a separate task file to make the flow easier
+# to follow (especially for novice Ansible users).
+- name: Process service account rights assignments
+  ansible.builtin.include_tasks: manage_assignment.yml
+  loop: "{{ windows_service_account_rights_assignments }}"
+  loop_control:
+    loop_var: assignment
+    label: "{{ assignment.service_name | default('missing-service_name') }}"
