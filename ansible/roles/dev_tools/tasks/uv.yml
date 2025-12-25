@@ -1,0 +1,45 @@
+---
+# Install UV (Astral's Python package manager)
+
+- name: Check if UV is already installed
+  ansible.builtin.stat:
+    path: "{{ dev_user_home }}/.local/bin/uv"
+  register: uv_installed
+  become: true
+  become_user: "{{ dev_user }}"
+
+- name: Download and install UV
+  when: not uv_installed.stat.exists
+  become: true
+  become_user: "{{ dev_user }}"
+  block:
+    - name: Download UV installer
+      ansible.builtin.get_url:
+        url: "{{ uv_install_url }}"
+        dest: /tmp/uv-install.sh
+        mode: "0755"
+
+    - name: Run UV installer
+      ansible.builtin.shell: |
+        /tmp/uv-install.sh
+      args:
+        creates: "{{ dev_user_home }}/.local/bin/uv"
+      environment:
+        HOME: "{{ dev_user_home }}"
+
+    - name: Clean up UV installer
+      ansible.builtin.file:
+        path: /tmp/uv-install.sh
+        state: absent
+
+- name: Verify UV installation
+  ansible.builtin.command: "{{ dev_user_home }}/.local/bin/uv --version"
+  register: uv_version
+  changed_when: false
+  become: true
+  become_user: "{{ dev_user }}"
+
+- name: Display UV version
+  ansible.builtin.debug:
+    msg: "UV installed: {{ uv_version.stdout }}"
+

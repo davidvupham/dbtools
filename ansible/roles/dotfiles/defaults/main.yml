@@ -1,0 +1,10 @@
+---
+# Default variables for dotfiles role
+
+# Git user configuration (should be provided via --extra-vars)
+git_user_name: ""
+git_user_email: ""
+
+# Shell configuration
+shell_rc_file: "{{ dev_user_home }}/.bashrc"
+

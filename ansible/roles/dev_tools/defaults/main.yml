@@ -1,0 +1,11 @@
+---
+# Default variables for dev_tools role
+
+# UV (Python package manager)
+uv_install_url: "https://astral.sh/uv/install.sh"
+
+# NVM (Node Version Manager)
+nvm_version: "v0.40.1"
+nvm_install_url: "https://raw.githubusercontent.com/nvm-sh/nvm/{{ nvm_version }}/install.sh"
+node_version: "lts/*"
+

@@ -1,0 +1,11 @@
+---
+# Dev tools role - Install development tools (uv, nvm, etc.)
+
+- name: Install UV (Python package manager)
+  ansible.builtin.include_tasks: uv.yml
+  tags: [uv, python]
+
+- name: Install NVM (Node Version Manager)
+  ansible.builtin.include_tasks: nvm.yml
+  tags: [nvm, node]
+

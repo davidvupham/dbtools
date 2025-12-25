@@ -12,15 +12,12 @@ For general VS Code + dev container guidance (including platform-specific detail
 - [Prerequisites](#prerequisites)
 - [Step 1 — Install WSL2](#step-1--install-wsl2)
 - [Step 2 — Install a Linux distribution](#step-2--install-a-linux-distribution)
-- [Step 3 — Update Linux packages](#step-3--update-linux-packages)
-- [Step 3.1 — Create /data (owned by you)](#step-31--create-data-owned-by-you)
-- [Step 3.2 — Install Docker (latest)](#step-32--install-docker-latest)
-- [Step 4 — Install VS Code + Remote WSL](#step-4--install-vs-code--remote-wsl)
-- [Step 5 — Configure Docker Desktop for WSL2](#step-5--configure-docker-desktop-for-wsl2)
-- [Step 6 — Create an SSH key (for GitHub)](#step-6--create-an-ssh-key-for-github)
-- [Step 7 — Create ~/src and clone GitHub repos](#step-7--create-src-and-clone-github-repos)
-- [Step 8 — Open in Dev Container](#step-8--open-in-dev-container)
-- [Step 9 — Verify the environment](#step-9--verify-the-environment)
+- [Step 3 — Automated Environment Setup (Recommended)](#step-3--automated-environment-setup-recommended)
+- [Step 4 — Manual Setup (Alternative)](#step-4--manual-setup-alternative)
+- [Step 5 — Install VS Code + Remote WSL](#step-5--install-vs-code--remote-wsl)
+- [Step 6 — Configure Docker Desktop for WSL2](#step-6--configure-docker-desktop-for-wsl2)
+- [Step 7 — Open in Dev Container](#step-7--open-in-dev-container)
+- [Step 8 — Verify the environment](#step-8--verify-the-environment)
 - [Troubleshooting](#troubleshooting)
 
 ## Prerequisites
@@ -72,13 +69,79 @@ Install Ubuntu (recommended):
 wsl --install -d Ubuntu-22.04
 ```
 
-Verify you’re on WSL2:
+Verify you're on WSL2:
 
 ```powershell
 wsl --list --verbose
 ```
 
-## Step 3 — Update Linux packages
+## Step 3 — Automated Environment Setup (Recommended)
+
+Use the Ansible playbook to automatically configure your development environment. This installs:
+
+- System packages (git, curl, jq, make, build tools)
+- Docker CE with compose plugin
+- Development tools (UV for Python, NVM for Node.js)
+- Shell configuration (bash aliases, PATH setup)
+- SSH keys for GitHub
+- VS Code extensions
+
+### Run these 4 commands in your WSL terminal
+
+```bash
+# 1. Install prerequisites
+sudo apt-get update && sudo apt-get install -y git ansible
+
+# 2. Install required Ansible collections
+ansible-galaxy collection install community.general community.crypto
+
+# 3. Clone repo via HTTPS (no SSH key needed yet)
+git clone https://github.com/<ORG>/dbtools.git ~/dev/dbtools
+
+# 4. Run the Ansible playbook
+cd ~/dev/dbtools/ansible
+ansible-playbook linux_dev_environment.yml -i inventory/localhost.yml --ask-become-pass
+```
+
+> **Note:** Replace `<ORG>` with your GitHub organization.
+
+### After the playbook completes
+
+1. **Log out and log back in** (or run `newgrp docker`) for Docker group membership to take effect
+
+2. **Add your SSH key to GitHub**: The playbook displays your public key at the end. Copy it and add at https://github.com/settings/keys
+
+3. **Switch git remote to SSH**:
+
+   ```bash
+   cd ~/dev/dbtools
+   git remote set-url origin git@github.com:<ORG>/dbtools.git
+   ```
+
+4. **Verify Docker works**:
+
+   ```bash
+   docker run --rm hello-world
+   ```
+
+5. **Verify SSH to GitHub**:
+
+   ```bash
+   ssh -T git@github.com
+   ```
+
+**Skip to [Step 5 — Install VS Code + Remote WSL](#step-5--install-vs-code--remote-wsl)** after the automated setup.
+
+---
+
+## Step 4 — Manual Setup (Alternative)
+
+> **Use this section only if** you cannot use the Ansible playbook, need to troubleshoot, or want to understand what the automated setup does.
+
+<details>
+<summary>Click to expand manual setup instructions</summary>
+
+### 4.1 — Update Linux packages
 
 Open your WSL terminal (Ubuntu) and run:
 
@@ -93,7 +156,7 @@ Install a minimal toolchain:
 sudo apt-get install -y git curl ca-certificates make
 ```
 
-## Step 3.1 — Create /data (owned by you)
+### 4.2 — Create /data (owned by you)
 
 Create a shared working directory at `/data` and ensure it is owned by your user:
 
@@ -108,22 +171,22 @@ Optional (recommended) permissions:
 chmod 775 /data
 ```
 
-## Step 3.2 — Install Docker (latest)
+### 4.3 — Install Docker (latest)
 
 There are two common approaches on managed Windows laptops.
 
-### Option A (recommended): Use Docker Desktop with WSL integration
+#### Option A (recommended): Use Docker Desktop with WSL integration
 
 If IT installs Docker Desktop via ServiceNow, you typically do not need to install Docker Engine inside WSL.
-Enable WSL integration (Step 5) and verify from WSL:
+Enable WSL integration (Step 6) and verify from WSL:
 
 ```bash
 docker version
 ```
 
-### Option B: Install Docker Engine inside WSL (when Docker Desktop isn’t available)
+#### Option B: Install Docker Engine inside WSL (when Docker Desktop isn't available)
 
-This installs the latest stable Docker Engine via Docker’s official APT repository.
+This installs the latest stable Docker Engine via Docker's official APT repository.
 
 1. Install prerequisites:
 
@@ -132,7 +195,7 @@ sudo apt-get update
 sudo apt-get install -y ca-certificates curl gnupg
 ```
 
-1. Add Docker’s official GPG key:
+2. Add Docker's official GPG key:
 
 ```bash
 sudo install -m 0755 -d /etc/apt/keyrings
@@ -140,7 +203,7 @@ curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o 
 sudo chmod a+r /etc/apt/keyrings/docker.gpg
 ```
 
-1. Add the repository:
+3. Add the repository:
 
 ```bash
 echo \
@@ -150,13 +213,13 @@ echo \
 sudo apt-get update
 ```
 
-1. Install Docker:
+4. Install Docker:
 
 ```bash
 sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 ```
 
-1. Allow running Docker without `sudo`:
+5. Allow running Docker without `sudo`:
 
 ```bash
 sudo usermod -aG docker "$USER"
@@ -164,7 +227,7 @@ sudo usermod -aG docker "$USER"
 
 Log out and back in (or restart the WSL distro) for group membership to apply.
 
-1. Start Docker and verify:
+6. Start Docker and verify:
 
 Running Docker Engine inside WSL usually requires `systemd` support.
 If your distro supports it, enable systemd in `/etc/wsl.conf`, then restart WSL.
@@ -176,34 +239,7 @@ docker version
 docker run --rm hello-world
 ```
 
-## Step 4 — Install VS Code + Remote WSL
-
-1. Install VS Code on Windows.
-2. Install the **Remote - WSL** extension.
-3. (Recommended) Install the **Dev Containers** extension.
-
-Open VS Code connected to WSL:
-
-```bash
-code .
-```
-
-If `code` is not available inside WSL, install the VS Code shell command (“Shell Command: Install 'code' command in PATH”).
-
-## Step 5 — Configure Docker Desktop for WSL2
-
-1. In Docker Desktop, enable **Use the WSL 2 based engine**.
-2. Enable **WSL Integration** for your distro.
-
-Verify Docker works from inside WSL:
-
-```bash
-docker version
-```
-
-If Docker is not available from WSL, re-check Docker Desktop WSL integration settings.
-
-## Step 6 — Create an SSH key (for GitHub)
+### 4.4 — Create an SSH key (for GitHub)
 
 If your team uses SSH for GitHub access, create an SSH key in WSL and add it to GitHub before cloning.
 
@@ -217,7 +253,7 @@ For a deeper explanation and a recommended auto-start configuration, see:
 ls -la ~/.ssh
 ```
 
-1. Create a new Ed25519 key (recommended):
+2. Create a new Ed25519 key (recommended):
 
 ```bash
 ssh-keygen -t ed25519 -C "you@example.com"
@@ -225,30 +261,30 @@ ssh-keygen -t ed25519 -C "you@example.com"
 
 When prompted, set a strong **passphrase** (recommended). This keeps the private key encrypted on disk.
 
-1. Start an SSH agent and add your key:
+3. Start an SSH agent and add your key:
 
 ```bash
 eval "$(ssh-agent -s)"
 ssh-add ~/.ssh/id_ed25519
 ```
 
-1. Copy your public key and add it to GitHub:
+4. Copy your public key and add it to GitHub:
 
 ```bash
 cat ~/.ssh/id_ed25519.pub
 ```
 
-1. Verify SSH connectivity:
+5. Verify SSH connectivity:
 
 ```bash
 ssh -T git@github.com
 ```
 
-### Optional (recommended): Auto-start SSH agent on login
+#### Optional (recommended): Auto-start SSH agent on login
 
 To avoid re-running `eval "$(ssh-agent -s)"` and `ssh-add` every time you open a new shell, configure your shell to auto-start (and reuse) an SSH agent.
 
-Follow Section 4 (“Auto-starting SSH Agent”) in:
+Follow Section 4 ("Auto-starting SSH Agent") in:
 
 - [docs/tutorials/ssh-agent/README.md](../tutorials/ssh-agent/README.md)
 
@@ -279,34 +315,65 @@ else
 fi
 ```
 
-## Step 7 — Create ~/src and clone GitHub repos
+### 4.5 — Create ~/dev and clone GitHub repos
 
 This is critical for performance.
 
-- ✅ Clone into Linux paths like `~/src/...`
-- ❌ Do not clone into Windows-mounted paths like `/mnt/c/...`
+- Clone into Linux paths like `~/dev/...`
+- Do not clone into Windows-mounted paths like `/mnt/c/...`
 
 ```bash
-mkdir -p ~/src
-cd ~/src
+mkdir -p ~/dev
+cd ~/dev
 
-# Examples (replace <ORG> with your GitHub organization/user as needed)
-git clone https://github.com/<ORG>/gds-tool_library.git
-git clone https://github.com/<ORG>/gds-doc.git
+# Clone via HTTPS first (no SSH key needed)
+git clone https://github.com/<ORG>/dbtools.git
 ```
 
-If your team uses SSH cloning, use the SSH URLs instead:
+If your team uses SSH cloning (after setting up SSH keys):
 
 ```bash
-git clone git@github.com:<ORG>/gds-tool_library.git
-git clone git@github.com:<ORG>/gds-doc.git
+git clone git@github.com:<ORG>/dbtools.git
 ```
 
 If your team uses a corporate Docker registry proxy, configure Docker auth before building containers:
 
 - [docs/how-to/configure-corporate-docker-registry.md](configure-corporate-docker-registry.md)
 
-## Step 8 — Open in Dev Container
+</details>
+
+---
+
+## Step 5 — Install VS Code + Remote WSL
+
+1. Install VS Code on Windows.
+2. Install the **Remote - WSL** extension.
+3. (Recommended) Install the **Dev Containers** extension.
+
+Open VS Code connected to WSL:
+
+```bash
+code .
+```
+
+If `code` is not available inside WSL, install the VS Code shell command ("Shell Command: Install 'code' command in PATH").
+
+## Step 6 — Configure Docker Desktop for WSL2
+
+> **Skip this step** if you installed Docker Engine inside WSL (manual setup Option B).
+
+1. In Docker Desktop, enable **Use the WSL 2 based engine**.
+2. Enable **WSL Integration** for your distro.
+
+Verify Docker works from inside WSL:
+
+```bash
+docker version
+```
+
+If Docker is not available from WSL, re-check Docker Desktop WSL integration settings.
+
+## Step 7 — Open in Dev Container
 
 Follow the dev container docs:
 
@@ -317,7 +384,7 @@ In VS Code (connected to WSL), run:
 
 - `Dev Containers: Rebuild and Reopen in Container`
 
-## Step 9 — Verify the environment
+## Step 8 — Verify the environment
 
 In VS Code, run the default verification task:
 
@@ -347,3 +414,12 @@ Windows and WSL2 share ports. Check conflicts as needed:
 
 - Windows: `netstat -ano | findstr :5432`
 - WSL: `sudo lsof -i :5432`
+
+### Ansible playbook fails
+
+If the automated setup fails:
+
+1. Check the error message for the specific task that failed
+2. Try running with verbose output: `ansible-playbook ... -vvv`
+3. Fall back to [Step 4 — Manual Setup](#step-4--manual-setup-alternative) for the specific component that failed
+4. Report the issue so the playbook can be improved

@@ -1,45 +1,173 @@
-# Ansible Playbooks for Windows Management
+# Ansible Playbooks
 
-This directory contains Ansible playbooks and roles for managing Windows servers.
+This directory contains Ansible playbooks and roles for:
+
+- **Windows Management** - Configure Windows servers (service accounts, user rights)
+- **Linux Development Environment** - Set up WSL or RHEL development environments
 
 ## Directory Structure
 
 ```bash
 ansible/
 ├── ansible.cfg
+├── deploy_ssh_key.yml               # Deploy SSH key to Linux hosts
+├── linux_dev_environment.yml        # Linux dev environment playbook
 ├── windows_service_account_rights.yml
+├── group_vars/                       # OS-specific variables
+│   ├── all.yml                       # Common variables
+│   ├── Debian.yml                    # Ubuntu/WSL packages
+│   └── RedHat.yml                    # RHEL packages
 ├── inventory/
+│   ├── localhost.yml                 # Local execution inventory
 │   ├── development/
-│   │   ├── hosts.ini
-│   │   ├── group_vars/
-│   │   │   └── all.yml
-│   │   └── host_vars/
 │   ├── test/
-│   │   ├── hosts.ini
-│   │   ├── group_vars/
-│   │   │   └── all.yml
-│   │   └── host_vars/
 │   ├── staging/
-│   │   ├── hosts.ini
-│   │   ├── group_vars/
-│   │   │   └── all.yml
-│   │   └── host_vars/
 │   ├── production/
-│   │   ├── hosts.ini
-│   │   ├── group_vars/
-│   │   │   └── all.yml
-│   │   └── host_vars/
 │   └── README.md
 └── roles/
+    ├── common_packages/              # System packages
+    ├── docker/                       # Docker CE installation
+    ├── dev_tools/                    # UV, NVM, etc.
+    ├── dotfiles/                     # Shell/git configuration
+    ├── ssh_keys/                     # SSH key generation
+    ├── vscode/                       # VS Code extensions
     └── windows_service_account_rights/
-        ├── tasks/
-        │   └── main.yml
-        ├── defaults/
-        │   └── main.yml
-        ├── meta/
-        │   └── main.yml
-        └── README.md
 ```
+
+---
+
+## Linux Development Environment Setup
+
+This playbook configures a development environment on WSL (Ubuntu) or RHEL servers.
+
+### What Gets Installed
+
+| Role | Description |
+|------|-------------|
+| `common_packages` | git, curl, jq, make, build tools, Python dev packages |
+| `docker` | Docker CE with compose plugin |
+| `dev_tools` | UV (Python package manager), NVM (Node.js) |
+| `dotfiles` | Bash configuration, git settings, useful aliases |
+| `ssh_keys` | Generate SSH key pair for GitHub |
+| `vscode` | VS Code extensions and settings |
+
+### Bootstrap Instructions
+
+#### WSL (Ubuntu)
+
+Run these commands in a fresh WSL terminal:
+
+```bash
+# 1. Install prerequisites
+sudo apt-get update && sudo apt-get install -y git ansible
+
+# 2. Clone repo via HTTPS (no SSH key needed yet)
+git clone https://github.com/your-org/dbtools.git ~/dev/dbtools
+
+# 3. Run the playbook locally
+cd ~/dev/dbtools/ansible
+ansible-playbook linux_dev_environment.yml -i inventory/localhost.yml --ask-become-pass
+
+# 4. (After playbook completes) Switch to SSH remote
+cd ~/dev/dbtools
+git remote set-url origin git@github.com:your-org/dbtools.git
+```
+
+#### RHEL
+
+Run these commands on the RHEL server:
+
+```bash
+# 1. Install prerequisites
+sudo dnf install -y git ansible-core
+
+# 2. Clone repo via HTTPS (no SSH key needed yet)
+git clone https://github.com/your-org/dbtools.git ~/dev/dbtools
+
+# 3. Run the playbook locally
+cd ~/dev/dbtools/ansible
+ansible-playbook linux_dev_environment.yml -i inventory/localhost.yml --ask-become-pass
+
+# 4. (After playbook completes) Switch to SSH remote
+cd ~/dev/dbtools
+git remote set-url origin git@github.com:your-org/dbtools.git
+```
+
+### Advanced Usage
+
+#### With Git Configuration
+
+```bash
+ansible-playbook linux_dev_environment.yml -i inventory/localhost.yml --ask-become-pass \
+  -e "git_user_name='Your Name'" \
+  -e "git_user_email='your.email@example.com'"
+```
+
+#### Run Specific Roles Only
+
+```bash
+# Only install Docker
+ansible-playbook linux_dev_environment.yml -i inventory/localhost.yml --ask-become-pass --tags docker
+
+# Only configure dotfiles and SSH keys
+ansible-playbook linux_dev_environment.yml -i inventory/localhost.yml --ask-become-pass --tags dotfiles,ssh
+```
+
+### Required Ansible Collections
+
+The playbook uses these collections (install before running if not already present):
+
+```bash
+ansible-galaxy collection install community.general community.crypto ansible.posix
+```
+
+### After Running the Playbook
+
+1. **Log out and log back in** (or run `newgrp docker`) for Docker group membership to take effect
+2. **Add SSH key to GitHub**: The playbook displays your public key - add it at https://github.com/settings/keys
+3. **Switch git remote to SSH**: `git remote set-url origin git@github.com:your-org/dbtools.git`
+4. **Verify Docker**: `docker run hello-world`
+
+---
+
+## Deploy SSH Key Playbook
+
+Use `deploy_ssh_key.yml` to deploy an SSH public key (e.g., from Windows) to Linux hosts.
+
+### Use Cases
+
+- Deploy your Windows SSH key to WSL for seamless SSH access
+- Deploy your Windows SSH key to RHEL servers for VS Code Remote SSH
+- Set up passwordless SSH access to multiple servers
+
+### Usage
+
+```bash
+# Install required collection
+ansible-galaxy collection install ansible.posix
+
+# Deploy Windows key to WSL (localhost)
+WINDOWS_USER=$(cmd.exe /c "echo %USERNAME%" 2>/dev/null | tr -d '\r')
+ansible-playbook deploy_ssh_key.yml -i inventory/localhost.yml \
+  -e "ssh_public_key_file=/mnt/c/Users/${WINDOWS_USER}/.ssh/id_ed25519.pub"
+
+# Deploy to RHEL server with password authentication
+ansible-playbook deploy_ssh_key.yml \
+  -i "rhel-server.example.com," \
+  -e "ssh_public_key_file=/mnt/c/Users/${WINDOWS_USER}/.ssh/id_ed25519.pub" \
+  -e "ansible_user=your-username" \
+  --ask-pass
+
+# Deploy using key content directly
+ansible-playbook deploy_ssh_key.yml -i inventory/localhost.yml \
+  -e "ssh_public_key='ssh-ed25519 AAAA... you@example.com'"
+```
+
+---
+
+## Windows Management
+
+The following sections cover Windows server management.
 
 ## Prerequisites
 

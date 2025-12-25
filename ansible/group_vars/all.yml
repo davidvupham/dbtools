@@ -1,0 +1,47 @@
+---
+# Common variables for all Linux development environments (WSL and RHEL)
+
+# Target user for development environment setup
+# This is the user who will be doing development (not root)
+dev_user: "{{ ansible_user_id }}"
+dev_user_home: "{{ ansible_env.HOME }}"
+
+# Git configuration
+git_user_name: ""  # Set via --extra-vars or prompt
+git_user_email: "" # Set via --extra-vars or prompt
+
+# SSH key configuration
+ssh_key_type: ed25519
+ssh_key_bits: 4096  # Only used for RSA
+ssh_key_comment: "{{ dev_user }}@{{ ansible_hostname }}"
+ssh_key_path: "{{ dev_user_home }}/.ssh/id_{{ ssh_key_type }}"
+
+# Development directories
+dev_directories:
+  - "{{ dev_user_home }}/dev"
+  - "{{ dev_user_home }}/dev/dbtools"
+  - "{{ dev_user_home }}/.local/bin"
+
+# Shell configuration
+default_shell: /bin/bash
+shell_rc_file: "{{ dev_user_home }}/.bashrc"
+
+# UV (Python package manager) configuration
+uv_install_url: "https://astral.sh/uv/install.sh"
+
+# NVM (Node Version Manager) configuration
+nvm_version: "v0.40.1"
+nvm_install_url: "https://raw.githubusercontent.com/nvm-sh/nvm/{{ nvm_version }}/install.sh"
+node_version: "lts/*"
+
+# VS Code extensions to install
+vscode_extensions:
+  - ms-python.python
+  - ms-python.vscode-pylance
+  - ms-vscode.powershell
+  - redhat.vscode-yaml
+  - esbenp.prettier-vscode
+  - dbaeumer.vscode-eslint
+  - eamodio.gitlens
+  - ms-azuretools.vscode-docker
+

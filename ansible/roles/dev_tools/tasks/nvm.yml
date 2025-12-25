@@ -1,0 +1,50 @@
+---
+# Install NVM (Node Version Manager)
+
+- name: Check if NVM is already installed
+  ansible.builtin.stat:
+    path: "{{ dev_user_home }}/.nvm/nvm.sh"
+  register: nvm_installed
+  become: true
+  become_user: "{{ dev_user }}"
+
+- name: Download and install NVM
+  when: not nvm_installed.stat.exists
+  become: true
+  become_user: "{{ dev_user }}"
+  block:
+    - name: Download NVM installer
+      ansible.builtin.get_url:
+        url: "{{ nvm_install_url }}"
+        dest: /tmp/nvm-install.sh
+        mode: "0755"
+
+    - name: Run NVM installer
+      ansible.builtin.shell: |
+        /tmp/nvm-install.sh
+      args:
+        creates: "{{ dev_user_home }}/.nvm/nvm.sh"
+      environment:
+        HOME: "{{ dev_user_home }}"
+
+    - name: Clean up NVM installer
+      ansible.builtin.file:
+        path: /tmp/nvm-install.sh
+        state: absent
+
+- name: Install Node.js LTS via NVM
+  ansible.builtin.shell: |
+    export NVM_DIR="{{ dev_user_home }}/.nvm"
+    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+    nvm install {{ node_version }}
+    nvm alias default {{ node_version }}
+  args:
+    creates: "{{ dev_user_home }}/.nvm/alias/default"
+    executable: /bin/bash
+  become: true
+  become_user: "{{ dev_user }}"
+
+- name: Display NVM installation status
+  ansible.builtin.debug:
+    msg: "NVM installed at {{ dev_user_home }}/.nvm with Node.js {{ node_version }}"
+

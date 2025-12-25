@@ -1,0 +1,9 @@
+---
+# Default variables for common_packages role
+# These can be overridden in group_vars or host_vars
+
+# Development directories to create
+dev_directories:
+  - "{{ dev_user_home }}/dev"
+  - "{{ dev_user_home }}/.local/bin"
+

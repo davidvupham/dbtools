@@ -1,0 +1,75 @@
+---
+# Git configuration
+
+- name: Configure git user name
+  community.general.git_config:
+    name: user.name
+    scope: global
+    value: "{{ git_user_name }}"
+  become: true
+  become_user: "{{ dev_user }}"
+  when: git_user_name | length > 0
+
+- name: Configure git user email
+  community.general.git_config:
+    name: user.email
+    scope: global
+    value: "{{ git_user_email }}"
+  become: true
+  become_user: "{{ dev_user }}"
+  when: git_user_email | length > 0
+
+- name: Configure git default branch
+  community.general.git_config:
+    name: init.defaultBranch
+    scope: global
+    value: main
+  become: true
+  become_user: "{{ dev_user }}"
+
+- name: Configure git pull strategy
+  community.general.git_config:
+    name: pull.rebase
+    scope: global
+    value: "false"
+  become: true
+  become_user: "{{ dev_user }}"
+
+- name: Configure git editor
+  community.general.git_config:
+    name: core.editor
+    scope: global
+    value: vim
+  become: true
+  become_user: "{{ dev_user }}"
+
+- name: Configure git color
+  community.general.git_config:
+    name: color.ui
+    scope: global
+    value: auto
+  become: true
+  become_user: "{{ dev_user }}"
+
+- name: Configure git credential helper (cache for 1 hour)
+  community.general.git_config:
+    name: credential.helper
+    scope: global
+    value: "cache --timeout=3600"
+  become: true
+  become_user: "{{ dev_user }}"
+
+- name: Remind user to set git user name if not provided
+  ansible.builtin.debug:
+    msg: |
+      Git user.name not configured. Set it manually:
+        git config --global user.name "Your Name"
+  when: git_user_name | length == 0
+
+- name: Remind user to set git user email if not provided
+  ansible.builtin.debug:
+    msg: |
+      Git user.email not configured. Set it manually:
+        git config --global user.email "your.email@example.com"
+  when: git_user_email | length == 0
+

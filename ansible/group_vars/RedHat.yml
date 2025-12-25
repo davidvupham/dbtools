@@ -1,0 +1,39 @@
+---
+# Variables for Red Hat-based systems (RHEL, CentOS, Fedora)
+
+# Package manager
+package_manager: dnf
+
+# Common development packages
+common_packages:
+  - git
+  - curl
+  - wget
+  - jq
+  - make
+  - vim-enhanced
+  - htop
+  - tree
+  - unzip
+  - zip
+  - ca-certificates
+  - gnupg2
+  - python3-devel
+  - python3-pip
+  - gcc
+  - gcc-c++
+  - openssl-devel
+  - libffi-devel
+
+# Docker packages
+docker_packages:
+  - docker-ce
+  - docker-ce-cli
+  - containerd.io
+  - docker-buildx-plugin
+  - docker-compose-plugin
+
+# Docker GPG key URL
+docker_gpg_url: "https://download.docker.com/linux/rhel/gpg"
+docker_repo_url: "https://download.docker.com/linux/rhel"
+

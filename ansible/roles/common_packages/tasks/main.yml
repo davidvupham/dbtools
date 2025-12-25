@@ -1,0 +1,47 @@
+---
+# Common packages role - Install essential development packages
+
+- name: Update package cache (Debian)
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600
+  when: ansible_os_family == "Debian"
+
+- name: Update package cache (RedHat)
+  ansible.builtin.dnf:
+    update_cache: true
+  when: ansible_os_family == "RedHat"
+
+- name: Install common packages (Debian)
+  ansible.builtin.apt:
+    name: "{{ common_packages }}"
+    state: present
+  when: ansible_os_family == "Debian"
+
+- name: Install common packages (RedHat)
+  ansible.builtin.dnf:
+    name: "{{ common_packages }}"
+    state: present
+  when: ansible_os_family == "RedHat"
+
+- name: Create development directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ dev_user }}"
+    group: "{{ dev_user }}"
+    mode: "0755"
+  loop: "{{ dev_directories }}"
+
+- name: Ensure .local/bin is in PATH
+  ansible.builtin.lineinfile:
+    path: "{{ shell_rc_file }}"
+    line: 'export PATH="$HOME/.local/bin:$PATH"'
+    state: present
+    create: true
+    owner: "{{ dev_user }}"
+    group: "{{ dev_user }}"
+    mode: "0644"
+  become: true
+  become_user: "{{ dev_user }}"
+

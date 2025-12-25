@@ -1,0 +1,26 @@
+---
+# Docker role - Install Docker CE
+
+- name: Include OS-specific tasks
+  ansible.builtin.include_tasks: "{{ ansible_os_family | lower }}.yml"
+
+- name: Ensure Docker service is started and enabled
+  ansible.builtin.systemd:
+    name: docker
+    state: started
+    enabled: true
+  when: ansible_service_mgr == "systemd"
+
+- name: Add user to docker group
+  ansible.builtin.user:
+    name: "{{ dev_user }}"
+    groups: docker
+    append: true
+
+- name: Display Docker group reminder
+  ansible.builtin.debug:
+    msg: |
+      User '{{ dev_user }}' has been added to the docker group.
+      You need to log out and log back in for this to take effect,
+      or run: newgrp docker
+

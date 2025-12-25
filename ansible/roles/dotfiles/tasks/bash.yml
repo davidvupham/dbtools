@@ -1,0 +1,56 @@
+---
+# Bash configuration
+
+- name: Ensure .bashrc exists
+  ansible.builtin.file:
+    path: "{{ shell_rc_file }}"
+    state: touch
+    owner: "{{ dev_user }}"
+    group: "{{ dev_user }}"
+    mode: "0644"
+    modification_time: preserve
+    access_time: preserve
+  become: true
+  become_user: "{{ dev_user }}"
+
+- name: Add custom bash configuration block
+  ansible.builtin.blockinfile:
+    path: "{{ shell_rc_file }}"
+    marker: "# {mark} ANSIBLE MANAGED - Development Environment"
+    block: |
+      # Development environment paths
+      export PATH="$HOME/.local/bin:$PATH"
+
+      # UV (Python)
+      export PATH="$HOME/.local/bin:$PATH"
+
+      # NVM (Node.js)
+      export NVM_DIR="$HOME/.nvm"
+      [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+      [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+
+      # Useful aliases
+      alias ll='ls -alF'
+      alias la='ls -A'
+      alias l='ls -CF'
+      alias gs='git status'
+      alias gd='git diff'
+      alias gl='git log --oneline -20'
+
+      # Docker aliases
+      alias dps='docker ps'
+      alias dpsa='docker ps -a'
+      alias dimg='docker images'
+      alias dexec='docker exec -it'
+
+      # Better history
+      export HISTSIZE=10000
+      export HISTFILESIZE=20000
+      export HISTCONTROL=ignoreboth:erasedups
+      shopt -s histappend
+    owner: "{{ dev_user }}"
+    group: "{{ dev_user }}"
+    mode: "0644"
+  become: true
+  become_user: "{{ dev_user }}"
+

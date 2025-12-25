@@ -1,0 +1,11 @@
+---
+# Dotfiles role - Configure shell and git settings
+
+- name: Configure bash profile
+  ansible.builtin.include_tasks: bash.yml
+  tags: [bash, shell]
+
+- name: Configure git
+  ansible.builtin.include_tasks: git.yml
+  tags: [git]
+

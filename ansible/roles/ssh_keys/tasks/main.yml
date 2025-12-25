@@ -1,0 +1,84 @@
+---
+# SSH keys role - Generate SSH keys for GitHub authentication
+
+- name: Ensure .ssh directory exists
+  ansible.builtin.file:
+    path: "{{ dev_user_home }}/.ssh"
+    state: directory
+    owner: "{{ dev_user }}"
+    group: "{{ dev_user }}"
+    mode: "0700"
+  become: true
+  become_user: "{{ dev_user }}"
+
+- name: Check if SSH key already exists
+  ansible.builtin.stat:
+    path: "{{ ssh_key_path }}"
+  register: ssh_key_exists
+  become: true
+  become_user: "{{ dev_user }}"
+
+- name: Generate SSH key pair
+  community.crypto.openssh_keypair:
+    path: "{{ ssh_key_path }}"
+    type: "{{ ssh_key_type }}"
+    size: "{{ ssh_key_bits if ssh_key_type == 'rsa' else omit }}"
+    comment: "{{ ssh_key_comment }}"
+    owner: "{{ dev_user }}"
+    group: "{{ dev_user }}"
+    mode: "0600"
+  become: true
+  become_user: "{{ dev_user }}"
+  when: not ssh_key_exists.stat.exists
+
+- name: Set correct permissions on public key
+  ansible.builtin.file:
+    path: "{{ ssh_key_path }}.pub"
+    owner: "{{ dev_user }}"
+    group: "{{ dev_user }}"
+    mode: "0644"
+  become: true
+  become_user: "{{ dev_user }}"
+
+- name: Read public key
+  ansible.builtin.slurp:
+    src: "{{ ssh_key_path }}.pub"
+  register: ssh_public_key
+  become: true
+  become_user: "{{ dev_user }}"
+
+- name: Configure SSH for GitHub
+  ansible.builtin.blockinfile:
+    path: "{{ dev_user_home }}/.ssh/config"
+    marker: "# {mark} ANSIBLE MANAGED - GitHub SSH config"
+    block: |
+      Host github.com
+          HostName github.com
+          User git
+          IdentityFile {{ ssh_key_path }}
+          IdentitiesOnly yes
+    create: true
+    owner: "{{ dev_user }}"
+    group: "{{ dev_user }}"
+    mode: "0600"
+  become: true
+  become_user: "{{ dev_user }}"
+
+- name: Display SSH public key for GitHub
+  ansible.builtin.debug:
+    msg: |
+      ============================================================
+      SSH PUBLIC KEY (add this to GitHub)
+      ============================================================
+
+      {{ ssh_public_key.content | b64decode }}
+
+      Steps to add to GitHub:
+      1. Go to https://github.com/settings/keys
+      2. Click "New SSH key"
+      3. Paste the key above
+      4. Click "Add SSH key"
+
+      Test with: ssh -T git@github.com
+      ============================================================
+

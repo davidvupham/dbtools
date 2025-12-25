@@ -1,0 +1,80 @@
+---
+# VS Code role - Install VS Code extensions and configure settings
+
+- name: Check if VS Code (code) is available
+  ansible.builtin.command: which code
+  register: vscode_available
+  changed_when: false
+  failed_when: false
+  become: true
+  become_user: "{{ dev_user }}"
+
+- name: Display VS Code not found message
+  ansible.builtin.debug:
+    msg: |
+      VS Code CLI (code) not found in PATH.
+      This is expected if:
+        - You're on WSL and haven't opened VS Code from Windows yet
+        - VS Code is not installed
+      
+      To install extensions manually later, run:
+        code --install-extension <extension-id>
+      
+      Or open VS Code and it will prompt to install recommended extensions
+      from .vscode/extensions.json
+  when: vscode_available.rc != 0
+
+- name: Install VS Code extensions
+  ansible.builtin.command: "code --install-extension {{ item }}"
+  loop: "{{ vscode_extensions }}"
+  register: vscode_ext_result
+  changed_when: "'was successfully installed' in vscode_ext_result.stdout"
+  failed_when: false
+  become: true
+  become_user: "{{ dev_user }}"
+  when: vscode_available.rc == 0
+
+- name: Ensure VS Code user settings directory exists
+  ansible.builtin.file:
+    path: "{{ dev_user_home }}/.config/Code/User"
+    state: directory
+    owner: "{{ dev_user }}"
+    group: "{{ dev_user }}"
+    mode: "0755"
+  become: true
+  become_user: "{{ dev_user }}"
+  when: vscode_available.rc == 0
+
+- name: Configure VS Code settings
+  ansible.builtin.copy:
+    dest: "{{ dev_user_home }}/.config/Code/User/settings.json"
+    content: |
+      {
+        "editor.fontSize": 14,
+        "editor.tabSize": 4,
+        "editor.insertSpaces": true,
+        "editor.formatOnSave": true,
+        "editor.rulers": [80, 120],
+        "files.trimTrailingWhitespace": true,
+        "files.insertFinalNewline": true,
+        "terminal.integrated.defaultProfile.linux": "bash",
+        "python.defaultInterpreterPath": "{{ dev_user_home }}/.local/bin/python3",
+        "git.autofetch": true,
+        "[python]": {
+          "editor.tabSize": 4
+        },
+        "[yaml]": {
+          "editor.tabSize": 2
+        },
+        "[json]": {
+          "editor.tabSize": 2
+        }
+      }
+    owner: "{{ dev_user }}"
+    group: "{{ dev_user }}"
+    mode: "0644"
+    force: false
+  become: true
+  become_user: "{{ dev_user }}"
+  when: vscode_available.rc == 0
+
