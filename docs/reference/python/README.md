@@ -16,6 +16,10 @@ This section provides encyclopedic lookups for Python syntax, standard library, 
 * **Files & I/O**: `pathlib`, `io`, `json`, `csv`
 * **Concurrency**: `threading`, `multiprocessing`, `asyncio`
 
+## Tooling & Package Management
+
+* **[UV Reference](uv/uv-reference.md)**: CLI commands, configuration, and workspace management.
+
 ## Terminology
 
 * **[Glossary](./glossary.md)**: Definitions of common Python terms (GIL, Closure, MRO, etc.)

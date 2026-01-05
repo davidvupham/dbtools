@@ -159,9 +159,9 @@ flowchart TB
 
 For detailed architecture documentation, see:
 
-- [Enterprise Observability Architecture](../../../explanation/architecture/observability/Enterprise_Observability_Notification_Data_Pipeline_Architecture.md)
-- [OpenTelemetry Architecture](../../../explanation/architecture/observability/OPENTELEMETRY_ARCHITECTURE.md)
-- [PowerShell Logging Architecture](../../../explanation/architecture/observability/POWERSHELL_LOGGING_ARCHITECTURE.md)
+- [Enterprise Observability Architecture](../../explanation/architecture/observability/Enterprise_Observability_Notification_Data_Pipeline_Architecture.md)
+- [OpenTelemetry Architecture](../../explanation/architecture/observability/OPENTELEMETRY_ARCHITECTURE.md)
+- [PowerShell Logging Architecture](../../explanation/architecture/observability/POWERSHELL_LOGGING_ARCHITECTURE.md)
 
 ---
 

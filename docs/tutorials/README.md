@@ -13,12 +13,14 @@ Welcome to the dbtools tutorials library. These guides are designed to help you 
 ## 📚 Tutorials by Topic
 
 ### Languages & Scripting
+
 - **[Python](python/README.md)**: Logic, data structures, and app development.
 - **[PowerShell](powershell/README.md)**: Automation, scripting, and Windows management.
 - **[Shell Scripting](shell-scripting/README.md)**: Linux command line and bash scripts.
 - **[OOP](oop/README.md)**: Object-Oriented Programming concepts and patterns.
 
 ### Infrastructure & Cloud
+
 - **[AWS](aws/README.md)**: Cloud infrastructure and services.
 - **[Terraform](terraform/README.md)**: Infrastructure as Code (IaC).
 - **[Docker](docker/README.md)**: Containerization basics and patterns.
@@ -27,16 +29,13 @@ Welcome to the dbtools tutorials library. These guides are designed to help you 
 - **[Vault](gds-vault/README.md)**: Secrets management with HashiCorp Vault.
 
 ### DevOps & CI/CD
+
 - **[GitHub Actions](github-actions/README.md)**: CI/CD workflows and automation.
 - **[ArgoCD](argocd/README.md)**: GitOps continuous delivery.
-- **[Liquibase](liquibase/README.md)**: Database version control and deployment.
 - **[Git](git/README.md)**: Version control basics and flows.
 
-### Observability
-- **[Observability](observability/README.md)**: Monitoring, logging, tracing, and metrics.
-- **[End-to-End Metrics](observability/e2e-synthetic-metrics.md)**: Validating monitoring pipelines.
-
 ### Databases & Data
+
 - **[Kafka](kafka/README.md)**: Event streaming and messaging.
 - **[RabbitMQ](rabbitmq/README.md)**: Message broker basics.
 - **[PostgreSQL HA](postgres-high-availability/README.md)**: High availability setups.
@@ -44,6 +43,7 @@ Welcome to the dbtools tutorials library. These guides are designed to help you 
 - **[Snowflake](gds-snowflake/README.md)**: Cloud data warehousing.
 
 ### System Design & Basics
+
 - **[System Design](system-design/README.md)**: Architecture patterns and scalability.
 - **[Networking](networking/README.md)**: Network fundamentals.
 - **[Linux](linux/README.md)**: Operating system basics.
@@ -53,5 +53,7 @@ Welcome to the dbtools tutorials library. These guides are designed to help you 
 ---
 
 ## 🏗️ Project Management
+
 For project management standards and best practices, see:
+
 - [GitHub Project Management](../best-practices/github-project-management.md)

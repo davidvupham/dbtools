@@ -5,6 +5,7 @@ This directory contains all project documentation organized by category.
 ## Table of Contents
 
 - [Documentation Organization](#documentation-organization)
+  - [**Browse by Topic**](#browse-by-topic)
   - [tutorials/ - Learning-Oriented Guides](#tutorials---learning-oriented-guides)
   - [projects/ - Project Documentation](#projects---project-documentation)
   - [how-to/ - How-to Guides](#how-to---how-to-guides)
@@ -17,20 +18,45 @@ This directory contains all project documentation organized by category.
 - [Component Documentation](#component-documentation)
 - [Quick Links](#quick-links)
 
+## 🗂️ Browse by Topic
+
+Find documentation across all categories (Tutorials, How-to, Reference) for specific technologies:
+
+| Topic | Main Entry Point | How-to / Reference |
+|-------|------------------|--------------------|
+| **Python** | [Tutorials](tutorials/python/README.md) | [How-to](how-to/python/README.md) • [Ref](reference/python/README.md) |
+| **UV (Pkg Mgr)** | [Tutorials](tutorials/python/uv/README.md) | [How-to](how-to/python/README.md) • [Ref](reference/python/uv/uv-reference.md) |
+| **PowerShell** | [Tutorials](tutorials/powershell/README.md) | [How-to](how-to/powershell/README.md) • [Ref](reference/README.md) |
+| **Docker** | [Tutorials](tutorials/docker/README.md) | [Standards](best-practices/docker/README.md) |
+| **Kubernetes** | [Tutorials](tutorials/kubernetes/README.md) | |
+| **AWS** | [Tutorials](tutorials/aws/README.md) | |
+| **Terraform** | [Tutorials](tutorials/terraform/README.md) | |
+| **Ansible** | [Tutorials](tutorials/ansible/README.md) | |
+| **Liquibase** | [Course](courses/liquibase/README.md) | [Best Practices](best-practices/liquibase/README.md) |
+| **GDS Vault** | [Tutorials](tutorials/gds-vault/README.md) | [How-to](how-to/vault/README.md) |
+| **Kafka** | [Tutorials](tutorials/kafka/README.md) | |
+| **Observability** | [Course](courses/observability/README.md) | |
+| **System Design** | [Tutorials](system-design/README.md) | |
+| **Linux** | [Tutorials](linux/README.md) | [Ref](reference/linux/README.md) |
+
 ## 📚 Documentation Organization
 
-This documentation follows the **Diátaxis framework**, organizing content by user intent:
+This documentation follows the **[Diátaxis Framework](https://diataxis.fr/)**, a systematic approach to technical documentation that organizes content by **user intent**.
 
-- **Courses** (Learning-oriented): Comprehensive curriculums with a defined learning path and projects.
-  - *Example:* [Python Engineering Course](courses/python/README.md) - A structured path to master Python engineering.
-- **Tutorials** (Learning-oriented): Step-by-step lessons for specific tasks or quick starts.
-  - *Example:* [Python Basics Tutorial](tutorials/python/01_PYTHON_BASICS_FOR_THIS_PROJECT.md) - A quick "hello world" introduction.
-- **Reference** (Information-oriented): Technical details, syntax, and API specifications.
-  - *Example:* [Python Control Flow](reference/python/syntax/control_flow.md) - Encyclopedic lookup for `if`, `for`, `match`.
-- **Projects** (Project-oriented): Comprehensive documentation for real-world projects in this repo.
-- **How-to Guides** (Goal-oriented): Directions to solve specific problems.
-- **Explanation** (Understanding-oriented): High-level context and design decisions.
-- **Runbooks** (Goal-oriented): Operational procedures.
+The framework divides documentation into four distinct quadrants:
+
+1. **[Tutorials](tutorials/README.md)** (Learning-oriented): *"Teach me."* Lessons that lead the user through a series of steps to complete a project.
+2. **[How-to Guides](how-to/README.md)** (Problem-oriented): *"Help me do it."* Steps to solve a specific problem or real-world task.
+3. **[Reference](reference/README.md)** (Information-oriented): *"Describe it."* Technical descriptions of the machinery and how to operate it.
+4. **[Explanation](explanation/README.md)** (Understanding-oriented): *"Explain it."* Discussion that clarifies and illuminates a particular topic.
+
+For more information, visit the [official Diátaxis documentation](https://diataxis.fr/).
+
+Other categories in this repository include:
+
+- **[Courses](courses/python/README.md)**: Extended curriculums that combine multiple tutorials and projects.
+- **[Projects](projects/README.md)**: Real-world implementation documentation.
+- **[Runbooks](runbooks/README.md)**: Operational procedures.
 
 ### [courses/](courses/python/README.md) - Curriculums
 
@@ -42,11 +68,11 @@ Deep-dive, project-based engineering courses.
 
 Step-by-step tutorials for learning various technologies:
 
-- **Observability**: [Comprehensive 9-part tutorial](tutorials/observability/README.md)
 - [**Ansible**](tutorials/ansible/README.md)
 - [**Docker**](tutorials/docker/README.md)
 - [**Liquibase**](tutorials/liquibase/README.md)
 - [**Python**](tutorials/python/README.md)
+  - [**UV Package Manager**](tutorials/python/uv/README.md) - **Start Here for UV**
 - [**Kafka**](tutorials/kafka/README.md)
 
 ### [projects/](projects/README.md) - Project Documentation
@@ -61,6 +87,7 @@ Documentation for large-scale projects:
 Task-oriented guides for solving specific problems:
 
 - [**PowerShell Guides**](how-to/powershell/README.md)
+- [**Python & UV Guides**](how-to/python/README.md)
 - [**Configure Service Dependencies**](how-to/configure-service-dependencies.md)
 - [**Rotate AD Passwords with Vault**](how-to/rotate-ad-passwords-with-vault.md)
 
@@ -83,6 +110,15 @@ Practical procedures for operations:
 Organizational standards and recommended practices:
 
 - [**Technical Project Management**](best-practices/technical-project-management.md) - Project documentation framework
+- [**Docker Standards**](best-practices/docker/README.md) - Corporate registry and security policies.
+
+### [templates/](templates/README.md) - Project Templates
+
+Standard templates for project documentation:
+
+- [**Project Charter**](templates/project-charter.md)
+- [**Decision Log**](templates/decision-log.md)
+- [**Status Reports**](templates/status-report.md)
 
 ### [reference/](reference/README.md) - Technical Reference
 
