@@ -14,7 +14,7 @@ Welcome to the dbtools tutorials library. These guides are designed to help you 
 
 ### Languages & Scripting
 
-- **[Python](python/README.md)**: Logic, data structures, and app development.
+- **[Python](python/README.md)**: Fundamentals, modern tooling (uv), and app development.
 - **[PowerShell](powershell/README.md)**: Automation, scripting, and Windows management.
 - **[Shell Scripting](shell-scripting/README.md)**: Linux command line and bash scripts.
 - **[OOP](oop/README.md)**: Object-Oriented Programming concepts and patterns.

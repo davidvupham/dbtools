@@ -6,13 +6,13 @@ A comprehensive guide to managing Python projects and dependencies with `uv`.
 
 * [1. Introduction: Why `uv`?](#1-introduction-why-uv)
 * [2. Core Concepts for Beginners](#2-core-concepts-for-beginners)
-* [3. Architecture Deep Dive](#3-architecture-deep-dive)
+* [3. Architecture & Speed](#3-architecture--speed)
 * [4. Installation](#4-installation)
 * [5. Quick Start: Your First Project](#5-quick-start-your-first-project)
 * [6. Guide: Setting up `uv` for Existing Projects](#6-guide-setting-up-uv-for-existing-projects)
 * [7. Workflows: Team & Production](#7-workflows-team--production)
-* [8. Comparisons: `uv` vs. The Rest](#8-comparisons-uv-vs-the-rest)
-* [9. How-to Guide](#9-how-to-guide)
+* [8. Comparisons](#8-comparisons)
+* [9. Common Tasks (How-To)](#9-common-tasks-how-to)
 * [10. Best Practices](#10-best-practices)
 * [11. Reference Cheatsheet](#11-reference-cheatsheet)
 * [Further Reading](#further-reading)
@@ -63,85 +63,9 @@ When you add a package, `uv` acts as a solver. It looks at all your requirements
 * **Modules are Local**: Every project has its own `.venv` folder containing its dependencies. If Project A has `pandas` v2.0, it is physically sitting inside Project A's folder.
 * **Python is Managed**: `uv` manages Python versions globally on your machine to save disk space. If 10 projects need Python 3.12, `uv` downloads it once to a central cache and "links" it to each project. However, to your project, it *feels* like a completely private installation.
 
-## 3. Architecture Deep Dive
+## 3. Architecture & Speed
 
-For those interested in *how* `uv` achieves its speed and reliability, here is a look under the hood.
-
-### The "Standard" CPython (No Magic)
-
-When you ask `uv` for Python 3.12, it downloads **CPython**.
-
-**What is CPython?**
-It is the "reference implementation" of Python, written in C. It is what 99% of the world means when they say "I use Python". It is maintained by the Python Software Foundation (PSF).
-
-**Pros & Cons**:
-
-* Pros: 100% compatibility with all libraries (including C modules like `numpy`), standard behavior, and huge community support.
-* Cons: Slower than some experimental compilers (like PyPy) due to the Global Interpreter Lock (GIL), but it is the industry standard.
-
-**Is it different from python.org?**
-**No and Yes**.
-
-* **Code**: It is the **exact same source code**. `uv` does not modify the language logic.
-* **Build**: `uv` uses "Portable Builds" (maintained by Astral).
-  * *Python.org installers* often depend on your specific OS libraries (like needing a specific version of `glibc` on Linux).
-  * *`uv` builds* are statically linked. This means they run on almost *any* Linux machine (or Mac/Windows) without you needing to install system dependencies.
-* **Compatibility**: **Zero issues**. It satisfies the same verification tests as python.org builds.
-
-### Building on Rust
-
-`uv` is written in **Rust**, a systems programming language known for memory safety and performance.
-
-* **No Garbage Collection**: Unlike Python, Rust doesn't use a garbage collector, eliminating pauses.
-* **True Parallelism**: `uv` can download and unzip packages across many threads simultaneously without the "Global Interpreter Lock" (GIL) that slows down Python tools.
-
-### The PubGrub Resolver
-
-Dependency resolution is an NP-hard problem. `uv` uses **PubGrub**, a state-of-the-art algorithm (originally designed for the Dart language). It effectively searches the vast tree of possible package versions to find a compatible set usually in milliseconds, explaining conflicts clearly when they occur.
-
-### The Global Cache
-
-`uv` uses a **content-addressable global cache**.
-
-* **Deduplication**: If 5 separate projects use `boto3==1.34.0`, `uv` stores the wheel *once* on your disk.
-* **Hard Linking**: When creating a virtual environment, `uv` attempts to "hard link" files from the cache rather than copying them. This makes creating an environment almost instantaneous and uses near-zero additional disk space.
-
-### Looking Ahead: Python 3.13+ and Free-Threading (No-GIL)
-
-You might see buzz about Python 3.13/3.14 removing the **Global Interpreter Lock (GIL)** to allow true multi-core threading.
-
-* **Status**: Python 3.13 introduced experimental "free-threaded" builds.
-* **UV Support**: `uv` supports installing these variants *today* if you want to test the future of high-performance parallel Python.
-
-```bash
-uv python install 3.13t  # 't' stands for free-threading
-```
-
-### Where is everything stored?
-
-Even if you have 100 completely unrelated projects (no monorepo), `uv` shares the Python installations managed in a central data directory.
-
-* **Linux**: `~/.local/share/uv/python`
-* **macOS**: `~/Library/Application Support/uv/python`
-* **Windows**: `%LOCALAPPDATA%\uv\python`
-
-Each project simply links to these central installs, keeping your individual project folders lightweight.
-
-### Visualizing the Storage (The "Symlink" Magic)
-
-Let's say you have **Project A** and **Project B**, and both needed Python 3.12.
-
-1. **The Central Python (Stored Once)**:
-    * Location: `~/.local/share/uv/python/cpython-3.12/bin/python`
-    * This is the *actual* binary file. It sits here to be shared.
-
-2. **The Project Environment (The Link)**:
-    * Location: `~/src/project-a/.venv/bin/python`
-    * This is NOT a copy. It is a **symlink** (shortcut) pointing to the central Python above.
-
-3. **The Modules (The Project's library)**:
-    * Location: `~/src/project-a/.venv/lib/python3.12/site-packages/`
-    * This folder contains your libraries (like `requests`). `uv` fills this folder using hardlinks from its global cache to save space, but logically, they belong to this project.
+`uv` achieves 10-100x speedups by using Rust and a global cache. For a deep dive into how it works (PubGrub, lockfiles, etc.), see the **[UV Architecture](../../../../explanation/python/uv/uv-architecture.md)** guide.
 
 ## 4. Installation
 
@@ -338,64 +262,18 @@ COPY . .
 CMD ["fastapi", "run", "app/main.py"]
 ```
 
-## 8. Comparisons: `uv` vs. The Rest
+## 8. Comparisons
 
-| Feature | `pip` + `venv` | `Poetry` | `uv` |
-| :--- | :--- | :--- | :--- |
-| **Speed** | Slow | Slow/Moderate | **Extremely Fast** |
-| **Virtual Env** | Manual (`python -m venv`) | Automatic | **Automatic** |
-| **Dependency Resolution** | Basic | Advanced | **Advanced** |
-| **Python Version Mgmt** | No (need `pyenv`) | No (need `pyenv`) | **Built-in** |
-| **Lock File** | No (need `pip-tools`) | `poetry.lock` | **`uv.lock`** |
-| **Single Script Run** | Manual setup | `poetry run` | **`uv run`** (zero setup needed) |
+For a detailed breakdown of how `uv` compares to `pip`, `poetry`, and `pipenv`, including a "Migration ROI" matrix, see **[UV Adoption Rationale](../../../../explanation/python/uv/README.md#2-migration-roi-what-do-you-gain)**.
 
-## 9. How-to Guide
+## 9. Common Tasks (How-To)
 
-### How to manage Python versions
+`uv` is capable of much more than just project management. Check out our dedicated **How-To Guides** for specific tasks:
 
-Install a specific Python version:
-
-```bash
-uv python install 3.12
-```
-
-Pin a project to a specific version:
-
-```bash
-uv python pin 3.11
-```
-
-### How to run tools (replace `pipx`)
-
-Run a CLI tool without installing it globally:
-
-```bash
-uv x ruff check .
-uv x black .
-```
-
-### How to sync dependencies
-
-If you clone a repo with a `uv.lock` file, install everything exactly as specified:
-
-```bash
-uv sync
-```
-
-### How to use with legacy `requirements.txt`
-
-`uv` respects legacy workflows.
-Install from requirements:
-
-```bash
-uv pip install -r requirements.txt
-```
-
-Compile requirements from `pyproject.toml`:
-
-```bash
-uv pip compile pyproject.toml -o requirements.txt
-```
+* **[Manage Python Versions](../../../../how-to/python/uv/uv-python-management.md)**: Install specific versions (e.g., 3.12), pin projects, and list available versions.
+* **[Interactive Python (Ad-hoc)](../../../../how-to/python/uv/uv-interactive-python.md)**: Run scripts and REPLs without a project.
+* **[Run Tools (uvx)](../../../../how-to/python/uv/uv-tool-management.md)**: Run CLIs like `ruff`, `black`, or `pytest` in isolated environments (replaces `pipx`).
+* **[Dependency Management](../../../../how-to/python/uv/uv-dependency-management.md)**: Sync dependencies and work with legacy `requirements.txt`.
 
 ## 10. Best Practices
 

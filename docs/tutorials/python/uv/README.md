@@ -1,17 +1,48 @@
-# UV Tutorials
+# UV Package Manager: Learning Hub
 
-Step-by-step tutorials for learning the UV Python package manager.
+Welcome to the `uv` documentation. Use this guide to find the right resource for your needs.
 
-## Tutorials
+## 🧭 Where do I start?
 
-| Tutorial | Description |
-|----------|-------------|
-| [Getting Started with UV](./uv-getting-started.md) | Beginner-friendly introduction to UV |
-| [UV Comprehensive Guide](./uv_tutorial.md) | Deep dive into all UV features and concepts |
+Select the path that matches your current goal:
 
-## Related Documentation
+### 1. The Beginner Path 🟢
+>
+> *"I am new to `uv` and just want to install it and run my first project."*
 
-- **How-To Guides**: [UV How-To Guides](../../../how-to/python/uv/README.md) — Task-oriented guides for specific workflows
-- **Reference**: [UV Command Reference](../../../reference/python/uv/uv-reference.md) — CLI commands and configuration
-- **Explanation**: [UV Architecture](../../../explanation/python/uv/uv-architecture.md) — Deep dive into how UV works
-- **Official Docs**: [UV Documentation](https://docs.astral.sh/uv/) — Astral's official UV documentation
+* **Start Here**: **[Getting Started with UV](./uv-getting-started.md)**
+* **Time**: ~30 minutes
+* **Outcome**: You will have `uv` installed and a running Python project.
+
+### 2. The Comprehensive Path 🔵
+>
+> *"I need to know how to use `uv` for my day-to-day work, workflows, and team standards."*
+
+* **Start Here**: **[UV Comprehensive Guide](./uv_tutorial.md)**
+* **Time**: ~60 minutes
+* **Outcome**: Deep understanding of dependencies, locking, workspaces, and best practices.
+
+### 3. The Decision Maker Path 🟣
+>
+> *"Why should we switch to `uv`? What is the ROI? Is it production-ready?"*
+
+* **Start Here**: **[UV Adoption Rationale](../../../../explanation/python/uv/README.md)**
+* **Outcome**: Understand the business case, speed metrics, architecture (`uv-architecture.md`), and migration benefits.
+
+---
+
+## 📚 All Documentation
+
+* **Tutorials** (Learning)
+  * [Getting Started](./uv-getting-started.md)
+  * [Comprehensive Guide](./uv_tutorial.md)
+* **How-To Guides** (Task-based)
+  * [Migration Guide](../../../../how-to/python/uv/uv-migrate-from-pip.md)
+  * [Docker Integration](../../../../how-to/python/uv/uv-docker-integration.md)
+  * [CI/CD Integration](../../../../how-to/python/uv/uv-ci-cd-integration.md)
+  * [Manage Python Versions](../../../../how-to/python/uv/uv-python-management.md)
+  * [Run Tools (uvx)](../../../../how-to/python/uv/uv-tool-management.md)
+  * [Full Index](../../../../how-to/python/uv/README.md)
+* **Reference** (Technical)
+  * [Command Reference](../../../../reference/python/uv/uv-reference.md)
+  * [Architecture Deep Dive](../../../../explanation/python/uv/uv-architecture.md)

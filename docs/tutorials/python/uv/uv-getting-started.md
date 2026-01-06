@@ -446,6 +446,7 @@ Congratulations! You now know the basics of UV. Here's where to go next:
 | Goal | Resource |
 |------|----------|
 | Deep dive into UV concepts | [UV Comprehensive Guide](./uv_tutorial.md) |
+| Understand "Why UV?" | [UV Adoption Rationale](../../../explanation/python/uv/README.md) |
 | Migrate from pip/poetry | [Migration Guide](../../../how-to/python/uv/uv-migrate-from-pip.md) |
 | Use UV with Docker | [Docker Integration](../../../how-to/python/uv/uv-docker-integration.md) |
 | Set up CI/CD pipelines | [CI/CD Guide](../../../how-to/python/uv/uv-ci-cd-integration.md) |

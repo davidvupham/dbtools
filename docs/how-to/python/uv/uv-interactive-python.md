@@ -1,0 +1,72 @@
+# How to use Python interactively (Ad-hoc)
+
+You can use `uv` to launch specific Python versions or run scripts without creating a project or virtual environment. All downloads are managed centrally, keeping your workspace clean.
+
+## Launch a Python REPL (Shell)
+
+You can drop into a Python shell instantly, even for versions you haven't explicitly installed yet.
+
+### Launch a specific version
+
+`uv` will download the requested version (if needed) and start the shell.
+
+```bash
+uv run --python 3.12 python
+```
+
+### Launch the latest available version
+
+```bash
+uv run python
+```
+
+## Run a single-file script with dependencies
+
+You don't need a `pyproject.toml` or a virtual environment to run a standalone script that requires third-party libraries. `uv` creates an ephemeral environment for the execution.
+
+Use the `--with` flag to **temporarily** add dependencies for just this run:
+
+```bash
+# Run script.py using Python 3.11 and the 'requests' library
+uv run --python 3.11 --with requests script.py
+```
+
+### Example: Quick One-Liner
+
+You can also combine this with `python -c` for quick experiments:
+
+```bash
+uv run --with pandas python -c "import pandas as pd; print(pd.DataFrame({'a': [1, 2], 'b': [3, 4]}))"
+```
+
+## "Pinning" for Ad-hoc Scripts (PEP 723)
+
+If you have a standalone script that you run frequently, you don't want to type `--with` every time. `uv` supports **PEP 723 (Inline Script Metadata)**.
+
+You can declare the dependencies directly at the top of your python script:
+
+**`my_script.py`**:
+
+```python
+# /// script
+# requires-python = ">=3.12"
+# dependencies = [
+#     "requests<3",
+#     "rich",
+# ]
+# ///
+
+import requests
+from rich import print
+
+resp = requests.get("https://peps.python.org/api/peps.json")
+print(resp.json())
+```
+
+Now you can run it simply with:
+
+```bash
+uv run my_script.py
+```
+
+`uv` will automatically detect the header, create the necessary environment, and run the script.

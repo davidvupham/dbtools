@@ -384,6 +384,7 @@ Some packages need system libraries. Check the package documentation for require
 
 ## Related Guides
 
+- [UV Adoption Rationale (ROI & Business Case)](../../../explanation/python/uv/README.md)
 - [UV Getting Started Tutorial](../../../tutorials/python/uv/uv-getting-started.md)
 - [UV Docker Integration](./uv-docker-integration.md)
 - [UV CI/CD Integration](./uv-ci-cd-integration.md)

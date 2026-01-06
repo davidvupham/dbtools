@@ -11,8 +11,10 @@ This directory contains the Python basics for this project.
 * Part 1: Python Fundamentals — [01_PYTHON_BASICS_FOR_THIS_PROJECT.md](./01_PYTHON_BASICS_FOR_THIS_PROJECT.md)
   * Variables, data types, data structures, functions, error handling, type hints
 * **UV Package Manager** — [uv/](./uv/README.md)
-  * [Getting Started with UV](./uv/uv-getting-started.md) — Beginner-friendly step-by-step tutorial
-  * [UV Comprehensive Guide](./uv/uv_tutorial.md) — Deep dive into all UV features
+  * > **Start Here**: Select your path in the **[UV Learning Hub](./uv/README.md)**.
+  * 🟢 **Beginner**: [Getting Started](./uv/uv-getting-started.md)
+  * 🔵 **Comprehensive**: [Tutorial](./uv/uv_tutorial.md)
+  * 🟣 **Decision Maker**: [Adoption Rationale](../../../explanation/python/uv/README.md)
 
 * Part 2: Advanced Concepts — [01_PYTHON_BASICS_PART2.md](./01_PYTHON_BASICS_PART2.md)
   * Inner Functions & Closures, Decorators, Context Managers, Logging, Modules/Packages, Design Patterns
