@@ -215,9 +215,133 @@ docker-compose run --rm liquibase \
   --changelog-file=changelogs/master.xml \
   status --verbose | grep -c "NOT RUN"
 ```
+## Rootless Podman end-to-end test (PostgreSQL + SQL Server)
 
+These commands reproduce the exact test run from this workspace using rootless Podman, host-mounted volumes, and the sample changelog at `changelogs/platforms/postgres/databases/app`.
+
+## 0) One-time host prep
+
+```bash
+# Optional shared network
+podman network create devcontainer-network
+
+# Host paths for data/logs
+sudo mkdir -p /data/postgresql/psql1 /data/postgresql/psql2 /data/mssql/mssql1 /logs/postgresql /logs/mssql
+sudo chown -R "$USER":"$USER" /logs
+
+# Allow SQL Server (UID 10001) to write its volumes
+podman unshare chown -R 10001:0 /data/mssql /logs/mssql
+```
+
+## 1) Build images used in the test
+
+```bash
+podman build -t liquibase:latest docker/liquibase
+podman build -t gds-postgresql:latest docker/postgresql
+podman build -t gds-mssql:latest docker/mssql
+```
+
+## 2) Run PostgreSQL and SQL Server containers (host ports)
+
+```bash
+# PostgreSQL (port 5432)
+
+  -e POSTGRES_PASSWORD=YourStrong\!Passw0rd -e POSTGRES_DB=postgres -e POSTGRES_USER=postgres \
+  -v /data/postgresql:/data/postgresql \
+  -v /logs/postgresql:/logs/postgresql \
+  -v /data/postgresql/psql1:/var/lib/postgresql \
+  gds-postgresql:latest
+
+# SQL Server (port 1433)
 **Output example:**
+  -e ACCEPT_EULA=Y -e MSSQL_PID=Developer \
+  -e MSSQL_SA_PASSWORD=YourStrong\!Passw0rd \
+  -v /data/mssql:/data/mssql \
+  -v /logs/mssql:/logs/mssql \
+  -v /data/mssql/mssql1:/var/opt/mssql \
+  gds-mssql:latest
+```
 
+SQL Server readiness check:
+
+```bash
+podman exec mssql1 /opt/mssql-tools18/bin/sqlcmd -S localhost -U SA -P 'YourStrong!Passw0rd' -C -Q "SELECT @@VERSION"
+```
+
+## 3) Apply the sample changelog (v1.0) to both databases
+
+`LIQUIBASE_SEARCH_PATH` resolves relative includes; `host.containers.internal` reaches the host-published DB ports from the Liquibase container.
+
+```bash
+# PostgreSQL
+podman run --rm --entrypoint /bin/sh \
+  -v /home/dpham/src/dbtools/docker/liquibase/changelogs:/data/liquibase:ro \
+  liquibase:latest \
+  -c "LIQUIBASE_SEARCH_PATH=/data/liquibase/platforms/postgres/databases/app/releases/1.0 \
+      liquibase --changeLogFile=db.changelog-1.0.yaml \
+      --url=jdbc:postgresql://host.containers.internal:5432/postgres \
+      --username=postgres --password=YourStrong\!Passw0rd update"
+
+# SQL Server (ensure DB exists)
+
+  -Q "IF DB_ID('LiquibaseDemo') IS NULL CREATE DATABASE LiquibaseDemo;"
+
+podman run --rm --entrypoint /bin/sh \
+  -v /home/dpham/src/dbtools/docker/liquibase/changelogs:/data/liquibase:ro \
+  liquibase:latest \
+  -c "LIQUIBASE_SEARCH_PATH=/data/liquibase/platforms/postgres/databases/app/releases/1.0 \
+      liquibase --changeLogFile=db.changelog-1.0.yaml \
+      --url='jdbc:sqlserver://host.containers.internal:1433;databaseName=LiquibaseDemo;encrypt=false;trustServerCertificate=true' \
+      --username=SA --password=YourStrong\!Passw0rd update"
+```
+
+## 4) Apply the master changelog (adds tag v1.0)
+
+`db.changelog-master.yaml` wraps `tagDatabase` in a `changeSet`.
+
+```bash
+# PostgreSQL
+podman run --rm --entrypoint /bin/sh \
+  -v /home/dpham/src/dbtools/docker/liquibase/changelogs:/data/liquibase:ro \
+  liquibase:latest \
+  -c "LIQUIBASE_SEARCH_PATH=/data/liquibase/platforms/postgres/databases/app,/data/liquibase/platforms/postgres/databases/app/releases/1.0 \
+      liquibase --changeLogFile=db.changelog-master.yaml \
+      --url=jdbc:postgresql://host.containers.internal:5432/postgres \
+      --username=postgres --password=YourStrong\!Passw0rd update"
+
+# SQL Server
+podman run --rm --entrypoint /bin/sh \
+  -v /home/dpham/src/dbtools/docker/liquibase/changelogs:/data/liquibase:ro \
+  liquibase:latest \
+  -c "LIQUIBASE_SEARCH_PATH=/data/liquibase/platforms/postgres/databases/app,/data/liquibase/platforms/postgres/databases/app/releases/1.0 \
+      liquibase --changeLogFile=db.changelog-master.yaml \
+      --url='jdbc:sqlserver://host.containers.internal:1433;databaseName=LiquibaseDemo;encrypt=false;trustServerCertificate=true' \
+      --username=SA --password=YourStrong\!Passw0rd update"
+```
+
+## 5) Verify history (expects tag v1.0 and the demo changeset)
+
+```bash
+# PostgreSQL
+podman run --rm --entrypoint /bin/sh \
+  -v /home/dpham/src/dbtools/docker/liquibase/changelogs:/data/liquibase:ro \
+  liquibase:latest \
+  -c "LIQUIBASE_SEARCH_PATH=/data/liquibase/platforms/postgres/databases/app,/data/liquibase/platforms/postgres/databases/app/releases/1.0 \
+      liquibase --changeLogFile=db.changelog-master.yaml \
+      --url=jdbc:postgresql://host.containers.internal:5432/postgres \
+      --username=postgres --password=YourStrong\!Passw0rd history"
+
+# SQL Server
+podman run --rm --entrypoint /bin/sh \
+  -v /home/dpham/src/dbtools/docker/liquibase/changelogs:/data/liquibase:ro \
+  liquibase:latest \
+  -c "LIQUIBASE_SEARCH_PATH=/data/liquibase/platforms/postgres/databases/app,/data/liquibase/platforms/postgres/databases/app/releases/1.0 \
+      liquibase --changeLogFile=db.changelog-master.yaml \
+      --url='jdbc:sqlserver://host.containers.internal:1433;databaseName=LiquibaseDemo;encrypt=false;trustServerCertificate=true' \
+      --username=SA --password=YourStrong\!Passw0rd history"
+```
+
+Expected: both DBs show `001-create-demo-table.yaml::20251114-01-create-demo::sample` and `db.changelog-master.yaml::tag-v1.0::dpham` with tag `v1.0`.
 ```
 3 changesets have not been applied to mydb@jdbc:postgresql://postgres:5432/mydb
      changelogs/v1.0/001-create-users-table.xml::1::john.doe

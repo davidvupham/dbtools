@@ -1,5 +1,9 @@
 databaseChangeLog:
   - include:
       file: releases/1.0/db.changelog-1.0.yaml
-  - tagDatabase:
-      tag: v1.0
+  - changeSet:
+      id: tag-v1.0
+      author: dpham
+      changes:
+        - tagDatabase:
+            tag: v1.0
