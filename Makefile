@@ -29,7 +29,11 @@ DEV_IMAGE_TAG ?= latest
 DEV_IMAGE := $(DEV_IMAGE_NAME):$(DEV_IMAGE_TAG)
 
 # Liquibase variables
+COMPOSE ?= docker compose
 LB_COMPOSE := docker/liquibase/docker-compose.yml
+LB_COMPOSE_ARGS ?= -f $(LB_COMPOSE)
+LB_ENV_FILE ?= docker/liquibase/.env
+LB_ENV_ARG := $(if $(wildcard $(LB_ENV_FILE)),--env-file $(LB_ENV_FILE),)
 LB_DEFAULTS ?= /data/liquibase/env/liquibase.dev.properties
 LB_CHANGELOG ?= /data/liquibase/platforms/postgres/databases/app/db.changelog-master.yaml
 
@@ -124,13 +128,13 @@ infra-vault-down: ## Stop Vault
 	docker compose -f docker/docker-compose.yml down
 
 liquibase-validate: ## Validate Liquibase changelogs
-	docker compose -f $(LB_COMPOSE) run --rm liquibase \
+	$(COMPOSE) $(LB_COMPOSE_ARGS) $(LB_ENV_ARG) run --rm liquibase \
 		--defaults-file $(LB_DEFAULTS) \
 		--changelog-file $(LB_CHANGELOG) \
 		validate
 
 liquibase-update-sql: ## Preview Liquibase SQL
-	docker compose -f $(LB_COMPOSE) run --rm liquibase \
+	$(COMPOSE) $(LB_COMPOSE_ARGS) $(LB_ENV_ARG) run --rm liquibase \
 		--defaults-file $(LB_DEFAULTS) \
 		--changelog-file $(LB_CHANGELOG) \
 		updateSQL

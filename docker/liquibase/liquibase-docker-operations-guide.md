@@ -18,7 +18,7 @@
 
 ## Overview
 
-Liquibase is a database schema change management tool that tracks, versions, and deploys database changes. This guide covers operational procedures for running Liquibase in Docker containers.
+Liquibase is a database schema change management tool that tracks, versions, and deploys database changes. This guide covers operational procedures for running Liquibase in containers (Docker on Ubuntu, or rootless Podman on RHEL).
 
 **Key Characteristics:**
 
@@ -31,28 +31,48 @@ Liquibase is a database schema change management tool that tracks, versions, and
 
 ### Required Software
 
-- Docker Engine 20.10+ or Docker Desktop
-- Docker Compose 2.0+
+- Docker (common on Ubuntu): Docker Engine 20.10+ and Docker Compose v2 (`docker compose`)
+- Podman (common on RHEL): rootless Podman + `podman-compose`
 - Access to target database(s)
 
-### Required Files
+> **Command convention:** examples below use `docker compose`. On RHEL, replace `docker compose` with `podman-compose`.
 
+**Follow-up after configuring `.env`:**
+- If your host changelog path is not `/data/liquibase`, set `LIQUIBASE_HOST_ROOT` accordingly. For rootless Podman, also set `LIQUIBASE_UID`/`LIQUIBASE_GID` and keep `LIQUIBASE_VOLUME_SUFFIX=:Z` when required.
+- Sanity check the image wiring:
+
+```bash
+docker compose -f docker/liquibase/docker-compose.yml run --rm liquibase --version
+# or
+podman-compose -f docker/liquibase/docker-compose.yml run --rm liquibase --version
 ```
+
+### Required Files / Layout
+
+```text
 docker/liquibase/
-├── Dockerfile                    # Image definition
-├── docker-compose.yml            # Compose configuration
-├── changelogs/                   # Your migration scripts
-│   ├── master.xml               # Main changelog (example)
-│   ├── v1.0/                    # Version-specific changes
-│   └── ...
-├── liquibase.properties         # Optional: default connection settings
-└── OPERATIONS_GUIDE.md          # This file
+├── Dockerfile                     # Image definition
+├── docker-compose.yml             # Compose config (container path = /liquibase)
+├── docker-compose.network.yml     # Optional external-network override
+├── .env.example                   # Podman SELinux (:Z) and UID/GID hints
+├── changelogs/
+│   ├── env/
+│   │   └── liquibase.dev.properties    # Example defaults (offline)
+│   └── platforms/postgres/databases/app/
+│       ├── db.changelog-master.yaml
+│       └── releases/1.0/
+│           ├── 001-create-demo-table.yaml
+│           └── db.changelog-1.0.yaml
+└── output/                        # Optional mount for generated SQL/doc
 ```
+
+**Mount convention:** Host defaults to `/data/liquibase` (override `LIQUIBASE_HOST_ROOT`), container path is `/liquibase`. Add `LIQUIBASE_VOLUME_SUFFIX=:Z` for rootless Podman + SELinux.
 
 ### Network Access
 
-- Liquibase must reach database servers (same Docker network or network connectivity)
-- If databases are in other compose files, ensure network is shared
+- Liquibase must reach database servers (routing/DNS/VPN/firewall must allow it)
+- For external databases, use DNS/IP in the JDBC URL (standalone mode)
+- For databases running in containers where you want to connect by container/service name, use the “network mode” override described below
 
 ## Building the Image
 
@@ -64,11 +84,20 @@ docker/liquibase/
 # Navigate to the liquibase directory
 cd /workspaces/dbtools/docker/liquibase
 
-# Build using docker-compose (recommended)
-docker-compose build
+# Build using compose (recommended)
+docker compose build
 
 # Verify build
 docker run --rm liquibase:latest --version
+```
+
+> Tip: If you run compose from the repo root, add `--project-directory docker/liquibase` so the build context resolves to this Dockerfile.
+
+On RHEL:
+
+```bash
+podman-compose build
+podman run --rm liquibase:latest --version
 ```
 
 For custom version builds and troubleshooting build issues, refer to the Quick Start Guide.
@@ -77,7 +106,7 @@ For custom version builds and troubleshooting build issues, refer to the Quick S
 
 ### Changelog Organization (Best Practice)
 
-```
+```text
 changelogs/
 ├── master.xml                          # Master changelog file
 ├── v1.0/
@@ -141,8 +170,8 @@ property.table.prefix=app_
 ### Basic Pattern
 
 ```bash
-# Pattern: docker-compose run --rm liquibase [COMMAND] [OPTIONS]
-docker-compose run --rm liquibase --help
+# Pattern: docker compose run --rm liquibase [COMMAND] [OPTIONS]
+docker compose run --rm liquibase --help
 ```
 
 **Flags explained:**
@@ -150,12 +179,25 @@ docker-compose run --rm liquibase --help
 - `--rm`: Remove container after execution (cleanup)
 - `liquibase`: Service name from docker-compose.yml
 
+> **Standalone vs network mode:**
+>
+> - **Standalone mode (default):** connect to external databases by DNS/IP in your JDBC URL; no shared container network is required.
+> - **Network mode (optional):** connect to database containers by service name by joining an existing external container network using `docker-compose.network.yml` and setting `DBTOOLS_NETWORK` in `.env`.
+
 ### Using Properties File
 
 ```bash
 # Create liquibase.properties in the liquibase directory
 # Then run with defaults-file option
-docker-compose run --rm liquibase \
+docker compose run --rm liquibase \
+  --defaults-file=/liquibase/liquibase.properties \
+  update
+```
+
+Equivalent on RHEL:
+
+```bash
+podman-compose run --rm liquibase \
   --defaults-file=/liquibase/liquibase.properties \
   update
 ```
@@ -164,7 +206,7 @@ docker-compose run --rm liquibase \
 
 ```bash
 # All connection details on command line
-docker-compose run --rm liquibase \
+docker compose run --rm liquibase \
   --url=jdbc:postgresql://postgres:5432/mydb \
   --username=dbuser \
   --password=dbpass \
@@ -176,7 +218,7 @@ docker-compose run --rm liquibase \
 
 ```bash
 # Use contexts to control which changes apply
-docker-compose run --rm liquibase \
+docker compose run --rm liquibase \
   --url=jdbc:postgresql://postgres:5432/mydb \
   --username=dbuser \
   --password=dbpass \
@@ -185,7 +227,7 @@ docker-compose run --rm liquibase \
   update
 
 # Use labels for fine-grained control
-docker-compose run --rm liquibase \
+docker compose run --rm liquibase \
   --url=jdbc:postgresql://postgres:5432/mydb \
   --username=dbuser \
   --password=dbpass \
@@ -194,32 +236,11 @@ docker-compose run --rm liquibase \
   update
 ```
 
-## Common Operations
-
-### 1. Check Status (What Will Be Applied)
-
-```bash
-# See pending changes
-docker-compose run --rm liquibase \
-  --url=jdbc:postgresql://postgres:5432/mydb \
-  --username=dbuser \
-  --password=dbpass \
-  --changelog-file=changelogs/master.xml \
-  status --verbose
-
-# Count pending changesets
-docker-compose run --rm liquibase \
-  --url=jdbc:postgresql://postgres:5432/mydb \
-  --username=dbuser \
-  --password=dbpass \
-  --changelog-file=changelogs/master.xml \
-  status --verbose | grep -c "NOT RUN"
-```
-## Rootless Podman end-to-end test (PostgreSQL + SQL Server)
+## Rootless Podman End-to-End Test (PostgreSQL + SQL Server)
 
 These commands reproduce the exact test run from this workspace using rootless Podman, host-mounted volumes, and the sample changelog at `changelogs/platforms/postgres/databases/app`.
 
-## 0) One-time host prep
+### 0) One-time host prep
 
 ```bash
 # Optional shared network
@@ -233,7 +254,7 @@ sudo chown -R "$USER":"$USER" /logs
 podman unshare chown -R 10001:0 /data/mssql /logs/mssql
 ```
 
-## 1) Build images used in the test
+### 1) Build images used in the test
 
 ```bash
 podman build -t liquibase:latest docker/liquibase
@@ -241,11 +262,11 @@ podman build -t gds-postgresql:latest docker/postgresql
 podman build -t gds-mssql:latest docker/mssql
 ```
 
-## 2) Run PostgreSQL and SQL Server containers (host ports)
+### 2) Run PostgreSQL and SQL Server containers (host ports)
 
 ```bash
 # PostgreSQL (port 5432)
-
+podman run -d --name psql1 -p 5432:5432 \
   -e POSTGRES_PASSWORD=YourStrong\!Passw0rd -e POSTGRES_DB=postgres -e POSTGRES_USER=postgres \
   -v /data/postgresql:/data/postgresql \
   -v /logs/postgresql:/logs/postgresql \
@@ -253,7 +274,7 @@ podman build -t gds-mssql:latest docker/mssql
   gds-postgresql:latest
 
 # SQL Server (port 1433)
-**Output example:**
+podman run -d --name mssql1 -p 1433:1433 \
   -e ACCEPT_EULA=Y -e MSSQL_PID=Developer \
   -e MSSQL_SA_PASSWORD=YourStrong\!Passw0rd \
   -v /data/mssql:/data/mssql \
@@ -268,7 +289,7 @@ SQL Server readiness check:
 podman exec mssql1 /opt/mssql-tools18/bin/sqlcmd -S localhost -U SA -P 'YourStrong!Passw0rd' -C -Q "SELECT @@VERSION"
 ```
 
-## 3) Apply the sample changelog (v1.0) to both databases
+### 3) Apply the sample changelog (v1.0) to both databases
 
 `LIQUIBASE_SEARCH_PATH` resolves relative includes; `host.containers.internal` reaches the host-published DB ports from the Liquibase container.
 
@@ -283,7 +304,7 @@ podman run --rm --entrypoint /bin/sh \
       --username=postgres --password=YourStrong\!Passw0rd update"
 
 # SQL Server (ensure DB exists)
-
+podman exec mssql1 /opt/mssql-tools18/bin/sqlcmd -S localhost -U SA -P 'YourStrong!Passw0rd' -C \
   -Q "IF DB_ID('LiquibaseDemo') IS NULL CREATE DATABASE LiquibaseDemo;"
 
 podman run --rm --entrypoint /bin/sh \
@@ -295,7 +316,7 @@ podman run --rm --entrypoint /bin/sh \
       --username=SA --password=YourStrong\!Passw0rd update"
 ```
 
-## 4) Apply the master changelog (adds tag v1.0)
+### 4) Apply the master changelog (adds tag v1.0)
 
 `db.changelog-master.yaml` wraps `tagDatabase` in a `changeSet`.
 
@@ -319,7 +340,7 @@ podman run --rm --entrypoint /bin/sh \
       --username=SA --password=YourStrong\!Passw0rd update"
 ```
 
-## 5) Verify history (expects tag v1.0 and the demo changeset)
+### 5) Verify history (expects tag v1.0 and the demo changeset)
 
 ```bash
 # PostgreSQL
@@ -342,7 +363,32 @@ podman run --rm --entrypoint /bin/sh \
 ```
 
 Expected: both DBs show `001-create-demo-table.yaml::20251114-01-create-demo::sample` and `db.changelog-master.yaml::tag-v1.0::dpham` with tag `v1.0`.
+
+## Common Operations
+
+### 1. Check Status (What Will Be Applied)
+
+```bash
+# See pending changes
+docker compose run --rm liquibase \
+  --url=jdbc:postgresql://postgres:5432/mydb \
+  --username=dbuser \
+  --password=dbpass \
+  --changelog-file=changelogs/master.xml \
+  status --verbose
+
+# Count pending changesets
+docker compose run --rm liquibase \
+  --url=jdbc:postgresql://postgres:5432/mydb \
+  --username=dbuser \
+  --password=dbpass \
+  --changelog-file=changelogs/master.xml \
+  status --verbose | grep -c "NOT RUN"
 ```
+
+**Output example:**
+
+```text
 3 changesets have not been applied to mydb@jdbc:postgresql://postgres:5432/mydb
      changelogs/v1.0/001-create-users-table.xml::1::john.doe
      changelogs/v1.0/002-create-orders-table.xml::1::john.doe
@@ -353,7 +399,7 @@ Expected: both DBs show `001-create-demo-table.yaml::20251114-01-create-demo::sa
 
 ```bash
 # Apply all pending changes
-docker-compose run --rm liquibase \
+docker compose run --rm liquibase \
   --url=jdbc:postgresql://postgres:5432/mydb \
   --username=dbuser \
   --password=dbpass \
@@ -361,7 +407,7 @@ docker-compose run --rm liquibase \
   update
 
 # Apply specific number of changes
-docker-compose run --rm liquibase \
+docker compose run --rm liquibase \
   --url=jdbc:postgresql://postgres:5432/mydb \
   --username=dbuser \
   --password=dbpass \
@@ -369,7 +415,7 @@ docker-compose run --rm liquibase \
   update-count 2
 
 # Apply changes up to a specific tag
-docker-compose run --rm liquibase \
+docker compose run --rm liquibase \
   --url=jdbc:postgresql://postgres:5432/mydb \
   --username=dbuser \
   --password=dbpass \
@@ -381,7 +427,7 @@ docker-compose run --rm liquibase \
 
 ```bash
 # Generate SQL without applying
-docker-compose run --rm liquibase \
+docker compose run --rm liquibase \
   --url=jdbc:postgresql://postgres:5432/mydb \
   --username=dbuser \
   --password=dbpass \
@@ -389,7 +435,7 @@ docker-compose run --rm liquibase \
   update-sql
 
 # Save SQL to file
-docker-compose run --rm liquibase \
+docker compose run --rm liquibase \
   --url=jdbc:postgresql://postgres:5432/mydb \
   --username=dbuser \
   --password=dbpass \
@@ -401,7 +447,7 @@ docker-compose run --rm liquibase \
 
 ```bash
 # Rollback last N changes
-docker-compose run --rm liquibase \
+docker compose run --rm liquibase \
   --url=jdbc:postgresql://postgres:5432/mydb \
   --username=dbuser \
   --password=dbpass \
@@ -409,7 +455,7 @@ docker-compose run --rm liquibase \
   rollback-count 1
 
 # Rollback to a specific tag
-docker-compose run --rm liquibase \
+docker compose run --rm liquibase \
   --url=jdbc:postgresql://postgres:5432/mydb \
   --username=dbuser \
   --password=dbpass \
@@ -417,7 +463,7 @@ docker-compose run --rm liquibase \
   rollback v1.0
 
 # Rollback to a specific date
-docker-compose run --rm liquibase \
+docker compose run --rm liquibase \
   --url=jdbc:postgresql://postgres:5432/mydb \
   --username=dbuser \
   --password=dbpass \
@@ -425,7 +471,7 @@ docker-compose run --rm liquibase \
   rollback-to-date "2025-01-01"
 
 # Preview rollback SQL
-docker-compose run --rm liquibase \
+docker compose run --rm liquibase \
   --url=jdbc:postgresql://postgres:5432/mydb \
   --username=dbuser \
   --password=dbpass \
@@ -437,7 +483,7 @@ docker-compose run --rm liquibase \
 
 ```bash
 # Create a tag (bookmark) at current state
-docker-compose run --rm liquibase \
+docker compose run --rm liquibase \
   --url=jdbc:postgresql://postgres:5432/mydb \
   --username=dbuser \
   --password=dbpass \
@@ -449,7 +495,7 @@ docker-compose run --rm liquibase \
 
 ```bash
 # Compare two databases
-docker-compose run --rm liquibase \
+docker compose run --rm liquibase \
   --url=jdbc:postgresql://postgres:5432/source_db \
   --username=dbuser \
   --password=dbpass \
@@ -459,7 +505,7 @@ docker-compose run --rm liquibase \
   diff
 
 # Generate changelog from diff
-docker-compose run --rm liquibase \
+docker compose run --rm liquibase \
   --url=jdbc:postgresql://postgres:5432/source_db \
   --username=dbuser \
   --password=dbpass \
@@ -474,7 +520,7 @@ docker-compose run --rm liquibase \
 
 ```bash
 # Validate changelog syntax
-docker-compose run --rm liquibase \
+docker compose run --rm liquibase \
   --changelog-file=changelogs/master.xml \
   validate
 ```
@@ -483,7 +529,7 @@ docker-compose run --rm liquibase \
 
 ```bash
 # Generate database documentation
-docker-compose run --rm liquibase \
+docker compose run --rm liquibase \
   --url=jdbc:postgresql://postgres:5432/mydb \
   --username=dbuser \
   --password=dbpass \
@@ -497,15 +543,15 @@ docker-compose run --rm liquibase \
 
 ```bash
 # 1. Verify Liquibase version
-docker-compose run --rm liquibase --version
+docker compose run --rm liquibase --version
 
 # 2. Validate changelog syntax
-docker-compose run --rm liquibase \
+docker compose run --rm liquibase \
   --changelog-file=changelogs/master.xml \
   validate
 
 # 3. Test database connectivity
-docker-compose run --rm liquibase \
+docker compose run --rm liquibase \
   --url=jdbc:postgresql://postgres:5432/mydb \
   --username=dbuser \
   --password=dbpass \
@@ -513,7 +559,7 @@ docker-compose run --rm liquibase \
   status
 
 # 4. Check pending changes
-docker-compose run --rm liquibase \
+docker compose run --rm liquibase \
   --url=jdbc:postgresql://postgres:5432/mydb \
   --username=dbuser \
   --password=dbpass \
@@ -521,7 +567,7 @@ docker-compose run --rm liquibase \
   status --verbose
 
 # 5. Generate and review SQL (dry run)
-docker-compose run --rm liquibase \
+docker compose run --rm liquibase \
   --url=jdbc:postgresql://postgres:5432/mydb \
   --username=dbuser \
   --password=dbpass \
@@ -533,7 +579,7 @@ docker-compose run --rm liquibase \
 
 ```bash
 # 1. Verify all changes applied
-docker-compose run --rm liquibase \
+docker compose run --rm liquibase \
   --url=jdbc:postgresql://postgres:5432/mydb \
   --username=dbuser \
   --password=dbpass \
@@ -549,7 +595,7 @@ docker exec postgres psql -U dbuser -d mydb \
   -c "\dt" # List tables
 
 # 4. Check for errors in Liquibase logs
-docker-compose logs liquibase | grep -i error
+docker compose logs liquibase | grep -i error
 ```
 
 ### Health Check Script
@@ -566,17 +612,17 @@ echo "=== Liquibase Health Check ==="
 
 # Check 1: Liquibase version
 echo "1. Checking Liquibase version..."
-docker-compose run --rm liquibase --version || exit 1
+docker compose run --rm liquibase --version || exit 1
 
 # Check 2: Validate changelog
 echo "2. Validating changelog..."
-docker-compose run --rm liquibase \
+docker compose run --rm liquibase \
   --changelog-file=changelogs/master.xml \
   validate || exit 1
 
 # Check 3: Database connectivity
 echo "3. Testing database connectivity..."
-docker-compose run --rm liquibase \
+docker compose run --rm liquibase \
   --defaults-file=/liquibase/liquibase.properties \
   status > /dev/null || exit 1
 
@@ -589,7 +635,7 @@ echo "=== All health checks passed ==="
 
 ```bash
 # Run with verbose logging
-docker-compose run --rm liquibase \
+docker compose run --rm liquibase \
   --url=jdbc:postgresql://postgres:5432/mydb \
   --username=dbuser \
   --password=dbpass \
@@ -598,13 +644,15 @@ docker-compose run --rm liquibase \
   update
 
 # Capture output to file
-docker-compose run --rm liquibase \
+docker compose run --rm liquibase \
   --url=jdbc:postgresql://postgres:5432/mydb \
   --username=dbuser \
   --password=dbpass \
   --changelog-file=changelogs/master.xml \
   update 2>&1 | tee liquibase-$(date +%Y%m%d-%H%M%S).log
 ```
+
+On RHEL, replace `docker compose`/`docker exec` with `podman-compose`/`podman exec`.
 
 ### Check Database Changelog Tables
 
@@ -626,7 +674,7 @@ docker exec postgres psql -U dbuser -d mydb -c \
 
 ```bash
 # If Liquibase crashes, the lock may remain
-docker-compose run --rm liquibase \
+docker compose run --rm liquibase \
   --url=jdbc:postgresql://postgres:5432/mydb \
   --username=dbuser \
   --password=dbpass \
@@ -718,8 +766,20 @@ password=${DB_PASSWORD}
 export DB_USERNAME=dbuser
 export DB_PASSWORD=secure_password
 
-# Or use .env file with docker-compose
-docker-compose --env-file .env run --rm liquibase update
+# Or use an .env file (recommended). This repo's convention is docker/liquibase/.env
+# (from this directory, that path is just .env).
+docker compose --env-file .env run --rm liquibase update
+
+# On RHEL:
+podman-compose --env-file .env run --rm liquibase update
+
+# Network mode (ONLY when connecting to DB containers by service name):
+# Requires DBTOOLS_NETWORK to be set in .env.
+docker compose \
+  -f docker-compose.yml \
+  -f docker-compose.network.yml \
+  --env-file .env \
+  run --rm liquibase update
 ```
 
 ### 4. Testing and Validation
@@ -762,7 +822,7 @@ docker-compose --env-file .env run --rm liquibase update
 - Tag releases in changelog
 - Keep migration logs
 - Automate validation in CI/CD
-- Set resource limits in docker-compose
+- Set resource limits in compose
 
 ❌ **DON'T:**
 
@@ -780,12 +840,14 @@ docker-compose --env-file .env run --rm liquibase update
 
 ```bash
 # Release the lock
-docker-compose run --rm liquibase \
+docker compose run --rm liquibase \
   --url=jdbc:postgresql://postgres:5432/mydb \
   --username=dbuser \
   --password=dbpass \
   release-locks
 ```
+
+If you're on RHEL, replace `docker compose` with `podman-compose`.
 
 ### Issue: "Validation Failed: Checksum mismatch"
 
@@ -795,7 +857,7 @@ docker-compose run --rm liquibase \
 
 ```bash
 # Option 1: Clear checksums (not recommended for production)
-docker-compose run --rm liquibase \
+docker compose run --rm liquibase \
   --url=jdbc:postgresql://postgres:5432/mydb \
   --username=dbuser \
   --password=dbpass \
@@ -817,13 +879,12 @@ git checkout HEAD -- changelogs/problematic-file.xml
 docker ps | grep postgres
 
 # Check network connectivity
-docker-compose run --rm liquibase ping postgres
+docker compose run --rm liquibase ping postgres
 
 # Check if on same network
-docker network inspect dbtools-network
-
-# Use host.docker.internal for host databases
---url=jdbc:postgresql://host.docker.internal:5432/mydb
+# If your database is another container and you need service-name DNS,
+# use the network-mode override and set DBTOOLS_NETWORK in .env.
+docker compose -f docker-compose.yml -f docker-compose.network.yml --env-file .env run --rm liquibase --help
 ```
 
 ### Issue: "Driver not found"
@@ -837,7 +898,7 @@ docker network inspect dbtools-network
 docker run --rm liquibase:latest ls -l /opt/liquibase/lib/
 
 # If missing, rebuild image or add driver manually
-docker-compose build --no-cache
+docker compose build --no-cache
 ```
 
 ### Issue: Out of Memory errors
@@ -854,7 +915,7 @@ deploy:
       memory: 2G
 
 # Or run with Java heap settings
-docker-compose run --rm \
+docker compose run --rm \
   -e JAVA_OPTS="-Xmx2g" \
   liquibase update
 ```
@@ -864,7 +925,7 @@ docker-compose run --rm \
 ### Essential Commands
 
 | Command | Purpose | Example |
-|---------|---------|---------|
+| --- | --- | --- |
 | `update` | Apply all pending changes | `liquibase update` |
 | `update-count N` | Apply N changes | `liquibase update-count 5` |
 | `update-sql` | Generate SQL without applying | `liquibase update-sql` |
@@ -880,29 +941,34 @@ docker-compose run --rm \
 
 ```bash
 # Build image
-docker-compose build
+docker compose build
 
 # Rebuild without cache
-docker-compose build --no-cache
+docker compose build --no-cache
 
 # Check image size
 docker images liquibase
 
 # Run with custom command
-docker-compose run --rm liquibase [COMMAND]
+docker compose run --rm liquibase [COMMAND]
 
 # Run with environment variables
-docker-compose run --rm -e DB_PASSWORD=secret liquibase update
+docker compose run --rm -e DB_PASSWORD=secret liquibase update
 
 # View container logs (if run with -d)
-docker-compose logs -f liquibase
+docker compose logs -f liquibase
 
 # Remove stopped containers
-docker-compose down
+docker compose down
 
 # Clean up everything
-docker-compose down -v
+docker compose down -v
 docker rmi liquibase:latest
+
+# On RHEL, use podman-compose instead of docker compose:
+podman-compose build
+podman-compose run --rm liquibase [COMMAND]
+podman-compose down
 ```
 
 ### Database-Specific Connection Examples
@@ -910,7 +976,7 @@ docker rmi liquibase:latest
 **PostgreSQL:**
 
 ```bash
-docker-compose run --rm liquibase \
+docker compose run --rm liquibase \
   --url=jdbc:postgresql://postgres:5432/mydb \
   --username=dbuser \
   --password=dbpass \
@@ -921,7 +987,7 @@ docker-compose run --rm liquibase \
 **SQL Server:**
 
 ```bash
-docker-compose run --rm liquibase \
+docker compose run --rm liquibase \
   --url="jdbc:sqlserver://mssql1:1433;databaseName=mydb;encrypt=true;trustServerCertificate=true" \
   --username=SA \
   --password='YourStrong!Passw0rd' \
@@ -932,7 +998,7 @@ docker-compose run --rm liquibase \
 **Snowflake:**
 
 ```bash
-docker-compose run --rm liquibase \
+docker compose run --rm liquibase \
   --url="jdbc:snowflake://account.snowflakecomputing.com/?db=mydb&warehouse=compute_wh" \
   --username=snowuser \
   --password=snowpass \
@@ -943,7 +1009,7 @@ docker-compose run --rm liquibase \
 **MongoDB:**
 
 ```bash
-docker-compose run --rm liquibase \
+docker compose run --rm liquibase \
   --url=jdbc:mongodb://mongodb1:27017/mydb \
   --username=mongouser \
   --password=mongopass \
@@ -965,17 +1031,17 @@ docker-compose run --rm liquibase \
 # Most common workflow:
 
 # 1. Check what will be applied
-docker-compose run --rm liquibase --defaults-file=/liquibase/liquibase.properties status
+docker compose run --rm liquibase --defaults-file=/liquibase/liquibase.properties status
 
 # 2. Preview the SQL
-docker-compose run --rm liquibase --defaults-file=/liquibase/liquibase.properties update-sql
+docker compose run --rm liquibase --defaults-file=/liquibase/liquibase.properties update-sql
 
 # 3. Apply changes
-docker-compose run --rm liquibase --defaults-file=/liquibase/liquibase.properties update
+docker compose run --rm liquibase --defaults-file=/liquibase/liquibase.properties update
 
 # 4. Tag the release
-docker-compose run --rm liquibase --defaults-file=/liquibase/liquibase.properties tag v1.0
+docker compose run --rm liquibase --defaults-file=/liquibase/liquibase.properties tag v1.0
 
 # If something goes wrong:
-docker-compose run --rm liquibase --defaults-file=/liquibase/liquibase.properties rollback v1.0
+docker compose run --rm liquibase --defaults-file=/liquibase/liquibase.properties rollback v1.0
 ```

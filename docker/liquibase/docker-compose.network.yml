@@ -1,0 +1,17 @@
+# Optional network-mode override
+#
+# Use this file when your target database is running in another container and you
+# want to connect by container/service name on a shared external network.
+#
+# This is intentionally NOT the default to keep "standalone" usage simple for
+# external databases reachable by DNS/IP (corporate network, VPN, etc.).
+
+services:
+  liquibase:
+    networks:
+      - selected-network
+
+networks:
+  selected-network:
+    external: true
+    name: ${DBTOOLS_NETWORK:?Set DBTOOLS_NETWORK (e.g., in docker/liquibase/.env) to an existing network name}

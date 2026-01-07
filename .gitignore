@@ -3,6 +3,9 @@
 .env.local
 config.sh
 
+# Liquibase local configuration (do not commit)
+docker/liquibase/.env
+
 # VS Code
 .vscode/
 *.code-workspace.backup

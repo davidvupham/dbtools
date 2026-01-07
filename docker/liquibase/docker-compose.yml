@@ -35,28 +35,21 @@ services:
     # Image name after build
     image: liquibase:latest
 
-    # Container name (easier to reference than auto-generated name)
-    container_name: liquibase
-
     # Working directory inside container (canonical path)
-    working_dir: /data/liquibase
+    working_dir: /liquibase
 
     # Volume Mounts - CRITICAL FOR OPERATIONS
     # Maps your local changelog files into the container
     volumes:
-      # Canonical mount: host changelog root -> /data/liquibase in container
-      # Set LIQUIBASE_HOST_ROOT to an absolute host path like /data/liquibase, or
+      # Canonical mount: host changelog root -> /liquibase in container
+      # Set LIQUIBASE_HOST_ROOT to an absolute host path like /data/liquibase (host), or
       # leave unset to default to the local ./changelogs folder in this repo.
-      - ${LIQUIBASE_HOST_ROOT:-./changelogs}:/data/liquibase
+      # For SELinux systems (e.g., RHEL with Podman), set LIQUIBASE_VOLUME_SUFFIX=:Z
+      - ${LIQUIBASE_HOST_ROOT:-/data/liquibase}:/liquibase${LIQUIBASE_VOLUME_SUFFIX:-}
       # Note: Use :ro (read-only) for production changelogs, omit for dev/tutorial
 
       # Optional: Output directory for generated SQL, reports, etc.
-      - ./output:/data/liquibase/output
-
-    # Network Configuration
-    # Allows Liquibase to connect to database containers
-    networks:
-      - devcontainer-network
+      - ./output:/liquibase/output${LIQUIBASE_VOLUME_SUFFIX:-}
 
     # Environment Variables
     # These can be referenced in your liquibase.properties or changelogs
@@ -79,34 +72,18 @@ services:
     # Liquibase runs a migration and exits, shouldn't restart automatically
     restart: "no"
 
-    # Resource limits (optional but recommended)
-    # Prevents Liquibase from consuming too much memory/CPU
-    deploy:
-      resources:
-        limits:
-          cpus: "1.0" # Max 1 CPU core
-          memory: 1G # Max 1GB RAM
-        reservations:
-          cpus: "0.25" # Reserve at least 0.25 CPU
-          memory: 256M # Reserve at least 256MB RAM
-
-# ------------------------------------------------------------------------------
-# Networks
-# ------------------------------------------------------------------------------
-# Connect to existing database network
-# Network is shared with dev container and all database services
-networks:
-  devcontainer-network:
-    external: true
+    # Match container UID/GID for rootless Podman or to avoid root-owned files
+    user: "${LIQUIBASE_UID:-0}:${LIQUIBASE_GID:-0}"
 # ==============================================================================
 # USAGE EXAMPLES:
 # ==============================================================================
 #
 # Show help:
-#   docker-compose run --rm liquibase --help
+#   docker compose run --rm liquibase --help
+#   # On RHEL: podman-compose run --rm liquibase --help
 #
 # Run update (apply all pending changes):
-#   docker-compose run --rm liquibase \
+#   docker compose run --rm liquibase \
 #     --url=jdbc:postgresql://postgres:5432/mydb \
 #     --username=dbuser \
 #     --password=dbpass \
@@ -114,7 +91,7 @@ networks:
 #     update
 #
 # Check status (what changes are pending):
-#   docker-compose run --rm liquibase \
+#   docker compose run --rm liquibase \
 #     --url=jdbc:sqlserver://mssql1:1433;databaseName=mydb \
 #     --username=SA \
 #     --password=YourStrong!Passw0rd \
@@ -122,7 +99,7 @@ networks:
 #     status --verbose
 #
 # Rollback last change:
-#   docker-compose run --rm liquibase \
+#   docker compose run --rm liquibase \
 #     --url=jdbc:postgresql://postgres:5432/mydb \
 #     --username=dbuser \
 #     --password=dbpass \
@@ -130,7 +107,7 @@ networks:
 #     rollback-count 1
 #
 # Generate SQL without applying (dry run):
-#   docker-compose run --rm liquibase \
+#   docker compose run --rm liquibase \
 #     --url=jdbc:postgresql://postgres:5432/mydb \
 #     --username=dbuser \
 #     --password=dbpass \
@@ -138,7 +115,7 @@ networks:
 #     update-sql
 #
 # Using properties file:
-#   docker-compose run --rm liquibase \
+#   docker compose run --rm liquibase \
 #     --defaults-file=/liquibase/liquibase.properties \
 #     update
 #
