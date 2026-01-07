@@ -1,4 +1,4 @@
-# Self-Hosted GitHub Actions Runners in WSL with Docker
+# Self-Hosted GitHub Actions Runners with Docker (Linux/WSL)
 
 ## Table of Contents
 
@@ -6,7 +6,7 @@
 - [Why Use Self-Hosted Runners?](#why-use-self-hosted-runners)
 - [Architecture Overview](#architecture-overview)
 - [Prerequisites](#prerequisites)
-- [Part 1: Setup Docker in WSL 2](#part-1-setup-docker-in-wsl-2)
+- [Part 1: Setup Docker Host](#part-1-setup-docker-host)
 - [Part 2: Setup SQL Server](#part-2-setup-sql-server)
 - [Part 3: Configure GitHub Runner](#part-3-configure-github-runner)
 - [Part 4: Connect Runner to SQL Server](#part-4-connect-runner-to-sql-server)
@@ -24,44 +24,42 @@
 
 ## Introduction
 
-This guide teaches you how to set up **self-hosted GitHub Actions runners** running in Docker containers within Windows Subsystem for Linux (WSL 2). This approach is perfect for:
+This guide teaches you how to set up **self-hosted GitHub Actions runners** running in Docker containers.
 
-- **Local development and testing** of GitHub Actions workflows
-- **Learning CI/CD** without cloud database costs
-- **Enterprise scenarios** where databases aren't internet-accessible
-- **Cost optimization** with unlimited free runner minutes
+### Self-Hosted vs. GitHub-Hosted Runners
 
-By the end of this guide, you'll have a complete local CI/CD environment that mirrors production GitHub Actions, but runs entirely on your local machine.
+GitHub Actions offers two types of runners:
+
+1.  **GitHub-Hosted Runners**: Virtual machines managed by GitHub. They are clean, pre-installed with common software, and maintenance-free. However, they cannot access your local resources (like a local SQL Server) without complex networking.
+2.  **Self-Hosted Runners**: Machines that you manage. They offer full control over hardware and software.
+
+For this course, we use **self-hosted runners** because they allow:
+- **Direct Access to Local Resources**: The runner can talk directly to your local SQL Server container.
+- **Cost Savings**: Unlimited minutes for learning without consuming your GitHub Actions quota.
+- **Enterprise Simulation**: Mimics real-world scenarios where database servers are behind firewalls.
+
+For more details, see the official [GitHub documentation on self-hosted runners](https://docs.github.com/en/actions/hosting-your-own-runners/managing-self-hosted-runners/about-self-hosted-runners).
+
+
 
 ### What You'll Build
 
-```text
-┌─────────────────────────────────────────────────────────────┐
-│  Windows 11                                                 │
-│                                                             │
-│  ┌───────────────────────────────────────────────────────┐ │
-│  │  WSL 2 (Ubuntu)                                       │ │
-│  │                                                       │ │
-│  │  ┌─────────────────┐      ┌─────────────────┐       │ │
-│  │  │ Docker Container│      │ Docker Container│       │ │
-│  │  │                 │      │                 │       │ │
-│  │  │ GitHub Actions  │─────▶│  SQL Server     │       │ │
-│  │  │ Runner          │      │  Database       │       │ │
-│  │  │                 │      │                 │       │ │
-│  │  └─────────────────┘      └─────────────────┘       │ │
-│  │         ▲                                            │ │
-│  │         │                                            │ │
-│  │         │ Pulls jobs from GitHub.com                │ │
-│  └─────────┼────────────────────────────────────────────┘ │
-│            │                                              │
-└────────────┼──────────────────────────────────────────────┘
-             │
-             ▼
-    ┌────────────────┐
-    │  GitHub.com    │
-    │  Your Repo     │
-    │  Workflows     │
-    └────────────────┘
+```mermaid
+graph TB
+    subgraph Cloud ["GitHub.com"]
+        GH[Your Repo & Workflows]
+    end
+
+    subgraph Docker ["Docker Host"]
+        Runner["GitHub Actions Runner<br/>(Docker Container)"]
+        DB["SQL Server Database<br/>(Docker Container)"]
+    end
+
+    GH -- "Polled by" --> Runner
+    Runner -- "Deploys to" --> DB
+
+    style Docker fill:#e3f2fd,stroke:#1565c0,stroke-width:2px,color:#000000
+    style Cloud fill:#f5f5f5,stroke:#616161,stroke-width:2px,color:#000000
 ```
 
 ## Why Use Self-Hosted Runners?
@@ -98,24 +96,15 @@ By the end of this guide, you'll have a complete local CI/CD environment that mi
 - Custom configurations
 - Debug workflow issues locally
 
-### When to Use Self-Hosted Runners
 
-| Scenario | Recommended Approach |
-|----------|---------------------|
-| Learning Liquibase + GitHub Actions | ✅ Self-hosted (this guide) |
-| Local SQL Server development | ✅ Self-hosted |
-| Testing workflows before cloud deployment | ✅ Self-hosted |
-| Enterprise with private databases | ✅ Self-hosted |
-| Production with cloud databases | ⚠️ GitHub-hosted or enterprise runners |
-| Small team, simple needs | ⚠️ GitHub-hosted (simpler) |
 
 ## Architecture Overview
 
 ### Components
 
-### 1. WSL 2 (Windows Subsystem for Linux)
+### 1. Docker Host (Linux or WSL)
 
-- Linux environment on Windows
+- Linux environment (RHEL, Ubuntu, or WSL)
 - Runs Docker daemon
 - Hosts runner and SQL Server containers
 
@@ -139,20 +128,19 @@ By the end of this guide, you'll have a complete local CI/CD environment that mi
 
 ### How It Works
 
-```text
-1. You push code to GitHub
-   ↓
-2. GitHub creates workflow job
-   ↓
-3. GitHub sends job to your runner (via polling)
-   ↓
-4. Runner (in WSL Docker) executes job
-   ↓
-5. Runner deploys to SQL Server (in WSL Docker)
-   ↓
-6. Runner reports results back to GitHub
-   ↓
-7. You see results in GitHub Actions UI
+```mermaid
+sequenceDiagram
+    actor Developer
+    participant GitHub
+    participant Runner as Self-Hosted Runner
+    participant DB as SQL Server
+
+    Developer->>GitHub: 1. Push Code
+    GitHub->>Runner: 2. Job Available (via polling)
+    Runner->>Runner: 3. Execute Job
+    Runner->>DB: 4. Deploy Changes
+    Runner->>GitHub: 5. Report Results
+    GitHub-->>Developer: 6. Show Results in Actions UI
 ```
 
 **Key point:** The runner is **pulling** jobs from GitHub, not receiving incoming connections. This works through firewalls and NAT.
@@ -161,19 +149,19 @@ By the end of this guide, you'll have a complete local CI/CD environment that mi
 
 ### Required Software
 
-✅ **Windows 10 version 2004+ or Windows 11**
+✅ **Docker Host OS**:
+   - **Linux**: Ubuntu 20.04+, RHEL 8+, or similar.
+   - **Windows**: Windows 10/11 with WSL 2.
 
-- WSL 2 requires recent Windows
+✅ **Docker Engine installed** (Docker Desktop or Engine)
 
-✅ **WSL 2 installed and configured**
-
-- Ubuntu distribution recommended
-
-✅ **Docker Desktop for Windows** (optional) OR **Docker in WSL** (recommended)
-
-✅ **Git installed** in WSL
+✅ **Git installed**
 
 ✅ **GitHub account** with a repository
+
+✅ **(RHEL Only) SELinux Configuration**:
+   - Docker volumes need the `:z` flag (shared) or `:Z` flag (private) to be accessible.
+   - This guide includes `:z` in examples to support both RHEL and Ubuntu.
 
 ### Check Your Setup
 
@@ -214,9 +202,20 @@ wsl --install -d Ubuntu
 # Launch Ubuntu and create your user
 ```
 
-## Part 1: Setup Docker in WSL 2
+## Part 1: Setup Docker Host
 
-### Option A: Docker Desktop (Easier)
+### For Windows Users (WSL 2)
+
+If you are on Windows, you must install WSL 2 first:
+
+```powershell
+# Install WSL 2
+wsl --install
+```
+
+Then follow the Linux/Ubuntu steps inside your WSL terminal.
+
+### Option A: Docker Desktop (Windows/Mac/Linux)
 
 **Pros:** Simple installation, GUI management
 **Cons:** Resource intensive, commercial licensing for large companies
@@ -226,19 +225,21 @@ wsl --install -d Ubuntu
 1. Download [Docker Desktop](https://www.docker.com/products/docker-desktop/)
 2. Install Docker Desktop
 3. In Docker Desktop settings:
-   - ✅ Enable "Use the WSL 2 based engine"
-   - ✅ Enable integration with your Ubuntu distro
+   - ✅ Enable "Use the WSL 2 based engine" (if on Windows)
+   - ✅ Enable integration with your distro
 4. Restart Docker Desktop
 
 **Verify:**
 
 ```bash
-# In WSL terminal
+# In your terminal
 docker --version
 docker run hello-world
 ```
 
-### Option B: Docker in WSL Directly (Recommended for Learning)
+### Option B: Docker Engine (Linux / WSL)
+
+**Best for:** RHEL, Ubuntu Server, or lightweight WSL setup
 
 **Pros:** Lightweight, no extra software, free
 **Cons:** Command-line only, manual setup
@@ -277,13 +278,41 @@ sudo usermod -aG docker $USER
 
 # Apply group membership (logout/login or use newgrp)
 newgrp docker
-
-# Verify Docker works
-docker --version
-docker run hello-world
 ```
 
-### Configure Docker to Start on WSL Launch
+#### For Red Hat Enterprise Linux (RHEL) / CentOS / Fedora
+
+```bash
+# Remove old versions
+sudo dnf remove docker \
+                  docker-client \
+                  docker-client-latest \
+                  docker-common \
+                  docker-latest \
+                  docker-latest-logrotate \
+                  docker-logrotate \
+                  docker-engine
+
+# set up the repository
+sudo dnf -y install dnf-plugins-core
+sudo dnf config-manager --add-repo https://download.docker.com/linux/rhel/docker-ce.repo
+
+# Install Docker Engine
+sudo dnf install docker-ce docker-ce-cli containerd.io docker-compose-plugin
+
+# Start Docker
+sudo systemctl start docker
+sudo systemctl enable docker
+
+# Add user to docker group
+sudo usermod -aG docker $USER
+newgrp docker
+```
+
+
+### Configure Docker to Start on Boot (WSL Only)
+
+For standard Linux (Ubuntu/RHEL), Docker starts automatically via systemd. For WSL, you may need a startup script:
 
 ```bash
 # Create startup script
@@ -309,7 +338,7 @@ docker network create liquibase_tutorial
 docker network ls | grep liquibase
 ```
 
-✅ **Checkpoint:** Docker is installed and working in WSL 2!
+✅ **Checkpoint:** Docker is installed and working!
 
 ## Part 2: Setup SQL Server
 
@@ -355,14 +384,14 @@ docker exec -it sqlserver /opt/mssql-tools/bin/sqlcmd \
   -Q "CREATE DATABASE liquibase_demo; SELECT name FROM sys.databases WHERE name = 'liquibase_demo';"
 ```
 
-### Option 2: SQL Server on Windows Host
+### Option 2: SQL Server on Windows Host (From WSL/Linux)
 
-**Best for:** Already have SQL Server installed on Windows
+**Best for:** Already have SQL Server installed on a Windows host machine
 
-**Connection from WSL:**
+**Connection from Docker Host:**
 
 ```bash
-# Get Windows host IP from WSL
+# Get Windows host IP (WSL specific command, for Linux use host IP)
 export WINDOWS_HOST=$(ip route show | grep -i default | awk '{ print $3}')
 echo "Windows host IP: $WINDOWS_HOST"
 
@@ -381,9 +410,9 @@ docker run --rm mcr.microsoft.com/mssql-tools \
 4. Enable TCP/IP
 5. Restart SQL Server service
 
-### Option 3: SQL Server Directly in WSL
+### Option 3: SQL Server Directly on Host (Linux)
 
-**Best for:** Long-term WSL development
+**Best for:** Native Linux development (RHEL/Ubuntu)
 
 ```bash
 # Add Microsoft repository
@@ -545,7 +574,7 @@ docker run -d \
   -e RUNNER_LABELS="${RUNNER_LABELS}" \
   -e RUNNER_GROUP="${RUNNER_GROUP}" \
   -v /var/run/docker.sock:/var/run/docker.sock \
-  -v ~/github-runner:/tmp/github-runner \
+  -v ~/github-runner:/tmp/github-runner:z \
   myoung34/github-runner:latest
 ```
 
@@ -571,9 +600,9 @@ docker logs ${RUNNER_NAME:-liquibase-tutorial-runner}
 
 1. Go back to GitHub: **Settings** → **Actions** → **Runners**
 2. You should see your runner listed:
-   - **Name:** wsl-docker-runner
+   - **Name:** linux-docker-runner
    - **Status:** 🟢 Idle (green dot)
-   - **Labels:** self-hosted, linux, x64, wsl, docker
+   - **Labels:** self-hosted, linux, x64, docker
 
 ✅ **Checkpoint:** GitHub runner is connected and waiting for jobs!
 
@@ -702,7 +731,7 @@ Value: YourStrong!Passw0rd
 ### Step 5.2: Create Workflow for Self-Hosted Runner
 
 ```bash
-# In your repository directory (on WSL)
+# In your repository directory
 cd ~/your-repo-directory
 
 # Create workflow directory if it doesn't exist
@@ -723,7 +752,7 @@ on:
 jobs:
   deploy-local:
     name: Deploy to Local SQL Server
-    runs-on: self-hosted  # Use your WSL runner
+    runs-on: self-hosted  # Use your self-hosted runner
 
     steps:
       - name: Checkout code
@@ -771,7 +800,7 @@ jobs:
       - name: Deployment summary
         run: |
           echo "✅ Deployment completed successfully!"
-          echo "Environment: Local (WSL Docker)"
+          echo "Environment: Local (Docker)"
           echo "Triggered by: ${{ github.actor }}"
           echo "Commit: ${{ github.sha }}"
 EOF
@@ -1264,7 +1293,7 @@ newgrp docker
 docker ps
 ```
 
-### WSL Docker Not Starting
+### Docker Service Not Starting
 
 **Symptom:** "Cannot connect to the Docker daemon"
 
@@ -1292,7 +1321,7 @@ sudo apt remove docker docker-engine docker.io containerd runc
 **Solution:**
 
 ```bash
-# WSL doesn't auto-start Docker containers
+# Linux services don't always auto-start on WSL
 # Start manually:
 sudo service docker start
 docker start sqlserver
@@ -1555,7 +1584,7 @@ docker logs -f github-runner
 
 Congratulations! You've set up a complete local CI/CD environment with:
 
-✅ **GitHub Actions runner** in Docker on WSL
+✅ **GitHub Actions runner** in Docker (Linux/WSL)
 ✅ **SQL Server** accessible to runner
 ✅ **Automated deployments** via GitHub workflows
 ✅ **Production-like environment** for learning
@@ -1565,7 +1594,7 @@ Congratulations! You've set up a complete local CI/CD environment with:
 
 1. **Self-hosted runners** - How they work and when to use them
 2. **Docker networking** - Container communication
-3. **WSL integration** - Linux on Windows development
+3. **Linux/WSL integration** - Development environment setup
 4. **CI/CD patterns** - Local → Cloud migration
 5. **Troubleshooting** - Common issues and solutions
 

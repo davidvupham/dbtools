@@ -99,7 +99,7 @@ fi
 exec docker run --rm \
   --user "$(id -u):$(id -g)" \
   --network="${LB_NETWORK_DEFAULT}" \
-  -v "${PROJECT_DIR}:/workspace" \
+  -v "${PROJECT_DIR}:/workspace:z" \
   "${LB_IMAGE_DEFAULT}" \
   --defaults-file="/workspace/env/liquibase.${ENVIRONMENT}.properties" \
   --password="${MSSQL_LIQUIBASE_TUTORIAL_PWD}" \

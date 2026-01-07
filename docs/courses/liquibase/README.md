@@ -30,7 +30,7 @@ docs/tutorials/liquibase/
 │   ├── series-part2-manual.md      (Manual: Deployment Lifecycle)
 │   ├── guide-runner-setup.md       (Infra: Self-Hosted Runner)
 │   ├── series-part3-cicd.md        (Automation: GitHub Actions)
-│   └── fast-track-end-to-end.md    (Advanced: The "All-in-One" Path)
+│   └── guide-end-to-end-pipeline.md (Advanced: The "All-in-One" Path)
 ├── docker/                 <-- Support files (Docker Compose)
 ├── scripts/                <-- Helper scripts (aliases, setup)
 └── runner_config/          <-- Runner environment configs
@@ -62,8 +62,8 @@ Choose the path that fits your experience level.
 
 *Best for: Experienced DevOps engineers who just want the code.*
 
-- **[End-to-End Single Doc](./learning-paths/fast-track-end-to-end.md)**
-  - The entire process in one massive file. Good for searching or "ctrl+f", less good for step-by-step learning.
+- **[End-to-End Pipeline Guide](./learning-paths/guide-end-to-end-pipeline.md)**
+  - The entire process (Local -> CI/CD) in one guide. Good for searching or "ctrl+f", less good for step-by-step learning.
 
 ---
 

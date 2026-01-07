@@ -70,6 +70,7 @@ If you have not run Part 1 at least once, skim it first; this tutorial will refe
   - Docker installed and working (`docker --version`)
   - Git installed
   - Bash shell (Linux, WSL, or macOS)
+  - **(RHEL/CentOS Only)**: Ensure Docker is installed (use `dnf` repo) and if SELinux is enforcing, use `:z` on bind mounts (included in examples).
 - **GitHub**
   - GitHub account
   - Ability to create repositories and configure Actions secrets
