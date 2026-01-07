@@ -166,7 +166,7 @@ Liquibase provides two models:
 
 #### 1. Platform-Agnostic Change Types (Recommended)
 
-Liquibase translates these to database-specific SQL:
+Can be defined in **YAML, JSON, or XML**. Liquibase translates these to database-specific SQL:
 
 | Change Type | Purpose | Example |
 |:---|:---|:---|
@@ -181,9 +181,17 @@ Liquibase translates these to database-specific SQL:
 - Liquibase generates optimal SQL for each database
 - Automatic rollback statements for many change types
 
+**Drawbacks:**
+- **No SQL Audit History:** This is a major drawback. The actual SQL executed is generated dynamically, so there is no permanent record of the exact code run against the database in your version control. This often disqualifies platform-agnostic change types for organizations with strict auditing requirements.
+- **Limited Database-Specific Features:** Cannot use platform-specific features like PostgreSQL partial indexes or Oracle storage parameters
+- **Performance Control:** Generated SQL may not be optimized for specific high-performance requirements
+- **Coverage:** Not all database operations are supported by standard change types
+
 #### 2. Raw SQL (When You Need Control)
 
-Write database-specific SQL directly:
+Write database-specific SQL directly using either embedded SQL in YAML or "Formatted SQL" files.
+
+**Option A: Embedded in YAML**
 
 ```yaml
 - changeSet:
@@ -199,10 +207,55 @@ Write database-specific SQL directly:
           sql: DROP INDEX idx_customer_email;
 ```
 
+**Option B: Formatted SQL File (.sql)**
+
+Use standard SQL with Liquibase-specific comments to define changesets. This gives you full control over SQL while maintaining tracking.
+
+**[👉 Read the full Formatted SQL Guide](../../../reference/liquibase/formatted-sql-guide.md)** for detailed syntax on rollbacks, preconditions, and attributes.
+
+```sql
+--liquibase formatted sql
+
+--changeset alice:3
+CREATE INDEX idx_customer_email 
+ON customer(email) 
+WHERE email IS NOT NULL;
+--rollback DROP INDEX idx_customer_email;
+```
+
 **Use when:**
 - Leveraging database-specific features (e.g., PostgreSQL partial indexes)
 - Performance-critical queries requiring specific syntax
 - Platform-agnostic change types don't support your use case
+
+#### 3. Custom Change Types (Java) & External Commands
+
+**Custom Change Types** (implementing `CustomSqlChange` or `CustomTaskChange`) are **Java-only** because they compile to classes loaded by Liquibase.
+
+**[👉 Read the full Custom Java Change Guide](../../../reference/liquibase/custom-java-change-guide.md)** for implementation details, examples of masking data, and API integration.
+
+However, you can use **`executeCommand`** to run scripts in **Python, bash, PowerShell, Node.js**, or any other language:
+
+```yaml
+- changeSet:
+    id: 5
+    author: alice
+    changes:
+      - executeCommand:
+          executable: python
+          args:
+            - arg: {value: "scripts/migrate_data.py"}
+```
+
+**Use Custom Change Types (Java) when:**
+- You want tightly integrated logic that can generate SQL (for preview)
+- You need to access Liquibase internal APIs
+- You want platform independence (Java runs everywhere)
+
+**Use `executeCommand` (Scripts) when:**
+- You have existing scripts in other languages
+- You need to interact with OS-level tools
+- Logic is too complex for standard SQL
 
 ### Tracking Tables
 
