@@ -1,14 +1,16 @@
 # Liquibase Reference
 
-> **Document Version:** 1.0
-> **Last Updated:** December 20, 2025
-> **Status:** Production
-> **Related Docs:** [Architecture Guide](../../explanation/architecture/liquibase/liquibase-architecture.md), [Operations Guide](../../../how-to/liquibase/liquibase-operations-guide.md)
+**🔗 [← Back to Liquibase Documentation Index](../../explanation/liquibase/README.md)** — Navigation guide for all Liquibase docs
 
-This document serves as a reference for Liquibase features, limitations, and troubleshooting.
+> **Document Version:** 1.0
+> **Last Updated:** January 6, 2026
+> **Status:** Production
+> **Related Docs:** [Concepts](../../explanation/concepts/liquibase/liquibase-concepts.md) | [Architecture](../../explanation/architecture/liquibase/liquibase-architecture.md) | [Operations](../../how-to/liquibase/liquibase-operations-guide.md)
+
+This document serves as a reference for Liquibase features, limitations, configuration, and troubleshooting. Use this to look up specific commands, attributes, and error messages.
 
 > [!NOTE]
-> Examples use the **Global Data Services (GDS)** team, but these references apply to **all teams**.
+> For foundational understanding, see the [Concepts Guide](../../explanation/concepts/liquibase/liquibase-concepts.md). For day-to-day tasks, see the [Operations Guide](../../how-to/liquibase/liquibase-operations-guide.md).
 
 ## Table of Contents
 

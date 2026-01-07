@@ -32,7 +32,7 @@ Find documentation across all categories (Tutorials, How-to, Reference) for spec
 | **AWS** | [Tutorials](tutorials/aws/README.md) | |
 | **Terraform** | [Tutorials](tutorials/terraform/README.md) | |
 | **Ansible** | [Tutorials](tutorials/ansible/README.md) | |
-| **Liquibase** | [Course](courses/liquibase/README.md) | [Best Practices](best-practices/liquibase/README.md) |
+| **Liquibase** | [📍 **Start Here**](explanation/liquibase/README.md) | [Concepts](explanation/concepts/liquibase/liquibase-concepts.md) • [How-to](how-to/liquibase/liquibase-operations-guide.md) • [Ref](reference/liquibase/liquibase-reference.md) |
 | **GDS Vault** | [Tutorials](tutorials/gds-vault/README.md) | [How-to](how-to/vault/README.md) |
 | **Kafka** | [Tutorials](tutorials/kafka/README.md) | |
 | **Observability** | [Course](courses/observability/README.md) | |

@@ -1,271 +1,175 @@
 # Liquibase Architecture Guide
 
-> **Document Version:** 1.0
-> **Last Updated:** December 20, 2025
+**🔗 [← Back to Liquibase Documentation Index](../README.md)** — Navigation guide for all Liquibase docs
+
+> **Document Version:** 2.0
+> **Last Updated:** January 6, 2026
 > **Maintainers:** Global Data Services Team
 > **Status:** Production - Actively Maintained
 
 ![Liquibase Version](https://img.shields.io/badge/Liquibase-5.0%2B-blue)
 ![Document Status](https://img.shields.io/badge/Status-Production-green)
 
-> [!NOTE]
-> Examples in this document use the **Global Data Services (GDS)** team, but the patterns and structures apply to **all teams**.
+> [!IMPORTANT]
+> **New to Liquibase?** Start with the [Liquibase Concepts Guide](../concepts/liquibase/liquibase-concepts.md) first. This document assumes you understand the fundamentals (Changelog, Changeset, Change Types, tracking tables).
 
 ## Table of Contents
 
-- [Overview](#overview)
-  - [What is Liquibase?](#what-is-liquibase)
-  - [Architecture Scope](#architecture-scope)
-  - [Key Architectural Decisions](#key-architectural-decisions)
+- [Architecture Overview](#architecture-overview)
+  - [Scope](#scope)
+  - [Key Decisions](#key-decisions)
 - [Design Principles](#design-principles)
-  - [Single Source of Truth](#single-source-of-truth)
-  - [Team Isolation](#team-isolation)
-  - [Application-First Organization](#application-first-organization)
-  - [Shared Cross-Platform Databases](#shared-cross-platform-databases)
-  - [Release-Driven Versioning](#release-driven-versioning)
-  - [Baseline Strategy](#baseline-strategy)
-  - [Tracking Tables Location](#tracking-tables-location)
 - [Directory Structure](#directory-structure)
-  - [Cross-Platform Databases (e.g., dbadmin)](#cross-platform-databases-eg-dbadmin)
   - [Repository Strategy](#repository-strategy)
-  - [Changelog Directory Structure (Per-Team Repo)](#changelog-directory-structure-per-team-repo)
-  - [Naming Order Options](#naming-order-options)
-- [Conventions](#conventions)
+  - [Team Repository Layout](#team-repository-layout)
+  - [Cross-Platform Databases](#cross-platform-databases)
+- [Conventions & Standards](#conventions--standards)
   - [Platform Names](#platform-names)
   - [Database Names](#database-names)
   - [File Naming](#file-naming)
-  - [Properties Files Architecture](#properties-files-architecture)
-- [Advanced Architecture Patterns](#advanced-architecture-patterns)
-  - [Liquibase Flowfiles](#liquibase-flowfiles)
-  - [Kubernetes Init Containers](#kubernetes-init-containers)
-  - [Docker Execution](#docker-execution)
-  - [Rollback Strategy](#rollback-strategy)
-  - [Drift Detection](#drift-detection)
-  - [Testing Strategy](#testing-strategy)
+  - [Properties Files](#properties-files)
+  - [Search Path Configuration](#search-path-configuration)
+- [Advanced Patterns](#advanced-patterns)
+  - [Master Changelog Pattern](#master-changelog-pattern)
+  - [Release-Based Organization](#release-based-organization)
+  - [Baseline Strategy](#baseline-strategy)
+  - [Tracking Tables Configuration](#tracking-tables-configuration)
+  - [Platform-Specific Changes](#platform-specific-changes)
   - [Contexts and Labels](#contexts-and-labels)
-  - [Quality Checks (Pro)](#quality-checks-pro)
-- [Scalability and Performance Patterns](#scalability-and-performance-patterns)
-  - [Managing Large Numbers of Databases](#managing-large-numbers-of-databases)
-  - [Monitoring at Scale](#monitoring-at-scale)
-
+- [Deployment Architecture](#deployment-architecture)
+  - [Docker Execution](#docker-execution)
+  - [Kubernetes Init Containers](#kubernetes-init-containers)
+  - [CI/CD Integration](#cicd-integration)
+- [Scalability Patterns](#scalability-patterns)
 - [Related Documentation](#related-documentation)
 
-## Overview
+## Architecture Overview
 
-### What is Liquibase?
-
-Liquibase is an open-source, database-independent tool for tracking, managing, and applying database schema changes. It provides version control for database schemas, enabling teams to:
-
-- **Define changes as code**: Schema modifications are written in changelog files (YAML, XML, JSON, or SQL).
-- **Track deployment history**: The `DATABASECHANGELOG` table records every applied changeset.
-- **Deploy consistently**: The same changelog deploys identically across all environments.
-- **Roll back safely**: Built-in rollback support allows reverting changes when needed.
-- **Integrate with CI/CD**: Automate schema deployments alongside application code.
-
-This architecture relies on **Liquibase Community** (open-source) but implements functionality found in **Liquibase Secure** (commercial) via custom automation and standards. See [Edition Differences](../../../reference/liquibase/liquibase-reference.md#edition-differences) for feature comparison.
-
-### Architecture Scope
+### Scope
 
 This architecture supports database schema management across multiple platforms and environments:
 
 **Supported Platforms:**
-
 - PostgreSQL, SQL Server, Snowflake, MongoDB
 - Any future platform with a JDBC driver
 
 **Deployment Environments:**
-
 - `dev` → `test` → `stage` → `prod`
 
 Changes are written once and promoted through environments using environment-specific connection properties.
 
-### Key Architectural Decisions
+### Key Decisions
 
 | Decision | Rationale |
 |:---|:---|
 | **Separate repo per team** | Full isolation, standard GitHub permissions, independent deployments |
-| **Shared changelog repo (GDS-owned)** | The Global Data Services (GDS) team owns `gds-liquibase-shared` containing cross-platform databases like `dbadmin`. GDS manages and deploys these to all instances across all database platforms. |
-| **Application-first structure** | Within each team's repo, changelogs are organized by application, then platform, then database |
-| **Environment-specific properties** | Same changelogs deploy to all environments; only connection info differs |
+| **Shared GDS-owned repo** | Central `gds-liquibase-shared` for cross-platform databases (e.g., `dbadmin`) deployed by GDS to all platforms |
+| **Application-first structure** | Organize by application first, then platform, then database—aligns with microservices/team ownership |
+| **Environment-agnostic changelogs** | Same changes deploy everywhere; environment differences only in properties files |
+| **Release-driven versioning** | Organize changes by release to simplify rollback, tagging, and deployment tracking |
 
 [↑ Back to Table of Contents](#table-of-contents)
 
 ## Design Principles
 
-### Single Source of Truth
+1. **Single Source of Truth** — Changes written once, deploy identically to all environments
+2. **Team Isolation** — Each team controls their own repository and deployment schedule
+3. **Application-First Organization** — Directory structure mirrors business/product structure
+4. **Shared Cross-Platform Databases** — GDS manages databases deployed to all platforms
+5. **Release-Driven Versioning** — Changes grouped by release for clarity and safe rollback
+6. **Environment-Specific Properties** — Connection details differ per environment; changes do not
 
-- SQL changes are written **once** in YAML/XML changelogs
-- Same changelog deploys to all environments and instances
-- Each database instance × environment has its own properties file (connection details, credentials)
-- Version control tracks all schema evolution
-
-### Team Isolation
-
-- Each team owns a **separate GitHub repository** for their changelogs
-- Standard GitHub permissions control access
-- Teams can version and deploy independently
-
-### Application-First Organization
-
-- Within each team's repo, changelogs are organized by application first
-- **Nested Directory Structure**: `applications/` → `<app_name>/` → `<platform>/` → `<database>/`
-- Platform-specific SQL isolated using the **Liquibase `dbms` attribute**. This configuration ensures a changeset only runs if the connected database matches the specified type (e.g., `dbms="postgresql"`), allowing safe handling of platform-specific syntax in shared files.
-
-### Shared Cross-Platform Databases
-
-- GDS-owned `gds-liquibase-shared` repo contains databases deployed to all platforms (e.g., `dbadmin`)
-- **GDS Exclusive Ownership**: The `gds-liquibase-shared` repository is owned and managed **exclusively** by the Global Data Services (GDS) team. Other teams do not have access to reference or modify these shared databases.
-- Common layer (all platforms) + platform layer (platform-specific objects)
-
-### Release-Driven Versioning
-
-- Changes organized into `releases/<version>/` folders
-- Each release ends with a `tagDatabase` for rollback points (tags can correspond to Jira tickets, e.g., `GE-NNNN`)
-- Numbered files within releases ensure deterministic order
-
-### Baseline Strategy
-
-A **baseline** captures the current database schema as a starting point for Liquibase management. There are two key scenarios:
-
-**1. Initial Adoption (Existing Database)**
-When adopting Liquibase for an existing database, generate a baseline that represents the current schema. Use `changelogSync` to mark it as applied without re-executing SQL.
-
-**2. Baseline Reset (Consolidation)**
-Over time, changelogs accumulate (e.g., 50+ changesets). For new database instances, you can:
-
-- **Run all changesets** — Guarantees consistency, but slow for large schemas
-- **Consolidate into a new baseline** — Generate a fresh snapshot, making new deployments faster
-
-| Scenario | Approach |
-|:---|:---|
-| Existing instance, adopting Liquibase | Generate baseline → `changelogSync` |
-| New instance, many historical changesets | Run all changesets OR use consolidated baseline |
-| Periodic maintenance | Consolidate after major releases to simplify history |
-
-See the [Operations Guide](../../../how-to/liquibase/liquibase-operations-guide.md#baseline-management) for step-by-step procedures.
-
-### Tracking Tables Location
-
-Liquibase creates two tracking tables in each target database:
-
-| Table | Purpose |
-|:---|:---|
-| `DATABASECHANGELOG` | Tracks all applied changesets |
-| `DATABASECHANGELOGLOCK` | Prevents concurrent deployments |
-
-**Naming Convention:**
-
-| Platform Supports Schemas? | Configuration |
-|:---|:---|
-| **Yes** (PostgreSQL, SQL Server, Snowflake) | Place tables in a dedicated `liquibase` schema |
-| **No** (MongoDB, some NoSQL) | Prefix table names with `liquibase_` |
-
-**Properties Configuration:**
-
-```properties
-# For platforms with schema support
-liquibase.liquibase-schema-name=liquibase
-
-# For platforms without schema support
-liquibase.database-changelog-table-name=liquibase_changelog
-liquibase.database-changelog-lock-table-name=liquibase_changelog_lock
-```
+For detailed rationale on each principle, see [Concepts Guide - Key Decisions](../concepts/liquibase/liquibase-concepts.md#key-decisions-to-make).
 
 [↑ Back to Table of Contents](#table-of-contents)
 
-### Directory Structure
+## Directory Structure
 
-**Recommendation: Use Relative Paths with Search Path**
-Relative paths (e.g., `applications/app1/...`) need a consistent "anchor" or "root" to resolve correctly. Set `LIQUIBASE_SEARCH_PATH` to your repository root so that Liquibase can find files regardless of which directory you run the command from.
+Our architecture uses an **application-first organization** for changelogs. Each team repository has the same structure:
 
-**Example Configuration:**
+### Repository Strategy
 
-- **Local Dev**: `export LIQUIBASE_SEARCH_PATH=/home/user/src/my-repo`
-- **Docker**: Mount repo to `/liquibase/changelog` and set `LIQUIBASE_SEARCH_PATH=/liquibase/changelog`
-- **CI/CD (GitHub Actions)**:
-
-  ```yaml
-  - uses: liquibase/liquibase-github-action@v4
-    with:
-      # Relative path to changelog
-      changelogFile: "applications/app1/postgres/db/changelog.yaml"
-      # Search path set to workspace root
-      searchPath: "${{ github.workspace }}"
-  ```
-
-This ensures `include file="applications/..."` works identically everywhere.
+Each team owns a **separate GitHub repository**:
 
 ```text
-. (Repository Root)
-├── properties/                          # properties templates (no secrets)
-│   ├── liquibase.dev.properties.template
-│   ├── liquibase.prod.properties.template
-├── shared/
-│   ├── modules/                         # reusable, db-agnostic modules
-    data/reference/                    # CSVs for loadData
-  platforms/
-    postgres/
-      databases/
-        app/
-          db.changelog-master.yaml
-          baseline/
-            db.changelog-baseline.yaml
-          releases/
-            1.0/
-              db.changelog-1.0.yaml
-              001-create-tables.yaml
-              002-add-indexes.yaml
-        analytics/
-          db.changelog-master.yaml
-          releases/1.0/...
-    mssql/
-      databases/
-        erp/
-          db.changelog-master.yaml
-          releases/1.0/...
-    snowflake/
-      databases/
-        datawarehouse/
-          db.changelog-master.yaml
-          releases/1.0/...
-    mongodb/
-      databases/
-        catalog/
-          db.changelog-master.yaml
-          releases/
-            1.0/
-              db.changelog-1.0.yaml
-              001-create-collections.yaml
-              002-create-indexes.yaml
+github.com/org/team-alpha-liquibase    # Team Alpha's changelogs
+github.com/org/team-beta-liquibase     # Team Beta's changelogs
+github.com/org/gds-liquibase-shared    # Shared modules (GDS owned, read-only for others)
 ```
 
-### Cross-Platform Databases (e.g., dbadmin)
+**Benefits:**
+- **Isolation**: Teams manage their own changes independently
+- **Permissions**: Standard GitHub permissions control access
+- **Independence**: Teams can version and deploy independently
+- **Shared Modules**: Include `gds-liquibase-shared` as a Git submodule for cross-platform databases
 
-The `dbadmin` database exists on **every platform** but may have **different objects per platform**. Use a layered changelog structure:
+### Team Repository Layout
 
-**Changelog Layers:**
-
-1. **Common Layer**: Objects shared across all platforms (e.g., audit tables, metadata tables).
-2. **Platform Layer**: Platform-specific objects (e.g., PostgreSQL extensions, SQL Server CLR functions).
-
-**1. Directory Structure:**
+Each team's repository uses this structure:
 
 ```text
-shared/
-  modules/
-    dbadmin/
-      db.changelog-dbadmin-common.yaml     # Platform-agnostic objects
-      postgres/
-        db.changelog-dbadmin-postgres.yaml # PostgreSQL-specific objects
-      mssql/
-        db.changelog-dbadmin-mssql.yaml    # SQL Server-specific objects
-      snowflake/
-        db.changelog-dbadmin-snowflake.yaml
-      mongodb/
-        db.changelog-dbadmin-mongodb.yaml
+# Example: team-alpha-liquibase repo
+.
+├── applications/
+│   ├── payments_api/
+│   │   ├── postgres/
+│   │   │   └── orders/
+│   │   │       ├── db.changelog-master.yaml
+│   │   │       ├── baseline/
+│   │   │       │   └── db.changelog-baseline.yaml
+│   │   │       └── releases/
+│   │   │           ├── 1.0/
+│   │   │           ├── 1.1/
+│   │   │           └── 2.0/
+│   │   └── mssql/
+│   │       └── legacy_orders/
+│   │           ├── db.changelog-master.yaml
+│   │           └── releases/...
+│   └── inventory_svc/
+│       ├── postgres/
+│       │   └── catalog/
+│       │       └── db.changelog-master.yaml
+│       └── releases/...
+├── shared/                              # Git submodule: gds-liquibase-shared
+│   └── modules/
+│       └── dbadmin/
+│           ├── db.changelog-dbadmin-common.yaml
+│           ├── postgres/
+│           ├── mssql/
+│           └── snowflake/
+└── properties/
+    ├── liquibase.payments_api.postgres.orders.dbinstance1.dev.properties.template
+    ├── liquibase.payments_api.postgres.orders.dbinstance1.test.properties.template
+    └── ...
 ```
 
-**2. Platform Master Changelog (includes both layers):**
+**Directory Structure Key:**
+- `applications/` — Organize by application name (matches microservice/team ownership)
+- `<app_name>/` — Each application may span multiple databases/platforms
+- `<platform>/` — PostgreSQL, MSSQL, Snowflake, MongoDB
+- `<database>/` — Logical database name (e.g., `orders`, `catalog`, `legacy_orders`)
+- `releases/` — Changes grouped by release version for clarity and safe rollback
+
+### Cross-Platform Databases
+
+The `gds-liquibase-shared` repository (owned by GDS) contains databases deployed to all platforms (e.g., `dbadmin`).
+
+Use a **layered changelog approach** for platform-specific variations:
+
+```text
+shared/modules/dbadmin/
+├── db.changelog-dbadmin-common.yaml      # All platforms
+├── postgres/
+│   └── db.changelog-dbadmin-postgres.yaml # PostgreSQL only
+├── mssql/
+│   └── db.changelog-dbadmin-mssql.yaml    # SQL Server only
+├── snowflake/
+│   └── db.changelog-dbadmin-snowflake.yaml
+└── mongodb/
+    └── db.changelog-dbadmin-mongodb.yaml
+```
+
+**Master Changelog** (in each platform folder) includes both layers:
 
 ```yaml
 # platforms/postgres/databases/dbadmin/db.changelog-master.yaml
@@ -282,244 +186,44 @@ databaseChangeLog:
       tag: v1.0
 ```
 
-```yaml
-# platforms/mssql/databases/dbadmin/db.changelog-master.yaml
-databaseChangeLog:
-  # Layer 1: Common objects (all platforms)
-  - include:
-      file: ../../../../shared/modules/dbadmin/db.changelog-dbadmin-common.yaml
-
-  # Layer 2: SQL Server-specific objects
-  - include:
-      file: ../../../../shared/modules/dbadmin/mssql/db.changelog-dbadmin-mssql.yaml
-
-  - tagDatabase:
-      tag: v1.0
-```
-
-**3. Example: Common vs Platform-Specific Objects**
-
-```yaml
-# db.changelog-dbadmin-common.yaml (all platforms)
-databaseChangeLog:
-  - changeSet:
-      id: 20251220-01-create-audit-log
-      author: platform-team
-      changes:
-        - createTable:
-            tableName: audit_log
-            columns:
-              - column: { name: id, type: bigint, autoIncrement: true }
-              - column: { name: event_time, type: timestamp }
-              - column: { name: event_type, type: varchar(50) }
-```
-
-```yaml
-# db.changelog-dbadmin-postgres.yaml (PostgreSQL only)
-databaseChangeLog:
-  - changeSet:
-      id: 20251220-01-create-pg-extensions
-      author: platform-team
-      dbms: postgresql
-      changes:
-        - sql:
-            sql: CREATE EXTENSION IF NOT EXISTS pg_stat_statements;
-```
-
-```yaml
-# db.changelog-dbadmin-mssql.yaml (SQL Server only)
-databaseChangeLog:
-  - changeSet:
-      id: 20251220-01-create-mssql-schema
-      author: platform-team
-      dbms: mssql
-      changes:
-        - sql:
-            sql: |
-              IF NOT EXISTS (SELECT 1 FROM sys.schemas WHERE name = 'admin')
-                EXEC('CREATE SCHEMA admin');
-```
-
-**4. Properties Files:**
-
-Properties files are stored in the `properties/` directory relative to the repository root.
-
-**Naming Convention:**
-
-Since each team has its own repository, team name is implicit. The naming convention is:
-
-`liquibase.<application>.<platform>.<database>.<dbinstance>.<environment>.properties`
-
-| Dimension | Description | Example |
-|:---|:---|:---|
-| `application` | Application name (required) | `payments_api`, `monitoring` |
-| `platform` | Database technology | `postgres`, `mssql`, `snowflake` |
-| `database` | Logical database name | `customer`, `dbadmin` |
-| `dbinstance` | Database instance identifier | `dbinstance1`, `dbinstance_east` |
-| `environment` | Deployment environment | `dev`, `test`, `stage`, `prod` |
-
-**Naming Rules:**
-
-- Use **snake_case** (underscores) for multi-word names (e.g., `payments_api`).
-- **No dashes** allowed in application names.
-- All dimensions are separated by periods (`.`).
-
-**Examples:**
-
-```text
-# In team-alpha's repo
-properties/
-  liquibase.payments_api.postgres.orders.dbinstance1.dev.properties
-  liquibase.inventory_svc.postgres.catalog.dbinstance1.prod.properties
-```
-
-### Repository Strategy
-
-Each team owns a **separate GitHub repository** for full isolation and permission control:
-
-```text
-github.com/org/alpha-liquibase       # Team Alpha's changelogs
-github.com/org/beta-liquibase        # Team Beta's changelogs
-github.com/org/gds-liquibase-shared  # Shared modules (GDS owned)
-```
-
-**Benefits:**
-
-- **Isolation**: Teams cannot read/modify other teams' files
-- **Permissions**: Standard GitHub repo permissions apply
-- **Independence**: Teams can version and deploy independently
-
-**Shared Modules**: The `gds-liquibase-shared` repo can be included as a Git submodule in each team's repo.
-
-### Changelog Directory Structure (Per-Team Repo)
-
-Within each team's repository, no team folder is needed (team is implicit):
-
-```text
-# liquibase-team-alpha repo (repository root)
-applications/
-  payments_api/
-    postgres/
-      orders/
-        db.changelog-master.yaml
-        releases/
-          1.0/
-            db.changelog-1.0.yaml
-            001-create-tables.yaml
-    mssql/
-      legacy_orders/
-        db.changelog-master.yaml
-  inventory_svc/
-    postgres/
-      catalog/
-        db.changelog-master.yaml
-shared/                              # Git submodule: liquibase-shared
-  modules/
-    dbadmin/
-      db.changelog-dbadmin-common.yaml
-properties/
-  liquibase.payments_api.postgres.orders.dbinstance1.dev.properties.template
-```
-
-### Naming Order Options
-
-Choose the order that matches your workflow:
-
-**Option A: Application-First (Recommended)**
-
-```text
-liquibase.<application>.<platform>.<database>.<dbinstance>.<environment>.properties
-```
-
-- Glob by app: `liquibase.payments_api.*` → all databases for payments_api
-- **Why it's best**: Aligns with the "Application-First Organization" principle. In a microservices or per-team repo structure, teams primarily think in terms of their applications ("deploy payments_api version 2") rather than database platforms. This naming groups all configuration for a single app's ecosystem together, making it easier to filter property files for a specific deployment.
-
-**Option B: Platform-First**
-
-```text
-liquibase.<platform>.<application>.<database>.<dbinstance>.<environment>.properties
-```
-
-- Glob by platform: `liquibase.postgres.*` → all Postgres databases
-- **Why it's best**: Useful for centralized **Platform DBA teams**. If a team's primary responsibility is "Manage all PostgreSQL instances" regardless of the application, this structure allows them to easily apply changes (like maintenance scripts or audits) to every database of a specific technology type at once.
-
-**CI/CD Best Practice**: Generate properties files dynamically from a secrets manager at pipeline runtime. Never commit credentials to Git.
-
 [↑ Back to Table of Contents](#table-of-contents)
 
-## Conventions
+## Conventions & Standards
 
 ### Platform Names
 
-Use lowercase, hyphen-separated names matching your database technology:
+Use lowercase names matching database technology:
 
 ```text
-platforms/
-  postgres/          # PostgreSQL
-  mssql/            # Microsoft SQL Server
-  mysql/            # MySQL
-  oracle/           # Oracle Database
-  snowflake/        # Snowflake Data Warehouse
-  mongodb/          # MongoDB
-  cassandra/        # Apache Cassandra
-  dynamodb/         # AWS DynamoDB
+postgres/     # PostgreSQL
+mssql/        # Microsoft SQL Server
+snowflake/    # Snowflake Data Warehouse
+mongodb/      # MongoDB
 ```
-
-**Guidelines:**
-
-- Use official product name (lowercase)
-- Avoid abbreviations unless universally recognized
-- Be consistent across all documentation
 
 ### Database Names
 
-- **Existing Databases**: Directory name MUST match the actual database name in production. This ensures consistent discoverability and mapping.
-- **New Databases (Standard)**: Use lowercase, snake_case names (e.g., `customer_service`) for clarity and consistency.
-
-```text
-platforms/postgres/databases/
-  CustomerServiceDB/     # Existing Legacy DB (matches actual name)
-  payments_api/          # New Standard DB (snake_case)
-```
-
-**Guidelines:**
-
-- Match your microservice/application name
-- Use domain-driven design terminology
-- Avoid technical jargon (e.g., `db1`, `prod_db`)
-- Keep names under 30 characters for path readability
+- **Existing Databases:** Directory name MUST match actual database name (e.g., `CustomerServiceDB`)
+- **New Databases:** Use lowercase `snake_case` (e.g., `orders`, `catalog`, `customer_service`)
 
 ### File Naming
 
-**Master Changelogs:**
-
+**Master Changelog:**
 ```text
-db.changelog-master.yaml        # Standard name (consistent across all databases)
+db.changelog-master.yaml
 ```
 
 **Release Changelogs:**
-
 ```text
-releases/
-  1.0/
-    db.changelog-1.0.yaml       # Release aggregator
-  1.1/
-    db.changelog-1.1.yaml
-  2.0/
-    db.changelog-2.0.yaml
+releases/1.0/db.changelog-1.0.yaml
+releases/2.0/db.changelog-2.0.yaml
 ```
 
 **Individual Changesets:**
-
-Use format: `NNN-verb-noun-detail.{yaml,sql,xml}`
-
 ```text
 001-create-customers-table.yaml
 002-add-email-index.yaml
-003-create-orders-view.sql
-004-add-audit-trigger.sql
-005-seed-countries-reference-data.yaml
-010-alter-customer-email-length.yaml      # Leave gaps for insertions
+010-alter-customer-email-length.yaml    # Leave gaps for insertions
 ```
 
 **Changeset IDs:**
@@ -528,157 +232,255 @@ Use format: `YYYYMMDD-HHMM-JIRA-description`
 
 ```yaml
 changeSet:
-  id: 20251114-1000-PROJ-123-create-customers   # Date + Sequence + Ticket + Description
-  id: 20251114-1005-PROJ-123-add-email-index
-  id: 20251115-0900-PROJ-124-create-orders
+  id: 20251114-1000-PROJ-123-create-customers
+  author: team
+  changes: ...
 ```
 
-**Why this format?**
+Why this format?
+- **Date (`YYYYMMDD`)**: Natural chronological sorting
+- **Uniqueness**: Time component (`HHMM`) prevents collisions
+- **Traceability**: **Mandatory** Jira Ticket ID links to requirement
+- **Readability**: Description makes intent clear
 
-- **Date First (`YYYYMMDD`)**: Ensures natural chronological sorting in the changelog table and cleaner logical organization.
-- **Uniqueness**: Time component (`HHMM`) prevents collisions even if multiple tickets are merged same day.
-- **Traceability**: **Mandatory** Jira Ticket ID (`PROJ-123`) links every change to a requirement.
-- **Readability**: Description makes intent clear.
+### Properties Files
 
-### Properties Files Architecture
+**Naming Convention:**
 
-Changes are environment-agnostic. Environment details are injected via properties files.
+`liquibase.<application>.<platform>.<database>.<dbinstance>.<environment>.properties`
+
+**Example:**
 
 ```text
-properties/
-  liquibase.dev.properties.template
-  liquibase.stage.properties.template
-  liquibase.prod.properties.template
-  liquibase.{platform}.{database}.{env}.properties    # For complex setups
+liquibase.payments_api.postgres.orders.dbinstance1.dev.properties
+liquibase.inventory_svc.postgres.catalog.dbinstance1.prod.properties
 ```
 
-**Security Guidelines**:
+**Naming Rules:**
+- Use **snake_case** for multi-word names (e.g., `payments_api`)
+- **No dashes** in application names
+- All dimensions separated by periods
 
-- **Templates**: Keep `.properties.template` files in Git as examples (no secrets).
-- **Ephemeral Generation (Recommended)**: Programmatically generate the full `.properties` file with credentials from a secrets manager (e.g., Vault) at runtime, execute Liquibase, and **immediately delete** the file. This minimizes credential exposure on the filesystem.
-- **Environment Variables**: Alternatively, use environment variables (e.g., `DB_PASSWORD`) referenced in the properties file.
-- **GitIgnore**: Never commit actual `.properties` files containing secrets.
+**Security:**
+- ✅ Commit `.properties.template` files (no secrets)
+- ✅ Generate actual `.properties` files at runtime from secrets manager
+- ✅ Delete generated files immediately after use
+- ❌ Never commit files containing passwords or API keys
+
+### Search Path Configuration
+
+Use `LIQUIBASE_SEARCH_PATH` environment variable to resolve relative paths:
+
+```bash
+# Local Dev
+export LIQUIBASE_SEARCH_PATH=/home/user/src/my-repo
+
+# Docker
+docker run -e LIQUIBASE_SEARCH_PATH=/liquibase/changelog ...
+
+# GitHub Actions
+- uses: liquibase/liquibase-github-action@v4
+  with:
+    changelogFile: "applications/app1/postgres/orders/db.changelog-master.yaml"
+    searchPath: "${{ github.workspace }}"
+```
 
 [↑ Back to Table of Contents](#table-of-contents)
 
-## Advanced Architecture Patterns
+## Advanced Patterns
 
-### Liquibase Flowfiles
+### Master Changelog Pattern
 
-For enterprise standardization, use **Liquibase Flowfiles** (`liquibase.flowfile.yaml`) instead of raw CLI commands.
+Create a master changelog that includes all other changelogs for clarity:
 
-- **Orchestration**: Chain multiple commands (e.g., `validate` -> `checks run` -> `update`) in a single execution.
-- **Portability**: Define workflows once, run anywhere (local, Docker, CI/CD).
-- **See Operations Guide**: [Using Flow Files (Advanced)](../../../how-to/liquibase/liquibase-operations-guide.md#using-flow-files-advanced)
-- **Variables**: Use stage variables and conditionals to adapt logic per environment.
+```yaml
+# db.changelog-master.yaml
+databaseChangeLog:
+  - include: { file: baseline/db.changelog-baseline.yaml }
+  - include: { file: releases/1.0/db.changelog-1.0.yaml }
+  - include: { file: releases/2.0/db.changelog-2.0.yaml }
+```
 
-### Kubernetes Init Containers
+### Release-Based Organization
 
-In containerized environments (Kubernetes), run Liquibase as an **Init Container** rather than part of the application startup or a separate Job.
+Organize changes by release for clarity and easy rollback:
 
-- **Avoids Race Conditions**: Ensures migrations finish before the app starts.
-- **Prevents Locks**: Linear execution per pod avoids `DATABASECHANGELOGLOCK` contention.
-- **Fail Fast**: If migration fails, the pod fails to start, preventing broken apps from serving traffic.
+```text
+releases/
+  1.0/
+    db.changelog-1.0.yaml
+    001-create-tables.yaml
+    002-add-indexes.yaml
+  2.0/
+    db.changelog-2.0.yaml
+    001-refactor-customer-table.yaml
+```
 
-### Docker Execution
+**Benefits:**
+- Clear version history aligned with application versioning
+- Easy rollback to known-good states (tag releases)
+- Simple changelog navigation
 
-Liquibase can run in Docker containers for consistent, reproducible deployments:
+### Baseline Strategy
 
-- Mount the repository root to a standard path (e.g., `/liquibase/changelog`) inside the container
-- Set `LIQUIBASE_SEARCH_PATH` to the mounted directory to resolve relative paths correctly
-- **Credentials**: Avoid raw environment variables (visible in `docker inspect`). Instead, **mount** an ephemeral properties file (generated at runtime) or use Docker Secrets to pass credentials securely.
+For existing databases, create a baseline snapshot to avoid re-running complex historical schemas:
 
-See the [Operations Guide](../../../how-to/liquibase/liquibase-operations-guide.md#docker-execution) for Docker run commands.
+```bash
+# Generate baseline
+liquibase generate-changelog --changelog-file=baseline/db.changelog-baseline.yaml
 
-### Rollback Strategy
+# Mark as applied (don't re-run)
+liquibase changelog-sync
+```
 
-Liquibase supports rolling back changes when deployments fail or need to be reverted:
+Master changelog includes baseline:
 
-| Method | Use Case |
-|:---|:---|
-| **Rollback by Tag** | Roll back to a named release point (e.g., `v1.0`) |
-| **Rollback by Count** | Roll back the last N changesets |
-| **Rollback by Date** | Roll back to a specific date/time |
+```yaml
+databaseChangeLog:
+  - include: { file: baseline/db.changelog-baseline.yaml }
+  - tagDatabase: { tag: baseline }
+  - include: { file: releases/1.0/db.changelog-1.0.yaml }
+```
 
-**Best Practice**: Tag releases in your changelog so you can rollback to known-good states.
+See [Operations Guide - Baseline Management](../../how-to/liquibase/liquibase-operations-guide.md#baseline-management) for detailed procedures.
 
-See the [Operations Guide](../../../how-to/liquibase/liquibase-operations-guide.md#rollback-strategy) for rollback commands.
+### Tracking Tables Configuration
 
-### Drift Detection
+Liquibase creates two tracking tables. Configure their location based on platform:
 
-**Drift** is when the actual database schema differs from what Liquibase changelogs expect. This happens when:
+**PostgreSQL/SQL Server/Snowflake (schema support):**
+```properties
+liquibase.liquibase-schema-name=liquibase
+```
 
-- Manual changes are made directly to the database
-- Emergency hotfixes bypass the changelog process
-- Different environments diverge over time
+**MongoDB (no schema support):**
+```properties
+liquibase.database-changelog-table-name=liquibase_changelog
+liquibase.database-changelog-lock-table-name=liquibase_changelog_lock
+```
 
-Liquibase can detect drift using `diff` and `diffChangeLog` commands to compare environments.
+### Platform-Specific Changes
 
-See the [Operations Guide](../../../how-to/liquibase/liquibase-operations-guide.md#drift-detection) for drift detection commands.
+Use the `dbms` attribute for small platform differences in shared changelogs:
 
-### Testing Strategy
+```yaml
+- changeSet:
+    id: 20251220-01-add-json
+    dbms: postgresql
+    changes:
+      - addColumn:
+          tableName: config
+          columns:
+            - column: { name: settings, type: jsonb }
+```
 
-Database changes should be tested before production deployment:
-
-| Test Type | Purpose |
-|:---|:---|
-| **Changelog Validation** | Verify syntax and structure before deployment |
-| **Ephemeral Database Testing** | Apply changes to a temporary database, run tests, then destroy |
-| **Rollback Testing** | Verify rollback works correctly before deploying to production |
-
-See the [Operations Guide](../../../how-to/liquibase/liquibase-operations-guide.md#testing-strategy) for testing procedures.
+For larger divergence, use separate files in platform-specific folders.
 
 ### Contexts and Labels
 
-Liquibase supports **contexts** and **labels** to control which changesets run in which environments:
+Use sparingly to control conditional execution:
 
-- **Contexts**: Filter by environment (e.g., `context: dev` runs only in dev)
-- **Labels**: Tag changesets for selective execution (e.g., `labels: 'db:app'`)
+- **Contexts:** Filter by environment (e.g., `context: dev` for test data)
+- **Labels:** Tag changesets for selective deployment (e.g., `labels: 'db:app,platform:postgres'`)
 
-**Best Practice**: Keep schema changes environment-agnostic. Use contexts only for dev-only test data.
-
-### Quality Checks (Pro)
-
-Liquibase Pro/Enterprise includes **Quality Checks** that analyze changelogs for policy violations before deployment:
-
-- Block dangerous patterns (e.g., DROP TABLE without backup)
-- Enforce naming conventions
-- Require rollback blocks
-
-See the [Reference](../../../reference/liquibase/liquibase-reference.md#edition-differences) for edition feature comparison.
+**Best Practice:** Keep schema changes environment-agnostic. Use contexts only for non-production test data.
 
 [↑ Back to Table of Contents](#table-of-contents)
 
-## Scalability and Performance Patterns
+## Deployment Architecture
+
+### Docker Execution
+
+Run Liquibase in Docker for consistent, reproducible deployments:
+
+```bash
+docker run \
+  -v "$(pwd)":/liquibase/changelog \
+  -e LIQUIBASE_SEARCH_PATH=/liquibase/changelog \
+  -e LIQUIBASE_URL=jdbc:postgresql://postgres:5432/mydb \
+  -e LIQUIBASE_USERNAME=user \
+  liquibase/liquibase:latest update
+```
+
+**Key Practices:**
+- Mount repository to standard path (`/liquibase/changelog`)
+- Set `LIQUIBASE_SEARCH_PATH` to resolve relative paths
+- Pass credentials via environment variables or mounted secrets file (not raw command line)
+
+### Kubernetes Init Containers
+
+Deploy Liquibase as an **Init Container** before the application starts:
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: app-pod
+spec:
+  initContainers:
+  - name: liquibase-migrate
+    image: liquibase/liquibase:latest
+    env:
+    - name: LIQUIBASE_SEARCH_PATH
+      value: /liquibase/changelog
+    volumeMounts:
+    - name: changelog
+      mountPath: /liquibase/changelog
+  containers:
+  - name: app
+    image: my-app:latest
+  volumes:
+  - name: changelog
+    configMap:
+      name: changelog-configmap
+```
+
+**Benefits:**
+- Migrations complete before app starts
+- Linear execution avoids lock contention
+- Fail fast: pod fails to start if migration fails
+
+### CI/CD Integration
+
+Deploy changes automatically in your CI/CD pipeline:
+
+**GitHub Actions Example:**
+```yaml
+- uses: liquibase/liquibase-github-action@v4
+  with:
+    changelogFile: "applications/app1/postgres/orders/db.changelog-master.yaml"
+    searchPath: "${{ github.workspace }}"
+    url: ${{ secrets.DB_URL }}
+    username: ${{ secrets.DB_USER }}
+    password: ${{ secrets.DB_PASSWORD }}
+    command: update
+```
+
+See [Operations Guide - Execution Patterns](../../how-to/liquibase/liquibase-operations-guide.md#execution-patterns) for more examples.
+
+[↑ Back to Table of Contents](#table-of-contents)
+
+## Scalability Patterns
 
 ### Managing Large Numbers of Databases
 
-**1. Automated Database Discovery**
-Instead of hardcoding database lists, auto-discover from configuration or directory structure.
-
-**2. Parallel Deployments**
-Deploy to independent databases in parallel to reduce total deployment time.
-
-**3. Database Grouping**
-Group databases for sequential vs parallel deployment in a configuration file (e.g., `deployment-config.yaml`).
+1. **Automated Database Discovery** — Auto-discover databases from configuration instead of hardcoding lists
+2. **Parallel Deployments** — Deploy to independent databases in parallel to reduce total time
+3. **Database Grouping** — Group databases for sequential vs parallel deployment via configuration file
 
 ### Monitoring at Scale
 
-**1. Structured Logging (JSON)**
-Enable structured logging (`log-format=JSON`) to output machine-readable logs.
-
-- **Ingestion**: Easily parsed by Splunk, Datadog, or ELK.
-- **Context**: Includes operation type, target database, and changeset details in every log entry.
-
-**2. Track Deployment Metrics**
-Log start time, end time, and success/failure status to a metrics system (Prometheus, Datadog).
-
-**3. Deployment Dashboard**
-Track failure rates, average duration, and pending updates across all databases.
+1. **Structured Logging** — Enable `log-format=JSON` for machine-readable logs ingested by Splunk, Datadog, ELK
+2. **Deployment Metrics** — Track start/end times, success/failure rates via Prometheus, Datadog
+3. **Deployment Dashboard** — Monitor failure rates, duration, and pending updates across all databases
 
 [↑ Back to Table of Contents](#table-of-contents)
 
 ## Related Documentation
 
-- [**Liquibase Operations Guide**](../../../how-to/liquibase/liquibase-operations-guide.md): Practical guides for Creating Baselines, Deployments, Rollbacks, and Migrations.
-- [**Liquibase Reference**](../../../reference/liquibase/liquibase-reference.md): Glossary, Command Reference, Limitations, and Troubleshooting.
+**Start here:** [Liquibase Documentation Index](../README.md)
+
+- **[Liquibase Concepts Guide](../concepts/liquibase/liquibase-concepts.md)** — Foundational understanding (read first if new to Liquibase)
+- **[Liquibase Operations Guide](../../how-to/liquibase/liquibase-operations-guide.md)** — Day-to-day tasks: authoring, deploying, troubleshooting
+- **[Liquibase Reference](../../reference/liquibase/liquibase-reference.md)** — Command reference, glossary, limitations, troubleshooting
+- **[Liquibase Secure Implementation Analysis](../liquibase-secure-implementation-analysis.md)** — Evaluating Pro/Secure features

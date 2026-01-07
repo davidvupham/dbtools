@@ -1,11 +1,16 @@
 # Liquibase Operations Guide
 
-> **Document Version:** 2.0
-> **Last Updated:** December 20, 2025
-> **Status:** Production
-> **Related Docs:** [Architecture Guide](../../explanation/architecture/liquibase/liquibase-architecture.md), [Reference](../../../reference/liquibase/liquibase-reference.md)
+**🔗 [← Back to Liquibase Documentation Index](../../explanation/liquibase/README.md)** — Navigation guide for all Liquibase docs
 
-This guide covers the day-to-day operations for managing database changes using the standard architecture.
+> **Document Version:** 2.0
+> **Last Updated:** January 6, 2026
+> **Status:** Production
+> **Related Docs:** [Concepts](../../explanation/concepts/liquibase/liquibase-concepts.md) | [Architecture](../../explanation/architecture/liquibase/liquibase-architecture.md) | [Reference](../../reference/liquibase/liquibase-reference.md)
+
+This guide covers day-to-day tasks: writing changesets, deploying changes, handling rollbacks, testing, and troubleshooting.
+
+> [!IMPORTANT]
+> **Prerequisites:** Understand basic Liquibase concepts (Changelog, Changeset, Change Types). See [Concepts Guide](../../explanation/concepts/liquibase/liquibase-concepts.md) if you're new to Liquibase.
 
 > [!NOTE]
 > Examples use the **Global Data Services (GDS)** team, but these procedures apply to **all teams**.
