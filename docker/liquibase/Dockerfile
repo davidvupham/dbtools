@@ -36,18 +36,24 @@
 # ------------------------------------------------------------------------------
 # FROM: Specifies the parent image to build upon
 #
-# eclipse-temurin:21-jre:
+# eclipse-temurin:21-jre-ubi9-minimal:
 #   - Eclipse Temurin is an OpenJDK distribution (open-source Java)
 #   - 21 = Java version 21 (LTS - Long Term Support release)
 #   - jre = Java Runtime Environment (enough to run Java apps, not compile them)
-#   - JRE is smaller than JDK (no compiler/dev tools), perfect for production
+#   - ubi9-minimal = Red Hat Universal Base Image 9 (minimal variant)
+#   - UBI images work on both RHEL and Ubuntu hosts
 #
 # WHY JAVA?
 #   - Liquibase is a Java application
 #   - Requires Java Runtime to execute
 #   - JDBC drivers (database connectors) are Java libraries
 #
-FROM eclipse-temurin:21-jre
+# WHY UBI9-MINIMAL?
+#   - Cross-platform: works on RHEL, Ubuntu, and other Linux distributions
+#   - Smaller footprint than full UBI images
+#   - Enterprise-ready with Red Hat security updates
+#
+FROM docker.io/library/eclipse-temurin:21-jre-ubi9-minimal
 
 # ------------------------------------------------------------------------------
 # Build Arguments - Version Control
@@ -112,30 +118,41 @@ ENV LIQUIBASE_HOME=/opt/liquibase \
 #
 # COMMAND BREAKDOWN:
 #
-RUN apt-get update \
+RUN set -eux; \
     # ----------------------------------------------------------------------
-    # Update package index
-    # Like refreshing the app store catalog before installing apps
+    # Install required utilities using microdnf (RHEL UBI minimal)
+    # - Use microdnf when available (smaller UBI images)
+    # - Fall back to dnf for full RHEL/Fedora images
     # ----------------------------------------------------------------------
-    && apt-get install -y --no-install-recommends curl unzip ca-certificates \
+    if command -v microdnf >/dev/null 2>&1; then \
+        PM=microdnf; \
+        INSTALL_CMD="$PM -y --refresh install"; \
+        CLEAN_CMD="$PM -y clean all"; \
+    elif command -v dnf >/dev/null 2>&1; then \
+        PM=dnf; \
+        INSTALL_CMD="$PM -y --setopt=timeout=600 --setopt=retries=10 install"; \
+        CLEAN_CMD="$PM -y clean all"; \
+    else \
+        echo "ERROR: No supported package manager found (dnf or microdnf)"; \
+        exit 1; \
+    fi; \
     # ----------------------------------------------------------------------
     # Install required utilities:
     # - curl: Download files from URLs
     # - unzip: Extract .zip archives (if needed)
     # - ca-certificates: SSL/TLS certificates for HTTPS downloads
-    #
-    # Flags explained:
-    # - -y: Automatically answer "yes" to prompts (non-interactive)
-    # - --no-install-recommends: Don't install suggested packages (smaller image)
+    # - tar: Extract .tar.gz archives (Liquibase distribution)
     # ----------------------------------------------------------------------
-    && rm -rf /var/lib/apt/lists/* \
+    sh -xc "$INSTALL_CMD unzip ca-certificates tar"; \
     # ----------------------------------------------------------------------
-    # Clean up APT cache
-    # After installing packages, delete the package lists
-    # Saves space (package lists can be hundreds of MB)
-    # We won't need them again since image is built
+    # Clean up package manager cache to reduce image size
     # ----------------------------------------------------------------------
-    && curl -fsSL -o /tmp/liquibase.tar.gz \
+    sh -xc "$CLEAN_CMD"; \
+    rm -rf /var/cache/yum /var/cache/dnf; \
+    # ----------------------------------------------------------------------
+    # Download Liquibase from GitHub releases
+    # ----------------------------------------------------------------------
+    curl -fsSL -o /tmp/liquibase.tar.gz \
     https://github.com/liquibase/liquibase/releases/download/v${LIQUIBASE_VERSION}/liquibase-${LIQUIBASE_VERSION}.tar.gz \
     # ----------------------------------------------------------------------
     # Download Liquibase from GitHub releases
