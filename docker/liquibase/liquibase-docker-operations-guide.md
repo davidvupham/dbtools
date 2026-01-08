@@ -94,9 +94,11 @@ docker run --rm liquibase:latest --version
 > Tip: If you run compose from the repo root, add `--project-directory docker/liquibase` so the build context resolves to this Dockerfile.
 
 On RHEL:
-
 ```bash
 podman-compose build
+# or if building manually:
+podman build -t liquibase:latest docker/liquibase --format docker
+
 podman run --rm liquibase:latest --version
 ```
 
@@ -255,11 +257,10 @@ podman unshare chown -R 10001:0 /data/mssql /logs/mssql
 ```
 
 ### 1) Build images used in the test
-
 ```bash
-podman build -t liquibase:latest docker/liquibase
-podman build -t gds-postgresql:latest docker/postgresql
-podman build -t gds-mssql:latest docker/mssql
+podman build -t liquibase:latest docker/liquibase --format docker
+podman build -t gds-postgresql:latest docker/postgresql --format docker
+podman build -t gds-mssql:latest docker/mssql --format docker
 ```
 
 ### 2) Run PostgreSQL and SQL Server containers (host ports)
