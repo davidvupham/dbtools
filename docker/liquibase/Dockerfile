@@ -301,6 +301,31 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD ["liquibase", "--version"]
 
 # ------------------------------------------------------------------------------
+# Security - Non-Root User
+# ------------------------------------------------------------------------------
+# Create and switch to a non-root user for security best practices.
+# Running as root inside containers is a security risk (CKV_DOCKER_3).
+#
+# WHY NON-ROOT?
+#   - Limits blast radius if container is compromised
+#   - Required by CKV_DOCKER_3 security policy
+#   - Best practice for production containers
+#
+# USER CONFIGURATION:
+#   - UID 1001: Standard non-root UID (avoids system user conflicts)
+#   - GID 0: Root group for OpenShift/enterprise compatibility
+#   - Named user: Provides cleaner logs and better tool compatibility
+#
+# RUNTIME OVERRIDE:
+#   You can still run as a different user at runtime:
+#   docker run --user $(id -u):$(id -g) liquibase --version
+#
+RUN useradd --uid 1001 --gid 0 --create-home liquibase \
+    && chown -R 1001:0 ${LIQUIBASE_HOME} /liquibase
+
+USER liquibase
+
+# ------------------------------------------------------------------------------
 # Container Entry Point and Default Command
 # ------------------------------------------------------------------------------
 # ENTRYPOINT vs CMD - IMPORTANT DISTINCTION:
