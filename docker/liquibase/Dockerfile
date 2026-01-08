@@ -276,6 +276,31 @@ RUN set -eux; \
 WORKDIR /liquibase
 
 # ------------------------------------------------------------------------------
+# Health Check - Container Health Monitoring
+# ------------------------------------------------------------------------------
+# HEALTHCHECK: Tells Docker how to verify the container is working properly
+#
+# WHY HEALTHCHECK?
+#   - Docker/Podman can detect if the container is healthy or unhealthy
+#   - Orchestrators (Docker Compose, Kubernetes) use health status for:
+#     * Restarting unhealthy containers automatically
+#     * Load balancing (only route to healthy containers)
+#     * Deployment rollouts (wait for healthy before continuing)
+#
+# OPTIONS EXPLAINED:
+#   --interval=30s   : Check health every 30 seconds
+#   --timeout=10s    : Wait up to 10 seconds for command to complete
+#   --start-period=5s: Grace period for container startup before checks count
+#   --retries=3      : Mark unhealthy after 3 consecutive failures
+#
+# THE CHECK:
+#   liquibase --version: Verifies Liquibase is installed and executable
+#   If exit code 0 → healthy, otherwise → unhealthy
+#
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD ["liquibase", "--version"]
+
+# ------------------------------------------------------------------------------
 # Container Entry Point and Default Command
 # ------------------------------------------------------------------------------
 # ENTRYPOINT vs CMD - IMPORTANT DISTINCTION:
