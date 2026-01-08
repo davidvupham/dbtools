@@ -95,7 +95,7 @@ else
   echo "  Default project dir: /data/${CURRENT_USER} (per-user isolation)"
   check_data_permissions || echo "  (continuing anyway - you can specify a different directory)"
   echo ""
-  read -rp "Liquibase project root (mounted to /workspace) [${DEFAULT_LIQUIBASE_TUTORIAL_DATA_DIR}]: " INPUT_LB_DIR
+  read -rp "Liquibase project root (mounted to /data) [${DEFAULT_LIQUIBASE_TUTORIAL_DATA_DIR}]: " INPUT_LB_DIR
   LB_DIR="${INPUT_LB_DIR:-$DEFAULT_LIQUIBASE_TUTORIAL_DATA_DIR}"
 fi
 

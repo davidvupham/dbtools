@@ -264,16 +264,15 @@ RUN set -eux; \
 # ------------------------------------------------------------------------------
 # WORKDIR: Sets the default directory for subsequent commands
 # - Creates the directory if it doesn't exist
-# - Like "cd /liquibase" but persists
+# - Like "cd /data" but persists
 # - When you run the container, you start in this directory
 # - All relative paths in commands are relative to this directory
 #
-# WHY /liquibase?
-# - Convention: working directory for Liquibase operations
-# - Users mount their changelog files here
-# - Example: docker run -v ./changelogs:/liquibase liquibase update
+# WHY /data?
+# - Users mount their tutorial project directory here
+# - Example: docker run -v /data/dpham/liquibase_tutorial:/data liquibase update
 #
-WORKDIR /liquibase
+WORKDIR /data
 
 # ------------------------------------------------------------------------------
 # Health Check - Container Health Monitoring
@@ -325,7 +324,7 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
 #   docker run --user $(id -u):$(id -g) liquibase --version
 #
 RUN useradd --uid 1001 --gid 0 --create-home liquibase \
-    && chown -R 1001:0 ${LIQUIBASE_HOME} /liquibase
+    && chown -R 1001:0 ${LIQUIBASE_HOME} /data
 
 USER liquibase
 
@@ -368,7 +367,7 @@ CMD ["--help"]
 # ==============================================================================
 # BUILD INSTRUCTIONS:
 # ==============================================================================
-# From /workspaces/dbtools/docker/liquibase directory:
+# From the docker/liquibase directory:
 #
 #   docker build -t liquibase:latest .
 #
@@ -389,7 +388,7 @@ CMD ["--help"]
 #
 # Run Liquibase update (example):
 #   docker run --rm \
-#     -v ./changelogs:/liquibase \
+#     -v ./changelogs:/data \
 #     liquibase \
 #     --url=jdbc:postgresql://host.docker.internal:5432/mydb \
 #     --username=user \

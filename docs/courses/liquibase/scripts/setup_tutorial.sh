@@ -63,7 +63,7 @@ url=jdbc:sqlserver://mssql_liquibase_tutorial:1433;databaseName=${dbname};encryp
 username=sa
 password=\${MSSQL_LIQUIBASE_TUTORIAL_PWD}
 changelog-file=database/changelog/changelog.xml
-search-path=/workspace
+search-path=/data
 logLevel=info
 EOF
   echo "Created: ${path}"

@@ -122,7 +122,7 @@ export LIQUIBASE_TUTORIAL_DIR="/path/to/your/repo/docs/courses/liquibase"
 
 # Example for common locations:
 # export LIQUIBASE_TUTORIAL_DIR="$HOME/src/dbtools/docs/courses/liquibase"
-# export LIQUIBASE_TUTORIAL_DIR="/workspaces/dbtools/docs/courses/liquibase"
+# export LIQUIBASE_TUTORIAL_DIR="/data/dbtools/docs/courses/liquibase"
 ```
 
 **Shared Docker Host Setup:** Create your per-user project directory (one-time setup):
@@ -257,9 +257,9 @@ If you prefer to run raw container commands yourself, mirror this pattern (note 
 ```bash
 cr run --rm \
   --network=liquibase_tutorial \
-  -v "$LIQUIBASE_TUTORIAL_DATA_DIR":/workspace:Z,U \
+  -v "$LIQUIBASE_TUTORIAL_DATA_DIR":/data:Z,U \
   liquibase:latest \
-  --defaults-file=/workspace/env/liquibase.<ENV>.properties \
+  --defaults-file=/data/env/liquibase.<ENV>.properties \
   --password="${MSSQL_LIQUIBASE_TUTORIAL_PWD}" \
   <LIQUIBASE_COMMAND>
 ```
@@ -503,7 +503,7 @@ url=jdbc:sqlserver://localhost:14333;databaseName=orderdb;encrypt=true;trustServ
 username=sa
 password=${MSSQL_LIQUIBASE_TUTORIAL_PWD}
 changelog-file=database/changelog/changelog.xml
-search-path=/workspace
+search-path=/data
 logLevel=info
 EOF
 
@@ -514,7 +514,7 @@ url=jdbc:sqlserver://localhost:14333;databaseName=orderdb;encrypt=true;trustServ
 username=sa
 password=${MSSQL_LIQUIBASE_TUTORIAL_PWD}
 changelog-file=database/changelog/changelog.xml
-search-path=/workspace
+search-path=/data
 logLevel=info
 EOF
 
@@ -525,7 +525,7 @@ url=jdbc:sqlserver://localhost:14333;databaseName=orderdb;encrypt=true;trustServ
 username=sa
 password=${MSSQL_LIQUIBASE_TUTORIAL_PWD}
 changelog-file=database/changelog/changelog.xml
-search-path=/workspace
+search-path=/data
 logLevel=info
 EOF
 
@@ -553,7 +553,7 @@ ls -la "$LIQUIBASE_TUTORIAL_DATA_DIR/env/"
   - Points to the XML file that includes all your changesets
 
 - `search-path`: Where Liquibase looks for files inside Docker container
-  - When we mount `$LIQUIBASE_TUTORIAL_DATA_DIR` to `/workspace`, this tells Liquibase to look in `/workspace`
+  - When we mount `$LIQUIBASE_TUTORIAL_DATA_DIR` to `/data`, this tells Liquibase to look in `/data`
 
 - `logLevel`: How much detail to show (info is good for learning)
   - `severe` - Only critical errors
@@ -588,7 +588,7 @@ cd "$LIQUIBASE_TUTORIAL_DATA_DIR"
 # IMPORTANT: Use .sql extension to generate Formatted SQL
 # NOTE: Liquibase requires *.databaseType.sql format for Formatted SQL generation
 LB_NETWORK=host lb -e dev -- \
-  --changelog-file=/workspace/database/changelog/baseline/V0000__baseline.mssql.sql \
+  --changelog-file=/data/database/changelog/baseline/V0000__baseline.mssql.sql \
   --schemas=app \
   --include-schema=true \
   generateChangeLog
@@ -621,7 +621,7 @@ Step 4 VALIDATION SUCCESSFUL
 
 ```bash
 lb -e dev -- \
-  --changelog-file=/workspace/database/changelog/baseline/V0000__baseline.mssql.sql \
+  --changelog-file=/data/database/changelog/baseline/V0000__baseline.mssql.sql \
   --schemas=app \
   --include-schema=true \
   generateChangeLog

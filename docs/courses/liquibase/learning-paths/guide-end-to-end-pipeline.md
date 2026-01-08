@@ -237,7 +237,7 @@ url=jdbc:sqlserver://mssql_liquibase_tutorial:1433;databaseName=orderdb;encrypt=
 username=sa
 password=${MSSQL_LIQUIBASE_TUTORIAL_PWD}
 changelog-file=database/changelog/changelog.xml
-search-path=/workspace
+search-path=/data
 logLevel=info
 EOF
 
@@ -248,7 +248,7 @@ url=jdbc:sqlserver://mssql_liquibase_tutorial:1433;databaseName=orderdb;encrypt=
 username=sa
 password=${MSSQL_LIQUIBASE_TUTORIAL_PWD}
 changelog-file=database/changelog/changelog.xml
-search-path=/workspace
+search-path=/data
 logLevel=info
 EOF
 
@@ -259,7 +259,7 @@ url=jdbc:sqlserver://mssql_liquibase_tutorial:1433;databaseName=orderdb;encrypt=
 username=sa
 password=${MSSQL_LIQUIBASE_TUTORIAL_PWD}
 changelog-file=database/changelog/changelog.xml
-search-path=/workspace
+search-path=/data
 logLevel=info
 EOF
 
@@ -277,7 +277,7 @@ cd /data/liquibase-tutorial
 # IMPORTANT: Use --schemas=app to capture only the app schema
 # IMPORTANT: Use --include-schema=true to include schemaName attributes in the XML
 lb -e dev -- \
-  --changelog-file=/workspace/database/changelog/baseline/V0000__baseline.xml \
+  --changelog-file=/data/database/changelog/baseline/V0000__baseline.xml \
   --schemas=app \
   --include-schema=true \
   generateChangeLog

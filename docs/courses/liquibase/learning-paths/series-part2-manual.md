@@ -367,7 +367,7 @@ Capture the drift as a proper changeset:
 # Generate a changelog capturing the drift
 lb -e dev -- diffChangeLog \
     --referenceUrl="offline:mssql?changeLogFile=database/changelog/changelog.xml" \
-    --changelogFile=/workspace/database/changelog/changes/V0002__drift_loyalty_points.xml
+    --changelogFile=/data/database/changelog/changes/V0002__drift_loyalty_points.xml
 ```
 
 Review and edit the generated file, then include it in your master changelog.

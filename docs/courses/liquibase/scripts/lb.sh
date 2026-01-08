@@ -144,8 +144,8 @@ fi
 exec "$CR" run --rm \
   --user "$(id -u):$(id -g)" \
   --network="${LB_NETWORK_DEFAULT}" \
-  -v "${PROJECT_DIR}:/workspace:Z,U" \
+  -v "${PROJECT_DIR}:/data:z,U" \
   "${LB_IMAGE_DEFAULT}" \
-  --defaults-file="/workspace/env/liquibase.${ENVIRONMENT}.properties" \
+  --defaults-file="/data/env/liquibase.${ENVIRONMENT}.properties" \
   --password="${MSSQL_LIQUIBASE_TUTORIAL_PWD}" \
   "${PASS_ARGS[@]}"
