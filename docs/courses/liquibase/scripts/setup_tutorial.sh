@@ -6,7 +6,7 @@ set -euo pipefail
 # Responsibilities:
 # - Source setup_environment.sh to capture/export required env vars
 # - Source setup_aliases.sh to register lb/sqlcmd-tutorial helpers
-# - Create missing Liquibase properties for dev/stage/prod under $LB_PROJECT_DIR/env
+# - Create missing Liquibase properties for dev/stage/prod under $LIQUIBASE_TUTORIAL_DATA_DIR/env
 #
 # IMPORTANT: This script must be SOURCED so that environment and aliases
 #            are applied to your current shell.
@@ -43,16 +43,16 @@ source "${ALIAS_HELPER}"
 
 # 3) Ensure required env vars are available
 : "${MSSQL_LIQUIBASE_TUTORIAL_PWD:?MSSQL_LIQUIBASE_TUTORIAL_PWD must be set}"
-LB_PROJECT_DIR="${LB_PROJECT_DIR:-/data/liquibase-tutorial}"
-export LB_PROJECT_DIR
+LIQUIBASE_TUTORIAL_DATA_DIR="${LIQUIBASE_TUTORIAL_DATA_DIR:-/data/liquibase-tutorial}"
+export LIQUIBASE_TUTORIAL_DATA_DIR
 
 # 4) Create missing Liquibase properties files
-mkdir -p "${LB_PROJECT_DIR}/env"
+mkdir -p "${LIQUIBASE_TUTORIAL_DATA_DIR}/env"
 
 create_prop() {
   local envname="$1"; shift
   local dbname="$1"; shift
-  local path="${LB_PROJECT_DIR}/env/liquibase.${envname}.properties"
+  local path="${LIQUIBASE_TUTORIAL_DATA_DIR}/env/liquibase.${envname}.properties"
   if [[ -f "${path}" ]]; then
     echo "Exists: ${path}"
     return 0
@@ -76,9 +76,9 @@ create_prop prod  testdbprd
 # 5) Summarize
 echo
 echo "Tutorial setup complete. Summary:"
-echo "- LB_PROJECT_DIR: ${LB_PROJECT_DIR}"
+echo "- LIQUIBASE_TUTORIAL_DATA_DIR: ${LIQUIBASE_TUTORIAL_DATA_DIR}"
 echo "- Env files:"
-ls -la "${LB_PROJECT_DIR}/env" || true
+ls -la "${LIQUIBASE_TUTORIAL_DATA_DIR}/env" || true
 echo
 echo "Verify helpers:"
 type lb || true

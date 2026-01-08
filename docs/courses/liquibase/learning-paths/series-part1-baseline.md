@@ -80,10 +80,10 @@ In this tutorial, you'll learn:
 
 Before starting this tutorial, you should have:
 
-- ✅ **Docker and Docker Compose** installed and running
+- ✅ **Docker or Podman** installed and running
   - Docker version 20.10+ recommended
-  - Docker Compose version 2.0+ recommended
-  - Verify with: `docker --version` and `docker compose version`
+  - Podman version 3.0+ (RedHat/CentOS)
+  - Verify with: `docker --version` or `podman --version`
 
 - ✅ **Bash shell** (Linux, macOS, or WSL2 on Windows)
   - Tutorial uses bash-specific syntax
@@ -102,21 +102,11 @@ Before starting this tutorial, you should have:
 
 ### Time Estimate
 
-- **First-time setup:** ~30 minutes
-  - Environment configuration
-  - Docker container setup
-  - Project structure creation
+- **Total time:** 45-60 minutes
+- **Setup:** 10-15 minutes (container startup, environment configuration)
+- **Core tutorial:** 30-40 minutes (Steps 1-5)
+- **Cleanup:** 5 minutes (optional)
 
-- **Tutorial execution:** ~1-2 hours
-  - Database creation and population
-  - Liquibase configuration
-  - Baseline generation and deployment
-
-- **Verification and cleanup:** ~15 minutes
-  - Verifying deployments
-  - Understanding what was created
-
-**Total time:** Approximately **2-3 hours** for first-time completion. Subsequent runs will be faster as you become familiar with the workflow.
 
 ---
 
@@ -124,25 +114,41 @@ Before starting this tutorial, you should have:
 
 ### Step 0: Configure Environment and Aliases
 
-Set up your environment, aliases, and the required Liquibase properties first. The helper will prompt you for:
-
-- Tutorial scripts directory (the folder containing `scripts/`)
-- Liquibase project directory (where `database/` and `env/` will live)
-- SQL Server SA password (`MSSQL_LIQUIBASE_TUTORIAL_PWD`)
+First, set the `LIQUIBASE_TUTORIAL_DIR` environment variable to point to your repository's tutorial directory. This variable will be used throughout the tutorial.
 
 ```bash
-# Source the one-shot setup helper (env, aliases, properties)
-source /path/to/your/repo/docs/tutorials/liquibase/scripts/setup_tutorial.sh
+# Set this to YOUR repository path (adjust as needed)
+export LIQUIBASE_TUTORIAL_DIR="/path/to/your/repo/docs/courses/liquibase"
+
+# Example for common locations:
+# export LIQUIBASE_TUTORIAL_DIR="$HOME/src/dbtools/docs/courses/liquibase"
+# export LIQUIBASE_TUTORIAL_DIR="/workspaces/dbtools/docs/courses/liquibase"
 ```
 
-Tips:
+**Shared Docker Host Setup:** Create your per-user project directory (one-time setup):
 
-- `LB_PROJECT_DIR` is where your Liquibase project (changelog/env) lives; default is `/data/liquibase-tutorial`.
-- The setup script prompts for the tutorial scripts location so aliases work from anywhere.
+```bash
+# Create /data/$USER directory (requires sudo)
+sudo "$LIQUIBASE_TUTORIAL_DIR/scripts/setup_user_directory.sh"
+```
+
+Now source the setup script to configure aliases and properties:
+
+```bash
+# Source the setup helper (env, aliases, properties)
+source "$LIQUIBASE_TUTORIAL_DIR/scripts/setup_tutorial.sh"
+```
+
+The setup script will:
+- Set `LIQUIBASE_TUTORIAL_DATA_DIR` to `/data/$USER/liquibase_tutorial` (your per-user project directory)
+- Create aliases: `sqlcmd-tutorial`, `lb`, `cr`
+- Prompt for SQL Server password (`MSSQL_LIQUIBASE_TUTORIAL_PWD`)
 
 ### Start the Tutorial SQL Server Container
 
 This tutorial uses a dedicated SQL Server container that can be safely removed after completion.
+
+> **Note:** The `cr` command is a **Container Runtime** alias that auto-detects whether to use `docker` (Ubuntu/Debian) or `podman` (RHEL/Fedora) based on your operating system. It's defined in `setup_aliases.sh` and works the same as running docker/podman directly.
 
 #### Build and start SQL Server container
 
@@ -150,11 +156,23 @@ This tutorial uses a dedicated SQL Server container that can be safely removed a
 # Navigate to the tutorial docker directory
 cd "$LIQUIBASE_TUTORIAL_DIR/docker"
 
-# Start the SQL Server container
-docker compose up -d
+# Start the SQL Server container using the cr (container runtime) alias
+# (cr auto-detects docker on Ubuntu/Debian, podman on RHEL/Fedora)
+# Create data directory for SQL Server
+mkdir -p "$LIQUIBASE_TUTORIAL_DATA_DIR/mssql1/mssql-data"
+
+cr compose up -d 2>/dev/null || cr run -d --name mssql_liquibase_tutorial -h mssql1 -p 14333:1433 \
+  -e ACCEPT_EULA=Y -e MSSQL_SA_PASSWORD="$MSSQL_LIQUIBASE_TUTORIAL_PWD" \
+  -e MSSQL_PID=Developer -v "$LIQUIBASE_TUTORIAL_DATA_DIR/mssql1/mssql-data":/var/opt/mssql:Z,U \
+  mcr.microsoft.com/mssql/server:2025-latest
+
+> **Note:** The `:Z,U` volume options are required for rootless Podman:
+> - `:Z` - Relabels the volume for SELinux (private to this container)
+> - `:U` - Recursively changes ownership to match the container user
+> - Data is stored in `$LIQUIBASE_TUTORIAL_DATA_DIR/mssql-data` (e.g., `/data/$USER/liquibase_tutorial/mssql-data`)
 
 # Verify it's running
-docker ps | grep mssql_liquibase_tutorial
+cr ps | grep mssql_liquibase_tutorial
 ```
 
 **Expected output:**
@@ -177,13 +195,18 @@ The container has a built-in health check. You can poll for the `(healthy)` stat
 
 ```bash
 # Watch the container status until it shows (healthy) (Ctrl+C to exit)
-watch -n 2 "docker ps | grep 'mssql_liquibase_tutorial.*(healthy)'"
+watch -n 2 "$LIQUIBASE_TUTORIAL_DIR/scripts/cr.sh ps | grep 'mssql_liquibase_tutorial'"
+```
+
+**Expected output (healthy):** Status shows "Up" and time keeps increasing:
+```text
+1fea5c21c7ae  mcr.microsoft.com/mssql/server:2025-latest  ...  Up About a minute  0.0.0.0:14333->1433/tcp  mssql_liquibase_tutorial
 ```
 
 Or check the logs and filter for the ready message:
 
 ```bash
-docker logs mssql_liquibase_tutorial 2>&1 | grep 'SQL Server is now ready for client connections'
+cr logs mssql_liquibase_tutorial 2>&1 | grep 'SQL Server is now ready for client connections'
 ```
 
 #### Build Liquibase container image
@@ -192,31 +215,28 @@ The Liquibase container is a "run-once" tool (not a long-running service), so we
 
 ```bash
 # Navigate to the liquibase docker directory (from your repo root)
-cd /path/to/your/repo/docker/liquibase
+cd "${LIQUIBASE_TUTORIAL_DIR%/docs/courses/liquibase}/docker/liquibase"
 
 # Build the custom Liquibase image with SQL Server drivers
-docker compose build
+cr build -t liquibase:latest .
 
 # Verify the image was created
-docker images | grep liquibase
+cr images | grep liquibase
 
 # Quick sanity check: verify the Liquibase CLI runs
-# (either command is fine; -it is optional for non-interactive output)
-docker run --rm liquibase:latest --version
-# or
-docker run -it liquibase:latest liquibase --version
+cr run --rm liquibase:latest --version
 ```
 
-**Note:** The Liquibase container is not meant to stay running - it executes commands and exits. We'll use `docker run` to execute Liquibase commands throughout this tutorial.
+**Note:** The Liquibase container is not meant to stay running - it executes commands and exits. We'll use `docker run` (or `podman run` on RHEL) to execute Liquibase commands throughout this tutorial. The `lb` wrapper script auto-detects your container runtime.
 
 Troubleshooting:
 
 - If you see "Cannot find database driver: com.microsoft.sqlserver.jdbc.SQLServerDriver", rebuild the image from `docker/liquibase` and re-run the version check.
-- If an alias like `lb` is not found in a new shell, re-source the aliases: `source /path/to/your/repo/docs/tutorials/liquibase/scripts/setup_aliases.sh`.
+- If an alias like `lb` is not found in a new shell, re-source the aliases: `source "$LIQUIBASE_TUTORIAL_DIR/scripts/setup_aliases.sh"`.
 
-### Important Note About Docker Commands
+### Important Note About Container Commands
 
-Prefer using the provided `lb` wrapper, which encapsulates the full `docker run` invocation so you don't need to know paths or Docker flags:
+The `lb` wrapper auto-detects your container runtime (Docker or Podman based on your OS) and encapsulates the full run invocation so you don't need to know paths or flags.
 
 Heads-up: The commands below are examples to show wrapper usage. Do not run them yet. Run `lb` commands only after Step 1 (databases created) and after your properties point to those databases (created in Step 0 or Step 3). If you run them now, they will fail with connection/DB-not-found errors because the databases don’t exist yet; however, seeing Liquibase start and attempt a connection still confirms the Liquibase container image is built and accessible.
 
@@ -232,13 +252,12 @@ Note: The standalone `--` is intentional. It separates options for the `lb` wrap
 
 Under the hood, `lb` runs Docker with the correct user, network, mounted project directory, and injects your `--defaults-file` and password.
 
-If you prefer to run raw Docker yourself, mirror this pattern (note use of `LB_PROJECT_DIR` instead of hard-coded paths):
+If you prefer to run raw container commands yourself, mirror this pattern (note use of `LIQUIBASE_TUTORIAL_DATA_DIR` instead of hard-coded paths):
 
 ```bash
-docker run --rm \
-  --user $(id -u):$(id -g) \
+cr run --rm \
   --network=liquibase_tutorial \
-  -v "$LB_PROJECT_DIR":/workspace \
+  -v "$LIQUIBASE_TUTORIAL_DATA_DIR":/workspace:Z,U \
   liquibase:latest \
   --defaults-file=/workspace/env/liquibase.<ENV>.properties \
   --password="${MSSQL_LIQUIBASE_TUTORIAL_PWD}" \
@@ -252,28 +271,6 @@ Notes:
 - Run as your user (not root) to avoid permission issues
 
 If you see connection errors, verify the correct network and password parameter order.
-
-### Check SQL Server is Running
-
-Now verify you can connect to SQL Server. This test ensures your database is accessible before we start.
-
-```bash
-# Test connection (should show server name and date)
-sqlcmd-tutorial -Q "SELECT @@SERVERNAME AS ServerName, GETDATE() AS CurrentTime"
-```
-
-**Expected output:**
-
-```text
-ServerName               CurrentTime
------------------------- -----------------------
-mssql_liquibase_tutorial 2025-11-16 02:49:32.910
-```
-
-**Troubleshooting:**
-
-- **Connection refused**: SQL Server might not be running. Check with `docker ps | grep mssql_liquibase_tutorial`
-- **Login failed**: Password might be wrong. Verify `$MSSQL_LIQUIBASE_TUTORIAL_PWD` is set correctly
 
 ### Helper Script for sqlcmd
 
@@ -297,17 +294,43 @@ sqlcmd-tutorial -Q "SELECT @@SERVERNAME AS ServerName, GETDATE() AS CurrentTime;
 sqlcmd-tutorial create_databases.sql
 ```
 
+
+### Check SQL Server is Running
+
+Now verify you can connect to SQL Server. This test ensures your database is accessible before we start.
+
+```bash
+# Test connection (should show server name and date)
+sqlcmd-tutorial -Q "SELECT @@SERVERNAME AS ServerName, GETDATE() AS CurrentTime"
+```
+
+**Expected output:**
+
+```text
+ServerName               CurrentTime
+------------------------ -----------------------
+mssql_liquibase_tutorial 2026-01-07 18:35:07.160
+```
+
+**Troubleshooting:**
+
+- **Connection refused**: SQL Server might not be running. Check with `cr ps | grep mssql_liquibase_tutorial`
+- **Login failed**: Password might be wrong. Check variable: `echo $MSSQL_LIQUIBASE_TUTORIAL_PWD`
+
+
 ## Project Structure
 
 Create a clear directory structure for your Liquibase project:
 
-```bash
-# Remove existing directory if it exists from previous runs
-sudo rm -rf /data/liquibase-tutorial
+> **Note:** On shared Docker hosts, the default project directory is `/data/$USER/liquibase_tutorial` (per-user isolation). The `setup_tutorial.sh` script sets `LIQUIBASE_TUTORIAL_DATA_DIR` for you. If you need to change it, export `LIQUIBASE_TUTORIAL_DATA_DIR` before running the setup script.
 
-# Create project directory
-mkdir -p /data/liquibase-tutorial
-cd /data/liquibase-tutorial
+```bash
+# Remove existing Liquibase directories if starting fresh (preserves mssql-data)
+rm -rf "$LIQUIBASE_TUTORIAL_DATA_DIR/database" "$LIQUIBASE_TUTORIAL_DATA_DIR/env" 2>/dev/null
+
+# Create project directory (uses /data/$USER by default)
+mkdir -p "$LIQUIBASE_TUTORIAL_DATA_DIR"
+cd "$LIQUIBASE_TUTORIAL_DATA_DIR"
 
 # Create folder structure
 mkdir -p database/changelog/baseline
@@ -318,7 +341,7 @@ mkdir -p env
 **Quick review: verify directories were created**
 
 ```bash
-ls -R /data/liquibase-tutorial
+ls -R "$LIQUIBASE_TUTORIAL_DATA_DIR/database"
 ```
 
 You should see `database/changelog/baseline`, `database/changelog/changes`, and `env` in the output.
@@ -326,12 +349,12 @@ You should see `database/changelog/baseline`, `database/changelog/changes`, and 
 **What each folder means:**
 
 ```text
-/data/liquibase-tutorial/
+$LIQUIBASE_TUTORIAL_DATA_DIR/              # e.g., /data/$USER$/liquibase_tutorial
 ├── database/
 │   └── changelog/
 │       ├── changelog.xml           # Master file listing all changes in order
 │       ├── baseline/               # Initial database snapshot
-│       │   └── V0000__baseline.xml
+│       │   └── V0000__baseline.mssql.sql
 │       └── changes/                # Incremental changes after baseline
 │           ├── V0001__add_orders_table.sql
 │           ├── V0002__modify_customer_email.sql
@@ -382,9 +405,9 @@ sqlcmd-tutorial verify_databases.sql
 ```text
 name        database_id  create_date
 ----------- ------------ -----------------------
-testdbdev   5            2025-11-14 20:00:00.000
-testdbprd   7            2025-11-14 20:00:01.000
-testdbstg   6            2025-11-14 20:00:00.500
+orderdb   5            2025-11-14 20:00:00.000
+orderdb   7            2025-11-14 20:00:01.000
+orderdb   6            2025-11-14 20:00:00.500
 ```
 
 **What did we just do?**
@@ -474,9 +497,9 @@ Create properties files to connect Liquibase to each environment:
 
 ```bash
 # Development properties
-cat > /data/liquibase-tutorial/env/liquibase.dev.properties << 'EOF'
+cat > "$LIQUIBASE_TUTORIAL_DATA_DIR/env/liquibase.dev.properties" << 'EOF'
 # Development Environment Connection
-url=jdbc:sqlserver://mssql_liquibase_tutorial:1433;databaseName=testdbdev;encrypt=true;trustServerCertificate=true
+url=jdbc:sqlserver://localhost:14333;databaseName=orderdb;encrypt=true;trustServerCertificate=true
 username=sa
 password=${MSSQL_LIQUIBASE_TUTORIAL_PWD}
 changelog-file=database/changelog/changelog.xml
@@ -485,9 +508,9 @@ logLevel=info
 EOF
 
 # Staging properties
-cat > /data/liquibase-tutorial/env/liquibase.stage.properties << 'EOF'
+cat > "$LIQUIBASE_TUTORIAL_DATA_DIR/env/liquibase.stage.properties" << 'EOF'
 # Staging Environment Connection
-url=jdbc:sqlserver://mssql_liquibase_tutorial:1433;databaseName=testdbstg;encrypt=true;trustServerCertificate=true
+url=jdbc:sqlserver://localhost:14333;databaseName=orderdb;encrypt=true;trustServerCertificate=true
 username=sa
 password=${MSSQL_LIQUIBASE_TUTORIAL_PWD}
 changelog-file=database/changelog/changelog.xml
@@ -496,9 +519,9 @@ logLevel=info
 EOF
 
 # Production properties
-cat > /data/liquibase-tutorial/env/liquibase.prod.properties << 'EOF'
+cat > "$LIQUIBASE_TUTORIAL_DATA_DIR/env/liquibase.prod.properties" << 'EOF'
 # Production Environment Connection
-url=jdbc:sqlserver://mssql_liquibase_tutorial:1433;databaseName=testdbprd;encrypt=true;trustServerCertificate=true
+url=jdbc:sqlserver://localhost:14333;databaseName=orderdb;encrypt=true;trustServerCertificate=true
 username=sa
 password=${MSSQL_LIQUIBASE_TUTORIAL_PWD}
 changelog-file=database/changelog/changelog.xml
@@ -507,15 +530,16 @@ logLevel=info
 EOF
 
 # Verify files were created
-ls -la /data/liquibase-tutorial/env/
+ls -la "$LIQUIBASE_TUTORIAL_DATA_DIR/env/"
 ```
 
 **What each property means:**
 
 - `url`: JDBC connection string (notice `databaseName` differs per environment)
   - `jdbc:sqlserver://` - Protocol for SQL Server connections
-  - `mssql_liquibase_tutorial:1433` - Server hostname (container name) and port (note: internally container uses 1433, but exposed as 14333 on host)
-  - `databaseName=testdbdev` - Which database to connect to (this changes per environment)
+  - `localhost:14333` - Connect to host machine port 14333 (where container maps 1433).
+  - **Note**: This requires running the Liquibase container with `--network host` (set via `LB_NETWORK=host`) so it can see `localhost` as the host machine.
+  - `databaseName=orderdb` - Which database to connect to (this changes per environment)
   - `encrypt=true` - Use encrypted connection
   - `trustServerCertificate=true` - Trust the server's SSL certificate (for local dev only; in production use proper certificates)
 
@@ -529,7 +553,7 @@ ls -la /data/liquibase-tutorial/env/
   - Points to the XML file that includes all your changesets
 
 - `search-path`: Where Liquibase looks for files inside Docker container
-  - When we mount `/data/liquibase-tutorial` to `/workspace`, this tells Liquibase to look in `/workspace`
+  - When we mount `$LIQUIBASE_TUTORIAL_DATA_DIR` to `/workspace`, this tells Liquibase to look in `/workspace`
 
 - `logLevel`: How much detail to show (info is good for learning)
   - `severe` - Only critical errors
@@ -556,39 +580,39 @@ Now use Liquibase to capture the current state of development as a **baseline**:
 
 ```bash
 # Change to project directory
-cd /data/liquibase-tutorial
+cd "$LIQUIBASE_TUTORIAL_DATA_DIR"
 
 # Generate baseline from development database (using lb wrapper)
 # IMPORTANT: Use --schemas=app to capture only the app schema
-# IMPORTANT: Use --include-schema=true to include schemaName attributes in the XML
-lb -e dev -- \
-  --changelog-file=/workspace/database/changelog/baseline/V0000__baseline.xml \
+# IMPORTANT: Use --include-schema=true to include schemaName attributes in the SQL
+# IMPORTANT: Use .sql extension to generate Formatted SQL
+# NOTE: Liquibase requires *.databaseType.sql format for Formatted SQL generation
+LB_NETWORK=host lb -e dev -- \
+  --changelog-file=/workspace/database/changelog/baseline/V0000__baseline.mssql.sql \
   --schemas=app \
   --include-schema=true \
   generateChangeLog
 
-# Check the generated file (owned by your user, not root)
-cat database/changelog/baseline/V0000__baseline.xml
+# Check the generated file
+cat database/changelog/baseline/V0000__baseline.mssql.sql
 ```
 
-### Quick checks
-
-- schemaName: Verify all objects include `schemaName="app"`.
+### Validate Generation
+We have provided a script to automatically validate the baseline file format and content:
 
 ```bash
-grep -n 'schemaName="app"' database/changelog/baseline/V0000__baseline.xml | head
+# Run validation script
+$LIQUIBASE_TUTORIAL_DIR/scripts/validate_step4_baseline.sh
 ```
 
-- Objects captured: Spot tables, views, FKs, and indexes.
-
-```bash
-grep -nE '<createTable|<createView|<createIndex' database/changelog/baseline/V0000__baseline.xml | head -n 20
-```
-
-- Sanity size check: Ensure it’s not trivially small.
-
-```bash
-wc -l database/changelog/baseline/V0000__baseline.xml
+**Expected Output:**
+```text
+[PASS] File exists: V0000__baseline.mssql.sql
+[PASS] Header matches '-- liquibase formatted sql'
+[PASS] Found ... occurrences of 'app.' schema prefix
+[PASS] Found CREATE TABLE app.customer
+...
+Step 4 VALIDATION SUCCESSFUL
 ```
 
 ### If something looks off
@@ -597,7 +621,7 @@ wc -l database/changelog/baseline/V0000__baseline.xml
 
 ```bash
 lb -e dev -- \
-  --changelog-file=/workspace/database/changelog/baseline/V0000__baseline.xml \
+  --changelog-file=/workspace/database/changelog/baseline/V0000__baseline.mssql.sql \
   --schemas=app \
   --include-schema=true \
   generateChangeLog
@@ -605,10 +629,10 @@ lb -e dev -- \
 
 **What happened?**
 
-- Liquibase connected to `testdbdev` database
+- Liquibase connected to `orderdb` database
 - Scanned all database objects (tables, views, indexes, constraints, schemas)
-- Generated XML file representing the current state
-- Saved it as `V0000__baseline.xml` in the baseline folder
+- Generated Formatted SQL file representing the current state
+- Saved it as `V0000__baseline.mssql.sql` in the baseline folder
 - **File is owned by the user executing the dev container** because we used `--user $(id -u):$(id -g)`
 
 **What gets captured:**
@@ -622,7 +646,7 @@ lb -e dev -- \
 
 **What to check in the generated baseline:**
 
-1. **Schema attributes**: With `--include-schema=true`, all objects should have `schemaName="app"`
+1. **Schema attributes**: With `--include-schema=true`, all objects should have `app.` prefix (e.g., `CREATE TABLE app.customer`)
 2. **Data types**: Verify column types match exactly (especially NVARCHAR vs VARCHAR)
 3. **Constraints**: Check primary keys, foreign keys, unique constraints, and defaults
 4. **Indexes**: Verify all indexes are captured correctly
@@ -648,7 +672,7 @@ Without this file, Liquibase would have no central place to aggregate future cha
 
 ```bash
 # Create master changelog that includes baseline
-cat > /data/liquibase-tutorial/database/changelog/changelog.xml << 'EOF'
+cat > "$LIQUIBASE_TUTORIAL_DATA_DIR/database/changelog/changelog.xml" << 'EOF'
 <?xml version="1.0" encoding="UTF-8"?>
 <databaseChangeLog
     xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
@@ -657,7 +681,7 @@ cat > /data/liquibase-tutorial/database/changelog/changelog.xml << 'EOF'
                         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
 
     <!-- Baseline: initial database state -->
-    <include file="baseline/V0000__baseline.xml" relativeToChangelogFile="true"/>
+    <include file="baseline/V0000__baseline.mssql.sql" relativeToChangelogFile="true"/>
 
     <!-- Future changes will be added here -->
 
@@ -682,7 +706,7 @@ Development already has these objects (we created them in Step 2), so we **sync*
 - `changelogSync` = Just check it off (task was already done)
 
 ```bash
-cd /data/liquibase-tutorial
+cd "$LIQUIBASE_TUTORIAL_DATA_DIR"
 
 # Sync baseline to development (don't actually run DDL, just record as executed)
 lb -e dev -- changelogSync
@@ -709,7 +733,7 @@ lb -e dev -- tag baseline
 ```bash
 # Check DATABASECHANGELOG table
 sqlcmd-tutorial -Q "
-USE testdbdev;
+USE orderdb;
 SELECT ID, AUTHOR, FILENAME, DATEEXECUTED, TAG
 FROM DATABASECHANGELOG
 ORDER BY DATEEXECUTED;
@@ -721,7 +745,7 @@ ORDER BY DATEEXECUTED;
 Staging is empty, so we **deploy** the baseline (actually run all DDL):
 
 ```bash
-cd /data/liquibase-tutorial
+cd "$LIQUIBASE_TUTORIAL_DATA_DIR"
 
 # Preview what will run
 lb -e stage -- updateSQL
@@ -738,7 +762,7 @@ lb -e stage -- tag baseline
 ```bash
 # Check objects exist in staging
 sqlcmd-tutorial -Q "
-USE testdbstg;
+USE orderdb;
 SELECT
     SCHEMA_NAME(schema_id) AS SchemaName,
     name AS ObjectName,
@@ -754,7 +778,7 @@ ORDER BY type_desc, name;
 Production is also empty, so we deploy the baseline:
 
 ```bash
-cd /data/liquibase-tutorial
+cd "$LIQUIBASE_TUTORIAL_DATA_DIR"
 
 # Preview what will run
 lb -e prod -- updateSQL
@@ -771,7 +795,7 @@ lb -e prod -- tag baseline
 ```bash
 # Check objects exist in production
 sqlcmd-tutorial -Q "
-USE testdbprd;
+USE orderdb;
 SELECT
     SCHEMA_NAME(schema_id) AS SchemaName,
     name AS ObjectName,
@@ -810,7 +834,7 @@ When you've completed the tutorial series and want to clean up the containers an
 
 ```bash
 # Run the automated cleanup script
-/path/to/your/repo/docs/tutorials/liquibase/scripts/cleanup_liquibase_tutorial.sh
+"$LIQUIBASE_TUTORIAL_DIR/scripts/cleanup_liquibase_tutorial.sh"
 ```
 
 **What the script does:**
@@ -818,7 +842,7 @@ When you've completed the tutorial series and want to clean up the containers an
 - Stops and removes the `mssql_liquibase_tutorial` container
 - Removes the `mssql_liquibase_tutorial_data` volume
 - Removes the `liquibase_tutorial` Docker network
-- Optionally removes the `/data/liquibase-tutorial` directory (with confirmation)
+- Optionally removes the `$LIQUIBASE_TUTORIAL_DATA_DIR` directory (with confirmation)
 - Provides a summary of what was cleaned up
 
 > You can run this script any time you want to **reset the tutorial environment** and start again from Part 1.

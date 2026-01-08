@@ -3,13 +3,55 @@ set -euo pipefail
 
 # Helper script to execute sqlcmd inside the tutorial SQL Server container.
 # Replaces long commands like:
-#   docker exec -i mssql_liquibase_tutorial /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U SA -P "$MSSQL_LIQUIBASE_TUTORIAL_PWD" < 04_verify_dev_objects.sql
+#   container_runtime exec -i mssql_liquibase_tutorial /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U SA -P "$MSSQL_LIQUIBASE_TUTORIAL_PWD" < 04_verify_dev_objects.sql
 #
 # Usage examples:
 #   ./sqlcmd_tutorial.sh 04_verify_dev_objects.sql
 #   ./sqlcmd_tutorial.sh -Q "SELECT @@SERVERNAME AS ServerName, GETDATE() AS CurrentTime;"
 #   ./sqlcmd_tutorial.sh -d testdbdev 05_verify_dev_data.sql
 #   ./sqlcmd_tutorial.sh -d testdbdev -Q "SELECT name FROM sys.tables;"
+
+detect_runtime() {
+  # 1. Allow override via env var
+  if [[ -n "${CONTAINER_RUNTIME:-}" ]]; then
+    echo "$CONTAINER_RUNTIME"
+    return
+  fi
+
+  # 2. Check OS preference
+  local os_id=""
+  if [[ -f /etc/os-release ]]; then
+    os_id="$(source /etc/os-release && echo "${ID} ${ID_LIKE:-}")"
+  fi
+
+  # RedHat/Fedora/CentOS -> Prefer Podman
+  if [[ "$os_id" =~ (rhel|fedora|centos|rocky|almalinux) ]]; then
+    if command -v podman &> /dev/null; then
+      echo "podman"
+      return
+    fi
+  fi
+
+  # Ubuntu/Debian -> Prefer Docker
+  if [[ "$os_id" =~ (ubuntu|debian) ]]; then
+    if command -v docker &> /dev/null; then
+      echo "docker"
+      return
+    fi
+  fi
+
+  # 3. Fallback: check binaries
+  if command -v docker &> /dev/null; then
+    echo "docker"
+  elif command -v podman &> /dev/null; then
+    echo "podman"
+  else
+    echo "Error: Neither docker nor podman found. Install one or set CONTAINER_RUNTIME." >&2
+    exit 1
+  fi
+}
+
+CR="$(detect_runtime)"
 
 CONTAINER_NAME=${CONTAINER_NAME:-mssql_liquibase_tutorial}
 SQLCMD_BIN=/opt/mssql-tools18/bin/sqlcmd
@@ -126,7 +168,7 @@ if [[ -n "$SQL_FILE" ]]; then
 fi
 
 # Check container status
-if ! docker ps --format '{{.Names}}' | grep -q "^${CONTAINER_NAME}$"; then
+if ! "$CR" ps --format '{{.Names}}' | grep -q "^${CONTAINER_NAME}$"; then
   echo "Error: Container '${CONTAINER_NAME}' is not running." >&2
   echo "Start it first (see tutorial Step 0)." >&2
   exit 1
@@ -140,8 +182,8 @@ fi
 
 # Execute
 if [[ -n "$QUERY" ]]; then
-  docker exec -i "${CONTAINER_NAME}" "${SQLCMD_ARGS[@]}" -Q "$QUERY"
+  "$CR" exec -i "${CONTAINER_NAME}" "${SQLCMD_ARGS[@]}" -Q "$QUERY"
 else
   # Feed file via stdin to preserve local path semantics
-  docker exec -i "${CONTAINER_NAME}" "${SQLCMD_ARGS[@]}" < "$SQL_FILE"
+  "$CR" exec -i "${CONTAINER_NAME}" "${SQLCMD_ARGS[@]}" < "$SQL_FILE"
 fi

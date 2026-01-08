@@ -76,7 +76,7 @@ If you have not run Part 1 at least once, skim it first; this tutorial will refe
   - Ability to create repositories and configure Actions secrets
 - **From the first Liquibase tutorial**
   - The helper scripts under
-    `docs/tutorials/liquibase/scripts/` (for example `setup_tutorial.sh`, `cleanup_liquibase_tutorial.sh`, etc.)
+    `docs/courses/liquibase/scripts/` (for example `setup_tutorial.sh`, `cleanup_liquibase_tutorial.sh`, etc.)
 
 > This tutorial assumes the repo containing these docs is already cloned locally and accessible via a path like `/path/to/your/repo`.
 
@@ -91,7 +91,7 @@ This phase walks you through the local container + helper-script setup you’ll 
 From your cloned repo:
 
 ```bash
-cd /path/to/your/repo/docs/tutorials/liquibase
+cd /path/to/your/repo/docs/courses/liquibase
 
 # Source the one-shot setup helper (env, aliases, properties)
 source scripts/setup_tutorial.sh
@@ -99,7 +99,7 @@ source scripts/setup_tutorial.sh
 
 This script:
 
-- Exports `LIQUIBASE_TUTORIAL_DIR` and (optionally) `LB_PROJECT_DIR` (default `/data/liquibase-tutorial`).
+- Exports `LIQUIBASE_TUTORIAL_DIR` and (optionally) `LIQUIBASE_TUTORIAL_DATA_DIR` (default `/data/liquibase-tutorial`).
 - Configures aliases like:
   - `sqlcmd-tutorial` – wrapper for `sqlcmd` into the tutorial SQL Server container.
   - `lb` – wrapper that runs the Liquibase Docker image with the right mounts, user, and properties.
@@ -153,7 +153,7 @@ docker compose build
 docker run --rm liquibase:latest --version
 ```
 
-> The `lb` wrapper (defined as a shell alias that calls `lb.sh` in `docs/tutorials/liquibase/scripts/`) uses this image under the hood, so you do not need to remember the full `docker run` invocations or call `lb.sh` directly.
+> The `lb` wrapper (defined as a shell alias that calls `lb.sh` in `docs/courses/liquibase/scripts/`) uses this image under the hood, so you do not need to remember the full `docker run` invocations or call `lb.sh` directly.
 
 If you see `Cannot find database driver: com.microsoft.sqlserver.jdbc.SQLServerDriver`, rebuild the image from `docker/liquibase` and re-run the version check.
 If an alias like `lb` is not found in a new shell, re-source the aliases script (for example `source scripts/setup_tutorial.sh` or `setup_aliases.sh`).
@@ -177,7 +177,7 @@ sqlcmd-tutorial verify_app_schema.sql
 At this point you should have:
 
 - SQL Server container: `mssql_liquibase_tutorial`
-- Databases: `testdbdev`, `testdbstg`, `testdbprd`
+- Databases: `orderdb`, `orderdb`, `orderdb`
 - Shared schema: `app` in all three databases.
 
 ### Step 4: Create the Liquibase Project and Baseline
@@ -215,7 +215,7 @@ mkdir -p env
 
 Then:
 
-1. Populate **development** (`testdbdev`) with the tutorial objects using the provided scripts:
+1. Populate **development** (`orderdb`) with the tutorial objects using the provided scripts:
 
 ```bash
 # Create table, view, indexes, and sample data in DEVELOPMENT
@@ -233,7 +233,7 @@ sqlcmd-tutorial verify_dev_data.sql
 # Development properties
 cat > /data/liquibase-tutorial/env/liquibase.dev.properties << 'EOF'
 # Development Environment Connection
-url=jdbc:sqlserver://mssql_liquibase_tutorial:1433;databaseName=testdbdev;encrypt=true;trustServerCertificate=true
+url=jdbc:sqlserver://mssql_liquibase_tutorial:1433;databaseName=orderdb;encrypt=true;trustServerCertificate=true
 username=sa
 password=${MSSQL_LIQUIBASE_TUTORIAL_PWD}
 changelog-file=database/changelog/changelog.xml
@@ -244,7 +244,7 @@ EOF
 # Staging properties
 cat > /data/liquibase-tutorial/env/liquibase.stage.properties << 'EOF'
 # Staging Environment Connection
-url=jdbc:sqlserver://mssql_liquibase_tutorial:1433;databaseName=testdbstg;encrypt=true;trustServerCertificate=true
+url=jdbc:sqlserver://mssql_liquibase_tutorial:1433;databaseName=orderdb;encrypt=true;trustServerCertificate=true
 username=sa
 password=${MSSQL_LIQUIBASE_TUTORIAL_PWD}
 changelog-file=database/changelog/changelog.xml
@@ -255,7 +255,7 @@ EOF
 # Production properties
 cat > /data/liquibase-tutorial/env/liquibase.prod.properties << 'EOF'
 # Production Environment Connection
-url=jdbc:sqlserver://mssql_liquibase_tutorial:1433;databaseName=testdbprd;encrypt=true;trustServerCertificate=true
+url=jdbc:sqlserver://mssql_liquibase_tutorial:1433;databaseName=orderdb;encrypt=true;trustServerCertificate=true
 username=sa
 password=${MSSQL_LIQUIBASE_TUTORIAL_PWD}
 changelog-file=database/changelog/changelog.xml
@@ -497,7 +497,7 @@ jdbc:sqlserver://dev-sql.database.windows.net:1433;
 
 ```text
 jdbc:sqlserver://mssql_liquibase_tutorial:1433;
-  databaseName=testdbdev;
+  databaseName=orderdb;
   encrypt=true;
   trustServerCertificate=true;
   loginTimeout=30;
@@ -736,7 +736,7 @@ You now have a pipeline that:
 Even after you add CI/CD, the helper scripts in this tutorial remain extremely valuable:
 
 - **`lb` wrapper**
-  - Local “single command” runner for Liquibase against `testdbdev`, `testdbstg`, `testdbprd`.
+  - Local “single command” runner for Liquibase against `orderdb`, `orderdb`, `orderdb`.
   - Mirrors the same `changelog.xml` that CI/CD uses.
   - Perfect for:
     - Trying new changesets quickly.

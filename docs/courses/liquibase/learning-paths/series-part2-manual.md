@@ -3,9 +3,9 @@
 This Part 2 assumes you have completed **Part 1: Baseline SQL Server + Liquibase Setup** and have:
 
 - A working SQL Server tutorial container (`mssql_liquibase_tutorial`)
-- Three databases: `testdbdev`, `testdbstg`, `testdbprd`
-- A Liquibase project at `/data/liquibase-tutorial` with:
-  - `database/changelog/baseline/V0000__baseline.xml`
+- Three databases: `orderdb`, `orderdb`, `orderdb`
+- A Liquibase project at `$LIQUIBASE_TUTORIAL_DATA_DIR` with:
+  - `database/changelog/baseline/V0000__baseline.mssql.sql`
   - `database/changelog/changelog.xml` including the baseline
   - `env/liquibase.dev.properties`, `env/liquibase.stage.properties`, `env/liquibase.prod.properties`
 - Baseline deployed and tagged as `baseline` in all three environments
@@ -28,7 +28,9 @@ For this tutorial, we'll use **SQL format** for simplicity and readability.
 
 ```bash
 # Create the change file
-cat > /data/liquibase-tutorial/database/changelog/changes/V0001__add_orders_table.sql << 'EOF'
+cat > $LIQUIBASE_TUTORIAL_DATA_DIR/database/changelog/changes/V0001__add_orders_table.sql << 'EOF'
+--liquibase formatted sql
+
 --changeset tutorial:V0001-add-orders-table
 -- Purpose: Add orders table to track customer purchases
 -- This change creates:
@@ -55,10 +57,10 @@ EOF
 
 ### Include the Change in `changelog.xml`
 
-Update the master changelog to include this new change. One common pattern is to use an XML wrapper with `<sqlFile>` so you can add rollback later:
+Update the master changelog to include this new change.
 
 ```bash
-cat > /data/liquibase-tutorial/database/changelog/changelog.xml << 'EOF'
+cat > $LIQUIBASE_TUTORIAL_DATA_DIR/database/changelog/changelog.xml << 'EOF'
 <?xml version="1.0" encoding="UTF-8"?>
 <databaseChangeLog
     xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
@@ -67,25 +69,20 @@ cat > /data/liquibase-tutorial/database/changelog/changelog.xml << 'EOF'
                         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
 
     <!-- Baseline: initial database state -->
-    <include file="baseline/V0000__baseline.xml" relativeToChangelogFile="true"/>
+    <include file="baseline/V0000__baseline.mssql.sql" relativeToChangelogFile="true"/>
 
     <!-- V0001: Add orders table -->
-    <changeSet id="V0001-add-orders-table" author="tutorial">
-        <sqlFile
-            path="database/changelog/changes/V0001__add_orders_table.sql"
-            relativeToChangelogFile="false"/>
-    </changeSet>
+    <include file="changes/V0001__add_orders_table.sql" relativeToChangelogFile="true"/>
 
 </databaseChangeLog>
 EOF
 ```
 
-> In later steps you will refine this pattern to add explicit `<rollback>` blocks for safer deployments.
 
 ### Deploy to Development
 
 ```bash
-cd /data/liquibase-tutorial
+cd $LIQUIBASE_TUTORIAL_DATA_DIR
 
 # See what will run
 lb -e dev -- updateSQL
@@ -98,7 +95,7 @@ Verify in dev:
 
 ```bash
 sqlcmd-tutorial -Q "
-USE testdbdev;
+USE orderdb;
 SELECT
     SCHEMA_NAME(schema_id) AS SchemaName,
     name AS ObjectName,
@@ -151,7 +148,7 @@ Once the change is validated in development, promote it to staging and productio
 ### Deploy to Staging
 
 ```bash
-cd /data/liquibase-tutorial
+cd $LIQUIBASE_TUTORIAL_DATA_DIR
 
 # Preview what will run
 lb -e stage -- updateSQL
@@ -164,7 +161,7 @@ Verify in staging:
 
 ```bash
 sqlcmd-tutorial -Q "
-USE testdbstg;
+USE orderdb;
 SELECT
     SCHEMA_NAME(schema_id) AS SchemaName,
     name AS ObjectName,
@@ -178,7 +175,7 @@ ORDER BY type_desc, name;
 ### Deploy to Production
 
 ```bash
-cd /data/liquibase-tutorial
+cd $LIQUIBASE_TUTORIAL_DATA_DIR
 
 # Preview what will run
 lb -e prod -- updateSQL
@@ -191,7 +188,7 @@ Verify in production:
 
 ```bash
 sqlcmd-tutorial -Q "
-USE testdbprd;
+USE orderdb;
 SELECT
     SCHEMA_NAME(schema_id) AS SchemaName,
     name AS ObjectName,
@@ -214,7 +211,7 @@ Tags create named checkpoints in your deployment history for easy rollback targe
 After deploying V0001, tag the current state as a release:
 
 ```bash
-cd /data/liquibase-tutorial
+cd $LIQUIBASE_TUTORIAL_DATA_DIR
 
 # Tag all environments with the release version
 lb -e dev -- tag release-v1.0
@@ -228,7 +225,7 @@ View what's been deployed and when:
 
 ```bash
 sqlcmd-tutorial -Q "
-USE testdbdev;
+USE orderdb;
 SELECT 
     ID,
     AUTHOR,
@@ -264,31 +261,33 @@ V0001-add-orders-table    tutorial  database/changelog/changes/V0001...sql      
 
 ### Add Rollback Blocks to Changesets
 
-When using SQL files, you need explicit rollback instructions. Update your `changelog.xml`:
+When using Formatted SQL files, you use explicit rollback comments. Update your `changelog.xml` if needed, although for Formatted SQL, the rollback is usually inside the SQL file itself.
+
+### Add Rollback to SQL File
+
+When using Formatted SQL, you define rollbacks inline using `--rollback`. Update your `V0001__add_orders_table.sql`:
 
 ```bash
-cat > /data/liquibase-tutorial/database/changelog/changelog.xml << 'EOF'
-<?xml version="1.0" encoding="UTF-8"?>
-<databaseChangeLog
-    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
-                        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+cat > $LIQUIBASE_TUTORIAL_DATA_DIR/database/changelog/changes/V0001__add_orders_table.sql << 'EOF'
+--liquibase formatted sql
 
-    <!-- Baseline: initial database state -->
-    <include file="baseline/V0000__baseline.xml" relativeToChangelogFile="true"/>
+--changeset tutorial:V0001-add-orders-table
+-- Purpose: Add orders table to track customer purchases
 
-    <!-- V0001: Add orders table -->
-    <changeSet id="V0001-add-orders-table" author="tutorial">
-        <sqlFile
-            path="database/changelog/changes/V0001__add_orders_table.sql"
-            relativeToChangelogFile="false"/>
-        <rollback>
-            DROP TABLE IF EXISTS app.orders;
-        </rollback>
-    </changeSet>
-
-</databaseChangeLog>
+IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID(N'[app].[orders]') AND type = 'U')
+BEGIN
+    CREATE TABLE app.orders (
+        order_id INT IDENTITY(1,1) CONSTRAINT PK_orders PRIMARY KEY,
+        customer_id INT NOT NULL,
+        order_total DECIMAL(18,2) NOT NULL,
+        order_date DATETIME2(3) NOT NULL CONSTRAINT DF_orders_date DEFAULT (SYSUTCDATETIME()),
+        status NVARCHAR(50) NOT NULL DEFAULT 'pending',
+        CONSTRAINT FK_orders_customer FOREIGN KEY (customer_id)
+            REFERENCES app.customer(customer_id)
+    );
+END
+GO
+--rollback DROP TABLE IF EXISTS app.orders;
 EOF
 ```
 
@@ -297,7 +296,7 @@ EOF
 > **Warning:** Only practice rollback in development. Never rollback production without proper change management.
 
 ```bash
-cd /data/liquibase-tutorial
+cd $LIQUIBASE_TUTORIAL_DATA_DIR
 
 # Preview what rollback will do
 lb -e dev -- rollbackSQL release-v1.0
@@ -307,7 +306,7 @@ lb -e dev -- rollback baseline
 
 # Verify the orders table is gone
 sqlcmd-tutorial -Q "
-USE testdbdev;
+USE orderdb;
 SELECT name FROM sys.objects 
 WHERE schema_id = SCHEMA_ID('app') AND type = 'U';
 "
@@ -335,7 +334,7 @@ Create an untracked change directly in the database:
 
 ```bash
 sqlcmd-tutorial -Q "
-USE testdbdev;
+USE orderdb;
 -- Someone adds a column without using Liquibase
 ALTER TABLE app.customer ADD loyalty_points INT DEFAULT 0;
 "
@@ -346,7 +345,7 @@ ALTER TABLE app.customer ADD loyalty_points INT DEFAULT 0;
 Compare the database against your changelog:
 
 ```bash
-cd /data/liquibase-tutorial
+cd $LIQUIBASE_TUTORIAL_DATA_DIR
 
 # Compare dev database to what Liquibase thinks it should be
 lb -e dev -- diff \
@@ -396,7 +395,9 @@ Now add more changes following the established pattern.
 ### V0002: Add Index to Orders
 
 ```bash
-cat > /data/liquibase-tutorial/database/changelog/changes/V0002__add_orders_index.sql << 'EOF'
+cat > $LIQUIBASE_TUTORIAL_DATA_DIR/database/changelog/changes/V0002__add_orders_index.sql << 'EOF'
+--liquibase formatted sql
+
 --changeset tutorial:V0002-add-orders-date-index
 -- Purpose: Add performance index on order_date for reporting queries
 
@@ -409,13 +410,14 @@ BEGIN
     CREATE INDEX IX_orders_order_date ON app.orders(order_date DESC);
 END
 GO
+--rollback DROP INDEX IF EXISTS app.orders.IX_orders_order_date;
 EOF
 ```
 
 ### Update Master Changelog
 
 ```bash
-cat > /data/liquibase-tutorial/database/changelog/changelog.xml << 'EOF'
+cat > $LIQUIBASE_TUTORIAL_DATA_DIR/database/changelog/changelog.xml << 'EOF'
 <?xml version="1.0" encoding="UTF-8"?>
 <databaseChangeLog
     xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
@@ -424,21 +426,13 @@ cat > /data/liquibase-tutorial/database/changelog/changelog.xml << 'EOF'
                         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
 
     <!-- Baseline -->
-    <include file="baseline/V0000__baseline.xml" relativeToChangelogFile="true"/>
+    <include file="baseline/V0000__baseline.mssql.sql" relativeToChangelogFile="true"/>
 
     <!-- V0001: Add orders table -->
-    <changeSet id="V0001-add-orders-table" author="tutorial">
-        <sqlFile path="database/changelog/changes/V0001__add_orders_table.sql"
-                 relativeToChangelogFile="false"/>
-        <rollback>DROP TABLE IF EXISTS app.orders;</rollback>
-    </changeSet>
+    <include file="changes/V0001__add_orders_table.sql" relativeToChangelogFile="true"/>
 
     <!-- V0002: Add orders index -->
-    <changeSet id="V0002-add-orders-date-index" author="tutorial">
-        <sqlFile path="database/changelog/changes/V0002__add_orders_index.sql"
-                 relativeToChangelogFile="false"/>
-        <rollback>DROP INDEX IF EXISTS app.orders.IX_orders_order_date;</rollback>
-    </changeSet>
+    <include file="changes/V0002__add_orders_index.sql" relativeToChangelogFile="true"/>
 
 </databaseChangeLog>
 EOF

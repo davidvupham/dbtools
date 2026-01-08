@@ -1,67 +1,98 @@
-# SQL Server Docker Container for Liquibase Tutorial
-# This container is dedicated to the Liquibase tutorial and can be safely removed after completing the tutorial
+# Liquibase Tutorial Docker Compose
+# Creates 3 SQL Server containers (dev, stg, prd) for multi-environment tutorial
+# Uses slirp4netns network mode for WSL/rootless Podman compatibility
 
 services:
-  mssql_liquibase_tutorial:
-    image: mcr.microsoft.com/mssql/server:2025-latest
-    container_name: mssql_liquibase_tutorial
-    hostname: mssql_liquibase_tutorial
-
+  # ============================================================================
+  # SQL Server Containers (one per environment)
+  # ============================================================================
+  
+  mssql_dev:
+    build:
+      context: ../../../../docker/mssql
+      dockerfile: Dockerfile
+    image: mssql_tutorial:latest
+    container_name: mssql_dev
+    hostname: mssql_dev
     ports:
-      - "${MSSQL_LIQUIBASE_TUTORIAL_PORT:-14333}:1433"
-
+      - "14331:1433"
     environment:
       - ACCEPT_EULA=Y
-      - MSSQL_SA_PASSWORD=${MSSQL_LIQUIBASE_TUTORIAL_PWD}
+      - MSSQL_SA_PASSWORD=${MSSQL_LIQUIBASE_TUTORIAL_PWD:?MSSQL_LIQUIBASE_TUTORIAL_PWD is required}
       - MSSQL_PID=Developer
-
     volumes:
-      - mssql_liquibase_tutorial_data:/var/opt/mssql
-
+      - ${LIQUIBASE_TUTORIAL_DATA_DIR:-/data/liquibase_tutorial}/mssql_dev:/var/opt/mssql:z,U
     healthcheck:
-      test: /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P "$${MSSQL_SA_PASSWORD}" -Q "SELECT 1" -b -o /dev/null
+      test: /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P "$${MSSQL_SA_PASSWORD}" -Q "SELECT 1" -b -o /dev/null || exit 1
       interval: 10s
       timeout: 3s
       retries: 10
-      start_period: 10s
+      start_period: 15s
+    network_mode: slirp4netns:port_handler=slirp4netns
 
-    networks:
-      - liquibase_tutorial
-
-  github_runner:
-    image: myoung34/github-runner:latest
-    container_name: liquibase-tutorial-runner
-    restart: unless-stopped
-
+  mssql_stg:
+    build:
+      context: ../../../../docker/mssql
+      dockerfile: Dockerfile
+    image: mssql_tutorial:latest
+    container_name: mssql_stg
+    hostname: mssql_stg
+    ports:
+      - "14332:1433"
     environment:
-      - RUNNER_NAME=${RUNNER_NAME:-liquibase-tutorial-runner}
-      - RUNNER_WORKDIR=${RUNNER_WORKDIR:-/tmp/github-runner}
-      - RUNNER_TOKEN=${RUNNER_TOKEN}
-      - REPO_URL=${REPO_URL}
-      - RUNNER_LABELS=${RUNNER_LABELS:-self-hosted,linux,x64,wsl,docker}
-      - RUNNER_GROUP=${RUNNER_GROUP:-default}
-
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=${MSSQL_LIQUIBASE_TUTORIAL_PWD:?MSSQL_LIQUIBASE_TUTORIAL_PWD is required}
+      - MSSQL_PID=Developer
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - github_runner_data:/tmp/github-runner
+      - ${LIQUIBASE_TUTORIAL_DATA_DIR:-/data/liquibase_tutorial}/mssql_stg:/var/opt/mssql:z,U
+    healthcheck:
+      test: /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P "$${MSSQL_SA_PASSWORD}" -Q "SELECT 1" -b -o /dev/null || exit 1
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 15s
+    network_mode: slirp4netns:port_handler=slirp4netns
 
-    depends_on:
-      mssql_liquibase_tutorial:
-        condition: service_healthy
+  mssql_prd:
+    build:
+      context: ../../../../docker/mssql
+      dockerfile: Dockerfile
+    image: mssql_tutorial:latest
+    container_name: mssql_prd
+    hostname: mssql_prd
+    ports:
+      - "14333:1433"
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=${MSSQL_LIQUIBASE_TUTORIAL_PWD:?MSSQL_LIQUIBASE_TUTORIAL_PWD is required}
+      - MSSQL_PID=Developer
+    volumes:
+      - ${LIQUIBASE_TUTORIAL_DATA_DIR:-/data/liquibase_tutorial}/mssql_prd:/var/opt/mssql:z,U
+    healthcheck:
+      test: /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P "$${MSSQL_SA_PASSWORD}" -Q "SELECT 1" -b -o /dev/null || exit 1
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 15s
+    network_mode: slirp4netns:port_handler=slirp4netns
 
-    networks:
-      - liquibase_tutorial
-
+  # ============================================================================
+  # Liquibase Service (run-once tool)
+  # ============================================================================
+  
+  liquibase:
+    build:
+      context: ../../../../docker/liquibase
+      dockerfile: Dockerfile
+    image: liquibase:latest
+    container_name: liquibase_tutorial
+    working_dir: /data
+    volumes:
+      - ${LIQUIBASE_TUTORIAL_DATA_DIR:-/data/liquibase_tutorial}:/data:z,U
+    environment:
+      - LIQUIBASE_LOG_LEVEL=INFO
+    network_mode: slirp4netns
     profiles:
-      - runner
+      - tools
+    restart: "no"
 
-volumes:
-  mssql_liquibase_tutorial_data:
-    name: mssql_liquibase_tutorial_data
-  github_runner_data:
-    name: github_runner_data
-
-networks:
-  liquibase_tutorial:
-    name: liquibase_tutorial
-    driver: bridge

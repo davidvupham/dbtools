@@ -440,7 +440,7 @@ systemctl status mssql-server
 
 ## Part 3: Configure GitHub Runner
 
-> Runner Naming: The default runner name used throughout this tutorial is `liquibase-tutorial-runner`. You may choose any name. If you customize it, ensure you (a) set `RUNNER_NAME` when generating `runner.env.local`, (b) adjust the `container_name` in `docs/tutorials/liquibase/docker/docker-compose.yml`, and (c) pass `--runner <your-name>` to `verify-self-hosted-env.sh` (or rely on auto-detect if only one runner container exists). All commands using `docker exec` or `docker logs` should reference your chosen name.
+> Runner Naming: The default runner name used throughout this tutorial is `liquibase-tutorial-runner`. You may choose any name. If you customize it, ensure you (a) set `RUNNER_NAME` when generating `runner.env.local`, (b) adjust the `container_name` in `docs/courses/liquibase/docker/docker-compose.yml`, and (c) pass `--runner <your-name>` to `verify-self-hosted-env.sh` (or rely on auto-detect if only one runner container exists). All commands using `docker exec` or `docker logs` should reference your chosen name.
 
 ### Step 3.1: Register Runner in GitHub
 
@@ -467,7 +467,7 @@ systemctl status mssql-server
 
 ```bash
 # Run the setup script from the repository
-bash docs/tutorials/liquibase/scripts/setup-github-runner-config.sh
+bash docs/courses/liquibase/scripts/setup-github-runner-config.sh
 ```
 
 The script will:
@@ -547,7 +547,7 @@ source /data/github-runner-config/runner.env
 export RUNNER_NAME RUNNER_WORKDIR RUNNER_TOKEN REPO_URL RUNNER_LABELS RUNNER_GROUP
 
 # Start the runner (SQL Server will start automatically if not running)
-cd docs/tutorials/liquibase/docker
+cd docs/courses/liquibase/docker
 docker-compose --profile runner up -d github_runner
 
 # Check status
@@ -648,7 +648,7 @@ The `verify-self-hosted-env.sh` script performs the following validations:
 ```bash
 # Run from repository root
 # Auto-detect runner name or specify explicitly
-bash docs/tutorials/liquibase/scripts/verify-self-hosted-env.sh --runner liquibase-tutorial-runner
+bash docs/courses/liquibase/scripts/verify-self-hosted-env.sh --runner liquibase-tutorial-runner
 ```
 
 #### Understanding the Output

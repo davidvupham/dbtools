@@ -313,7 +313,7 @@ jdbc:sqlserver://dev-sql.database.windows.net:1433;
 
 ```text
 jdbc:sqlserver://mssql_liquibase_tutorial:1433;
-  databaseName=testdbdev;
+  databaseName=orderdb;
   encrypt=true;
   trustServerCertificate=true;
   loginTimeout=30;
@@ -341,8 +341,7 @@ on:
 jobs:
   deploy-dev:
     name: Deploy to Development Database
-    runs-on: self-hosted
-    labels: [ liquibase-tutorial ]
+    runs-on: [self-hosted, liquibase-tutorial]
 
     steps:
       - name: Checkout repository
@@ -416,8 +415,7 @@ on:
 jobs:
   deploy-dev:
     name: Deploy to Development
-    runs-on: self-hosted
-    labels: [ liquibase-tutorial ]
+    runs-on: [self-hosted, liquibase-tutorial]
     environment: development
 
     steps:
@@ -457,8 +455,7 @@ jobs:
 
   deploy-staging:
     name: Deploy to Staging
-    runs-on: self-hosted
-    labels: [ liquibase-tutorial ]
+    runs-on: [self-hosted, liquibase-tutorial]
     needs: deploy-dev
     environment: staging
 
@@ -489,8 +486,7 @@ jobs:
 
   deploy-production:
     name: Deploy to Production
-    runs-on: self-hosted
-    labels: [ liquibase-tutorial ]
+    runs-on: [self-hosted, liquibase-tutorial]
     needs: deploy-staging
     environment: production   # configure approvals & branches in GitHub Environments
 
@@ -556,7 +552,7 @@ You now have a pipeline that:
 Even after you add CI/CD, the helper scripts from Part 1 remain extremely valuable:
 
 - **`lb` wrapper**
-  - Local "single command" runner for Liquibase against `testdbdev`, `testdbstg`, `testdbprd`.
+  - Local "single command" runner for Liquibase against `orderdb`, `orderdb`, `orderdb`.
   - Mirrors the same `changelog.xml` that CI/CD uses.
   - Perfect for:
     - Trying new changesets quickly.

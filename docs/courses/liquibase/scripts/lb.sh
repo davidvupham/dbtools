@@ -6,13 +6,58 @@ set -euo pipefail
 #   lb.sh -e dev -- status --verbose
 #   lb.sh -e stage -- update
 #   lb.sh -e prod -- tag release-v1.2
-#   LB_PROJECT_DIR=/some/dir lb.sh -e dev -- updateSQL
+#   LIQUIBASE_TUTORIAL_DATA_DIR=/some/dir lb.sh -e dev -- updateSQL
 #
 # Requirements:
 #   - Docker image 'liquibase:latest' built via the repo's docker/liquibase directory
 #   - SQL Server container running on network 'liquibase_tutorial'
-#   - env files at $LB_PROJECT_DIR/env/liquibase.<env>.properties
+#   - env files at $LIQUIBASE_TUTORIAL_DATA_DIR/env/liquibase.<env>.properties
 #   - MSSQL_LIQUIBASE_TUTORIAL_PWD exported in the shell
+#
+# Runtime detection:
+#   Checks CONTAINER_RUNTIME env var, then searches for docker, then podman.
+
+detect_runtime() {
+  # 1. Allow override via env var
+  if [[ -n "${CONTAINER_RUNTIME:-}" ]]; then
+    echo "$CONTAINER_RUNTIME"
+    return
+  fi
+
+  # 2. Check OS preference
+  local os_id=""
+  if [[ -f /etc/os-release ]]; then
+    os_id="$(source /etc/os-release && echo "${ID} ${ID_LIKE:-}")"
+  fi
+
+  # RedHat/Fedora/CentOS -> Prefer Podman
+  if [[ "$os_id" =~ (rhel|fedora|centos|rocky|almalinux) ]]; then
+    if command -v podman &> /dev/null; then
+      echo "podman"
+      return
+    fi
+  fi
+
+  # Ubuntu/Debian -> Prefer Docker
+  if [[ "$os_id" =~ (ubuntu|debian) ]]; then
+    if command -v docker &> /dev/null; then
+      echo "docker"
+      return
+    fi
+  fi
+
+  # 3. Fallback: check binaries
+  if command -v docker &> /dev/null; then
+    echo "docker"
+  elif command -v podman &> /dev/null; then
+    echo "podman"
+  else
+    echo "Error: Neither docker nor podman found. Install one or set CONTAINER_RUNTIME." >&2
+    exit 1
+  fi
+}
+
+CR="$(detect_runtime)"
 
 ENVIRONMENT=""
 EXTRA_DOCKER_OPTS=()
@@ -38,14 +83,14 @@ Options before '--' apply to docker run:
 
 Environment variables:
   MSSQL_LIQUIBASE_TUTORIAL_PWD   Required. SA password used by CLI
-  LB_PROJECT_DIR                 Optional. Overrides --project
+  LIQUIBASE_TUTORIAL_DATA_DIR                 Optional. Overrides --project
   LB_IMAGE                       Optional. Overrides --image
   LB_NETWORK                     Optional. Overrides --net
 EOF
 }
 
 # Defaults
-LB_PROJECT_DIR_DEFAULT="${LB_PROJECT_DIR:-/data/liquibase-tutorial}"
+LIQUIBASE_TUTORIAL_DATA_DIR_DEFAULT="${LIQUIBASE_TUTORIAL_DATA_DIR:-/data/liquibase-tutorial}"
 LB_IMAGE_DEFAULT="${LB_IMAGE:-liquibase:latest}"
 LB_NETWORK_DEFAULT="${LB_NETWORK:-liquibase_tutorial}"
 
@@ -59,7 +104,7 @@ while [[ $# -gt 0 ]]; do
     --image)
       LB_IMAGE_DEFAULT="$2"; shift 2;;
     --project)
-      LB_PROJECT_DIR_DEFAULT="$2"; shift 2;;
+      LIQUIBASE_TUTORIAL_DATA_DIR_DEFAULT="$2"; shift 2;;
     -h|--help)
       print_usage; exit 0;;
     --)
@@ -82,7 +127,7 @@ if [[ -z "${MSSQL_LIQUIBASE_TUTORIAL_PWD:-}" ]]; then
 fi
 
 # Resolve project dir
-PROJECT_DIR="${LB_PROJECT_DIR_DEFAULT}"
+PROJECT_DIR="${LIQUIBASE_TUTORIAL_DATA_DIR_DEFAULT}"
 if [[ ! -d "$PROJECT_DIR" ]]; then
   echo "Error: Project directory not found: $PROJECT_DIR" >&2
   exit 1
@@ -96,10 +141,10 @@ if [[ ! -f "$PROP_FILE" ]]; then
 fi
 
 # docker run invocation
-exec docker run --rm \
+exec "$CR" run --rm \
   --user "$(id -u):$(id -g)" \
   --network="${LB_NETWORK_DEFAULT}" \
-  -v "${PROJECT_DIR}:/workspace:z" \
+  -v "${PROJECT_DIR}:/workspace:Z,U" \
   "${LB_IMAGE_DEFAULT}" \
   --defaults-file="/workspace/env/liquibase.${ENVIRONMENT}.properties" \
   --password="${MSSQL_LIQUIBASE_TUTORIAL_PWD}" \

@@ -14,28 +14,52 @@ set -euo pipefail
 # Prompts for:
 #  - MSSQL_LIQUIBASE_TUTORIAL_PWD (SQL Server SA password)
 #  - LIQUIBASE_TUTORIAL_DIR (tutorial root containing scripts/ and sql/)
-#  - LB_PROJECT_DIR (Liquibase project root mounted into container)
+#  - LIQUIBASE_TUTORIAL_DATA_DIR (Liquibase project root mounted into container)
 # Prints export lines you can paste or source in the current shell.
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 DEFAULT_TUTORIAL_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
-DEFAULT_LB_PROJECT_DIR="${LB_PROJECT_DIR:-/data/liquibase-tutorial}"
+
+# Per-user project directory for shared Docker hosts
+# Uses /data/$USER to avoid conflicts between users
+CURRENT_USER="$(whoami)"
+DEFAULT_LIQUIBASE_TUTORIAL_DATA_DIR="${LIQUIBASE_TUTORIAL_DATA_DIR:-/data/${CURRENT_USER}/liquibase_tutorial}"
 
 echo "Configure tutorial environment variables"
 echo "--------------------------------------"
 
+# Prerequisite check: verify /data exists and user can write to it
+check_data_permissions() {
+  if [[ ! -d "/data" ]]; then
+    echo "Warning: /data directory does not exist." >&2
+    echo "  You may need to create it with: sudo mkdir -p /data && sudo chmod 1777 /data" >&2
+    return 1
+  fi
+  
+  if [[ ! -w "/data" ]]; then
+    echo "Warning: No write permission on /data directory." >&2
+    echo "  Ask your administrator to run: sudo chmod 1777 /data" >&2
+    echo "  Or use a different project directory (e.g., your home directory)" >&2
+    return 1
+  fi
+  
+  return 0
+}
+
 # IS_SOURCED flag already set above
 
 # Prompt for SQL password (hidden input)
+DEFAULT_STRONG_PWD="MssqlPass123$"
+
 if [[ -z "${MSSQL_LIQUIBASE_TUTORIAL_PWD:-}" ]]; then
-  read -s -rp "Enter SQL Server SA password (MSSQL_LIQUIBASE_TUTORIAL_PWD): " INPUT_PWD
+  read -s -rp "Enter SQL Server SA password (default: ${DEFAULT_STRONG_PWD}): " INPUT_PWD
   echo
 else
-  read -s -rp "Enter SQL Server SA password (MSSQL_LIQUIBASE_TUTORIAL_PWD) [set in env]: " INPUT_PWD || true
+  read -s -rp "Enter SQL Server SA password [set in env]: " INPUT_PWD || true
   echo
 fi
 
-PASSWORD_VALUE="${INPUT_PWD:-${MSSQL_LIQUIBASE_TUTORIAL_PWD:-}}"
+PASSWORD_VALUE="${INPUT_PWD:-${MSSQL_LIQUIBASE_TUTORIAL_PWD:-$DEFAULT_STRONG_PWD}}"
 
 if [[ -z "${PASSWORD_VALUE}" ]]; then
   echo "Error: Password is required." >&2
@@ -47,27 +71,50 @@ if [[ "${PASSWORD_VALUE}" == *"!"* ]]; then
   echo "Warning: It's recommended to avoid '!' in the password to prevent shell history/interpolation issues." >&2
 fi
 
-# Tutorial root
-read -rp "Tutorial directory (contains scripts/ and sql/) [${DEFAULT_TUTORIAL_DIR}]: " INPUT_TUTORIAL_DIR
-TUTORIAL_DIR="${INPUT_TUTORIAL_DIR:-$DEFAULT_TUTORIAL_DIR}"
+# Tutorial root - use existing LIQUIBASE_TUTORIAL_DIR if set
+if [[ -n "${LIQUIBASE_TUTORIAL_DIR:-}" ]]; then
+  TUTORIAL_DIR="${LIQUIBASE_TUTORIAL_DIR}"
+  echo "Using LIQUIBASE_TUTORIAL_DIR=${TUTORIAL_DIR}"
+else
+  read -rp "Tutorial directory (contains scripts/ and sql/) [${DEFAULT_TUTORIAL_DIR}]: " INPUT_TUTORIAL_DIR
+  TUTORIAL_DIR="${INPUT_TUTORIAL_DIR:-$DEFAULT_TUTORIAL_DIR}"
+fi
 
 if [[ ! -d "${TUTORIAL_DIR}" ]]; then
   echo "Error: Tutorial directory not found: ${TUTORIAL_DIR}" >&2
   exit 1
 fi
 
-# Liquibase project dir
-read -rp "Liquibase project root (mounted to /workspace) [${DEFAULT_LB_PROJECT_DIR}]: " INPUT_LB_DIR
-LB_DIR="${INPUT_LB_DIR:-$DEFAULT_LB_PROJECT_DIR}"
+# Liquibase project dir - use existing LIQUIBASE_TUTORIAL_DATA_DIR if set
+if [[ -n "${LIQUIBASE_TUTORIAL_DATA_DIR:-}" ]]; then
+  LB_DIR="${LIQUIBASE_TUTORIAL_DATA_DIR}"
+  echo "Using LIQUIBASE_TUTORIAL_DATA_DIR=${LB_DIR}"
+else
+  echo ""
+  echo "Shared Docker Host Support:"
+  echo "  Default project dir: /data/${CURRENT_USER} (per-user isolation)"
+  check_data_permissions || echo "  (continuing anyway - you can specify a different directory)"
+  echo ""
+  read -rp "Liquibase project root (mounted to /workspace) [${DEFAULT_LIQUIBASE_TUTORIAL_DATA_DIR}]: " INPUT_LB_DIR
+  LB_DIR="${INPUT_LB_DIR:-$DEFAULT_LIQUIBASE_TUTORIAL_DATA_DIR}"
+fi
 
-mkdir -p "${LB_DIR}" || true
+# Create directory if it doesn't exist
+if [[ ! -d "${LB_DIR}" ]]; then
+  echo "Creating project directory: ${LB_DIR}"
+  if ! mkdir -p "${LB_DIR}" 2>/dev/null; then
+    echo "Error: Cannot create directory ${LB_DIR}" >&2
+    echo "  Ensure you have write permission, or choose a different path." >&2
+    if ${IS_SOURCED}; then return 1; else exit 1; fi
+  fi
+fi
 
 cat <<EOF
 
 Configuration summary:
   MSSQL_LIQUIBASE_TUTORIAL_PWD=(hidden)
   LIQUIBASE_TUTORIAL_DIR=${TUTORIAL_DIR}
-  LB_PROJECT_DIR=${LB_DIR}
+  LIQUIBASE_TUTORIAL_DATA_DIR=${LB_DIR}
 
 EOF
 
@@ -76,18 +123,18 @@ if ${IS_SOURCED}; then
   # Export into current shell
   export MSSQL_LIQUIBASE_TUTORIAL_PWD="${PASSWORD_VALUE}"
   export LIQUIBASE_TUTORIAL_DIR="${TUTORIAL_DIR}"
-  export LB_PROJECT_DIR="${LB_DIR}"
+  export LIQUIBASE_TUTORIAL_DATA_DIR="${LB_DIR}"
 
   # Validate by displaying effective values (mask the password)
   echo "Applied environment variables in current shell:"
   echo "  MSSQL_LIQUIBASE_TUTORIAL_PWD=(set; length ${#MSSQL_LIQUIBASE_TUTORIAL_PWD})"
   echo "  LIQUIBASE_TUTORIAL_DIR=${LIQUIBASE_TUTORIAL_DIR}"
-  echo "  LB_PROJECT_DIR=${LB_PROJECT_DIR}"
+  echo "  LIQUIBASE_TUTORIAL_DATA_DIR=${LIQUIBASE_TUTORIAL_DATA_DIR}"
   echo
   echo "Tip: persist these by adding the following to ~/.bashrc or ~/.zshrc:"
   echo "  export MSSQL_LIQUIBASE_TUTORIAL_PWD='(your password here)'"
   echo "  export LIQUIBASE_TUTORIAL_DIR=\"${LIQUIBASE_TUTORIAL_DIR}\""
-  echo "  export LB_PROJECT_DIR=\"${LB_PROJECT_DIR}\""
+  echo "  export LIQUIBASE_TUTORIAL_DATA_DIR=\"${LIQUIBASE_TUTORIAL_DATA_DIR}\""
 else
   # Not sourced: cannot modify parent shell; provide ready-to-copy exports
   echo "This script was executed, not sourced; exports cannot persist to your current shell."
@@ -95,7 +142,7 @@ else
   echo
   echo "  export MSSQL_LIQUIBASE_TUTORIAL_PWD='${PASSWORD_VALUE}'"
   echo "  export LIQUIBASE_TUTORIAL_DIR=\"${TUTORIAL_DIR}\""
-  echo "  export LB_PROJECT_DIR=\"${LB_DIR}\""
+  echo "  export LIQUIBASE_TUTORIAL_DATA_DIR=\"${LB_DIR}\""
   echo
   echo "Or re-run as:"
   echo "  source \"${BASH_SOURCE[0]}\""

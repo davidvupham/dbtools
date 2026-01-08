@@ -15,8 +15,8 @@ NC='\033[0m' # No Color
 CONTAINER_NAME="mssql_liquibase_tutorial"
 VOLUME_NAME="mssql_liquibase_tutorial_data"
 NETWORK_NAME="liquibase_tutorial"
-# Respect LB_PROJECT_DIR if set; fallback to default path
-TUTORIAL_DIR="${LB_PROJECT_DIR:-/data/liquibase-tutorial}"
+# Respect LIQUIBASE_TUTORIAL_DATA_DIR if set; fallback to default path
+TUTORIAL_DIR="${LIQUIBASE_TUTORIAL_DATA_DIR:-/data/liquibase-tutorial}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DEFAULT_LIQUIBASE_TUTORIAL_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 DOCKER_COMPOSE_DIR="${LIQUIBASE_TUTORIAL_DIR:-${DEFAULT_LIQUIBASE_TUTORIAL_DIR}}/docker"

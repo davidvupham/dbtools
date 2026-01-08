@@ -20,23 +20,34 @@ We believe you cannot effectively automate what you do not understand. Therefore
 
 ## 📂 Directory Structure
 
-The `docs/tutorials/liquibase/` directory is organized as follows:
+The `docs/courses/liquibase/` directory is organized as follows:
 
 ```text
-docs/tutorials/liquibase/
-├── README.md               <-- You are here (Navigation Hub)
-├── learning-paths/         <-- All Tutorial Content
+docs/courses/liquibase/
+├── README.md                  <-- You are here (Navigation Hub)
+├── course_overview.md         <-- Learning objectives, prerequisites
+├── quick_reference.md         <-- Common commands cheat sheet
+├── glossary.md                <-- Terminology definitions
+├── liquibase_course_design.md <-- Requirements and design
+├── learning-paths/            <-- All Tutorial Content
 │   ├── series-part1-baseline.md    (Manual: Setup & Baseline)
 │   ├── series-part2-manual.md      (Manual: Deployment Lifecycle)
 │   ├── guide-runner-setup.md       (Infra: Self-Hosted Runner)
 │   ├── series-part3-cicd.md        (Automation: GitHub Actions)
 │   └── guide-end-to-end-pipeline.md (Advanced: The "All-in-One" Path)
-├── docker/                 <-- Support files (Docker Compose)
-├── scripts/                <-- Helper scripts (aliases, setup)
-└── runner_config/          <-- Runner environment configs
+├── docker/                    <-- Docker Compose for tutorial
+├── scripts/                   <-- Step scripts, helpers, validation
+└── runner_config/             <-- Runner environment configs
 ```
 
+## 📋 Quick Resources
+
+- **[Course Overview](./course_overview.md)** - Learning objectives, time estimates, prerequisites
+- **[Quick Reference](./quick_reference.md)** - Common commands and scripts cheat sheet
+- **[Glossary](./glossary.md)** - Terminology definitions
+
 ## 📚 Learning Paths
+
 
 Choose the path that fits your experience level.
 
