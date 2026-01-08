@@ -297,6 +297,10 @@ WORKDIR /liquibase
 #   liquibase --version: Verifies Liquibase is installed and executable
 #   If exit code 0 → healthy, otherwise → unhealthy
 #
+# PODMAN NOTE:
+#   Podman users see "HEALTHCHECK is not supported for OCI image format".
+#   To resolve, build with: podman build --format docker ...
+#
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD ["liquibase", "--version"]
 
@@ -367,6 +371,9 @@ CMD ["--help"]
 # From /workspaces/dbtools/docker/liquibase directory:
 #
 #   docker build -t liquibase:latest .
+#
+# On RHEL with Podman (use --format docker for healthcheck support):
+#   podman build -t liquibase:latest . --format docker
 #
 # To customize versions:
 #   docker build \

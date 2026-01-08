@@ -57,9 +57,8 @@ docker build -t liquibase:latest docker/liquibase
 Note: If you prefer using compose from the repo root, add `--project-directory docker/liquibase` so the build context resolves to this directory.
 
 On RHEL with Podman:
-
 ```bash
-podman build -t liquibase:latest docker/liquibase
+podman build -t liquibase:latest docker/liquibase --format docker
 ```
 
 Build arguments (optional overrides):
