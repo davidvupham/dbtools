@@ -1,5 +1,12 @@
 # How to manage dependencies with `uv`
 
+## Table of contents
+
+- [Sync dependencies](#sync-dependencies)
+- [Manage legacy `requirements.txt`](#manage-legacy-requirementstxt)
+	- [Install from requirements.txt](#install-from-requirementstxt)
+	- [Compile requirements.txt from `pyproject.toml`](#compile-requirementstxt-from-pyprojecttoml)
+
 ## Sync dependencies
 
 If you clone a repo with a `uv.lock` file, you can install everything exactly as specified in the lockfile:

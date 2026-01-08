@@ -2,6 +2,15 @@
 
 You can use `uv` to launch specific Python versions or run scripts without creating a project or virtual environment. All downloads are managed centrally, keeping your workspace clean.
 
+## Table of contents
+
+- [Launch a Python REPL (Shell)](#launch-a-python-repl-shell)
+	- [Launch a specific version](#launch-a-specific-version)
+	- [Launch the latest available version](#launch-the-latest-available-version)
+- [Run a single-file script with dependencies](#run-a-single-file-script-with-dependencies)
+	- [Example: Quick One-Liner](#example-quick-one-liner)
+- ["Pinning" for Ad-hoc Scripts (PEP 723)](#pinning-for-ad-hoc-scripts-pep-723)
+
 ## Launch a Python REPL (Shell)
 
 You can drop into a Python shell instantly, even for versions you haven't explicitly installed yet.

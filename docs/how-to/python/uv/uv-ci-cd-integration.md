@@ -2,6 +2,39 @@
 
 This guide covers integrating UV into various CI/CD platforms for testing, building, and deploying Python applications.
 
+## Table of contents
+
+- [GitHub Actions](#github-actions)
+  - [Basic Setup](#basic-setup)
+  - [With Python Version Matrix](#with-python-version-matrix)
+  - [With Caching (Faster Builds)](#with-caching-faster-builds)
+  - [Full CI/CD Pipeline](#full-cicd-pipeline)
+- [GitLab CI](#gitlab-ci)
+  - [Basic Pipeline](#basic-pipeline)
+  - [With Python Version Matrix](#with-python-version-matrix-1)
+- [Azure DevOps](#azure-devops)
+  - [Basic Pipeline](#basic-pipeline-1)
+- [CircleCI](#circleci)
+  - [Basic Configuration](#basic-configuration)
+- [Jenkins](#jenkins)
+  - [Jenkinsfile](#jenkinsfile)
+- [Common Patterns](#common-patterns)
+  - [Dependency Caching](#dependency-caching)
+  - [Lock File Verification](#lock-file-verification)
+  - [Publishing to PyPI](#publishing-to-pypi)
+  - [Running Specific Dependency Groups](#running-specific-dependency-groups)
+- [Environment Variables](#environment-variables)
+- [Production Deployment](#production-deployment)
+  - [Building Wheels for Deployment](#building-wheels-for-deployment)
+  - [Publishing to Private PyPI](#publishing-to-private-pypi)
+  - [Deploying with pip (Traditional)](#deploying-with-pip-traditional)
+  - [Where Packages Are Installed](#where-packages-are-installed)
+- [Troubleshooting](#troubleshooting)
+  - ["Lock file is out of date"](#lock-file-is-out-of-date)
+  - [Slow CI builds](#slow-ci-builds)
+  - [Permission errors](#permission-errors)
+- [Related Guides](#related-guides)
+
 ## GitHub Actions
 
 ### Basic Setup

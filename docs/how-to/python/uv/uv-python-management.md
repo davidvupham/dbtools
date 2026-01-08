@@ -2,6 +2,12 @@
 
 `uv` simplifies globally installing and managing Python versions.
 
+## Table of contents
+
+- [Install a specific Python version](#install-a-specific-python-version)
+- [List available versions](#list-available-versions)
+- [Pin a project to a specific version](#pin-a-project-to-a-specific-version)
+
 ## Install a specific Python version
 
 Download and install a managed Python version into the central cache:

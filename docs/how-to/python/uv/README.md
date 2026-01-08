@@ -2,6 +2,11 @@
 
 Task-oriented guides for common UV workflows and integrations.
 
+## Table of contents
+
+- [Guides](#guides)
+- [Related Documentation](#related-documentation)
+
 ## Guides
 
 | Guide | Description |

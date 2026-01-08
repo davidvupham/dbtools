@@ -2,6 +2,50 @@
 
 This guide covers setting up and managing UV workspaces for monorepo projects with multiple Python packages.
 
+## Table of contents
+
+- [What Are Workspaces?](#what-are-workspaces)
+- [When to Use Workspaces](#when-to-use-workspaces)
+- [Quick Start](#quick-start)
+  - [Project Structure](#project-structure)
+  - [Step 1: Create the Workspace Root](#step-1-create-the-workspace-root)
+  - [Step 2: Create Member Packages](#step-2-create-member-packages)
+  - [Step 3: Initialize and Sync](#step-3-initialize-and-sync)
+- [Importing Workspace Packages](#importing-workspace-packages)
+  - [How It Works](#how-it-works)
+  - [Verifying Package Installation](#verifying-package-installation)
+  - [Key Difference from pip](#key-difference-from-pip)
+- [Working with Workspaces](#working-with-workspaces)
+  - [Running Commands in Specific Packages](#running-commands-in-specific-packages)
+  - [Adding Dependencies](#adding-dependencies)
+  - [Syncing Dependencies](#syncing-dependencies)
+- [Workspace Configuration](#workspace-configuration)
+  - [Include/Exclude Members](#includeexclude-members)
+  - [Workspace Sources](#workspace-sources)
+- [Common Patterns](#common-patterns)
+  - [Shared Development Dependencies](#shared-development-dependencies)
+  - [Per-Package Dev Dependencies](#per-package-dev-dependencies)
+  - [Publishable vs Non-Publishable Members](#publishable-vs-non-publishable-members)
+- [CI/CD for Workspaces](#cicd-for-workspaces)
+  - [Testing All Packages](#testing-all-packages)
+  - [Matrix Testing](#matrix-testing)
+  - [Only Test Changed Packages](#only-test-changed-packages)
+- [Building and Publishing](#building-and-publishing)
+  - [Build a Single Package](#build-a-single-package)
+  - [Publish a Package](#publish-a-package)
+  - [Build All Packages](#build-all-packages)
+- [Docker with Workspaces](#docker-with-workspaces)
+  - [Multi-Package Dockerfile](#multi-package-dockerfile)
+- [Troubleshooting](#troubleshooting)
+  - ["Package not found in workspace"](#package-not-found-in-workspace)
+  - [Circular dependencies](#circular-dependencies)
+  - [Lock file conflicts](#lock-file-conflicts)
+  - [Import errors in development](#import-errors-in-development)
+- [Migration from Other Tools](#migration-from-other-tools)
+  - [From Poetry Workspaces](#from-poetry-workspaces)
+  - [From npm/yarn Workspaces](#from-npmyarn-workspaces)
+- [Related Guides](#related-guides)
+
 ## What Are Workspaces?
 
 UV workspaces allow you to manage multiple related Python packages in a single repository with:

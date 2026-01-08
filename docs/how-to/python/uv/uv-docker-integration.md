@@ -2,6 +2,43 @@
 
 This guide covers best practices for using UV in Docker containers for both development and production.
 
+## Table of contents
+
+- [Quick Start](#quick-start)
+  - [Minimal Production Dockerfile](#minimal-production-dockerfile)
+- [Understanding UV Docker Images](#understanding-uv-docker-images)
+  - [Available Base Images](#available-base-images)
+  - [Choosing the Right Image](#choosing-the-right-image)
+- [Production Best Practices](#production-best-practices)
+  - [Multi-Stage Build (Recommended)](#multi-stage-build-recommended)
+  - [Key Optimizations Explained](#key-optimizations-explained)
+  - [Why Use `python` Directly (Not `uv run`) in Production](#why-use-python-directly-not-uv-run-in-production)
+- [Development Dockerfile](#development-dockerfile)
+  - [Docker Compose for Development](#docker-compose-for-development)
+  - [Docker Compose Watch (Auto-rebuild)](#docker-compose-watch-auto-rebuild)
+- [Caching Strategies](#caching-strategies)
+  - [Using BuildKit Cache Mounts](#using-buildkit-cache-mounts)
+  - [GitHub Actions with Docker Caching](#github-actions-with-docker-caching)
+- [Running Commands in Docker](#running-commands-in-docker)
+  - [Using UV Run](#using-uv-run)
+  - [Direct Python (After uv sync)](#direct-python-after-uv-sync)
+- [Environment Variables](#environment-variables)
+- [Common Patterns](#common-patterns)
+  - [FastAPI Application](#fastapi-application)
+  - [Flask with Gunicorn](#flask-with-gunicorn)
+  - [Django Application](#django-application)
+- [Deploying Workspace Packages](#deploying-workspace-packages)
+  - [Option 1: Install All Workspace Members](#option-1-install-all-workspace-members)
+  - [How UV Finds Workspace Packages](#how-uv-finds-workspace-packages)
+  - [Option 2: Build and Install Specific Wheels](#option-2-build-and-install-specific-wheels)
+  - [Where Are Packages Installed?](#where-are-packages-installed)
+- [Troubleshooting](#troubleshooting)
+  - ["Lock file not found"](#lock-file-not-found)
+  - ["Failed to hardlink"](#failed-to-hardlink)
+  - [Slow builds](#slow-builds)
+  - [Permission errors](#permission-errors)
+- [Related Guides](#related-guides)
+
 ## Quick Start
 
 ### Minimal Production Dockerfile
