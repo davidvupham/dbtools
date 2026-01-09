@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Source this file to create convenient aliases and environment variables for the tutorial
-# Usage: source /path/to/repo/docs/tutorials/liquibase/scripts/setup_aliases.sh
+# Usage: source /path/to/repo/docs/courses/liquibase/scripts/setup_aliases.sh
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 

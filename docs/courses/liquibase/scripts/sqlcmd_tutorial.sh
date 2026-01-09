@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Helper script to execute sqlcmd inside the tutorial SQL Server container.
+# Helper script to execute sqlcmd inside a tutorial SQL Server container.
 # Replaces long commands like:
-#   container_runtime exec -i mssql_liquibase_tutorial /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U SA -P "$MSSQL_LIQUIBASE_TUTORIAL_PWD" < 04_verify_dev_objects.sql
+#   container_runtime exec -i mssql_dev /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U SA -P "$MSSQL_LIQUIBASE_TUTORIAL_PWD" < verify_dev_objects.sql
 #
 # Usage examples:
 #   ./sqlcmd_tutorial.sh 04_verify_dev_objects.sql
 #   ./sqlcmd_tutorial.sh -Q "SELECT @@SERVERNAME AS ServerName, GETDATE() AS CurrentTime;"
-#   ./sqlcmd_tutorial.sh -d testdbdev 05_verify_dev_data.sql
-#   ./sqlcmd_tutorial.sh -d testdbdev -Q "SELECT name FROM sys.tables;"
+#   ./sqlcmd_tutorial.sh -d orderdb verify_dev_data.sql
+#   ./sqlcmd_tutorial.sh -d orderdb -Q "SELECT name FROM sys.tables;"
 
 detect_runtime() {
   # 1. Allow override via env var
@@ -53,7 +53,7 @@ detect_runtime() {
 
 CR="$(detect_runtime)"
 
-CONTAINER_NAME=${CONTAINER_NAME:-mssql_liquibase_tutorial}
+CONTAINER_NAME=${CONTAINER_NAME:-mssql_dev}
 SQLCMD_BIN=/opt/mssql-tools18/bin/sqlcmd
 SERVER=${SERVER:-localhost}
 USER=${USER_NAME:-SA}
@@ -68,9 +68,10 @@ Usage:
   sqlcmd_tutorial.sh [options] -Q "<query>"
 
 Options:
+  -e, --env      <name>   Environment (dev|stg|prd). Sets container to mssql_<env>
   -d, --database <name>   Database name to connect to (sqlcmd -d)
   -Q, --query    <query>  Query string to execute (exclusive with <sql-file.sql>)
-  --container    <name>   Container name (default: mssql_liquibase_tutorial)
+  --container    <name>   Container name (default: mssql_dev)
   --server       <host>   SQL Server hostname (default: localhost)
   --user         <name>   SQL login user (default: SA)
   -h, --help              Show this help and exit
@@ -81,14 +82,30 @@ Environment:
 Examples:
   ./sqlcmd_tutorial.sh 04_verify_dev_objects.sql
   ./sqlcmd_tutorial.sh -Q "SELECT @@SERVERNAME AS ServerName, GETDATE() AS CurrentTime;"
-  ./sqlcmd_tutorial.sh -d testdbdev 05_verify_dev_data.sql
-  ./sqlcmd_tutorial.sh --container mssql_liquibase_tutorial -d testdbdev -Q "SELECT name FROM sys.tables;"
+  ./sqlcmd_tutorial.sh -e dev -d orderdb 05_verify_dev_data.sql
+  ./sqlcmd_tutorial.sh -e stg -d orderdb -Q "SELECT name FROM sys.tables;"
+  ./sqlcmd_tutorial.sh --container mssql_dev -d orderdb -Q "SELECT name FROM sys.tables;"
 EOF
 }
 
 # Parse args
 while [[ $# -gt 0 ]]; do
   case "$1" in
+    -e|--env)
+      case "$2" in
+        dev|stg|prd)
+          if [[ -n "${CONTAINER_NAME:-}" && "${CONTAINER_NAME}" != "mssql_dev" ]]; then
+            echo "Error: Do not use both --env and --container." >&2
+            exit 2
+          fi
+          CONTAINER_NAME="mssql_$2"
+          ;;
+        *)
+          echo "Error: Invalid env '$2' (expected dev|stg|prd)." >&2
+          exit 2
+          ;;
+      esac
+      shift 2;;
     -d|--database)
       DB="$2"; shift 2;;
     -Q|--query)

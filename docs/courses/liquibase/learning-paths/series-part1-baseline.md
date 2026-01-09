@@ -1,17 +1,18 @@
 # Tutorial Part 1: Baseline SQL Server + Liquibase Setup
 
+<!-- markdownlint-disable MD013 -->
+
 ## Table of Contents
 
 - [Introduction](#introduction)
   - [Goals of Part 1](#goals-of-part-1)
   - [What You'll Learn](#what-youll-learn)
   - [Prerequisites](#prerequisites)
-  - [Time Estimate](#time-estimate)
 - [Environment Setup](#environment-setup)
   - [Step 0: Configure Environment and Aliases](#step-0-configure-environment-and-aliases)
   - [Start the Tutorial SQL Server Container](#start-the-tutorial-sql-server-container)
   - [Build Liquibase container image](#build-liquibase-container-image)
-  - [Important Note About Docker Commands](#important-note-about-docker-commands)
+- [Important Note About Container Commands](#important-note-about-container-commands)
   - [Check SQL Server is Running](#check-sql-server-is-running)
   - [Helper Script for sqlcmd](#helper-script-for-sqlcmd)
 - [Project Structure](#project-structure)
@@ -100,14 +101,6 @@ Before starting this tutorial, you should have:
 
 **No prior Liquibase experience required!** This tutorial explains all concepts from the ground up.
 
-### Time Estimate
-
-- **Total time:** 45-60 minutes
-- **Setup:** 10-15 minutes (container startup, environment configuration)
-- **Core tutorial:** 30-40 minutes (Steps 1-5)
-- **Cleanup:** 5 minutes (optional)
-
-
 ---
 
 ## Environment Setup
@@ -140,6 +133,7 @@ source "$LIQUIBASE_TUTORIAL_DIR/scripts/setup_tutorial.sh"
 ```
 
 The setup script will:
+
 - Set `LIQUIBASE_TUTORIAL_DATA_DIR` to `/data/$USER/liquibase_tutorial` (your per-user project directory)
 - Create aliases: `sqlcmd-tutorial`, `lb`, `cr`
 - Prompt for SQL Server password (`MSSQL_LIQUIBASE_TUTORIAL_PWD`)
@@ -199,6 +193,7 @@ watch -n 2 "$LIQUIBASE_TUTORIAL_DIR/scripts/cr.sh ps | grep 'mssql_liquibase_tut
 ```
 
 **Expected output (healthy):** Status shows "Up" and time keeps increasing:
+
 ```text
 1fea5c21c7ae  mcr.microsoft.com/mssql/server:2025-latest  ...  Up About a minute  0.0.0.0:14333->1433/tcp  mssql_liquibase_tutorial
 ```
@@ -244,8 +239,8 @@ Heads-up: The commands below are examples to show wrapper usage. Do not run them
 # Show status for dev
 lb -e dev -- status --verbose
 
-# Run update in stage
-lb -e stage -- update
+# Run update in staging
+lb -e stg -- update
 ```
 
 Note: The standalone `--` is intentional. It separates options for the `lb` wrapper (like `-e dev`) from the actual Liquibase command and its flags (for example, `status --verbose`).
@@ -256,7 +251,6 @@ If you prefer to run raw container commands yourself, mirror this pattern (note 
 
 ```bash
 cr run --rm \
-  --network=liquibase_tutorial \
   -v "$LIQUIBASE_TUTORIAL_DATA_DIR":/data:Z,U \
   liquibase:latest \
   --defaults-file=/data/env/liquibase.<ENV>.properties \
@@ -294,7 +288,6 @@ sqlcmd-tutorial -Q "SELECT @@SERVERNAME AS ServerName, GETDATE() AS CurrentTime;
 sqlcmd-tutorial create_databases.sql
 ```
 
-
 ### Check SQL Server is Running
 
 Now verify you can connect to SQL Server. This test ensures your database is accessible before we start.
@@ -309,14 +302,13 @@ sqlcmd-tutorial -Q "SELECT @@SERVERNAME AS ServerName, GETDATE() AS CurrentTime"
 ```text
 ServerName               CurrentTime
 ------------------------ -----------------------
-mssql_liquibase_tutorial 2026-01-07 18:35:07.160
+mssql_dev                2026-01-07 18:35:07.160
 ```
 
 **Troubleshooting:**
 
-- **Connection refused**: SQL Server might not be running. Check with `cr ps | grep mssql_liquibase_tutorial`
+- **Connection refused**: SQL Server might not be running. Check with `cr ps | grep mssql_dev`
 - **Login failed**: Password might be wrong. Check variable: `echo $MSSQL_LIQUIBASE_TUTORIAL_PWD`
-
 
 ## Project Structure
 
@@ -338,7 +330,7 @@ mkdir -p database/changelog/changes
 mkdir -p env
 ```
 
-**Quick review: verify directories were created**
+### Quick review: verify directories were created
 
 ```bash
 ls -R "$LIQUIBASE_TUTORIAL_DATA_DIR/database"
@@ -354,15 +346,15 @@ $LIQUIBASE_TUTORIAL_DATA_DIR/              # e.g., /data/$USER$/liquibase_tutori
 │   └── changelog/
 │       ├── changelog.xml           # Master file listing all changes in order
 │       ├── baseline/               # Initial database snapshot
-│       │   └── V0000__baseline.mssql.sql
+│       │   └── V0000__baseline.sql
 │       └── changes/                # Incremental changes after baseline
 │           ├── V0001__add_orders_table.sql
 │           ├── V0002__modify_customer_email.sql
 │           └── V0003__update_stored_procedure.sql
 └── env/
     ├── liquibase.dev.properties    # Development database connection
-    ├── liquibase.stage.properties  # Staging database connection
-    └── liquibase.prod.properties   # Production database connection
+    ├── liquibase.stg.properties  # Staging database connection
+    └── liquibase.prd.properties   # Production database connection
 ```
 
 **About file permissions:**
@@ -508,7 +500,7 @@ logLevel=info
 EOF
 
 # Staging properties
-cat > "$LIQUIBASE_TUTORIAL_DATA_DIR/env/liquibase.stage.properties" << 'EOF'
+cat > "$LIQUIBASE_TUTORIAL_DATA_DIR/env/liquibase.stg.properties" << 'EOF'
 # Staging Environment Connection
 url=jdbc:sqlserver://localhost:14333;databaseName=orderdb;encrypt=true;trustServerCertificate=true
 username=sa
@@ -519,7 +511,7 @@ logLevel=info
 EOF
 
 # Production properties
-cat > "$LIQUIBASE_TUTORIAL_DATA_DIR/env/liquibase.prod.properties" << 'EOF'
+cat > "$LIQUIBASE_TUTORIAL_DATA_DIR/env/liquibase.prd.properties" << 'EOF'
 # Production Environment Connection
 url=jdbc:sqlserver://localhost:14333;databaseName=orderdb;encrypt=true;trustServerCertificate=true
 username=sa
@@ -586,18 +578,18 @@ cd "$LIQUIBASE_TUTORIAL_DATA_DIR"
 # IMPORTANT: Use --schemas=app to capture only the app schema
 # IMPORTANT: Use --include-schema=true to include schemaName attributes in the SQL
 # IMPORTANT: Use .sql extension to generate Formatted SQL
-# NOTE: Liquibase requires *.databaseType.sql format for Formatted SQL generation
 LB_NETWORK=host lb -e dev -- \
-  --changelog-file=/data/database/changelog/baseline/V0000__baseline.mssql.sql \
+  --changelog-file=/data/database/changelog/baseline/V0000__baseline.sql \
   --schemas=app \
   --include-schema=true \
   generateChangeLog
 
 # Check the generated file
-cat database/changelog/baseline/V0000__baseline.mssql.sql
+cat database/changelog/baseline/V0000__baseline.sql
 ```
 
 ### Validate Generation
+
 We have provided a script to automatically validate the baseline file format and content:
 
 ```bash
@@ -606,8 +598,9 @@ $LIQUIBASE_TUTORIAL_DIR/scripts/validate_step4_baseline.sh
 ```
 
 **Expected Output:**
+
 ```text
-[PASS] File exists: V0000__baseline.mssql.sql
+[PASS] File exists: V0000__baseline.sql
 [PASS] Header matches '-- liquibase formatted sql'
 [PASS] Found ... occurrences of 'app.' schema prefix
 [PASS] Found CREATE TABLE app.customer
@@ -621,7 +614,7 @@ Step 4 VALIDATION SUCCESSFUL
 
 ```bash
 lb -e dev -- \
-  --changelog-file=/data/database/changelog/baseline/V0000__baseline.mssql.sql \
+  --changelog-file=/data/database/changelog/baseline/V0000__baseline.sql \
   --schemas=app \
   --include-schema=true \
   generateChangeLog
@@ -632,7 +625,7 @@ lb -e dev -- \
 - Liquibase connected to `orderdb` database
 - Scanned all database objects (tables, views, indexes, constraints, schemas)
 - Generated Formatted SQL file representing the current state
-- Saved it as `V0000__baseline.mssql.sql` in the baseline folder
+- Saved it as `V0000__baseline.sql` in the baseline folder
 - **File is owned by the user executing the dev container** because we used `--user $(id -u):$(id -g)`
 
 **What gets captured:**
@@ -681,7 +674,7 @@ cat > "$LIQUIBASE_TUTORIAL_DATA_DIR/database/changelog/changelog.xml" << 'EOF'
                         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
 
     <!-- Baseline: initial database state -->
-    <include file="baseline/V0000__baseline.mssql.sql" relativeToChangelogFile="true"/>
+    <include file="baseline/V0000__baseline.sql" relativeToChangelogFile="true"/>
 
     <!-- Future changes will be added here -->
 
@@ -748,13 +741,13 @@ Staging is empty, so we **deploy** the baseline (actually run all DDL):
 cd "$LIQUIBASE_TUTORIAL_DATA_DIR"
 
 # Preview what will run
-lb -e stage -- updateSQL
+lb -e stg -- updateSQL
 
 # Deploy to staging
-lb -e stage -- update
+lb -e stg -- update
 
 # Tag the baseline
-lb -e stage -- tag baseline
+lb -e stg -- tag baseline
 ```
 
 **Verify deployment:**
@@ -781,13 +774,13 @@ Production is also empty, so we deploy the baseline:
 cd "$LIQUIBASE_TUTORIAL_DATA_DIR"
 
 # Preview what will run
-lb -e prod -- updateSQL
+lb -e prd -- updateSQL
 
 # Deploy to production
-lb -e prod -- update
+lb -e prd -- update
 
 # Tag the baseline
-lb -e prod -- tag baseline
+lb -e prd -- tag baseline
 ```
 
 **Verify deployment:**

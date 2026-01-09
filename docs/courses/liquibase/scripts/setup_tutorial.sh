@@ -10,7 +10,7 @@ set -euo pipefail
 #
 # IMPORTANT: This script must be SOURCED so that environment and aliases
 #            are applied to your current shell.
-#            Example:  source /path/to/repo/docs/tutorials/liquibase/scripts/setup_tutorial.sh
+#            Example:  source /path/to/repo/docs/courses/liquibase/scripts/setup_tutorial.sh
 
 if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
   echo "This script must be sourced so changes apply to your current shell." >&2
@@ -43,42 +43,21 @@ source "${ALIAS_HELPER}"
 
 # 3) Ensure required env vars are available
 : "${MSSQL_LIQUIBASE_TUTORIAL_PWD:?MSSQL_LIQUIBASE_TUTORIAL_PWD must be set}"
-LIQUIBASE_TUTORIAL_DATA_DIR="${LIQUIBASE_TUTORIAL_DATA_DIR:-/data/liquibase-tutorial}"
+: "${LIQUIBASE_TUTORIAL_DIR:?LIQUIBASE_TUTORIAL_DIR must be set}"
+
+# Default: per-user isolation for shared Docker hosts
+LIQUIBASE_TUTORIAL_DATA_DIR="${LIQUIBASE_TUTORIAL_DATA_DIR:-/data/$(whoami)/liquibase_tutorial}"
 export LIQUIBASE_TUTORIAL_DATA_DIR
 
-# 4) Create missing Liquibase properties files
+# 4) Ensure runtime project directories exist
 mkdir -p "${LIQUIBASE_TUTORIAL_DATA_DIR}/env"
-
-create_prop() {
-  local envname="$1"; shift
-  local dbname="$1"; shift
-  local path="${LIQUIBASE_TUTORIAL_DATA_DIR}/env/liquibase.${envname}.properties"
-  if [[ -f "${path}" ]]; then
-    echo "Exists: ${path}"
-    return 0
-  fi
-  cat > "${path}" <<EOF
-# ${envname^} Environment Connection
-url=jdbc:sqlserver://mssql_liquibase_tutorial:1433;databaseName=${dbname};encrypt=true;trustServerCertificate=true
-username=sa
-password=\${MSSQL_LIQUIBASE_TUTORIAL_PWD}
-changelog-file=database/changelog/changelog.xml
-search-path=/data
-logLevel=info
-EOF
-  echo "Created: ${path}"
-}
-
-create_prop dev   testdbdev
-create_prop stage testdbstg
-create_prop prod  testdbprd
+mkdir -p "${LIQUIBASE_TUTORIAL_DATA_DIR}/database/changelog/baseline" "${LIQUIBASE_TUTORIAL_DATA_DIR}/database/changelog/changes"
 
 # 5) Summarize
 echo
 echo "Tutorial setup complete. Summary:"
 echo "- LIQUIBASE_TUTORIAL_DATA_DIR: ${LIQUIBASE_TUTORIAL_DATA_DIR}"
-echo "- Env files:"
-ls -la "${LIQUIBASE_TUTORIAL_DATA_DIR}/env" || true
+echo "- Project dirs: env/, database/changelog/{baseline,changes}"
 echo
 echo "Verify helpers:"
 type lb || true

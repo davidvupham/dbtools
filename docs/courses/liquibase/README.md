@@ -48,7 +48,6 @@ docs/courses/liquibase/
 
 ## 📚 Learning Paths
 
-
 Choose the path that fits your experience level.
 
 ### ✅ Recommended Path (Beginner to Intermediate)

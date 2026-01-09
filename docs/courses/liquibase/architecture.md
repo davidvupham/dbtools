@@ -2,7 +2,7 @@
 
 ## Container Architecture
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────────┐
 │                     Host Machine (Ubuntu/RHEL)                       │
 │                                                                      │
@@ -32,7 +32,7 @@
 │  │  │  data   │ │  data   │ │  data   │ │     changelog/       │ │  │
 │  │  └─────────┘ └─────────┘ └─────────┘ │ ┌──────────────────┐ │ │  │
 │  │                                       │ │ V0000__baseline  │ │ │  │
-│  │  ┌──────────────────────────────────┐ │ │    .mssql.sql    │ │ │  │
+│  │  ┌──────────────────────────────────┐ │ │       .sql       │ │ │  │
 │  │  │              env/                │ │ └──────────────────┘ │ │  │
 │  │  │ liquibase.dev.properties         │ └──────────────────────┘ │  │
 │  │  │ liquibase.stg.properties         │                          │  │
@@ -44,7 +44,7 @@
 
 ## Deployment Flow
 
-```
+```text
 ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
 │    DEV      │────▶│   STAGING   │────▶│ PRODUCTION  │
 │  mssql_dev  │     │  mssql_stg  │     │  mssql_prd  │
@@ -59,14 +59,14 @@
 
 ## Changelog Structure
 
-```
+```text
 database/changelog/
 ├── changelog.xml          # Master changelog (includes all files)
 ├── baseline/
-│   └── V0000__baseline.mssql.sql    # Initial state
+│   └── V0000__baseline.sql          # Initial state
 └── changes/
-    ├── V0001__add_orders.mssql.sql  # First change
-    └── V0002__add_index.mssql.sql   # Second change
+    ├── V0001__add_orders.sql        # First change
+    └── V0002__add_index.sql         # Second change
 ```
 
 ## Network Configuration

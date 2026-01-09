@@ -194,11 +194,11 @@ For this combined tutorial we will:
 
 ### Step 10: Set Up a Self-Hosted Runner in a Docker Container
 
- > **If you already completed this:** If you followed README.md "Path 4: Self-Hosted Runner" and set up your runner environment, you can skip this step—just verify your runner shows as "Online" in GitHub Settings → Actions → Runners.
-
- > **Execution timing:** Complete the actions below now (before pushing any workflow files in Steps 12–13). The runner must be online and your secrets defined or initial workflow runs will queue indefinitely. If you are only reading ahead, you may delay the runner start until just before adding `.github/workflows`, but do not push workflow YAML until the runner shows as "Online" in GitHub.
-
- > **Detailed guide:** For comprehensive setup instructions including Docker/WSL installation, see [Self-Hosted GitHub Actions Runners Guide](./guide-runner-setup.md).
+> **If you already completed this:** If you followed README.md "Path 4: Self-Hosted Runner" and set up your runner environment, you can skip this step—just verify your runner shows as "Online" in GitHub Settings → Actions → Runners.
+>
+> **Execution timing:** Complete the actions below now (before pushing any workflow files in Steps 12–13). The runner must be online and your secrets defined or initial workflow runs will queue indefinitely. If you are only reading ahead, you may delay the runner start until just before adding `.github/workflows`, but do not push workflow YAML until the runner shows as "Online" in GitHub.
+>
+> **Detailed guide:** For comprehensive setup instructions including Docker/WSL installation, see [Self-Hosted GitHub Actions Runners Guide](./guide-runner-setup.md).
 
 - [ ] **Create a personal access token (PAT)** (once per machine) with at least `repo` scope, following GitHub's "self-hosted runner" instructions.
 - [ ] **Create a registration token** for the runner from your repo’s **Settings → Actions → Runners → New self-hosted runner** page. (This short‑lived token is different from the PAT and is used only during runner registration.)

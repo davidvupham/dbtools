@@ -1,6 +1,10 @@
 # Liquibase Tutorial Docker Compose
 # Creates 3 SQL Server containers (dev, stg, prd) for multi-environment tutorial
 # Uses slirp4netns network mode for WSL/rootless Podman compatibility
+#
+# IMPORTANT: Set LIQUIBASE_TUTORIAL_DATA_DIR before running:
+#   export LIQUIBASE_TUTORIAL_DATA_DIR="/data/$USER/liquibase_tutorial"
+# Or source the setup script: source scripts/setup_tutorial.sh
 
 services:
   # ============================================================================

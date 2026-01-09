@@ -48,9 +48,9 @@ GO
 
 ## File Naming
 
-- Baseline: `V0000__baseline.mssql.sql`
-- Changes: `V0001__description.mssql.sql`
-- Format: `V<number>__<description>.<dbtype>.sql`
+- Baseline: `V0000__baseline.sql`
+- Changes: `V0001__description.sql`
+- Format: `V<number>__<description>.sql`
 
 ## Container Ports
 

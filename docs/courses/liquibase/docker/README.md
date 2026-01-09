@@ -1,14 +1,18 @@
-# Liquibase Tutorial - SQL Server Container
+# Liquibase Tutorial - Containers
 
-This directory contains the Docker configuration for a dedicated SQL Server instance used in the Liquibase tutorial.
+This directory contains the container-compose configuration used by the Liquibase course.
 
-## Container Details
+## What gets created
 
-- **Container Name**: `mssql_liquibase_tutorial`
-- **Image**: `mcr.microsoft.com/mssql/server:2025-latest`
-- **Port**: `1433`
-- **Network**: `liquibase_tutorial`
-- **Volume**: `mssql_liquibase_tutorial_data`
+Three SQL Server containers (one per environment):
+
+- `mssql_dev` (host port `14331`)
+- `mssql_stg` (host port `14332`)
+- `mssql_prd` (host port `14333`)
+
+And an optional run-once Liquibase tool container (profile `tools`):
+
+- `liquibase_tutorial`
 
 ## Prerequisites
 
@@ -29,7 +33,15 @@ export MSSQL_LIQUIBASE_TUTORIAL_PWD='YourStrong!Passw0rd'
 
 ```bash
 cd "$LIQUIBASE_TUTORIAL_DIR/docker"
-docker compose up -d
+
+# Start SQL Server containers (dev/stg/prd)
+docker compose up -d mssql_dev mssql_stg mssql_prd
+```
+
+Tip: the course scripts wrap this for you:
+
+```bash
+"$LIQUIBASE_TUTORIAL_DIR/scripts/step02_start_containers.sh"
 ```
 
 ## Stopping the Container
@@ -43,14 +55,11 @@ docker compose down
 To completely clean up after completing the tutorial:
 
 ```bash
-# Stop and remove the container
+# Stop and remove containers
 docker compose down
 
-# Remove the volume (deletes all databases)
-docker volume rm mssql_liquibase_tutorial_data
-
-# Remove the network
-docker network rm liquibase_tutorial
+# Remove tutorial data directory (destructive)
+rm -rf "${LIQUIBASE_TUTORIAL_DATA_DIR:-/data/$USER/liquibase_tutorial}"
 ```
 
 ## Health Check
@@ -59,8 +68,8 @@ The container includes a health check that verifies SQL Server is ready to accep
 
 Check the health status:
 
-```bash
-docker ps
-```
+Each SQL Server service defines a healthcheck. Verify with:
 
-Look for "healthy" in the STATUS column.
+```bash
+docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'
+```

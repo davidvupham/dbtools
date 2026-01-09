@@ -4,35 +4,36 @@
 
 ### Changelog Files
 
-| Pattern | Example | Description |
-|---------|---------|-------------|
-| `V<number>__<description>.<dbtype>.sql` | `V0000__baseline.mssql.sql` | Version-prefixed Formatted SQL |
+| Pattern                        | Example               | Description                   |
+|--------------------------------|----------------------|--------------------------------|
+| `V<number>__<description>.sql` | `V0000__baseline.sql` | Version-prefixed Formatted SQL |
 
 **Rules:**
+
 - Version number: Zero-padded 4 digits (V0000, V0001, etc.)
 - Separator: Double underscore (`__`)
 - Description: lowercase_with_underscores
-- Database type: `mssql`, `postgresql`, `snowflake`, `mongodb`
 - Extension: `.sql`
 
 **Examples:**
-```
-V0000__baseline.mssql.sql
-V0001__add_orders_table.mssql.sql
-V0002__create_customer_index.mssql.sql
+
+```text
+V0000__baseline.sql
+V0001__add_orders_table.sql
+V0002__create_customer_index.sql
 ```
 
 ## Container Naming
 
-| Pattern | Examples |
-|---------|----------|
-| `mssql_<env>` | `mssql_dev`, `mssql_stg`, `mssql_prd` |
-| `liquibase_<purpose>` | `liquibase_tutorial` |
+| Pattern               | Examples                             |
+|-----------------------|--------------------------------------|
+| `mssql_<env>`         | `mssql_dev`, `mssql_stg`, `mssql_prd` |
+| `liquibase_<purpose>` | `liquibase_tutorial`                 |
 
 ## Environment Names
 
 | Full | Short | Port |
-|------|-------|------|
+| ------ | ------- | ------ |
 | development | dev | 14331 |
 | staging | stg | 14332 |
 | production | prd | 14333 |
@@ -46,14 +47,14 @@ V0002__create_customer_index.mssql.sql
 ## Network Naming
 
 | Pattern | Example |
-|---------|---------|
+|:-------------------|:-----------------------------|
 | `<project>_network` | `liquibase_tutorial_network` |
 
 ## Directory Naming
 
 | Pattern | Example |
 |---------|---------|
-| `/data/$USER/<project>` | `/data/dpham/liquibase_tutorial` |
+| `/data/$USER/<project>` | `/data/$USER/liquibase_tutorial` |
 | `database/changelog/baseline` | Baseline changelogs |
 | `database/changelog/changes` | Incremental changes |
 | `env/` | Environment property files |

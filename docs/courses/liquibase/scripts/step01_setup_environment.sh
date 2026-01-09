@@ -70,7 +70,7 @@ cat > "$LIQUIBASE_TUTORIAL_DATA_DIR/database/changelog/changelog.xml" << 'EOF'
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
 
     <!-- Baseline from existing database -->
-    <include file="database/changelog/baseline/V0000__baseline.mssql.sql" />
+    <include file="database/changelog/baseline/V0000__baseline.sql" />
 
     <!-- Incremental changes -->
     <!-- <include file="database/changelog/changes/V0001__add_orders_table.sql" /> -->

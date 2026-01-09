@@ -31,11 +31,11 @@ By completing this course, you will be able to:
 
 ## Course Structure
 
-| Part | Title | Duration | Topics |
-|------|-------|----------|--------|
-| **1** | [Baseline Setup](./learning-paths/series-part1-baseline.md) | 45-60 min | Environment setup, baseline generation, multi-env deploy |
-| **2** | [Manual Lifecycle](./learning-paths/series-part2-manual.md) | 30-45 min | Changesets, rollbacks, drift detection, tags |
-| **3** | [CI/CD Automation](./learning-paths/series-part3-cicd.md) | 45-60 min | GitHub Actions, secrets, multi-env workflows |
+| Part | Title | Topics |
+|------|-------|--------|
+| **1** | [Baseline Setup](./learning-paths/series-part1-baseline.md) | Environment setup, baseline generation, multi-env deploy |
+| **2** | [Manual Lifecycle](./learning-paths/series-part2-manual.md) | Changesets, rollbacks, drift detection, tags |
+| **3** | [CI/CD Automation](./learning-paths/series-part3-cicd.md) | GitHub Actions, secrets, multi-env workflows |
 
 ## Supplemental Guides
 
@@ -68,6 +68,6 @@ $LIQUIBASE_TUTORIAL_DIR/scripts/validate_tutorial.sh
 
 ## Support
 
-- Review troubleshooting sections in each part
+- See the [Troubleshooting Guide](./troubleshooting.md) for common issues
 - Check container logs: `podman logs mssql_dev`
 - Validate environment: `./scripts/validate_tutorial.sh`

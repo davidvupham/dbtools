@@ -2,15 +2,15 @@
 
 This Part 2 assumes you have completed **Part 1: Baseline SQL Server + Liquibase Setup** and have:
 
-- A working SQL Server tutorial container (`mssql_liquibase_tutorial`)
-- Three databases: `orderdb`, `orderdb`, `orderdb`
+- Three SQL Server containers running: `mssql_dev`, `mssql_stg`, `mssql_prd`
+- Database `orderdb` created in each environment
 - A Liquibase project at `$LIQUIBASE_TUTORIAL_DATA_DIR` with:
-  - `database/changelog/baseline/V0000__baseline.mssql.sql`
+  - `database/changelog/baseline/V0000__baseline.sql`
   - `database/changelog/changelog.xml` including the baseline
-  - `env/liquibase.dev.properties`, `env/liquibase.stage.properties`, `env/liquibase.prod.properties`
+    - `env/liquibase.dev.properties`, `env/liquibase.stg.properties`, `env/liquibase.prd.properties`
 - Baseline deployed and tagged as `baseline` in all three environments
 
-From here we’ll walk through making changes, deploying them through dev → stage → prod, and handling rollback and drift manually.
+From here we’ll walk through making changes, deploying them through dev → stg → prd, and handling rollback and drift manually.
 
 ## Step 6: Making Your First Change
 
@@ -69,15 +69,13 @@ cat > $LIQUIBASE_TUTORIAL_DATA_DIR/database/changelog/changelog.xml << 'EOF'
                         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
 
     <!-- Baseline: initial database state -->
-    <include file="baseline/V0000__baseline.mssql.sql" relativeToChangelogFile="true"/>
+    <include file="baseline/V0000__baseline.sql" relativeToChangelogFile="true"/>
 
     <!-- V0001: Add orders table -->
     <include file="changes/V0001__add_orders_table.sql" relativeToChangelogFile="true"/>
-
 </databaseChangeLog>
 EOF
 ```
-
 
 ### Deploy to Development
 
@@ -151,10 +149,10 @@ Once the change is validated in development, promote it to staging and productio
 cd $LIQUIBASE_TUTORIAL_DATA_DIR
 
 # Preview what will run
-lb -e stage -- updateSQL
+lb -e stg -- updateSQL
 
 # Deploy to staging
-lb -e stage -- update
+lb -e stg -- update
 ```
 
 Verify in staging:
@@ -178,10 +176,10 @@ ORDER BY type_desc, name;
 cd $LIQUIBASE_TUTORIAL_DATA_DIR
 
 # Preview what will run
-lb -e prod -- updateSQL
+lb -e prd -- updateSQL
 
 # Deploy to production
-lb -e prod -- update
+lb -e prd -- update
 ```
 
 Verify in production:
@@ -199,7 +197,6 @@ ORDER BY type_desc, name;
 "
 ```
 
-
 At this point all three environments have the new `orders` table.
 
 ## Step 8: Tags and Release Management
@@ -215,8 +212,8 @@ cd $LIQUIBASE_TUTORIAL_DATA_DIR
 
 # Tag all environments with the release version
 lb -e dev -- tag release-v1.0
-lb -e stage -- tag release-v1.0
-lb -e prod -- tag release-v1.0
+lb -e stg -- tag release-v1.0
+lb -e prd -- tag release-v1.0
 ```
 
 ### Query DATABASECHANGELOG
@@ -378,7 +375,7 @@ Add drift detection to your CI/CD pipeline before deployments:
 
 ```bash
 # In CI/CD, fail the build if drift is detected
-lb -e stage -- diff --reportFile=drift-report.txt
+lb -e stg -- diff --reportFile=drift-report.txt
 if [ -s drift-report.txt ]; then
     echo "ERROR: Drift detected in staging!"
     cat drift-report.txt
@@ -426,7 +423,7 @@ cat > $LIQUIBASE_TUTORIAL_DATA_DIR/database/changelog/changelog.xml << 'EOF'
                         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
 
     <!-- Baseline -->
-    <include file="baseline/V0000__baseline.mssql.sql" relativeToChangelogFile="true"/>
+    <include file="baseline/V0000__baseline.sql" relativeToChangelogFile="true"/>
 
     <!-- V0001: Add orders table -->
     <include file="changes/V0001__add_orders_table.sql" relativeToChangelogFile="true"/>
@@ -446,12 +443,12 @@ lb -e dev -- update
 lb -e dev -- tag release-v1.1
 
 # Deploy to staging (after dev validation)
-lb -e stage -- update
-lb -e stage -- tag release-v1.1
+lb -e stg -- update
+lb -e stg -- tag release-v1.1
 
 # Deploy to production (after staging validation)
-lb -e prod -- update
-lb -e prod -- tag release-v1.1
+lb -e prd -- update
+lb -e prd -- tag release-v1.1
 ```
 
 ---

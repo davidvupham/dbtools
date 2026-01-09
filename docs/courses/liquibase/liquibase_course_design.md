@@ -18,15 +18,15 @@ This document defines requirements and design for the Liquibase course refactori
 | 4 | **Database drivers** | MSSQL, PostgreSQL, Snowflake, MongoDB |
 | 5 | **Data persistence** | All data in `/data/$USER/liquibase_tutorial/` |
 | 6 | **Working directory** | Use `/data` inside Liquibase container |
-| 7 | **Multi-platform** | User can choose: MSSQL, PostgreSQL, Snowflake, or MongoDB |
+| 7 | **Multi-platform** | MSSQL (current); PostgreSQL, Snowflake, MongoDB (future) |
 
 ### Naming & Standards
 
 | # | Requirement | Details |
 |---|-------------|---------|
 | 8 | **Database name** | `orderdb` (reflects orders/customers domain) |
-| 9 | **Formatted SQL** | Liquibase Formatted SQL with `.mssql.sql` extension (required by Liquibase) |
-| 10 | **Network** | `liquibase_tutorial_network` for containers; host for Snowflake |
+| 9 | **Formatted SQL** | Liquibase Formatted SQL with `.sql` extension |
+| 10 | **Network** | `slirp4netns` for rootless Podman/WSL compatibility; bridge for Docker |
 | 11 | **Naming convention** | Use underscores (`_`) everywhere |
 | 14 | **Volume mounts** | Use `:Z,U` for SELinux/rootless Podman |
 
@@ -54,7 +54,7 @@ This document defines requirements and design for the Liquibase course refactori
 
 | # | Requirement | Details |
 |---|-------------|---------|
-| 16 | **Course Overview** | Learning objectives, time, prerequisites |
+| 16 | **Course Overview** | Learning objectives, prerequisites |
 | 17 | **Architecture Diagram** | Container relationships |
 | 18 | **Quick Reference** | Common commands |
 | 19 | **Glossary** | Terminology definitions |
@@ -67,7 +67,7 @@ This document defines requirements and design for the Liquibase course refactori
 
 ## Architecture
 
-```
+```text
 /data/$USER/liquibase_tutorial/
 ├── mssql_dev/              # Dev SQL Server data
 ├── mssql_stg/              # Staging SQL Server data
@@ -96,19 +96,37 @@ This document defines requirements and design for the Liquibase course refactori
 
 ---
 
-## Issues to Fix
+## Issues Fixed
 
-- Path references: `docs/tutorials/` → `docs/courses/`
-- File references: `V0000__baseline.mssql.sql` → `V0000__baseline.sql`
-- YAML syntax: `runs-on` with labels
-- Missing: Time Estimate section
-- Broken link: best-practices file reference
+- [x] Path references: `docs/tutorials/` → `docs/courses/`
+- [x] File references: Updated to `.sql` extension throughout
+- [x] Network mode: Documented `slirp4netns` for Podman compatibility
+- [x] Multi-platform: Clarified as MSSQL current, others future
+- [x] Verification checklist: Expanded with additional items
+- [ ] YAML syntax: `runs-on` with labels (Part 3 CI/CD)
+- [ ] Broken link: best-practices file reference (Part 3 CI/CD)
 
 ---
 
 ## Verification
 
+### Platform Testing
+
 - [ ] Test on Ubuntu
 - [ ] Test on RHEL
+- [ ] Test with Docker
+- [ ] Test with rootless Podman
+
+### Functionality
+
 - [ ] All scripts show pass/fail
 - [ ] Cleanup removes all artifacts
+- [ ] Multi-user (shared host) tested
+- [ ] CI/CD workflow runs successfully
+
+### Documentation Checklist
+
+- [ ] All file paths consistent
+- [ ] All environment variables documented
+- [ ] Documentation links valid
+- [ ] Troubleshooting guide complete

@@ -4,13 +4,13 @@ set -euo pipefail
 # Liquibase Docker wrapper for the tutorial
 # Usage examples:
 #   lb.sh -e dev -- status --verbose
-#   lb.sh -e stage -- update
-#   lb.sh -e prod -- tag release-v1.2
+#   lb.sh -e stg -- update
+#   lb.sh -e prd -- tag release-v1.2
 #   LIQUIBASE_TUTORIAL_DATA_DIR=/some/dir lb.sh -e dev -- updateSQL
 #
 # Requirements:
 #   - Docker image 'liquibase:latest' built via the repo's docker/liquibase directory
-#   - SQL Server container running on network 'liquibase_tutorial'
+#   - SQL Server containers running (mssql_dev/mssql_stg/mssql_prd)
 #   - env files at $LIQUIBASE_TUTORIAL_DATA_DIR/env/liquibase.<env>.properties
 #   - MSSQL_LIQUIBASE_TUTORIAL_PWD exported in the shell
 #
@@ -66,19 +66,19 @@ PASS_ARGS=()
 print_usage() {
   cat <<'EOF'
 Usage:
-  lb.sh -e <dev|stage|prod> -- <liquibase-args>
+  lb.sh -e <dev|stg|prd> -- <liquibase-args>
 
 Examples:
   lb.sh -e dev -- status --verbose
   lb.sh -e dev -- update
-  lb.sh -e stage -- updateSQL
-  lb.sh -e prod -- tag release-v1.2
+  lb.sh -e stg -- updateSQL
+  lb.sh -e prd -- tag release-v1.2
 
 Options before '--' apply to docker run:
-  -e, --env <name>   Environment (dev|stage|prod) [required]
-  --net <network>    Docker network (default: liquibase_tutorial)
+  -e, --env <name>   Environment (dev|stg|prd) [required]
+  --net <network>    Container network (default: auto)
   --image <name>     Liquibase image (default: liquibase:latest)
-  --project <dir>    Project dir to mount (default: /data/liquibase-tutorial)
+  --project <dir>    Project dir to mount (default: /data/$USER/liquibase_tutorial)
   -h, --help         Show help
 
 Environment variables:
@@ -90,9 +90,9 @@ EOF
 }
 
 # Defaults
-LIQUIBASE_TUTORIAL_DATA_DIR_DEFAULT="${LIQUIBASE_TUTORIAL_DATA_DIR:-/data/liquibase-tutorial}"
+LIQUIBASE_TUTORIAL_DATA_DIR_DEFAULT="${LIQUIBASE_TUTORIAL_DATA_DIR:-/data/$(whoami)/liquibase_tutorial}"
 LB_IMAGE_DEFAULT="${LB_IMAGE:-liquibase:latest}"
-LB_NETWORK_DEFAULT="${LB_NETWORK:-liquibase_tutorial}"
+LB_NETWORK_DEFAULT="${LB_NETWORK:-}"
 
 # Parse args until '--'
 while [[ $# -gt 0 ]]; do
@@ -113,6 +113,18 @@ while [[ $# -gt 0 ]]; do
       echo "Unknown option: $1" >&2; print_usage; exit 2;;
   esac
 done
+
+# Backward compatibility: accept stage/prod as aliases
+case "$ENVIRONMENT" in
+  stage) ENVIRONMENT="stg";;
+  prod)  ENVIRONMENT="prd";;
+esac
+
+if [[ "$ENVIRONMENT" != "dev" && "$ENVIRONMENT" != "stg" && "$ENVIRONMENT" != "prd" ]]; then
+  echo "Error: invalid environment '$ENVIRONMENT' (expected dev|stg|prd)." >&2
+  print_usage
+  exit 2
+fi
 
 if [[ -z "$ENVIRONMENT" ]]; then
   echo "Error: environment not specified. Use -e dev|stage|prod" >&2
@@ -140,12 +152,40 @@ if [[ ! -f "$PROP_FILE" ]]; then
   exit 1
 fi
 
+# Compute connection URL (avoid runtime-specific hostnames in the properties files)
+case "$ENVIRONMENT" in
+  dev) PORT=14331;;
+  stg) PORT=14332;;
+  prd) PORT=14333;;
+esac
+
+# If network not explicitly set, pick a safe default per runtime
+# - docker: host networking so liquibase can reach localhost:1433x
+# - podman: slirp4netns so liquibase can reach host via host.containers.internal
+HOSTNAME="localhost"
+NETWORK_ARG=()
+if [[ -n "${LB_NETWORK_DEFAULT}" ]]; then
+  NETWORK_ARG=(--network="${LB_NETWORK_DEFAULT}")
+else
+  if [[ "$CR" == "docker" ]]; then
+    NETWORK_ARG=(--network=host)
+    HOSTNAME="localhost"
+  else
+    NETWORK_ARG=(--network slirp4netns:port_handler=slirp4netns)
+    HOSTNAME="host.containers.internal"
+  fi
+fi
+
+JDBC_URL="jdbc:sqlserver://${HOSTNAME}:${PORT};databaseName=orderdb;encrypt=true;trustServerCertificate=true"
+
 # docker run invocation
 exec "$CR" run --rm \
   --user "$(id -u):$(id -g)" \
-  --network="${LB_NETWORK_DEFAULT}" \
+  "${NETWORK_ARG[@]}" \
   -v "${PROJECT_DIR}:/data:z,U" \
   "${LB_IMAGE_DEFAULT}" \
   --defaults-file="/data/env/liquibase.${ENVIRONMENT}.properties" \
+  --url="${JDBC_URL}" \
+  --username=sa \
   --password="${MSSQL_LIQUIBASE_TUTORIAL_PWD}" \
   "${PASS_ARGS[@]}"

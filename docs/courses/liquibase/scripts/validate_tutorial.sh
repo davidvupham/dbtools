@@ -62,7 +62,7 @@ check "liquibase.dev.properties" "$([[ -f "$LIQUIBASE_TUTORIAL_DATA_DIR/env/liqu
 check "liquibase.stg.properties" "$([[ -f "$LIQUIBASE_TUTORIAL_DATA_DIR/env/liquibase.stg.properties" ]] && echo true || echo false)"
 check "liquibase.prd.properties" "$([[ -f "$LIQUIBASE_TUTORIAL_DATA_DIR/env/liquibase.prd.properties" ]] && echo true || echo false)"
 check "changelog.xml" "$([[ -f "$LIQUIBASE_TUTORIAL_DATA_DIR/database/changelog/changelog.xml" ]] && echo true || echo false)"
-check "V0000__baseline.mssql.sql" "$([[ -f "$LIQUIBASE_TUTORIAL_DATA_DIR/database/changelog/baseline/V0000__baseline.mssql.sql" ]] && echo true || echo false)"
+check "V0000__baseline.sql" "$([[ -f "$LIQUIBASE_TUTORIAL_DATA_DIR/database/changelog/baseline/V0000__baseline.sql" ]] && echo true || echo false)"
 
 echo
 echo "========================================"

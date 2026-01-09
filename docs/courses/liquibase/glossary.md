@@ -43,7 +43,6 @@
 
 | Extension | Description |
 |-----------|-------------|
-| `.mssql.sql` | Formatted SQL for Microsoft SQL Server |
-| `.postgresql.sql` | Formatted SQL for PostgreSQL |
+| `.sql` | Formatted SQL changelog |
 | `.xml` | XML changelog format |
 | `.yaml` | YAML changelog format |

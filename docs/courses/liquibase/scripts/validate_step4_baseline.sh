@@ -7,7 +7,7 @@ RED='\033[0;31m'
 NC='\033[0m' # No Color
 
 # Path to Baseline
-BASELINE_FILE="${LIQUIBASE_TUTORIAL_DATA_DIR:?variable not set}/database/changelog/baseline/V0000__baseline.mssql.sql"
+BASELINE_FILE="${LIQUIBASE_TUTORIAL_DATA_DIR:?variable not set}/database/changelog/baseline/V0000__baseline.sql"
 
 echo "Validating Step 4: Baseline Generation"
 echo "Target File: $BASELINE_FILE"
@@ -20,9 +20,9 @@ fail() { echo -e "[${RED}FAIL${NC}] $1"; FAILURES=$((FAILURES+1)); }
 
 # 1. Existence Check
 if [[ -f "$BASELINE_FILE" ]]; then
-    pass "File exists: V0000__baseline.mssql.sql"
+    pass "File exists: V0000__baseline.sql"
 else
-    fail "File not found: V0000__baseline.mssql.sql"
+    fail "File not found: V0000__baseline.sql"
     exit 1
 fi
 

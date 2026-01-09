@@ -30,17 +30,16 @@ This guide teaches you how to set up **self-hosted GitHub Actions runners** runn
 
 GitHub Actions offers two types of runners:
 
-1.  **GitHub-Hosted Runners**: Virtual machines managed by GitHub. They are clean, pre-installed with common software, and maintenance-free. However, they cannot access your local resources (like a local SQL Server) without complex networking.
-2.  **Self-Hosted Runners**: Machines that you manage. They offer full control over hardware and software.
+1. **GitHub-Hosted Runners**: Virtual machines managed by GitHub. They are clean, pre-installed with common software, and maintenance-free. However, they cannot access your local resources (like a local SQL Server) without complex networking.
+2. **Self-Hosted Runners**: Machines that you manage. They offer full control over hardware and software.
 
 For this course, we use **self-hosted runners** because they allow:
+
 - **Direct Access to Local Resources**: The runner can talk directly to your local SQL Server container.
 - **Cost Savings**: Unlimited minutes for learning without consuming your GitHub Actions quota.
 - **Enterprise Simulation**: Mimics real-world scenarios where database servers are behind firewalls.
 
 For more details, see the official [GitHub documentation on self-hosted runners](https://docs.github.com/en/actions/hosting-your-own-runners/managing-self-hosted-runners/about-self-hosted-runners).
-
-
 
 ### What You'll Build
 
@@ -96,8 +95,6 @@ graph TB
 - Custom configurations
 - Debug workflow issues locally
 
-
-
 ## Architecture Overview
 
 ### Components
@@ -149,19 +146,15 @@ sequenceDiagram
 
 ### Required Software
 
-✅ **Docker Host OS**:
-   - **Linux**: Ubuntu 20.04+, RHEL 8+, or similar.
-   - **Windows**: Windows 10/11 with WSL 2.
-
-✅ **Docker Engine installed** (Docker Desktop or Engine)
-
-✅ **Git installed**
-
-✅ **GitHub account** with a repository
-
-✅ **(RHEL Only) SELinux Configuration**:
-   - Docker volumes need the `:z` flag (shared) or `:Z` flag (private) to be accessible.
-   - This guide includes `:z` in examples to support both RHEL and Ubuntu.
+- ✅ **Docker Host OS**
+  - **Linux**: Ubuntu 20.04+, RHEL 8+, or similar.
+  - **Windows**: Windows 10/11 with WSL 2.
+- ✅ **Docker Engine installed** (Docker Desktop or Engine)
+- ✅ **Git installed**
+- ✅ **GitHub account** with a repository
+- ✅ **(RHEL Only) SELinux configuration**
+  - Docker volumes need the `:z` flag (shared) or `:Z` flag (private) to be accessible.
+  - This guide includes `:z` in examples to support both RHEL and Ubuntu.
 
 ### Check Your Setup
 
@@ -309,7 +302,6 @@ sudo usermod -aG docker $USER
 newgrp docker
 ```
 
-
 ### Configure Docker to Start on Boot (WSL Only)
 
 For standard Linux (Ubuntu/RHEL), Docker starts automatically via systemd. For WSL, you may need a startup script:
@@ -445,10 +437,10 @@ systemctl status mssql-server
 ### Step 3.1: Register Runner in GitHub
 
 1. Go to your GitHub repository
-2. Click **Settings** tab
-3. In left sidebar: **Actions** → **Runners**
-4. Click **New self-hosted runner** button
-5. Select:
+1. Click **Settings** tab
+1. In left sidebar: **Actions** → **Runners**
+1. Click **New self-hosted runner** button
+1. Select:
    - **Linux** (operating system)
    - **x64** (architecture)
 
@@ -456,7 +448,7 @@ systemctl status mssql-server
 
 **Note:** This process uses a **runner registration token** (temporary, expires in 1 hour), not a Personal Access Token (PAT). PATs are used for Git operations and API access, not runner registration.
 
-6. **Copy the registration token** shown (looks like: `AABBC...XYZ`)
+1. **Copy the registration token** shown (looks like: `AABBC...XYZ`)
    - ⚠️ **Important:** This token expires after 1 hour
    - You'll use it in the next step
    - If it expires, return here to generate a new token
