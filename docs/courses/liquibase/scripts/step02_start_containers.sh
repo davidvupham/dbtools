@@ -19,6 +19,15 @@ echo "Liquibase Tutorial - Step 02: Start Containers"
 echo "========================================"
 echo
 
+# Check for existing containers and warn
+EXISTING=$(docker ps -a --filter "name=mssql_" --format "{{.Names}}" 2>/dev/null | wc -l)
+if [ "$EXISTING" -gt 0 ]; then
+    echo -e "${YELLOW}Warning: Found existing mssql containers${NC}"
+    echo "If you encounter port conflicts, run cleanup first:"
+    echo "  $TUTORIAL_ROOT/scripts/cleanup_validation.sh"
+    echo
+fi
+
 # Check required environment
 # Note: docker-compose.yml has a fallback to /data/liquibase_tutorial, but we prefer per-user isolation
 LIQUIBASE_TUTORIAL_DATA_DIR="${LIQUIBASE_TUTORIAL_DATA_DIR:-/data/${USER}/liquibase_tutorial}"

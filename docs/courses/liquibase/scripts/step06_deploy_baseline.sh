@@ -27,10 +27,25 @@ if [[ -z "${MSSQL_LIQUIBASE_TUTORIAL_PWD:-}" ]]; then
 fi
 export MSSQL_LIQUIBASE_TUTORIAL_PWD
 
-# Ensure lb alias is available
-if ! command -v lb &>/dev/null; then
+# Ensure lb command is available (use direct script path if alias not available)
+LB_CMD=""
+if command -v lb &>/dev/null || type lb &>/dev/null 2>&1; then
+    LB_CMD="lb"
+else
     echo -e "${YELLOW}Warning: lb alias not found. Sourcing setup_aliases.sh...${NC}"
-    source "$TUTORIAL_ROOT/scripts/setup_aliases.sh"
+    source "$TUTORIAL_ROOT/scripts/setup_aliases.sh" || true
+    # Check again after sourcing
+    if command -v lb &>/dev/null || type lb &>/dev/null 2>&1; then
+        LB_CMD="lb"
+    else
+        # Use direct script path (more reliable than alias in subshells)
+        LB_CMD="$TUTORIAL_ROOT/scripts/lb.sh"
+        if [[ ! -f "$LB_CMD" ]]; then
+            echo -e "${RED}ERROR: lb command not found and lb.sh script not found${NC}"
+            exit 1
+        fi
+        echo "Using direct script path for lb: $LB_CMD"
+    fi
 fi
 
 cd "$LIQUIBASE_TUTORIAL_DATA_DIR"
@@ -52,8 +67,8 @@ fi
 # Deploy to Development (changelogSync - mark as executed, don't run)
 echo "Deploying to Development (changelogSync)..."
 echo
-if lb -e dev -- changelogSync 2>&1; then
-    if lb -e dev -- tag baseline 2>&1; then
+if "$LB_CMD" -e dev -- changelogSync 2>&1; then
+    if "$LB_CMD" -e dev -- tag baseline 2>&1; then
         echo -e "${GREEN}✓ Development: Baseline synced and tagged${NC}"
     else
         echo -e "${YELLOW}Warning: Failed to tag baseline in dev${NC}"
@@ -66,8 +81,8 @@ fi
 echo
 echo "Deploying to Staging (update - actually execute)..."
 echo
-if lb -e stg -- update 2>&1; then
-    if lb -e stg -- tag baseline 2>&1; then
+if "$LB_CMD" -e stg -- update 2>&1; then
+    if "$LB_CMD" -e stg -- tag baseline 2>&1; then
         echo -e "${GREEN}✓ Staging: Baseline deployed and tagged${NC}"
     else
         echo -e "${YELLOW}Warning: Failed to tag baseline in stg${NC}"
@@ -80,8 +95,8 @@ fi
 echo
 echo "Deploying to Production (update - actually execute)..."
 echo
-if lb -e prd -- update 2>&1; then
-    if lb -e prd -- tag baseline 2>&1; then
+if "$LB_CMD" -e prd -- update 2>&1; then
+    if "$LB_CMD" -e prd -- tag baseline 2>&1; then
         echo -e "${GREEN}✓ Production: Baseline deployed and tagged${NC}"
     else
         echo -e "${YELLOW}Warning: Failed to tag baseline in prd${NC}"

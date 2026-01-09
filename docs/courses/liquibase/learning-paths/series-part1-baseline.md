@@ -9,8 +9,9 @@
   - [What You'll Learn](#what-youll-learn)
   - [Prerequisites](#prerequisites)
 - [Environment Setup](#environment-setup)
+  - [Before You Start: Clean Up Previous Runs](#before-you-start-clean-up-previous-runs)
   - [Step 0: Configure Environment and Aliases](#step-0-configure-environment-and-aliases)
-  - [Start the Tutorial SQL Server Container](#start-the-tutorial-sql-server-container)
+  - [Start the Tutorial SQL Server Containers](#start-the-tutorial-sql-server-containers)
   - [Build Liquibase container image](#build-liquibase-container-image)
 - [Important Note About Container Commands](#important-note-about-container-commands)
   - [Check SQL Server is Running](#check-sql-server-is-running)
@@ -105,6 +106,27 @@ Before starting this tutorial, you should have:
 
 ## Environment Setup
 
+### Before You Start: Clean Up Previous Runs
+
+**Important:** Before starting the tutorial, clean up any containers or resources from previous runs to ensure a clean environment.
+
+```bash
+# Set tutorial directory (if not already set)
+export LIQUIBASE_TUTORIAL_DIR="/path/to/your/repo/docs/courses/liquibase"
+
+# Run cleanup script to remove any existing containers
+"$LIQUIBASE_TUTORIAL_DIR/scripts/cleanup_validation.sh"
+```
+
+**What the cleanup script does:**
+- Stops and removes any existing SQL Server containers (`mssql_dev`, `mssql_stg`, `mssql_prd`)
+- Removes any existing Liquibase containers
+- Cleans up Docker networks
+- Waits for ports to be released
+- Ensures a clean starting state
+
+> **Note:** You can skip this step if you're certain the environment is clean, but it's recommended to run it to avoid port conflicts or other issues.
+
 ### Step 0: Configure Environment and Aliases
 
 First, set the `LIQUIBASE_TUTORIAL_DIR` environment variable to point to your repository's tutorial directory. This variable will be used throughout the tutorial.
@@ -136,7 +158,8 @@ The setup script will:
 
 - Set `LIQUIBASE_TUTORIAL_DATA_DIR` to `/data/$USER/liquibase_tutorial` (your per-user project directory)
 - Create aliases: `sqlcmd-tutorial`, `lb`, `cr`
-- Prompt for SQL Server password (`MSSQL_LIQUIBASE_TUTORIAL_PWD`)
+- Create Liquibase properties files for dev, stg, and prd environments
+- Prompt for SQL Server password (`MSSQL_LIQUIBASE_TUTORIAL_PWD`) if not already set
 
 ### Start the Tutorial SQL Server Containers
 
@@ -223,6 +246,7 @@ The Liquibase container is a "run-once" tool (not a long-running service), so we
 
 ```bash
 # Navigate to the liquibase docker directory (from your repo root)
+# This removes '/docs/courses/liquibase' from the path to get repo root, then goes to docker/liquibase
 cd "${LIQUIBASE_TUTORIAL_DIR%/docs/courses/liquibase}/docker/liquibase"
 
 # Build the custom Liquibase image with SQL Server drivers
@@ -246,7 +270,11 @@ Troubleshooting:
 
 The `lb` wrapper auto-detects your container runtime (Docker or Podman based on your OS) and encapsulates the full run invocation so you don't need to know paths or flags.
 
-Heads-up: The commands below are examples to show wrapper usage. Do not run them yet. Run `lb` commands only after Step 1 (databases created) and after your properties point to those databases (created in Step 0 or Step 3). If you run them now, they will fail with connection/DB-not-found errors because the databases don’t exist yet; however, seeing Liquibase start and attempt a connection still confirms the Liquibase container image is built and accessible.
+> **Important:** The properties files use `localhost` in the JDBC connection string. This requires running the Liquibase container with `--network host` so it can see `localhost` as the host machine. The `lb` wrapper automatically sets `LB_NETWORK=host` when needed, but if you run raw container commands, you must include `--network host` in your `docker run` or `podman run` command.
+
+**Note:** The commands below are examples to show wrapper usage. Do not run them yet. Run `lb` commands only after Step 1 (databases created) and after your properties point to those databases (created in Step 0 or Step 3).
+
+If you run them now, they will fail with connection/DB-not-found errors because the databases don't exist yet. However, seeing Liquibase start and attempt a connection still confirms the Liquibase container image is built and accessible.
 
 ```bash
 # Show status for dev
@@ -354,7 +382,7 @@ You should see `database/changelog/baseline`, `database/changelog/changes`, and 
 **What each folder means:**
 
 ```text
-$LIQUIBASE_TUTORIAL_DATA_DIR/              # e.g., /data/$USER$/liquibase_tutorial
+$LIQUIBASE_TUTORIAL_DATA_DIR/              # e.g., /data/$USER/liquibase_tutorial
 ├── database/
 │   └── changelog/
 │       ├── changelog.xml           # Master file listing all changes in order
@@ -528,7 +556,7 @@ Create properties files to connect Liquibase to each environment and set up the 
 
 **Recommended: Properties files are created automatically**
 
-If you ran `setup_tutorial.sh` in Step 0, the properties files were already created. However, if you need to create them manually or want to understand the structure, you can use:
+If you ran `setup_tutorial.sh` in Step 0, the properties files were already created automatically. However, if you need to create them manually or want to understand the structure, you can use:
 
 ```bash
 # Run the step script (creates directories, properties, and master changelog)
@@ -591,7 +619,6 @@ ls -la "$LIQUIBASE_TUTORIAL_DATA_DIR/env/"
 - `url`: JDBC connection string (notice port differs per environment)
   - `jdbc:sqlserver://` - Protocol for SQL Server connections
   - `localhost:14331/14332/14333` - Connect to host machine ports (dev=14331, stg=14332, prd=14333)
-  - **Note**: This requires running the Liquibase container with `--network host` (set via `LB_NETWORK=host`) so it can see `localhost` as the host machine.
   - `databaseName=orderdb` - Database name (same for all environments)
   - `encrypt=true` - Use encrypted connection
   - `trustServerCertificate=true` - Trust the server's SSL certificate (for local dev only; in production use proper certificates)
@@ -893,21 +920,38 @@ Now that your baseline is in place and Liquibase is tracking changes across dev/
 
 ## Cleanup After Tutorial
 
-When you've completed the tutorial series and want to clean up the containers and databases, you can use the cleanup helper script.
+**Always clean up after completing the tutorial** to free up resources and ensure a clean state for future runs.
 
 ### Quick Cleanup (Recommended)
 
 ```bash
 # Run the automated cleanup script
+"$LIQUIBASE_TUTORIAL_DIR/scripts/cleanup_validation.sh"
+```
+
+**What the cleanup script does:**
+
+- Stops and removes the SQL Server containers (`mssql_dev`, `mssql_stg`, `mssql_prd`)
+- Removes any Liquibase containers
+- Removes associated Docker networks
+- Waits for ports to be released
+- Optionally removes validation log files (with confirmation)
+- Provides a summary of what was cleaned up
+
+**Alternative: Full cleanup (removes data directory)**
+
+If you want to completely remove all tutorial data (including databases and changelogs):
+
+```bash
+# Run the full cleanup script
 "$LIQUIBASE_TUTORIAL_DIR/scripts/cleanup_liquibase_tutorial.sh"
 ```
 
-**What the script does:**
+This script also:
+- Removes the `$LIQUIBASE_TUTORIAL_DATA_DIR` directory (with confirmation)
+- Removes all data volumes
 
-- Stops and removes the SQL Server containers (`mssql_dev`, `mssql_stg`, `mssql_prd`)
-- Removes associated data volumes
-- Removes the `liquibase_tutorial` Docker network
-- Optionally removes the `$LIQUIBASE_TUTORIAL_DATA_DIR` directory (with confirmation)
-- Provides a summary of what was cleaned up
-
-> You can run this script any time you want to **reset the tutorial environment** and start again from Part 1.
+> **Important:** 
+> - Run cleanup **after completing** the tutorial to free up resources
+> - Run cleanup **before starting** a new tutorial run to ensure a clean environment
+> - You can run cleanup scripts any time you want to **reset the tutorial environment** and start again from Part 1

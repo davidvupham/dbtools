@@ -56,16 +56,27 @@ echo "Checking databases exist..."
 # Check database on each container
 for container in mssql_dev mssql_stg mssql_prd; do
     echo -n "  Checking $container... "
+    # Use -h -1 to suppress headers, -W to remove trailing spaces, and filter out empty lines and status messages
     result=$($CR_CMD exec "$container" /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa \
         -P "$MSSQL_LIQUIBASE_TUTORIAL_PWD" \
         -Q "SELECT name FROM sys.databases WHERE name = 'orderdb';" \
-        -h -1 -W 2>&1 | grep -v "^$" | tail -1)
+        -h -1 -W 2>&1 | grep -E "^orderdb$" | head -1)
     
     if [[ "$result" == "orderdb" ]]; then
         pass "$container has orderdb database"
     else
-        fail "$container missing orderdb database"
-        echo "    Actual result: ${result:-empty}"
+        # Try alternative check - count databases
+        db_count=$($CR_CMD exec "$container" /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa \
+            -P "$MSSQL_LIQUIBASE_TUTORIAL_PWD" \
+            -Q "SELECT COUNT(*) FROM sys.databases WHERE name = 'orderdb';" \
+            -h -1 -W 2>&1 | grep -E "^[[:space:]]*1[[:space:]]*$" | wc -l)
+        
+        if [[ "$db_count" -gt 0 ]]; then
+            pass "$container has orderdb database (verified via count)"
+        else
+            fail "$container missing orderdb database"
+            echo "    Actual result: ${result:-empty}"
+        fi
     fi
 done
 

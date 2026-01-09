@@ -90,19 +90,21 @@ USER root
 #
 RUN mkdir -p /data/mssql /logs/mssql && \
     chown -R mssql:0 /data /logs && \
-    chmod -R g+rwx /data /logs && \
-    # ----------------------------------------------------------------------
-    # Create healthcheck script that reads password from environment variable
-    # The script must read MSSQL_SA_PASSWORD at runtime (set via docker-compose)
-    # ----------------------------------------------------------------------
-    mkdir -p /opt/mssql/bin && \
-    cat > /opt/mssql/bin/healthcheck.sh << 'HEALTHCHECK_EOF' && \
+    chmod -R g+rwx /data /logs
+
+# ----------------------------------------------------------------------
+# Create healthcheck script that reads password from environment variable
+# The script must read MSSQL_SA_PASSWORD at runtime (set via docker-compose)
+# ----------------------------------------------------------------------
+RUN mkdir -p /opt/mssql/bin && \
+    cat > /opt/mssql/bin/healthcheck.sh << 'HEALTHCHECK_EOF'
 #!/bin/bash
 set -euo pipefail
 # Read password from environment variable (set at runtime)
 /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P "${MSSQL_SA_PASSWORD}" -Q "SELECT 1" -b -o /dev/null
 HEALTHCHECK_EOF
-    chmod +x /opt/mssql/bin/healthcheck.sh && \
+
+RUN chmod +x /opt/mssql/bin/healthcheck.sh && \
     chown mssql:0 /opt/mssql/bin/healthcheck.sh
 
 # ------------------------------------------------------------------------------
