@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# Tutorial Setup Script - Step 02: Start Containers
+# Start MSSQL Containers
 # Starts all SQL Server containers for dev, stg, prd environments
+# Reusable across all tutorial parts
 
 set -euo pipefail
 
@@ -15,7 +16,7 @@ YELLOW='\033[1;33m'
 NC='\033[0m'
 
 echo "========================================"
-echo "Liquibase Tutorial - Step 02: Start Containers"
+echo "Liquibase Tutorial - Start MSSQL Containers"
 echo "========================================"
 echo
 
@@ -36,14 +37,14 @@ export LIQUIBASE_TUTORIAL_DATA_DIR
 # Validate data directory doesn't use the generic fallback from docker-compose.yml
 if [[ "$LIQUIBASE_TUTORIAL_DATA_DIR" == "/data/liquibase_tutorial" ]]; then
     echo -e "${YELLOW}WARNING: Using generic data directory (not per-user)${NC}"
-    echo "For multi-user support, run step01_setup_environment.sh first"
+    echo "For multi-user support, run setup_liquibase_environment.sh first"
     echo "or export LIQUIBASE_TUTORIAL_DATA_DIR=\"/data/\${USER}/liquibase_tutorial\""
     echo
 fi
 
 if [[ -z "${MSSQL_LIQUIBASE_TUTORIAL_PWD:-}" ]]; then
     echo -e "${RED}ERROR: MSSQL_LIQUIBASE_TUTORIAL_PWD not set${NC}"
-    echo "Run step01_setup_environment.sh first or export the password"
+    echo "Run setup_liquibase_environment.sh first or export the password"
     exit 1
 fi
 export MSSQL_LIQUIBASE_TUTORIAL_PWD
@@ -95,11 +96,11 @@ $CR_CMD ps -a --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" 2>/dev/null |
 
 echo
 echo "========================================"
-echo -e "${GREEN}Step 02 Complete${NC}"
+echo -e "${GREEN}Containers Started${NC}"
 echo "========================================"
 echo "Containers running on ports:"
 echo "  mssql_dev: localhost:14331"
 echo "  mssql_stg: localhost:14332"
 echo "  mssql_prd: localhost:14333"
 echo
-echo "Next: Run step03_create_databases.sh"
+echo "Next: Run create_orderdb_databases.sh"

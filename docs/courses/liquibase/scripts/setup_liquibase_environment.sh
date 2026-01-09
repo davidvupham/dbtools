@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# Tutorial Setup Script - Step 01: Environment Setup
+# Setup Liquibase Environment
 # Creates directories and configures environment for Liquibase tutorial
+# Reusable across all tutorial parts
 
 set -euo pipefail
 
@@ -14,7 +15,7 @@ YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 echo "========================================"
-echo "Liquibase Tutorial - Step 01: Setup"
+echo "Liquibase Tutorial - Setup Environment"
 echo "========================================"
 echo
 
@@ -82,10 +83,10 @@ echo -e "${GREEN}✓ Done${NC}"
 # Summary
 echo
 echo "========================================"
-echo -e "${GREEN}Step 01 Complete${NC}"
+echo -e "${GREEN}Environment Setup Complete${NC}"
 echo "========================================"
 echo "Data directory:  $LIQUIBASE_TUTORIAL_DATA_DIR"
 echo "Properties:      $LIQUIBASE_TUTORIAL_DATA_DIR/env/"
 echo "Changelogs:      $LIQUIBASE_TUTORIAL_DATA_DIR/database/changelog/"
 echo
-echo "Next: Run step02_start_containers.sh"
+echo "Next: Run start_mssql_containers.sh"

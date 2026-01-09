@@ -1,6 +1,7 @@
 #!/bin/bash
-# Validation script for Step 5: Deploy Baseline Across Environments
+# Validate Liquibase Baseline Deployment
 # Validates that baseline is deployed to all environments and tracked in Liquibase
+# Reusable across all tutorial parts
 
 set -u
 
@@ -11,7 +12,7 @@ YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 echo "========================================"
-echo "Validating Step 5: Deploy Baseline"
+echo "Validating Liquibase Baseline Deployment"
 echo "========================================"
 echo
 
@@ -112,7 +113,7 @@ done
 
 echo "========================================"
 if [[ "$FAILURES" -eq 0 ]]; then
-    echo -e "${GREEN}Step 5 VALIDATION SUCCESSFUL${NC}"
+    echo -e "${GREEN}VALIDATION SUCCESSFUL${NC}"
     echo "========================================"
     echo
     echo "Expected output summary:"
@@ -126,7 +127,7 @@ if [[ "$FAILURES" -eq 0 ]]; then
     echo
     exit 0
 else
-    echo -e "${RED}Step 5 VALIDATION FAILED ($FAILURES errors)${NC}"
+    echo -e "${RED}VALIDATION FAILED ($FAILURES errors)${NC}"
     echo "========================================"
     echo
     echo "To fix:"

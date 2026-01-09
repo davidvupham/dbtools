@@ -1,4 +1,8 @@
 #!/bin/bash
+# Validate Liquibase Baseline
+# Validates that baseline file exists and has correct format
+# Reusable across all tutorial parts
+
 set -u
 
 # Colors
@@ -9,7 +13,7 @@ NC='\033[0m' # No Color
 # Path to Baseline
 BASELINE_FILE="${LIQUIBASE_TUTORIAL_DATA_DIR:?variable not set}/database/changelog/baseline/V0000__baseline.mssql.sql"
 
-echo "Validating Step 4: Baseline Generation"
+echo "Validating Liquibase Baseline"
 echo "Target File: $BASELINE_FILE"
 echo "---------------------------------------------------"
 
@@ -73,7 +77,7 @@ fi
 
 echo "---------------------------------------------------"
 if [[ "$FAILURES" -eq 0 ]]; then
-    echo -e "${GREEN}Step 4 VALIDATION SUCCESSFUL${NC}"
+    echo -e "${GREEN}VALIDATION SUCCESSFUL${NC}"
     echo "========================================"
     echo
     echo "Expected output summary:"
@@ -87,12 +91,12 @@ if [[ "$FAILURES" -eq 0 ]]; then
     echo
     exit 0
 else
-    echo -e "${RED}Step 4 VALIDATION FAILED ($FAILURES errors)${NC}"
+    echo -e "${RED}VALIDATION FAILED ($FAILURES errors)${NC}"
     echo "========================================"
     echo
     echo "To fix:"
-    echo "  1. Ensure Step 2 completed (dev database populated)"
-    echo "  2. Run step05_generate_baseline.sh"
+    echo "  1. Ensure dev database populated"
+    echo "  2. Run generate_liquibase_baseline.sh"
     echo "  3. Or manually run: lb -e dev -- generateChangeLog --schemas=app --include-schema=true"
     echo
     exit 1

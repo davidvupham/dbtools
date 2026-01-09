@@ -132,11 +132,11 @@ fi
 # Step 1: Start Containers
 log_section "Step 1: Start SQL Server Containers"
 
-if [ -f "$LIQUIBASE_TUTORIAL_DIR/scripts/step02_start_containers.sh" ]; then
-    execute_step "Start Containers" "$LIQUIBASE_TUTORIAL_DIR/scripts/step02_start_containers.sh"
+if [ -f "$LIQUIBASE_TUTORIAL_DIR/scripts/start_mssql_containers.sh" ]; then
+    execute_step "Start Containers" "$LIQUIBASE_TUTORIAL_DIR/scripts/start_mssql_containers.sh"
     CONTAINER_START_RESULT=$?
 else
-    log "✗ ERROR: step02_start_containers.sh not found"
+    log "✗ ERROR: start_mssql_containers.sh not found"
     ((ISSUES_FOUND++))
     CONTAINER_START_RESULT=1
 fi
@@ -164,70 +164,70 @@ fi
 # Step 3: Create Project Structure
 log_section "Step 3: Create Project Structure"
 
-if [ -f "$LIQUIBASE_TUTORIAL_DIR/scripts/step01_setup_environment.sh" ]; then
-    execute_step "Setup Environment" "$LIQUIBASE_TUTORIAL_DIR/scripts/step01_setup_environment.sh"
+if [ -f "$LIQUIBASE_TUTORIAL_DIR/scripts/setup_liquibase_environment.sh" ]; then
+    execute_step "Setup Environment" "$LIQUIBASE_TUTORIAL_DIR/scripts/setup_liquibase_environment.sh"
 else
-    log "✗ ERROR: step01_setup_environment.sh not found"
+    log "✗ ERROR: setup_liquibase_environment.sh not found"
     ((ISSUES_FOUND++))
 fi
 
 # Step 4: Create Databases
 log_section "Step 4: Create Three Database Environments"
 
-if [ -f "$LIQUIBASE_TUTORIAL_DIR/scripts/step03_create_databases.sh" ]; then
-    execute_step "Create Databases" "$LIQUIBASE_TUTORIAL_DIR/scripts/step03_create_databases.sh"
+if [ -f "$LIQUIBASE_TUTORIAL_DIR/scripts/create_orderdb_databases.sh" ]; then
+    execute_step "Create Databases" "$LIQUIBASE_TUTORIAL_DIR/scripts/create_orderdb_databases.sh"
     CREATE_DB_RESULT=$?
 
-    if [ $CREATE_DB_RESULT -eq 0 ] && [ -f "$LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_step1_databases.sh" ]; then
-        execute_step "Validate Databases" "$LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_step1_databases.sh"
+    if [ $CREATE_DB_RESULT -eq 0 ] && [ -f "$LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_orderdb_databases.sh" ]; then
+        execute_step "Validate Databases" "$LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_orderdb_databases.sh"
     fi
 else
-    log "✗ ERROR: step03_create_databases.sh not found"
+    log "✗ ERROR: create_orderdb_databases.sh not found"
     ((ISSUES_FOUND++))
 fi
 
 # Step 5: Populate Development
 log_section "Step 5: Populate Development with Existing Objects"
 
-if [ -f "$LIQUIBASE_TUTORIAL_DIR/scripts/step04_populate_dev.sh" ]; then
-    execute_step "Populate Dev" "$LIQUIBASE_TUTORIAL_DIR/scripts/step04_populate_dev.sh"
+if [ -f "$LIQUIBASE_TUTORIAL_DIR/scripts/populate_dev_database.sh" ]; then
+    execute_step "Populate Dev" "$LIQUIBASE_TUTORIAL_DIR/scripts/populate_dev_database.sh"
     POPULATE_RESULT=$?
 
-    if [ $POPULATE_RESULT -eq 0 ] && [ -f "$LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_step2_populate.sh" ]; then
-        execute_step "Validate Populate" "$LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_step2_populate.sh"
+    if [ $POPULATE_RESULT -eq 0 ] && [ -f "$LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_dev_populate.sh" ]; then
+        execute_step "Validate Populate" "$LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_dev_populate.sh"
     fi
 else
-    log "✗ ERROR: step04_populate_dev.sh not found"
+    log "✗ ERROR: populate_dev_database.sh not found"
     ((ISSUES_FOUND++))
 fi
 
 # Step 6: Generate Baseline
 log_section "Step 6: Generate Baseline from Development"
 
-if [ -f "$LIQUIBASE_TUTORIAL_DIR/scripts/step05_generate_baseline.sh" ]; then
-    execute_step "Generate Baseline" "$LIQUIBASE_TUTORIAL_DIR/scripts/step05_generate_baseline.sh"
+if [ -f "$LIQUIBASE_TUTORIAL_DIR/scripts/generate_liquibase_baseline.sh" ]; then
+    execute_step "Generate Baseline" "$LIQUIBASE_TUTORIAL_DIR/scripts/generate_liquibase_baseline.sh"
     BASELINE_RESULT=$?
 
-    if [ $BASELINE_RESULT -eq 0 ] && [ -f "$LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_step4_baseline.sh" ]; then
-        execute_step "Validate Baseline" "$LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_step4_baseline.sh"
+    if [ $BASELINE_RESULT -eq 0 ] && [ -f "$LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_liquibase_baseline.sh" ]; then
+        execute_step "Validate Baseline" "$LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_liquibase_baseline.sh"
     fi
 else
-    log "✗ ERROR: step05_generate_baseline.sh not found"
+    log "✗ ERROR: generate_liquibase_baseline.sh not found"
     ((ISSUES_FOUND++))
 fi
 
 # Step 7: Deploy Baseline
 log_section "Step 7: Deploy Baseline Across Environments"
 
-if [ -f "$LIQUIBASE_TUTORIAL_DIR/scripts/step06_deploy_baseline.sh" ]; then
-    execute_step "Deploy Baseline" "$LIQUIBASE_TUTORIAL_DIR/scripts/step06_deploy_baseline.sh"
+if [ -f "$LIQUIBASE_TUTORIAL_DIR/scripts/deploy_liquibase_baseline.sh" ]; then
+    execute_step "Deploy Baseline" "$LIQUIBASE_TUTORIAL_DIR/scripts/deploy_liquibase_baseline.sh"
     DEPLOY_RESULT=$?
 
-    if [ $DEPLOY_RESULT -eq 0 ] && [ -f "$LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_step5_deploy.sh" ]; then
-        execute_step "Validate Deployment" "$LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_step5_deploy.sh"
+    if [ $DEPLOY_RESULT -eq 0 ] && [ -f "$LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_liquibase_deploy.sh" ]; then
+        execute_step "Validate Deployment" "$LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_liquibase_deploy.sh"
     fi
 else
-    log "✗ ERROR: step06_deploy_baseline.sh not found"
+    log "✗ ERROR: deploy_liquibase_baseline.sh not found"
     ((ISSUES_FOUND++))
 fi
 

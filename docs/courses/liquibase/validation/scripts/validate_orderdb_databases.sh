@@ -1,6 +1,7 @@
 #!/bin/bash
-# Validation script for Step 1: Create Databases
+# Validate OrderDB Databases
 # Validates that orderdb exists on all three SQL Server containers
+# Reusable across all tutorial parts
 
 set -u
 
@@ -11,7 +12,7 @@ YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 echo "========================================"
-echo "Validating Step 1: Create Databases"
+echo "Validating OrderDB Databases"
 echo "========================================"
 echo
 
@@ -83,7 +84,7 @@ done
 echo
 echo "========================================"
 if [[ "$FAILURES" -eq 0 ]]; then
-    echo -e "${GREEN}Step 1 VALIDATION SUCCESSFUL${NC}"
+    echo -e "${GREEN}VALIDATION SUCCESSFUL${NC}"
     echo "========================================"
     echo
     echo "Expected output summary:"
@@ -92,12 +93,12 @@ if [[ "$FAILURES" -eq 0 ]]; then
     echo
     exit 0
 else
-    echo -e "${RED}Step 1 VALIDATION FAILED ($FAILURES errors)${NC}"
+    echo -e "${RED}VALIDATION FAILED ($FAILURES errors)${NC}"
     echo "========================================"
     echo
     echo "To fix:"
     echo "  1. Ensure containers are running: docker ps | grep mssql_"
-    echo "  2. Run step03_create_databases.sh to create databases"
+    echo "  2. Run create_orderdb_databases.sh to create databases"
     echo
     exit 1
 fi

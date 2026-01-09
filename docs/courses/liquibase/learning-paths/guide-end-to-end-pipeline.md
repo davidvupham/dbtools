@@ -84,734 +84,195 @@ If you have not run Part 1 at least once, skim it first; this tutorial will refe
 
 ## Phase 1: Local Environment Using the Helper Scripts
 
-This phase walks you through the local container + helper-script setup you’ll use throughout the rest of this tutorial.
+This phase establishes your local Liquibase project with baseline deployment. **Follow Part 1 of the series tutorial** which provides detailed step-by-step instructions.
 
-### Step 1: Run the One-Time Setup Helper
+### Quick Start: Use Part 1 Tutorial
 
-From your cloned repo:
+**Complete [Part 1: Baseline SQL Server + Liquibase Setup](./series-part1-baseline.md)** to:
 
-```bash
-cd /path/to/your/repo/docs/courses/liquibase
+1. ✅ Set up environment and aliases (Step 0)
+2. ✅ Start SQL Server containers (Step 2)
+3. ✅ Create databases and schemas (Step 1)
+4. ✅ Populate development database (Step 2)
+5. ✅ Generate baseline changelog (Step 4)
+6. ✅ Deploy baseline to all environments (Step 5)
 
-# Source the one-shot setup helper (env, aliases, properties)
-source scripts/setup_tutorial.sh
-```
-
-This script:
-
-- Exports `LIQUIBASE_TUTORIAL_DIR` and (optionally) `LIQUIBASE_TUTORIAL_DATA_DIR` (default `/data/liquibase-tutorial`).
-- Configures aliases like:
-  - `sqlcmd-tutorial` – wrapper for `sqlcmd` into the tutorial SQL Server container.
-  - `lb` – wrapper that runs the Liquibase Docker image with the right mounts, user, and properties.
-
-You can always re-source this script in a new shell if aliases disappear.
-
-### Step 2: Start the Tutorial SQL Server and Liquibase Image
-
-Start the tutorial SQL Server container and Liquibase image using the helper structure:
+**Recommended approach:** Use the reusable scripts from `scripts/` directory:
 
 ```bash
-# Start the dedicated SQL Server tutorial container
-cd "$LIQUIBASE_TUTORIAL_DIR/docker"
-docker compose up -d
+# Set tutorial directory
+export LIQUIBASE_TUTORIAL_DIR="/path/to/your/repo/docs/courses/liquibase"
 
-# Verify it is running and healthy
-docker ps | grep mssql_liquibase_tutorial
+# Source setup to configure aliases
+source "$LIQUIBASE_TUTORIAL_DIR/scripts/setup_tutorial.sh"
+
+# Run setup scripts in order
+"$LIQUIBASE_TUTORIAL_DIR/scripts/setup_liquibase_environment.sh"
+"$LIQUIBASE_TUTORIAL_DIR/scripts/start_mssql_containers.sh"
+"$LIQUIBASE_TUTORIAL_DIR/scripts/create_orderdb_databases.sh"
+"$LIQUIBASE_TUTORIAL_DIR/scripts/populate_dev_database.sh"
+"$LIQUIBASE_TUTORIAL_DIR/scripts/generate_liquibase_baseline.sh"
+"$LIQUIBASE_TUTORIAL_DIR/scripts/deploy_liquibase_baseline.sh"
 ```
 
-You should see `mssql_liquibase_tutorial` listening on host port `14333` and marked `(healthy)`.
+> **Note:** These scripts are reusable across all tutorials. See [Scripts README](../scripts/README.md) for details.
 
-**Expected output:**
+**What you'll have after Phase 1:**
 
-```text
-mssql_liquibase_tutorial   mcr.microsoft.com/mssql/server:2025-latest   Up X seconds (healthy)   0.0.0.0:14333->1433/tcp
-```
+- Three SQL Server containers (`mssql_dev`, `mssql_stg`, `mssql_prd`) with `orderdb` database
+- Liquibase project at `$LIQUIBASE_TUTORIAL_DATA_DIR` with baseline deployed
+- Helper commands (`lb`, `sqlcmd-tutorial`) configured
+- All environments tagged with `baseline`
 
-**What this does:**
+**For detailed explanations** of each step, concepts, and troubleshooting, see [Part 1: Baseline](./series-part1-baseline.md).
 
-- Downloads the SQL Server 2025 image (if not already present).
-- Creates a container named `mssql_liquibase_tutorial`.
-- Starts SQL Server on port `1433` (exposed as `14333` on the host).
-- Uses the password from `$MSSQL_LIQUIBASE_TUTORIAL_PWD`.
-- Includes a health check so Docker reports when SQL Server is ready.
-
-To wait for the container to become healthy, you can watch the status:
-
-```bash
-# Watch the container status (Ctrl+C to exit)
-watch -n 2 'docker ps | grep mssql_liquibase_tutorial'
-```
-
-Next, build the Liquibase Docker image (if you have not already):
-
-```bash
-cd /path/to/your/repo/docker/liquibase
-# Build the Liquibase Docker image used by the local helper (`lb`) and CI/CD
-docker compose build
-
-# Sanity check: run Liquibase inside the container to verify the image works
-docker run --rm liquibase:latest --version
-```
-
-> The `lb` wrapper (defined as a shell alias that calls `lb.sh` in `docs/courses/liquibase/scripts/`) uses this image under the hood, so you do not need to remember the full `docker run` invocations or call `lb.sh` directly.
-
-If you see `Cannot find database driver: com.microsoft.sqlserver.jdbc.SQLServerDriver`, rebuild the image from `docker/liquibase` and re-run the version check.
-If an alias like `lb` is not found in a new shell, re-source the aliases script (for example `source scripts/setup_tutorial.sh` or `setup_aliases.sh`).
-
-### Step 3: Create Dev/Stage/Prod Databases and `app` Schema
-
-Create three databases on the tutorial SQL Server instance and the `app` schema:
-
-```bash
-# From anywhere (after sourcing setup_tutorial.sh)
-
-# Create dev/stage/prod databases
-sqlcmd-tutorial create_databases.sql
-sqlcmd-tutorial verify_databases.sql
-
-# Create the app schema in all three
-sqlcmd-tutorial create_app_schema.sql
-sqlcmd-tutorial verify_app_schema.sql
-```
-
-At this point you should have:
-
-- SQL Server container: `mssql_liquibase_tutorial` (single container for simplicity)
-- Database: `orderdb` (same database name, used for all environments in this simplified setup)
-- Schema: `app` in the database
-
-### Step 4: Create the Liquibase Project and Baseline
-
-Now create the Liquibase project structure:
-
-```bash
-sudo rm -rf /data/liquibase-tutorial
-mkdir -p /data/liquibase-tutorial
-cd /data/liquibase-tutorial
-
-mkdir -p database/changelog/baseline
-mkdir -p database/changelog/changes
-mkdir -p env
-```
-
-**What each folder means:**
-
-```text
-/data/liquibase-tutorial/
-├── database/
-│   └── changelog/
-│       ├── changelog.xml           # Master file listing all changes in order
-│       ├── baseline/               # Initial database snapshot
-│       │   └── V0000__baseline.xml
-│       └── changes/                # Incremental changes after baseline
-│           ├── V0001__add_orders_table.sql
-│           ├── V0002__modify_customer_email.sql
-│           └── V0003__update_stored_procedure.sql
-└── env/
-    ├── liquibase.dev.properties    # Development database connection
-    ├── liquibase.stg.properties    # Staging database connection
-    └── liquibase.prd.properties    # Production database connection
-```
-
-Then:
-
-1. Populate **development** (`orderdb`) with the tutorial objects using the provided scripts:
-
-```bash
-# Create table, view, indexes, and sample data in DEVELOPMENT
-# Note: Script assumes 'app' schema already exists
-sqlcmd-tutorial populate_dev_database.sql
-
-# Verify objects were created in development
-sqlcmd-tutorial verify_dev_objects.sql
-sqlcmd-tutorial verify_dev_data.sql
-```
-
-1. Create `env/liquibase.dev.properties`, `env/liquibase.stg.properties`, and `env/liquibase.prd.properties`:
-
-```bash
-# Development properties
-cat > /data/liquibase-tutorial/env/liquibase.dev.properties << 'EOF'
-# Development Environment Connection
-url=jdbc:sqlserver://mssql_liquibase_tutorial:1433;databaseName=orderdb;encrypt=true;trustServerCertificate=true
-username=sa
-password=${MSSQL_LIQUIBASE_TUTORIAL_PWD}
-changelog-file=database/changelog/changelog.xml
-search-path=/data
-logLevel=info
-EOF
-
-# Staging properties
-cat > /data/liquibase-tutorial/env/liquibase.stg.properties << 'EOF'
-# Staging Environment Connection
-url=jdbc:sqlserver://mssql_liquibase_tutorial:1433;databaseName=orderdb;encrypt=true;trustServerCertificate=true
-username=sa
-password=${MSSQL_LIQUIBASE_TUTORIAL_PWD}
-changelog-file=database/changelog/changelog.xml
-search-path=/data
-logLevel=info
-EOF
-
-# Production properties
-cat > /data/liquibase-tutorial/env/liquibase.prd.properties << 'EOF'
-# Production Environment Connection
-url=jdbc:sqlserver://mssql_liquibase_tutorial:1433;databaseName=orderdb;encrypt=true;trustServerCertificate=true
-username=sa
-password=${MSSQL_LIQUIBASE_TUTORIAL_PWD}
-changelog-file=database/changelog/changelog.xml
-search-path=/data
-logLevel=info
-EOF
-
-# Verify files were created
-ls -la /data/liquibase-tutorial/env/
-```
-
-1. Generate the **baseline** changelog from dev using the `lb` helper:
-
-```bash
-# Change to project directory
-cd /data/liquibase-tutorial
-
-# Generate baseline from development database (using lb wrapper)
-# IMPORTANT: Use --schemas=app to capture only the app schema
-# IMPORTANT: Use --include-schema=true to include schemaName attributes in the XML
-lb -e dev -- \
-  --changelog-file=/data/database/changelog/baseline/V0000__baseline.xml \
-  --schemas=app \
-  --include-schema=true \
-  generateChangeLog
-
-# Check the generated file (owned by your user, not root)
-cat database/changelog/baseline/V0000__baseline.xml
-```
-
-1. Create `database/changelog/changelog.xml` that includes the baseline (and later includes incremental changes):
-
-```bash
-# Create master changelog that includes baseline
-cat > /data/liquibase-tutorial/database/changelog/changelog.xml << 'EOF'
-<?xml version="1.0" encoding="UTF-8"?>
-<databaseChangeLog
-    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
-                        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
-
-    <!-- Baseline: initial database state -->
-    <include file="baseline/V0000__baseline.xml" relativeToChangelogFile="true"/>
-
-    <!-- Future changes will be added here -->
-
-</databaseChangeLog>
-EOF
-```
-
-### Step 5: Deploy Baseline to All Environments
-
-Deploy the baseline to all environments:
-
-- **Development**: sync the baseline (no DDL executed; just mark as executed):
-
-```bash
-cd /data/liquibase-tutorial
-lb -e dev -- changelogSync
-lb -e dev -- tag baseline
-```
-
-- **Staging and Production**: actually deploy the baseline:
-
-```bash
-lb -e stg -- update
-lb -e stg -- tag baseline
-
-lb -e prd -- update
-lb -e prd -- tag baseline
-```
-
-You now have:
-
-- A **version-controlled project root** at `/data/liquibase-tutorial`.
-- Three aligned environments (dev/stage/prod) managed by Liquibase.
-- Helper commands (`lb`, `sqlcmd-tutorial`) for all local operations.
-
-Everything up to here establishes your local baseline (dev/stage/prod databases + a Liquibase project). The rest of this document adds GitHub Actions CI/CD on top of that state.
+Once Phase 1 is complete, proceed to Phase 2 to push your project to GitHub.
 
 ---
 
 ## Phase 2: From Local Project to GitHub Repository
 
-### Step 6: Create a GitHub Repository
+This phase moves your local Liquibase project into Git and GitHub. **Follow Part 3 of the series tutorial** which covers this in detail.
 
-On GitHub:
+### Quick Start: Use Part 3 Tutorial
 
-1. Click **“New repository”**.
-2. Name it something like `sqlserver-liquibase-demo` or `liquibase-github-actions-demo`.
-3. Choose **Private** (recommended for database projects).
-4. Do **not** initialize with README or `.gitignore` (we already have them locally).
+**Follow [Part 3: From Local Liquibase Project to GitHub Actions CI/CD](./series-part3-cicd.md), starting at "Phase 2: From Local Project to GitHub Repository":**
 
-Copy the repository URL (HTTPS or SSH).
+- **Step 6:** Create a GitHub Repository
+- **Step 7:** Initialize Git and Push Initial Project (if you're the first person)
+- **Step 8:** Create Your Personal Branch (if working in a multi-user setup)
 
-### Step 7: Add Liquibase Project Files to Git
+**Key steps:**
 
-You will now treat `/data/liquibase-tutorial` as a Git repository that you push to GitHub:
+1. Create a GitHub repository (private recommended)
+2. Initialize Git in `$LIQUIBASE_TUTORIAL_DATA_DIR`
+3. Create `.gitignore` to exclude properties files with passwords
+4. Commit and push your Liquibase project
 
-```bash
-cd /data/liquibase-tutorial
+> **Important:** Never commit `env/liquibase.*.properties` files that contain passwords. CI/CD will use GitHub Secrets instead.
 
-git init
-git remote add origin https://github.com/YOUR_USERNAME/YOUR_REPO.git  # or SSH URL
-git branch -M main
-```
-
-Create a minimal `.gitignore` if you do not already have one here:
-
-```bash
-cat > .gitignore << 'EOF'
-# Liquibase local configuration (contains passwords)
-liquibase.properties
-env/liquibase.*.properties
-
-# IDE files
-.vscode/
-.idea/
-*.swp
-
-# OS files
-.DS_Store
-Thumbs.db
-
-# Liquibase runtime files
-liquibase.log
-*.lock
-
-# Local databases or temp files
-*.db
-*.sqlite
-EOF
-```
-
-Then add the project files:
-
-```bash
-git add database env .gitignore README.md 2>/dev/null || true
-git add database env .gitignore
-
-git commit -m "Initial commit: Liquibase SQL Server tutorial project"
-```
-
-> Keep **passwords and environment-specific properties out of Git**. CI/CD will use GitHub Secrets instead.
-
-### Step 8: Push the Project to GitHub
-
-```bash
-git push -u origin main
-```
-
-Verify on GitHub that you see:
-
-- `database/changelog/...`
-- `env/` (without hard-coded passwords; use environment variables or secrets rather than committing passwords)
-- `.gitignore` and `README.md`.
+**For detailed instructions** including `.gitignore` template and multi-user branch setup, see [Part 3, Phase 2](./series-part3-cicd.md#phase-2-from-local-project-to-github-repository).
 
 ---
 
-## Phase 3: CI/CD with GitHub Actions (Self-Hosted Runner in Docker)
+## Phase 3: CI/CD with GitHub Actions (Self-Hosted Runner)
 
-This phase follows the same CI/CD patterns as Part 3 (CI/CD), but assumes you are running a **self-hosted GitHub Actions runner inside a Docker container** on the same Docker network as your tutorial SQL Server container.
+This phase sets up automated CI/CD pipelines using GitHub Actions. **Follow Part 3 of the series tutorial** which provides comprehensive CI/CD setup instructions.
 
-### Step 9: Where the Databases Live for CI/CD
+### Quick Start: Use Part 3 Tutorial
 
-For this combined tutorial we will:
+**Follow [Part 3: From Local Liquibase Project to GitHub Actions CI/CD](./series-part3-cicd.md), starting at "Phase 3: CI/CD with GitHub Actions":**
 
-- Use the **existing tutorial SQL Server container** `mssql_liquibase_tutorial` as the CI/CD target for dev/stage/prod.
-- Run the GitHub Actions **runner itself in a Docker container**, attached to the same Docker network (for example `liquibase_tutorial`).
-- Use JDBC URLs that point at `mssql_liquibase_tutorial:1433` (inside the Docker network), not at a public cloud endpoint.
+- **Step 9:** Where the Databases Live for CI/CD
+- **Step 10:** Set Up a Self-Hosted Runner in a Docker Container
+- **Step 11:** Configure GitHub Secrets
+- **Step 12:** First CI Workflow – Deploy to Development (Self-Hosted)
+- **Step 13:** Multi-Environment Pipeline (Dev → Stg → Prd)
 
-> In real production you would typically move the databases to managed services (Azure SQL, RDS SQL Server, etc.) and use GitHub-hosted runners. The self-hosted runner in Docker is ideal for learning and for private environments that GitHub-hosted runners cannot reach.
+**Key steps:**
 
-### Step 9a: Set Up a Self-Hosted Runner in a Docker Container
+1. **Set up self-hosted runner** (Step 10)
+   - Create Docker network for runner and SQL Server containers
+   - Run GitHub Actions runner container
+   - Verify runner appears as "Online" in GitHub
 
-1. **Create a personal access token (PAT)** (once per machine) with at least `repo` scope, following GitHub’s “self-hosted runner” instructions.
-2. **Create a registration token** for the runner from your repo’s **Settings → Actions → Runners → New self-hosted runner** page.
-3. **Create a Docker network if you do not already have one shared with the tutorial containers** (this tutorial uses `liquibase_tutorial`):
+2. **Configure GitHub Secrets** (Step 11)
+   - Add `DEV_DB_URL`, `DEV_DB_USERNAME`, `DEV_DB_PASSWORD`
+   - Add `STG_DB_URL`, `STG_DB_USERNAME`, `STG_DB_PASSWORD`
+   - Add `PRD_DB_URL`, `PRD_DB_USERNAME`, `PRD_DB_PASSWORD`
+   - Use JDBC URLs pointing to your SQL Server containers
 
-```bash
-docker network create liquibase_tutorial 2>/dev/null || true
-```
+3. **Create workflows** (Steps 12-13)
+   - Single-environment workflow for development
+   - Multi-environment pipeline (dev → staging → production)
+   - Configure GitHub Environments with approval gates
 
-1. Ensure your `mssql_liquibase_tutorial` container is attached to that network (it should be if you followed the first tutorial’s `docker compose` file).
+**For detailed instructions** including:
+- Self-hosted runner setup and troubleshooting
+- Workflow YAML examples
+- Environment protection rules
+- Branch-based workflows for multi-user setups
 
-2. **Run a self-hosted runner container** attached to the same network. One common pattern is to use the official Actions runner image and environment variables:
+See [Part 3, Phase 3](./series-part3-cicd.md#phase-3-cicd-with-github-actions-self-hosted-runner-in-docker).
 
-```bash
-docker run -d --restart unless-stopped \
-  --name liquibase-actions-runner \
-  --network liquibase_tutorial \
-  -e REPO_URL="https://github.com/YOUR_ORG/YOUR_REPO" \
-  -e RUNNER_NAME="liquibase-tutorial-runner" \
-  -e RUNNER_WORKDIR="/runner/_work" \
-  -e RUNNER_LABELS="self-hosted,liquibase-tutorial" \
-  -e RUNNER_TOKEN="YOUR_REGISTRATION_TOKEN" \
-  -v /var/run/docker.sock:/var/run/docker.sock \
-  ghcr.io/actions/actions-runner:latest
-```
-
-Key points:
-
-- The runner container joins the **same Docker network** as `mssql_liquibase_tutorial`.
-- The **label** `liquibase-tutorial` lets you target this runner from workflows.
-- Mounting `/var/run/docker.sock` is optional if you need the runner to start other containers; for basic Liquibase CLI use you can omit it.
-
-1. In the Actions UI, you should now see a **self-hosted runner** registered for your repo with labels like `self-hosted`, `linux`, and `liquibase-tutorial`.
-
-### Step 10: Configure GitHub Secrets
-
-In your new Liquibase repo on GitHub:
-
-1. Go to **Settings → Secrets and variables → Actions**.
-2. Add the following **repository secrets** (matching the three environments you created in Phase 1, but pointing at real CI/CD databases):
-
-For each environment (dev, stg, prd):
-
-- `DEV_DB_URL`, `DEV_DB_USERNAME`, `DEV_DB_PASSWORD`
-- `STG_DB_URL`, `STG_DB_USERNAME`, `STG_DB_PASSWORD`
-- `PRD_DB_URL`, `PRD_DB_USERNAME`, `PRD_DB_PASSWORD`
-
-These `*_DB_PASSWORD` secrets will be mapped into the **same environment variable** used by the local tutorial helpers, `MSSQL_LIQUIBASE_TUTORIAL_PWD`, so local commands and CI/CD follow the same pattern.
-
-Example JDBC URLs (adapt from the GitHub Actions tutorial):
-
-- Azure SQL:
-
-```text
-jdbc:sqlserver://dev-sql.database.windows.net:1433;
-  databaseName=myapp_dev;
-  encrypt=true;
-  trustServerCertificate=false;
-  loginTimeout=30;
-  connectRetryCount=3;
-```
-
-- Local tutorial SQL Server (for the self-hosted runner in Docker):
-
-```text
-jdbc:sqlserver://mssql_liquibase_tutorial:1433;
-  databaseName=orderdb;
-  encrypt=true;
-  trustServerCertificate=true;
-  loginTimeout=30;
-```
-
-> For actual production, avoid using `sa`; create a dedicated **Liquibase service account** with only the permissions it needs (described in [Phase 5](#security-and-accounts)).
-
-### Step 11: First CI Workflow – Deploy to Development (Self-Hosted)
-
-Create `.github/workflows/deploy-dev.yml` in your repo with a minimal workflow that targets the self-hosted runner container:
-
-```yaml
-name: Deploy to Development
-
-on:
-  push:
-    branches:
-      - main
-    paths:
-      - 'database/**'
-  workflow_dispatch:
-
-jobs:
-  deploy-dev:
-    name: Deploy to Development Database
-    runs-on: [self-hosted, liquibase-tutorial]
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '11'
-
-      - name: Set up Liquibase
-        uses: liquibase/setup-liquibase@v2
-        with:
-          version: '4.32.0'
-          edition: 'oss'
-
-      - name: Deploy database changes to DEV
-        env:
-          # Map GitHub secret into the same env var used by local helper scripts
-          MSSQL_LIQUIBASE_TUTORIAL_PWD: ${{ secrets.DEV_DB_PASSWORD }}
-        run: |
-          liquibase update \
-            --changelog-file=database/changelog/changelog.xml \
-            --url="${{ secrets.DEV_DB_URL }}" \
-            --username="${{ secrets.DEV_DB_USERNAME }}" \
-            --password="${MSSQL_LIQUIBASE_TUTORIAL_PWD}"
-
-      - name: Show deployment history
-        env:
-          MSSQL_LIQUIBASE_TUTORIAL_PWD: ${{ secrets.DEV_DB_PASSWORD }}
-        run: |
-          liquibase history \
-            --changelog-file=database/changelog/changelog.xml \
-            --url="${{ secrets.DEV_DB_URL }}" \
-            --username="${{ secrets.DEV_DB_USERNAME }}" \
-            --password="${MSSQL_LIQUIBASE_TUTORIAL_PWD}"
-```
-
-Commit and push:
-
-```bash
-git add .github/workflows/deploy-dev.yml
-git commit -m "Add initial GitHub Actions workflow for DEV deployment"
-git push
-```
-
-On GitHub:
-
-- Go to the **Actions** tab and watch the “Deploy to Development” workflow run on your next push.
-
-### Step 12: Multi-Environment Pipeline (Dev → Staging → Production)
-
-Now replace the single-env workflow with a multi-environment pipeline similar to the one in Part 3 (CI/CD), but still targeting the self-hosted runner container.
-
-Create `.github/workflows/deploy-pipeline.yml`:
-
-```yaml
-name: Database Deployment Pipeline
-
-on:
-  push:
-    branches:
-      - main
-    paths:
-      - 'database/**'
-  workflow_dispatch:
-
-jobs:
-  deploy-dev:
-    name: Deploy to Development
-    runs-on: [self-hosted, liquibase-tutorial]
-    environment: development
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '11'
-
-      - name: Set up Liquibase
-        uses: liquibase/setup-liquibase@v2
-        with:
-          version: '4.32.0'
-          edition: 'oss'
-
-      - name: Deploy to development
-        env:
-          MSSQL_LIQUIBASE_TUTORIAL_PWD: ${{ secrets.DEV_DB_PASSWORD }}
-        run: |
-          liquibase update \
-            --changelog-file=database/changelog/changelog.xml \
-            --url="${{ secrets.DEV_DB_URL }}" \
-            --username="${{ secrets.DEV_DB_USERNAME }}" \
-            --password="${MSSQL_LIQUIBASE_TUTORIAL_PWD}"
-
-      - name: Verify dev deployment
-        env:
-          MSSQL_LIQUIBASE_TUTORIAL_PWD: ${{ secrets.DEV_DB_PASSWORD }}
-        run: |
-          liquibase status --verbose \
-            --changelog-file=database/changelog/changelog.xml \
-            --url="${{ secrets.DEV_DB_URL }}" \
-            --username="${{ secrets.DEV_DB_USERNAME }}" \
-            --password="${MSSQL_LIQUIBASE_TUTORIAL_PWD}"
-
-  deploy-staging:
-    name: Deploy to Staging
-    runs-on: [self-hosted, liquibase-tutorial]
-    needs: deploy-dev
-    environment: staging
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '11'
-
-      - name: Set up Liquibase
-        uses: liquibase/setup-liquibase@v2
-        with:
-          version: '4.32.0'
-          edition: 'oss'
-
-      - name: Deploy to staging
-        env:
-          MSSQL_LIQUIBASE_TUTORIAL_PWD: ${{ secrets.STG_DB_PASSWORD }}
-        run: |
-          liquibase update \
-            --changelog-file=database/changelog/changelog.xml \
-            --url="${{ secrets.STG_DB_URL }}" \
-            --username="${{ secrets.STG_DB_USERNAME }}" \
-            --password="${MSSQL_LIQUIBASE_TUTORIAL_PWD}"
-
-  deploy-production:
-    name: Deploy to Production
-    runs-on: [self-hosted, liquibase-tutorial]
-    needs: deploy-staging
-    environment: production   # configure approvals & branches in GitHub Environments
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '11'
-
-      - name: Set up Liquibase
-        uses: liquibase/setup-liquibase@v2
-        with:
-          version: '4.32.0'
-          edition: 'oss'
-
-      - name: Deploy to production
-        env:
-          MSSQL_LIQUIBASE_TUTORIAL_PWD: ${{ secrets.PRD_DB_PASSWORD }}
-        run: |
-          liquibase update \
-            --changelog-file=database/changelog/changelog.xml \
-            --url="${{ secrets.PRD_DB_URL }}" \
-            --username="${{ secrets.PRD_DB_USERNAME }}" \
-            --password="${MSSQL_LIQUIBASE_TUTORIAL_PWD}"
-
-      - name: Tag production deployment
-        env:
-          MSSQL_LIQUIBASE_TUTORIAL_PWD: ${{ secrets.PRD_DB_PASSWORD }}
-        run: |
-          liquibase tag "release-${{ github.run_number }}" \
-            --changelog-file=database/changelog/changelog.xml \
-            --url="${{ secrets.PRD_DB_URL }}" \
-            --username="${{ secrets.PRD_DB_USERNAME }}" \
-            --password="${MSSQL_LIQUIBASE_TUTORIAL_PWD}"
-```
-
-Then:
-
-1. In GitHub, configure **Environments** (`development`, `staging`, `production`) under **Settings → Environments**.
-2. For `production`, require:
-   - At least one **required reviewer**.
-   - (Optionally) a **wait timer** (for example 5 minutes).
-3. Commit and push `deploy-pipeline.yml`.
-
-You now have a pipeline that:
-
-- Runs on pushes to `main` that touch `database/**`.
-- Deploys in order: dev → stage → prod.
-- Uses GitHub Environment protection rules for production approvals.
-- Executes entirely on your **self-hosted runner container**, which talks to the `mssql_liquibase_tutorial` SQL Server container over the shared `liquibase_tutorial` Docker network.
-
-> To adapt this pipeline later for a cloud SQL Server and GitHub-hosted runners, change `runs-on` back to `ubuntu-latest` and update the JDBC URLs and secrets to point at your cloud databases.
+> **Note:** Part 3 uses three separate SQL Server containers (`mssql_dev`, `mssql_stg`, `mssql_prd`) which matches the setup from Part 1. The runner connects to these containers via Docker networking.
 
 ---
 
 ## Phase 4: Integrating Local Helper Scripts with CI/CD Practices
 
-### Step 13: Using `lb` and `sqlcmd-tutorial` Alongside GitHub Actions
+This phase covers best practices for using local helper scripts alongside CI/CD. **Follow Part 3 of the series tutorial** for detailed guidance.
 
-Even after you add CI/CD, the helper scripts in this tutorial remain extremely valuable:
+### Quick Start: Use Part 3 Tutorial
 
-- **`lb` wrapper**
-  - Local “single command” runner for Liquibase against `orderdb`, `orderdb`, `orderdb`.
-  - Mirrors the same `changelog.xml` that CI/CD uses.
-  - Perfect for:
-    - Trying new changesets quickly.
-    - Running `status`, `updateSQL`, or `rollback` locally.
+**Follow [Part 3: From Local Liquibase Project to GitHub Actions CI/CD](./series-part3-cicd.md), starting at "Phase 4: Integrating Local Helper Scripts with CI/CD Practices":**
 
-- **`sqlcmd-tutorial`**
-  - Convenient way to inspect schema and data in the tutorial SQL Server container.
-  - Lets you verify what CI/CD is doing by reproducing operations locally.
+- **Step 14:** Using `lb` and `sqlcmd-tutorial` Alongside GitHub Actions
+- **Step 15:** Recommended Daily Workflow (Branch-Based)
 
-> Best practice: treat the **local helper scripts + tutorial container** as your **sandbox** and GitHub Actions + real SQL Server as your **pipeline**. Both should always use the **same changelog and changeset discipline**.
+**Key concepts:**
 
-### Step 14: Recommended Daily Workflow
+- **Local helper scripts** (`lb`, `sqlcmd-tutorial`) remain valuable for:
+  - Testing changesets locally before committing
+  - Running `status`, `updateSQL`, or `rollback` commands
+  - Inspecting schema and data in containers
+  - Debugging issues before they reach CI/CD
 
-1. **Create or modify a changeset locally**
-   - Edit `database/changelog/changes/V00xx__description.sql`.
-   - Update `changelog.xml` (using the XML wrapper + `<sqlFile>` + `<rollback>` pattern from the first tutorial).
+- **Daily workflow:**
+  1. Create/modify changeset locally
+  2. Test with helper scripts (`lb -e dev -- update`, etc.)
+  3. Commit and push to trigger CI/CD
+  4. Monitor pipeline execution
+  5. Handle rollbacks if needed (see Part 2)
 
-2. **Test locally with helper scripts**
-   - Use `lb -e dev -- status --verbose`, `lb -e dev -- update`, `lb -e dev -- rollback ...`.
-   - Use `sqlcmd-tutorial` to inspect results.
+> **Best practice:** Treat local helper scripts + containers as your **sandbox** and GitHub Actions as your **pipeline**. Both should use the same changelog and changeset discipline.
 
-3. **Commit and push**
-   - `git add database/changelog`
-   - `git commit -m "Describe your change"`
-   - `git push origin main` or open a PR.
-
-4. **CI/CD takes over**
-   - GitHub Actions pipeline validates and deploys through dev → stage → prod.
-   - Production deployments require approval via the `production` environment.
-
-5. **If something goes wrong**
-
-- Use the rollback guidance in [Part 2](./series-part2-manual.md) and [Part 3](./series-part3-cicd.md).
+**For detailed workflow examples** including branch-based workflows for multi-user setups, see [Part 3, Phase 4](./series-part3-cicd.md#phase-4-integrating-local-helper-scripts-with-cicd-practices).
 
 ---
 
 ## Phase 5: Best Practices and Improvements
 
-This section summarizes best practices and tightens a few areas so the end-to-end flow is safer and more consistent.
+This section summarizes best practices for production use. **See Part 3 of the series tutorial** for detailed best practices.
 
-### Security and Accounts
+### Quick Reference: Best Practices
 
-- **Avoid `sa` for anything beyond tutorials**
-  - For the tutorial container, using `sa` is acceptable.
-  - For CI/CD (especially production), create a **service account**:
-    - Minimal required permissions (DDL but not `sysadmin`).
-    - Rotation policy for its password.
-    - Stored only in GitHub Secrets / Vault, never in Git.
+**Follow [Part 3: From Local Liquibase Project to GitHub Actions CI/CD](./series-part3-cicd.md), "Phase 5: Best Practices and Improvements":**
 
-- **Secret hygiene**
-  - Keep `liquibase.properties` and environment-specific property files out of Git.
-  - Use GitHub Secrets (and environment secrets where appropriate).
-  - Never echo secrets to logs in Actions.
+- **Security and Accounts**
+  - Avoid `sa` account for production
+  - Create dedicated service accounts with minimal permissions
+  - Use GitHub Secrets for all credentials
+  - Never commit passwords to Git
 
-### Rollback and Safety
+- **Rollback and Safety**
+  - Prefer tag-based rollbacks
+  - Always define explicit rollback blocks
+  - Use two-phase migrations for destructive operations
 
-- Prefer **tag-based rollbacks** for releases and use **count/date** only when you understand the implications.
-- Always define explicit `<rollback>` blocks in `changelog.xml` when you use SQL files.
-- For destructive operations (drop table/column), use **two-phase migrations** and document in comments that data cannot be restored.
+- **Drift Detection and Environments**
+  - Use `diff` and `diffChangeLog` commands regularly
+  - Never skip dev → staging → production promotion path
+  - Gate production deployments with approvals
 
-### Drift Detection and Environments
-
-- Use the `diff` and `diffChangeLog` commands to:
-  - Detect manual changes in dev/stage/prod.
-  - Reverse-engineer drift into proper changesets when appropriate.
-  - Clean up or formalize hotfixes done under pressure.
-
-- Never skip the **dev → staging → production** promotion path:
-  - CI/CD should mirror your manual promotion process (dev → stage → prod).
-  - Production workflows should always be gated by approvals and/or scheduled windows.
+**For comprehensive best practices** including security guidelines, rollback strategies, and drift detection workflows, see [Part 3, Phase 5](./series-part3-cicd.md#phase-5-best-practices-and-improvements).
 
 ### Where to Go Deeper
 
-For more detail on any single area:
+- **Local setup, baseline, and manual workflows:** [Part 1](./series-part1-baseline.md) and [Part 2](./series-part2-manual.md)
+- **CI/CD automation and best practices:** [Part 3](./series-part3-cicd.md)
+- **Advanced scenarios:** See individual tutorial parts for detailed explanations
 
-- **Local architecture, rollback strategies, drift detection, and advanced change scenarios**
-  See [Part 1: Baseline](./series-part1-baseline.md) for the local baseline setup.
+---
 
-- **Cloud-facing GitHub Actions workflows, environment protection, and secrets**
-  See [Part 3: CI/CD Automation](./series-part3-cicd.md).
+## Summary
 
-This tutorial is designed to be your **end-to-end “happy path”**: start with the containerized helper-based environment, build a robust Liquibase project, and then wire it into a production-grade GitHub Actions pipeline.
+This end-to-end guide provides a **navigation path** through the modular tutorial series:
+
+1. **Phase 1:** Complete [Part 1](./series-part1-baseline.md) to set up local environment and baseline
+2. **Phase 2:** Follow [Part 3, Phase 2](./series-part3-cicd.md#phase-2-from-local-project-to-github-repository) to push project to GitHub
+3. **Phase 3:** Follow [Part 3, Phase 3](./series-part3-cicd.md#phase-3-cicd-with-github-actions-self-hosted-runner-in-docker) to set up CI/CD
+4. **Phase 4:** Follow [Part 3, Phase 4](./series-part3-cicd.md#phase-4-integrating-local-helper-scripts-with-cicd-practices) for daily workflow
+5. **Phase 5:** Review [Part 3, Phase 5](./series-part3-cicd.md#phase-5-best-practices-and-improvements) for best practices
+
+**All tutorials use the same reusable scripts** from `scripts/` directory, ensuring consistency across the entire course.

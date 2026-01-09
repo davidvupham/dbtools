@@ -1,6 +1,7 @@
 #!/bin/bash
-# Validation script for Step 2: Populate Development
+# Validate Development Database Population
 # Validates that development database has required objects and sample data
+# Reusable across all tutorial parts
 
 set -u
 
@@ -11,7 +12,7 @@ YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 echo "========================================"
-echo "Validating Step 2: Populate Development"
+echo "Validating Development Database Population"
 echo "========================================"
 echo
 
@@ -125,7 +126,7 @@ fi
 echo
 echo "========================================"
 if [[ "$FAILURES" -eq 0 ]]; then
-    echo -e "${GREEN}Step 2 VALIDATION SUCCESSFUL${NC}"
+    echo -e "${GREEN}VALIDATION SUCCESSFUL${NC}"
     echo "========================================"
     echo
     echo "Expected output summary:"
@@ -137,12 +138,12 @@ if [[ "$FAILURES" -eq 0 ]]; then
     echo
     exit 0
 else
-    echo -e "${RED}Step 2 VALIDATION FAILED ($FAILURES errors)${NC}"
+    echo -e "${RED}VALIDATION FAILED ($FAILURES errors)${NC}"
     echo "========================================"
     echo
     echo "To fix:"
     echo "  1. Ensure mssql_dev container is running"
-    echo "  2. Run step04_populate_dev.sh to create objects"
+    echo "  2. Run populate_dev_database.sh to create objects"
     echo "  3. Or manually run: sqlcmd-tutorial populate_dev_database.sql"
     echo
     exit 1

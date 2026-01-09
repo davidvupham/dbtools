@@ -29,6 +29,8 @@ docs/courses/liquibase/
 ├── quick_reference.md         <-- Common commands cheat sheet
 ├── glossary.md                <-- Terminology definitions
 ├── liquibase_course_design.md <-- Requirements and design
+├── BEST_PRACTICES_MODULARITY.md <-- Modularity and reusability best practices
+├── REFACTORING_SUMMARY.md <-- Refactoring documentation
 ├── learning-paths/            <-- All Tutorial Content
 │   ├── series-part1-baseline.md    (Manual: Setup & Baseline)
 │   ├── series-part2-manual.md      (Manual: Deployment Lifecycle)
@@ -36,7 +38,7 @@ docs/courses/liquibase/
 │   ├── series-part3-cicd.md        (Automation: GitHub Actions)
 │   └── guide-end-to-end-pipeline.md (Advanced: The "All-in-One" Path)
 ├── docker/                    <-- Docker Compose for tutorial
-├── scripts/                   <-- Step scripts, helpers, validation
+├── scripts/                   <-- Reusable modular scripts (see scripts/README.md)
 └── runner_config/             <-- Runner environment configs
 ```
 
@@ -44,6 +46,7 @@ docs/courses/liquibase/
 
 - **[Course Overview](./course_overview.md)** - Learning objectives, time estimates, prerequisites
 - **[Quick Reference](./quick_reference.md)** - Common commands and scripts cheat sheet
+- **[Scripts Documentation](./scripts/README.md)** - All available scripts and naming conventions
 - **[Glossary](./glossary.md)** - Terminology definitions
 
 ## 📚 Learning Paths
@@ -73,7 +76,7 @@ Choose the path that fits your experience level.
 *Best for: Experienced DevOps engineers who just want the code.*
 
 - **[End-to-End Pipeline Guide](./learning-paths/guide-end-to-end-pipeline.md)**
-  - The entire process (Local -> CI/CD) in one guide. Good for searching or "ctrl+f", less good for step-by-step learning.
+  - The entire process (Local -> CI/CD) in one guide. Acts as a navigation map referencing the series parts. Good for searching or "ctrl+f", less good for step-by-step learning.
 
 ---
 
@@ -93,9 +96,6 @@ Choose the path that fits your experience level.
 
 **A:** Highly recommended. Use Part 3 only if you are already comfortable with Liquibase command line, baselines, and drift detection. If you jump straight to CI/CD, debugging "why did my pipeline fail?" becomes much harder if you don't know the underlying Liquibase error.
 
-### Q: Can I use this with Azure SQL or AWS RDS?
-
-**A:** Yes. The tutorials use local Docker containers for zero-cost learning, but the JDBC URLs in the pipeline can be swapped to point to Azure SQL, RDS, or any other SQL Server instance.
 
 ### Q: Why do you suggest a self-hosted runner?
 
@@ -103,7 +103,7 @@ Choose the path that fits your experience level.
 
 ### Q: Where are the helper scripts?
 
-**A:** Check the `scripts/` folder. The tutorial relies on `setup_tutorial.sh` to configure easy aliases like `lb` (Liquibase wrapper) and `sqlcmd-tutorial`.
+**A:** Check the `scripts/` folder. All scripts use descriptive names (e.g., `setup_liquibase_environment.sh`, `start_mssql_containers.sh`) making them self-documenting and reusable. The tutorial relies on `setup_tutorial.sh` to configure easy aliases like `lb` (Liquibase wrapper) and `sqlcmd-tutorial`. See [Scripts Documentation](./scripts/README.md) for a complete list.
 
 ## 🆘 Troubleshooting & Help
 

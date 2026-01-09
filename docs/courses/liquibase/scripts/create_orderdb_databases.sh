@@ -1,16 +1,18 @@
 #!/usr/bin/env bash
-# Tutorial Setup Script - Step 03: Create Databases
-# Creates orderdb database on all SQL Server containers
+# Create OrderDB Databases
+# Creates orderdb database and app schema on all SQL Server containers
+# Reusable across all tutorial parts
 
 set -euo pipefail
 
 # Colors
 RED='\033[0;31m'
 GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
 NC='\033[0m'
 
 echo "========================================"
-echo "Liquibase Tutorial - Step 03: Create Databases"
+echo "Liquibase Tutorial - Create OrderDB Databases"
 echo "========================================"
 echo
 
@@ -61,8 +63,8 @@ done
 
 echo
 echo "========================================"
-echo -e "${GREEN}Step 03 Complete${NC}"
+echo -e "${GREEN}Databases Created${NC}"
 echo "========================================"
 echo "Database 'orderdb' created on all environments"
 echo
-echo "Next: Run step04_populate_dev.sh"
+echo "Next: Run populate_dev_database.sh"

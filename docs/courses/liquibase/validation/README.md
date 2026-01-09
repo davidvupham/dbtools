@@ -54,13 +54,13 @@ All validation scripts are located in `scripts/`:
   - Cleans up resources
   - Supports non-interactive mode
 
-### Step Validation Scripts
+### Validation Scripts
 
-- **`scripts/validate_step1_databases.sh`** - Validates database creation
-- **`scripts/validate_step2_populate.sh`** - Validates dev population
-- **`scripts/validate_step3_properties.sh`** - Validates properties files
-- **`scripts/validate_step4_baseline.sh`** - Validates baseline generation
-- **`scripts/validate_step5_deploy.sh`** - Validates baseline deployment
+- **`scripts/validate_orderdb_databases.sh`** - Validates database creation
+- **`scripts/validate_dev_populate.sh`** - Validates dev population
+- **`scripts/validate_liquibase_properties.sh`** - Validates properties files
+- **`scripts/validate_liquibase_baseline.sh`** - Validates baseline generation
+- **`scripts/validate_liquibase_deploy.sh`** - Validates baseline deployment
 
 ## Reports
 
@@ -131,14 +131,14 @@ bash "$LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_part3_cicd.sh"
 bash "$LIQUIBASE_TUTORIAL_DIR/validation/scripts/cleanup_validation.sh"
 ```
 
-### Running Step Validation
+### Running Validation Scripts
 
 ```bash
-bash "$LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_step1_databases.sh"
-bash "$LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_step2_populate.sh"
-bash "$LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_step3_properties.sh"
-bash "$LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_step4_baseline.sh"
-bash "$LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_step5_deploy.sh"
+bash "$LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_orderdb_databases.sh"
+bash "$LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_dev_populate.sh"
+bash "$LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_liquibase_properties.sh"
+bash "$LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_liquibase_baseline.sh"
+bash "$LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_liquibase_deploy.sh"
 ```
 
 ## Best Practices

@@ -1,6 +1,7 @@
 #!/bin/bash
-# Validation script for Step 3: Configure Liquibase Properties
+# Validate Liquibase Properties
 # Validates that properties files exist and have correct content
+# Reusable across all tutorial parts
 
 set -u
 
@@ -11,7 +12,7 @@ YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 echo "========================================"
-echo "Validating Step 3: Configure Liquibase Properties"
+echo "Validating Liquibase Properties"
 echo "========================================"
 echo
 
@@ -19,7 +20,7 @@ LIQUIBASE_TUTORIAL_DATA_DIR="${LIQUIBASE_TUTORIAL_DATA_DIR:-/data/${USER}/liquib
 
 if [[ ! -d "$LIQUIBASE_TUTORIAL_DATA_DIR" ]]; then
     echo -e "${RED}ERROR: LIQUIBASE_TUTORIAL_DATA_DIR not set or directory doesn't exist${NC}"
-    echo "Run step01_setup_environment.sh first"
+    echo "Run setup_liquibase_environment.sh first"
     exit 1
 fi
 
@@ -120,7 +121,7 @@ fi
 echo
 echo "========================================"
 if [[ "$FAILURES" -eq 0 ]]; then
-    echo -e "${GREEN}Step 3 VALIDATION SUCCESSFUL${NC}"
+    echo -e "${GREEN}VALIDATION SUCCESSFUL${NC}"
     echo "========================================"
     echo
     echo "Expected output summary:"
@@ -133,11 +134,11 @@ if [[ "$FAILURES" -eq 0 ]]; then
     echo
     exit 0
 else
-    echo -e "${RED}Step 3 VALIDATION FAILED ($FAILURES errors)${NC}"
+    echo -e "${RED}VALIDATION FAILED ($FAILURES errors)${NC}"
     echo "========================================"
     echo
     echo "To fix:"
-    echo "  1. Run step01_setup_environment.sh to create properties files"
+    echo "  1. Run setup_liquibase_environment.sh to create properties files"
     echo "  2. Or manually create properties files in $ENV_DIR"
     echo
     exit 1

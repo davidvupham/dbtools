@@ -52,7 +52,7 @@ export LIQUIBASE_TUTORIAL_DIR="/path/to/repo/docs/courses/liquibase"
 source "$LIQUIBASE_TUTORIAL_DIR/scripts/setup_tutorial.sh"
 
 # 3. Start containers
-$LIQUIBASE_TUTORIAL_DIR/scripts/step02_start_containers.sh
+$LIQUIBASE_TUTORIAL_DIR/scripts/start_mssql_containers.sh
 
 # 4. Validate environment
 $LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_tutorial.sh

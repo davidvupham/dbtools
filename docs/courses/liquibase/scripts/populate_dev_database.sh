@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# Tutorial Setup Script - Step 04: Populate Development
+# Populate Development Database
 # Creates sample objects in development database for baseline
+# Reusable across all tutorial parts
 
 set -euo pipefail
 
@@ -10,7 +11,7 @@ GREEN='\033[0;32m'
 NC='\033[0m'
 
 echo "========================================"
-echo "Liquibase Tutorial - Step 04: Populate Development"
+echo "Liquibase Tutorial - Populate Development Database"
 echo "========================================"
 echo
 
@@ -83,13 +84,13 @@ echo "$result"
 if echo "$result" | grep -q "app.customer"; then
     echo
     echo "========================================"
-    echo -e "${GREEN}Step 04 Complete${NC}"
+    echo -e "${GREEN}Development Database Populated${NC}"
     echo "========================================"
     echo "Development database populated with:"
     echo "  - app.customer table"
     echo "  - app.v_customer_basic view"
     echo
-    echo "Next: Run step05_generate_baseline.sh"
+    echo "Next: Run generate_liquibase_baseline.sh"
 else
     echo -e "${RED}✗ Failed to create objects${NC}"
     exit 1

@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# Tutorial Setup Script - Step 06: Deploy Baseline
+# Deploy Liquibase Baseline
 # Deploys baseline to all environments (dev: changelogSync, stg/prd: update)
+# Reusable across all tutorial parts
 
 set -euo pipefail
 
@@ -14,7 +15,7 @@ YELLOW='\033[1;33m'
 NC='\033[0m'
 
 echo "========================================"
-echo "Liquibase Tutorial - Step 06: Deploy Baseline"
+echo "Liquibase Tutorial - Deploy Baseline"
 echo "========================================"
 echo
 
@@ -53,14 +54,14 @@ cd "$LIQUIBASE_TUTORIAL_DATA_DIR"
 # Check master changelog exists
 if [[ ! -f "database/changelog/changelog.xml" ]]; then
     echo -e "${RED}ERROR: changelog.xml not found${NC}"
-    echo "Run Step 3 first to create properties and changelog"
+    echo "Run setup_liquibase_environment.sh first to create properties and changelog"
     exit 1
 fi
 
 # Check baseline file exists
 if [[ ! -f "database/changelog/baseline/V0000__baseline.mssql.sql" ]]; then
     echo -e "${RED}ERROR: Baseline file not found${NC}"
-    echo "Run Step 4 (step05_generate_baseline.sh) first"
+    echo "Run generate_liquibase_baseline.sh first"
     exit 1
 fi
 
@@ -108,7 +109,7 @@ fi
 
 echo
 echo "========================================"
-echo -e "${GREEN}Step 06 Complete${NC}"
+echo -e "${GREEN}Baseline Deployed${NC}"
 echo "========================================"
 echo "Baseline deployed to all environments:"
 echo "  - Development: Changes synced (changelogSync)"
@@ -118,4 +119,4 @@ echo
 echo "All environments tagged with 'baseline'"
 echo
 echo "Next: Continue with Part 2 (Manual Lifecycle)"
-echo "  Or run: validate_step5_deploy.sh to verify deployment"
+echo "  Or run: validate_liquibase_deploy.sh to verify deployment"

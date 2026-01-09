@@ -21,15 +21,16 @@ lb -e stg -- <command>    # Staging (port 14332)
 lb -e prd -- <command>    # Production (port 14333)
 ```
 
-## Step Scripts
+## Setup Scripts
 
 | Script | Purpose |
 |--------|---------|
-| `step01_setup_environment.sh` | Create directories, set env vars |
-| `step02_start_containers.sh` | Start all SQL Server containers |
-| `step03_create_databases.sh` | Create orderdb on all containers |
-| `step04_populate_dev.sh` | Add sample objects to dev |
-| `step05_generate_baseline.sh` | Generate baseline changelog |
+| `setup_liquibase_environment.sh` | Create directories, set env vars |
+| `start_mssql_containers.sh` | Start all SQL Server containers |
+| `create_orderdb_databases.sh` | Create orderdb on all containers |
+| `populate_dev_database.sh` | Add sample objects to dev |
+| `generate_liquibase_baseline.sh` | Generate baseline changelog |
+| `deploy_liquibase_baseline.sh` | Deploy baseline to all environments |
 | `validate_tutorial.sh` | Validate entire setup |
 | `cleanup_tutorial.sh` | Remove all tutorial resources |
 

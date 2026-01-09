@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# Tutorial Setup Script - Step 05: Generate Baseline
+# Generate Liquibase Baseline
 # Generates baseline changelog from development database using Liquibase
+# Reusable across all tutorial parts
 
 set -euo pipefail
 
@@ -15,7 +16,7 @@ YELLOW='\033[1;33m'
 NC='\033[0m'
 
 echo "========================================"
-echo "Liquibase Tutorial - Step 05: Generate Baseline"
+echo "Liquibase Tutorial - Generate Baseline"
 echo "========================================"
 echo
 
@@ -67,7 +68,7 @@ $CR_CMD run --rm \
 if [[ -f "$LIQUIBASE_TUTORIAL_DATA_DIR/database/changelog/baseline/V0000__baseline.mssql.sql" ]]; then
     echo
     echo "========================================"
-    echo -e "${GREEN}Step 05 Complete${NC}"
+    echo -e "${GREEN}Baseline Generated${NC}"
     echo "========================================"
     echo "Baseline generated at:"
     echo "  $LIQUIBASE_TUTORIAL_DATA_DIR/database/changelog/baseline/V0000__baseline.mssql.sql"
@@ -75,7 +76,7 @@ if [[ -f "$LIQUIBASE_TUTORIAL_DATA_DIR/database/changelog/baseline/V0000__baseli
     echo "Preview (first 20 lines):"
     head -20 "$LIQUIBASE_TUTORIAL_DATA_DIR/database/changelog/baseline/V0000__baseline.mssql.sql"
     echo
-    echo "Next: Run step06_deploy_baseline.sh"
+    echo "Next: Run deploy_liquibase_baseline.sh"
 else
     echo -e "${RED}✗ Failed to generate baseline${NC}"
     exit 1

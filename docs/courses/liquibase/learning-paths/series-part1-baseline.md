@@ -173,7 +173,7 @@ This tutorial uses three dedicated SQL Server containers (one per environment) t
 
 ```bash
 # Run the automated step script
-$LIQUIBASE_TUTORIAL_DIR/scripts/step02_start_containers.sh
+$LIQUIBASE_TUTORIAL_DIR/scripts/start_mssql_containers.sh
 ```
 
 The script will:
@@ -423,7 +423,7 @@ Create the `orderdb` database on each SQL Server container to represent dev, sta
 
 ```bash
 # Run the automated step script
-$LIQUIBASE_TUTORIAL_DIR/scripts/step03_create_databases.sh
+$LIQUIBASE_TUTORIAL_DIR/scripts/create_orderdb_databases.sh
 ```
 
 The script will:
@@ -435,7 +435,7 @@ The script will:
 
 ```bash
 # Run the validation script to verify databases were created
-$LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_step1_databases.sh
+$LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_orderdb_databases.sh
 ```
 
 **Alternative: Manual commands**
@@ -465,7 +465,7 @@ orderdb     5            2025-11-14 20:00:00.000
 
 **Next: Create the app schema** (required before using Liquibase):
 
-The `step03_create_databases.sh` script also creates the app schema on each container. If you used the manual commands above, create the schema manually:
+The `create_orderdb_databases.sh` script also creates the app schema on each container. If you used the manual commands above, create the schema manually:
 
 ```bash
 # Create app schema on each container
@@ -506,7 +506,7 @@ Now create some database objects in **development only**. This simulates an exis
 
 ```bash
 # Run the automated step script
-$LIQUIBASE_TUTORIAL_DIR/scripts/step04_populate_dev.sh
+$LIQUIBASE_TUTORIAL_DIR/scripts/populate_dev_database.sh
 ```
 
 The script will:
@@ -519,7 +519,7 @@ The script will:
 
 ```bash
 # Run the validation script to verify objects were created
-$LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_step2_populate.sh
+$LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_dev_populate.sh
 ```
 
 **Alternative: Manual commands**
@@ -560,7 +560,7 @@ If you ran `setup_tutorial.sh` in Step 0, the properties files were already crea
 
 ```bash
 # Run the step script (creates directories, properties, and master changelog)
-$LIQUIBASE_TUTORIAL_DIR/scripts/step01_setup_environment.sh
+$LIQUIBASE_TUTORIAL_DIR/scripts/setup_liquibase_environment.sh
 ```
 
 This script creates:
@@ -572,7 +572,7 @@ This script creates:
 
 ```bash
 # Run the validation script to verify properties files
-$LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_step3_properties.sh
+$LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_liquibase_properties.sh
 ```
 
 **Alternative: Manual creation**
@@ -662,7 +662,7 @@ Now use Liquibase to capture the current state of development as a **baseline**:
 
 ```bash
 # Run the automated step script
-$LIQUIBASE_TUTORIAL_DIR/scripts/step05_generate_baseline.sh
+$LIQUIBASE_TUTORIAL_DIR/scripts/generate_liquibase_baseline.sh
 ```
 
 The script will:
@@ -677,7 +677,7 @@ The script will:
 
 ```bash
 # Run the validation script to verify baseline format and content
-$LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_step4_baseline.sh
+$LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_liquibase_baseline.sh
 ```
 
 **Alternative: Manual commands**
@@ -752,13 +752,13 @@ lb -e dev -- \
 
 ## Step 5: Deploy Baseline Across Environments
 
-Now deploy the baseline to each environment. The master changelog (`changelog.xml`) should already exist if you ran `setup_tutorial.sh` or `step01_setup_environment.sh`. If not, create it first (see alternative manual commands below).
+Now deploy the baseline to each environment. The master changelog (`changelog.xml`) should already exist if you ran `setup_tutorial.sh` or `setup_liquibase_environment.sh`. If not, create it first (see alternative manual commands below).
 
 **Recommended: Use the step script**
 
 ```bash
 # Run the automated step script
-$LIQUIBASE_TUTORIAL_DIR/scripts/step06_deploy_baseline.sh
+$LIQUIBASE_TUTORIAL_DIR/scripts/deploy_liquibase_baseline.sh
 ```
 
 The script will:
@@ -772,7 +772,7 @@ The script will:
 
 ```bash
 # Run the validation script to verify deployment across all environments
-$LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_step5_deploy.sh
+$LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_liquibase_deploy.sh
 ```
 
 **What the script does:**
@@ -878,7 +878,7 @@ ORDER BY DATEEXECUTED;
 Run the validation script to confirm everything deployed correctly:
 
 ```bash
-$LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_step5_deploy.sh
+$LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_liquibase_deploy.sh
 ```
 
 This will check:
@@ -895,12 +895,12 @@ For convenience, here's a summary of all step scripts used in Part 1:
 
 | Step | Script | Purpose | Validation |
 |------|--------|---------|------------|
-| 0/3 | `step01_setup_environment.sh` | Create directories, properties, changelog | `validate_step3_properties.sh` |
-| - | `step02_start_containers.sh` | Start SQL Server containers | Manual check |
-| 1 | `step03_create_databases.sh` | Create orderdb on all containers | `validate_step1_databases.sh` |
-| 2 | `step04_populate_dev.sh` | Populate dev with sample objects | `validate_step2_populate.sh` |
-| 4 | `step05_generate_baseline.sh` | Generate baseline from dev | `validate_step4_baseline.sh` |
-| 5 | `step06_deploy_baseline.sh` | Deploy baseline to all environments | `validate_step5_deploy.sh` |
+| 0/3 | `setup_liquibase_environment.sh` | Create directories, properties, changelog | `validate_liquibase_properties.sh` |
+| - | `start_mssql_containers.sh` | Start SQL Server containers | Manual check |
+| 1 | `create_orderdb_databases.sh` | Create orderdb on all containers | `validate_orderdb_databases.sh` |
+| 2 | `populate_dev_database.sh` | Populate dev with sample objects | `validate_dev_populate.sh` |
+| 4 | `generate_liquibase_baseline.sh` | Generate baseline from dev | `validate_liquibase_baseline.sh` |
+| 5 | `deploy_liquibase_baseline.sh` | Deploy baseline to all environments | `validate_liquibase_deploy.sh` |
 
 All scripts show success/fail indicators and provide clear next steps.
 

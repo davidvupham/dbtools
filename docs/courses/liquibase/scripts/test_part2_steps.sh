@@ -192,11 +192,11 @@ setup_prerequisites() {
 
     # Step 0: Setup environment (creates directories, properties, changelog)
     log_info "Running Step 0: Setup Environment..."
-    if [ -f "$LIQUIBASE_TUTORIAL_DIR/scripts/step01_setup_environment.sh" ]; then
-        bash "$LIQUIBASE_TUTORIAL_DIR/scripts/step01_setup_environment.sh" >> "$TEST_LOG" 2>&1
+    if [ -f "$LIQUIBASE_TUTORIAL_DIR/scripts/setup_liquibase_environment.sh" ]; then
+        bash "$LIQUIBASE_TUTORIAL_DIR/scripts/setup_liquibase_environment.sh" >> "$TEST_LOG" 2>&1
         log_pass "Step 0: Environment setup complete"
     else
-        log_fail "step01_setup_environment.sh not found"
+        log_fail "setup_liquibase_environment.sh not found"
         return 1
     fi
 
@@ -211,12 +211,12 @@ setup_prerequisites() {
     done
 
     if [ "$containers_running" = false ]; then
-        if [ -f "$LIQUIBASE_TUTORIAL_DIR/scripts/step02_start_containers.sh" ]; then
-            bash "$LIQUIBASE_TUTORIAL_DIR/scripts/step02_start_containers.sh" >> "$TEST_LOG" 2>&1
+        if [ -f "$LIQUIBASE_TUTORIAL_DIR/scripts/start_mssql_containers.sh" ]; then
+            bash "$LIQUIBASE_TUTORIAL_DIR/scripts/start_mssql_containers.sh" >> "$TEST_LOG" 2>&1
             sleep 15  # Wait for containers to be healthy
             log_pass "Step 1: Containers started"
         else
-            log_fail "step02_start_containers.sh not found"
+            log_fail "start_mssql_containers.sh not found"
             return 1
         fi
     else
@@ -225,21 +225,21 @@ setup_prerequisites() {
 
     # Step 2: Create databases
     log_info "Running Step 2: Create Databases..."
-    if [ -f "$LIQUIBASE_TUTORIAL_DIR/scripts/step03_create_databases.sh" ]; then
-        bash "$LIQUIBASE_TUTORIAL_DIR/scripts/step03_create_databases.sh" >> "$TEST_LOG" 2>&1
+    if [ -f "$LIQUIBASE_TUTORIAL_DIR/scripts/create_orderdb_databases.sh" ]; then
+        bash "$LIQUIBASE_TUTORIAL_DIR/scripts/create_orderdb_databases.sh" >> "$TEST_LOG" 2>&1
         log_pass "Step 2: Databases created"
     else
-        log_fail "step03_create_databases.sh not found"
+        log_fail "create_orderdb_databases.sh not found"
         return 1
     fi
 
     # Step 3: Populate dev
     log_info "Running Step 3: Populate Development..."
-    if [ -f "$LIQUIBASE_TUTORIAL_DIR/scripts/step04_populate_dev.sh" ]; then
-        bash "$LIQUIBASE_TUTORIAL_DIR/scripts/step04_populate_dev.sh" >> "$TEST_LOG" 2>&1
+    if [ -f "$LIQUIBASE_TUTORIAL_DIR/scripts/populate_dev_database.sh" ]; then
+        bash "$LIQUIBASE_TUTORIAL_DIR/scripts/populate_dev_database.sh" >> "$TEST_LOG" 2>&1
         log_pass "Step 3: Development populated"
     else
-        log_fail "step04_populate_dev.sh not found"
+        log_fail "populate_dev_database.sh not found"
         return 1
     fi
 
@@ -262,27 +262,27 @@ setup_prerequisites() {
             IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('app.customer') AND name = 'loyalty_points') ALTER TABLE app.customer DROP COLUMN loyalty_points;" >> "$TEST_LOG" 2>&1 || true
 
         # Repopulate dev
-        if [ -f "$LIQUIBASE_TUTORIAL_DIR/scripts/step04_populate_dev.sh" ]; then
-            bash "$LIQUIBASE_TUTORIAL_DIR/scripts/step04_populate_dev.sh" >> "$TEST_LOG" 2>&1
+        if [ -f "$LIQUIBASE_TUTORIAL_DIR/scripts/populate_dev_database.sh" ]; then
+            bash "$LIQUIBASE_TUTORIAL_DIR/scripts/populate_dev_database.sh" >> "$TEST_LOG" 2>&1
         fi
 
         # Generate baseline
-        if [ -f "$LIQUIBASE_TUTORIAL_DIR/scripts/step05_generate_baseline.sh" ]; then
-            bash "$LIQUIBASE_TUTORIAL_DIR/scripts/step05_generate_baseline.sh" >> "$TEST_LOG" 2>&1
+        if [ -f "$LIQUIBASE_TUTORIAL_DIR/scripts/generate_liquibase_baseline.sh" ]; then
+            bash "$LIQUIBASE_TUTORIAL_DIR/scripts/generate_liquibase_baseline.sh" >> "$TEST_LOG" 2>&1
             log_pass "Step 4: Baseline generated"
         else
-            log_fail "step05_generate_baseline.sh not found"
+            log_fail "generate_liquibase_baseline.sh not found"
             return 1
         fi
     fi
 
     # Step 5: Deploy baseline
     log_info "Running Step 5: Deploy Baseline..."
-    if [ -f "$LIQUIBASE_TUTORIAL_DIR/scripts/step06_deploy_baseline.sh" ]; then
-        bash "$LIQUIBASE_TUTORIAL_DIR/scripts/step06_deploy_baseline.sh" >> "$TEST_LOG" 2>&1
+    if [ -f "$LIQUIBASE_TUTORIAL_DIR/scripts/deploy_liquibase_baseline.sh" ]; then
+        bash "$LIQUIBASE_TUTORIAL_DIR/scripts/deploy_liquibase_baseline.sh" >> "$TEST_LOG" 2>&1
         log_pass "Step 5: Baseline deployment script completed"
     else
-        log_fail "step06_deploy_baseline.sh not found"
+        log_fail "deploy_liquibase_baseline.sh not found"
         return 1
     fi
 
