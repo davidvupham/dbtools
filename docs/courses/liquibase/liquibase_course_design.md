@@ -25,10 +25,10 @@ This document defines requirements and design for the Liquibase course refactori
 | # | Requirement | Details |
 |---|-------------|---------|
 | 8 | **Database name** | `orderdb` (reflects orders/customers domain) |
-| 9 | **Formatted SQL** | Liquibase Formatted SQL with `.sql` extension |
-| 10 | **Network** | `slirp4netns` for rootless Podman/WSL compatibility; bridge for Docker |
+| 9 | **Formatted SQL** | Liquibase Formatted SQL with `.mssql.sql` extension (Liquibase requires `*.databaseType.sql`) |
+| 10 | **Network** | Docker: bridge/host network; Podman: slirp4netns for rootless compatibility |
 | 11 | **Naming convention** | Use underscores (`_`) everywhere |
-| 14 | **Volume mounts** | Use `:Z,U` for SELinux/rootless Podman |
+| 14 | **Volume mounts** | Use `:Z,U` for SELinux/rootless Podman; omit for Docker |
 
 ### Scripting & Validation
 
@@ -99,10 +99,11 @@ This document defines requirements and design for the Liquibase course refactori
 ## Issues Fixed
 
 - [x] Path references: `docs/tutorials/` → `docs/courses/`
-- [x] File references: Updated to `.sql` extension throughout
-- [x] Network mode: Documented `slirp4netns` for Podman compatibility
+- [x] File references: Updated to `.mssql.sql` extension (Liquibase requirement for Formatted SQL)
+- [x] Network mode: Docker uses host/bridge; Podman uses slirp4netns
 - [x] Multi-platform: Clarified as MSSQL current, others future
 - [x] Verification checklist: Expanded with additional items
+- [x] Scripts: Auto-detect container runtime (Docker vs Podman)
 - [ ] YAML syntax: `runs-on` with labels (Part 3 CI/CD)
 - [ ] Broken link: best-practices file reference (Part 3 CI/CD)
 
@@ -112,7 +113,9 @@ This document defines requirements and design for the Liquibase course refactori
 
 ### Platform Testing
 
+- [x] Test with Docker
 - [ ] Test on Ubuntu
+- [ ] Test with rootless Podman
 - [ ] Test on RHEL
 - [ ] Test with Docker
 - [ ] Test with rootless Podman
