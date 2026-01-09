@@ -1,6 +1,9 @@
 # Liquibase Tutorial Docker Compose
 # Creates 3 SQL Server containers (dev, stg, prd) for multi-environment tutorial
-# Uses slirp4netns network mode for WSL/rootless Podman compatibility
+#
+# Network Modes:
+#   - Docker: Uses default bridge network (containers accessible via localhost:port)
+#   - Podman: Use podman-compose with this file, or docker-compose.podman.yml for rootless
 #
 # IMPORTANT: Set LIQUIBASE_TUTORIAL_DATA_DIR before running:
 #   export LIQUIBASE_TUTORIAL_DATA_DIR="/data/$USER/liquibase_tutorial"
@@ -19,20 +22,19 @@ services:
     container_name: mssql_dev
     hostname: mssql_dev
     ports:
-      - "14331:1433"
+      - "${MSSQL_DEV_PORT:-14331}:1433"
     environment:
       - ACCEPT_EULA=Y
       - MSSQL_SA_PASSWORD=${MSSQL_LIQUIBASE_TUTORIAL_PWD:?MSSQL_LIQUIBASE_TUTORIAL_PWD is required}
       - MSSQL_PID=Developer
     volumes:
-      - ${LIQUIBASE_TUTORIAL_DATA_DIR:-/data/liquibase_tutorial}/mssql_dev:/var/opt/mssql:z,U
+      - ${LIQUIBASE_TUTORIAL_DATA_DIR:-/data/liquibase_tutorial}/mssql_dev:/var/opt/mssql
     healthcheck:
       test: /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P "$${MSSQL_SA_PASSWORD}" -Q "SELECT 1" -b -o /dev/null || exit 1
       interval: 10s
       timeout: 3s
       retries: 10
       start_period: 15s
-    network_mode: slirp4netns:port_handler=slirp4netns
 
   mssql_stg:
     build:
@@ -42,20 +44,19 @@ services:
     container_name: mssql_stg
     hostname: mssql_stg
     ports:
-      - "14332:1433"
+      - "${MSSQL_STG_PORT:-14332}:1433"
     environment:
       - ACCEPT_EULA=Y
       - MSSQL_SA_PASSWORD=${MSSQL_LIQUIBASE_TUTORIAL_PWD:?MSSQL_LIQUIBASE_TUTORIAL_PWD is required}
       - MSSQL_PID=Developer
     volumes:
-      - ${LIQUIBASE_TUTORIAL_DATA_DIR:-/data/liquibase_tutorial}/mssql_stg:/var/opt/mssql:z,U
+      - ${LIQUIBASE_TUTORIAL_DATA_DIR:-/data/liquibase_tutorial}/mssql_stg:/var/opt/mssql
     healthcheck:
       test: /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P "$${MSSQL_SA_PASSWORD}" -Q "SELECT 1" -b -o /dev/null || exit 1
       interval: 10s
       timeout: 3s
       retries: 10
       start_period: 15s
-    network_mode: slirp4netns:port_handler=slirp4netns
 
   mssql_prd:
     build:
@@ -65,20 +66,19 @@ services:
     container_name: mssql_prd
     hostname: mssql_prd
     ports:
-      - "14333:1433"
+      - "${MSSQL_PRD_PORT:-14333}:1433"
     environment:
       - ACCEPT_EULA=Y
       - MSSQL_SA_PASSWORD=${MSSQL_LIQUIBASE_TUTORIAL_PWD:?MSSQL_LIQUIBASE_TUTORIAL_PWD is required}
       - MSSQL_PID=Developer
     volumes:
-      - ${LIQUIBASE_TUTORIAL_DATA_DIR:-/data/liquibase_tutorial}/mssql_prd:/var/opt/mssql:z,U
+      - ${LIQUIBASE_TUTORIAL_DATA_DIR:-/data/liquibase_tutorial}/mssql_prd:/var/opt/mssql
     healthcheck:
       test: /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P "$${MSSQL_SA_PASSWORD}" -Q "SELECT 1" -b -o /dev/null || exit 1
       interval: 10s
       timeout: 3s
       retries: 10
       start_period: 15s
-    network_mode: slirp4netns:port_handler=slirp4netns
 
   # ============================================================================
   # Liquibase Service (run-once tool)
@@ -92,10 +92,9 @@ services:
     container_name: liquibase_tutorial
     working_dir: /data
     volumes:
-      - ${LIQUIBASE_TUTORIAL_DATA_DIR:-/data/liquibase_tutorial}:/data:z,U
+      - ${LIQUIBASE_TUTORIAL_DATA_DIR:-/data/liquibase_tutorial}:/data
     environment:
       - LIQUIBASE_LOG_LEVEL=INFO
-    network_mode: slirp4netns
     profiles:
       - tools
     restart: "no"

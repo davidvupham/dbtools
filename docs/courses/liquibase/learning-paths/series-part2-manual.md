@@ -5,7 +5,7 @@ This Part 2 assumes you have completed **Part 1: Baseline SQL Server + Liquibase
 - Three SQL Server containers running: `mssql_dev`, `mssql_stg`, `mssql_prd`
 - Database `orderdb` created in each environment
 - A Liquibase project at `$LIQUIBASE_TUTORIAL_DATA_DIR` with:
-  - `database/changelog/baseline/V0000__baseline.sql`
+  - `database/changelog/baseline/V0000__baseline.mssql.sql`
   - `database/changelog/changelog.xml` including the baseline
     - `env/liquibase.dev.properties`, `env/liquibase.stg.properties`, `env/liquibase.prd.properties`
 - Baseline deployed and tagged as `baseline` in all three environments
@@ -69,7 +69,7 @@ cat > $LIQUIBASE_TUTORIAL_DATA_DIR/database/changelog/changelog.xml << 'EOF'
                         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
 
     <!-- Baseline: initial database state -->
-    <include file="baseline/V0000__baseline.sql" relativeToChangelogFile="true"/>
+    <include file="baseline/V0000__baseline.mssql.sql" relativeToChangelogFile="true"/>
 
     <!-- V0001: Add orders table -->
     <include file="changes/V0001__add_orders_table.sql" relativeToChangelogFile="true"/>
@@ -423,7 +423,7 @@ cat > $LIQUIBASE_TUTORIAL_DATA_DIR/database/changelog/changelog.xml << 'EOF'
                         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
 
     <!-- Baseline -->
-    <include file="baseline/V0000__baseline.sql" relativeToChangelogFile="true"/>
+    <include file="baseline/V0000__baseline.mssql.sql" relativeToChangelogFile="true"/>
 
     <!-- V0001: Add orders table -->
     <include file="changes/V0001__add_orders_table.sql" relativeToChangelogFile="true"/>

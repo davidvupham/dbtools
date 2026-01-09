@@ -63,7 +63,7 @@
 database/changelog/
 ├── changelog.xml          # Master changelog (includes all files)
 ├── baseline/
-│   └── V0000__baseline.sql          # Initial state
+│   └── V0000__baseline.mssql.sql          # Initial state
 └── changes/
     ├── V0001__add_orders.sql        # First change
     └── V0002__add_index.sql         # Second change

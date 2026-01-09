@@ -29,39 +29,49 @@ fi
 export MSSQL_LIQUIBASE_TUTORIAL_PWD
 
 # Detect container runtime
-if command -v podman &>/dev/null; then
-    CR_CMD="podman"
-else
+if command -v docker &>/dev/null && docker compose version &>/dev/null; then
     CR_CMD="docker"
+    NETWORK_ARGS="--network=host"
+    DB_HOST="localhost"
+elif command -v podman &>/dev/null; then
+    CR_CMD="podman"
+    NETWORK_ARGS="--network slirp4netns:port_handler=slirp4netns"
+    DB_HOST="host.containers.internal"
+else
+    echo -e "${RED}ERROR: No container runtime found${NC}"
+    exit 1
 fi
+
+# Determine port (use MSSQL_DEV_PORT if set, otherwise default)
+DEV_PORT="${MSSQL_DEV_PORT:-14331}"
 
 echo "Generating baseline from mssql_dev..."
 echo
 
 # Run Liquibase generateChangeLog
 $CR_CMD run --rm \
-    --network slirp4netns:port_handler=slirp4netns \
-    -v "${LIQUIBASE_TUTORIAL_DATA_DIR}:/data:z,U" \
+    $NETWORK_ARGS \
+    -v "${LIQUIBASE_TUTORIAL_DATA_DIR}:/data" \
     liquibase:latest \
-    --url="jdbc:sqlserver://host.containers.internal:14331;databaseName=orderdb;encrypt=true;trustServerCertificate=true" \
+    --url="jdbc:sqlserver://${DB_HOST}:${DEV_PORT};databaseName=orderdb;encrypt=true;trustServerCertificate=true" \
     --username=sa \
     --password="${MSSQL_LIQUIBASE_TUTORIAL_PWD}" \
-    --changelog-file=/data/database/changelog/baseline/V0000__baseline.sql \
+    --changelog-file=/data/database/changelog/baseline/V0000__baseline.mssql.sql \
     --schemas=app \
     --overwrite-output-file=true \
     generateChangeLog 2>&1
 
 # Verify baseline was created
-if [[ -f "$LIQUIBASE_TUTORIAL_DATA_DIR/database/changelog/baseline/V0000__baseline.sql" ]]; then
+if [[ -f "$LIQUIBASE_TUTORIAL_DATA_DIR/database/changelog/baseline/V0000__baseline.mssql.sql" ]]; then
     echo
     echo "========================================"
     echo -e "${GREEN}Step 05 Complete${NC}"
     echo "========================================"
     echo "Baseline generated at:"
-    echo "  $LIQUIBASE_TUTORIAL_DATA_DIR/database/changelog/baseline/V0000__baseline.sql"
+    echo "  $LIQUIBASE_TUTORIAL_DATA_DIR/database/changelog/baseline/V0000__baseline.mssql.sql"
     echo
     echo "Preview (first 20 lines):"
-    head -20 "$LIQUIBASE_TUTORIAL_DATA_DIR/database/changelog/baseline/V0000__baseline.sql"
+    head -20 "$LIQUIBASE_TUTORIAL_DATA_DIR/database/changelog/baseline/V0000__baseline.mssql.sql"
     echo
     echo "Next: Run step06_deploy_baseline.sh"
 else

@@ -346,7 +346,7 @@ $LIQUIBASE_TUTORIAL_DATA_DIR/              # e.g., /data/$USER$/liquibase_tutori
 │   └── changelog/
 │       ├── changelog.xml           # Master file listing all changes in order
 │       ├── baseline/               # Initial database snapshot
-│       │   └── V0000__baseline.sql
+│       │   └── V0000__baseline.mssql.sql
 │       └── changes/                # Incremental changes after baseline
 │           ├── V0001__add_orders_table.sql
 │           ├── V0002__modify_customer_email.sql
@@ -579,13 +579,13 @@ cd "$LIQUIBASE_TUTORIAL_DATA_DIR"
 # IMPORTANT: Use --include-schema=true to include schemaName attributes in the SQL
 # IMPORTANT: Use .sql extension to generate Formatted SQL
 LB_NETWORK=host lb -e dev -- \
-  --changelog-file=/data/database/changelog/baseline/V0000__baseline.sql \
+  --changelog-file=/data/database/changelog/baseline/V0000__baseline.mssql.sql \
   --schemas=app \
   --include-schema=true \
   generateChangeLog
 
 # Check the generated file
-cat database/changelog/baseline/V0000__baseline.sql
+cat database/changelog/baseline/V0000__baseline.mssql.sql
 ```
 
 ### Validate Generation
@@ -600,7 +600,7 @@ $LIQUIBASE_TUTORIAL_DIR/scripts/validate_step4_baseline.sh
 **Expected Output:**
 
 ```text
-[PASS] File exists: V0000__baseline.sql
+[PASS] File exists: V0000__baseline.mssql.sql
 [PASS] Header matches '-- liquibase formatted sql'
 [PASS] Found ... occurrences of 'app.' schema prefix
 [PASS] Found CREATE TABLE app.customer
@@ -614,7 +614,7 @@ Step 4 VALIDATION SUCCESSFUL
 
 ```bash
 lb -e dev -- \
-  --changelog-file=/data/database/changelog/baseline/V0000__baseline.sql \
+  --changelog-file=/data/database/changelog/baseline/V0000__baseline.mssql.sql \
   --schemas=app \
   --include-schema=true \
   generateChangeLog
@@ -625,7 +625,7 @@ lb -e dev -- \
 - Liquibase connected to `orderdb` database
 - Scanned all database objects (tables, views, indexes, constraints, schemas)
 - Generated Formatted SQL file representing the current state
-- Saved it as `V0000__baseline.sql` in the baseline folder
+- Saved it as `V0000__baseline.mssql.sql` in the baseline folder
 - **File is owned by the user executing the dev container** because we used `--user $(id -u):$(id -g)`
 
 **What gets captured:**
@@ -674,7 +674,7 @@ cat > "$LIQUIBASE_TUTORIAL_DATA_DIR/database/changelog/changelog.xml" << 'EOF'
                         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
 
     <!-- Baseline: initial database state -->
-    <include file="baseline/V0000__baseline.sql" relativeToChangelogFile="true"/>
+    <include file="baseline/V0000__baseline.mssql.sql" relativeToChangelogFile="true"/>
 
     <!-- Future changes will be added here -->
 

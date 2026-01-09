@@ -36,24 +36,37 @@ check "LIQUIBASE_TUTORIAL_DATA_DIR set" "$([[ -n "${LIQUIBASE_TUTORIAL_DATA_DIR:
 check "MSSQL_LIQUIBASE_TUTORIAL_PWD set" "$([[ -n "${MSSQL_LIQUIBASE_TUTORIAL_PWD:-}" ]] && echo true || echo false)"
 check "Data directory exists" "$([[ -d "$LIQUIBASE_TUTORIAL_DATA_DIR" ]] && echo true || echo false)"
 
+# Detect container runtime
+if command -v docker &>/dev/null && docker compose version &>/dev/null; then
+    CR_CMD="docker"
+elif command -v podman &>/dev/null; then
+    CR_CMD="podman"
+else
+    CR_CMD=""
+fi
+
 echo
 echo "Containers:"
-for container in mssql_dev mssql_stg mssql_prd; do
-    status=$(podman ps --filter "name=$container" --filter "health=healthy" --format "{{.Names}}" 2>/dev/null)
-    check "$container healthy" "$([[ "$status" == "$container" ]] && echo true || echo false)"
-done
+if [[ -n "$CR_CMD" ]]; then
+    for container in mssql_dev mssql_stg mssql_prd; do
+        status=$($CR_CMD ps --filter "name=$container" --filter "health=healthy" --format "{{.Names}}" 2>/dev/null || true)
+        check "$container healthy" "$([[ "$status" == "$container" ]] && echo true || echo false)"
+    done
+else
+    echo -e "[${YELLOW}SKIP${NC}] Container checks (no runtime found)"
+fi
 
 echo
 echo "Databases:"
-if [[ -n "${MSSQL_LIQUIBASE_TUTORIAL_PWD:-}" ]]; then
+if [[ -n "${MSSQL_LIQUIBASE_TUTORIAL_PWD:-}" && -n "$CR_CMD" ]]; then
     for container in mssql_dev mssql_stg mssql_prd; do
-        result=$(podman exec "$container" /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa \
+        result=$($CR_CMD exec "$container" /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa \
             -P "$MSSQL_LIQUIBASE_TUTORIAL_PWD" \
             -Q "SELECT name FROM sys.databases WHERE name = 'orderdb'" 2>/dev/null | grep -c orderdb || true)
         check "orderdb on $container" "$([[ "$result" -ge 1 ]] && echo true || echo false)"
     done
 else
-    echo -e "[${YELLOW}SKIP${NC}] Database checks (password not set)"
+    echo -e "[${YELLOW}SKIP${NC}] Database checks (password not set or no runtime)"
 fi
 
 echo
@@ -62,7 +75,7 @@ check "liquibase.dev.properties" "$([[ -f "$LIQUIBASE_TUTORIAL_DATA_DIR/env/liqu
 check "liquibase.stg.properties" "$([[ -f "$LIQUIBASE_TUTORIAL_DATA_DIR/env/liquibase.stg.properties" ]] && echo true || echo false)"
 check "liquibase.prd.properties" "$([[ -f "$LIQUIBASE_TUTORIAL_DATA_DIR/env/liquibase.prd.properties" ]] && echo true || echo false)"
 check "changelog.xml" "$([[ -f "$LIQUIBASE_TUTORIAL_DATA_DIR/database/changelog/changelog.xml" ]] && echo true || echo false)"
-check "V0000__baseline.sql" "$([[ -f "$LIQUIBASE_TUTORIAL_DATA_DIR/database/changelog/baseline/V0000__baseline.sql" ]] && echo true || echo false)"
+check "V0000__baseline.mssql.sql" "$([[ -f "$LIQUIBASE_TUTORIAL_DATA_DIR/database/changelog/baseline/V0000__baseline.mssql.sql" ]] && echo true || echo false)"
 
 echo
 echo "========================================"

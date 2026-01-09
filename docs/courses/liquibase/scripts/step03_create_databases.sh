@@ -19,10 +19,20 @@ if [[ -z "${MSSQL_LIQUIBASE_TUTORIAL_PWD:-}" ]]; then
     exit 1
 fi
 
+# Detect container runtime
+if command -v docker &>/dev/null && docker compose version &>/dev/null; then
+    CR_CMD="docker"
+elif command -v podman &>/dev/null; then
+    CR_CMD="podman"
+else
+    echo -e "${RED}ERROR: No container runtime found${NC}"
+    exit 1
+fi
+
 # Create database on each container
 for container in mssql_dev mssql_stg mssql_prd; do
     echo -n "Creating orderdb on $container... "
-    result=$(podman exec "$container" /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa \
+    result=$($CR_CMD exec "$container" /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa \
         -P "$MSSQL_LIQUIBASE_TUTORIAL_PWD" \
         -Q "IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = 'orderdb') CREATE DATABASE orderdb; SELECT name FROM sys.databases WHERE name = 'orderdb';" 2>&1)
     

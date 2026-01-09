@@ -66,7 +66,18 @@ EOSQL
 
 echo "Creating sample objects in mssql_dev..."
 echo
-result=$(echo "$SQL_SCRIPT" | podman exec -i mssql_dev /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P "$MSSQL_LIQUIBASE_TUTORIAL_PWD" 2>&1)
+
+# Detect container runtime
+if command -v docker &>/dev/null && docker compose version &>/dev/null; then
+    CR_CMD="docker"
+elif command -v podman &>/dev/null; then
+    CR_CMD="podman"
+else
+    echo -e "${RED}ERROR: No container runtime found${NC}"
+    exit 1
+fi
+
+result=$(echo "$SQL_SCRIPT" | $CR_CMD exec -i mssql_dev /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P "$MSSQL_LIQUIBASE_TUTORIAL_PWD" 2>&1)
 echo "$result"
 
 if echo "$result" | grep -q "app.customer"; then

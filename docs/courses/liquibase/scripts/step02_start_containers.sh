@@ -33,12 +33,16 @@ export MSSQL_LIQUIBASE_TUTORIAL_PWD
 # Detect container runtime
 if command -v podman-compose &>/dev/null; then
     COMPOSE_CMD="podman-compose"
+    CR_CMD="podman"
 elif command -v ~/.local/bin/podman-compose &>/dev/null; then
     COMPOSE_CMD="$HOME/.local/bin/podman-compose"
-elif command -v docker-compose &>/dev/null; then
-    COMPOSE_CMD="docker-compose"
+    CR_CMD="podman"
 elif command -v docker &>/dev/null && docker compose version &>/dev/null; then
     COMPOSE_CMD="docker compose"
+    CR_CMD="docker"
+elif command -v docker-compose &>/dev/null; then
+    COMPOSE_CMD="docker-compose"
+    CR_CMD="docker"
 else
     echo -e "${RED}ERROR: No container compose tool found${NC}"
     exit 1
@@ -57,7 +61,7 @@ $COMPOSE_CMD up -d mssql_dev mssql_stg mssql_prd 2>&1
 echo
 echo "Waiting for containers to become healthy..."
 for i in {1..30}; do
-    healthy_count=$(podman ps --filter "health=healthy" --format "{{.Names}}" 2>/dev/null | grep -c "mssql_" || true)
+    healthy_count=$($CR_CMD ps --filter "health=healthy" --format "{{.Names}}" 2>/dev/null | grep -c "mssql_" || true)
     if [[ "$healthy_count" -eq 3 ]]; then
         echo -e "${GREEN}All containers healthy!${NC}"
         break
@@ -69,7 +73,7 @@ done
 # Show status
 echo
 echo "Container Status:"
-podman ps -a --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" 2>/dev/null | grep -E "NAMES|mssql_"
+$CR_CMD ps -a --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" 2>/dev/null | grep -E "NAMES|mssql_"
 
 echo
 echo "========================================"

@@ -76,7 +76,7 @@ This document defines requirements and design for the Liquibase course refactori
 │   └── changelog/
 │       ├── changelog.xml
 │       ├── baseline/
-│       │   └── V0000__baseline.sql
+│       │   └── V0000__baseline.mssql.sql
 │       └── changes/
 │           └── V0001__add_orders_table.sql
 └── env/

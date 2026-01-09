@@ -48,7 +48,7 @@ GO
 
 ## File Naming
 
-- Baseline: `V0000__baseline.sql`
+- Baseline: `V0000__baseline.mssql.sql`
 - Changes: `V0001__description.sql`
 - Format: `V<number>__<description>.sql`
 
