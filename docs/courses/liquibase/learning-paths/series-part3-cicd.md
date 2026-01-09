@@ -12,7 +12,7 @@
   - [Step 10: Set Up a Self-Hosted Runner in a Docker Container](#step-10-set-up-a-self-hosted-runner-in-a-docker-container)
   - [Step 11: Configure GitHub Secrets](#step-11-configure-github-secrets)
   - [Step 12: First CI Workflow – Deploy to Development (Self-Hosted)](#step-12-first-ci-workflow--deploy-to-development-self-hosted)
-  - [Step 13: Multi-Environment Pipeline (Dev → Staging → Production)](#step-13-multi-environment-pipeline-dev--staging--production)
+  - [Step 13: Multi-Environment Pipeline (Dev → Stg → Prd)](#step-13-multi-environment-pipeline-dev--stg--prd)
 - [Phase 4: Integrating Local Helper Scripts with CI/CD Practices](#phase-4-integrating-local-helper-scripts-with-cicd-practices)
   - [Step 14: Using lb and sqlcmd-tutorial Alongside GitHub Actions](#step-14-using-lb-and-sqlcmd-tutorial-alongside-github-actions)
   - [Step 15: Recommended Daily Workflow (Branch-Based)](#step-15-recommended-daily-workflow-branch-based)
@@ -25,17 +25,17 @@
 
 This Part 3 assumes you already have:
 
-- A local Liquibase project at `/data/liquibase-tutorial` with:
-  - `database/changelog/baseline/V0000__baseline.xml`
+- A local Liquibase project at `$LIQUIBASE_TUTORIAL_DATA_DIR` with:
+  - `database/changelog/baseline/V0000__baseline.mssql.sql`
   - `database/changelog/changelog.xml` that includes the baseline and any subsequent changes
-  - `env/liquibase.dev.properties`, `env/liquibase.stage.properties`, `env/liquibase.prod.properties`
-- Baseline deployed to dev/stage/prod and tagged appropriately (for example `baseline`, `release-v1.x`).
+  - `env/liquibase.dev.properties`, `env/liquibase.stg.properties`, `env/liquibase.prd.properties`
+- Baseline deployed to dev/stg/prd and tagged appropriately (for example `baseline`, `release-v1.x`).
 
 From here, this tutorial focuses only on:
 
 - Moving the project into Git and pushing to GitHub.
 - Configuring secrets and runners.
-- Defining GitHub Actions workflows to deploy the same changelog to dev/stage/prod.
+- Defining GitHub Actions workflows to deploy the same changelog to dev/stg/prd.
 - Integrating local helper scripts with CI/CD best practices.
 
 The sections and content below mirror the **Phase 2+** material from the original combined tutorial.
@@ -77,22 +77,22 @@ On GitHub:
 1. Accept the collaboration invitation email from GitHub
 2. Clone the repository:
 
-  ```bash
-  cd /data
-  git clone <https://github.com/ORG_NAME/sqlserver-liquibase-demo.git> liquibase-tutorial
-  cd liquibase-tutorial
-  ```
+   ```bash
+   # Clone to your data directory
+   git clone https://github.com/ORG_NAME/sqlserver-liquibase-demo.git "$LIQUIBASE_TUTORIAL_DATA_DIR"
+   cd "$LIQUIBASE_TUTORIAL_DATA_DIR"
+   ```
 
-1. Skip to **Step 8** to create your personal branch
+3. Skip to **Step 8** to create your personal branch
 
 ### Step 7: Initialize Git and Push Initial Project (First Person Only)
 
 **If you are the first person setting up the repository:**
 
-Treat `/data/liquibase-tutorial` as a Git repository:
+Treat your Liquibase project directory as a Git repository:
 
 ```bash
-cd /data/liquibase-tutorial
+cd "$LIQUIBASE_TUTORIAL_DATA_DIR"
 
 git init
 git remote add origin https://github.com/ORG_NAME/sqlserver-liquibase-demo.git
@@ -165,7 +165,7 @@ This prevents accidental pushes to `main` from learners.
 **Everyone (including the first person) should now create a personal branch:**
 
 ```bash
-cd /data/liquibase-tutorial
+cd "$LIQUIBASE_TUTORIAL_DATA_DIR"
 
 # Replace 'yourname' with your actual name or initials
 export TUTORIAL_USER="yourname"  # e.g., alice, bob, dvp
@@ -186,11 +186,11 @@ This phase adapts the CI/CD structure from the earlier GitHub Actions tutorial, 
 
 For this combined tutorial we will:
 
-- Use the **existing tutorial SQL Server container** `mssql_liquibase_tutorial` as the CI/CD target for dev/stage/prod.
-- Run the GitHub Actions **runner itself in a Docker container**, attached to the same Docker network (for example `liquibase_tutorial`).
-- Use JDBC URLs that point at `mssql_liquibase_tutorial:1433` (inside the Docker network), not at a public cloud endpoint.
+- Use the **existing tutorial SQL Server containers** (`mssql_dev`, `mssql_stg`, `mssql_prd`) as the CI/CD targets.
+- Run the GitHub Actions **runner itself in a Docker container**, attached to the host network or connected to the SQL Server containers.
+- Use JDBC URLs that point to the appropriate container (e.g., `mssql_dev:1433`, `mssql_stg:1433`, `mssql_prd:1433` when inside Docker, or `localhost:PORT` when using host networking).
 
-> The self-hosted runner in Docker is ideal for learning.
+> **Note:** Part 1 creates three separate SQL Server containers on different ports. For CI/CD with self-hosted runners, you'll configure secrets to connect to each environment's container. The self-hosted runner in Docker is ideal for learning.
 
 ### Step 10: Set Up a Self-Hosted Runner in a Docker Container
 
@@ -215,11 +215,7 @@ For this combined tutorial we will:
    fi
    ```
 
-- [ ] **Ensure your `mssql_liquibase_tutorial` container is attached to that network** (it should be if you followed the first tutorial’s `docker compose` file). Re-attach if needed:
-
-   ```bash
-   docker network connect liquibase_tutorial mssql_liquibase_tutorial
-   ```
+- [ ] **Ensure your SQL Server containers are accessible** (they should be if you followed Part 1's `docker compose` file). The containers `mssql_dev`, `mssql_stg`, and `mssql_prd` should be running on ports defined by `MSSQL_DEV_PORT`, `MSSQL_STG_PORT`, and `MSSQL_PRD_PORT` (defaults: 14331, 14332, 14333).
 
 - [ ] **Run a self-hosted runner container** attached to the same network. One common pattern is to use the official Actions runner image and environment variables:
 
@@ -245,7 +241,7 @@ For this combined tutorial we will:
 
 Key points:
 
-- The runner container joins the **same Docker network** as `mssql_liquibase_tutorial`.
+- The runner container should have network access to your SQL Server containers (either via host network or Docker networking).
 - The **label** `liquibase-tutorial` lets you target this runner from workflows.
 - Mounting `/var/run/docker.sock` is optional if you need the runner to start other containers; for basic Liquibase CLI use you can omit it.
 - After it starts, in the Actions UI you should see a **self-hosted runner** registered with labels like `self-hosted`, `linux`, and `liquibase-tutorial`. Only proceed to add workflow YAML files once it appears as Online.
@@ -260,20 +256,16 @@ That guide covers Docker/WSL installation, SQL Server setup, runner configuratio
 
 Before proceeding to Step 11, verify:
 
-- [ ] **Docker network** `liquibase_tutorial` exists
-- [ ] **SQL Server container** `mssql_liquibase_tutorial` is running and attached to the network
-- [ ] **Runner container** is running and attached to the same network
+- [ ] **SQL Server containers** `mssql_dev`, `mssql_stg`, and `mssql_prd` are running
+- [ ] **Runner container** is running and can access the SQL Server ports
 - [ ] **GitHub shows runner as "Online"** in Settings → Actions → Runners
 - [ ] Runner has appropriate labels (e.g., `self-hosted`, `liquibase-tutorial`)
 
 **Test connectivity:**
 
 ```bash
-# Verify network
-docker network inspect liquibase_tutorial
-
-# Verify both containers are on the network
-docker network inspect liquibase_tutorial | grep -E "(mssql_liquibase_tutorial|runner)"
+# Verify containers are running
+docker ps | grep mssql_
 
 # Check runner logs
 docker logs <your-runner-container-name> | tail -20
@@ -288,11 +280,11 @@ In your new Liquibase repo on GitHub:
 1. Go to **Settings → Secrets and variables → Actions**.
 2. Add the following **repository secrets** (matching the three environments you created in Part 1, but pointing at real CI/CD databases or your tutorial SQL Server):
 
-For each environment (dev, stage, prod):
+For each environment (dev, stg, prd):
 
 - `DEV_DB_URL`, `DEV_DB_USERNAME`, `DEV_DB_PASSWORD`
-- `STAGE_DB_URL`, `STAGE_DB_USERNAME`, `STAGE_DB_PASSWORD`
-- `PROD_DB_URL`, `PROD_DB_USERNAME`, `PROD_DB_PASSWORD`
+- `STG_DB_URL`, `STG_DB_USERNAME`, `STG_DB_PASSWORD`
+- `PRD_DB_URL`, `PRD_DB_USERNAME`, `PRD_DB_PASSWORD`
 
 These `*_DB_PASSWORD` secrets will be mapped into the **same environment variable** used by the local tutorial helpers, `MSSQL_LIQUIBASE_TUTORIAL_PWD`, so the pattern from Part 1 stays consistent between local commands and CI/CD.
 
@@ -309,10 +301,25 @@ jdbc:sqlserver://dev-sql.database.windows.net:1433;
   connectRetryCount=3;
 ```
 
-- Local tutorial SQL Server (for the self-hosted runner in Docker):
+- Local tutorial SQL Server (for the self-hosted runner):
 
 ```text
-jdbc:sqlserver://mssql_liquibase_tutorial:1433;
+# DEV environment (mssql_dev container)
+jdbc:sqlserver://localhost:${MSSQL_DEV_PORT:-14331};
+  databaseName=orderdb;
+  encrypt=true;
+  trustServerCertificate=true;
+  loginTimeout=30;
+
+# STG environment (mssql_stg container)
+jdbc:sqlserver://localhost:${MSSQL_STG_PORT:-14332};
+  databaseName=orderdb;
+  encrypt=true;
+  trustServerCertificate=true;
+  loginTimeout=30;
+
+# PRD environment (mssql_prd container)
+jdbc:sqlserver://localhost:${MSSQL_PRD_PORT:-14333};
   databaseName=orderdb;
   encrypt=true;
   trustServerCertificate=true;
@@ -393,9 +400,9 @@ On GitHub:
 
 - Go to the **Actions** tab and watch the “Deploy to Development” workflow run on your next push.
 
-### Step 13: Multi-Environment Pipeline (Dev → Staging → Production)
+### Step 13: Multi-Environment Pipeline (Dev → Stg → Prd)
 
-Now replace the single-env workflow with a pipeline that promotes changes through dev → stage → prod.
+Now replace the single-env workflow with a pipeline that promotes changes through dev → stg → prd.
 
 Create `.github/workflows/deploy-pipeline.yml`:
 
@@ -476,12 +483,12 @@ jobs:
 
       - name: Deploy to staging
         env:
-          MSSQL_LIQUIBASE_TUTORIAL_PWD: ${{ secrets.STAGE_DB_PASSWORD }}
+          MSSQL_LIQUIBASE_TUTORIAL_PWD: ${{ secrets.STG_DB_PASSWORD }}
         run: |
           liquibase update \
             --changelog-file=database/changelog/changelog.xml \
-            --url="${{ secrets.STAGE_DB_URL }}" \
-            --username="${{ secrets.STAGE_DB_USERNAME }}" \
+            --url="${{ secrets.STG_DB_URL }}" \
+            --username="${{ secrets.STG_DB_USERNAME }}" \
             --password="${MSSQL_LIQUIBASE_TUTORIAL_PWD}"
 
   deploy-production:
@@ -507,22 +514,22 @@ jobs:
 
       - name: Deploy to production
         env:
-          MSSQL_LIQUIBASE_TUTORIAL_PWD: ${{ secrets.PROD_DB_PASSWORD }}
+          MSSQL_LIQUIBASE_TUTORIAL_PWD: ${{ secrets.PRD_DB_PASSWORD }}
         run: |
           liquibase update \
             --changelog-file=database/changelog/changelog.xml \
-            --url="${{ secrets.PROD_DB_URL }}" \
-            --username="${{ secrets.PROD_DB_USERNAME }}" \
+            --url="${{ secrets.PRD_DB_URL }}" \
+            --username="${{ secrets.PRD_DB_USERNAME }}" \
             --password="${MSSQL_LIQUIBASE_TUTORIAL_PWD}"
 
       - name: Tag production deployment
         env:
-          MSSQL_LIQUIBASE_TUTORIAL_PWD: ${{ secrets.PROD_DB_PASSWORD }}
+          MSSQL_LIQUIBASE_TUTORIAL_PWD: ${{ secrets.PRD_DB_PASSWORD }}
         run: |
           liquibase tag "release-${{ github.run_number }}" \
             --changelog-file=database/changelog/changelog.xml \
-            --url="${{ secrets.PROD_DB_URL }}" \
-            --username="${{ secrets.PROD_DB_USERNAME }}" \
+            --url="${{ secrets.PRD_DB_URL }}" \
+            --username="${{ secrets.PRD_DB_USERNAME }}" \
             --password="${MSSQL_LIQUIBASE_TUTORIAL_PWD}"
 ```
 
@@ -537,9 +544,9 @@ Then:
 You now have a pipeline that:
 
 - Runs on pushes to any tutorial branch (`tutorial-*`) that touch `database/**`.
-- Deploys in order: dev → stage → prod.
+- Deploys in order: dev → stg → prd.
 - Uses GitHub Environment protection rules for production approvals.
-- Executes entirely on your **self-hosted runner container**, which talks to the `mssql_liquibase_tutorial` SQL Server container over the shared `liquibase_tutorial` Docker network.
+- Executes entirely on your **self-hosted runner container**, which talks to the `mssql_dev`, `mssql_stg`, and `mssql_prd` SQL Server containers over the shared Docker network.
 
 > To adapt this pipeline later for a cloud SQL Server and GitHub-hosted runners, change `runs-on` back to `ubuntu-latest` and update the JDBC URLs and secrets to point at your cloud databases.
 

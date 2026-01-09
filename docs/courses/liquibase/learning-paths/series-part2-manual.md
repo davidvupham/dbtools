@@ -72,7 +72,7 @@ cat > $LIQUIBASE_TUTORIAL_DATA_DIR/database/changelog/changelog.xml << 'EOF'
     <include file="baseline/V0000__baseline.mssql.sql" relativeToChangelogFile="true"/>
 
     <!-- V0001: Add orders table -->
-    <include file="changes/V0001__add_orders_table.sql" relativeToChangelogFile="true"/>
+    <include file="changes/V0001__add_orders_table.mssql.sql" relativeToChangelogFile="true"/>
 </databaseChangeLog>
 EOF
 ```
@@ -262,10 +262,10 @@ When using Formatted SQL files, you use explicit rollback comments. Update your 
 
 ### Add Rollback to SQL File
 
-When using Formatted SQL, you define rollbacks inline using `--rollback`. Update your `V0001__add_orders_table.sql`:
+When using Formatted SQL, you define rollbacks inline using `--rollback`. Update your `V0001__add_orders_table.mssql.sql`:
 
 ```bash
-cat > $LIQUIBASE_TUTORIAL_DATA_DIR/database/changelog/changes/V0001__add_orders_table.sql << 'EOF'
+cat > $LIQUIBASE_TUTORIAL_DATA_DIR/database/changelog/changes/V0001__add_orders_table.mssql.sql << 'EOF'
 --liquibase formatted sql
 
 --changeset tutorial:V0001-add-orders-table
@@ -392,7 +392,7 @@ Now add more changes following the established pattern.
 ### V0002: Add Index to Orders
 
 ```bash
-cat > $LIQUIBASE_TUTORIAL_DATA_DIR/database/changelog/changes/V0002__add_orders_index.sql << 'EOF'
+cat > $LIQUIBASE_TUTORIAL_DATA_DIR/database/changelog/changes/V0002__add_orders_index.mssql.sql << 'EOF'
 --liquibase formatted sql
 
 --changeset tutorial:V0002-add-orders-date-index
@@ -426,10 +426,10 @@ cat > $LIQUIBASE_TUTORIAL_DATA_DIR/database/changelog/changelog.xml << 'EOF'
     <include file="baseline/V0000__baseline.mssql.sql" relativeToChangelogFile="true"/>
 
     <!-- V0001: Add orders table -->
-    <include file="changes/V0001__add_orders_table.sql" relativeToChangelogFile="true"/>
+    <include file="changes/V0001__add_orders_table.mssql.sql" relativeToChangelogFile="true"/>
 
     <!-- V0002: Add orders index -->
-    <include file="changes/V0002__add_orders_index.sql" relativeToChangelogFile="true"/>
+    <include file="changes/V0002__add_orders_index.mssql.sql" relativeToChangelogFile="true"/>
 
 </databaseChangeLog>
 EOF
