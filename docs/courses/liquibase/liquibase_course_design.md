@@ -104,8 +104,8 @@ This document defines requirements and design for the Liquibase course refactori
 - [x] Multi-platform: Clarified as MSSQL current, others future
 - [x] Verification checklist: Expanded with additional items
 - [x] Scripts: Auto-detect container runtime (Docker vs Podman)
-- [ ] YAML syntax: `runs-on` with labels (Part 3 CI/CD)
-- [ ] Broken link: best-practices file reference (Part 3 CI/CD)
+- [x] YAML syntax: `runs-on` with labels (Part 3 CI/CD)
+- [x] Broken link: best-practices file reference (Part 3 CI/CD)
 
 ---
 
@@ -117,8 +117,6 @@ This document defines requirements and design for the Liquibase course refactori
 - [ ] Test on Ubuntu
 - [ ] Test with rootless Podman
 - [ ] Test on RHEL
-- [ ] Test with Docker
-- [ ] Test with rootless Podman
 
 ### Functionality
 
@@ -129,7 +127,7 @@ This document defines requirements and design for the Liquibase course refactori
 
 ### Documentation Checklist
 
-- [ ] All file paths consistent
+- [x] All file paths consistent
 - [ ] All environment variables documented
-- [ ] Documentation links valid
+- [x] Documentation links valid
 - [ ] Troubleshooting guide complete

@@ -28,7 +28,7 @@ For this tutorial, we'll use **SQL format** for simplicity and readability.
 
 ```bash
 # Create the change file
-cat > $LIQUIBASE_TUTORIAL_DATA_DIR/database/changelog/changes/V0001__add_orders_table.sql << 'EOF'
+cat > $LIQUIBASE_TUTORIAL_DATA_DIR/database/changelog/changes/V0001__add_orders_table.mssql.sql << 'EOF'
 --liquibase formatted sql
 
 --changeset tutorial:V0001-add-orders-table
@@ -285,6 +285,7 @@ BEGIN
 END
 GO
 --rollback DROP TABLE IF EXISTS app.orders;
+--rollback GO
 EOF
 ```
 
@@ -407,7 +408,8 @@ BEGIN
     CREATE INDEX IX_orders_order_date ON app.orders(order_date DESC);
 END
 GO
---rollback DROP INDEX IF EXISTS app.orders.IX_orders_order_date;
+--rollback DROP INDEX IF EXISTS IX_orders_order_date ON app.orders;
+--rollback GO
 EOF
 ```
 

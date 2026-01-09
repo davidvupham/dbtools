@@ -1,25 +1,13 @@
-USE testdbdev;
+-- Create app schema in orderdb database
+-- Run this against each container (mssql_dev, mssql_stg, mssql_prd)
+USE orderdb;
+GO
 IF NOT EXISTS (
     SELECT 1
     FROM sys.schemas
     WHERE name = 'app'
 ) EXEC('CREATE SCHEMA app');
-PRINT 'Created app schema in testdbdev';
 GO
-USE testdbstg;
-IF NOT EXISTS (
-    SELECT 1
-    FROM sys.schemas
-    WHERE name = 'app'
-) EXEC('CREATE SCHEMA app');
-PRINT 'Created app schema in testdbstg';
+PRINT 'Created app schema in orderdb';
 GO
-USE testdbprd;
-IF NOT EXISTS (
-    SELECT 1
-    FROM sys.schemas
-    WHERE name = 'app'
-) EXEC('CREATE SCHEMA app');
-PRINT 'Created app schema in testdbprd';
-GO
-SELECT 'Schema creation complete in all three databases.' AS Result;
+SELECT 'Schema creation complete.' AS Result;

@@ -176,9 +176,9 @@ sqlcmd-tutorial verify_app_schema.sql
 
 At this point you should have:
 
-- SQL Server container: `mssql_liquibase_tutorial`
-- Databases: `orderdb`, `orderdb`, `orderdb`
-- Shared schema: `app` in all three databases.
+- SQL Server container: `mssql_liquibase_tutorial` (single container for simplicity)
+- Database: `orderdb` (same database name, used for all environments in this simplified setup)
+- Schema: `app` in the database
 
 ### Step 4: Create the Liquibase Project and Baseline
 
@@ -209,8 +209,8 @@ mkdir -p env
 │           └── V0003__update_stored_procedure.sql
 └── env/
     ├── liquibase.dev.properties    # Development database connection
-    ├── liquibase.stage.properties  # Staging database connection
-    └── liquibase.prod.properties   # Production database connection
+    ├── liquibase.stg.properties    # Staging database connection
+    └── liquibase.prd.properties    # Production database connection
 ```
 
 Then:
@@ -227,7 +227,7 @@ sqlcmd-tutorial verify_dev_objects.sql
 sqlcmd-tutorial verify_dev_data.sql
 ```
 
-1. Create `env/liquibase.dev.properties`, `env/liquibase.stage.properties`, and `env/liquibase.prod.properties`:
+1. Create `env/liquibase.dev.properties`, `env/liquibase.stg.properties`, and `env/liquibase.prd.properties`:
 
 ```bash
 # Development properties
@@ -242,7 +242,7 @@ logLevel=info
 EOF
 
 # Staging properties
-cat > /data/liquibase-tutorial/env/liquibase.stage.properties << 'EOF'
+cat > /data/liquibase-tutorial/env/liquibase.stg.properties << 'EOF'
 # Staging Environment Connection
 url=jdbc:sqlserver://mssql_liquibase_tutorial:1433;databaseName=orderdb;encrypt=true;trustServerCertificate=true
 username=sa
@@ -253,7 +253,7 @@ logLevel=info
 EOF
 
 # Production properties
-cat > /data/liquibase-tutorial/env/liquibase.prod.properties << 'EOF'
+cat > /data/liquibase-tutorial/env/liquibase.prd.properties << 'EOF'
 # Production Environment Connection
 url=jdbc:sqlserver://mssql_liquibase_tutorial:1433;databaseName=orderdb;encrypt=true;trustServerCertificate=true
 username=sa
@@ -322,11 +322,11 @@ lb -e dev -- tag baseline
 - **Staging and Production**: actually deploy the baseline:
 
 ```bash
-lb -e stage -- update
-lb -e stage -- tag baseline
+lb -e stg -- update
+lb -e stg -- tag baseline
 
-lb -e prod -- update
-lb -e prod -- tag baseline
+lb -e prd -- update
+lb -e prd -- tag baseline
 ```
 
 You now have:
@@ -472,11 +472,11 @@ In your new Liquibase repo on GitHub:
 1. Go to **Settings → Secrets and variables → Actions**.
 2. Add the following **repository secrets** (matching the three environments you created in Phase 1, but pointing at real CI/CD databases):
 
-For each environment (dev, stage, prod):
+For each environment (dev, stg, prd):
 
 - `DEV_DB_URL`, `DEV_DB_USERNAME`, `DEV_DB_PASSWORD`
-- `STAGE_DB_URL`, `STAGE_DB_USERNAME`, `STAGE_DB_PASSWORD`
-- `PROD_DB_URL`, `PROD_DB_USERNAME`, `PROD_DB_PASSWORD`
+- `STG_DB_URL`, `STG_DB_USERNAME`, `STG_DB_PASSWORD`
+- `PRD_DB_URL`, `PRD_DB_USERNAME`, `PRD_DB_PASSWORD`
 
 These `*_DB_PASSWORD` secrets will be mapped into the **same environment variable** used by the local tutorial helpers, `MSSQL_LIQUIBASE_TUTORIAL_PWD`, so local commands and CI/CD follow the same pattern.
 
@@ -523,8 +523,7 @@ on:
 jobs:
   deploy-dev:
     name: Deploy to Development Database
-    runs-on: self-hosted
-    labels: [ liquibase-tutorial ]
+    runs-on: [self-hosted, liquibase-tutorial]
 
     steps:
       - name: Checkout repository
@@ -596,8 +595,7 @@ on:
 jobs:
   deploy-dev:
     name: Deploy to Development
-    runs-on: self-hosted
-    labels: [ liquibase-tutorial ]
+    runs-on: [self-hosted, liquibase-tutorial]
     environment: development
 
     steps:
@@ -637,8 +635,7 @@ jobs:
 
   deploy-staging:
     name: Deploy to Staging
-    runs-on: self-hosted
-    labels: [ liquibase-tutorial ]
+    runs-on: [self-hosted, liquibase-tutorial]
     needs: deploy-dev
     environment: staging
 
@@ -659,18 +656,17 @@ jobs:
 
       - name: Deploy to staging
         env:
-          MSSQL_LIQUIBASE_TUTORIAL_PWD: ${{ secrets.STAGE_DB_PASSWORD }}
+          MSSQL_LIQUIBASE_TUTORIAL_PWD: ${{ secrets.STG_DB_PASSWORD }}
         run: |
           liquibase update \
             --changelog-file=database/changelog/changelog.xml \
-            --url="${{ secrets.STAGE_DB_URL }}" \
-            --username="${{ secrets.STAGE_DB_USERNAME }}" \
+            --url="${{ secrets.STG_DB_URL }}" \
+            --username="${{ secrets.STG_DB_USERNAME }}" \
             --password="${MSSQL_LIQUIBASE_TUTORIAL_PWD}"
 
   deploy-production:
     name: Deploy to Production
-    runs-on: self-hosted
-    labels: [ liquibase-tutorial ]
+    runs-on: [self-hosted, liquibase-tutorial]
     needs: deploy-staging
     environment: production   # configure approvals & branches in GitHub Environments
 
@@ -691,22 +687,22 @@ jobs:
 
       - name: Deploy to production
         env:
-          MSSQL_LIQUIBASE_TUTORIAL_PWD: ${{ secrets.PROD_DB_PASSWORD }}
+          MSSQL_LIQUIBASE_TUTORIAL_PWD: ${{ secrets.PRD_DB_PASSWORD }}
         run: |
           liquibase update \
             --changelog-file=database/changelog/changelog.xml \
-            --url="${{ secrets.PROD_DB_URL }}" \
-            --username="${{ secrets.PROD_DB_USERNAME }}" \
+            --url="${{ secrets.PRD_DB_URL }}" \
+            --username="${{ secrets.PRD_DB_USERNAME }}" \
             --password="${MSSQL_LIQUIBASE_TUTORIAL_PWD}"
 
       - name: Tag production deployment
         env:
-          MSSQL_LIQUIBASE_TUTORIAL_PWD: ${{ secrets.PROD_DB_PASSWORD }}
+          MSSQL_LIQUIBASE_TUTORIAL_PWD: ${{ secrets.PRD_DB_PASSWORD }}
         run: |
           liquibase tag "release-${{ github.run_number }}" \
             --changelog-file=database/changelog/changelog.xml \
-            --url="${{ secrets.PROD_DB_URL }}" \
-            --username="${{ secrets.PROD_DB_USERNAME }}" \
+            --url="${{ secrets.PRD_DB_URL }}" \
+            --username="${{ secrets.PRD_DB_USERNAME }}" \
             --password="${MSSQL_LIQUIBASE_TUTORIAL_PWD}"
 ```
 

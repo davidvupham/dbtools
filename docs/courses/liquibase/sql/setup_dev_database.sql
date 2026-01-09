@@ -1,4 +1,4 @@
-USE testdbdev;
+USE orderdb;
 -- Step 1: Create schema
 IF NOT EXISTS (
     SELECT 1

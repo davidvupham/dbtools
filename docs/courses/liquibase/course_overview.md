@@ -61,7 +61,7 @@ $LIQUIBASE_TUTORIAL_DIR/scripts/validate_tutorial.sh
 ## Technology Stack
 
 - **Database:** Microsoft SQL Server 2025
-- **Migration Tool:** Liquibase 5.x
+- **Migration Tool:** Liquibase 4.x (4.32.0+)
 - **Containers:** Docker/Podman
 - **CI/CD:** GitHub Actions (Part 3)
 - **Changelog Format:** Formatted SQL

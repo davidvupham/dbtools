@@ -1,4 +1,4 @@
-USE testdbdev;
+USE orderdb;
 -- List all objects in app schema
 SELECT SCHEMA_NAME(schema_id) AS SchemaName,
     name AS ObjectName,

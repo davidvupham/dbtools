@@ -1,7 +1,8 @@
--- Verify all three databases exist
+-- Verify orderdb database exists
+-- Run this against each container (mssql_dev, mssql_stg, mssql_prd)
 SELECT name,
     database_id,
     create_date
 FROM sys.databases
-WHERE name IN ('testdbdev', 'testdbstg', 'testdbprd')
+WHERE name = 'orderdb'
 ORDER BY name;

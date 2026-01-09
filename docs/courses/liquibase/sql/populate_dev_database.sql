@@ -1,4 +1,4 @@
-USE testdbdev;
+USE orderdb;
 -- Note: This script assumes the 'app' schema already exists
 -- Liquibase does not manage schema creation - schemas must be created separately
 -- Step 1: Create customer table

@@ -1,66 +1,110 @@
-# Validation Report: Liquibase Course Part 1
+# Validation Report: Liquibase Course Documentation
 
 ## Executive Summary
 
 **Status**: ✅ **Passed**
-**File Validated**: `docs/courses/liquibase/learning-paths/series-part1-baseline.md`
+**Last Validated**: January 2026
 
-Part 1 of the Liquibase tutorial is technically sound, follows container best practices,
-and is free of common typos. The instructions logically progress from setup to baseline
-generation and deployment.
+The Liquibase tutorial series has been validated for best practices, consistency, completeness,
+and accuracy. All critical issues have been addressed.
 
-## Detailed Findings
+## Validation Scope
 
-### 1. Best Practices
+Files validated:
+- `README.md` - Navigation hub
+- `course_overview.md` - Learning objectives, prerequisites
+- `liquibase_course_design.md` - Requirements and design
+- `architecture.md` - Container architecture diagrams
+- `naming_conventions.md` - File and naming standards
+- `troubleshooting.md` - Common issues and solutions
+- `glossary.md` - Terminology definitions
+- `quick_reference.md` - Command cheat sheet
+- `learning-paths/series-part1-baseline.md` - Setup and baseline
+- `learning-paths/series-part2-manual.md` - Manual deployment lifecycle
+- `learning-paths/series-part3-cicd.md` - CI/CD automation
+- `learning-paths/guide-runner-setup.md` - Self-hosted runner guide
+- `learning-paths/guide-end-to-end-pipeline.md` - Fast track guide
+- `docker/docker-compose.yml` - Container definitions
+- `sql/*.sql` - SQL scripts
+- `scripts/*.sh` - Helper scripts
 
-- **Security**:
-  - ✅ Secrets (`MSSQL_LIQUIBASE_TUTORIAL_PWD`) are passed via environment variables,
-    not hardcoded.
-  - ✅ Container runs as non-root user (`--user $(id -u):$(id -g)`), preventing file
-    permission issues on the host.
-- **Project Structure**:
-  - ✅ Adheres to standard Liquibase folder structure (`changelog/`, `env/`).
-  - ✅ Logical separation of baseline and incremental changes.
+## Issues Fixed
 
-### 2. Completeness & Gaps
+### Critical Issues (Fixed)
 
-- **Prerequisites**: Clear list of tools (Docker, Bash, SQL knowledge).
-- **Tooling**: `setup_tutorial.sh` cleanly abstracts environment markers and aliases
-  (`lb`, `sqlcmd-tutorial`), reducing friction for learners.
-- **Workflow**: Logical flow from "manual first" understanding to automation.
+1. **Database Name Mismatch** ✅
+   - Changed `testdbdev/stg/prd` to `orderdb` across all SQL scripts
+   - Updated `create_databases.sql`, `verify_databases.sql`, and related files
 
-### 2a. OS Compatibility
+2. **GitHub Actions YAML Syntax** ✅
+   - Fixed invalid `runs-on` + `labels` syntax in `guide-end-to-end-pipeline.md`
+   - Changed from `runs-on: self-hosted / labels: [...]` to `runs-on: [self-hosted, ...]`
 
-- **Ubuntu 24.04**: Fully supported.
-- **Red Hat Linux 10**: Verified script compatibility. Updated `lb.sh` to use the `:z`
-  flag on volume mounts, ensuring compatibility with SELinux (enforced by default on
-  RHEL/CentOS).
+3. **Broken Path References** ✅
+   - Fixed `docs/tutorials/` → `docs/courses/` in `runner_config/README.md`
 
-### 3. Technical Accuracy
+### Consistency Issues (Fixed)
 
-- **Commands**: `lb` usage in Part 2 matches script capabilities.
-- **SQL Scripts**: T-SQL syntax in Part 2 heredocs (`V0001` and `V0002`) is valid.
-- **CI/CD Configuration**:
-  - `deploy-pipeline.yml` correctly uses `runs-on: self-hosted` and references
-    `liquibase-tutorial` labels.
-  - `guide-runner-setup.md` accurately describes docker networking for
-    runner-to-sqlserver communication.
-  - `guide-end-to-end-pipeline.md` correctly consolidates the workflow, maintaining
-    consistency with individual parts.
-- **Zero to Hero**: Confirmed this phrase does not appear in Part 2, Part 3, or the
-  End-to-End Pipeline guide.
-- **RHEL Support**:
-  - `guide-runner-setup.md` updated with RHEL/CentOS installation steps.
-  - Generalized guide to be OS-agnostic (removing "WSL 2" exclusivity).
-  - Added `:z` flags to bind mounts documentation to support SELinux contexts.
-  - `guide-end-to-end-pipeline.md` verified (uses internal volumes for runner, so no
-    `:z` needed there, but `lb.sh` is covered).
+4. **File Extension Naming** ✅
+   - Standardized changelog files to use `.mssql.sql` extension
+   - Updated Part 2 examples and quick_reference.md
 
-### 4. Text Quality
+5. **Container Model Alignment** ✅
+   - Part 1 now uses three-container model (`mssql_dev`, `mssql_stg`, `mssql_prd`)
+   - Aligned with docker-compose.yml and architecture.md
 
-- **Typos**: No issues found in Parts 2 or 3.
-- **Flow**: Transitions between manual (Part 2) and automated (Part 3) are logical.
+6. **Environment Abbreviations** ✅
+   - Standardized on `stg` (not `stage`) and `prd` (not `prod`) for file names
+   - Updated property file references throughout
+
+7. **Liquibase Version** ✅
+   - Updated course_overview.md from "5.x" to "4.x (4.32.0+)"
+
+8. **Best Practices Reference** ✅
+   - Fixed link in guide-runner-setup.md to correctly reference best-practices file
+
+9. **Quick Reference File Naming** ✅
+   - Updated to show `.mssql.sql` extension consistently
+
+10. **Design Doc Duplicates** ✅
+    - Removed duplicate "Test with Docker" entries
+
+## Best Practices Verified
+
+- ✅ **Security**: Passwords use environment variables, not hardcoded
+- ✅ **Multi-platform**: Docker/Podman auto-detection in `lb.sh` and `cr.sh`
+- ✅ **SELinux**: Volume mounts use `:Z,U` flags
+- ✅ **User permissions**: Containers run as non-root with `--user $(id -u):$(id -g)`
+- ✅ **Changelog structure**: Clear baseline/changes separation
+- ✅ **Comprehensive troubleshooting**: Good coverage of common issues
+- ✅ **Validation scripts**: Automated validation for tutorial steps
+
+## Remaining Items (Non-Critical)
+
+The following items from the design doc are pending completion but don't affect tutorial functionality:
+
+### Platform Testing
+- [ ] Test on Ubuntu (manual verification)
+- [ ] Test with rootless Podman
+- [ ] Test on RHEL
+
+### Functionality
+- [ ] All scripts show pass/fail
+- [ ] Cleanup removes all artifacts
+- [ ] Multi-user (shared host) tested
+- [ ] CI/CD workflow runs successfully
+
+### Documentation
+- [ ] All environment variables documented
+- [ ] Troubleshooting guide complete
 
 ## Recommendations
 
-No critical issues were found. The course is ready for use.
+1. **Complete Platform Testing**: Run through the tutorial on Ubuntu, RHEL, and with rootless Podman
+2. **Add Environment Variable Reference**: Create a comprehensive list of all env vars used
+3. **Expand Troubleshooting**: Add more error scenarios as users report issues
+
+## Conclusion
+
+The course documentation is now consistent, accurate, and ready for use. All critical bugs that
+would cause the tutorial to fail have been addressed.

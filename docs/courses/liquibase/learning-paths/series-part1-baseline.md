@@ -138,70 +138,68 @@ The setup script will:
 - Create aliases: `sqlcmd-tutorial`, `lb`, `cr`
 - Prompt for SQL Server password (`MSSQL_LIQUIBASE_TUTORIAL_PWD`)
 
-### Start the Tutorial SQL Server Container
+### Start the Tutorial SQL Server Containers
 
-This tutorial uses a dedicated SQL Server container that can be safely removed after completion.
+This tutorial uses three dedicated SQL Server containers (one per environment) that can be safely removed after completion.
 
 > **Note:** The `cr` command is a **Container Runtime** alias that auto-detects whether to use `docker` (Ubuntu/Debian) or `podman` (RHEL/Fedora) based on your operating system. It's defined in `setup_aliases.sh` and works the same as running docker/podman directly.
 
-#### Build and start SQL Server container
+#### Build and start SQL Server containers
 
 ```bash
 # Navigate to the tutorial docker directory
 cd "$LIQUIBASE_TUTORIAL_DIR/docker"
 
-# Start the SQL Server container using the cr (container runtime) alias
-# (cr auto-detects docker on Ubuntu/Debian, podman on RHEL/Fedora)
-# Create data directory for SQL Server
-mkdir -p "$LIQUIBASE_TUTORIAL_DATA_DIR/mssql1/mssql-data"
+# Start all three SQL Server containers using docker-compose
+# (mssql_dev on port 14331, mssql_stg on port 14332, mssql_prd on port 14333)
+cr compose up -d mssql_dev mssql_stg mssql_prd
 
-cr compose up -d 2>/dev/null || cr run -d --name mssql_liquibase_tutorial -h mssql1 -p 14333:1433 \
-  -e ACCEPT_EULA=Y -e MSSQL_SA_PASSWORD="$MSSQL_LIQUIBASE_TUTORIAL_PWD" \
-  -e MSSQL_PID=Developer -v "$LIQUIBASE_TUTORIAL_DATA_DIR/mssql1/mssql-data":/var/opt/mssql:Z,U \
-  mcr.microsoft.com/mssql/server:2025-latest
+# Verify containers are running
+cr ps | grep mssql_
+```
 
-> **Note:** The `:Z,U` volume options are required for rootless Podman:
+> **Note:** The docker-compose.yml uses `:Z,U` volume options for rootless Podman compatibility:
 > - `:Z` - Relabels the volume for SELinux (private to this container)
 > - `:U` - Recursively changes ownership to match the container user
-> - Data is stored in `$LIQUIBASE_TUTORIAL_DATA_DIR/mssql-data` (e.g., `/data/$USER/liquibase_tutorial/mssql-data`)
-
-# Verify it's running
-cr ps | grep mssql_liquibase_tutorial
-```
+> - Data is stored in `$LIQUIBASE_TUTORIAL_DATA_DIR/mssql_dev/`, `mssql_stg/`, `mssql_prd/`
 
 **Expected output:**
 
 ```text
-mssql_liquibase_tutorial   mcr.microsoft.com/mssql/server:2025-latest   Up X seconds (healthy)   0.0.0.0:14333->1433/tcp
+mssql_dev   mssql_tutorial:latest   Up X seconds (healthy)   0.0.0.0:14331->1433/tcp
+mssql_stg   mssql_tutorial:latest   Up X seconds (healthy)   0.0.0.0:14332->1433/tcp
+mssql_prd   mssql_tutorial:latest   Up X seconds (healthy)   0.0.0.0:14333->1433/tcp
 ```
 
 **What this does:**
 
-- Downloads SQL Server 2025 image (if not already downloaded)
-- Creates a container named `mssql_liquibase_tutorial`
-- Starts SQL Server on port `1433`
+- Builds/downloads SQL Server 2025 image (if not already available)
+- Creates three containers: `mssql_dev`, `mssql_stg`, `mssql_prd`
+- Starts SQL Server on ports 14331, 14332, 14333 respectively
 - Uses the password from `$MSSQL_LIQUIBASE_TUTORIAL_PWD`
-- Includes a health check to verify SQL Server is ready
+- Includes health checks to verify SQL Server is ready
 
 **Wait for SQL Server to be ready:**
 
-The container has a built-in health check. You can poll for the `(healthy)` status with `grep`:
+Each container has a built-in health check. You can poll for the `(healthy)` status:
 
 ```bash
-# Watch the container status until it shows (healthy) (Ctrl+C to exit)
-watch -n 2 "$LIQUIBASE_TUTORIAL_DIR/scripts/cr.sh ps | grep 'mssql_liquibase_tutorial'"
+# Watch the container status until all show (healthy) (Ctrl+C to exit)
+watch -n 2 'cr ps | grep mssql_'
 ```
 
-**Expected output (healthy):** Status shows "Up" and time keeps increasing:
+**Expected output (healthy):** Status shows "Up" and all containers are healthy:
 
 ```text
-1fea5c21c7ae  mcr.microsoft.com/mssql/server:2025-latest  ...  Up About a minute  0.0.0.0:14333->1433/tcp  mssql_liquibase_tutorial
+mssql_dev  ...  Up About a minute (healthy)  0.0.0.0:14331->1433/tcp
+mssql_stg  ...  Up About a minute (healthy)  0.0.0.0:14332->1433/tcp
+mssql_prd  ...  Up About a minute (healthy)  0.0.0.0:14333->1433/tcp
 ```
 
 Or check the logs and filter for the ready message:
 
 ```bash
-cr logs mssql_liquibase_tutorial 2>&1 | grep 'SQL Server is now ready for client connections'
+cr logs mssql_dev 2>&1 | grep 'SQL Server is now ready for client connections'
 ```
 
 #### Build Liquibase container image
@@ -385,10 +383,10 @@ We've provided a SQL script that creates all three databases. Navigate to the tu
 sqlcmd-tutorial create_databases.sql
 ```
 
-**Verify all three databases exist:**
+**Verify orderdb exists on each container:**
 
 ```bash
-# Run the verification script
+# Run the verification script (runs against mssql_dev by default)
 sqlcmd-tutorial verify_databases.sql
 ```
 
@@ -397,45 +395,46 @@ sqlcmd-tutorial verify_databases.sql
 ```text
 name        database_id  create_date
 ----------- ------------ -----------------------
-orderdb   5            2025-11-14 20:00:00.000
-orderdb   7            2025-11-14 20:00:01.000
-orderdb   6            2025-11-14 20:00:00.500
+orderdb     5            2025-11-14 20:00:00.000
 ```
 
 **What did we just do?**
 
-- Created three empty databases using `create_databases.sql`
-- All on the same SQL Server instance (simulating separate environments)
-- In real production, these would be on different servers/clouds
+- Created `orderdb` database on each SQL Server container
+- Each container (mssql_dev, mssql_stg, mssql_prd) has its own isolated `orderdb`
+- This simulates separate dev/staging/production environments
 - Verified creation with `verify_databases.sql`
 
 **Next: Create the app schema** (required before using Liquibase):
 
+The scripts run against each container. The `sqlcmd-tutorial` helper connects to `mssql_dev` by default. You'll need to run against each container or use the step scripts:
+
 ```bash
-# Create app schema in all three databases
-sqlcmd-tutorial create_app_schema.sql
+# Create app schema on each container
+# Option 1: Use step script (recommended)
+$LIQUIBASE_TUTORIAL_DIR/scripts/step03_create_databases.sh
+
+# Option 2: Run manually against each container
+sqlcmd-tutorial create_app_schema.sql           # mssql_dev (default)
 ```
 
-**Verify schema exists in all three databases:**
+**Verify schema exists:**
 
 ```bash
-# Expect to see three rows: dev/stage/prod with schema_name = app
 sqlcmd-tutorial verify_app_schema.sql
 ```
 
 **Expected output:**
 
 ```text
-env    schema_name
------  -----------
-dev    app
-stage  app
-prod   app
+database_name  schema_name
+-------------  -----------
+orderdb        app
 ```
 
 **Troubleshooting:**
 
-- If any row is missing, re-run `sqlcmd-tutorial create_app_schema.sql` and then `sqlcmd-tutorial verify_app_schema.sql`. Also verify `MSSQL_LIQUIBASE_TUTORIAL_PWD` is set.
+- If schema is missing, re-run `sqlcmd-tutorial create_app_schema.sql`. Also verify `MSSQL_LIQUIBASE_TUTORIAL_PWD` is set.
 
 **Why this step?** Liquibase does not manage schema creation. The `app` schema must exist before we can create tables and views within it. In production, schemas would be created through:
 
@@ -832,8 +831,8 @@ When you've completed the tutorial series and want to clean up the containers an
 
 **What the script does:**
 
-- Stops and removes the `mssql_liquibase_tutorial` container
-- Removes the `mssql_liquibase_tutorial_data` volume
+- Stops and removes the SQL Server containers (`mssql_dev`, `mssql_stg`, `mssql_prd`)
+- Removes associated data volumes
 - Removes the `liquibase_tutorial` Docker network
 - Optionally removes the `$LIQUIBASE_TUTORIAL_DATA_DIR` directory (with confirmation)
 - Provides a summary of what was cleaned up

@@ -11,16 +11,16 @@ This directory contains an example environment file for the Liquibase tutorial s
 Copy the example to a non-committed filename that holds your real (ephemeral) registration token.
 
 ```bash
-cp docs/tutorials/liquibase/runner_config/runner.env.example docs/tutorials/liquibase/runner_config/runner.env.local
-nano docs/tutorials/liquibase/runner_config/runner.env.local
+cp docs/courses/liquibase/runner_config/runner.env.example docs/courses/liquibase/runner_config/runner.env.local
+nano docs/courses/liquibase/runner_config/runner.env.local
 ```
 
 Then load and export variables before starting the runner:
 
 ```bash
-source docs/tutorials/liquibase/runner_config/runner.env.local
+source docs/courses/liquibase/runner_config/runner.env.local
 export RUNNER_NAME RUNNER_WORKDIR RUNNER_TOKEN REPO_URL RUNNER_LABELS RUNNER_GROUP
-cd docs/tutorials/liquibase/docker
+cd docs/courses/liquibase/docker
 docker-compose --profile runner up -d github_runner
 ```
 

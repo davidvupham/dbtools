@@ -1596,7 +1596,7 @@ Congratulations! You've set up a complete local CI/CD environment with:
 
 1. Follow the main tutorial: [Part 3: CI/CD Automation](./series-part3-cicd.md)
 2. Add cloud staging environment (hybrid approach)
-3. Implement advanced workflows from [github-actions-liquibase-best-practices.md](../../../best-practices/liquibase/github-actions.md)
+3. Implement advanced workflows from the [GitHub Actions Best Practices Guide](../../../../best-practices/liquibase/github-actions.md)
 
 **For Production:**
 

@@ -1,4 +1,4 @@
-USE testdbdev;
+USE orderdb;
 -- Check sample data in customer table
 SELECT customer_id,
     full_name,
