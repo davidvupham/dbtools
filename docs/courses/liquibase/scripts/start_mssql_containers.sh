@@ -20,8 +20,18 @@ echo "Liquibase Tutorial - Start MSSQL Containers"
 echo "========================================"
 echo
 
+# Detect container runtime (podman or docker)
+if command -v podman &>/dev/null; then
+    CR_CMD="podman"
+elif command -v docker &>/dev/null; then
+    CR_CMD="docker"
+else
+    echo -e "${RED}ERROR: Neither podman nor docker found${NC}"
+    exit 1
+fi
+
 # Check for existing containers and warn
-EXISTING=$(docker ps -a --filter "name=mssql_" --format "{{.Names}}" 2>/dev/null | wc -l)
+EXISTING=$($CR_CMD ps -a --filter "name=mssql_" --format "{{.Names}}" 2>/dev/null | wc -l)
 if [ "$EXISTING" -gt 0 ]; then
     echo -e "${YELLOW}Warning: Found existing mssql containers${NC}"
     echo "If you encounter port conflicts, run cleanup first:"
@@ -49,45 +59,130 @@ if [[ -z "${MSSQL_LIQUIBASE_TUTORIAL_PWD:-}" ]]; then
 fi
 export MSSQL_LIQUIBASE_TUTORIAL_PWD
 
-# Detect container runtime
-if command -v podman-compose &>/dev/null; then
-    COMPOSE_CMD="podman-compose"
-    CR_CMD="podman"
-elif command -v ~/.local/bin/podman-compose &>/dev/null; then
-    COMPOSE_CMD="$HOME/.local/bin/podman-compose"
-    CR_CMD="podman"
-elif command -v docker &>/dev/null && docker compose version &>/dev/null; then
-    COMPOSE_CMD="docker compose"
-    CR_CMD="docker"
-elif command -v docker-compose &>/dev/null; then
-    COMPOSE_CMD="docker-compose"
-    CR_CMD="docker"
-else
-    echo -e "${RED}ERROR: No container compose tool found${NC}"
-    exit 1
+# Detect OS to determine if we should use podman run directly (for RHEL/WSL2)
+USE_PODMAN_RUN=false
+if [[ -f /etc/os-release ]]; then
+    source /etc/os-release
+    # Check for RHEL, CentOS, Fedora, Rocky, AlmaLinux
+    if [[ "$ID" == "rhel" ]] || [[ "$ID" == "centos" ]] || [[ "$ID" == "fedora" ]] || \
+       [[ "$ID" == "rocky" ]] || [[ "$ID" == "almalinux" ]] || \
+       [[ "$ID_LIKE" =~ (rhel|centos|fedora|rocky|almalinux) ]]; then
+        if [[ "$CR_CMD" == "podman" ]]; then
+            USE_PODMAN_RUN=true
+            echo -e "${YELLOW}Detected RHEL/CentOS/Fedora with Podman - using podman run directly${NC}"
+            echo "This avoids podman-compose networking issues in WSL2"
+            echo
+        fi
+    fi
 fi
 
-echo "Using: $COMPOSE_CMD"
+# Build SQL Server image if it doesn't exist
+MSSQL_IMAGE="mssql_tutorial:latest"
+if ! $CR_CMD image exists "$MSSQL_IMAGE" 2>/dev/null; then
+    echo "Building SQL Server image..."
+    cd "$DOCKER_DIR"
+    $CR_CMD build -t "$MSSQL_IMAGE" -f ../../../../docker/mssql/Dockerfile ../../../../docker/mssql
+    echo
+fi
+
 echo "Data directory: $LIQUIBASE_TUTORIAL_DATA_DIR"
 echo
 
 # Start containers
 echo "Starting SQL Server containers..."
-cd "$DOCKER_DIR"
-$COMPOSE_CMD up -d mssql_dev mssql_stg mssql_prd 2>&1
 
-# Wait for health checks
-echo
-echo "Waiting for containers to become healthy..."
-for i in {1..30}; do
-    healthy_count=$($CR_CMD ps --filter "health=healthy" --format "{{.Names}}" 2>/dev/null | grep -c "mssql_" || true)
-    if [[ "$healthy_count" -eq 3 ]]; then
-        echo -e "${GREEN}All containers healthy!${NC}"
-        break
+if [[ "$USE_PODMAN_RUN" == "true" ]]; then
+    # Use podman run directly for RHEL/WSL2
+    mkdir -p "$LIQUIBASE_TUTORIAL_DATA_DIR/mssql_dev" \
+             "$LIQUIBASE_TUTORIAL_DATA_DIR/mssql_stg" \
+             "$LIQUIBASE_TUTORIAL_DATA_DIR/mssql_prd"
+    
+    # Remove existing containers if they exist
+    $CR_CMD rm -f mssql_dev mssql_stg mssql_prd 2>/dev/null || true
+    
+    # Start dev container
+    echo "Starting mssql_dev on port 14331..."
+    $CR_CMD run -d --name mssql_dev \
+        -p 14331:1433 \
+        -e ACCEPT_EULA=Y \
+        -e MSSQL_SA_PASSWORD="$MSSQL_LIQUIBASE_TUTORIAL_PWD" \
+        -e MSSQL_PID=Developer \
+        -v "$LIQUIBASE_TUTORIAL_DATA_DIR/mssql_dev:/var/opt/mssql:Z,U" \
+        "$MSSQL_IMAGE" 2>&1
+    
+    # Start staging container
+    echo "Starting mssql_stg on port 14332..."
+    $CR_CMD run -d --name mssql_stg \
+        -p 14332:1433 \
+        -e ACCEPT_EULA=Y \
+        -e MSSQL_SA_PASSWORD="$MSSQL_LIQUIBASE_TUTORIAL_PWD" \
+        -e MSSQL_PID=Developer \
+        -v "$LIQUIBASE_TUTORIAL_DATA_DIR/mssql_stg:/var/opt/mssql:Z,U" \
+        "$MSSQL_IMAGE" 2>&1
+    
+    # Start production container
+    echo "Starting mssql_prd on port 14333..."
+    $CR_CMD run -d --name mssql_prd \
+        -p 14333:1433 \
+        -e ACCEPT_EULA=Y \
+        -e MSSQL_SA_PASSWORD="$MSSQL_LIQUIBASE_TUTORIAL_PWD" \
+        -e MSSQL_PID=Developer \
+        -v "$LIQUIBASE_TUTORIAL_DATA_DIR/mssql_prd:/var/opt/mssql:Z,U" \
+        "$MSSQL_IMAGE" 2>&1
+else
+    # Use compose for other platforms
+    # Detect container compose tool
+    if command -v podman-compose &>/dev/null; then
+        COMPOSE_CMD="podman-compose"
+    elif command -v ~/.local/bin/podman-compose &>/dev/null; then
+        COMPOSE_CMD="$HOME/.local/bin/podman-compose"
+    elif command -v docker &>/dev/null && docker compose version &>/dev/null; then
+        COMPOSE_CMD="docker compose"
+    elif command -v docker-compose &>/dev/null; then
+        COMPOSE_CMD="docker-compose"
+    else
+        echo -e "${RED}ERROR: No container compose tool found${NC}"
+        exit 1
     fi
-    echo -n "."
-    sleep 2
-done
+    
+    echo "Using: $COMPOSE_CMD"
+    cd "$DOCKER_DIR"
+    $COMPOSE_CMD up -d mssql_dev mssql_stg mssql_prd 2>&1
+fi
+
+# Wait for containers to be ready
+echo
+echo "Waiting for SQL Server to be ready..."
+if [[ "$USE_PODMAN_RUN" == "true" ]]; then
+    # For podman run, wait for SQL Server to accept connections
+    for container in mssql_dev mssql_stg mssql_prd; do
+        echo -n "Waiting for $container to be ready..."
+        for i in {1..30}; do
+            if $CR_CMD exec "$container" /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa \
+                -P "$MSSQL_LIQUIBASE_TUTORIAL_PWD" -Q "SELECT 1" -b -o /dev/null 2>/dev/null; then
+                echo -e " ${GREEN}✓ Ready${NC}"
+                break
+            fi
+            if [[ $i -eq 30 ]]; then
+                echo -e " ${YELLOW}⚠ Timeout (SQL Server may still be starting)${NC}"
+            else
+                echo -n "."
+                sleep 2
+            fi
+        done
+    done
+else
+    # For compose, use health check status
+    for i in {1..30}; do
+        healthy_count=$($CR_CMD ps --filter "health=healthy" --format "{{.Names}}" 2>/dev/null | grep -c "mssql_" || true)
+        if [[ "$healthy_count" -eq 3 ]]; then
+            echo -e "${GREEN}All containers healthy!${NC}"
+            break
+        fi
+        echo -n "."
+        sleep 2
+    done
+fi
 
 # Show status
 echo
