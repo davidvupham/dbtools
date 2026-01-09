@@ -242,3 +242,6 @@ docs/tutorials/liquibase/runner_config/runner.env.local
 # (removed) PDF conversion resources and exceptions no longer used
 .liquibase/settings.json
 #.gemini/system.md
+node_modules
+package-lock.json
+package.json
