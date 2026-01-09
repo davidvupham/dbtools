@@ -20,8 +20,17 @@ echo "========================================"
 echo
 
 # Check required environment
+# Note: docker-compose.yml has a fallback to /data/liquibase_tutorial, but we prefer per-user isolation
 LIQUIBASE_TUTORIAL_DATA_DIR="${LIQUIBASE_TUTORIAL_DATA_DIR:-/data/${USER}/liquibase_tutorial}"
 export LIQUIBASE_TUTORIAL_DATA_DIR
+
+# Validate data directory doesn't use the generic fallback from docker-compose.yml
+if [[ "$LIQUIBASE_TUTORIAL_DATA_DIR" == "/data/liquibase_tutorial" ]]; then
+    echo -e "${YELLOW}WARNING: Using generic data directory (not per-user)${NC}"
+    echo "For multi-user support, run step01_setup_environment.sh first"
+    echo "or export LIQUIBASE_TUTORIAL_DATA_DIR=\"/data/\${USER}/liquibase_tutorial\""
+    echo
+fi
 
 if [[ -z "${MSSQL_LIQUIBASE_TUTORIAL_PWD:-}" ]]; then
     echo -e "${RED}ERROR: MSSQL_LIQUIBASE_TUTORIAL_PWD not set${NC}"

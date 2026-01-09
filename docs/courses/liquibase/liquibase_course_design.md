@@ -62,6 +62,7 @@ This document defines requirements and design for the Liquibase course refactori
 | 24 | **Rollback testing** | Standard practice |
 | 25 | **Changelog folder structure** | Simple structure: `database/changelog/` with `baseline/` and `changes/` subdirs |
 | 26 | **Docker Compose build** | Reference Dockerfiles via `build.context`; no pre-build required |
+| 27 | **Container security** | All containers must have HEALTHCHECK and default non-root USER |
 
 ---
 

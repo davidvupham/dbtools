@@ -90,7 +90,20 @@ USER root
 #
 RUN mkdir -p /data/mssql /logs/mssql && \
     chown -R mssql:0 /data /logs && \
-    chmod -R g+rwx /data /logs
+    chmod -R g+rwx /data /logs && \
+    # ----------------------------------------------------------------------
+    # Create healthcheck script that reads password from environment variable
+    # The script must read MSSQL_SA_PASSWORD at runtime (set via docker-compose)
+    # ----------------------------------------------------------------------
+    mkdir -p /opt/mssql/bin && \
+    cat > /opt/mssql/bin/healthcheck.sh << 'HEALTHCHECK_EOF' && \
+#!/bin/bash
+set -euo pipefail
+# Read password from environment variable (set at runtime)
+/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P "${MSSQL_SA_PASSWORD}" -Q "SELECT 1" -b -o /dev/null
+HEALTHCHECK_EOF
+    chmod +x /opt/mssql/bin/healthcheck.sh && \
+    chown mssql:0 /opt/mssql/bin/healthcheck.sh
 
 # ------------------------------------------------------------------------------
 # Volume Declaration
@@ -147,6 +160,52 @@ EXPOSE 1433
 #   - Cannot modify system files or other users' data
 #
 USER mssql
+
+# ------------------------------------------------------------------------------
+# Health Check - Container Health Monitoring
+# ------------------------------------------------------------------------------
+# HEALTHCHECK: Tells Docker how to verify the container is working properly
+#
+# WHY HEALTHCHECK?
+#   - Docker/Podman can detect if the container is healthy or unhealthy
+#   - Orchestrators (Docker Compose, Kubernetes) use health status for:
+#     * Restarting unhealthy containers automatically
+#     * Load balancing (only route to healthy containers)
+#     * Deployment rollouts (wait for healthy before continuing)
+#
+# OPTIONS EXPLAINED:
+#   --interval=10s   : Check health every 10 seconds
+#   --timeout=3s     : Wait up to 3 seconds for command to complete
+#   --start-period=15s: Grace period for container startup (SQL Server takes time to initialize)
+#   --retries=10     : Mark unhealthy after 10 consecutive failures
+#
+# THE CHECK:
+#   sqlcmd -Q "SELECT 1": Verifies SQL Server is accepting connections
+#   -C: Trust server certificate (for encrypted connections)
+#   -S localhost: Connect to local SQL Server instance
+#   -U sa: System administrator user
+#   -P: Password from environment variable
+#   -b: Exit on error (important for healthcheck)
+#   -o /dev/null: Discard output (we only care about exit code)
+#   If exit code 0 → healthy, otherwise → unhealthy
+#
+# NOTE:
+#   The password is read from MSSQL_SA_PASSWORD environment variable at runtime.
+#   Docker Compose may override this healthcheck, but having it in the Dockerfile
+#   ensures the image itself is self-contained and can be used independently.
+#
+# PODMAN NOTE:
+#   Podman users see "HEALTHCHECK is not supported for OCI image format".
+#   To resolve, build with: podman build --format docker ...
+#
+# HEALTHCHECK SCRIPT:
+#   Uses a wrapper script (/opt/mssql/bin/healthcheck.sh) that reads the
+#   MSSQL_SA_PASSWORD environment variable at runtime. This is necessary
+#   because the password is set via docker-compose environment variables,
+#   not build-time ENV statements.
+#
+HEALTHCHECK --interval=10s --timeout=3s --start-period=15s --retries=10 \
+    CMD ["/opt/mssql/bin/healthcheck.sh"]
 
 # ------------------------------------------------------------------------------
 # Container Startup Command

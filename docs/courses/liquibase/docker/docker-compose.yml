@@ -8,6 +8,12 @@
 # IMPORTANT: Set LIQUIBASE_TUTORIAL_DATA_DIR before running:
 #   export LIQUIBASE_TUTORIAL_DATA_DIR="/data/$USER/liquibase_tutorial"
 # Or source the setup script: source scripts/setup_tutorial.sh
+#
+# Volume Mount Suffixes:
+#   - :Z,U flags are used for SELinux/rootless Podman compatibility
+#   - Docker ignores these flags, so they are safe for both runtimes
+#   - :Z = Relabel volume for SELinux (private to this container)
+#   - :U = Recursively change ownership to match container user
 
 services:
   # ============================================================================
@@ -28,7 +34,7 @@ services:
       - MSSQL_SA_PASSWORD=${MSSQL_LIQUIBASE_TUTORIAL_PWD:?MSSQL_LIQUIBASE_TUTORIAL_PWD is required}
       - MSSQL_PID=Developer
     volumes:
-      - ${LIQUIBASE_TUTORIAL_DATA_DIR:-/data/liquibase_tutorial}/mssql_dev:/var/opt/mssql
+      - ${LIQUIBASE_TUTORIAL_DATA_DIR:-/data/liquibase_tutorial}/mssql_dev:/var/opt/mssql:Z,U
     healthcheck:
       test: /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P "$${MSSQL_SA_PASSWORD}" -Q "SELECT 1" -b -o /dev/null || exit 1
       interval: 10s
@@ -50,7 +56,7 @@ services:
       - MSSQL_SA_PASSWORD=${MSSQL_LIQUIBASE_TUTORIAL_PWD:?MSSQL_LIQUIBASE_TUTORIAL_PWD is required}
       - MSSQL_PID=Developer
     volumes:
-      - ${LIQUIBASE_TUTORIAL_DATA_DIR:-/data/liquibase_tutorial}/mssql_stg:/var/opt/mssql
+      - ${LIQUIBASE_TUTORIAL_DATA_DIR:-/data/liquibase_tutorial}/mssql_stg:/var/opt/mssql:Z,U
     healthcheck:
       test: /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P "$${MSSQL_SA_PASSWORD}" -Q "SELECT 1" -b -o /dev/null || exit 1
       interval: 10s
@@ -72,7 +78,7 @@ services:
       - MSSQL_SA_PASSWORD=${MSSQL_LIQUIBASE_TUTORIAL_PWD:?MSSQL_LIQUIBASE_TUTORIAL_PWD is required}
       - MSSQL_PID=Developer
     volumes:
-      - ${LIQUIBASE_TUTORIAL_DATA_DIR:-/data/liquibase_tutorial}/mssql_prd:/var/opt/mssql
+      - ${LIQUIBASE_TUTORIAL_DATA_DIR:-/data/liquibase_tutorial}/mssql_prd:/var/opt/mssql:Z,U
     healthcheck:
       test: /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P "$${MSSQL_SA_PASSWORD}" -Q "SELECT 1" -b -o /dev/null || exit 1
       interval: 10s
@@ -92,7 +98,7 @@ services:
     container_name: liquibase_tutorial
     working_dir: /data
     volumes:
-      - ${LIQUIBASE_TUTORIAL_DATA_DIR:-/data/liquibase_tutorial}:/data
+      - ${LIQUIBASE_TUTORIAL_DATA_DIR:-/data/liquibase_tutorial}:/data:Z,U
     environment:
       - LIQUIBASE_LOG_LEVEL=INFO
     profiles:
