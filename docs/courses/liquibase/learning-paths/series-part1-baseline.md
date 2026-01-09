@@ -146,6 +146,21 @@ This tutorial uses three dedicated SQL Server containers (one per environment) t
 
 #### Build and start SQL Server containers
 
+**Recommended: Use the step script**
+
+```bash
+# Run the automated step script
+$LIQUIBASE_TUTORIAL_DIR/scripts/step02_start_containers.sh
+```
+
+The script will:
+- Start all three SQL Server containers (mssql_dev, mssql_stg, mssql_prd)
+- Wait for health checks to pass
+- Show container status
+- Display success/fail indicators
+
+**Alternative: Manual commands**
+
 ```bash
 # Navigate to the tutorial docker directory
 cd "$LIQUIBASE_TUTORIAL_DIR/docker"
@@ -374,19 +389,34 @@ This is the recommended approach for running Docker containers that create files
 
 ## Step 1: Create Three Database Environments
 
-Create three databases on the same SQL Server to represent dev, stage, and prod.
+Create the `orderdb` database on each SQL Server container to represent dev, staging, and production environments.
 
-We've provided a SQL script that creates all three databases. Navigate to the tutorial scripts directory and run it:
+**Recommended: Use the step script**
+
+```bash
+# Run the automated step script
+$LIQUIBASE_TUTORIAL_DIR/scripts/step03_create_databases.sh
+```
+
+The script will:
+- Create `orderdb` on all three containers (mssql_dev, mssql_stg, mssql_prd)
+- Show success/fail indicators for each container
+- Display completion message
+
+**Validate Step 1:**
+
+```bash
+# Run the validation script to verify databases were created
+$LIQUIBASE_TUTORIAL_DIR/scripts/validate_step1_databases.sh
+```
+
+**Alternative: Manual commands**
 
 ```bash
 # Create development, staging, and production databases
 sqlcmd-tutorial create_databases.sql
-```
 
-**Verify orderdb exists on each container:**
-
-```bash
-# Run the verification script (runs against mssql_dev by default)
+# Verify orderdb exists (runs against mssql_dev by default)
 sqlcmd-tutorial verify_databases.sql
 ```
 
@@ -407,15 +437,11 @@ orderdb     5            2025-11-14 20:00:00.000
 
 **Next: Create the app schema** (required before using Liquibase):
 
-The scripts run against each container. The `sqlcmd-tutorial` helper connects to `mssql_dev` by default. You'll need to run against each container or use the step scripts:
+The `step03_create_databases.sh` script also creates the app schema on each container. If you used the manual commands above, create the schema manually:
 
 ```bash
 # Create app schema on each container
-# Option 1: Use step script (recommended)
-$LIQUIBASE_TUTORIAL_DIR/scripts/step03_create_databases.sh
-
-# Option 2: Run manually against each container
-sqlcmd-tutorial create_app_schema.sql           # mssql_dev (default)
+sqlcmd-tutorial create_app_schema.sql
 ```
 
 **Verify schema exists:**
@@ -448,21 +474,35 @@ Now create some database objects in **development only**. This simulates an exis
 
 **Important**: The script assumes the `app` schema already exists (as Liquibase doesn't manage schemas). In production, schemas would be created through infrastructure scripts or database initialization.
 
-We've provided a SQL script that creates objects in the development database:
+**Recommended: Use the step script**
+
+```bash
+# Run the automated step script
+$LIQUIBASE_TUTORIAL_DIR/scripts/step04_populate_dev.sh
+```
+
+The script will:
+- Create `app.customer` table with indexes and constraints
+- Create `app.v_customer_basic` view
+- Insert sample data
+- Show success/fail indicators
+
+**Validate Step 2:**
+
+```bash
+# Run the validation script to verify objects were created
+$LIQUIBASE_TUTORIAL_DIR/scripts/validate_step2_populate.sh
+```
+
+**Alternative: Manual commands**
 
 ```bash
 # Create table, view, indexes, and sample data in DEVELOPMENT
 # Note: Script assumes 'app' schema already exists
 sqlcmd-tutorial populate_dev_database.sql
-```
 
-**Verify objects were created in development:**
-
-```bash
-# List all objects in app schema (development only)
+# Verify objects were created in development
 sqlcmd-tutorial verify_dev_objects.sql
-
-# Check sample data
 sqlcmd-tutorial verify_dev_data.sql
 ```
 
@@ -484,15 +524,39 @@ sqlcmd-tutorial verify_dev_data.sql
 
 ## Step 3: Configure Liquibase for Each Environment
 
-Create properties files to connect Liquibase to each environment:
+Create properties files to connect Liquibase to each environment and set up the master changelog.
+
+**Recommended: Properties files are created automatically**
+
+If you ran `setup_tutorial.sh` in Step 0, the properties files were already created. However, if you need to create them manually or want to understand the structure, you can use:
+
+```bash
+# Run the step script (creates directories, properties, and master changelog)
+$LIQUIBASE_TUTORIAL_DIR/scripts/step01_setup_environment.sh
+```
+
+This script creates:
+- Project directories (`database/changelog/baseline`, `database/changelog/changes`, `env/`)
+- Properties files for dev, stg, prd
+- Master `changelog.xml` file
+
+**Validate Step 3:**
+
+```bash
+# Run the validation script to verify properties files
+$LIQUIBASE_TUTORIAL_DIR/scripts/validate_step3_properties.sh
+```
+
+**Alternative: Manual creation**
+
+If you prefer to create properties files manually:
 
 ```bash
 # Development properties
 cat > "$LIQUIBASE_TUTORIAL_DATA_DIR/env/liquibase.dev.properties" << 'EOF'
 # Development Environment Connection
-url=jdbc:sqlserver://localhost:14333;databaseName=orderdb;encrypt=true;trustServerCertificate=true
+url=jdbc:sqlserver://localhost:14331;databaseName=orderdb;encrypt=true;trustServerCertificate=true
 username=sa
-password=${MSSQL_LIQUIBASE_TUTORIAL_PWD}
 changelog-file=database/changelog/changelog.xml
 search-path=/data
 logLevel=info
@@ -501,9 +565,8 @@ EOF
 # Staging properties
 cat > "$LIQUIBASE_TUTORIAL_DATA_DIR/env/liquibase.stg.properties" << 'EOF'
 # Staging Environment Connection
-url=jdbc:sqlserver://localhost:14333;databaseName=orderdb;encrypt=true;trustServerCertificate=true
+url=jdbc:sqlserver://localhost:14332;databaseName=orderdb;encrypt=true;trustServerCertificate=true
 username=sa
-password=${MSSQL_LIQUIBASE_TUTORIAL_PWD}
 changelog-file=database/changelog/changelog.xml
 search-path=/data
 logLevel=info
@@ -514,7 +577,6 @@ cat > "$LIQUIBASE_TUTORIAL_DATA_DIR/env/liquibase.prd.properties" << 'EOF'
 # Production Environment Connection
 url=jdbc:sqlserver://localhost:14333;databaseName=orderdb;encrypt=true;trustServerCertificate=true
 username=sa
-password=${MSSQL_LIQUIBASE_TUTORIAL_PWD}
 changelog-file=database/changelog/changelog.xml
 search-path=/data
 logLevel=info
@@ -526,11 +588,11 @@ ls -la "$LIQUIBASE_TUTORIAL_DATA_DIR/env/"
 
 **What each property means:**
 
-- `url`: JDBC connection string (notice `databaseName` differs per environment)
+- `url`: JDBC connection string (notice port differs per environment)
   - `jdbc:sqlserver://` - Protocol for SQL Server connections
-  - `localhost:14333` - Connect to host machine port 14333 (where container maps 1433).
+  - `localhost:14331/14332/14333` - Connect to host machine ports (dev=14331, stg=14332, prd=14333)
   - **Note**: This requires running the Liquibase container with `--network host` (set via `LB_NETWORK=host`) so it can see `localhost` as the host machine.
-  - `databaseName=orderdb` - Which database to connect to (this changes per environment)
+  - `databaseName=orderdb` - Database name (same for all environments)
   - `encrypt=true` - Use encrypted connection
   - `trustServerCertificate=true` - Trust the server's SSL certificate (for local dev only; in production use proper certificates)
 
@@ -569,6 +631,30 @@ ls -la "$LIQUIBASE_TUTORIAL_DATA_DIR/env/"
 
 Now use Liquibase to capture the current state of development as a **baseline**:
 
+**Recommended: Use the step script**
+
+```bash
+# Run the automated step script
+$LIQUIBASE_TUTORIAL_DIR/scripts/step05_generate_baseline.sh
+```
+
+The script will:
+- Generate baseline from development database
+- Use `--schemas=app` to capture only the app schema
+- Use `--include-schema=true` to include schema names
+- Save to `V0000__baseline.mssql.sql`
+- Show success/fail indicators
+- Display preview of generated file
+
+**Validate Step 4:**
+
+```bash
+# Run the validation script to verify baseline format and content
+$LIQUIBASE_TUTORIAL_DIR/scripts/validate_step4_baseline.sh
+```
+
+**Alternative: Manual commands**
+
 ```bash
 # Change to project directory
 cd "$LIQUIBASE_TUTORIAL_DATA_DIR"
@@ -585,15 +671,6 @@ LB_NETWORK=host lb -e dev -- \
 
 # Check the generated file
 cat database/changelog/baseline/V0000__baseline.mssql.sql
-```
-
-### Validate Generation
-
-We have provided a script to automatically validate the baseline file format and content:
-
-```bash
-# Run validation script
-$LIQUIBASE_TUTORIAL_DIR/scripts/validate_step4_baseline.sh
 ```
 
 **Expected Output:**
@@ -648,22 +725,45 @@ lb -e dev -- \
 
 ## Step 5: Deploy Baseline Across Environments
 
-Now create the master changelog and deploy the baseline to each environment:
+Now deploy the baseline to each environment. The master changelog (`changelog.xml`) should already exist if you ran `setup_tutorial.sh` or `step01_setup_environment.sh`. If not, create it first (see alternative manual commands below).
 
-### Create Master Changelog
-
-The "master changelog" (`changelog.xml`) is the single entry point Liquibase reads when you run commands like `update`, `status`, or `changelogSync`. Every environment properties file we created earlier (`changelog-file=database/changelog/changelog.xml`) points to this file, so it must exist before any deployment action.
-
-Why not just point Liquibase directly at the baseline file? Because separating the baseline into its own file and including it from a master changelog lets you append future incremental changes (V0001, V0002, etc.) in a controlled, chronological order. The master changelog becomes your ordered "table of contents" of database evolution:
-
-1. Include baseline (captured state of the existing DB)
-2. Add new changeset files (e.g. `changes/V0001__add_orders_table.sql`)
-3. Keep a stable root reference for CI/CD pipelines and tooling
-
-Without this file, Liquibase would have no central place to aggregate future changes. Therefore creating it is required before deploying (syncing) the baseline across environments.
+**Recommended: Use the step script**
 
 ```bash
-# Create master changelog that includes baseline
+# Run the automated step script
+$LIQUIBASE_TUTORIAL_DIR/scripts/step06_deploy_baseline.sh
+```
+
+The script will:
+- Deploy baseline to development (using `changelogSync` - marks as executed without running)
+- Deploy baseline to staging (using `update` - actually executes SQL)
+- Deploy baseline to production (using `update` - actually executes SQL)
+- Tag all environments with `baseline`
+- Show success/fail indicators for each environment
+
+**Validate Step 5:**
+
+```bash
+# Run the validation script to verify deployment across all environments
+$LIQUIBASE_TUTORIAL_DIR/scripts/validate_step5_deploy.sh
+```
+
+**What the script does:**
+
+- **Development**: Uses `changelogSync` because objects already exist (we created them in Step 2)
+  - Records changes as executed WITHOUT running the SQL
+  - Think of it as "checking items off a to-do list" without doing the work
+  
+- **Staging & Production**: Uses `update` because databases are empty
+  - Actually executes the SQL statements to create objects
+  - Think of it as "doing the task AND checking it off"
+
+**Alternative: Manual commands**
+
+If you need to create the master changelog manually or prefer step-by-step control:
+
+```bash
+# Create master changelog that includes baseline (if not already created)
 cat > "$LIQUIBASE_TUTORIAL_DATA_DIR/database/changelog/changelog.xml" << 'EOF'
 <?xml version="1.0" encoding="UTF-8"?>
 <databaseChangeLog
@@ -692,19 +792,26 @@ Development already has these objects (we created them in Step 2), so we **sync*
 - **When to use sync**: When the database already has the objects (like our dev database)
 - **When to use update**: When the database is empty or missing objects (like our stage/prod databases)
 
-**Think of it like checking items off a to-do list:**
+**Manual deployment commands:**
 
-- `update` = Do the task AND check it off
-- `changelogSync` = Just check it off (task was already done)
+If you prefer to deploy manually instead of using the script:
 
 ```bash
 cd "$LIQUIBASE_TUTORIAL_DATA_DIR"
 
-# Sync baseline to development (don't actually run DDL, just record as executed)
+# Development: Sync baseline (marks as executed without running SQL)
 lb -e dev -- changelogSync
-
-# Tag the baseline (create a named checkpoint for rollback purposes)
 lb -e dev -- tag baseline
+
+# Staging: Deploy baseline (actually executes SQL)
+lb -e stg -- updateSQL  # Preview first
+lb -e stg -- update     # Execute
+lb -e stg -- tag baseline
+
+# Production: Deploy baseline (actually executes SQL)
+lb -e prd -- updateSQL  # Preview first
+lb -e prd -- update     # Execute
+lb -e prd -- tag baseline
 ```
 
 **What does tag do?**
@@ -720,89 +827,55 @@ lb -e dev -- tag baseline
 - Documents the "before Liquibase" state
 - Useful for audit and compliance
 
-**Verify sync worked:**
+**Verify deployment worked:**
 
 ```bash
-# Check DATABASECHANGELOG table
+# Check DATABASECHANGELOG table in any environment
 sqlcmd-tutorial -Q "
 USE orderdb;
-SELECT ID, AUTHOR, FILENAME, DATEEXECUTED, TAG
+SELECT ID, AUTHOR, FILENAME, DATEEXECUTED, TAG, EXECTYPE
 FROM DATABASECHANGELOG
 ORDER BY DATEEXECUTED;
-"
-```
-
-### Deploy to Staging (Step 5: Baseline)
-
-Staging is empty, so we **deploy** the baseline (actually run all DDL):
-
-```bash
-cd "$LIQUIBASE_TUTORIAL_DATA_DIR"
-
-# Preview what will run
-lb -e stg -- updateSQL
-
-# Deploy to staging
-lb -e stg -- update
-
-# Tag the baseline
-lb -e stg -- tag baseline
-```
-
-**Verify deployment:**
-
-```bash
-# Check objects exist in staging
-sqlcmd-tutorial -Q "
-USE orderdb;
-SELECT
-    SCHEMA_NAME(schema_id) AS SchemaName,
-    name AS ObjectName,
-    type_desc AS ObjectType
-FROM sys.objects
-WHERE schema_id = SCHEMA_ID('app')
-ORDER BY type_desc, name;
-"
-```
-
-### Deploy to Production (Step 5: Baseline)
-
-Production is also empty, so we deploy the baseline:
-
-```bash
-cd "$LIQUIBASE_TUTORIAL_DATA_DIR"
-
-# Preview what will run
-lb -e prd -- updateSQL
-
-# Deploy to production
-lb -e prd -- update
-
-# Tag the baseline
-lb -e prd -- tag baseline
-```
-
-**Verify deployment:**
-
-```bash
-# Check objects exist in production
-sqlcmd-tutorial -Q "
-USE orderdb;
-SELECT
-    SCHEMA_NAME(schema_id) AS SchemaName,
-    name AS ObjectName,
-    type_desc AS ObjectType
-FROM sys.objects
-WHERE schema_id = SCHEMA_ID('app')
-ORDER BY type_desc, name;
 "
 ```
 
 **What did we accomplish?**
 
 ✅ All three environments now have identical schemas
-✅ Liquibase is tracking what ran where
+✅ Liquibase is tracking what ran where (DATABASECHANGELOG table in each environment)
+✅ Baseline tagged in all environments for rollback capability
 ✅ We can now deploy future changes safely
+
+**Verify deployment summary:**
+
+Run the validation script to confirm everything deployed correctly:
+
+```bash
+$LIQUIBASE_TUTORIAL_DIR/scripts/validate_step5_deploy.sh
+```
+
+This will check:
+- DATABASECHANGELOG table exists in all environments
+- Baseline changesets tracked in all environments
+- Baseline objects (app.customer) exist in all environments
+- Baseline tag created in all environments
+
+---
+
+## Quick Reference: Step Scripts Summary
+
+For convenience, here's a summary of all step scripts used in Part 1:
+
+| Step | Script | Purpose | Validation |
+|------|--------|---------|------------|
+| 0/3 | `step01_setup_environment.sh` | Create directories, properties, changelog | `validate_step3_properties.sh` |
+| - | `step02_start_containers.sh` | Start SQL Server containers | Manual check |
+| 1 | `step03_create_databases.sh` | Create orderdb on all containers | `validate_step1_databases.sh` |
+| 2 | `step04_populate_dev.sh` | Populate dev with sample objects | `validate_step2_populate.sh` |
+| 4 | `step05_generate_baseline.sh` | Generate baseline from dev | `validate_step4_baseline.sh` |
+| 5 | `step06_deploy_baseline.sh` | Deploy baseline to all environments | `validate_step5_deploy.sh` |
+
+All scripts show success/fail indicators and provide clear next steps.
 
 ---
 

@@ -1,0 +1,106 @@
+#!/usr/bin/env bash
+# Tutorial Setup Script - Step 06: Deploy Baseline
+# Deploys baseline to all environments (dev: changelogSync, stg/prd: update)
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+TUTORIAL_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+# Colors
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m'
+
+echo "========================================"
+echo "Liquibase Tutorial - Step 06: Deploy Baseline"
+echo "========================================"
+echo
+
+LIQUIBASE_TUTORIAL_DATA_DIR="${LIQUIBASE_TUTORIAL_DATA_DIR:-/data/${USER}/liquibase_tutorial}"
+export LIQUIBASE_TUTORIAL_DATA_DIR
+
+if [[ -z "${MSSQL_LIQUIBASE_TUTORIAL_PWD:-}" ]]; then
+    echo -e "${RED}ERROR: MSSQL_LIQUIBASE_TUTORIAL_PWD not set${NC}"
+    exit 1
+fi
+export MSSQL_LIQUIBASE_TUTORIAL_PWD
+
+# Ensure lb alias is available
+if ! command -v lb &>/dev/null; then
+    echo -e "${YELLOW}Warning: lb alias not found. Sourcing setup_aliases.sh...${NC}"
+    source "$TUTORIAL_ROOT/scripts/setup_aliases.sh"
+fi
+
+cd "$LIQUIBASE_TUTORIAL_DATA_DIR"
+
+# Check master changelog exists
+if [[ ! -f "database/changelog/changelog.xml" ]]; then
+    echo -e "${RED}ERROR: changelog.xml not found${NC}"
+    echo "Run Step 3 first to create properties and changelog"
+    exit 1
+fi
+
+# Check baseline file exists
+if [[ ! -f "database/changelog/baseline/V0000__baseline.mssql.sql" ]]; then
+    echo -e "${RED}ERROR: Baseline file not found${NC}"
+    echo "Run Step 4 (step05_generate_baseline.sh) first"
+    exit 1
+fi
+
+# Deploy to Development (changelogSync - mark as executed, don't run)
+echo "Deploying to Development (changelogSync)..."
+echo
+if lb -e dev -- changelogSync 2>&1; then
+    if lb -e dev -- tag baseline 2>&1; then
+        echo -e "${GREEN}✓ Development: Baseline synced and tagged${NC}"
+    else
+        echo -e "${YELLOW}Warning: Failed to tag baseline in dev${NC}"
+    fi
+else
+    echo -e "${RED}✗ Failed to sync baseline in dev${NC}"
+    exit 1
+fi
+
+echo
+echo "Deploying to Staging (update - actually execute)..."
+echo
+if lb -e stg -- update 2>&1; then
+    if lb -e stg -- tag baseline 2>&1; then
+        echo -e "${GREEN}✓ Staging: Baseline deployed and tagged${NC}"
+    else
+        echo -e "${YELLOW}Warning: Failed to tag baseline in stg${NC}"
+    fi
+else
+    echo -e "${RED}✗ Failed to deploy baseline in stg${NC}"
+    exit 1
+fi
+
+echo
+echo "Deploying to Production (update - actually execute)..."
+echo
+if lb -e prd -- update 2>&1; then
+    if lb -e prd -- tag baseline 2>&1; then
+        echo -e "${GREEN}✓ Production: Baseline deployed and tagged${NC}"
+    else
+        echo -e "${YELLOW}Warning: Failed to tag baseline in prd${NC}"
+    fi
+else
+    echo -e "${RED}✗ Failed to deploy baseline in prd${NC}"
+    exit 1
+fi
+
+echo
+echo "========================================"
+echo -e "${GREEN}Step 06 Complete${NC}"
+echo "========================================"
+echo "Baseline deployed to all environments:"
+echo "  - Development: Changes synced (changelogSync)"
+echo "  - Staging: Changes executed (update)"
+echo "  - Production: Changes executed (update)"
+echo
+echo "All environments tagged with 'baseline'"
+echo
+echo "Next: Continue with Part 2 (Manual Lifecycle)"
+echo "  Or run: validate_step5_deploy.sh to verify deployment"

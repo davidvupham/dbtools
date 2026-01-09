@@ -79,6 +79,38 @@ Files validated:
 - ✅ **Comprehensive troubleshooting**: Good coverage of common issues
 - ✅ **Validation scripts**: Automated validation for tutorial steps
 
+## Requirements 12 & 13: Scripting & Validation (Now Fully Met)
+
+### Requirement 12: Script each step ✅ **Fully Met**
+
+- ✅ **All step scripts show success/fail indicators**:
+  - `step01_setup_environment.sh` - Shows ✓ Done / ERROR messages
+  - `step02_start_containers.sh` - Shows [GREEN]Step 02 Complete, health check status
+  - `step03_create_databases.sh` - Shows ✓ Done / ✗ Failed for each container
+  - `step04_populate_dev.sh` - Shows success/fail with object verification
+  - `step05_generate_baseline.sh` - Shows [GREEN]Step 05 Complete / [RED]✗ Failed
+  - `step06_deploy_baseline.sh` - Shows ✓/✗ indicators for each environment
+
+- ✅ **Part 1 tutorial updated to reference step scripts**:
+  - Each step now shows "Recommended: Use the step script" section
+  - Alternative manual commands still provided for learning
+  - Scripts minimize copy/paste by automating entire steps
+
+### Requirement 13: Validation scripts ✅ **Fully Met**
+
+- ✅ **Validation scripts created for all steps**:
+  - `validate_step1_databases.sh` - Validates databases exist on all containers
+  - `validate_step2_populate.sh` - Validates dev objects and sample data
+  - `validate_step3_properties.sh` - Validates properties files and changelog
+  - `validate_step4_baseline.sh` - Validates baseline file format (enhanced with expected output)
+  - `validate_step5_deploy.sh` - Validates deployment across all environments
+
+- ✅ **All validation scripts show expected output**:
+  - Each script displays [PASS]/[FAIL] indicators
+  - Expected output summary shown on success
+  - Fix instructions shown on failure
+  - Clear error messages with actionable guidance
+
 ## Remaining Items (Non-Critical)
 
 The following items from the design doc are pending completion but don't affect tutorial functionality:
@@ -89,7 +121,7 @@ The following items from the design doc are pending completion but don't affect 
 - [ ] Test on RHEL
 
 ### Functionality
-- [ ] All scripts show pass/fail
+- [x] All scripts show pass/fail ✅ **Now Complete**
 - [ ] Cleanup removes all artifacts
 - [ ] Multi-user (shared host) tested
 - [ ] CI/CD workflow runs successfully

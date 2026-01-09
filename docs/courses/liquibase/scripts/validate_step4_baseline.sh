@@ -74,7 +74,26 @@ fi
 echo "---------------------------------------------------"
 if [[ "$FAILURES" -eq 0 ]]; then
     echo -e "${GREEN}Step 4 VALIDATION SUCCESSFUL${NC}"
+    echo "========================================"
+    echo
+    echo "Expected output summary:"
+    echo "  ✓ Baseline file exists: V0000__baseline.mssql.sql"
+    echo "  ✓ Contains '-- liquibase formatted sql' header"
+    echo "  ✓ Uses 'app.' schema prefix for all objects"
+    echo "  ✓ Contains CREATE TABLE app.customer"
+    echo "  ✓ Contains CREATE VIEW app.v_customer_basic"
+    echo "  ✓ Contains INDEX definitions"
+    echo "  ✓ Contains multiple changesets (>= 4)"
+    echo
+    exit 0
 else
     echo -e "${RED}Step 4 VALIDATION FAILED ($FAILURES errors)${NC}"
+    echo "========================================"
+    echo
+    echo "To fix:"
+    echo "  1. Ensure Step 2 completed (dev database populated)"
+    echo "  2. Run step05_generate_baseline.sh"
+    echo "  3. Or manually run: lb -e dev -- generateChangeLog --schemas=app --include-schema=true"
+    echo
     exit 1
 fi

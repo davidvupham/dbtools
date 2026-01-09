@@ -120,7 +120,7 @@ This document defines requirements and design for the Liquibase course refactori
 
 ### Functionality
 
-- [ ] All scripts show pass/fail
+- [x] All scripts show pass/fail
 - [ ] Cleanup removes all artifacts
 - [ ] Multi-user (shared host) tested
 - [ ] CI/CD workflow runs successfully
