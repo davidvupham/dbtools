@@ -49,6 +49,7 @@ echo "Generating baseline from mssql_dev..."
 echo
 
 # Run Liquibase generateChangeLog
+# IMPORTANT: Use --include-schema=true to include schema names in SQL (app. prefix)
 $CR_CMD run --rm \
     $NETWORK_ARGS \
     -v "${LIQUIBASE_TUTORIAL_DATA_DIR}:/data" \
@@ -58,6 +59,7 @@ $CR_CMD run --rm \
     --password="${MSSQL_LIQUIBASE_TUTORIAL_PWD}" \
     --changelog-file=/data/database/changelog/baseline/V0000__baseline.mssql.sql \
     --schemas=app \
+    --include-schema=true \
     --overwrite-output-file=true \
     generateChangeLog 2>&1
 

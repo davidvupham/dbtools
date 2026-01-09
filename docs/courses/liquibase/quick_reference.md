@@ -73,5 +73,5 @@ podman logs mssql_dev
 podman exec mssql_dev /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P "$MSSQL_LIQUIBASE_TUTORIAL_PWD" -Q "SELECT 1"
 
 # Validate environment
-./scripts/validate_tutorial.sh
+./validation/scripts/validate_tutorial.sh
 ```

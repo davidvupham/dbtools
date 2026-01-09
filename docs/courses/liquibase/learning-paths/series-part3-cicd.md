@@ -79,6 +79,7 @@ On GitHub:
 
    ```bash
    # Clone to your data directory
+   # Replace ORG_NAME with your GitHub organization or username
    git clone https://github.com/ORG_NAME/sqlserver-liquibase-demo.git "$LIQUIBASE_TUTORIAL_DATA_DIR"
    cd "$LIQUIBASE_TUTORIAL_DATA_DIR"
    ```
@@ -95,6 +96,7 @@ Treat your Liquibase project directory as a Git repository:
 cd "$LIQUIBASE_TUTORIAL_DATA_DIR"
 
 git init
+# Replace ORG_NAME with your GitHub organization or username
 git remote add origin https://github.com/ORG_NAME/sqlserver-liquibase-demo.git
 git branch -M main
 ```
@@ -220,6 +222,9 @@ For this combined tutorial we will:
 - [ ] **Run a self-hosted runner container** attached to the same network. One common pattern is to use the official Actions runner image and environment variables:
 
    ```bash
+   # Replace placeholders before running:
+   # - ORG_NAME: Your GitHub organization or username
+   # - YOUR_REGISTRATION_TOKEN: Token from GitHub Settings → Actions → Runners → New self-hosted runner
    docker run -d --restart unless-stopped \
      --name liquibase-actions-runner \
      --network liquibase_tutorial \
@@ -232,10 +237,9 @@ For this combined tutorial we will:
      ghcr.io/actions/actions-runner:latest
    ```
 
-   Replace placeholders:
-
-  - ORG_NAME: GitHub organization or user name hosting the repo
-  - YOUR_REGISTRATION_TOKEN: Token from Actions → Runners → New self-hosted runner
+   **Important:** Replace the placeholders:
+   - `ORG_NAME`: Your GitHub organization or username hosting the repository
+   - `YOUR_REGISTRATION_TOKEN`: The registration token from GitHub (Settings → Actions → Runners → New self-hosted runner)
 
    Note: Remove the docker.sock mount if the runner does not need to start other containers.
 
@@ -305,21 +309,24 @@ jdbc:sqlserver://dev-sql.database.windows.net:1433;
 
 ```text
 # DEV environment (mssql_dev container)
-jdbc:sqlserver://localhost:${MSSQL_DEV_PORT:-14331};
+# Note: Replace the port number (14331) with your actual MSSQL_DEV_PORT value
+jdbc:sqlserver://localhost:14331;
   databaseName=orderdb;
   encrypt=true;
   trustServerCertificate=true;
   loginTimeout=30;
 
 # STG environment (mssql_stg container)
-jdbc:sqlserver://localhost:${MSSQL_STG_PORT:-14332};
+# Note: Replace the port number (14332) with your actual MSSQL_STG_PORT value
+jdbc:sqlserver://localhost:14332;
   databaseName=orderdb;
   encrypt=true;
   trustServerCertificate=true;
   loginTimeout=30;
 
 # PRD environment (mssql_prd container)
-jdbc:sqlserver://localhost:${MSSQL_PRD_PORT:-14333};
+# Note: Replace the port number (14333) with your actual MSSQL_PRD_PORT value
+jdbc:sqlserver://localhost:14333;
   databaseName=orderdb;
   encrypt=true;
   trustServerCertificate=true;
@@ -559,7 +566,7 @@ You now have a pipeline that:
 Even after you add CI/CD, the helper scripts from Part 1 remain extremely valuable:
 
 - **`lb` wrapper**
-  - Local "single command" runner for Liquibase against `orderdb`, `orderdb`, `orderdb`.
+  - Local "single command" runner for Liquibase against dev, stg, and prd environments (all using the `orderdb` database).
   - Mirrors the same `changelog.xml` that CI/CD uses.
   - Perfect for:
     - Trying new changesets quickly.

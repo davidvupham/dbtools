@@ -55,6 +55,8 @@ GO
 EOF
 ```
 
+> **Note:** The `IF NOT EXISTS` check ensures this changeset is **idempotent**—it can be safely run multiple times without errors. If the table already exists, the changeset will be skipped. This is a best practice for all database changes.
+
 ### Include the Change in `changelog.xml`
 
 Update the master changelog to include this new change.
@@ -106,7 +108,7 @@ ORDER BY type_desc, name;
 
 **Expected output:**
 
-You should see 10 rows total. The V0001 changeset adds the `orders` table plus 3 new constraints (DF__orders__status, DF_orders_date, FK_orders_customer, PK_orders), bringing the total to 10 objects in the app schema:
+You should see 10 rows total. The V0001 changeset adds the `orders` table plus 4 new constraints (DF__orders__status, DF_orders_date, FK_orders_customer, PK_orders), bringing the total to 10 objects in the app schema:
 
 ```text
 SchemaName  ObjectName                  ObjectType
@@ -170,6 +172,8 @@ ORDER BY type_desc, name;
 "
 ```
 
+**Expected output:** You should see the same 10 objects as in development, including the `orders` table and its constraints.
+
 ### Deploy to Production
 
 ```bash
@@ -197,6 +201,8 @@ ORDER BY type_desc, name;
 "
 ```
 
+**Expected output:** You should see the same 10 objects as in development and staging, including the `orders` table and its constraints.
+
 At this point all three environments have the new `orders` table.
 
 ## Step 8: Tags and Release Management
@@ -223,7 +229,7 @@ View what's been deployed and when:
 ```bash
 sqlcmd-tutorial -Q "
 USE orderdb;
-SELECT 
+SELECT
     ID,
     AUTHOR,
     FILENAME,
@@ -258,7 +264,7 @@ V0001-add-orders-table    tutorial  database/changelog/changes/V0001...sql      
 
 ### Add Rollback Blocks to Changesets
 
-When using Formatted SQL files, you use explicit rollback comments. Update your `changelog.xml` if needed, although for Formatted SQL, the rollback is usually inside the SQL file itself.
+When using Formatted SQL files, you define rollback blocks directly in the SQL file using `--rollback` comments. The `changelog.xml` file does not need rollback blocks for Formatted SQL files—the rollback instructions are embedded in the SQL file itself.
 
 ### Add Rollback to SQL File
 
@@ -297,15 +303,18 @@ EOF
 cd $LIQUIBASE_TUTORIAL_DATA_DIR
 
 # Preview what rollback will do
-lb -e dev -- rollbackSQL release-v1.0
+# Note: We're rolling back to 'baseline' to remove all changes after baseline
+# You could also rollback to 'release-v1.0' to remove only changes after that tag
+lb -e dev -- rollbackSQL baseline
 
 # Execute rollback to baseline (removes V0001 orders table)
+# This removes all changesets executed after the baseline tag
 lb -e dev -- rollback baseline
 
 # Verify the orders table is gone
 sqlcmd-tutorial -Q "
 USE orderdb;
-SELECT name FROM sys.objects 
+SELECT name FROM sys.objects
 WHERE schema_id = SCHEMA_ID('app') AND type = 'U';
 "
 ```
@@ -365,10 +374,16 @@ Capture the drift as a proper changeset:
 # Generate a changelog capturing the drift
 lb -e dev -- diffChangeLog \
     --referenceUrl="offline:mssql?changeLogFile=database/changelog/changelog.xml" \
-    --changelogFile=/data/database/changelog/changes/V0002__drift_loyalty_points.xml
+    --changelogFile=$LIQUIBASE_TUTORIAL_DATA_DIR/database/changelog/changes/V0002__drift_loyalty_points.xml
 ```
 
-Review and edit the generated file, then include it in your master changelog.
+**Workflow after detecting drift:**
+1. Review the generated changelog file
+2. Edit it if needed (e.g., adjust changeset ID, add comments)
+3. Include it in your master `changelog.xml` if you want to keep the drift
+4. Deploy the changeset to track the drift in your version control
+
+**Note:** In this tutorial, we'll remove the drift column to restore the original state, so we won't include this generated file. In a real scenario, you would review and decide whether to keep or revert the drift.
 
 ### Best Practice: Regular Drift Checks
 
@@ -390,6 +405,12 @@ fi
 
 Now add more changes following the established pattern.
 
+> **Note:** If you generated a drift detection file `V0002__drift_loyalty_points.xml` in Step 10, you have two options:
+> - Remove or rename that file if you don't want to include the drift
+> - Use `V0003` for the index changeset below if you want to keep the drift file
+>
+> For this tutorial, we'll proceed with `V0002` for the index, assuming the drift file was not included in the master changelog.
+
 ### V0002: Add Index to Orders
 
 ```bash
@@ -400,8 +421,8 @@ cat > $LIQUIBASE_TUTORIAL_DATA_DIR/database/changelog/changes/V0002__add_orders_
 -- Purpose: Add performance index on order_date for reporting queries
 
 IF NOT EXISTS (
-    SELECT 1 FROM sys.indexes 
-    WHERE name = 'IX_orders_order_date' 
+    SELECT 1 FROM sys.indexes
+    WHERE name = 'IX_orders_order_date'
     AND object_id = OBJECT_ID('app.orders')
 )
 BEGIN

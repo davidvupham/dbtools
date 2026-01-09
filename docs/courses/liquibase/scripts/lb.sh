@@ -178,11 +178,17 @@ fi
 
 JDBC_URL="jdbc:sqlserver://${HOSTNAME}:${PORT};databaseName=orderdb;encrypt=true;trustServerCertificate=true"
 
+# Volume mount flags: Docker doesn't support :z,U, Podman needs it for SELinux
+VOLUME_MOUNT="${PROJECT_DIR}:/data"
+if [[ "$CR" == "podman" ]]; then
+  VOLUME_MOUNT="${PROJECT_DIR}:/data:z,U"
+fi
+
 # docker run invocation
 exec "$CR" run --rm \
   --user "$(id -u):$(id -g)" \
   "${NETWORK_ARG[@]}" \
-  -v "${PROJECT_DIR}:/data:z,U" \
+  -v "${VOLUME_MOUNT}" \
   "${LB_IMAGE_DEFAULT}" \
   --defaults-file="/data/env/liquibase.${ENVIRONMENT}.properties" \
   --url="${JDBC_URL}" \

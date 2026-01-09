@@ -115,7 +115,7 @@ Before starting this tutorial, you should have:
 export LIQUIBASE_TUTORIAL_DIR="/path/to/your/repo/docs/courses/liquibase"
 
 # Run cleanup script to remove any existing containers
-"$LIQUIBASE_TUTORIAL_DIR/scripts/cleanup_validation.sh"
+"$LIQUIBASE_TUTORIAL_DIR/validation/scripts/cleanup_validation.sh"
 ```
 
 **What the cleanup script does:**
@@ -435,7 +435,7 @@ The script will:
 
 ```bash
 # Run the validation script to verify databases were created
-$LIQUIBASE_TUTORIAL_DIR/scripts/validate_step1_databases.sh
+$LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_step1_databases.sh
 ```
 
 **Alternative: Manual commands**
@@ -519,7 +519,7 @@ The script will:
 
 ```bash
 # Run the validation script to verify objects were created
-$LIQUIBASE_TUTORIAL_DIR/scripts/validate_step2_populate.sh
+$LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_step2_populate.sh
 ```
 
 **Alternative: Manual commands**
@@ -572,7 +572,7 @@ This script creates:
 
 ```bash
 # Run the validation script to verify properties files
-$LIQUIBASE_TUTORIAL_DIR/scripts/validate_step3_properties.sh
+$LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_step3_properties.sh
 ```
 
 **Alternative: Manual creation**
@@ -677,7 +677,7 @@ The script will:
 
 ```bash
 # Run the validation script to verify baseline format and content
-$LIQUIBASE_TUTORIAL_DIR/scripts/validate_step4_baseline.sh
+$LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_step4_baseline.sh
 ```
 
 **Alternative: Manual commands**
@@ -772,7 +772,7 @@ The script will:
 
 ```bash
 # Run the validation script to verify deployment across all environments
-$LIQUIBASE_TUTORIAL_DIR/scripts/validate_step5_deploy.sh
+$LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_step5_deploy.sh
 ```
 
 **What the script does:**
@@ -780,7 +780,7 @@ $LIQUIBASE_TUTORIAL_DIR/scripts/validate_step5_deploy.sh
 - **Development**: Uses `changelogSync` because objects already exist (we created them in Step 2)
   - Records changes as executed WITHOUT running the SQL
   - Think of it as "checking items off a to-do list" without doing the work
-  
+
 - **Staging & Production**: Uses `update` because databases are empty
   - Actually executes the SQL statements to create objects
   - Think of it as "doing the task AND checking it off"
@@ -878,7 +878,7 @@ ORDER BY DATEEXECUTED;
 Run the validation script to confirm everything deployed correctly:
 
 ```bash
-$LIQUIBASE_TUTORIAL_DIR/scripts/validate_step5_deploy.sh
+$LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_step5_deploy.sh
 ```
 
 This will check:
@@ -926,7 +926,7 @@ Now that your baseline is in place and Liquibase is tracking changes across dev/
 
 ```bash
 # Run the automated cleanup script
-"$LIQUIBASE_TUTORIAL_DIR/scripts/cleanup_validation.sh"
+"$LIQUIBASE_TUTORIAL_DIR/validation/scripts/cleanup_validation.sh"
 ```
 
 **What the cleanup script does:**
@@ -951,7 +951,7 @@ This script also:
 - Removes the `$LIQUIBASE_TUTORIAL_DATA_DIR` directory (with confirmation)
 - Removes all data volumes
 
-> **Important:** 
+> **Important:**
 > - Run cleanup **after completing** the tutorial to free up resources
 > - Run cleanup **before starting** a new tutorial run to ensure a clean environment
 > - You can run cleanup scripts any time you want to **reset the tutorial environment** and start again from Part 1

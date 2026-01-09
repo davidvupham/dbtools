@@ -24,7 +24,7 @@ EXISTING=$(docker ps -a --filter "name=mssql_" --format "{{.Names}}" 2>/dev/null
 if [ "$EXISTING" -gt 0 ]; then
     echo -e "${YELLOW}Warning: Found existing mssql containers${NC}"
     echo "If you encounter port conflicts, run cleanup first:"
-    echo "  $TUTORIAL_ROOT/scripts/cleanup_validation.sh"
+    echo "  $TUTORIAL_ROOT/validation/scripts/cleanup_validation.sh"
     echo
 fi
 

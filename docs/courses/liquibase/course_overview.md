@@ -55,7 +55,7 @@ source "$LIQUIBASE_TUTORIAL_DIR/scripts/setup_tutorial.sh"
 $LIQUIBASE_TUTORIAL_DIR/scripts/step02_start_containers.sh
 
 # 4. Validate environment
-$LIQUIBASE_TUTORIAL_DIR/scripts/validate_tutorial.sh
+$LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_tutorial.sh
 ```
 
 ## Technology Stack
@@ -70,4 +70,4 @@ $LIQUIBASE_TUTORIAL_DIR/scripts/validate_tutorial.sh
 
 - See the [Troubleshooting Guide](./troubleshooting.md) for common issues
 - Check container logs: `podman logs mssql_dev`
-- Validate environment: `./scripts/validate_tutorial.sh`
+- Validate environment: `./validation/scripts/validate_tutorial.sh`
