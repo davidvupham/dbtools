@@ -65,12 +65,43 @@ if [[ ! -f "database/changelog/baseline/V0000__baseline.mssql.sql" ]]; then
     exit 1
 fi
 
+# Helper function to tag idempotently (handles case where tag already exists)
+# Returns: 0 on success, 1 on error
+# Sets TAG_STATUS: "new" if tag was created, "exists" if tag already existed
+tag_baseline_idempotent() {
+    local env=$1
+    local tag_output
+    TAG_STATUS=""
+    tag_output=$("$LB_CMD" -e "$env" -- tag baseline 2>&1) || {
+        local exit_code=$?
+        # Check if the error is because the tag already exists
+        if echo "$tag_output" | grep -qiE "(already exists|already.*tag|tag.*exists)"; then
+            echo -e "${YELLOW}ℹ Tag 'baseline' already exists in $env (idempotent: skipping)${NC}"
+            TAG_STATUS="exists"
+            return 0
+        else
+            # Some other error occurred
+            echo "$tag_output" >&2
+            TAG_STATUS="error"
+            return $exit_code
+        fi
+    }
+    # Tag succeeded (newly created)
+    echo "$tag_output"
+    TAG_STATUS="new"
+    return 0
+}
+
 # Deploy to Development (changelogSync - mark as executed, don't run)
 echo "Deploying to Development (changelogSync)..."
 echo
 if "$LB_CMD" -e dev -- changelogSync 2>&1; then
-    if "$LB_CMD" -e dev -- tag baseline 2>&1; then
-        echo -e "${GREEN}✓ Development: Baseline synced and tagged${NC}"
+    if tag_baseline_idempotent dev; then
+        if [[ "$TAG_STATUS" == "new" ]]; then
+            echo -e "${GREEN}✓ Development: Baseline synced and tagged${NC}"
+        elif [[ "$TAG_STATUS" == "exists" ]]; then
+            echo -e "${GREEN}✓ Development: Baseline synced (tag already existed)${NC}"
+        fi
     else
         echo -e "${YELLOW}Warning: Failed to tag baseline in dev${NC}"
     fi
@@ -83,8 +114,12 @@ echo
 echo "Deploying to Staging (update - actually execute)..."
 echo
 if "$LB_CMD" -e stg -- update 2>&1; then
-    if "$LB_CMD" -e stg -- tag baseline 2>&1; then
-        echo -e "${GREEN}✓ Staging: Baseline deployed and tagged${NC}"
+    if tag_baseline_idempotent stg; then
+        if [[ "$TAG_STATUS" == "new" ]]; then
+            echo -e "${GREEN}✓ Staging: Baseline deployed and tagged${NC}"
+        elif [[ "$TAG_STATUS" == "exists" ]]; then
+            echo -e "${GREEN}✓ Staging: Baseline deployed (tag already existed)${NC}"
+        fi
     else
         echo -e "${YELLOW}Warning: Failed to tag baseline in stg${NC}"
     fi
@@ -97,8 +132,12 @@ echo
 echo "Deploying to Production (update - actually execute)..."
 echo
 if "$LB_CMD" -e prd -- update 2>&1; then
-    if "$LB_CMD" -e prd -- tag baseline 2>&1; then
-        echo -e "${GREEN}✓ Production: Baseline deployed and tagged${NC}"
+    if tag_baseline_idempotent prd; then
+        if [[ "$TAG_STATUS" == "new" ]]; then
+            echo -e "${GREEN}✓ Production: Baseline deployed and tagged${NC}"
+        elif [[ "$TAG_STATUS" == "exists" ]]; then
+            echo -e "${GREEN}✓ Production: Baseline deployed (tag already existed)${NC}"
+        fi
     else
         echo -e "${YELLOW}Warning: Failed to tag baseline in prd${NC}"
     fi
