@@ -897,13 +897,13 @@ All scripts show success/fail indicators and provide clear next steps.
 
 Now that your baseline is in place and Liquibase is tracking changes across dev/stage/prod, choose your next path:
 
-- **Recommended for new Liquibase users** – Continue with **Part 2: Manual Liquibase Deployment Lifecycle** (`series-part2-manual.md`):
+- **Recommended for new Liquibase users** – Continue with [**Part 2: Manual Liquibase Deployment Lifecycle**](series-part2-manual.md):
   - Learn how to add new changesets (V0001 and beyond).
   - Practice deploying changes manually through dev → stage → prod.
   - Experiment with tags, rollback, and drift detection before introducing automation.
 
 - **If you already understand manual Liquibase workflows** – You can skip directly to
-  **Part 3: From Local Liquibase Project to GitHub Actions CI/CD** (`series-part3-cicd.md`) to wire this same project into a GitHub Actions pipeline.
+  [**Part 3: From Local Liquibase Project to GitHub Actions CI/CD**](series-part3-cicd.md) to wire this same project into a GitHub Actions pipeline.
 
 ## Cleanup After Tutorial
 
