@@ -28,6 +28,7 @@
 - [Next Steps](#next-steps)
 - [Cleanup After Tutorial](#cleanup-after-tutorial)
 - [Appendix: Container Networking Details](#appendix-container-networking-details)
+- [Appendix: File Permissions and User Mapping](#appendix-file-permissions-and-user-mapping)
 
 ---
 
@@ -375,22 +376,7 @@ $LIQUIBASE_TUTORIAL_DATA_DIR/              # e.g., /data/$USER/liquibase_tutoria
 └── mssql_dev/, mssql_stg/, mssql_prd/ (SQL Server data volumes)
 ```
 
-**About file permissions:**
-
-All Liquibase Docker commands in this tutorial use the `--user $(id -u):$(id -g)` flag, which makes the container run as your user instead of root. This means:
-
-- ✅ **Files and directories created by Liquibase will be owned by the user executing the dev container**
-- ✅ No permission issues when editing or deleting files
-- ✅ No need for `sudo chown` or `chmod 777`
-- ✅ Matches production best practices
-
-**How it works:**
-
-```bash
---user $(id -u):$(id -g)  # Runs container as your current user ID and group ID
-```
-
-This is the recommended approach for running Docker containers that create files in mounted volumes.
+> **Note on file permissions:** All containers are configured to create files owned by your user. For details, see [Appendix: File Permissions and User Mapping](#appendix-file-permissions-and-user-mapping).
 
 ## Step 1: Create Three Database Environments
 
@@ -707,7 +693,7 @@ lb -e dev -- \
 - Scanned all database objects (tables, views, indexes, constraints, schemas)
 - Generated Formatted SQL file representing the current state
 - Saved it as `V0000__baseline.mssql.sql` in the baseline folder
-- **File is owned by the user executing the dev container** because we used `--user $(id -u):$(id -g)`
+- File is owned by your user (no permission issues when editing)
 
 **What gets captured:**
 
@@ -1066,3 +1052,43 @@ done
 **Expected output:** Each should show `mssql_dev`, `mssql_stg`, or `mssql_prd` respectively (not container IDs).
 
 **Note:** If you have existing containers that were created before this fix, they may still show container IDs. To fix them, you'll need to recreate the containers (your data will persist in the volumes). Stop and remove the containers, then run `start_mssql_containers.sh` again to create them with the correct hostnames.
+
+---
+
+## Appendix: File Permissions and User Mapping
+
+This tutorial uses different user mapping approaches for different containers to ensure files created in mounted volumes are owned by your user, avoiding permission issues.
+
+### Liquibase Containers
+
+Liquibase containers use the `--user $(id -u):$(id -g)` flag to run as your user instead of root:
+
+- Files and directories created by Liquibase are owned by your user
+- No permission issues when editing or deleting files
+- No need for `sudo chown` or `chmod 777`
+- Matches production best practices
+
+```bash
+--user $(id -u):$(id -g)  # Runs container as your current user ID and group ID
+```
+
+This flag is applied automatically by the `lb` wrapper script when running Liquibase commands.
+
+### MSSQL Containers
+
+MSSQL containers use the `--userns=keep-id` flag with rootless Podman (applied automatically in `start_mssql_containers.sh`):
+
+- Ensures container UIDs map to your host user's UID namespace
+- Files created by SQL Server (running as `mssql` user, UID 10001 inside the container) are owned by your user on the host
+- Works seamlessly with rootless Podman (the recommended way to run Podman)
+- The `:U` volume flag ensures proper ownership changes
+
+```bash
+--userns=keep-id  # Maps container UIDs to host user's UID namespace (Podman only)
+```
+
+**Note:** When using Docker, the `--userns=keep-id` flag is not needed as Docker handles user namespaces differently. The MSSQL containers will still create files with correct ownership when using Docker.
+
+### Why Different Approaches?
+
+SQL Server requires running as a specific user (`mssql`, UID 10001) inside the container, so we can't use `--user` to override it. Instead, we use `--userns=keep-id` to map container UIDs to your host user's namespace. Liquibase, on the other hand, can run as any user, so we use `--user` to run it directly as your user.

@@ -14,6 +14,14 @@
 #   - Docker ignores these flags, so they are safe for both runtimes
 #   - :Z = Relabel volume for SELinux (private to this container)
 #   - :U = Recursively change ownership to match container user
+#
+# User Namespace Handling:
+#   - For rootless Podman: When using the start_mssql_containers.sh script on RHEL/Fedora
+#     systems, the script automatically adds --userns=keep-id flag to ensure proper UID
+#     mapping. This ensures files created in mounted volumes are owned by your host user.
+#   - For Docker: User namespaces are handled differently, so no additional flags are needed.
+#   - When using podman-compose or docker-compose directly, the :U volume flag helps with
+#     ownership, but for best results with rootless Podman, use the start script instead.
 
 services:
   # ============================================================================
