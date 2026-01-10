@@ -471,10 +471,6 @@ mssql_dev          orderdb        app
 
 Now create some database objects in **development only**. This simulates an existing database you want to start managing with Liquibase.
 
-**Important**: The script assumes the `app` schema already exists (created in Step 1). In production, schemas would be created through infrastructure scripts or database initialization.
-
-**Recommended: Use the step script**
-
 ```bash
 # Run the automated step script
 $LIQUIBASE_TUTORIAL_DIR/scripts/populate_dev_database.sh
@@ -513,13 +509,28 @@ sqlcmd-tutorial verify_orderdb_data.sql
 - Verified with `verify_orderdb_objects.sql` and `verify_orderdb_data.sql`
 - Staging and production are still empty (we'll deploy to them next)
 
-**Note**: The `app` schema must exist before running Liquibase. In production, create schemas through infrastructure automation.
+**Note**: The `app` schema must exist before running Liquibase.
 
 **Why only in dev?**
 
 - This represents your "existing production database" scenario
 - In real life, you'd generate baseline from production
 - For this tutorial, we're using dev as our "existing" database
+
+> **💡 Connecting to the Database**
+>
+> If you want to run queries manually to verify the database state:
+>
+> ```bash
+> # Interactive SQL session to mssql_dev
+> podman exec -it mssql_dev /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P "$MSSQL_LIQUIBASE_TUTORIAL_PWD" -d orderdb
+>
+> # Or run a single query
+> sqlcmd-tutorial -e dev -Q "SELECT * FROM app.customer;"
+> ```
+>
+> In the interactive session, type `GO` after each query to execute, and `EXIT` to quit.
+
 
 ## Step 3: Configure Liquibase for Each Environment
 

@@ -56,6 +56,16 @@ ELSE
     PRINT 'View app.v_customer_basic already exists';
 GO
 
+-- Reset and insert sample data (idempotent)
+DELETE FROM app.customer;
+INSERT INTO app.customer (first_name, last_name, email)
+VALUES 
+    ('Alice', 'Johnson', 'alice.johnson@example.com'),
+    ('Bob', 'Smith', 'bob.smith@example.com'),
+    ('Carol', 'Williams', 'carol.williams@example.com');
+PRINT 'Inserted sample data: 3 rows';
+GO
+
 -- Verify objects
 SELECT 'Created objects:' AS Status;
 SELECT TABLE_SCHEMA + '.' + TABLE_NAME AS ObjectName, TABLE_TYPE 
@@ -78,20 +88,30 @@ else
     exit 1
 fi
 
-result=$(echo "$SQL_SCRIPT" | $CR_CMD exec -i mssql_dev /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P "$MSSQL_LIQUIBASE_TUTORIAL_PWD" 2>&1)
-echo "$result"
+echo "Using container runtime: $CR_CMD"
+echo "$SQL_SCRIPT" | $CR_CMD exec -i mssql_dev /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P "$MSSQL_LIQUIBASE_TUTORIAL_PWD" 2>&1 || true
 
-if echo "$result" | grep -q "app.customer"; then
+# Verify objects exist (idempotent check)
+echo
+echo "Verifying database objects..."
+
+verify_result=$($CR_CMD exec mssql_dev /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa \
+    -P "$MSSQL_LIQUIBASE_TUTORIAL_PWD" \
+    -d orderdb \
+    -Q "SET NOCOUNT ON; SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'app' AND TABLE_NAME IN ('customer', 'v_customer_basic');" \
+    -h -1 -W 2>&1 | grep -E '^[0-9]+$' | head -1)
+
+if [[ "$verify_result" == "2" ]]; then
     echo
     echo "========================================"
-    echo -e "${GREEN}Development Database Populated${NC}"
+    echo -e "${GREEN}Development Database Ready${NC}"
     echo "========================================"
-    echo "Development database populated with:"
-    echo "  - app.customer table"
-    echo "  - app.v_customer_basic view"
+    echo "Objects in orderdb:"
+    echo "  ✓ app.customer table"
+    echo "  ✓ app.v_customer_basic view"
     echo
     echo "Next: Run generate_liquibase_baseline.sh"
 else
-    echo -e "${RED}✗ Failed to create objects${NC}"
+    echo -e "${RED}✗ Failed to verify objects (found $verify_result of 2 expected)${NC}"
     exit 1
 fi

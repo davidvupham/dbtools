@@ -36,21 +36,23 @@ else
     exit 1
 fi
 
+echo "Using container runtime: $CR_CMD"
 echo "Checking development database objects..."
 echo
 
 # Check app schema exists
 echo -n "  Checking app schema... "
-result=$($CR_CMD exec mssql_dev /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa \
+raw_result=$($CR_CMD exec mssql_dev /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa \
     -P "$MSSQL_LIQUIBASE_TUTORIAL_PWD" \
     -d orderdb \
-    -Q "SELECT name FROM sys.schemas WHERE name = 'app';" \
-    -h -1 -W 2>&1 | grep -v "^$" | tail -1)
+    -Q "SET NOCOUNT ON; SELECT name FROM sys.schemas WHERE name = 'app';" \
+    -h -1 -W 2>&1)
+result=$(echo "$raw_result" | grep -v "^$" | tail -1)
 
 if [[ "$result" == "app" ]]; then
     pass "app schema exists"
 else
-    fail "app schema not found"
+    fail "app schema not found (got: '$result')"
 fi
 
 # Check customer table exists
@@ -58,7 +60,7 @@ echo -n "  Checking customer table... "
 result=$($CR_CMD exec mssql_dev /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa \
     -P "$MSSQL_LIQUIBASE_TUTORIAL_PWD" \
     -d orderdb \
-    -Q "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'app' AND TABLE_NAME = 'customer';" \
+    -Q "SET NOCOUNT ON; SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'app' AND TABLE_NAME = 'customer';" \
     -h -1 -W 2>&1 | grep -v "^$" | tail -1)
 
 if [[ "$result" == "customer" ]]; then
@@ -72,13 +74,13 @@ echo -n "  Checking customer table columns... "
 columns=$($CR_CMD exec mssql_dev /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa \
     -P "$MSSQL_LIQUIBASE_TUTORIAL_PWD" \
     -d orderdb \
-    -Q "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = 'app' AND TABLE_NAME = 'customer' ORDER BY ORDINAL_POSITION;" \
+    -Q "SET NOCOUNT ON; SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = 'app' AND TABLE_NAME = 'customer' ORDER BY ORDINAL_POSITION;" \
     -h -1 -W 2>&1 | grep -v "^$" | grep -v "column_name" | tr '\n' ',')
 
-if echo "$columns" | grep -q "customer_id" && echo "$columns" | grep -q "full_name" && echo "$columns" | grep -q "email"; then
+if echo "$columns" | grep -q "customer_id" && echo "$columns" | grep -q "first_name" && echo "$columns" | grep -q "last_name" && echo "$columns" | grep -q "email"; then
     pass "Customer table has required columns"
 else
-    fail "Customer table missing required columns (expected: customer_id, full_name, email, phone_number, created_at)"
+    fail "Customer table missing required columns (expected: customer_id, first_name, last_name, email, created_at)"
 fi
 
 # Check view exists
@@ -86,7 +88,7 @@ echo -n "  Checking v_customer_basic view... "
 result=$($CR_CMD exec mssql_dev /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa \
     -P "$MSSQL_LIQUIBASE_TUTORIAL_PWD" \
     -d orderdb \
-    -Q "SELECT name FROM sys.views WHERE schema_id = SCHEMA_ID('app') AND name = 'v_customer_basic';" \
+    -Q "SET NOCOUNT ON; SELECT name FROM sys.views WHERE schema_id = SCHEMA_ID('app') AND name = 'v_customer_basic';" \
     -h -1 -W 2>&1 | grep -v "^$" | tail -1)
 
 if [[ "$result" == "v_customer_basic" ]]; then
@@ -100,8 +102,13 @@ echo -n "  Checking sample data... "
 row_count=$($CR_CMD exec mssql_dev /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa \
     -P "$MSSQL_LIQUIBASE_TUTORIAL_PWD" \
     -d orderdb \
-    -Q "SELECT COUNT(*) FROM app.customer;" \
-    -h -1 -W 2>&1 | grep -v "^$" | grep -v "^-" | tail -1)
+    -Q "SET NOCOUNT ON; SELECT COUNT(*) FROM app.customer;" \
+    -h -1 -W 2>&1 | grep -v "^$" | grep -v "^-" | tail -1) || row_count=0
+
+# Ensure row_count is a valid number
+if ! [[ "$row_count" =~ ^[0-9]+$ ]]; then
+    row_count=0
+fi
 
 if [[ "$row_count" -ge "3" ]]; then
     pass "Sample data exists ($row_count rows in app.customer)"
@@ -114,8 +121,13 @@ echo -n "  Checking indexes... "
 index_count=$($CR_CMD exec mssql_dev /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa \
     -P "$MSSQL_LIQUIBASE_TUTORIAL_PWD" \
     -d orderdb \
-    -Q "SELECT COUNT(*) FROM sys.indexes i INNER JOIN sys.objects o ON i.object_id = o.object_id WHERE o.schema_id = SCHEMA_ID('app') AND o.name = 'customer';" \
-    -h -1 -W 2>&1 | grep -v "^$" | grep -v "^-" | tail -1)
+    -Q "SET NOCOUNT ON; SELECT COUNT(*) FROM sys.indexes i INNER JOIN sys.objects o ON i.object_id = o.object_id WHERE o.schema_id = SCHEMA_ID('app') AND o.name = 'customer';" \
+    -h -1 -W 2>&1 | grep -v "^$" | grep -v "^-" | tail -1) || index_count=0
+
+# Ensure index_count is a valid number
+if ! [[ "$index_count" =~ ^[0-9]+$ ]]; then
+    index_count=0
+fi
 
 if [[ "$index_count" -ge "1" ]]; then
     pass "Indexes exist on customer table ($index_count found)"
@@ -131,7 +143,7 @@ if [[ "$FAILURES" -eq 0 ]]; then
     echo
     echo "Expected output summary:"
     echo "  ✓ app schema exists"
-    echo "  ✓ app.customer table exists with required columns"
+    echo "  ✓ app.customer table exists with required columns (customer_id, first_name, last_name, email, created_at)"
     echo "  ✓ app.v_customer_basic view exists"
     echo "  ✓ Sample data exists (>= 3 rows)"
     echo "  ✓ Indexes exist on customer table"
