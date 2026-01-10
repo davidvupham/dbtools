@@ -108,6 +108,7 @@ if [[ "$USE_PODMAN_RUN" == "true" ]]; then
     # Start dev container
     echo "Starting mssql_dev on port 14331..."
     $CR_CMD run -d --name mssql_dev \
+        --hostname mssql_dev \
         -p 14331:1433 \
         -e ACCEPT_EULA=Y \
         -e MSSQL_SA_PASSWORD="$MSSQL_LIQUIBASE_TUTORIAL_PWD" \
@@ -118,6 +119,7 @@ if [[ "$USE_PODMAN_RUN" == "true" ]]; then
     # Start staging container
     echo "Starting mssql_stg on port 14332..."
     $CR_CMD run -d --name mssql_stg \
+        --hostname mssql_stg \
         -p 14332:1433 \
         -e ACCEPT_EULA=Y \
         -e MSSQL_SA_PASSWORD="$MSSQL_LIQUIBASE_TUTORIAL_PWD" \
@@ -128,6 +130,7 @@ if [[ "$USE_PODMAN_RUN" == "true" ]]; then
     # Start production container
     echo "Starting mssql_prd on port 14333..."
     $CR_CMD run -d --name mssql_prd \
+        --hostname mssql_prd \
         -p 14333:1433 \
         -e ACCEPT_EULA=Y \
         -e MSSQL_SA_PASSWORD="$MSSQL_LIQUIBASE_TUTORIAL_PWD" \

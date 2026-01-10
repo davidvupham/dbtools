@@ -13,7 +13,6 @@
   - [Step 0: Configure Environment and Aliases](#step-0-configure-environment-and-aliases)
   - [Start the Tutorial SQL Server Containers](#start-the-tutorial-sql-server-containers)
   - [Build Liquibase container image](#build-liquibase-container-image)
-- [Important Note About Container Commands](#important-note-about-container-commands)
   - [Check SQL Server is Running](#check-sql-server-is-running)
   - [Helper Script for sqlcmd](#helper-script-for-sqlcmd)
 - [Project Structure](#project-structure)
@@ -28,6 +27,7 @@
   - [Deploy to Production](#deploy-to-production-step-5-baseline)
 - [Next Steps](#next-steps)
 - [Cleanup After Tutorial](#cleanup-after-tutorial)
+- [Appendix: Container Networking Details](#appendix-container-networking-details)
 
 ---
 
@@ -259,52 +259,11 @@ cr images | grep liquibase
 cr run --rm liquibase:latest --version
 ```
 
-**Note:** The Liquibase container is not meant to stay running - it executes commands and exits. We'll use `docker run` (or `podman run` on RHEL) to execute Liquibase commands throughout this tutorial. The `lb` wrapper script auto-detects your container runtime.
+**Note:** The Liquibase container is not meant to stay running - it executes commands and exits. We'll use the `lb` wrapper script to run Liquibase commands throughout this tutorial. The wrapper automatically handles all container networking and configuration details for you.
 
-Troubleshooting:
-
-- If an alias like `lb` is not found in a new shell, re-source the aliases: `source "$LIQUIBASE_TUTORIAL_DIR/scripts/setup_aliases.sh"`.
-
-### Important Note About Container Commands
-
-The `lb` wrapper auto-detects your container runtime (Docker or Podman based on your OS) and encapsulates the full run invocation so you don't need to know paths or flags.
-
-> **Important:** The properties files use `localhost` in the JDBC connection string. This requires running the Liquibase container with `--network host` so it can see `localhost` as the host machine. The `lb` wrapper automatically sets `LB_NETWORK=host` when needed, but if you run raw container commands, you must include `--network host` in your `docker run` or `podman run` command.
-
-**Note:** The commands below are examples to show wrapper usage. Do not run them yet. Run `lb` commands only after Step 1 (databases created) and after your properties point to those databases (created in Step 0 or Step 3).
-
-If you run them now, they will fail with connection/DB-not-found errors because the databases don't exist yet. However, seeing Liquibase start and attempt a connection still confirms the Liquibase container image is built and accessible.
-
-```bash
-# Show status for dev
-lb -e dev -- status --verbose
-
-# Run update in staging
-lb -e stg -- update
-```
-
-Note: The standalone `--` is intentional. It separates options for the `lb` wrapper (like `-e dev`) from the actual Liquibase command and its flags (for example, `status --verbose`).
-
-Under the hood, `lb` runs Docker with the correct user, network, mounted project directory, and injects your `--defaults-file` and password.
-
-If you prefer to run raw container commands yourself, mirror this pattern (note use of `LIQUIBASE_TUTORIAL_DATA_DIR` instead of hard-coded paths):
-
-```bash
-cr run --rm \
-  -v "$LIQUIBASE_TUTORIAL_DATA_DIR":/data:Z,U \
-  liquibase:latest \
-  --defaults-file=/data/env/liquibase.<ENV>.properties \
-  --password="${MSSQL_LIQUIBASE_TUTORIAL_PWD}" \
-  <LIQUIBASE_COMMAND>
-```
-
-Notes:
-
-- The password parameter must come after the defaults file but before the Liquibase command
-- Use the dedicated Docker network `liquibase_tutorial`
-- Run as your user (not root) to avoid permission issues
-
-If you see connection errors, verify the correct network and password parameter order.
+> **Quick tip:** If an alias like `lb` is not found in a new shell, re-source the aliases: `source "$LIQUIBASE_TUTORIAL_DIR/scripts/setup_aliases.sh"`.
+>
+> For detailed information about how container networking works in this tutorial (including how the `lb` wrapper handles Docker vs Podman), see the [Appendix: Container Networking Details](#appendix-container-networking-details) at the end of this document.
 
 ### Helper Script for sqlcmd
 
@@ -318,7 +277,8 @@ To simplify running SQL commands inside the tutorial SQL Server container, use t
 
 ```bash
 # EXAMPLE ONLY – DO NOT RUN YET
-sqlcmd-tutorial -Q "SELECT @@SERVERNAME AS ServerName, GETDATE() AS CurrentTime;"
+# Note: Use -e dev/stg/prd to specify which SQL Server instance to connect to
+sqlcmd-tutorial -e dev -Q "SELECT @@SERVERNAME AS ServerName, GETDATE() AS CurrentTime;"
 ```
 
 - Run a `.sql` file:
@@ -689,7 +649,8 @@ cd "$LIQUIBASE_TUTORIAL_DATA_DIR"
 # IMPORTANT: Use --schemas=app to capture only the app schema
 # IMPORTANT: Use --include-schema=true to include schemaName attributes in the SQL
 # IMPORTANT: Use .sql extension to generate Formatted SQL
-LB_NETWORK=host lb -e dev -- \
+# Note: The lb wrapper automatically handles network configuration based on your container runtime (Docker/Podman)
+lb -e dev -- \
   --changelog-file=/data/database/changelog/baseline/V0000__baseline.mssql.sql \
   --schemas=app \
   --include-schema=true \
@@ -954,3 +915,136 @@ This script also:
 > - Run cleanup **after completing** the tutorial to free up resources
 > - Run cleanup **before starting** a new tutorial run to ensure a clean environment
 > - You can run cleanup scripts any time you want to **reset the tutorial environment** and start again from Part 1
+
+---
+
+## Appendix: Container Networking Details
+
+This section explains how container networking works in this tutorial for readers who want to understand the technical details or need to troubleshoot connection issues.
+
+### Architecture Overview
+
+The tutorial uses a multi-container setup:
+
+- **SQL Server containers** (`mssql_dev`, `mssql_stg`, `mssql_prd`): Three separate containers that expose ports to the host machine (14331, 14332, 14333 respectively)
+- **Liquibase container**: A separate "run-once" container that executes Liquibase commands and exits
+
+Since the SQL Server containers expose ports to the **host machine**, the Liquibase container needs to connect through the host's network to reach these ports.
+
+### How the `lb` Wrapper Works
+
+The `lb` wrapper script auto-detects your container runtime (Docker or Podman based on your OS) and handles all networking configuration automatically:
+
+- **Docker**: Uses `--network host` with `localhost` (allows container to access host ports 14331/14332/14333 directly)
+- **Podman**: Uses `--network slirp4netns` with `host.containers.internal` (special hostname that resolves to the host)
+
+The wrapper dynamically generates the correct JDBC URL and network configuration, so the properties file `localhost` value is effectively replaced at runtime.
+
+### Properties File vs Runtime Configuration
+
+The properties files use `localhost` in the JDBC connection string for reference:
+
+```properties
+url=jdbc:sqlserver://localhost:14331;databaseName=orderdb;encrypt=true;trustServerCertificate=true
+```
+
+However, the `lb` wrapper overrides this at runtime by passing a `--url` parameter that uses the correct hostname for your container runtime. This means you don't need to worry about the networking details - just use the `lb` wrapper as shown in the tutorial.
+
+### Example: Using the `lb` Wrapper
+
+The standalone `--` in `lb` commands is intentional. It separates options for the `lb` wrapper from the actual Liquibase command:
+
+```bash
+# Show status for dev
+lb -e dev -- status --verbose
+
+# Run update in staging
+lb -e stg -- update
+```
+
+In these examples:
+- `-e dev` is an option for the `lb` wrapper (specifies the environment)
+- `--` separates wrapper options from Liquibase commands
+- `status --verbose` and `update` are the actual Liquibase commands
+
+Under the hood, `lb` runs the container with the correct user, network, mounted project directory, and injects your `--defaults-file` and password.
+
+### Running Raw Container Commands (Advanced)
+
+If you prefer to run raw container commands yourself (for debugging or customization), you need to match the network configuration:
+
+**For Docker:**
+
+```bash
+cr run --rm \
+  --user "$(id -u):$(id -g)" \
+  --network host \
+  -v "$LIQUIBASE_TUTORIAL_DATA_DIR":/data:Z,U \
+  liquibase:latest \
+  --defaults-file=/data/env/liquibase.<ENV>.properties \
+  --url="jdbc:sqlserver://localhost:<PORT>;databaseName=orderdb;encrypt=true;trustServerCertificate=true" \
+  --username=sa \
+  --password="${MSSQL_LIQUIBASE_TUTORIAL_PWD}" \
+  <LIQUIBASE_COMMAND>
+```
+
+**For Podman:**
+
+```bash
+cr run --rm \
+  --user "$(id -u):$(id -g)" \
+  --network slirp4netns:port_handler=slirp4netns \
+  -v "$LIQUIBASE_TUTORIAL_DATA_DIR":/data:z,U \
+  liquibase:latest \
+  --defaults-file=/data/env/liquibase.<ENV>.properties \
+  --url="jdbc:sqlserver://host.containers.internal:<PORT>;databaseName=orderdb;encrypt=true;trustServerCertificate=true" \
+  --username=sa \
+  --password="${MSSQL_LIQUIBASE_TUTORIAL_PWD}" \
+  <LIQUIBASE_COMMAND>
+```
+
+**Important points:**
+
+- Replace `<PORT>` with 14331 (dev), 14332 (stg), or 14333 (prd) depending on environment
+- Replace `<ENV>` with dev, stg, or prd
+- The password parameter must come after the defaults file but before the Liquibase command
+- The `--url` parameter overrides the URL in the properties file
+- Run as your user (`--user $(id -u):$(id -g)`) to avoid permission issues
+
+### Troubleshooting Connection Issues
+
+If you see connection errors when using the `lb` wrapper:
+
+1. Verify the SQL Server containers are running: `cr ps | grep mssql_`
+2. Check that containers show as healthy: look for `(healthy)` status
+3. Verify the correct network configuration is being used (the wrapper handles this automatically)
+4. Verify the password is set: `echo $MSSQL_LIQUIBASE_TUTORIAL_PWD`
+
+If running raw container commands, also verify:
+
+- Network mode matches your container runtime (host for Docker, slirp4netns for Podman)
+- Hostname in JDBC URL matches the network mode (`localhost` for host network, `host.containers.internal` for slirp4netns)
+- Port numbers match the environment (14331/14332/14333)
+
+### Setting SQL Server Instance Names
+
+SQL Server containers are automatically configured with server names that match their container names (`mssql_dev`, `mssql_stg`, `mssql_prd`). This is done by setting the container hostname when the containers are created:
+
+- **Docker Compose**: The `docker-compose.yml` file sets `hostname: mssql_dev/stg/prd` for each service
+- **Podman/Docker run**: The `start_mssql_containers.sh` script uses the `--hostname` flag when creating containers
+
+SQL Server on Linux uses the container's hostname as its `@@SERVERNAME` when it first starts, so the server name is set automatically without requiring any manual configuration.
+
+**Verifying the server name:**
+
+```bash
+# Check server name for each environment
+for env in dev stg prd; do
+    echo "=== mssql_${env} ==="
+    sqlcmd-tutorial -e "$env" -Q "SELECT @@SERVERNAME AS ServerName" -h -1 -W
+done
+```
+
+**Expected output:** Each should show `mssql_dev`, `mssql_stg`, or `mssql_prd` respectively (not container IDs).
+
+**Note:** If you have existing containers that were created before this fix, they may still show container IDs. To fix them, you'll need to recreate the containers (your data will persist in the volumes). Stop and remove the containers, then run `start_mssql_containers.sh` again to create them with the correct hostnames.
