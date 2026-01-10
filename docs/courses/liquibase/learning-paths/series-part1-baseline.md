@@ -9,8 +9,8 @@
   - [What You'll Learn](#what-youll-learn)
   - [Prerequisites](#prerequisites)
 - [Environment Setup](#environment-setup)
-  - [Before You Start: Clean Up Previous Runs](#before-you-start-clean-up-previous-runs)
   - [Step 0: Configure Environment and Aliases](#step-0-configure-environment-and-aliases)
+  - [Before You Start: Clean Up Previous Runs](#before-you-start-clean-up-previous-runs)
   - [Start the Tutorial SQL Server Containers](#start-the-tutorial-sql-server-containers)
   - [Build Liquibase container image](#build-liquibase-container-image)
   - [Check SQL Server is Running](#check-sql-server-is-running)
@@ -107,33 +107,9 @@ Before starting this tutorial, you should have:
 
 ## Environment Setup
 
-### Before You Start: Clean Up Previous Runs
-
-**Important:** Before starting the tutorial, perform a complete cleanup to remove all containers, networks, and data from previous runs. This ensures you start with a completely fresh environment.
-
-```bash
-# Set tutorial directory (if not already set)
-export LIQUIBASE_TUTORIAL_DIR="/path/to/your/repo/docs/courses/liquibase"
-
-# Run complete cleanup script to remove all containers, networks, and data
-"$LIQUIBASE_TUTORIAL_DIR/scripts/cleanup_tutorial.sh"
-```
-
-**What the cleanup script does:**
-- Stops and removes all tutorial containers (`mssql_dev`, `mssql_stg`, `mssql_prd`, `liquibase_tutorial`)
-- Removes Docker networks (`liquibase_tutorial_network`)
-- **Removes the data directory** (`$LIQUIBASE_TUTORIAL_DATA_DIR`) - this deletes all databases, changelogs, configuration files, and volumes
-- Provides a complete fresh start for the tutorial
-
-The script will prompt for confirmation before removing the data directory to prevent accidental data loss.
-
-> **Warning:** This cleanup will remove all tutorial data including databases and changelogs. Only run this if you want to start completely fresh from the beginning.
-
-> **Note:** You can skip this step if you're certain the environment is clean, but it's recommended to run it to ensure a clean starting state.
-
 ### Step 0: Configure Environment and Aliases
 
-First, set the `LIQUIBASE_TUTORIAL_DIR` environment variable to point to your repository's tutorial directory. This variable will be used throughout the tutorial.
+Set the `LIQUIBASE_TUTORIAL_DIR` environment variable to point to your repository's tutorial directory. This variable will be used throughout the tutorial.
 
 ```bash
 # Set this to YOUR repository path (adjust as needed)
@@ -144,7 +120,7 @@ export LIQUIBASE_TUTORIAL_DIR="/path/to/your/repo/docs/courses/liquibase"
 # export LIQUIBASE_TUTORIAL_DIR="/data/dbtools/docs/courses/liquibase"
 ```
 
-**Shared Docker Host Setup:** Create your per-user project directory (one-time setup):
+**Create Per-User Project Directory:** Create your per-user project directory (one-time setup):
 
 ```bash
 # Create /data/$USER directory (requires sudo)
@@ -164,6 +140,27 @@ The setup script will:
 - Create aliases: `sqlcmd-tutorial`, `lb`, `cr`
 - Create Liquibase properties files for dev, stg, and prd environments
 - Prompt for SQL Server password (`MSSQL_LIQUIBASE_TUTORIAL_PWD`) if not already set
+
+### Before You Start: Clean Up Previous Runs
+
+**Important:** Before starting the tutorial, perform a complete cleanup to remove all containers, networks, and data from previous runs. This ensures you start with a completely fresh environment.
+
+```bash
+# Run complete cleanup script to remove all containers, networks, and data
+"$LIQUIBASE_TUTORIAL_DIR/scripts/cleanup_tutorial.sh"
+```
+
+**What the cleanup script does:**
+- Stops and removes all tutorial containers (`mssql_dev`, `mssql_stg`, `mssql_prd`, `liquibase_tutorial`)
+- Removes Docker networks (`liquibase_tutorial_network`)
+- **Removes the data directory** (`$LIQUIBASE_TUTORIAL_DATA_DIR`) - this deletes all databases, changelogs, configuration files, and volumes
+- Provides a complete fresh start for the tutorial
+
+The script will prompt for confirmation before removing the data directory to prevent accidental data loss.
+
+> **Warning:** This cleanup will remove all tutorial data including databases and changelogs. Only run this if you want to start completely fresh from the beginning.
+
+> **Note:** You can skip this step if you're certain the environment is clean, but it's recommended to run it to ensure a clean starting state.
 
 ### Start the Tutorial SQL Server Containers
 
