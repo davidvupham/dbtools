@@ -6,13 +6,10 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-TUTORIAL_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-DOCKER_DIR="$TUTORIAL_ROOT/docker"
 
 # Colors
 RED='\033[0;31m'
 GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
 NC='\033[0m'
 
 echo "========================================"
@@ -29,35 +26,12 @@ if [[ -z "${MSSQL_LIQUIBASE_TUTORIAL_PWD:-}" ]]; then
 fi
 export MSSQL_LIQUIBASE_TUTORIAL_PWD
 
-# Detect container runtime
-if command -v docker &>/dev/null && docker compose version &>/dev/null; then
-    CR_CMD="docker"
-    NETWORK_ARGS="--network=host"
-    DB_HOST="localhost"
-elif command -v podman &>/dev/null; then
-    CR_CMD="podman"
-    NETWORK_ARGS="--network slirp4netns:port_handler=slirp4netns"
-    DB_HOST="host.containers.internal"
-else
-    echo -e "${RED}ERROR: No container runtime found${NC}"
-    exit 1
-fi
-
-# Determine port (use MSSQL_DEV_PORT if set, otherwise default)
-DEV_PORT="${MSSQL_DEV_PORT:-14331}"
-
 echo "Generating baseline from mssql_dev..."
 echo
 
-# Run Liquibase generateChangeLog
+# Use lb.sh wrapper to run Liquibase generateChangeLog
 # IMPORTANT: Use --include-schema=true to include schema names in SQL (app. prefix)
-$CR_CMD run --rm \
-    $NETWORK_ARGS \
-    -v "${LIQUIBASE_TUTORIAL_DATA_DIR}:/data" \
-    liquibase:latest \
-    --url="jdbc:sqlserver://${DB_HOST}:${DEV_PORT};databaseName=orderdb;encrypt=true;trustServerCertificate=true" \
-    --username=sa \
-    --password="${MSSQL_LIQUIBASE_TUTORIAL_PWD}" \
+"$SCRIPT_DIR/lb.sh" -e dev -- \
     --changelog-file=/data/platform/mssql/database/orderdb/changelog/baseline/V0000__baseline.mssql.sql \
     --schemas=app \
     --include-schema=true \

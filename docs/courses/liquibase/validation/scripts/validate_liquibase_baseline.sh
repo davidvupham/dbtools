@@ -31,7 +31,7 @@ else
 fi
 
 # 2. Formatted SQL Header Check
-if grep -q "\-\- liquibase formatted sql" "$BASELINE_FILE"; then
+if grep -Fq -- "-- liquibase formatted sql" "$BASELINE_FILE"; then
     pass "Header matches '-- liquibase formatted sql'"
 else
     fail "Header missing or incorrect. Expected '-- liquibase formatted sql'"
@@ -68,7 +68,7 @@ else
 fi
 
 # 5. Changeset Check
-COUNT_CHANGESETS=$(grep -c "\-\- changeset" "$BASELINE_FILE")
+COUNT_CHANGESETS=$(grep -Fc -- "-- changeset" "$BASELINE_FILE")
 if [[ "$COUNT_CHANGESETS" -ge 4 ]]; then
     pass "Found $COUNT_CHANGESETS changesets (Expected >= 4)"
 else

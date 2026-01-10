@@ -46,6 +46,16 @@ ELSE
     PRINT 'Table app.customer already exists';
 GO
 
+-- Create index on customer name (for search optimization)
+IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_customer_name' AND object_id = OBJECT_ID('app.customer'))
+BEGIN
+    CREATE NONCLUSTERED INDEX IX_customer_name ON app.customer (last_name, first_name);
+    PRINT 'Created index: IX_customer_name';
+END
+ELSE
+    PRINT 'Index IX_customer_name already exists';
+GO
+
 -- Create customer view
 IF NOT EXISTS (SELECT * FROM sys.views WHERE name = 'v_customer_basic' AND schema_id = SCHEMA_ID('app'))
 BEGIN
@@ -108,6 +118,7 @@ if [[ "$verify_result" == "2" ]]; then
     echo "========================================"
     echo "Objects in orderdb:"
     echo "  ✓ app.customer table"
+    echo "  ✓ IX_customer_name index"
     echo "  ✓ app.v_customer_basic view"
     echo
     echo "Next: Run generate_liquibase_baseline.sh"

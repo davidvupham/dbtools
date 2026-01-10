@@ -672,6 +672,7 @@ cd "$LIQUIBASE_TUTORIAL_DATA_DIR"
 # IMPORTANT: Use --schemas=app to capture only the app schema
 # IMPORTANT: Use --include-schema=true to include schemaName attributes in the SQL
 # IMPORTANT: Use .sql extension to generate Formatted SQL
+# IMPORTANT: Use --overwrite-output-file=true if baseline already exists and you want to regenerate it
 # Note: The lb wrapper automatically handles network configuration based on your container runtime (Docker/Podman)
 lb -e dev -- \
   --changelog-file=/data/platform/mssql/database/orderdb/changelog/baseline/V0000__baseline.mssql.sql \
@@ -697,6 +698,7 @@ Step 4 VALIDATION SUCCESSFUL
 ### If something looks off
 
 - Regenerate the baseline with the exact flags (only `app` schema, include schema attributes):
+  - **If baseline already exists**, add `--overwrite-output-file=true` to replace the existing file:
 
 ```bash
 lb -e dev -- \
@@ -741,6 +743,7 @@ Now deploy the baseline to each environment. The master changelog (`changelog.xm
 
 ```bash
 # Run the automated step script
+# Note: This script is idempotent - safe to run multiple times
 $LIQUIBASE_TUTORIAL_DIR/scripts/deploy_liquibase_baseline.sh
 ```
 
@@ -755,6 +758,7 @@ The script will:
 
 ```bash
 # Run the validation script to verify deployment across all environments
+# Note: Ensure deploy_liquibase_baseline.sh completed successfully first
 $LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_liquibase_deploy.sh
 ```
 
