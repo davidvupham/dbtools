@@ -105,7 +105,18 @@ fi
 # Step 6: Wait for ports to be released
 echo
 echo -e "${YELLOW}Step 5: Waiting for ports to be released...${NC}"
-for port in 14331 14332 14333; do
+
+# Try to load ports from .ports file, otherwise use defaults
+LIQUIBASE_TUTORIAL_DATA_DIR="${LIQUIBASE_TUTORIAL_DATA_DIR:-/data/${USER}/liquibase_tutorial}"
+PORTS_FILE="$LIQUIBASE_TUTORIAL_DATA_DIR/.ports"
+if [[ -f "$PORTS_FILE" ]]; then
+    source "$PORTS_FILE"
+fi
+MSSQL_DEV_PORT="${MSSQL_DEV_PORT:-14331}"
+MSSQL_STG_PORT="${MSSQL_STG_PORT:-14332}"
+MSSQL_PRD_PORT="${MSSQL_PRD_PORT:-14333}"
+
+for port in $MSSQL_DEV_PORT $MSSQL_STG_PORT $MSSQL_PRD_PORT; do
     for i in {1..10}; do
         if ! netstat -tuln 2>/dev/null | grep -q ":$port " && ! ss -tuln 2>/dev/null | grep -q ":$port "; then
             echo -e "${GREEN}✓ Port $port is free${NC}"

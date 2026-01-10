@@ -45,12 +45,30 @@ if [[ -z "${MSSQL_LIQUIBASE_TUTORIAL_PWD:-}" ]]; then
 fi
 export MSSQL_LIQUIBASE_TUTORIAL_PWD
 
+# Load port assignments if .ports file exists (from previous start_mssql_containers.sh run)
+PORTS_FILE="$LIQUIBASE_TUTORIAL_DATA_DIR/.ports"
+if [[ -f "$PORTS_FILE" ]]; then
+    source "$PORTS_FILE"
+    echo -e "${GREEN}Using ports from $PORTS_FILE${NC}"
+fi
+
+# Use ports from .ports file, or fall back to defaults
+MSSQL_DEV_PORT="${MSSQL_DEV_PORT:-14331}"
+MSSQL_STG_PORT="${MSSQL_STG_PORT:-14332}"
+MSSQL_PRD_PORT="${MSSQL_PRD_PORT:-14333}"
+
 # Create properties files for each environment
+# Note: lb.sh overrides the URL at runtime, so these ports are for reference/debugging
 echo -n "Creating Liquibase properties files... "
 for env in dev stg prd; do
-    port=$((14331 + $(echo "dev stg prd" | tr ' ' '\n' | grep -n "^${env}$" | cut -d: -f1) - 1))
+    case "$env" in
+        dev) port="$MSSQL_DEV_PORT";;
+        stg) port="$MSSQL_STG_PORT";;
+        prd) port="$MSSQL_PRD_PORT";;
+    esac
     cat > "$LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/env/liquibase.mssql_${env}.properties" << EOF
 # ${env^^} Environment - Liquibase Properties
+# Note: lb.sh dynamically sets the URL based on .ports file; this is a fallback
 url=jdbc:sqlserver://localhost:${port};databaseName=orderdb;encrypt=true;trustServerCertificate=true
 username=sa
 changelog-file=changelog/changelog.xml

@@ -931,7 +931,7 @@ If you want to completely remove all tutorial data (including databases and chan
 
 ```bash
 # Run the full cleanup script
-"$LIQUIBASE_TUTORIAL_DIR/scripts/cleanup_liquibase_tutorial.sh"
+"$LIQUIBASE_TUTORIAL_DIR/scripts/cleanup_tutorial.sh"
 ```
 
 This script also:

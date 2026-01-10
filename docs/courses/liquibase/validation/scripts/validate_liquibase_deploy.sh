@@ -23,6 +23,17 @@ fi
 
 LIQUIBASE_TUTORIAL_DATA_DIR="${LIQUIBASE_TUTORIAL_DATA_DIR:-/data/${USER}/liquibase_tutorial}"
 
+# Load port assignments from .ports file if it exists
+PORTS_FILE="$LIQUIBASE_TUTORIAL_DATA_DIR/.ports"
+if [[ -f "$PORTS_FILE" ]]; then
+    source "$PORTS_FILE"
+fi
+
+# Use ports from .ports file, or fall back to defaults
+MSSQL_DEV_PORT="${MSSQL_DEV_PORT:-14331}"
+MSSQL_STG_PORT="${MSSQL_STG_PORT:-14332}"
+MSSQL_PRD_PORT="${MSSQL_PRD_PORT:-14333}"
+
 # Check if baseline file exists (prerequisite)
 BASELINE_FILE="$LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/changelog/baseline/V0000__baseline.mssql.sql"
 if [[ ! -f "$BASELINE_FILE" ]]; then
@@ -69,7 +80,11 @@ echo
 
 # Check each environment
 for env in dev stg prd; do
-    port=$((14331 + $(echo "dev stg prd" | tr ' ' '\n' | grep -n "^${env}$" | cut -d: -f1) - 1))
+    case "$env" in
+        dev) port="$MSSQL_DEV_PORT";;
+        stg) port="$MSSQL_STG_PORT";;
+        prd) port="$MSSQL_PRD_PORT";;
+    esac
 
     echo "Checking $env environment (port $port)..."
 

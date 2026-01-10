@@ -18,6 +18,17 @@ echo
 
 LIQUIBASE_TUTORIAL_DATA_DIR="${LIQUIBASE_TUTORIAL_DATA_DIR:-/data/${USER}/liquibase_tutorial}"
 
+# Load port assignments from .ports file if it exists
+PORTS_FILE="$LIQUIBASE_TUTORIAL_DATA_DIR/.ports"
+if [[ -f "$PORTS_FILE" ]]; then
+    source "$PORTS_FILE"
+fi
+
+# Use ports from .ports file, or fall back to defaults
+MSSQL_DEV_PORT="${MSSQL_DEV_PORT:-14331}"
+MSSQL_STG_PORT="${MSSQL_STG_PORT:-14332}"
+MSSQL_PRD_PORT="${MSSQL_PRD_PORT:-14333}"
+
 if [[ ! -d "$LIQUIBASE_TUTORIAL_DATA_DIR" ]]; then
     echo -e "${RED}ERROR: LIQUIBASE_TUTORIAL_DATA_DIR not set or directory doesn't exist${NC}"
     echo "Run setup_liquibase_environment.sh first"
@@ -45,7 +56,11 @@ fi
 # Check each properties file
 for env in dev stg prd; do
     prop_file="$ENV_DIR/liquibase.mssql_${env}.properties"
-    expected_port=$((14331 + $(echo "dev stg prd" | tr ' ' '\n' | grep -n "^${env}$" | cut -d: -f1) - 1))
+    case "$env" in
+        dev) expected_port="$MSSQL_DEV_PORT";;
+        stg) expected_port="$MSSQL_STG_PORT";;
+        prd) expected_port="$MSSQL_PRD_PORT";;
+    esac
 
     echo -n "  Checking liquibase.mssql_${env}.properties... "
     if [[ -f "$prop_file" ]]; then
@@ -126,9 +141,9 @@ if [[ "$FAILURES" -eq 0 ]]; then
     echo
     echo "Expected output summary:"
     echo "  ✓ env/ directory exists"
-    echo "  ✓ liquibase.mssql_dev.properties exists with correct config (port 14331)"
-    echo "  ✓ liquibase.mssql_stg.properties exists with correct config (port 14332)"
-    echo "  ✓ liquibase.mssql_prd.properties exists with correct config (port 14333)"
+    echo "  ✓ liquibase.mssql_dev.properties exists with correct config (port $MSSQL_DEV_PORT)"
+    echo "  ✓ liquibase.mssql_stg.properties exists with correct config (port $MSSQL_STG_PORT)"
+    echo "  ✓ liquibase.mssql_prd.properties exists with correct config (port $MSSQL_PRD_PORT)"
     echo "  ✓ All properties files have: url, username, changelog-file, search-path"
     echo "  ✓ changelog.xml exists and includes baseline"
     echo

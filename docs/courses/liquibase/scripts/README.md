@@ -46,7 +46,7 @@ Scripts use descriptive names that indicate their purpose:
 
 | Script | Purpose |
 |--------|---------|
-| `cleanup_liquibase_tutorial.sh` | Removes all tutorial containers, networks, and data |
+| `cleanup_tutorial.sh` | Removes all tutorial containers, networks, and data |
 | `cleanup_tutorial.sh` | Lightweight cleanup (containers only) |
 
 ## Usage Pattern

@@ -76,7 +76,7 @@ If you have not run Part 1 at least once, skim it first; this tutorial will refe
   - Ability to create repositories and configure Actions secrets
 - **From the first Liquibase tutorial**
   - The helper scripts under
-    `docs/courses/liquibase/scripts/` (for example `setup_tutorial.sh`, `cleanup_liquibase_tutorial.sh`, etc.)
+    `docs/courses/liquibase/scripts/` (for example `setup_tutorial.sh`, `cleanup_tutorial.sh`, etc.)
 
 > This tutorial assumes the repo containing these docs is already cloned locally and accessible via a path like `/path/to/your/repo`.
 

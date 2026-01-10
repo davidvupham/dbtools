@@ -152,11 +152,22 @@ if [[ ! -f "$PROP_FILE" ]]; then
   exit 1
 fi
 
-# Compute connection URL (avoid runtime-specific hostnames in the properties files)
+# Load port assignments from .ports file (written by start_mssql_containers.sh)
+PORTS_FILE="$PROJECT_DIR/.ports"
+if [[ -f "$PORTS_FILE" ]]; then
+  source "$PORTS_FILE"
+fi
+
+# Use ports from .ports file, or fall back to defaults
+MSSQL_DEV_PORT="${MSSQL_DEV_PORT:-14331}"
+MSSQL_STG_PORT="${MSSQL_STG_PORT:-14332}"
+MSSQL_PRD_PORT="${MSSQL_PRD_PORT:-14333}"
+
+# Select port based on environment
 case "$ENVIRONMENT" in
-  dev) PORT=14331;;
-  stg) PORT=14332;;
-  prd) PORT=14333;;
+  dev) PORT="$MSSQL_DEV_PORT";;
+  stg) PORT="$MSSQL_STG_PORT";;
+  prd) PORT="$MSSQL_PRD_PORT";;
 esac
 
 # If network not explicitly set, pick a safe default per runtime

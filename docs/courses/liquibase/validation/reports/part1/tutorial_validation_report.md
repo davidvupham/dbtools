@@ -115,7 +115,7 @@ All scripts referenced in the tutorial exist and are properly structured:
 | `validate_step3_properties.sh` | ✅ Exists | Validates properties files |
 | `validate_step4_baseline.sh` | ✅ Exists | Validates baseline generation |
 | `validate_step5_deploy.sh` | ✅ Exists | Validates baseline deployment |
-| `cleanup_liquibase_tutorial.sh` | ✅ Exists | Cleanup script |
+| `cleanup_tutorial.sh` | ✅ Exists | Cleanup script |
 
 ### Script Issues Found
 
