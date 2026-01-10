@@ -15,6 +15,7 @@ This directory contains various utility scripts for development, testing, databa
 | [`verify_pyodbc.sh`](./verify_pyodbc.sh) | Database | specific verification for Python ODBC driver installation and configuration. |
 | [`add_test_docstrings.py`](./add_test_docstrings.py) | Dev / Docs | Bulk-adds minimal docstrings to `pytest` test functions. |
 | [`validate_oop_docs.py`](./validate_oop_docs.py) | Docs | Validates Python code blocks in markdown tutorials by executing them. |
+| [`set_prompt.sh`](./set_prompt.sh) | Shell Config | Sets up a colorful, informative bash prompt with OS detection (ubuntu/redhat/linux). |
 
 ---
 
@@ -102,4 +103,25 @@ export VAULT_ADDR=...
 export VAULT_ROLE_ID=...
 export VAULT_SECRET_ID=...
 python scripts/diagnose_vault_approle.py
+```
+
+### Shell Configuration
+
+#### `set_prompt.sh`
+
+Configures a colorful, informative bash prompt that displays:
+- OS type (ubuntu/redhat/linux) at the beginning
+- Current date
+- Username and hostname
+- Current working directory
+
+The prompt uses best-practice color coding for readability and visual hierarchy. OS detection runs once at shell startup for efficiency.
+
+```bash
+# Source it to apply to current shell
+. scripts/set_prompt.sh
+
+# Or add to your ~/.bashrc to make it permanent
+echo '. ~/src/dbtools/scripts/set_prompt.sh' >> ~/.bashrc
+source ~/.bashrc
 ```
