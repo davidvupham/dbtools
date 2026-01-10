@@ -882,12 +882,12 @@ For convenience, here's a summary of all step scripts used in Part 1:
 
 | Step | Script | Purpose | Validation |
 |------|--------|---------|------------|
-| 0/3 | `setup_liquibase_environment.sh` | Create directories, properties, changelog | `validate_liquibase_properties.sh` |
+| [0](#step-0-configure-environment-and-aliases) / [3](#step-3-configure-liquibase-for-each-environment) | `setup_liquibase_environment.sh` | Create directories, properties, changelog. **Note:** In [Step 0](#step-0-configure-environment-and-aliases), `setup_tutorial.sh` automatically creates properties files. In [Step 3](#step-3-configure-liquibase-for-each-environment), `setup_liquibase_environment.sh` is the manual option to create properties and master changelog if needed. | `validate_liquibase_properties.sh` |
 | - | `start_mssql_containers.sh` | Start SQL Server containers | Manual check |
-| 1 | `create_orderdb_database.sh` | Create orderdb on all containers | `validate_orderdb_database.sh` |
-| 2 | `populate_dev_database.sh` | Populate dev with sample objects | `validate_dev_populate.sh` |
-| 4 | `generate_liquibase_baseline.sh` | Generate baseline from dev | `validate_liquibase_baseline.sh` |
-| 5 | `deploy_liquibase_baseline.sh` | Deploy baseline to all environments | `validate_liquibase_deploy.sh` |
+| [1](#step-1-create-three-database-environments) | `create_orderdb_database.sh` | Create orderdb on all containers | `validate_orderdb_database.sh` |
+| [2](#step-2-populate-development-with-existing-objects) | `populate_dev_database.sh` | Populate dev with sample objects | `validate_dev_populate.sh` |
+| [4](#step-4-generate-baseline-from-development) | `generate_liquibase_baseline.sh` | Generate baseline from dev | `validate_liquibase_baseline.sh` |
+| [5](#step-5-deploy-baseline-across-environments) | `deploy_liquibase_baseline.sh` | Deploy baseline to all environments | `validate_liquibase_deploy.sh` |
 
 All scripts show success/fail indicators and provide clear next steps.
 
