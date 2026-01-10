@@ -223,7 +223,7 @@ Each container has a built-in health check. You can poll for the `(healthy)` sta
 
 ```bash
 # Watch the container status until all show (healthy) (Ctrl+C to exit)
-watch -n 2 'cr ps | grep mssql_'
+watch -n 2 '"$LIQUIBASE_TUTORIAL_DIR/scripts/cr.sh" ps | grep mssql_'
 ```
 
 **Expected output (healthy):** Status shows "Up" and all containers are healthy:
@@ -333,8 +333,8 @@ sqlcmd-tutorial create_databases.sql
 Now verify you can connect to SQL Server. This test ensures your database is accessible before we start.
 
 ```bash
-# Test connection (should show server name and date)
-sqlcmd-tutorial -Q "SELECT @@SERVERNAME AS ServerName, GETDATE() AS CurrentTime"
+# Test connection to dev instance (should show server name and date)
+sqlcmd-tutorial -e dev -Q "SELECT @@SERVERNAME AS ServerName, GETDATE() AS CurrentTime"
 ```
 
 **Expected output:**

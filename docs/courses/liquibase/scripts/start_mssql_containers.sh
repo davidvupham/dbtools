@@ -81,7 +81,12 @@ MSSQL_IMAGE="mssql_tutorial:latest"
 if ! $CR_CMD image exists "$MSSQL_IMAGE" 2>/dev/null; then
     echo "Building SQL Server image..."
     cd "$DOCKER_DIR"
-    $CR_CMD build -t "$MSSQL_IMAGE" -f ../../../../docker/mssql/Dockerfile ../../../../docker/mssql
+    # Use docker format for Podman to support HEALTHCHECK instruction
+    if [[ "$CR_CMD" == "podman" ]]; then
+        $CR_CMD build --format docker -t "$MSSQL_IMAGE" -f ../../../../docker/mssql/Dockerfile ../../../../docker/mssql
+    else
+        $CR_CMD build -t "$MSSQL_IMAGE" -f ../../../../docker/mssql/Dockerfile ../../../../docker/mssql
+    fi
     echo
 fi
 
