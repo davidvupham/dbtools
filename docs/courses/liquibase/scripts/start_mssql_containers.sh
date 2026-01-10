@@ -175,9 +175,6 @@ if [[ -f /etc/os-release ]]; then
        [[ "$ID_LIKE" =~ (rhel|centos|fedora|rocky|almalinux) ]]; then
         if [[ "$CR_CMD" == "podman" ]]; then
             USE_PODMAN_RUN=true
-            echo -e "${YELLOW}Detected RHEL/CentOS/Fedora with Podman - using podman run directly${NC}"
-            echo "This avoids podman-compose networking issues in WSL2"
-            echo
         fi
     fi
 fi
@@ -210,7 +207,7 @@ MSSQL_PRD_PORT=${MSSQL_PRD_PORT:-14333}
 
 # For Podman on RHEL (shared host), dynamically find available ports
 if [[ "$USE_PODMAN_RUN" == "true" ]]; then
-    echo "Finding available ports for multi-user environment..."
+    echo "Finding available ports for SQL Server containers (mssql_dev, mssql_stg, mssql_prod)..."
     
     # Check if we already have a .ports file with running containers
     PORTS_FILE="$LIQUIBASE_TUTORIAL_DATA_DIR/.ports"
@@ -235,7 +232,85 @@ if [[ "$USE_PODMAN_RUN" == "true" ]]; then
         # Parse the ports
         read -r MSSQL_DEV_PORT MSSQL_STG_PORT MSSQL_PRD_PORT <<< "$AVAILABLE_PORTS"
         
-        echo "  Found available ports: $MSSQL_DEV_PORT, $MSSQL_STG_PORT, $MSSQL_PRD_PORT"
+        # Display chosen ports and prompt user
+        echo
+        echo -e "${GREEN}Dynamic ports chosen:${NC}"
+        echo "  mssql_dev:  localhost:$MSSQL_DEV_PORT"
+        echo "  mssql_stg:  localhost:$MSSQL_STG_PORT"
+        echo "  mssql_prod: localhost:$MSSQL_PRD_PORT"
+        echo
+        
+        # Prompt user to accept or enter new starting port
+        while true; do
+            echo -e "${YELLOW}Options:${NC}"
+            echo "  - Enter 'yes' or 'y' to accept these ports"
+            echo "  - Enter 'no' or 'n' to specify a different starting port"
+            echo "  - Enter a port number directly to search from that port"
+            read -p "Your choice: " user_input
+            
+            if [[ -z "$user_input" ]]; then
+                echo -e "${YELLOW}Please enter 'yes', 'no', or a port number${NC}"
+                continue
+            fi
+            
+            # Check if input is a number (new starting port)
+            if [[ "$user_input" =~ ^[0-9]+$ ]]; then
+                NEW_START_PORT=$user_input
+                echo "Searching for available ports starting from $NEW_START_PORT..."
+                
+                AVAILABLE_PORTS=$(find_available_ports "$NEW_START_PORT" 3) || {
+                    echo -e "${RED}ERROR: Could not find 3 available ports starting from $NEW_START_PORT${NC}"
+                    echo "Please try a different starting port."
+                    continue
+                }
+                
+                # Parse the new ports
+                read -r MSSQL_DEV_PORT MSSQL_STG_PORT MSSQL_PRD_PORT <<< "$AVAILABLE_PORTS"
+                
+                echo
+                echo -e "${GREEN}New dynamic ports chosen:${NC}"
+                echo "  mssql_dev:  localhost:$MSSQL_DEV_PORT"
+                echo "  mssql_stg:  localhost:$MSSQL_STG_PORT"
+                echo "  mssql_prod: localhost:$MSSQL_PRD_PORT"
+                echo
+                continue
+            fi
+            
+            # Check for yes/accept
+            user_input_lower=$(echo "$user_input" | tr '[:upper:]' '[:lower:]')
+            if [[ "$user_input_lower" == "yes" ]] || [[ "$user_input_lower" == "y" ]] || \
+               [[ "$user_input_lower" == "accept" ]] || [[ "$user_input_lower" == "a" ]]; then
+                echo -e "${GREEN}Accepted ports. Continuing...${NC}"
+                break
+            elif [[ "$user_input_lower" == "no" ]] || [[ "$user_input_lower" == "n" ]]; then
+                read -p "Enter a new starting port number: " new_port
+                if [[ -n "$new_port" ]] && [[ "$new_port" =~ ^[0-9]+$ ]]; then
+                    NEW_START_PORT=$new_port
+                    echo "Searching for available ports starting from $NEW_START_PORT..."
+                    
+                    AVAILABLE_PORTS=$(find_available_ports "$NEW_START_PORT" 3) || {
+                        echo -e "${RED}ERROR: Could not find 3 available ports starting from $NEW_START_PORT${NC}"
+                        echo "Please try a different starting port."
+                        continue
+                    }
+                    
+                    # Parse the new ports
+                    read -r MSSQL_DEV_PORT MSSQL_STG_PORT MSSQL_PRD_PORT <<< "$AVAILABLE_PORTS"
+                    
+                    echo
+                    echo -e "${GREEN}New dynamic ports chosen:${NC}"
+                    echo "  mssql_dev:  localhost:$MSSQL_DEV_PORT"
+                    echo "  mssql_stg:  localhost:$MSSQL_STG_PORT"
+                    echo "  mssql_prod: localhost:$MSSQL_PRD_PORT"
+                    echo
+                    continue
+                else
+                    echo -e "${RED}Invalid port number. Please enter a numeric port.${NC}"
+                fi
+            else
+                echo -e "${YELLOW}Please enter 'yes', 'no', or a port number${NC}"
+            fi
+        done
     fi
 else
     # For Docker/WSL2, use defaults or environment overrides
