@@ -27,11 +27,11 @@ echo "Data directory: $LIQUIBASE_TUTORIAL_DATA_DIR"
 
 # Create directories
 echo -n "Creating directories... "
-if mkdir -p "$LIQUIBASE_TUTORIAL_DATA_DIR"/{mssql_dev,mssql_stg,mssql_prd,database/changelog/{baseline,changes},env} 2>/dev/null; then
+if mkdir -p "$LIQUIBASE_TUTORIAL_DATA_DIR"/{mssql_dev,mssql_stg,mssql_prd,platform/mssql/database/orderdb/changelog/{baseline,changes},platform/mssql/database/orderdb/env} 2>/dev/null; then
     echo -e "${GREEN}✓ Done${NC}"
 else
     echo -e "${YELLOW}Using sudo...${NC}"
-    sudo mkdir -p "$LIQUIBASE_TUTORIAL_DATA_DIR"/{mssql_dev,mssql_stg,mssql_prd,database/changelog/{baseline,changes},env}
+    sudo mkdir -p "$LIQUIBASE_TUTORIAL_DATA_DIR"/{mssql_dev,mssql_stg,mssql_prd,platform/mssql/database/orderdb/changelog/{baseline,changes},platform/mssql/database/orderdb/env}
     sudo chown -R "$USER:$USER" "$LIQUIBASE_TUTORIAL_DATA_DIR"
     echo -e "${GREEN}✓ Done${NC}"
 fi
@@ -49,12 +49,12 @@ export MSSQL_LIQUIBASE_TUTORIAL_PWD
 echo -n "Creating Liquibase properties files... "
 for env in dev stg prd; do
     port=$((14331 + $(echo "dev stg prd" | tr ' ' '\n' | grep -n "^${env}$" | cut -d: -f1) - 1))
-    cat > "$LIQUIBASE_TUTORIAL_DATA_DIR/env/liquibase.${env}.properties" << EOF
+    cat > "$LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/env/liquibase.mssql_${env}.properties" << EOF
 # ${env^^} Environment - Liquibase Properties
 url=jdbc:sqlserver://localhost:${port};databaseName=orderdb;encrypt=true;trustServerCertificate=true
 username=sa
-changelog-file=database/changelog/changelog.xml
-search-path=/data
+changelog-file=changelog/changelog.xml
+search-path=/data/platform/mssql/database/orderdb
 logLevel=info
 EOF
 done
@@ -62,7 +62,7 @@ echo -e "${GREEN}✓ Done${NC}"
 
 # Create master changelog
 echo -n "Creating master changelog... "
-cat > "$LIQUIBASE_TUTORIAL_DATA_DIR/database/changelog/changelog.xml" << 'EOF'
+cat > "$LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/changelog/changelog.xml" << 'EOF'
 <?xml version="1.0" encoding="UTF-8"?>
 <databaseChangeLog
     xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
@@ -86,7 +86,7 @@ echo "========================================"
 echo -e "${GREEN}Environment Setup Complete${NC}"
 echo "========================================"
 echo "Data directory:  $LIQUIBASE_TUTORIAL_DATA_DIR"
-echo "Properties:      $LIQUIBASE_TUTORIAL_DATA_DIR/env/"
-echo "Changelogs:      $LIQUIBASE_TUTORIAL_DATA_DIR/database/changelog/"
+echo "Properties:      $LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/env/"
+echo "Changelogs:      $LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/changelog/"
 echo
 echo "Next: Run start_mssql_containers.sh"

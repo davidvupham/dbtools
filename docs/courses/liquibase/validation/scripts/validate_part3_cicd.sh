@@ -166,19 +166,19 @@ validate_file_structure() {
     PART3_FILE="$TUTORIAL_DIR/learning-paths/series-part3-cicd.md"
 
     # Check if tutorial references correct file structure
-    if grep -q "database/changelog/baseline/V0000__baseline.mssql.sql" "$PART3_FILE"; then
+    if grep -q "platform/mssql/database/orderdb/changelog/baseline/V0000__baseline.mssql.sql" "$PART3_FILE"; then
         log_pass "Tutorial references correct baseline file pattern"
     else
         log_fail "Tutorial may not reference baseline file correctly"
     fi
 
-    if grep -q "database/changelog/changelog.xml" "$PART3_FILE"; then
+    if grep -q "platform/mssql/database/orderdb/changelog/changelog.xml" "$PART3_FILE"; then
         log_pass "Tutorial references changelog.xml"
     else
         log_fail "Tutorial missing reference to changelog.xml"
     fi
 
-    if grep -q "env/liquibase.dev.properties" "$PART3_FILE"; then
+    if grep -q "platform/mssql/database/orderdb/env/liquibase.mssql_dev.properties" "$PART3_FILE"; then
         log_pass "Tutorial references environment properties files"
     else
         log_fail "Tutorial missing reference to environment properties"

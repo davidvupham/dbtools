@@ -26,9 +26,9 @@
 This Part 3 assumes you already have:
 
 - A local Liquibase project at `$LIQUIBASE_TUTORIAL_DATA_DIR` with:
-  - `database/changelog/baseline/V0000__baseline.mssql.sql`
-  - `database/changelog/changelog.xml` that includes the baseline and any subsequent changes
-  - `env/liquibase.dev.properties`, `env/liquibase.stg.properties`, `env/liquibase.prd.properties`
+  - `platform/mssql/database/orderdb/changelog/baseline/V0000__baseline.mssql.sql`
+  - `platform/mssql/database/orderdb/changelog/changelog.xml` that includes the baseline and any subsequent changes
+  - `platform/mssql/database/orderdb/env/liquibase.mssql_dev.properties`, `platform/mssql/database/orderdb/env/liquibase.mssql_stg.properties`, `platform/mssql/database/orderdb/env/liquibase.mssql_prd.properties`
 - Baseline deployed to dev/stg/prd and tagged appropriately (for example `baseline`, `release-v1.x`).
 
 From here, this tutorial focuses only on:
@@ -107,7 +107,7 @@ Create a minimal `.gitignore` if you do not already have one here:
 cat > .gitignore << 'EOF'
 # Liquibase local configuration (contains passwords)
 liquibase.properties
-env/liquibase.*.properties
+platform/mssql/database/orderdb/platform/mssql/database/orderdb/env/liquibase.mssql_*.properties
 
 # IDE files
 .vscode/
@@ -131,8 +131,8 @@ EOF
 Then add the project files:
 
 ```bash
-git add database env .gitignore README.md 2>/dev/null || true
-git add database env .gitignore
+git add platform .gitignore README.md 2>/dev/null || true
+git add platform .gitignore
 
 git commit -m "Initial commit: Liquibase SQL Server tutorial project"
 ```
@@ -147,8 +147,8 @@ git push -u origin main
 
 Verify on GitHub that you see:
 
-- `database/changelog/...`
-- `env/` (without hard-coded passwords; use environment variables or secrets rather than committing passwords)
+- `platform/mssql/database/orderdb/changelog/...`
+- `platform/mssql/database/orderdb/env/` (without hard-coded passwords; use environment variables or secrets rather than committing passwords)
 - `.gitignore` and `README.md`
 
 #### Important: Protect the main branch
@@ -379,7 +379,7 @@ jobs:
           MSSQL_LIQUIBASE_TUTORIAL_PWD: ${{ secrets.DEV_DB_PASSWORD }}
         run: |
           liquibase update \
-            --changelog-file=database/changelog/changelog.xml \
+            --changelog-file=platform/mssql/database/orderdb/changelog/changelog.xml \
             --url="${{ secrets.DEV_DB_URL }}" \
             --username="${{ secrets.DEV_DB_USERNAME }}" \
             --password="${MSSQL_LIQUIBASE_TUTORIAL_PWD}"
@@ -389,7 +389,7 @@ jobs:
           MSSQL_LIQUIBASE_TUTORIAL_PWD: ${{ secrets.DEV_DB_PASSWORD }}
         run: |
           liquibase history \
-            --changelog-file=database/changelog/changelog.xml \
+            --changelog-file=platform/mssql/database/orderdb/changelog/changelog.xml \
             --url="${{ secrets.DEV_DB_URL }}" \
             --username="${{ secrets.DEV_DB_USERNAME }}" \
             --password="${MSSQL_LIQUIBASE_TUTORIAL_PWD}"
@@ -452,7 +452,7 @@ jobs:
           MSSQL_LIQUIBASE_TUTORIAL_PWD: ${{ secrets.DEV_DB_PASSWORD }}
         run: |
           liquibase update \
-            --changelog-file=database/changelog/changelog.xml \
+            --changelog-file=platform/mssql/database/orderdb/changelog/changelog.xml \
             --url="${{ secrets.DEV_DB_URL }}" \
             --username="${{ secrets.DEV_DB_USERNAME }}" \
             --password="${MSSQL_LIQUIBASE_TUTORIAL_PWD}"
@@ -462,7 +462,7 @@ jobs:
           MSSQL_LIQUIBASE_TUTORIAL_PWD: ${{ secrets.DEV_DB_PASSWORD }}
         run: |
           liquibase status --verbose \
-            --changelog-file=database/changelog/changelog.xml \
+            --changelog-file=platform/mssql/database/orderdb/changelog/changelog.xml \
             --url="${{ secrets.DEV_DB_URL }}" \
             --username="${{ secrets.DEV_DB_USERNAME }}" \
             --password="${MSSQL_LIQUIBASE_TUTORIAL_PWD}"
@@ -493,7 +493,7 @@ jobs:
           MSSQL_LIQUIBASE_TUTORIAL_PWD: ${{ secrets.STG_DB_PASSWORD }}
         run: |
           liquibase update \
-            --changelog-file=database/changelog/changelog.xml \
+            --changelog-file=platform/mssql/database/orderdb/changelog/changelog.xml \
             --url="${{ secrets.STG_DB_URL }}" \
             --username="${{ secrets.STG_DB_USERNAME }}" \
             --password="${MSSQL_LIQUIBASE_TUTORIAL_PWD}"
@@ -524,7 +524,7 @@ jobs:
           MSSQL_LIQUIBASE_TUTORIAL_PWD: ${{ secrets.PRD_DB_PASSWORD }}
         run: |
           liquibase update \
-            --changelog-file=database/changelog/changelog.xml \
+            --changelog-file=platform/mssql/database/orderdb/changelog/changelog.xml \
             --url="${{ secrets.PRD_DB_URL }}" \
             --username="${{ secrets.PRD_DB_USERNAME }}" \
             --password="${MSSQL_LIQUIBASE_TUTORIAL_PWD}"
@@ -534,7 +534,7 @@ jobs:
           MSSQL_LIQUIBASE_TUTORIAL_PWD: ${{ secrets.PRD_DB_PASSWORD }}
         run: |
           liquibase tag "release-${{ github.run_number }}" \
-            --changelog-file=database/changelog/changelog.xml \
+            --changelog-file=platform/mssql/database/orderdb/changelog/changelog.xml \
             --url="${{ secrets.PRD_DB_URL }}" \
             --username="${{ secrets.PRD_DB_USERNAME }}" \
             --password="${MSSQL_LIQUIBASE_TUTORIAL_PWD}"
@@ -550,7 +550,7 @@ Then:
 
 You now have a pipeline that:
 
-- Runs on pushes to any tutorial branch (`tutorial-*`) that touch `database/**`.
+- Runs on pushes to any tutorial branch (`tutorial-*`) that touch `platform/**`.
 - Deploys in order: dev → stg → prd.
 - Uses GitHub Environment protection rules for production approvals.
 - Executes entirely on your **self-hosted runner container**, which talks to the `mssql_dev`, `mssql_stg`, and `mssql_prd` SQL Server containers over the shared Docker network.
@@ -583,7 +583,7 @@ Even after you add CI/CD, the helper scripts from Part 1 remain extremely valuab
 ### Step 15: Recommended Daily Workflow (Branch-Based)
 
 1. **Create or modify a changeset locally**
-   - Edit `database/changelog/changes/V00xx__description.sql`.
+   - Edit `platform/mssql/database/orderdb/changelog/changes/V00xx__description.sql`.
    - Update `changelog.xml` (using the XML wrapper + `<sqlFile>` + `<rollback>` pattern from the manual tutorial).
 
 2. **Test locally with helper scripts**
@@ -593,7 +593,7 @@ Even after you add CI/CD, the helper scripts from Part 1 remain extremely valuab
 3. **Commit and push to your personal branch**
 
    ```bash
-   git add database/changelog
+   git add platform/mssql/database/orderdb/changelog
    git commit -m "V00xx: Describe your change"
    git push origin "tutorial-${TUTORIAL_USER}"
    ```

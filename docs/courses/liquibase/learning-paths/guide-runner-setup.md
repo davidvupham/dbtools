@@ -1088,7 +1088,7 @@ jobs:
       - name: Deploy to local SQL Server
         run: |
           liquibase update \
-            --changelog-file=database/changelog/changelog.xml \
+            --changelog-file=platform/mssql/database/orderdb/changelog/changelog.xml \
             --url="${{ secrets.LOCAL_DB_URL }}" \
             --username="${{ secrets.LOCAL_DB_USERNAME }}" \
             --password="${{ secrets.LOCAL_DB_PASSWORD }}"
@@ -1109,7 +1109,7 @@ jobs:
       - name: Deploy to Azure SQL
         run: |
           liquibase update \
-            --changelog-file=database/changelog/changelog.xml \
+            --changelog-file=platform/mssql/database/orderdb/changelog/changelog.xml \
             --url="${{ secrets.AZURE_STAGE_DB_URL }}" \
             --username="${{ secrets.AZURE_STAGE_DB_USERNAME }}" \
             --password="${{ secrets.AZURE_STAGE_DB_PASSWORD }}"
@@ -1130,7 +1130,7 @@ jobs:
       - name: Deploy to production
         run: |
           liquibase update \
-            --changelog-file=database/changelog/changelog.xml \
+            --changelog-file=platform/mssql/database/orderdb/changelog/changelog.xml \
             --url="${{ secrets.AZURE_PROD_DB_URL }}" \
             --username="${{ secrets.AZURE_PROD_DB_USERNAME }}" \
             --password="${{ secrets.AZURE_PROD_DB_PASSWORD }}"
@@ -1698,7 +1698,7 @@ steps:
   - name: Deploy changes
     run: |
       liquibase update \
-        --changelog-file=database/changelog/changelog.xml \
+        --changelog-file=platform/mssql/database/orderdb/changelog/changelog.xml \
         --url="jdbc:sqlserver://sqlserver:1433;databaseName=liquibase_demo;encrypt=true;trustServerCertificate=true" \
         --username="${{ secrets.LOCAL_DB_USERNAME }}" \
         --password="${{ secrets.LOCAL_DB_PASSWORD }}"

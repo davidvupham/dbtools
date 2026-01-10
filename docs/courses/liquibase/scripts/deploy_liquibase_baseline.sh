@@ -52,14 +52,14 @@ fi
 cd "$LIQUIBASE_TUTORIAL_DATA_DIR"
 
 # Check master changelog exists
-if [[ ! -f "database/changelog/changelog.xml" ]]; then
+if [[ ! -f "platform/mssql/database/orderdb/changelog/changelog.xml" ]]; then
     echo -e "${RED}ERROR: changelog.xml not found${NC}"
     echo "Run setup_liquibase_environment.sh first to create properties and changelog"
     exit 1
 fi
 
 # Check baseline file exists
-if [[ ! -f "database/changelog/baseline/V0000__baseline.mssql.sql" ]]; then
+if [[ ! -f "platform/mssql/database/orderdb/changelog/baseline/V0000__baseline.mssql.sql" ]]; then
     echo -e "${RED}ERROR: Baseline file not found${NC}"
     echo "Run generate_liquibase_baseline.sh first"
     exit 1

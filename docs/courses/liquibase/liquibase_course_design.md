@@ -60,7 +60,7 @@ This document defines requirements and design for the Liquibase course refactori
 | 19 | **Glossary** | Terminology definitions |
 | 23 | **Naming conventions** | Documented standards |
 | 24 | **Rollback testing** | Standard practice |
-| 25 | **Changelog folder structure** | Simple structure: `database/changelog/` with `baseline/` and `changes/` subdirs |
+| 25 | **Changelog folder structure** | Simple structure: `platform/mssql/database/orderdb/changelog/` with `baseline/` and `changes/` subdirs |
 | 26 | **Docker Compose build** | Reference Dockerfiles via `build.context`; no pre-build required |
 | 27 | **Container security** | All containers must have HEALTHCHECK and default non-root USER |
 
@@ -73,17 +73,20 @@ This document defines requirements and design for the Liquibase course refactori
 ├── mssql_dev/              # Dev SQL Server data
 ├── mssql_stg/              # Staging SQL Server data
 ├── mssql_prd/              # Production SQL Server data
-├── database/
-│   └── changelog/
-│       ├── changelog.xml
-│       ├── baseline/
-│       │   └── V0000__baseline.mssql.sql
-│       └── changes/
-│           └── V0001__add_orders_table.sql
-└── env/
-    ├── liquibase.dev.properties
-    ├── liquibase.stg.properties
-    └── liquibase.prd.properties
+└── platform/
+    └── mssql/
+        └── database/
+            └── orderdb/
+                ├── changelog/
+                │   ├── changelog.xml
+                │   ├── baseline/
+                │   │   └── V0000__baseline.mssql.sql
+                │   └── changes/
+                │       └── V0001__add_orders_table.sql
+                └── env/
+                    ├── liquibase.mssql_dev.properties
+                    ├── liquibase.mssql_stg.properties
+                    └── liquibase.mssql_prd.properties
 ```
 
 **Network:** `liquibase_tutorial_network`

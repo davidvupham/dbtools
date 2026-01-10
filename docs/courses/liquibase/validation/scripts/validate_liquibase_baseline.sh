@@ -11,7 +11,7 @@ RED='\033[0;31m'
 NC='\033[0m' # No Color
 
 # Path to Baseline
-BASELINE_FILE="${LIQUIBASE_TUTORIAL_DATA_DIR:?variable not set}/database/changelog/baseline/V0000__baseline.mssql.sql"
+BASELINE_FILE="${LIQUIBASE_TUTORIAL_DATA_DIR:?variable not set}/platform/mssql/database/orderdb/changelog/baseline/V0000__baseline.mssql.sql"
 
 echo "Validating Liquibase Baseline"
 echo "Target File: $BASELINE_FILE"

@@ -141,20 +141,20 @@ cleanup() {
     "$SQLCMD_CMD" -e dev -Q "USE orderdb; DELETE FROM DATABASECHANGELOG WHERE ID LIKE 'V000%' OR ID LIKE 'release-v%';" >> "$TEST_LOG" 2>&1 || true
 
     # Remove Part 2 change files (keep Part 1 baseline)
-    if [ -d "$LIQUIBASE_TUTORIAL_DATA_DIR/database/changelog/changes" ]; then
+    if [ -d "$LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/changelog/changes" ]; then
         log_info "Removing Part 2 change files..."
-        rm -f "$LIQUIBASE_TUTORIAL_DATA_DIR/database/changelog/changes/V0001__add_orders_table.mssql.sql" 2>/dev/null || true
-        rm -f "$LIQUIBASE_TUTORIAL_DATA_DIR/database/changelog/changes/V0002__add_orders_index.mssql.sql" 2>/dev/null || true
-        rm -f "$LIQUIBASE_TUTORIAL_DATA_DIR/database/changelog/changes/V0002__drift_loyalty_points.xml" 2>/dev/null || true
+        rm -f "$LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/changelog/changes/V0001__add_orders_table.mssql.sql" 2>/dev/null || true
+        rm -f "$LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/changelog/changes/V0002__add_orders_index.mssql.sql" 2>/dev/null || true
+        rm -f "$LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/changelog/changes/V0002__drift_loyalty_points.xml" 2>/dev/null || true
     fi
 
     # Remove drift column if it exists
     "$SQLCMD_CMD" -e dev -Q "USE orderdb; IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('app.customer') AND name = 'loyalty_points') ALTER TABLE app.customer DROP COLUMN loyalty_points;" >> "$TEST_LOG" 2>&1 || true
 
     # Reset changelog.xml to baseline only
-    if [ -f "$LIQUIBASE_TUTORIAL_DATA_DIR/database/changelog/changelog.xml" ]; then
+    if [ -f "$LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/changelog/changelog.xml" ]; then
         log_info "Resetting changelog.xml to baseline only..."
-        cat > "$LIQUIBASE_TUTORIAL_DATA_DIR/database/changelog/changelog.xml" << 'EOF'
+        cat > "$LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/changelog/changelog.xml" << 'EOF'
 <?xml version="1.0" encoding="UTF-8"?>
 <databaseChangeLog
     xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
@@ -248,9 +248,9 @@ setup_prerequisites() {
     # Check if baseline exists and is valid
     # IMPORTANT: Don't regenerate baseline if it exists - regenerating changes the changeset IDs
     # which causes deployment issues. Only regenerate if baseline includes Part 2 changes.
-    if [ -f "$LIQUIBASE_TUTORIAL_DATA_DIR/database/changelog/baseline/V0000__baseline.mssql.sql" ] && \
-       grep -q "CREATE TABLE app.customer" "$LIQUIBASE_TUTORIAL_DATA_DIR/database/changelog/baseline/V0000__baseline.mssql.sql" 2>/dev/null && \
-       ! grep -q "loyalty_points\|app.orders" "$LIQUIBASE_TUTORIAL_DATA_DIR/database/changelog/baseline/V0000__baseline.mssql.sql" 2>/dev/null; then
+    if [ -f "$LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/changelog/baseline/V0000__baseline.mssql.sql" ] && \
+       grep -q "CREATE TABLE app.customer" "$LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/changelog/baseline/V0000__baseline.mssql.sql" 2>/dev/null && \
+       ! grep -q "loyalty_points\|app.orders" "$LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/changelog/baseline/V0000__baseline.mssql.sql" 2>/dev/null; then
         log_pass "Step 4: Baseline file exists and is valid (not regenerating to preserve changeset IDs)"
     else
         log_info "Baseline missing or invalid - generating..."
@@ -321,9 +321,9 @@ setup_prerequisites() {
 test_step6_create_file() {
     log_section "Step 6.1: Create V0001 Change File"
 
-    mkdir -p "$LIQUIBASE_TUTORIAL_DATA_DIR/database/changelog/changes"
+    mkdir -p "$LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/changelog/changes"
 
-    cat > "$LIQUIBASE_TUTORIAL_DATA_DIR/database/changelog/changes/V0001__add_orders_table.mssql.sql" << 'EOF'
+    cat > "$LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/changelog/changes/V0001__add_orders_table.mssql.sql" << 'EOF'
 --liquibase formatted sql
 
 --changeset tutorial:V0001-add-orders-table
@@ -351,7 +351,7 @@ GO
 --rollback GO
 EOF
 
-    if [ -f "$LIQUIBASE_TUTORIAL_DATA_DIR/database/changelog/changes/V0001__add_orders_table.mssql.sql" ]; then
+    if [ -f "$LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/changelog/changes/V0001__add_orders_table.mssql.sql" ]; then
         log_pass "V0001 change file created"
         return 0
     else
@@ -364,7 +364,7 @@ EOF
 test_step6_update_changelog() {
     log_section "Step 6.2: Update changelog.xml"
 
-    cat > "$LIQUIBASE_TUTORIAL_DATA_DIR/database/changelog/changelog.xml" << 'EOF'
+    cat > "$LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/changelog/changelog.xml" << 'EOF'
 <?xml version="1.0" encoding="UTF-8"?>
 <databaseChangeLog
     xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
@@ -380,7 +380,7 @@ test_step6_update_changelog() {
 </databaseChangeLog>
 EOF
 
-    if grep -q "V0001__add_orders_table" "$LIQUIBASE_TUTORIAL_DATA_DIR/database/changelog/changelog.xml"; then
+    if grep -q "V0001__add_orders_table" "$LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/changelog/changelog.xml"; then
         log_pass "changelog.xml updated"
         return 0
     else
@@ -616,15 +616,15 @@ test_step10_drift() {
     "$SQLCMD_CMD" -e dev -Q "USE orderdb; ALTER TABLE app.customer ADD loyalty_points INT DEFAULT 0;" >> "$TEST_LOG" 2>&1
 
     # Detect drift
-    if "$LB_CMD" -e dev -- diff --referenceUrl="offline:mssql?changeLogFile=database/changelog/changelog.xml" >> "$TEST_LOG" 2>&1; then
+    if "$LB_CMD" -e dev -- diff --referenceUrl="offline:mssql?changeLogFile=platform/mssql/database/orderdb/changelog/changelog.xml" >> "$TEST_LOG" 2>&1; then
         log_pass "Drift detection successful"
     else
         log_warn "Drift detection may have found differences (this is expected)"
     fi
 
     # Generate changelog (optional - we'll remove the drift)
-    mkdir -p "$LIQUIBASE_TUTORIAL_DATA_DIR/database/changelog/changes"
-    "$LB_CMD" -e dev -- diffChangeLog --referenceUrl="offline:mssql?changeLogFile=database/changelog/changelog.xml" --changelogFile="$LIQUIBASE_TUTORIAL_DATA_DIR/database/changelog/changes/V0002__drift_loyalty_points.xml" >> "$TEST_LOG" 2>&1 || true
+    mkdir -p "$LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/changelog/changes"
+    "$LB_CMD" -e dev -- diffChangeLog --referenceUrl="offline:mssql?changeLogFile=platform/mssql/database/orderdb/changelog/changelog.xml" --changelogFile="$LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/changelog/changes/V0002__drift_loyalty_points.xml" >> "$TEST_LOG" 2>&1 || true
 
     # Remove drift to restore state
     "$SQLCMD_CMD" -e dev -Q "USE orderdb; ALTER TABLE app.customer DROP COLUMN loyalty_points;" >> "$TEST_LOG" 2>&1
@@ -638,7 +638,7 @@ test_step11_index() {
     log_section "Step 11: Create V0002 Index"
 
     # Create V0002 file
-    cat > "$LIQUIBASE_TUTORIAL_DATA_DIR/database/changelog/changes/V0002__add_orders_index.mssql.sql" << 'EOF'
+    cat > "$LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/changelog/changes/V0002__add_orders_index.mssql.sql" << 'EOF'
 --liquibase formatted sql
 
 --changeset tutorial:V0002-add-orders-date-index
@@ -658,7 +658,7 @@ GO
 EOF
 
     # Update changelog
-    cat > "$LIQUIBASE_TUTORIAL_DATA_DIR/database/changelog/changelog.xml" << 'EOF'
+    cat > "$LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/changelog/changelog.xml" << 'EOF'
 <?xml version="1.0" encoding="UTF-8"?>
 <databaseChangeLog
     xmlns="http://www.liquibase.org/xml/ns/dbchangelog"

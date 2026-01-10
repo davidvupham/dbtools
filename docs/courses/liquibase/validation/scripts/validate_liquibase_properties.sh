@@ -29,8 +29,8 @@ FAILURES=0
 pass() { echo -e "[${GREEN}PASS${NC}] $1"; }
 fail() { echo -e "${RED}[FAIL]${NC} $1"; FAILURES=$((FAILURES+1)); }
 
-ENV_DIR="$LIQUIBASE_TUTORIAL_DATA_DIR/env"
-CHANGELOG_DIR="$LIQUIBASE_TUTORIAL_DATA_DIR/database/changelog"
+ENV_DIR="$LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/env"
+CHANGELOG_DIR="$LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/changelog"
 
 echo "Checking properties files..."
 echo
@@ -44,10 +44,10 @@ fi
 
 # Check each properties file
 for env in dev stg prd; do
-    prop_file="$ENV_DIR/liquibase.${env}.properties"
+    prop_file="$ENV_DIR/liquibase.mssql_${env}.properties"
     expected_port=$((14331 + $(echo "dev stg prd" | tr ' ' '\n' | grep -n "^${env}$" | cut -d: -f1) - 1))
 
-    echo -n "  Checking liquibase.${env}.properties... "
+    echo -n "  Checking liquibase.mssql_${env}.properties... "
     if [[ -f "$prop_file" ]]; then
         pass "File exists"
 
@@ -78,13 +78,13 @@ for env in dev stg prd; do
             fail "    Username incorrect"
         fi
 
-        if grep -q "changelog-file=database/changelog/changelog.xml" "$prop_file"; then
+        if grep -q "changelog-file=changelog/changelog.xml" "$prop_file"; then
             pass "    Changelog file path correct"
         else
             fail "    Changelog file path incorrect"
         fi
 
-        if grep -q "search-path=/data" "$prop_file"; then
+        if grep -q "search-path=/data/platform/mssql/database/orderdb" "$prop_file"; then
             pass "    Search path correct"
         else
             fail "    Search path incorrect"
@@ -126,9 +126,9 @@ if [[ "$FAILURES" -eq 0 ]]; then
     echo
     echo "Expected output summary:"
     echo "  ✓ env/ directory exists"
-    echo "  ✓ liquibase.dev.properties exists with correct config (port 14331)"
-    echo "  ✓ liquibase.stg.properties exists with correct config (port 14332)"
-    echo "  ✓ liquibase.prd.properties exists with correct config (port 14333)"
+    echo "  ✓ liquibase.mssql_dev.properties exists with correct config (port 14331)"
+    echo "  ✓ liquibase.mssql_stg.properties exists with correct config (port 14332)"
+    echo "  ✓ liquibase.mssql_prd.properties exists with correct config (port 14333)"
     echo "  ✓ All properties files have: url, username, changelog-file, search-path"
     echo "  ✓ changelog.xml exists and includes baseline"
     echo

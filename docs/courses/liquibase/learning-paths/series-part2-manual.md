@@ -5,9 +5,9 @@ This Part 2 assumes you have completed **Part 1: Baseline SQL Server + Liquibase
 - Three SQL Server containers running: `mssql_dev`, `mssql_stg`, `mssql_prd`
 - Database `orderdb` created in each environment
 - A Liquibase project at `$LIQUIBASE_TUTORIAL_DATA_DIR` with:
-  - `database/changelog/baseline/V0000__baseline.mssql.sql`
-  - `database/changelog/changelog.xml` including the baseline
-    - `env/liquibase.dev.properties`, `env/liquibase.stg.properties`, `env/liquibase.prd.properties`
+  - `platform/mssql/database/orderdb/changelog/baseline/V0000__baseline.mssql.sql`
+  - `platform/mssql/database/orderdb/changelog/changelog.xml` including the baseline
+    - `platform/mssql/database/orderdb/env/liquibase.mssql_dev.properties`, `platform/mssql/database/orderdb/env/liquibase.mssql_stg.properties`, `platform/mssql/database/orderdb/env/liquibase.mssql_prd.properties`
 - Baseline deployed and tagged as `baseline` in all three environments
 
 From here we’ll walk through making changes, deploying them through dev → stg → prd, and handling rollback and drift manually.
@@ -28,7 +28,7 @@ For this tutorial, we'll use **SQL format** for simplicity and readability.
 
 ```bash
 # Create the change file
-cat > $LIQUIBASE_TUTORIAL_DATA_DIR/database/changelog/changes/V0001__add_orders_table.mssql.sql << 'EOF'
+cat > $LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/changelog/changes/V0001__add_orders_table.mssql.sql << 'EOF'
 --liquibase formatted sql
 
 --changeset tutorial:V0001-add-orders-table
@@ -62,7 +62,7 @@ EOF
 Update the master changelog to include this new change.
 
 ```bash
-cat > $LIQUIBASE_TUTORIAL_DATA_DIR/database/changelog/changelog.xml << 'EOF'
+cat > $LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/changelog/changelog.xml << 'EOF'
 <?xml version="1.0" encoding="UTF-8"?>
 <databaseChangeLog
     xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
@@ -246,7 +246,7 @@ ORDER BY ORDEREXECUTED DESC;
 ```text
 ID                        AUTHOR    FILENAME                                    DATEEXECUTED             TAG           EXECTYPE
 ------------------------- --------- ------------------------------------------- ------------------------ ------------- --------
-V0001-add-orders-table    tutorial  database/changelog/changes/V0001...sql      2025-11-16 03:15:00.000  release-v1.0  EXECUTED
+V0001-add-orders-table    tutorial  platform/mssql/database/orderdb/changelog/changes/V0001...sql      2025-11-16 03:15:00.000  release-v1.0  EXECUTED
 <baseline entries...>                                                                                    baseline      MARK_RAN
 ```
 
@@ -271,7 +271,7 @@ When using Formatted SQL files, you define rollback blocks directly in the SQL f
 When using Formatted SQL, you define rollbacks inline using `--rollback`. Update your `V0001__add_orders_table.mssql.sql`:
 
 ```bash
-cat > $LIQUIBASE_TUTORIAL_DATA_DIR/database/changelog/changes/V0001__add_orders_table.mssql.sql << 'EOF'
+cat > $LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/changelog/changes/V0001__add_orders_table.mssql.sql << 'EOF'
 --liquibase formatted sql
 
 --changeset tutorial:V0001-add-orders-table
@@ -356,7 +356,7 @@ cd $LIQUIBASE_TUTORIAL_DATA_DIR
 
 # Compare dev database to what Liquibase thinks it should be
 lb -e dev -- diff \
-    --referenceUrl="offline:mssql?changeLogFile=database/changelog/changelog.xml"
+    --referenceUrl="offline:mssql?changeLogFile=platform/mssql/database/orderdb/changelog/changelog.xml"
 ```
 
 **Expected output will show:**
@@ -373,8 +373,8 @@ Capture the drift as a proper changeset:
 ```bash
 # Generate a changelog capturing the drift
 lb -e dev -- diffChangeLog \
-    --referenceUrl="offline:mssql?changeLogFile=database/changelog/changelog.xml" \
-    --changelogFile=$LIQUIBASE_TUTORIAL_DATA_DIR/database/changelog/changes/V0002__drift_loyalty_points.xml
+    --referenceUrl="offline:mssql?changeLogFile=platform/mssql/database/orderdb/changelog/changelog.xml" \
+    --changelogFile=$LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/changelog/changes/V0002__drift_loyalty_points.xml
 ```
 
 **Workflow after detecting drift:**
@@ -414,7 +414,7 @@ Now add more changes following the established pattern.
 ### V0002: Add Index to Orders
 
 ```bash
-cat > $LIQUIBASE_TUTORIAL_DATA_DIR/database/changelog/changes/V0002__add_orders_index.mssql.sql << 'EOF'
+cat > $LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/changelog/changes/V0002__add_orders_index.mssql.sql << 'EOF'
 --liquibase formatted sql
 
 --changeset tutorial:V0002-add-orders-date-index
@@ -437,7 +437,7 @@ EOF
 ### Update Master Changelog
 
 ```bash
-cat > $LIQUIBASE_TUTORIAL_DATA_DIR/database/changelog/changelog.xml << 'EOF'
+cat > $LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/changelog/changelog.xml << 'EOF'
 <?xml version="1.0" encoding="UTF-8"?>
 <databaseChangeLog
     xmlns="http://www.liquibase.org/xml/ns/dbchangelog"

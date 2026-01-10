@@ -110,11 +110,11 @@ echo $MSSQL_LIQUIBASE_TUTORIAL_PWD
 
 ```bash
 # With slirp4netns, use host.containers.internal
-# Check liquibase.dev.properties has correct URL:
+# Check liquibase.mssql_dev.properties has correct URL:
 # url=jdbc:sqlserver://host.containers.internal:14331;...
 
 # Verify properties file exists
-cat $LIQUIBASE_TUTORIAL_DATA_DIR/env/liquibase.dev.properties
+cat $LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/env/liquibase.mssql_dev.properties
 
 # Test from Liquibase container
 podman run --rm --network slirp4netns liquibase:latest \

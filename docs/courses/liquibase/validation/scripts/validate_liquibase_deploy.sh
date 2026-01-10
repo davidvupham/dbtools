@@ -58,8 +58,8 @@ for env in dev stg prd; do
         --url="jdbc:sqlserver://${DB_HOST}:${port};databaseName=orderdb;encrypt=true;trustServerCertificate=true" \
         --username=sa \
         --password="${MSSQL_LIQUIBASE_TUTORIAL_PWD}" \
-        --defaults-file="/data/env/liquibase.${env}.properties" \
-        --changelog-file=database/changelog/changelog.xml \
+        --defaults-file="/data/platform/mssql/database/orderdb/env/liquibase.mssql_${env}.properties" \
+        --changelog-file=platform/mssql/database/orderdb/changelog/changelog.xml \
         status --verbose 2>&1)
 
     # Check if baseline is tracked

@@ -11,7 +11,7 @@ set -euo pipefail
 # Requirements:
 #   - Docker image 'liquibase:latest' built via the repo's docker/liquibase directory
 #   - SQL Server containers running (mssql_dev/mssql_stg/mssql_prd)
-#   - env files at $LIQUIBASE_TUTORIAL_DATA_DIR/env/liquibase.<env>.properties
+#   - env files at $LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/env/liquibase.mssql_<env>.properties
 #   - MSSQL_LIQUIBASE_TUTORIAL_PWD exported in the shell
 #
 # Runtime detection:
@@ -146,7 +146,7 @@ if [[ ! -d "$PROJECT_DIR" ]]; then
 fi
 
 # Validate env properties file exists
-PROP_FILE="$PROJECT_DIR/env/liquibase.${ENVIRONMENT}.properties"
+PROP_FILE="$PROJECT_DIR/platform/mssql/database/orderdb/env/liquibase.mssql_${ENVIRONMENT}.properties"
 if [[ ! -f "$PROP_FILE" ]]; then
   echo "Error: Properties file not found: $PROP_FILE" >&2
   exit 1
@@ -190,7 +190,7 @@ exec "$CR" run --rm \
   "${NETWORK_ARG[@]}" \
   -v "${VOLUME_MOUNT}" \
   "${LB_IMAGE_DEFAULT}" \
-  --defaults-file="/data/env/liquibase.${ENVIRONMENT}.properties" \
+  --defaults-file="/data/platform/mssql/database/orderdb/env/liquibase.mssql_${ENVIRONMENT}.properties" \
   --url="${JDBC_URL}" \
   --username=sa \
   --password="${MSSQL_LIQUIBASE_TUTORIAL_PWD}" \

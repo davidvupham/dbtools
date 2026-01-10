@@ -6,7 +6,7 @@ set -euo pipefail
 # Responsibilities:
 # - Source setup_environment.sh to capture/export required env vars
 # - Source setup_aliases.sh to register lb/sqlcmd-tutorial helpers
-# - Create missing Liquibase properties for dev/stage/prod under $LIQUIBASE_TUTORIAL_DATA_DIR/env
+# - Create missing Liquibase properties for dev/stage/prod under $LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/env
 #
 # IMPORTANT: This script must be SOURCED so that environment and aliases
 #            are applied to your current shell.
@@ -50,14 +50,14 @@ LIQUIBASE_TUTORIAL_DATA_DIR="${LIQUIBASE_TUTORIAL_DATA_DIR:-/data/$(whoami)/liqu
 export LIQUIBASE_TUTORIAL_DATA_DIR
 
 # 4) Ensure runtime project directories exist
-mkdir -p "${LIQUIBASE_TUTORIAL_DATA_DIR}/env"
-mkdir -p "${LIQUIBASE_TUTORIAL_DATA_DIR}/database/changelog/baseline" "${LIQUIBASE_TUTORIAL_DATA_DIR}/database/changelog/changes"
+mkdir -p "${LIQUIBASE_TUTORIAL_DATA_DIR}/platform/mssql/database/orderdb/env"
+mkdir -p "${LIQUIBASE_TUTORIAL_DATA_DIR}/platform/mssql/database/orderdb/changelog/baseline" "${LIQUIBASE_TUTORIAL_DATA_DIR}/platform/mssql/database/orderdb/changelog/changes"
 
 # 5) Summarize
 echo
 echo "Tutorial setup complete. Summary:"
 echo "- LIQUIBASE_TUTORIAL_DATA_DIR: ${LIQUIBASE_TUTORIAL_DATA_DIR}"
-echo "- Project dirs: env/, database/changelog/{baseline,changes}"
+echo "- Project dirs: platform/mssql/database/orderdb/env/, platform/mssql/database/orderdb/changelog/{baseline,changes}"
 echo
 echo "Verify helpers:"
 type lb || true

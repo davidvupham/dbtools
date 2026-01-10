@@ -58,23 +58,23 @@ $CR_CMD run --rm \
     --url="jdbc:sqlserver://${DB_HOST}:${DEV_PORT};databaseName=orderdb;encrypt=true;trustServerCertificate=true" \
     --username=sa \
     --password="${MSSQL_LIQUIBASE_TUTORIAL_PWD}" \
-    --changelog-file=/data/database/changelog/baseline/V0000__baseline.mssql.sql \
+    --changelog-file=/data/platform/mssql/database/orderdb/changelog/baseline/V0000__baseline.mssql.sql \
     --schemas=app \
     --include-schema=true \
     --overwrite-output-file=true \
     generateChangeLog 2>&1
 
 # Verify baseline was created
-if [[ -f "$LIQUIBASE_TUTORIAL_DATA_DIR/database/changelog/baseline/V0000__baseline.mssql.sql" ]]; then
+if [[ -f "$LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/changelog/baseline/V0000__baseline.mssql.sql" ]]; then
     echo
     echo "========================================"
     echo -e "${GREEN}Baseline Generated${NC}"
     echo "========================================"
     echo "Baseline generated at:"
-    echo "  $LIQUIBASE_TUTORIAL_DATA_DIR/database/changelog/baseline/V0000__baseline.mssql.sql"
+    echo "  $LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/changelog/baseline/V0000__baseline.mssql.sql"
     echo
     echo "Preview (first 20 lines):"
-    head -20 "$LIQUIBASE_TUTORIAL_DATA_DIR/database/changelog/baseline/V0000__baseline.mssql.sql"
+    head -20 "$LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/changelog/baseline/V0000__baseline.mssql.sql"
     echo
     echo "Next: Run deploy_liquibase_baseline.sh"
 else

@@ -332,43 +332,47 @@ Create a clear directory structure for your Liquibase project:
 
 ```bash
 # Remove existing Liquibase directories if starting fresh (preserves mssql-data)
-rm -rf "$LIQUIBASE_TUTORIAL_DATA_DIR/database" "$LIQUIBASE_TUTORIAL_DATA_DIR/env" 2>/dev/null
+rm -rf "$LIQUIBASE_TUTORIAL_DATA_DIR/platform" 2>/dev/null
 
 # Create project directory (uses /data/$USER by default)
 mkdir -p "$LIQUIBASE_TUTORIAL_DATA_DIR"
 cd "$LIQUIBASE_TUTORIAL_DATA_DIR"
 
 # Create folder structure
-mkdir -p database/changelog/baseline
-mkdir -p database/changelog/changes
-mkdir -p env
+mkdir -p platform/mssql/database/orderdb/changelog/baseline
+mkdir -p platform/mssql/database/orderdb/changelog/changes
+mkdir -p platform/mssql/database/orderdb/env
 ```
 
 ### Quick review: verify directories were created
 
 ```bash
-ls -R "$LIQUIBASE_TUTORIAL_DATA_DIR/database"
+ls -R "$LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb"
 ```
 
-You should see `database/changelog/baseline`, `database/changelog/changes`, and `env` in the output.
+You should see `changelog/baseline`, `changelog/changes`, and `env` in the output.
 
 **What each folder means:**
 
 ```text
 $LIQUIBASE_TUTORIAL_DATA_DIR/              # e.g., /data/$USER/liquibase_tutorial
-├── database/
-│   └── changelog/
-│       ├── changelog.xml           # Master file listing all changes in order
-│       ├── baseline/               # Initial database snapshot
-│       │   └── V0000__baseline.mssql.sql
-│       └── changes/                # Incremental changes after baseline
-│           ├── V0001__add_orders_table.sql
-│           ├── V0002__modify_customer_email.sql
-│           └── V0003__update_stored_procedure.sql
-└── env/
-    ├── liquibase.dev.properties    # Development database connection
-    ├── liquibase.stg.properties  # Staging database connection
-    └── liquibase.prd.properties   # Production database connection
+├── platform/
+│   └── mssql/
+│       └── database/
+│           └── orderdb/
+│               ├── changelog/
+│               │   ├── changelog.xml           # Master file listing all changes in orderdb
+│               │   ├── baseline/               # Initial database snapshot
+│               │   │   └── V0000__baseline.mssql.sql
+│               │   └── changes/                # Incremental changes after baseline
+│               │       ├── V0001__add_orders_table.sql
+│               │       ├── V0002__modify_customer_email.sql
+│               │       └── V0003__update_stored_procedure.sql
+│               └── env/
+│                   ├── liquibase.mssql_dev.properties    # Connection to mssql_dev instance (development)
+│                   ├── liquibase.mssql_stg.properties  # Connection to mssql_stg instance (staging)
+│                   └── liquibase.mssql_prd.properties   # Connection to mssql_prd instance (production)
+└── mssql_dev/, mssql_stg/, mssql_prd/ (SQL Server data volumes)
 ```
 
 **About file permissions:**
@@ -537,7 +541,7 @@ $LIQUIBASE_TUTORIAL_DIR/scripts/setup_liquibase_environment.sh
 ```
 
 This script creates:
-- Project directories (`database/changelog/baseline`, `database/changelog/changes`, `env/`)
+- Project directories (`platform/mssql/database/orderdb/changelog/baseline`, `platform/mssql/database/orderdb/changelog/changes`, `platform/mssql/database/orderdb/env/`)
 - Properties files for dev, stg, prd
 - Master `changelog.xml` file
 
@@ -554,37 +558,37 @@ If you prefer to create properties files manually:
 
 ```bash
 # Development properties
-cat > "$LIQUIBASE_TUTORIAL_DATA_DIR/env/liquibase.dev.properties" << 'EOF'
+cat > "$LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/env/liquibase.mssql_dev.properties" << 'EOF'
 # Development Environment Connection
 url=jdbc:sqlserver://localhost:14331;databaseName=orderdb;encrypt=true;trustServerCertificate=true
 username=sa
-changelog-file=database/changelog/changelog.xml
-search-path=/data
+changelog-file=changelog/changelog.xml
+search-path=/data/platform/mssql/database/orderdb
 logLevel=info
 EOF
 
 # Staging properties
-cat > "$LIQUIBASE_TUTORIAL_DATA_DIR/env/liquibase.stg.properties" << 'EOF'
+cat > "$LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/env/liquibase.mssql_stg.properties" << 'EOF'
 # Staging Environment Connection
 url=jdbc:sqlserver://localhost:14332;databaseName=orderdb;encrypt=true;trustServerCertificate=true
 username=sa
-changelog-file=database/changelog/changelog.xml
-search-path=/data
+changelog-file=changelog/changelog.xml
+search-path=/data/platform/mssql/database/orderdb
 logLevel=info
 EOF
 
 # Production properties
-cat > "$LIQUIBASE_TUTORIAL_DATA_DIR/env/liquibase.prd.properties" << 'EOF'
+cat > "$LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/env/liquibase.mssql_prd.properties" << 'EOF'
 # Production Environment Connection
 url=jdbc:sqlserver://localhost:14333;databaseName=orderdb;encrypt=true;trustServerCertificate=true
 username=sa
-changelog-file=database/changelog/changelog.xml
-search-path=/data
+changelog-file=changelog/changelog.xml
+search-path=/data/platform/mssql/database/orderdb
 logLevel=info
 EOF
 
 # Verify files were created
-ls -la "$LIQUIBASE_TUTORIAL_DATA_DIR/env/"
+ls -la "$LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/env/"
 ```
 
 **What each property means:**
@@ -665,13 +669,13 @@ cd "$LIQUIBASE_TUTORIAL_DATA_DIR"
 # IMPORTANT: Use .sql extension to generate Formatted SQL
 # Note: The lb wrapper automatically handles network configuration based on your container runtime (Docker/Podman)
 lb -e dev -- \
-  --changelog-file=/data/database/changelog/baseline/V0000__baseline.mssql.sql \
+  --changelog-file=/data/platform/mssql/database/orderdb/changelog/baseline/V0000__baseline.mssql.sql \
   --schemas=app \
   --include-schema=true \
   generateChangeLog
 
 # Check the generated file
-cat database/changelog/baseline/V0000__baseline.mssql.sql
+cat platform/mssql/database/orderdb/changelog/baseline/V0000__baseline.mssql.sql
 ```
 
 **Expected Output:**
@@ -691,7 +695,7 @@ Step 4 VALIDATION SUCCESSFUL
 
 ```bash
 lb -e dev -- \
-  --changelog-file=/data/database/changelog/baseline/V0000__baseline.mssql.sql \
+  --changelog-file=/data/platform/mssql/database/orderdb/changelog/baseline/V0000__baseline.mssql.sql \
   --schemas=app \
   --include-schema=true \
   generateChangeLog
@@ -765,7 +769,7 @@ If you need to create the master changelog manually or prefer step-by-step contr
 
 ```bash
 # Create master changelog that includes baseline (if not already created)
-cat > "$LIQUIBASE_TUTORIAL_DATA_DIR/database/changelog/changelog.xml" << 'EOF'
+cat > "$LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/changelog/changelog.xml" << 'EOF'
 <?xml version="1.0" encoding="UTF-8"?>
 <databaseChangeLog
     xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
@@ -995,7 +999,7 @@ cr run --rm \
   --network host \
   -v "$LIQUIBASE_TUTORIAL_DATA_DIR":/data:Z,U \
   liquibase:latest \
-  --defaults-file=/data/env/liquibase.<ENV>.properties \
+  --defaults-file=/data/platform/mssql/database/orderdb/env/liquibase.mssql_<ENV>.properties \
   --url="jdbc:sqlserver://localhost:<PORT>;databaseName=orderdb;encrypt=true;trustServerCertificate=true" \
   --username=sa \
   --password="${MSSQL_LIQUIBASE_TUTORIAL_PWD}" \
@@ -1010,7 +1014,7 @@ cr run --rm \
   --network slirp4netns:port_handler=slirp4netns \
   -v "$LIQUIBASE_TUTORIAL_DATA_DIR":/data:z,U \
   liquibase:latest \
-  --defaults-file=/data/env/liquibase.<ENV>.properties \
+  --defaults-file=/data/platform/mssql/database/orderdb/env/liquibase.mssql_<ENV>.properties \
   --url="jdbc:sqlserver://host.containers.internal:<PORT>;databaseName=orderdb;encrypt=true;trustServerCertificate=true" \
   --username=sa \
   --password="${MSSQL_LIQUIBASE_TUTORIAL_PWD}" \

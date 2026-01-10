@@ -43,7 +43,7 @@ V0002__create_customer_index.mssql.sql
 
 | Pattern | Example |
 |---------|---------|
-| `liquibase.<env>.properties` | `liquibase.dev.properties` |
+| `liquibase.mssql_<env>.properties` | `liquibase.mssql_dev.properties` |
 
 ## Network Naming
 
@@ -56,9 +56,9 @@ V0002__create_customer_index.mssql.sql
 | Pattern | Example |
 |---------|---------|
 | `/data/$USER/<project>` | `/data/$USER/liquibase_tutorial` |
-| `database/changelog/baseline` | Baseline changelogs |
-| `database/changelog/changes` | Incremental changes |
-| `env/` | Environment property files |
+| `platform/mssql/database/orderdb/changelog/baseline` | Baseline changelogs |
+| `platform/mssql/database/orderdb/changelog/changes` | Incremental changes |
+| `platform/mssql/database/orderdb/env/` | Environment property files |
 
 ## General Conventions
 

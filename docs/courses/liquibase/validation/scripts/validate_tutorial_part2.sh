@@ -156,7 +156,7 @@ else
 fi
 
 # Check if baseline exists
-if [ -f "$LIQUIBASE_TUTORIAL_DATA_DIR/database/changelog/baseline/V0000__baseline.mssql.sql" ]; then
+if [ -f "$LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/changelog/baseline/V0000__baseline.mssql.sql" ]; then
     log "✓ Baseline file exists"
 else
     log "✗ ERROR: Baseline file not found. Part 1 must be completed first."
@@ -165,7 +165,7 @@ else
 fi
 
 # Check if changelog.xml exists
-if [ -f "$LIQUIBASE_TUTORIAL_DATA_DIR/database/changelog/changelog.xml" ]; then
+if [ -f "$LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/changelog/changelog.xml" ]; then
     log "✓ Changelog.xml exists"
 else
     log "✗ ERROR: changelog.xml not found. Part 1 must be completed first."
@@ -180,9 +180,9 @@ log_section "Step 6: Making Your First Change"
 
 # Create V0001 change file
 log "Creating V0001__add_orders_table.mssql.sql"
-mkdir -p "$LIQUIBASE_TUTORIAL_DATA_DIR/database/changelog/changes"
+mkdir -p "$LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/changelog/changes"
 
-cat > "$LIQUIBASE_TUTORIAL_DATA_DIR/database/changelog/changes/V0001__add_orders_table.mssql.sql" << 'EOF'
+cat > "$LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/changelog/changes/V0001__add_orders_table.mssql.sql" << 'EOF'
 --liquibase formatted sql
 
 --changeset tutorial:V0001-add-orders-table
@@ -208,7 +208,7 @@ END
 GO
 EOF
 
-if [ -f "$LIQUIBASE_TUTORIAL_DATA_DIR/database/changelog/changes/V0001__add_orders_table.mssql.sql" ]; then
+if [ -f "$LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/changelog/changes/V0001__add_orders_table.mssql.sql" ]; then
     log "✓ V0001 change file created"
 else
     log "✗ ERROR: Failed to create V0001 change file"
@@ -217,7 +217,7 @@ fi
 
 # Update changelog.xml
 log "Updating changelog.xml to include V0001"
-cat > "$LIQUIBASE_TUTORIAL_DATA_DIR/database/changelog/changelog.xml" << 'EOF'
+cat > "$LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/changelog/changelog.xml" << 'EOF'
 <?xml version="1.0" encoding="UTF-8"?>
 <databaseChangeLog
     xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
@@ -301,7 +301,7 @@ log_section "Step 9: Rollback Strategies"
 
 # Add rollback to V0001 file
 log "Adding rollback block to V0001 file"
-cat > "$LIQUIBASE_TUTORIAL_DATA_DIR/database/changelog/changes/V0001__add_orders_table.mssql.sql" << 'EOF'
+cat > "$LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/changelog/changes/V0001__add_orders_table.mssql.sql" << 'EOF'
 --liquibase formatted sql
 
 --changeset tutorial:V0001-add-orders-table
@@ -354,13 +354,13 @@ ALTER TABLE app.customer ADD loyalty_points INT DEFAULT 0;
 
 # Detect drift with diff
 log "Detecting drift with diff command"
-execute_step "Detect drift" "lb -e dev -- diff --referenceUrl='offline:mssql?changeLogFile=database/changelog/changelog.xml'"
+execute_step "Detect drift" "lb -e dev -- diff --referenceUrl='offline:mssql?changeLogFile=platform/mssql/database/orderdb/changelog/changelog.xml'"
 
 # Generate changelog from drift
 log "Generating changelog from drift"
-mkdir -p "$LIQUIBASE_TUTORIAL_DATA_DIR/database/changelog/changes"
+mkdir -p "$LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/changelog/changes"
 execute_step "Generate diffChangeLog" \
-    "lb -e dev -- diffChangeLog --referenceUrl='offline:mssql?changeLogFile=database/changelog/changelog.xml' --changelogFile=$LIQUIBASE_TUTORIAL_DATA_DIR/database/changelog/changes/V0002__drift_loyalty_points.xml"
+    "lb -e dev -- diffChangeLog --referenceUrl='offline:mssql?changeLogFile=platform/mssql/database/orderdb/changelog/changelog.xml' --changelogFile=$LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/changelog/changes/V0002__drift_loyalty_points.xml"
 
 # Remove the drift column to restore state
 log "Removing drift column to restore state"
@@ -376,7 +376,7 @@ log_section "Step 11: Additional Changesets"
 
 # Create V0002 index file
 log "Creating V0002__add_orders_index.mssql.sql"
-cat > "$LIQUIBASE_TUTORIAL_DATA_DIR/database/changelog/changes/V0002__add_orders_index.mssql.sql" << 'EOF'
+cat > "$LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/changelog/changes/V0002__add_orders_index.mssql.sql" << 'EOF'
 --liquibase formatted sql
 
 --changeset tutorial:V0002-add-orders-date-index
@@ -397,7 +397,7 @@ EOF
 
 # Update master changelog
 log "Updating master changelog to include V0002"
-cat > "$LIQUIBASE_TUTORIAL_DATA_DIR/database/changelog/changelog.xml" << 'EOF'
+cat > "$LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/changelog/changelog.xml" << 'EOF'
 <?xml version="1.0" encoding="UTF-8"?>
 <databaseChangeLog
     xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
