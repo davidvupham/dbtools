@@ -174,15 +174,15 @@ fi
 # Step 4: Create Databases
 log_section "Step 4: Create Three Database Environments"
 
-if [ -f "$LIQUIBASE_TUTORIAL_DIR/scripts/create_orderdb_databases.sh" ]; then
-    execute_step "Create Databases" "$LIQUIBASE_TUTORIAL_DIR/scripts/create_orderdb_databases.sh"
+if [ -f "$LIQUIBASE_TUTORIAL_DIR/scripts/create_orderdb_database.sh" ]; then
+    execute_step "Create Databases" "$LIQUIBASE_TUTORIAL_DIR/scripts/create_orderdb_database.sh"
     CREATE_DB_RESULT=$?
 
-    if [ $CREATE_DB_RESULT -eq 0 ] && [ -f "$LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_orderdb_databases.sh" ]; then
-        execute_step "Validate Databases" "$LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_orderdb_databases.sh"
+    if [ $CREATE_DB_RESULT -eq 0 ] && [ -f "$LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_orderdb_database.sh" ]; then
+        execute_step "Validate Databases" "$LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_orderdb_database.sh"
     fi
 else
-    log "✗ ERROR: create_orderdb_databases.sh not found"
+    log "✗ ERROR: create_orderdb_database.sh not found"
     ((ISSUES_FOUND++))
 fi
 

@@ -225,11 +225,11 @@ setup_prerequisites() {
 
     # Step 2: Create databases
     log_info "Running Step 2: Create Databases..."
-    if [ -f "$LIQUIBASE_TUTORIAL_DIR/scripts/create_orderdb_databases.sh" ]; then
-        bash "$LIQUIBASE_TUTORIAL_DIR/scripts/create_orderdb_databases.sh" >> "$TEST_LOG" 2>&1
+    if [ -f "$LIQUIBASE_TUTORIAL_DIR/scripts/create_orderdb_database.sh" ]; then
+        bash "$LIQUIBASE_TUTORIAL_DIR/scripts/create_orderdb_database.sh" >> "$TEST_LOG" 2>&1
         log_pass "Step 2: Databases created"
     else
-        log_fail "create_orderdb_databases.sh not found"
+        log_fail "create_orderdb_database.sh not found"
         return 1
     fi
 

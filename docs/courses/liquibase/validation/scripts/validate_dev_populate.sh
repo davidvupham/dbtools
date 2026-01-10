@@ -144,7 +144,7 @@ else
     echo "To fix:"
     echo "  1. Ensure mssql_dev container is running"
     echo "  2. Run populate_dev_database.sh to create objects"
-    echo "  3. Or manually run: sqlcmd-tutorial populate_dev_database.sql"
+    echo "  3. Or manually run: sqlcmd-tutorial populate_orderdb_database.sql"
     echo
     exit 1
 fi

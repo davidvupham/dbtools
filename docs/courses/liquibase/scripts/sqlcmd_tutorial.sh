@@ -3,12 +3,12 @@ set -euo pipefail
 
 # Helper script to execute sqlcmd inside a tutorial SQL Server container.
 # Replaces long commands like:
-#   container_runtime exec -i mssql_dev /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U SA -P "$MSSQL_LIQUIBASE_TUTORIAL_PWD" < verify_dev_objects.sql
+#   container_runtime exec -i mssql_dev /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U SA -P "$MSSQL_LIQUIBASE_TUTORIAL_PWD" < verify_orderdb_objects.sql
 #
 # Usage examples:
-#   ./sqlcmd_tutorial.sh 04_verify_dev_objects.sql
+#   ./sqlcmd_tutorial.sh 04_verify_orderdb_objects.sql
 #   ./sqlcmd_tutorial.sh -Q "SELECT @@SERVERNAME AS ServerName, GETDATE() AS CurrentTime;"
-#   ./sqlcmd_tutorial.sh -d orderdb verify_dev_data.sql
+#   ./sqlcmd_tutorial.sh -d orderdb verify_orderdb_data.sql
 #   ./sqlcmd_tutorial.sh -d orderdb -Q "SELECT name FROM sys.tables;"
 
 detect_runtime() {
@@ -80,9 +80,9 @@ Environment:
   MSSQL_LIQUIBASE_TUTORIAL_PWD   Password for the SQL login (required)
 
 Examples:
-  ./sqlcmd_tutorial.sh 04_verify_dev_objects.sql
+  ./sqlcmd_tutorial.sh 04_verify_orderdb_objects.sql
   ./sqlcmd_tutorial.sh -Q "SELECT @@SERVERNAME AS ServerName, GETDATE() AS CurrentTime;"
-  ./sqlcmd_tutorial.sh -e dev -d orderdb 05_verify_dev_data.sql
+  ./sqlcmd_tutorial.sh -e dev -d orderdb 05_verify_orderdb_data.sql
   ./sqlcmd_tutorial.sh -e stg -d orderdb -Q "SELECT name FROM sys.tables;"
   ./sqlcmd_tutorial.sh --container mssql_dev -d orderdb -Q "SELECT name FROM sys.tables;"
 EOF

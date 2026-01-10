@@ -27,7 +27,7 @@ lb -e prd -- <command>    # Production (port 14333)
 |--------|---------|
 | `setup_liquibase_environment.sh` | Create directories, set env vars |
 | `start_mssql_containers.sh` | Start all SQL Server containers |
-| `create_orderdb_databases.sh` | Create orderdb on all containers |
+| `create_orderdb_database.sh` | Create orderdb on all containers |
 | `populate_dev_database.sh` | Add sample objects to dev |
 | `generate_liquibase_baseline.sh` | Generate baseline changelog |
 | `deploy_liquibase_baseline.sh` | Deploy baseline to all environments |

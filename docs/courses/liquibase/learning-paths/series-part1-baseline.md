@@ -41,7 +41,7 @@ This tutorial is **Part 1** of a comprehensive series on implementing database c
 By the end of Part 1, you will have:
 
 1. ✅ **Set up a complete Liquibase project structure** with proper organization for changelogs and environment configurations
-2. ✅ **Created three database environments** (dev, stage, prod) to simulate a real-world multi-environment setup
+2. ✅ **Created three database environments** (dev, stage, prod) representing a real-world multi-environment setup
 3. ✅ **Generated a baseline** from an existing development database that represents your current production state
 4. ✅ **Deployed the baseline** across all environments using Liquibase's sync and update commands
 5. ✅ **Established Liquibase tracking** so all future changes can be safely managed and deployed
@@ -286,7 +286,7 @@ sqlcmd-tutorial -e dev -Q "SELECT @@SERVERNAME AS ServerName, GETDATE() AS Curre
 
 ```bash
 # EXAMPLE ONLY – DO NOT RUN YET
-sqlcmd-tutorial create_databases.sql
+sqlcmd-tutorial create_orderdb_database.sql
 ```
 
 ### Check SQL Server is Running
@@ -386,84 +386,92 @@ Create the `orderdb` database on each SQL Server container to represent dev, sta
 
 ```bash
 # Run the automated step script
-$LIQUIBASE_TUTORIAL_DIR/scripts/create_orderdb_databases.sh
+$LIQUIBASE_TUTORIAL_DIR/scripts/create_orderdb_database.sh
 ```
 
 The script will:
 - Create `orderdb` on all three containers (mssql_dev, mssql_stg, mssql_prd)
+- Create the `app` schema in each database (required for Liquibase)
 - Show success/fail indicators for each container
 - Display completion message
 
 **Validate Step 1:**
 
 ```bash
-# Run the validation script to verify databases were created
-$LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_orderdb_databases.sh
+# Run the validation script to verify databases and schemas were created
+$LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_orderdb_database.sh
 ```
+
+The validation script checks:
+- All three containers (mssql_dev, mssql_stg, mssql_prd) are running
+- Each container has `orderdb` database
+- Each `orderdb` has `app` schema
 
 **Alternative: Manual commands**
 
-```bash
-# Create development, staging, and production databases
-sqlcmd-tutorial create_databases.sql
+To create databases and schemas manually for all three environments:
 
-# Verify orderdb exists (runs against mssql_dev by default)
-sqlcmd-tutorial verify_databases.sql
+```bash
+# Create orderdb database on each environment
+sqlcmd-tutorial -e dev create_orderdb_database.sql
+sqlcmd-tutorial -e stg create_orderdb_database.sql
+sqlcmd-tutorial -e prd create_orderdb_database.sql
+
+# Create app schema in each orderdb (required for Liquibase)
+sqlcmd-tutorial -e dev -d orderdb create_app_schema.sql
+sqlcmd-tutorial -e stg -d orderdb create_app_schema.sql
+sqlcmd-tutorial -e prd -d orderdb create_app_schema.sql
+
+# Verify orderdb exists on each environment
+sqlcmd-tutorial -e dev verify_orderdb_database.sql
+sqlcmd-tutorial -e stg verify_orderdb_database.sql
+sqlcmd-tutorial -e prd verify_orderdb_database.sql
+
+# Verify app schema exists in each orderdb
+sqlcmd-tutorial -e dev -d orderdb verify_app_schema.sql
+sqlcmd-tutorial -e stg -d orderdb verify_app_schema.sql
+sqlcmd-tutorial -e prd -d orderdb verify_app_schema.sql
+```
+
+Or use a loop to run for all environments:
+
+```bash
+# Create databases and schemas for all environments
+for env in dev stg prd; do
+    sqlcmd-tutorial -e "$env" create_orderdb_database.sql
+    sqlcmd-tutorial -e "$env" -d orderdb create_app_schema.sql
+    sqlcmd-tutorial -e "$env" verify_orderdb_database.sql
+    sqlcmd-tutorial -e "$env" -d orderdb verify_app_schema.sql
+done
 ```
 
 **Expected output:**
 
+For database verification:
 ```text
-name        database_id  create_date
------------ ------------ -----------------------
-orderdb     5            2025-11-14 20:00:00.000
+instance_name      name        database_id  create_date
+------------------ ----------- ------------ -----------------------
+mssql_dev          orderdb     5            2025-11-14 20:00:00.000
+```
+
+For schema verification:
+```text
+instance_name      database_name  schema_name
+------------------ -------------- -----------
+mssql_dev          orderdb        app
 ```
 
 **What did we just do?**
 
-- Created `orderdb` database on each SQL Server container
-- Each container (mssql_dev, mssql_stg, mssql_prd) has its own isolated `orderdb`
-- This simulates separate dev/staging/production environments
-- Verified creation with `verify_databases.sql`
-
-**Next: Create the app schema** (required before using Liquibase):
-
-The `create_orderdb_databases.sh` script also creates the app schema on each container. If you used the manual commands above, create the schema manually:
-
-```bash
-# Create app schema on each container
-sqlcmd-tutorial create_app_schema.sql
-```
-
-**Verify schema exists:**
-
-```bash
-sqlcmd-tutorial verify_app_schema.sql
-```
-
-**Expected output:**
-
-```text
-database_name  schema_name
--------------  -----------
-orderdb        app
-```
-
-**Troubleshooting:**
-
-- If schema is missing, re-run `sqlcmd-tutorial create_app_schema.sql`. Also verify `MSSQL_LIQUIBASE_TUTORIAL_PWD` is set.
-
-**Why this step?** Liquibase does not manage schema creation. The `app` schema must exist before we can create tables and views within it. In production, schemas would be created through:
-
-- Infrastructure-as-code (Terraform, ARM templates)
-- Database initialization scripts
-- Manual DBA processes
+- Created `orderdb` database on each SQL Server container (mssql_dev, mssql_stg, mssql_prd)
+- Created the `app` schema in each database (required for Liquibase)
+- Verified creation with `verify_orderdb_database.sql` and `verify_app_schema.sql`
 
 ## Step 2: Populate Development with Existing Objects
 
 Now create some database objects in **development only**. This simulates an existing database you want to start managing with Liquibase.
 
-**Important**: The script assumes the `app` schema already exists (as Liquibase doesn't manage schemas). In production, schemas would be created through infrastructure scripts or database initialization.
+**Important**: The script assumes the `app` schema already exists (created in Step 1). In production, schemas would be created through infrastructure scripts or database initialization.
 
 **Recommended: Use the step script**
 
@@ -490,19 +498,19 @@ $LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_dev_populate.sh
 ```bash
 # Create table, view, indexes, and sample data in DEVELOPMENT
 # Note: Script assumes 'app' schema already exists
-sqlcmd-tutorial populate_dev_database.sql
+sqlcmd-tutorial populate_orderdb_database.sql
 
 # Verify objects were created in development
-sqlcmd-tutorial verify_dev_objects.sql
-sqlcmd-tutorial verify_dev_data.sql
+sqlcmd-tutorial verify_orderdb_objects.sql
+sqlcmd-tutorial verify_orderdb_data.sql
 ```
 
 **What did we just do?**
 
-- Created a complete working database in development using `populate_dev_database.sql`
+- Created a complete working database in development using `populate_orderdb_database.sql`
 - Table `customer` with indexes and constraints, view `v_customer_basic` (in existing `app` schema)
 - Added sample data (3 customer records)
-- Verified with `verify_dev_objects.sql` and `verify_dev_data.sql`
+- Verified with `verify_orderdb_objects.sql` and `verify_orderdb_data.sql`
 - Staging and production are still empty (we'll deploy to them next)
 
 **Note**: The `app` schema must exist before running Liquibase. In production, create schemas through infrastructure automation.
@@ -712,7 +720,7 @@ lb -e dev -- \
 4. **Indexes**: Verify all indexes are captured correctly
 5. **Ordering**: Ensure foreign key tables come after their referenced tables
 
-**Note**: Schema creation is not captured (see Liquibase Limitations section above). Schemas must exist before running Liquibase.
+**Note**: When using `generateChangeLog` to create a baseline from an existing database, Liquibase does not capture schema creation statements. The generated changelog will include objects within schemas, but not the `CREATE SCHEMA` statements themselves. If you need to create schemas via Liquibase, you can add `CREATE SCHEMA` statements in a separate changeset.
 
 ## Step 5: Deploy Baseline Across Environments
 
@@ -861,7 +869,7 @@ For convenience, here's a summary of all step scripts used in Part 1:
 |------|--------|---------|------------|
 | 0/3 | `setup_liquibase_environment.sh` | Create directories, properties, changelog | `validate_liquibase_properties.sh` |
 | - | `start_mssql_containers.sh` | Start SQL Server containers | Manual check |
-| 1 | `create_orderdb_databases.sh` | Create orderdb on all containers | `validate_orderdb_databases.sh` |
+| 1 | `create_orderdb_database.sh` | Create orderdb on all containers | `validate_orderdb_database.sh` |
 | 2 | `populate_dev_database.sh` | Populate dev with sample objects | `validate_dev_populate.sh` |
 | 4 | `generate_liquibase_baseline.sh` | Generate baseline from dev | `validate_liquibase_baseline.sh` |
 | 5 | `deploy_liquibase_baseline.sh` | Deploy baseline to all environments | `validate_liquibase_deploy.sh` |

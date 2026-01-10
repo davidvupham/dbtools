@@ -109,7 +109,7 @@ source "$LIQUIBASE_TUTORIAL_DIR/scripts/setup_tutorial.sh"
 # Run setup scripts in order
 "$LIQUIBASE_TUTORIAL_DIR/scripts/setup_liquibase_environment.sh"
 "$LIQUIBASE_TUTORIAL_DIR/scripts/start_mssql_containers.sh"
-"$LIQUIBASE_TUTORIAL_DIR/scripts/create_orderdb_databases.sh"
+"$LIQUIBASE_TUTORIAL_DIR/scripts/create_orderdb_database.sh"
 "$LIQUIBASE_TUTORIAL_DIR/scripts/populate_dev_database.sh"
 "$LIQUIBASE_TUTORIAL_DIR/scripts/generate_liquibase_baseline.sh"
 "$LIQUIBASE_TUTORIAL_DIR/scripts/deploy_liquibase_baseline.sh"

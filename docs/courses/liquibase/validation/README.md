@@ -56,7 +56,7 @@ All validation scripts are located in `scripts/`:
 
 ### Validation Scripts
 
-- **`scripts/validate_orderdb_databases.sh`** - Validates database creation
+- **`scripts/validate_orderdb_database.sh`** - Validates database creation
 - **`scripts/validate_dev_populate.sh`** - Validates dev population
 - **`scripts/validate_liquibase_properties.sh`** - Validates properties files
 - **`scripts/validate_liquibase_baseline.sh`** - Validates baseline generation
@@ -134,7 +134,7 @@ bash "$LIQUIBASE_TUTORIAL_DIR/validation/scripts/cleanup_validation.sh"
 ### Running Validation Scripts
 
 ```bash
-bash "$LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_orderdb_databases.sh"
+bash "$LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_orderdb_database.sh"
 bash "$LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_dev_populate.sh"
 bash "$LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_liquibase_properties.sh"
 bash "$LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_liquibase_baseline.sh"

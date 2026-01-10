@@ -22,7 +22,7 @@ Scripts use descriptive names that indicate their purpose:
 |--------|---------|---------|
 | `setup_liquibase_environment.sh` | Creates project directories, properties files, master changelog | Part 1, End-to-End |
 | `start_mssql_containers.sh` | Starts SQL Server containers (dev/stg/prd) | Part 1, End-to-End |
-| `create_orderdb_databases.sh` | Creates `orderdb` database and `app` schema on all containers | Part 1, End-to-End |
+| `create_orderdb_database.sh` | Creates `orderdb` database and `app` schema on all containers | Part 1, End-to-End |
 | `populate_dev_database.sh` | Populates development with sample objects for baseline | Part 1, End-to-End |
 
 ### Liquibase Operations

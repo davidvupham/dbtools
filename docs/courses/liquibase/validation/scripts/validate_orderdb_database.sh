@@ -1,6 +1,6 @@
 #!/bin/bash
-# Validate OrderDB Databases
-# Validates that orderdb exists on all three SQL Server containers
+# Validate OrderDB Database
+# Validates that orderdb database and app schema exist on all three SQL Server containers
 # Reusable across all tutorial parts
 
 set -u
@@ -12,7 +12,7 @@ YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 echo "========================================"
-echo "Validating OrderDB Databases"
+echo "Validating OrderDB Database"
 echo "========================================"
 echo
 
@@ -79,6 +79,32 @@ for container in mssql_dev mssql_stg mssql_prd; do
             echo "    Actual result: ${result:-empty}"
         fi
     fi
+
+    # Check app schema exists in orderdb
+    echo -n "  Checking $container orderdb.app schema... "
+    schema_result=$($CR_CMD exec "$container" /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa \
+        -P "$MSSQL_LIQUIBASE_TUTORIAL_PWD" \
+        -d orderdb \
+        -Q "SELECT name FROM sys.schemas WHERE name = 'app';" \
+        -h -1 -W 2>&1 | grep -E "^app$" | head -1)
+
+    if [[ "$schema_result" == "app" ]]; then
+        pass "$container has app schema in orderdb"
+    else
+        # Try alternative check - count schemas
+        schema_count=$($CR_CMD exec "$container" /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa \
+            -P "$MSSQL_LIQUIBASE_TUTORIAL_PWD" \
+            -d orderdb \
+            -Q "SELECT COUNT(*) FROM sys.schemas WHERE name = 'app';" \
+            -h -1 -W 2>&1 | grep -E "^[[:space:]]*1[[:space:]]*$" | wc -l)
+
+        if [[ "$schema_count" -gt 0 ]]; then
+            pass "$container has app schema in orderdb (verified via count)"
+        else
+            fail "$container missing app schema in orderdb"
+            echo "    Actual result: ${schema_result:-empty}"
+        fi
+    fi
 done
 
 echo
@@ -90,6 +116,7 @@ if [[ "$FAILURES" -eq 0 ]]; then
     echo "Expected output summary:"
     echo "  ✓ All three containers (mssql_dev, mssql_stg, mssql_prd) are running"
     echo "  ✓ Each container has 'orderdb' database"
+    echo "  ✓ Each orderdb has 'app' schema"
     echo
     exit 0
 else
@@ -98,7 +125,7 @@ else
     echo
     echo "To fix:"
     echo "  1. Ensure containers are running: docker ps | grep mssql_"
-    echo "  2. Run create_orderdb_databases.sh to create databases"
+    echo "  2. Run create_orderdb_database.sh to create databases"
     echo
     exit 1
 fi

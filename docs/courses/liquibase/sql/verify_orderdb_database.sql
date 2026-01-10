@@ -1,6 +1,7 @@
 -- Verify orderdb database exists
 -- Run this against each container (mssql_dev, mssql_stg, mssql_prd)
-SELECT name,
+SELECT @@SERVERNAME AS instance_name,
+    name,
     database_id,
     create_date
 FROM sys.databases

@@ -209,4 +209,4 @@ echo "  mssql_dev: localhost:14331"
 echo "  mssql_stg: localhost:14332"
 echo "  mssql_prd: localhost:14333"
 echo
-echo "Next: Run create_orderdb_databases.sh"
+echo "Next: Run create_orderdb_database.sh"

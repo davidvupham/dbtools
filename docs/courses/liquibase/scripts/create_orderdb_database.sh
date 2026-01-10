@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Create OrderDB Databases
+# Create OrderDB Database
 # Creates orderdb database and app schema on all SQL Server containers
 # Reusable across all tutorial parts
 
@@ -12,7 +12,7 @@ YELLOW='\033[1;33m'
 NC='\033[0m'
 
 echo "========================================"
-echo "Liquibase Tutorial - Create OrderDB Databases"
+echo "Liquibase Tutorial - Create OrderDB Database"
 echo "========================================"
 echo
 
@@ -63,7 +63,7 @@ done
 
 echo
 echo "========================================"
-echo -e "${GREEN}Databases Created${NC}"
+echo -e "${GREEN}Database Created${NC}"
 echo "========================================"
 echo "Database 'orderdb' created on all environments"
 echo
