@@ -290,11 +290,17 @@ sqlcmd-tutorial create_databases.sql
 
 ### Check SQL Server is Running
 
-Now verify you can connect to SQL Server. This test ensures your database is accessible before we start.
+Now verify you can connect to all three SQL Server instances. This test ensures your databases are accessible before we start.
 
 ```bash
 # Test connection to dev instance (should show server name and date)
 sqlcmd-tutorial -e dev -Q "SELECT @@SERVERNAME AS ServerName, GETDATE() AS CurrentTime"
+
+# Test connection to stg instance
+sqlcmd-tutorial -e stg -Q "SELECT @@SERVERNAME AS ServerName, GETDATE() AS CurrentTime"
+
+# Test connection to prd instance
+sqlcmd-tutorial -e prd -Q "SELECT @@SERVERNAME AS ServerName, GETDATE() AS CurrentTime"
 ```
 
 **Expected output:**
@@ -303,11 +309,19 @@ sqlcmd-tutorial -e dev -Q "SELECT @@SERVERNAME AS ServerName, GETDATE() AS Curre
 ServerName               CurrentTime
 ------------------------ -----------------------
 mssql_dev                2026-01-07 18:35:07.160
+
+ServerName               CurrentTime
+------------------------ -----------------------
+mssql_stg                2026-01-07 18:35:08.245
+
+ServerName               CurrentTime
+------------------------ -----------------------
+mssql_prd                2026-01-07 18:35:09.380
 ```
 
 **Troubleshooting:**
 
-- **Connection refused**: SQL Server might not be running. Check with `cr ps | grep mssql_dev`
+- **Connection refused**: SQL Server might not be running. Check with `cr ps | grep mssql_`
 - **Login failed**: Password might be wrong. Check variable: `echo $MSSQL_LIQUIBASE_TUTORIAL_PWD`
 
 ## Project Structure
