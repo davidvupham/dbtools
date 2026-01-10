@@ -109,24 +109,27 @@ Before starting this tutorial, you should have:
 
 ### Before You Start: Clean Up Previous Runs
 
-**Important:** Before starting the tutorial, clean up any containers or resources from previous runs to ensure a clean environment.
+**Important:** Before starting the tutorial, perform a complete cleanup to remove all containers, networks, and data from previous runs. This ensures you start with a completely fresh environment.
 
 ```bash
 # Set tutorial directory (if not already set)
 export LIQUIBASE_TUTORIAL_DIR="/path/to/your/repo/docs/courses/liquibase"
 
-# Run cleanup script to remove any existing containers
-"$LIQUIBASE_TUTORIAL_DIR/validation/scripts/cleanup_validation.sh"
+# Run complete cleanup script to remove all containers, networks, and data
+"$LIQUIBASE_TUTORIAL_DIR/scripts/cleanup_tutorial.sh"
 ```
 
 **What the cleanup script does:**
-- Stops and removes any existing SQL Server containers (`mssql_dev`, `mssql_stg`, `mssql_prd`)
-- Removes any existing Liquibase containers
-- Cleans up Docker networks
-- Waits for ports to be released
-- Ensures a clean starting state
+- Stops and removes all tutorial containers (`mssql_dev`, `mssql_stg`, `mssql_prd`, `liquibase_tutorial`)
+- Removes Docker networks (`liquibase_tutorial_network`)
+- **Removes the data directory** (`$LIQUIBASE_TUTORIAL_DATA_DIR`) - this deletes all databases, changelogs, configuration files, and volumes
+- Provides a complete fresh start for the tutorial
 
-> **Note:** You can skip this step if you're certain the environment is clean, but it's recommended to run it to avoid port conflicts or other issues.
+The script will prompt for confirmation before removing the data directory to prevent accidental data loss.
+
+> **Warning:** This cleanup will remove all tutorial data including databases and changelogs. Only run this if you want to start completely fresh from the beginning.
+
+> **Note:** You can skip this step if you're certain the environment is clean, but it's recommended to run it to ensure a clean starting state.
 
 ### Step 0: Configure Environment and Aliases
 
