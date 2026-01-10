@@ -185,12 +185,35 @@ The script will:
 
 **Alternative: Manual commands**
 
+> **Important:** These manual commands use **default ports** (14331, 14332, 14333). If these ports are already in use, docker-compose will fail with port conflicts. For multi-user environments or when ports may be in use, first run `setup_db_container_ports.sh` to configure available ports.
+
 ```bash
+# Option 1: Use default ports (14331, 14332, 14333)
 # Navigate to the tutorial docker directory
 cd "$LIQUIBASE_TUTORIAL_DIR/docker"
+cr compose up -d mssql_dev mssql_stg mssql_prd
 
-# Start all three SQL Server containers using docker-compose
-# (mssql_dev on port 14331, mssql_stg on port 14332, mssql_prd on port 14333)
+# Option 2: Setup dynamic ports first (recommended for multi-user environments)
+# Run the port setup script to configure available ports and save them to .ports file
+$LIQUIBASE_TUTORIAL_DIR/scripts/setup_db_container_ports.sh
+
+# Source the .ports file to use the configured ports
+if [[ -f "$LIQUIBASE_TUTORIAL_DATA_DIR/.ports" ]]; then
+    source "$LIQUIBASE_TUTORIAL_DATA_DIR/.ports"
+    export MSSQL_DEV_PORT MSSQL_STG_PORT MSSQL_PRD_PORT
+fi
+
+# Navigate to the tutorial docker directory and start containers
+cd "$LIQUIBASE_TUTORIAL_DIR/docker"
+cr compose up -d mssql_dev mssql_stg mssql_prd
+
+# Option 3: Use ports from a previous run (if .ports file already exists)
+# Source the existing .ports file
+if [[ -f "$LIQUIBASE_TUTORIAL_DATA_DIR/.ports" ]]; then
+    source "$LIQUIBASE_TUTORIAL_DATA_DIR/.ports"
+    export MSSQL_DEV_PORT MSSQL_STG_PORT MSSQL_PRD_PORT
+fi
+cd "$LIQUIBASE_TUTORIAL_DIR/docker"
 cr compose up -d mssql_dev mssql_stg mssql_prd
 
 # Verify containers are running
@@ -201,6 +224,10 @@ cr ps | grep mssql_
 > - `:Z` - Relabels the volume for SELinux (private to this container)
 > - `:U` - Recursively changes ownership to match the container user
 > - Data is stored in `$LIQUIBASE_TUTORIAL_DATA_DIR/mssql_dev/`, `mssql_stg/`, `mssql_prd/`
+> - Ports can be customized by:
+>   - Running `setup_db_container_ports.sh` to configure available ports (recommended)
+>   - Setting `MSSQL_DEV_PORT`, `MSSQL_STG_PORT`, `MSSQL_PRD_PORT` environment variables before running docker-compose
+>   - Sourcing an existing `.ports` file from a previous run
 
 **Expected output:**
 
