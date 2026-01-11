@@ -277,19 +277,16 @@ Create a clear directory structure for your Liquibase project:
 
 > **Note:** On shared Docker hosts, the default project directory is `/data/$USER/liquibase_tutorial` (per-user isolation). The `setup_tutorial.sh` script sets `LIQUIBASE_TUTORIAL_DATA_DIR` for you. If you need to change it, export `LIQUIBASE_TUTORIAL_DATA_DIR` before running the setup script.
 
+Run the script to create the project structure:
+
 ```bash
-# Remove existing Liquibase directories if starting fresh (preserves mssql-data)
-rm -rf "$LIQUIBASE_TUTORIAL_DATA_DIR/platform" 2>/dev/null
-
-# Create project directory (uses /data/$USER by default)
-mkdir -p "$LIQUIBASE_TUTORIAL_DATA_DIR"
-cd "$LIQUIBASE_TUTORIAL_DATA_DIR"
-
-# Create folder structure
-mkdir -p platform/mssql/database/orderdb/changelog/baseline
-mkdir -p platform/mssql/database/orderdb/changelog/changes
-mkdir -p platform/mssql/database/orderdb/env
+"$LIQUIBASE_TUTORIAL_DIR/scripts/create_project_structure.sh"
 ```
+
+The script will:
+- Remove existing `platform` directory if starting fresh (preserves mssql-data)
+- Create the project directory structure at `$LIQUIBASE_TUTORIAL_DATA_DIR`
+- Create the required folders: `platform/mssql/database/orderdb/changelog/{baseline,changes}` and `platform/mssql/database/orderdb/env`
 
 ### Quick review: verify directories were created
 
