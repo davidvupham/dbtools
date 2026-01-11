@@ -89,8 +89,22 @@ else
     exit 1
 fi
 
+# Ensure parent directory is owned by user so new file will be owned by user
+CHANGELOG_DIR="$(dirname "$CHANGELOG_FILE")"
+if [[ -d "$CHANGELOG_DIR" ]] && [[ ! -O "$CHANGELOG_DIR" ]]; then
+    echo -e "${YELLOW}Warning: changelog directory not owned by user, fixing ownership...${NC}"
+    sudo chown -R "$USER:$USER" "$CHANGELOG_DIR" 2>/dev/null || {
+        echo -e "${RED}ERROR: Cannot fix ownership of changelog directory: $CHANGELOG_DIR${NC}"
+        exit 1
+    }
+fi
+
 # Update master changelog.xml
 echo -n "Updating master changelog.xml... "
+# Save current umask
+OLD_UMASK=$(umask)
+# Set umask for group-writable files (664)
+umask 0002
 cat > "$CHANGELOG_FILE" << 'EOF'
 <?xml version="1.0" encoding="UTF-8"?>
 <databaseChangeLog
@@ -110,6 +124,8 @@ cat > "$CHANGELOG_FILE" << 'EOF'
 
 </databaseChangeLog>
 EOF
+# Restore original umask
+umask "$OLD_UMASK"
 
 if grep -q "V0002__add_orders_index" "$CHANGELOG_FILE"; then
     echo -e "${GREEN}✓ Done${NC}"

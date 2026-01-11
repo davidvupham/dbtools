@@ -189,6 +189,15 @@ if [[ -f "$CHANGELOG_FILE" && "$OVERWRITE" -ne 1 ]]; then
     echo -e "${YELLOW}Skipped (already exists)${NC}"
 else
     backup_file_if_needed "$CHANGELOG_FILE"
+    # Ensure parent directory is owned by user so new file will be owned by user
+    CHANGELOG_DIR="$(dirname "$CHANGELOG_FILE")"
+    if [[ -d "$CHANGELOG_DIR" ]] && [[ ! -O "$CHANGELOG_DIR" ]]; then
+        sudo chown -R "$USER:$USER" "$CHANGELOG_DIR" 2>/dev/null || true
+    fi
+    # Save current umask
+    OLD_UMASK=$(umask)
+    # Set umask for group-writable files (664)
+    umask 0002
     cat > "$CHANGELOG_FILE" << 'EOF'
 <?xml version="1.0" encoding="UTF-8"?>
 <databaseChangeLog
@@ -205,6 +214,8 @@ else
 
 </databaseChangeLog>
 EOF
+    # Restore original umask
+    umask "$OLD_UMASK"
     echo -e "${GREEN}✓ Done${NC}"
 fi
 
