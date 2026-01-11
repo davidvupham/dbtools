@@ -29,6 +29,7 @@
 - [Cleanup After Tutorial](#cleanup-after-tutorial)
 - [Appendix: Container Networking Details](#appendix-container-networking-details)
 - [Appendix: File Permissions and User Mapping](#appendix-file-permissions-and-user-mapping)
+- [Appendix: Creating the `app` Schema with Liquibase](#appendix-creating-the-app-schema-with-liquibase)
 
 ---
 
@@ -352,60 +353,6 @@ The validation script checks:
 - Each container has `orderdb` database
 - Each `orderdb` has `app` schema
 
-**Alternative: Manual commands**
-
-To create databases and schemas manually for all three environments:
-
-```bash
-# Create orderdb database on each environment
-sqlcmd-tutorial -e dev create_orderdb_database.sql
-sqlcmd-tutorial -e stg create_orderdb_database.sql
-sqlcmd-tutorial -e prd create_orderdb_database.sql
-
-# Create app schema in each orderdb (required for Liquibase)
-sqlcmd-tutorial -e dev -d orderdb create_app_schema.sql
-sqlcmd-tutorial -e stg -d orderdb create_app_schema.sql
-sqlcmd-tutorial -e prd -d orderdb create_app_schema.sql
-
-# Verify orderdb exists on each environment
-sqlcmd-tutorial -e dev verify_orderdb_database.sql
-sqlcmd-tutorial -e stg verify_orderdb_database.sql
-sqlcmd-tutorial -e prd verify_orderdb_database.sql
-
-# Verify app schema exists in each orderdb
-sqlcmd-tutorial -e dev -d orderdb verify_app_schema.sql
-sqlcmd-tutorial -e stg -d orderdb verify_app_schema.sql
-sqlcmd-tutorial -e prd -d orderdb verify_app_schema.sql
-```
-
-Or use a loop to run for all environments:
-
-```bash
-# Create databases and schemas for all environments
-for env in dev stg prd; do
-    sqlcmd-tutorial -e "$env" create_orderdb_database.sql
-    sqlcmd-tutorial -e "$env" -d orderdb create_app_schema.sql
-    sqlcmd-tutorial -e "$env" verify_orderdb_database.sql
-    sqlcmd-tutorial -e "$env" -d orderdb verify_app_schema.sql
-done
-```
-
-**Expected output:**
-
-For database verification:
-```text
-instance_name      name        database_id  create_date
------------------- ----------- ------------ -----------------------
-mssql_dev          orderdb     5            2025-11-14 20:00:00.000
-```
-
-For schema verification:
-```text
-instance_name      database_name  schema_name
------------------- -------------- -----------
-mssql_dev          orderdb        app
-```
-
 **What did we just do?**
 
 - Created `orderdb` database on each SQL Server container (mssql_dev, mssql_stg, mssql_prd)
@@ -453,8 +400,6 @@ sqlcmd-tutorial verify_orderdb_data.sql
 - Added sample data (3 customer records)
 - Verified with `verify_orderdb_objects.sql` and `verify_orderdb_data.sql`
 - Staging and production are still empty (we'll deploy to them next)
-
-**Note**: The `app` schema must exist before running Liquibase.
 
 **Why only in dev?**
 
@@ -504,82 +449,7 @@ $LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_liquibase_properties.sh
 
 **Alternative: Manual creation**
 
-If you prefer to create properties files manually:
-
-```bash
-# Development properties
-cat > "$LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/env/liquibase.mssql_dev.properties" << 'EOF'
-# Development Environment Connection
-url=jdbc:sqlserver://localhost:14331;databaseName=orderdb;encrypt=true;trustServerCertificate=true
-username=sa
-changelog-file=changelog/changelog.xml
-search-path=/data/platform/mssql/database/orderdb
-logLevel=info
-EOF
-
-# Staging properties
-cat > "$LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/env/liquibase.mssql_stg.properties" << 'EOF'
-# Staging Environment Connection
-url=jdbc:sqlserver://localhost:14332;databaseName=orderdb;encrypt=true;trustServerCertificate=true
-username=sa
-changelog-file=changelog/changelog.xml
-search-path=/data/platform/mssql/database/orderdb
-logLevel=info
-EOF
-
-# Production properties
-cat > "$LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/env/liquibase.mssql_prd.properties" << 'EOF'
-# Production Environment Connection
-url=jdbc:sqlserver://localhost:14333;databaseName=orderdb;encrypt=true;trustServerCertificate=true
-username=sa
-changelog-file=changelog/changelog.xml
-search-path=/data/platform/mssql/database/orderdb
-logLevel=info
-EOF
-
-# Verify files were created
-ls -la "$LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/env/"
-```
-
-**What each property means:**
-
-- `url`: JDBC connection string (notice port differs per environment)
-  - `jdbc:sqlserver://` - Protocol for SQL Server connections
-  - `localhost:14331/14332/14333` - Connect to host machine ports (dev=14331, stg=14332, prd=14333)
-  - `databaseName=orderdb` - Database name (same for all environments)
-  - `encrypt=true` - Use encrypted connection
-  - `trustServerCertificate=true` - Trust the server's SSL certificate (for local dev only; in production use proper certificates)
-
-- `username/password`: SQL Server credentials
-  - `sa` = System Administrator (default SQL Server admin account)
-  - `${MSSQL_LIQUIBASE_TUTORIAL_PWD}` - Environment variable containing the password (set in prerequisites)
-  - **SECURITY NOTE**: In real production environments, NEVER use sa account! Create dedicated service accounts with minimal permissions.
-
-- `changelog-file`: Master file that lists all changes
-  - This is the "table of contents" for your database changes
-  - Points to the XML file that includes all your changesets
-
-- `search-path`: Where Liquibase looks for files inside Docker container
-  - When we mount `$LIQUIBASE_TUTORIAL_DATA_DIR` to `/data`, this tells Liquibase to look in `/data`
-
-- `logLevel`: How much detail to show (info is good for learning)
-  - `severe` - Only critical errors
-  - `warning` - Warnings and errors
-  - `info` - General information (recommended for learning)
-  - `fine` - Detailed debugging information
-  - `debug` - Very detailed debugging
-
-**Security note**: This tutorial uses environment variables for the password, which is better than hardcoding. In production, use:
-
-- **Secret management**: Azure Key Vault, AWS Secrets Manager, HashiCorp Vault
-  - Centralized, encrypted storage for secrets
-  - Automatic rotation of passwords
-  - Audit logs of who accessed secrets
-
-- **CI/CD platform secrets**: GitHub Secrets, GitLab CI/CD variables
-  - Encrypted secrets stored in CI/CD platform
-  - Automatically injected during pipeline execution
-  - Never visible in logs or code
+See [Appendix: Manual Creation of Liquibase Properties Files](#appendix-manual-creation-of-liquibase-properties-files).
 
 ## Step 4: Generate Baseline from Development
 
@@ -609,55 +479,14 @@ $LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_liquibase_baseline.sh
 
 **Alternative: Manual commands**
 
-```bash
-# Change to project directory
-cd "$LIQUIBASE_TUTORIAL_DATA_DIR"
-
-# Generate baseline from development database (using lb wrapper)
-# IMPORTANT: Use --schemas=app to capture only the app schema
-# IMPORTANT: Use --include-schema=true to include schemaName attributes in the SQL
-# IMPORTANT: Use .sql extension to generate Formatted SQL
-# IMPORTANT: Use --overwrite-output-file=true if baseline already exists and you want to regenerate it
-# Note: The lb wrapper automatically handles network configuration based on your container runtime (Docker/Podman)
-lb -e dev -- \
-  --changelog-file=/data/platform/mssql/database/orderdb/changelog/baseline/V0000__baseline.mssql.sql \
-  --schemas=app \
-  --include-schema=true \
-  generateChangeLog
-
-# Check the generated file
-cat platform/mssql/database/orderdb/changelog/baseline/V0000__baseline.mssql.sql
-```
-
-**Expected Output:**
-
-```text
-[PASS] File exists: V0000__baseline.mssql.sql
-[PASS] Header matches '-- liquibase formatted sql'
-[PASS] Found ... occurrences of 'app.' schema prefix
-[PASS] Found CREATE TABLE app.customer
-...
-Step 4 VALIDATION SUCCESSFUL
-```
-
-### If something looks off
-
-- Regenerate the baseline with the exact flags (only `app` schema, include schema attributes):
-  - **If baseline already exists**, add `--overwrite-output-file=true` to replace the existing file:
-
-```bash
-lb -e dev -- \
-  --changelog-file=/data/platform/mssql/database/orderdb/changelog/baseline/V0000__baseline.mssql.sql \
-  --schemas=app \
-  --include-schema=true \
-  generateChangeLog
-```
+See [Appendix: Step 4 Manual Commands (Generate Baseline)](#appendix-step-4-manual-commands-generate-baseline-from-development).
 
 **What happened?**
 
 - Liquibase connected to `orderdb` database
 - Scanned all database objects (tables, views, indexes, constraints, schemas)
 - Generated Formatted SQL file representing the current state
+- **Note:** Liquibase baselines typically do **not** generate `CREATE SCHEMA` statements (e.g., it won’t create `app`). Create schemas separately (as in Step 1) or add a dedicated changeset.
 - Saved it as `V0000__baseline.mssql.sql` in the baseline folder
 - File is owned by your user (no permission issues when editing)
 
@@ -678,7 +507,7 @@ lb -e dev -- \
 4. **Indexes**: Verify all indexes are captured correctly
 5. **Ordering**: Ensure foreign key tables come after their referenced tables
 
-**Note**: When using `generateChangeLog` to create a baseline from an existing database, Liquibase does not capture schema creation statements. The generated changelog will include objects within schemas, but not the `CREATE SCHEMA` statements themselves. If you need to create schemas via Liquibase, you can add `CREATE SCHEMA` statements in a separate changeset.
+**Note**: When using `generateChangeLog` to create a baseline from an existing database, Liquibase does not capture schema creation statements. The generated changelog will include objects within schemas, but not the `CREATE SCHEMA` statements themselves. If you need to create schemas via Liquibase, add a dedicated changeset (see [Appendix: Creating the `app` Schema with Liquibase](#appendix-creating-the-app-schema-with-liquibase)).
 
 ## Step 5: Deploy Baseline Across Environments
 
@@ -892,6 +721,8 @@ This script also:
 
 ## Appendix: Container Networking Details
 
+Back to: [Build Liquibase container image](#build-liquibase-container-image)
+
 This section explains how container networking works in this tutorial for readers who want to understand the technical details or need to troubleshoot connection issues.
 
 ### Architecture Overview
@@ -1025,6 +856,8 @@ done
 
 ## Appendix: File Permissions and User Mapping
 
+Back to: [Project Structure](#project-structure)
+
 This tutorial uses different user mapping approaches for different containers to ensure files created in mounted volumes are owned by your user, avoiding permission issues.
 
 ### Liquibase Containers
@@ -1064,6 +897,8 @@ SQL Server requires running as a specific user (`mssql`, UID 10001) inside the c
 ---
 
 ## Appendix: Manual SQL Server Container Commands
+
+Back to: [Start the Tutorial SQL Server Containers](#start-the-tutorial-sql-server-containers)
 
 **Alternative: Manual commands**
 
@@ -1148,4 +983,226 @@ Or check the logs and filter for the ready message:
 
 ```bash
 cr logs mssql_dev 2>&1 | grep 'SQL Server is now ready for client connections'
+```
+
+### Step 1: Manual database and schema commands
+
+Back to: [Step 1: Create Three Database Environments](#step-1-create-three-database-environments)
+
+**Alternative: Manual commands**
+
+To create databases and schemas manually for all three environments:
+
+```bash
+# Create orderdb database on each environment
+sqlcmd-tutorial -e dev create_orderdb_database.sql
+sqlcmd-tutorial -e stg create_orderdb_database.sql
+sqlcmd-tutorial -e prd create_orderdb_database.sql
+
+# Create app schema in each orderdb (required for Liquibase)
+sqlcmd-tutorial -e dev -d orderdb create_app_schema.sql
+sqlcmd-tutorial -e stg -d orderdb create_app_schema.sql
+sqlcmd-tutorial -e prd -d orderdb create_app_schema.sql
+
+# Verify orderdb exists on each environment
+sqlcmd-tutorial -e dev verify_orderdb_database.sql
+sqlcmd-tutorial -e stg verify_orderdb_database.sql
+sqlcmd-tutorial -e prd verify_orderdb_database.sql
+
+# Verify app schema exists in each orderdb
+sqlcmd-tutorial -e dev -d orderdb verify_app_schema.sql
+sqlcmd-tutorial -e stg -d orderdb verify_app_schema.sql
+sqlcmd-tutorial -e prd -d orderdb verify_app_schema.sql
+```
+
+Or use a loop to run for all environments:
+
+```bash
+# Create databases and schemas for all environments
+for env in dev stg prd; do
+    sqlcmd-tutorial -e "$env" create_orderdb_database.sql
+    sqlcmd-tutorial -e "$env" -d orderdb create_app_schema.sql
+    sqlcmd-tutorial -e "$env" verify_orderdb_database.sql
+    sqlcmd-tutorial -e "$env" -d orderdb verify_app_schema.sql
+done
+```
+
+**Expected output:**
+
+For database verification:
+```text
+instance_name      name        database_id  create_date
+------------------ ----------- ------------ -----------------------
+mssql_dev          orderdb     5            2025-11-14 20:00:00.000
+```
+
+For schema verification:
+```text
+instance_name      database_name  schema_name
+------------------ -------------- -----------
+mssql_dev          orderdb        app
+```
+
+## Appendix: Manual Creation of Liquibase Properties Files
+
+Back to: [Step 3: Configure Liquibase for Each Environment](#step-3-configure-liquibase-for-each-environment)
+
+If you prefer to create properties files manually:
+
+```bash
+# Development properties
+cat > "$LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/env/liquibase.mssql_dev.properties" << 'EOF'
+# Development Environment Connection
+url=jdbc:sqlserver://localhost:14331;databaseName=orderdb;encrypt=true;trustServerCertificate=true
+username=sa
+changelog-file=changelog/changelog.xml
+search-path=/data/platform/mssql/database/orderdb
+logLevel=info
+EOF
+
+# Staging properties
+cat > "$LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/env/liquibase.mssql_stg.properties" << 'EOF'
+# Staging Environment Connection
+url=jdbc:sqlserver://localhost:14332;databaseName=orderdb;encrypt=true;trustServerCertificate=true
+username=sa
+changelog-file=changelog/changelog.xml
+search-path=/data/platform/mssql/database/orderdb
+logLevel=info
+EOF
+
+# Production properties
+cat > "$LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/env/liquibase.mssql_prd.properties" << 'EOF'
+# Production Environment Connection
+url=jdbc:sqlserver://localhost:14333;databaseName=orderdb;encrypt=true;trustServerCertificate=true
+username=sa
+changelog-file=changelog/changelog.xml
+search-path=/data/platform/mssql/database/orderdb
+logLevel=info
+EOF
+
+# Verify files were created
+ls -la "$LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/env/"
+```
+
+**What each property means:**
+
+- `url`: JDBC connection string (notice port differs per environment)
+  - `jdbc:sqlserver://` - Protocol for SQL Server connections
+  - `localhost:14331/14332/14333` - Connect to host machine ports (dev=14331, stg=14332, prd=14333)
+  - `databaseName=orderdb` - Database name (same for all environments)
+  - `encrypt=true` - Use encrypted connection
+  - `trustServerCertificate=true` - Trust the server's SSL certificate (for local dev only; in production use proper certificates)
+
+- `username/password`: SQL Server credentials
+  - `sa` = System Administrator (default SQL Server admin account)
+  - `${MSSQL_LIQUIBASE_TUTORIAL_PWD}` - Environment variable containing the password (set in prerequisites)
+  - **SECURITY NOTE**: In real production environments, NEVER use sa account! Create dedicated service accounts with minimal permissions.
+
+- `changelog-file`: Master file that lists all changes
+  - This is the "table of contents" for your database changes
+  - Points to the XML file that includes all your changesets
+
+- `search-path`: Where Liquibase looks for files inside Docker container
+  - When we mount `$LIQUIBASE_TUTORIAL_DATA_DIR` to `/data`, this tells Liquibase to look in `/data`
+
+- `logLevel`: How much detail to show (info is good for learning)
+  - `severe` - Only critical errors
+  - `warning` - Warnings and errors
+  - `info` - General information (recommended for learning)
+  - `fine` - Detailed debugging information
+  - `debug` - Very detailed debugging
+
+**Security note**: This tutorial uses environment variables for the password, which is better than hardcoding. In production, use:
+
+- **Secret management**: Azure Key Vault, AWS Secrets Manager, HashiCorp Vault
+  - Centralized, encrypted storage for secrets
+  - Automatic rotation of passwords
+  - Audit logs of who accessed secrets
+
+- **CI/CD platform secrets**: GitHub Secrets, GitLab CI/CD variables
+  - Encrypted secrets stored in CI/CD platform
+  - Automatically injected during pipeline execution
+  - Never visible in logs or code
+
+## Appendix: Creating the `app` Schema with Liquibase
+
+Back to: [Step 4: Generate Baseline from Development](#step-4-generate-baseline-from-development)
+
+If you want Liquibase to create the `app` schema (instead of creating it manually in Step 1), add a small schema-creation changeset **and include it before the baseline**.
+
+### Example: Formatted SQL changeset
+
+Create a new file (example path/name):
+
+```text
+platform/mssql/database/orderdb/changelog/baseline/V0000a__create_app_schema.mssql.sql
+```
+
+Example contents:
+
+```sql
+-- liquibase formatted sql
+-- changeset tutorial:create-app-schema
+IF NOT EXISTS (SELECT 1 FROM sys.schemas WHERE name = 'app')
+    EXEC('CREATE SCHEMA app');
+```
+
+### Include order (important)
+
+In your master `changelog.xml`, include the schema file **before** the generated baseline file:
+
+```xml
+<!-- Ensure schema exists before baseline creates objects in it -->
+<include file="baseline/V0000a__create_app_schema.mssql.sql" relativeToChangelogFile="true"/>
+<include file="baseline/V0000__baseline.mssql.sql" relativeToChangelogFile="true"/>
+```
+
+## Appendix: Step 4 Manual Commands (Generate Baseline from Development)
+
+Back to: [Step 4: Generate Baseline from Development](#step-4-generate-baseline-from-development)
+
+**Alternative: Manual commands**
+
+```bash
+# Change to project directory
+cd "$LIQUIBASE_TUTORIAL_DATA_DIR"
+
+# Generate baseline from development database (using lb wrapper)
+# IMPORTANT: Use --schemas=app to capture only the app schema
+# IMPORTANT: Use --include-schema=true to include schemaName attributes in the SQL
+# IMPORTANT: Use .sql extension to generate Formatted SQL
+# IMPORTANT: Use --overwrite-output-file=true if baseline already exists and you want to regenerate it
+# Note: The lb wrapper automatically handles network configuration based on your container runtime (Docker/Podman)
+lb -e dev -- \
+  --changelog-file=/data/platform/mssql/database/orderdb/changelog/baseline/V0000__baseline.mssql.sql \
+  --schemas=app \
+  --include-schema=true \
+  generateChangeLog
+
+# Check the generated file
+cat platform/mssql/database/orderdb/changelog/baseline/V0000__baseline.mssql.sql
+```
+
+**Expected Output:**
+
+```text
+[PASS] File exists: V0000__baseline.mssql.sql
+[PASS] Header matches '-- liquibase formatted sql'
+[PASS] Found ... occurrences of 'app.' schema prefix
+[PASS] Found CREATE TABLE app.customer
+...
+Step 4 VALIDATION SUCCESSFUL
+```
+
+### If something looks off
+
+- Regenerate the baseline with the exact flags (only `app` schema, include schema attributes):
+  - **If baseline already exists**, add `--overwrite-output-file=true` to replace the existing file:
+
+```bash
+lb -e dev -- \
+  --changelog-file=/data/platform/mssql/database/orderdb/changelog/baseline/V0000__baseline.mssql.sql \
+  --schemas=app \
+  --include-schema=true \
+  generateChangeLog
 ```
