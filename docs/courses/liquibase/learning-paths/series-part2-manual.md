@@ -36,6 +36,11 @@
   - [Deploy Through Environments](#deploy-through-environments)
 - [Summary](#summary)
 - [Next Steps](#next-steps)
+- [Appendix: Step 6 Manual Commands (Create V0001 Change File)](#appendix-step-6-manual-commands-create-v0001-change-file)
+- [Appendix: Step 6 Manual Commands (Update Changelog for V0001)](#appendix-step-6-manual-commands-update-changelog-for-v0001)
+- [Appendix: Step 9 Manual Commands (Add Rollback to V0001)](#appendix-step-9-manual-commands-add-rollback-to-v0001)
+- [Appendix: Step 11 Manual Commands (Create V0002 Change File)](#appendix-step-11-manual-commands-create-v0002-change-file)
+- [Appendix: Step 11 Manual Commands (Update Changelog for V0002)](#appendix-step-11-manual-commands-update-changelog-for-v0002)
 
 ---
 
@@ -62,6 +67,7 @@ In this tutorial, you'll learn:
 
 - **Change management:**
   - Creating Formatted SQL changesets with proper structure
+  - Understanding idempotency: changesets should be safe to run multiple times
   - Including changes in the master changelog
   - Deploying changes with `update` and previewing with `updateSQL`
 
@@ -145,72 +151,28 @@ Now let's make a new database change: add an `orders` table.
 
 ### Create the Change File
 
-**Choosing between SQL and YAML format:**
-
-- **SQL format**: Best for complex queries, views, and SQL Server-specific features
-- **YAML/XML format**: Best for tables, indexes, constraints (database-agnostic)
-- You can mix both formats in the same project
-
-For this tutorial, we'll use **SQL format** for simplicity and readability.
+**Recommended: Use the step script**
 
 ```bash
-# Create the change file
-cat > $LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/changelog/changes/V0001__add_orders_table.mssql.sql << 'EOF'
---liquibase formatted sql
-
---changeset tutorial:V0001-add-orders-table
--- Purpose: Add orders table to track customer purchases
--- This change creates:
---   - orders table with 5 columns (order_id, customer_id, order_total, order_date, status)
---   - Primary key constraint (PK_orders)
---   - Foreign key constraint to customer table (FK_orders_customer)
---   - Two default constraints (DF_orders_date for order_date, inline default for status)
-
-IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID(N'[app].[orders]') AND type = 'U')
-BEGIN
-    CREATE TABLE app.orders (
-        order_id INT IDENTITY(1,1) CONSTRAINT PK_orders PRIMARY KEY,
-        customer_id INT NOT NULL,
-        order_total DECIMAL(18,2) NOT NULL,
-        order_date DATETIME2(3) NOT NULL CONSTRAINT DF_orders_date DEFAULT (SYSUTCDATETIME()),
-        status NVARCHAR(50) NOT NULL DEFAULT 'pending',
-        CONSTRAINT FK_orders_customer FOREIGN KEY (customer_id)
-            REFERENCES app.customer(customer_id)
-    );
-END
-GO
-EOF
+# Run the automated step script
+$LIQUIBASE_TUTORIAL_DIR/scripts/create_orders_table_changelog.sh
 ```
 
-> **Note:** The `IF NOT EXISTS` check ensures this changeset is **idempotent**—it can be safely run multiple times without errors. If the table already exists, the changeset will be skipped. This is a best practice for all database changes.
+The script will:
+- Create the V0001 change file for the orders table
+- Update the master changelog.xml to include V0001
+- Show success/fail indicators
+- Display file locations and next steps
 
-### Include the Change in `changelog.xml`
+> **Note:** This changeset follows the idempotency principle—it uses `IF NOT EXISTS` checks so it can be safely run multiple times without errors.
 
-Update the master changelog to include this new change.
+**Alternative: Manual commands**
 
-```bash
-cat > $LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/changelog/changelog.xml << 'EOF'
-<?xml version="1.0" encoding="UTF-8"?>
-<databaseChangeLog
-    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
-                        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
-
-    <!-- Baseline: initial database state -->
-    <include file="baseline/V0000__baseline.mssql.sql" relativeToChangelogFile="true"/>
-
-    <!-- V0001: Add orders table -->
-    <include file="changes/V0001__add_orders_table.mssql.sql" relativeToChangelogFile="true"/>
-</databaseChangeLog>
-EOF
-```
+See [Appendix: Step 6 Manual Commands (Create V0001 Change File)](#appendix-step-6-manual-commands-create-v0001-change-file) and [Appendix: Step 6 Manual Commands (Update Changelog for V0001)](#appendix-step-6-manual-commands-update-changelog-for-v0001).
 
 ### Deploy to Development
 
 ```bash
-cd $LIQUIBASE_TUTORIAL_DATA_DIR
-
 # See what will run
 lb -e dev -- updateSQL
 
@@ -219,6 +181,21 @@ lb -e dev -- update
 ```
 
 Verify in dev:
+
+**Recommended: Use the validation script**
+
+```bash
+# Run the validation script
+$LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_app_schema_objects.sh dev
+```
+
+The script will:
+- Query objects in the app schema
+- Display them in a formatted table with borders
+- Validate expected objects exist
+- Show success/fail indicators
+
+**Alternative: Manual query**
 
 ```bash
 sqlcmd-tutorial -Q "
@@ -395,32 +372,23 @@ When using Formatted SQL files, you define rollback blocks directly in the SQL f
 
 ### Add Rollback to SQL File
 
-When using Formatted SQL, you define rollbacks inline using `--rollback`. Update your `V0001__add_orders_table.mssql.sql`:
+When using Formatted SQL, you define rollbacks inline using `--rollback`. Update your `V0001__add_orders_table.mssql.sql` to include rollback blocks.
+
+**Recommended: Use the step script**
 
 ```bash
-cat > $LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/changelog/changes/V0001__add_orders_table.mssql.sql << 'EOF'
---liquibase formatted sql
-
---changeset tutorial:V0001-add-orders-table
--- Purpose: Add orders table to track customer purchases
-
-IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID(N'[app].[orders]') AND type = 'U')
-BEGIN
-    CREATE TABLE app.orders (
-        order_id INT IDENTITY(1,1) CONSTRAINT PK_orders PRIMARY KEY,
-        customer_id INT NOT NULL,
-        order_total DECIMAL(18,2) NOT NULL,
-        order_date DATETIME2(3) NOT NULL CONSTRAINT DF_orders_date DEFAULT (SYSUTCDATETIME()),
-        status NVARCHAR(50) NOT NULL DEFAULT 'pending',
-        CONSTRAINT FK_orders_customer FOREIGN KEY (customer_id)
-            REFERENCES app.customer(customer_id)
-    );
-END
-GO
---rollback DROP TABLE IF EXISTS app.orders;
---rollback GO
-EOF
+# Run the automated step script
+$LIQUIBASE_TUTORIAL_DIR/scripts/add_rollback_to_orders_table.sh
 ```
+
+The script will:
+- Update the V0001 change file to include rollback blocks
+- Show success/fail indicators
+- Display file location and next steps
+
+**Alternative: Manual commands**
+
+See [Appendix: Step 9 Manual Commands (Add Rollback to V0001)](#appendix-step-9-manual-commands-add-rollback-to-v0001).
 
 ### Practice Rollback (Development Only)
 
@@ -540,50 +508,22 @@ Now add more changes following the established pattern.
 
 ### V0002: Add Index to Orders
 
-```bash
-cat > $LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/changelog/changes/V0002__add_orders_index.mssql.sql << 'EOF'
---liquibase formatted sql
-
---changeset tutorial:V0002-add-orders-date-index
--- Purpose: Add performance index on order_date for reporting queries
-
-IF NOT EXISTS (
-    SELECT 1 FROM sys.indexes
-    WHERE name = 'IX_orders_order_date'
-    AND object_id = OBJECT_ID('app.orders')
-)
-BEGIN
-    CREATE INDEX IX_orders_order_date ON app.orders(order_date DESC);
-END
-GO
---rollback DROP INDEX IF EXISTS IX_orders_order_date ON app.orders;
---rollback GO
-EOF
-```
-
-### Update Master Changelog
+**Recommended: Use the step script**
 
 ```bash
-cat > $LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/changelog/changelog.xml << 'EOF'
-<?xml version="1.0" encoding="UTF-8"?>
-<databaseChangeLog
-    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
-                        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
-
-    <!-- Baseline -->
-    <include file="baseline/V0000__baseline.mssql.sql" relativeToChangelogFile="true"/>
-
-    <!-- V0001: Add orders table -->
-    <include file="changes/V0001__add_orders_table.mssql.sql" relativeToChangelogFile="true"/>
-
-    <!-- V0002: Add orders index -->
-    <include file="changes/V0002__add_orders_index.mssql.sql" relativeToChangelogFile="true"/>
-
-</databaseChangeLog>
-EOF
+# Run the automated step script
+$LIQUIBASE_TUTORIAL_DIR/scripts/create_orders_index_changelog.sh
 ```
+
+The script will:
+- Create the V0002 change file for the orders index
+- Update the master changelog.xml to include V0002
+- Show success/fail indicators
+- Display file locations and next steps
+
+**Alternative: Manual commands**
+
+See [Appendix: Step 11 Manual Commands (Create V0002 Change File)](#appendix-step-11-manual-commands-create-v0002-change-file) and [Appendix: Step 11 Manual Commands (Update Changelog for V0002)](#appendix-step-11-manual-commands-update-changelog-for-v0002).
 
 ### Deploy Through Environments
 
@@ -620,3 +560,150 @@ In Part 2, you learned:
 
 - **[Part 3: CI/CD Automation](./series-part3-cicd.md)** - Wire everything into GitHub Actions for automated deployments.
 - **[Runner Setup Guide](./guide-runner-setup.md)** - Set up a self-hosted runner for local CI/CD testing.
+
+---
+
+## Appendix: Step 6 Manual Commands (Create V0001 Change File)
+
+Back to: [Create the Change File](#create-the-change-file)
+
+If you need to create the change file manually or prefer step-by-step control:
+
+```bash
+# Create the change file
+cat > $LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/changelog/changes/V0001__add_orders_table.mssql.sql << 'EOF'
+--liquibase formatted sql
+
+--changeset tutorial:V0001-add-orders-table
+-- Purpose: Add orders table to track customer purchases
+-- This change creates:
+--   - orders table with 5 columns (order_id, customer_id, order_total, order_date, status)
+--   - Primary key constraint (PK_orders)
+--   - Foreign key constraint to customer table (FK_orders_customer)
+--   - Two default constraints (DF_orders_date for order_date, inline default for status)
+
+IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID(N'[app].[orders]') AND type = 'U')
+BEGIN
+    CREATE TABLE app.orders (
+        order_id INT IDENTITY(1,1) CONSTRAINT PK_orders PRIMARY KEY,
+        customer_id INT NOT NULL,
+        order_total DECIMAL(18,2) NOT NULL,
+        order_date DATETIME2(3) NOT NULL CONSTRAINT DF_orders_date DEFAULT (SYSUTCDATETIME()),
+        status NVARCHAR(50) NOT NULL DEFAULT 'pending',
+        CONSTRAINT FK_orders_customer FOREIGN KEY (customer_id)
+            REFERENCES app.customer(customer_id)
+    );
+END
+GO
+EOF
+```
+
+## Appendix: Step 6 Manual Commands (Update Changelog for V0001)
+
+Back to: [Include the Change in `changelog.xml`](#include-the-change-in-changelogxml)
+
+If you need to update the master changelog manually or prefer step-by-step control:
+
+```bash
+cat > $LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/changelog/changelog.xml << 'EOF'
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <!-- Baseline: initial database state -->
+    <include file="baseline/V0000__baseline.mssql.sql" relativeToChangelogFile="true"/>
+
+    <!-- V0001: Add orders table -->
+    <include file="changes/V0001__add_orders_table.mssql.sql" relativeToChangelogFile="true"/>
+</databaseChangeLog>
+EOF
+```
+
+## Appendix: Step 9 Manual Commands (Add Rollback to V0001)
+
+Back to: [Add Rollback to SQL File](#add-rollback-to-sql-file)
+
+If you need to update the V0001 change file to add rollback blocks manually or prefer step-by-step control:
+
+```bash
+cat > $LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/changelog/changes/V0001__add_orders_table.mssql.sql << 'EOF'
+--liquibase formatted sql
+
+--changeset tutorial:V0001-add-orders-table
+-- Purpose: Add orders table to track customer purchases
+
+IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID(N'[app].[orders]') AND type = 'U')
+BEGIN
+    CREATE TABLE app.orders (
+        order_id INT IDENTITY(1,1) CONSTRAINT PK_orders PRIMARY KEY,
+        customer_id INT NOT NULL,
+        order_total DECIMAL(18,2) NOT NULL,
+        order_date DATETIME2(3) NOT NULL CONSTRAINT DF_orders_date DEFAULT (SYSUTCDATETIME()),
+        status NVARCHAR(50) NOT NULL DEFAULT 'pending',
+        CONSTRAINT FK_orders_customer FOREIGN KEY (customer_id)
+            REFERENCES app.customer(customer_id)
+    );
+END
+GO
+--rollback DROP TABLE IF EXISTS app.orders;
+--rollback GO
+EOF
+```
+
+## Appendix: Step 11 Manual Commands (Create V0002 Change File)
+
+Back to: [V0002: Add Index to Orders](#v0002-add-index-to-orders)
+
+If you need to create the V0002 change file manually or prefer step-by-step control:
+
+```bash
+cat > $LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/changelog/changes/V0002__add_orders_index.mssql.sql << 'EOF'
+--liquibase formatted sql
+
+--changeset tutorial:V0002-add-orders-date-index
+-- Purpose: Add performance index on order_date for reporting queries
+
+IF NOT EXISTS (
+    SELECT 1 FROM sys.indexes
+    WHERE name = 'IX_orders_order_date'
+    AND object_id = OBJECT_ID('app.orders')
+)
+BEGIN
+    CREATE INDEX IX_orders_order_date ON app.orders(order_date DESC);
+END
+GO
+--rollback DROP INDEX IF EXISTS IX_orders_order_date ON app.orders;
+--rollback GO
+EOF
+```
+
+## Appendix: Step 11 Manual Commands (Update Changelog for V0002)
+
+Back to: [Update Master Changelog](#update-master-changelog)
+
+If you need to update the master changelog manually or prefer step-by-step control:
+
+```bash
+cat > $LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/changelog/changelog.xml << 'EOF'
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <!-- Baseline -->
+    <include file="baseline/V0000__baseline.mssql.sql" relativeToChangelogFile="true"/>
+
+    <!-- V0001: Add orders table -->
+    <include file="changes/V0001__add_orders_table.mssql.sql" relativeToChangelogFile="true"/>
+
+    <!-- V0002: Add orders index -->
+    <include file="changes/V0002__add_orders_index.mssql.sql" relativeToChangelogFile="true"/>
+
+</databaseChangeLog>
+EOF
+```
