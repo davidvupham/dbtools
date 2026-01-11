@@ -1,14 +1,103 @@
 # Tutorial Part 2: Manual Liquibase Deployment Lifecycle
 
+<!-- markdownlint-disable MD013 -->
+
+## Table of Contents
+
+- [Introduction](#introduction)
+  - [Goals of Part 2](#goals-of-part-2)
+  - [What You'll Learn](#what-youll-learn)
+  - [Prerequisites](#prerequisites)
+- [Validate Part 1 Completion](#validate-part-1-completion)
+- [Step 6: Making Your First Change](#step-6-making-your-first-change)
+  - [Create the Change File](#create-the-change-file)
+  - [Include the Change in changelog.xml](#include-the-change-in-changelogxml)
+  - [Deploy to Development](#deploy-to-development)
+- [Step 7: Promoting Changes to Staging and Production](#step-7-promoting-changes-to-staging-and-production)
+  - [Deploy to Staging](#deploy-to-staging)
+  - [Deploy to Production](#deploy-to-production)
+- [Step 8: Tags and Release Management](#step-8-tags-and-release-management)
+  - [Create a Release Tag](#create-a-release-tag)
+  - [Query DATABASECHANGELOG](#query-databasechangelog)
+- [Step 9: Rollback Strategies](#step-9-rollback-strategies)
+  - [Understanding Rollback Types](#understanding-rollback-types)
+  - [Add Rollback Blocks to Changesets](#add-rollback-blocks-to-changesets)
+  - [Add Rollback to SQL File](#add-rollback-to-sql-file)
+  - [Practice Rollback (Development Only)](#practice-rollback-development-only)
+  - [Re-apply After Rollback](#re-apply-after-rollback)
+- [Step 10: Drift Detection](#step-10-drift-detection)
+  - [Simulate Drift](#simulate-drift)
+  - [Detect Drift with diff](#detect-drift-with-diff)
+  - [Generate a Changelog from Drift](#generate-a-changelog-from-drift)
+  - [Best Practice: Regular Drift Checks](#best-practice-regular-drift-checks)
+- [Step 11: Additional Changesets](#step-11-additional-changesets)
+  - [V0002: Add Index to Orders](#v0002-add-index-to-orders)
+  - [Update Master Changelog](#update-master-changelog)
+  - [Deploy Through Environments](#deploy-through-environments)
+- [Summary](#summary)
+- [Next Steps](#next-steps)
+
+---
+
+## Introduction
+
+This tutorial is **Part 2** of a comprehensive series on implementing database change management with Liquibase and Microsoft SQL Server. Part 2 focuses on the **manual deployment lifecycle**—making changes, deploying them through environments, and handling rollback and drift detection.
+
+### Goals of Part 2
+
+By the end of Part 2, you will have:
+
+1. ✅ **Made your first database change** by adding a new `orders` table to the schema
+2. ✅ **Promoted changes through environments** from dev → staging → production
+3. ✅ **Learned tag-based release management** for tracking deployments
+4. ✅ **Practiced rollback strategies** to undo changes when needed
+5. ✅ **Detected and handled drift** when database changes are made outside of Liquibase
+6. ✅ **Added multiple changesets** following the established workflow pattern
+
+**The end result:** Hands-on experience with the complete Liquibase manual deployment lifecycle, preparing you for CI/CD automation in Part 3.
+
+### What You'll Learn
+
+In this tutorial, you'll learn:
+
+- **Change management:**
+  - Creating Formatted SQL changesets with proper structure
+  - Including changes in the master changelog
+  - Deploying changes with `update` and previewing with `updateSQL`
+
+- **Multi-environment promotion:**
+  - Deploying changes from dev → staging → production
+  - Verifying deployments in each environment
+  - Following a consistent deployment workflow
+
+- **Release management:**
+  - Creating release tags for versioning
+  - Querying DATABASECHANGELOG to track deployments
+  - Understanding tag-based vs count-based rollback
+
+- **Rollback capabilities:**
+  - Adding rollback blocks to changesets
+  - Practicing rollback in development
+  - Re-applying changes after rollback
+
+- **Drift detection:**
+  - Identifying changes made outside Liquibase
+  - Using `diff` to compare database vs changelog
+  - Capturing drift as proper changesets
+
+### Prerequisites
+
 This Part 2 assumes you have completed **Part 1: Baseline SQL Server + Liquibase Setup** and have:
 
-- Three SQL Server containers running: `mssql_dev`, `mssql_stg`, `mssql_prd`
-- Database `orderdb` created in each environment
-- A Liquibase project at `$LIQUIBASE_TUTORIAL_DATA_DIR` with:
+- ✅ **Three SQL Server containers running**: `mssql_dev`, `mssql_stg`, `mssql_prd`
+- ✅ **Database `orderdb` created** in each environment
+- ✅ **A Liquibase project** at `$LIQUIBASE_TUTORIAL_DATA_DIR` with:
   - `platform/mssql/database/orderdb/changelog/baseline/V0000__baseline.mssql.sql`
   - `platform/mssql/database/orderdb/changelog/changelog.xml` including the baseline
-    - `platform/mssql/database/orderdb/env/liquibase.mssql_dev.properties`, `platform/mssql/database/orderdb/env/liquibase.mssql_stg.properties`, `platform/mssql/database/orderdb/env/liquibase.mssql_prd.properties`
-- Baseline deployed and tagged as `baseline` in all three environments
+  - `platform/mssql/database/orderdb/env/liquibase.mssql_dev.properties`, `liquibase.mssql_stg.properties`, `liquibase.mssql_prd.properties`
+- ✅ **Baseline deployed and tagged** as `baseline` in all three environments
+
+---
 
 ## Validate Part 1 Completion
 
