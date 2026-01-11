@@ -10,6 +10,44 @@ This Part 2 assumes you have completed **Part 1: Baseline SQL Server + Liquibase
     - `platform/mssql/database/orderdb/env/liquibase.mssql_dev.properties`, `platform/mssql/database/orderdb/env/liquibase.mssql_stg.properties`, `platform/mssql/database/orderdb/env/liquibase.mssql_prd.properties`
 - Baseline deployed and tagged as `baseline` in all three environments
 
+## Validate Part 1 Completion
+
+Before starting Part 2, validate that Part 1 was completed successfully:
+
+```bash
+# Run the comprehensive validation script (validates all prerequisites)
+$LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_liquibase_deploy.sh
+```
+
+**What the script validates (maps to prerequisites above):**
+
+- ✅ **Containers running** - Validates containers are accessible (implicit via database connections)
+- ✅ **Database `orderdb` exists** - Validates by connecting to each environment
+- ✅ **Baseline file exists** - Validates `V0000__baseline.mssql.sql` exists
+- ✅ **Master changelog exists** - Validates `changelog.xml` exists and includes baseline
+- ✅ **Properties files** - Validates via database connections (full validation: `validate_liquibase_properties.sh`)
+- ✅ **DATABASECHANGELOG table exists** - Validates in all environments (dev, stg, prd)
+- ✅ **Baseline changesets tracked** - Validates ≥4 changesets in all environments
+- ✅ **Baseline objects exist** - Validates app.customer table exists in all environments
+- ✅ **Baseline tagged** - Validates `baseline` tag exists in all environments
+
+**Optional: Individual validation scripts**
+
+For granular validation of specific prerequisites:
+
+```bash
+# Containers and databases
+$LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_orderdb_database.sh
+
+# Properties files
+$LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_liquibase_properties.sh
+
+# Baseline deployment (comprehensive validation, recommended)
+$LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_liquibase_deploy.sh
+```
+
+If validation fails, complete the missing steps from Part 1 before proceeding.
+
 From here we’ll walk through making changes, deploying them through dev → stg → prd, and handling rollback and drift manually.
 
 ## Step 6: Making Your First Change
