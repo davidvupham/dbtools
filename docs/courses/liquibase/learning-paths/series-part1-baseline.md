@@ -183,90 +183,8 @@ The script will:
 - Show container status
 - Display success/fail indicators
 
-**Alternative: Manual commands**
-
-> **Important:** These manual commands use **default ports** (14331, 14332, 14333). If these ports are already in use, docker-compose will fail with port conflicts. For multi-user environments or when ports may be in use, first run `setup_db_container_ports.sh` to configure available ports.
-
-```bash
-# Option 1: Use default ports (14331, 14332, 14333)
-# Navigate to the tutorial docker directory
-cd "$LIQUIBASE_TUTORIAL_DIR/docker"
-cr compose up -d mssql_dev mssql_stg mssql_prd
-
-# Option 2: Setup dynamic ports first (recommended for multi-user environments)
-# Run the port setup script to configure available ports and save them to .ports file
-$LIQUIBASE_TUTORIAL_DIR/scripts/setup_db_container_ports.sh
-
-# Source the .ports file to use the configured ports
-if [[ -f "$LIQUIBASE_TUTORIAL_DATA_DIR/.ports" ]]; then
-    source "$LIQUIBASE_TUTORIAL_DATA_DIR/.ports"
-    export MSSQL_DEV_PORT MSSQL_STG_PORT MSSQL_PRD_PORT
-fi
-
-# Navigate to the tutorial docker directory and start containers
-cd "$LIQUIBASE_TUTORIAL_DIR/docker"
-cr compose up -d mssql_dev mssql_stg mssql_prd
-
-# Option 3: Use ports from a previous run (if .ports file already exists)
-# Source the existing .ports file
-if [[ -f "$LIQUIBASE_TUTORIAL_DATA_DIR/.ports" ]]; then
-    source "$LIQUIBASE_TUTORIAL_DATA_DIR/.ports"
-    export MSSQL_DEV_PORT MSSQL_STG_PORT MSSQL_PRD_PORT
-fi
-cd "$LIQUIBASE_TUTORIAL_DIR/docker"
-cr compose up -d mssql_dev mssql_stg mssql_prd
-
-# Verify containers are running
-cr ps | grep mssql_
-```
-
-> **Note:** The docker-compose.yml uses `:Z,U` volume options for rootless Podman compatibility:
-> - `:Z` - Relabels the volume for SELinux (private to this container)
-> - `:U` - Recursively changes ownership to match the container user
-> - Data is stored in `$LIQUIBASE_TUTORIAL_DATA_DIR/mssql_dev/`, `mssql_stg/`, `mssql_prd/`
-> - Ports can be customized by:
->   - Running `setup_db_container_ports.sh` to configure available ports (recommended)
->   - Setting `MSSQL_DEV_PORT`, `MSSQL_STG_PORT`, `MSSQL_PRD_PORT` environment variables before running docker-compose
->   - Sourcing an existing `.ports` file from a previous run
-
-**Expected output:**
-
-```text
-mssql_dev   mssql_tutorial:latest   Up X seconds (healthy)   0.0.0.0:14331->1433/tcp
-mssql_stg   mssql_tutorial:latest   Up X seconds (healthy)   0.0.0.0:14332->1433/tcp
-mssql_prd   mssql_tutorial:latest   Up X seconds (healthy)   0.0.0.0:14333->1433/tcp
-```
-
-**What this does:**
-
-- Builds/downloads SQL Server 2025 image (if not already available)
-- Creates three containers: `mssql_dev`, `mssql_stg`, `mssql_prd`
-- Starts SQL Server on ports 14331, 14332, 14333 respectively
-- Uses the password from `$MSSQL_LIQUIBASE_TUTORIAL_PWD`
-- Includes health checks to verify SQL Server is ready
-
-**Wait for SQL Server to be ready:**
-
-Each container has a built-in health check. You can poll for the `(healthy)` status:
-
-```bash
-# Watch the container status until all show (healthy) (Ctrl+C to exit)
-watch -n 2 '"$LIQUIBASE_TUTORIAL_DIR/scripts/cr.sh" ps | grep mssql_'
-```
-
-**Expected output (healthy):** Status shows "Up" and all containers are healthy:
-
-```text
-mssql_dev  ...  Up About a minute (healthy)  0.0.0.0:14331->1433/tcp
-mssql_stg  ...  Up About a minute (healthy)  0.0.0.0:14332->1433/tcp
-mssql_prd  ...  Up About a minute (healthy)  0.0.0.0:14333->1433/tcp
-```
-
-Or check the logs and filter for the ready message:
-
-```bash
-cr logs mssql_dev 2>&1 | grep 'SQL Server is now ready for client connections'
-```
+For manual compose-based commands and port customization examples, see the appendix:
+[Appendix: Manual SQL Server Container Commands](#appendix-manual-sql-server-container-commands)
 
 #### Build Liquibase container image
 
@@ -1142,3 +1060,92 @@ MSSQL containers use the `--userns=keep-id` flag with rootless Podman (applied a
 ### Why Different Approaches?
 
 SQL Server requires running as a specific user (`mssql`, UID 10001) inside the container, so we can't use `--user` to override it. Instead, we use `--userns=keep-id` to map container UIDs to your host user's namespace. Liquibase, on the other hand, can run as any user, so we use `--user` to run it directly as your user.
+
+---
+
+## Appendix: Manual SQL Server Container Commands
+
+**Alternative: Manual commands**
+
+> **Important:** These manual commands use **default ports** (14331, 14332, 14333). If these ports are already in use, docker-compose will fail with port conflicts. For multi-user environments or when ports may be in use, first run `setup_db_container_ports.sh` to configure available ports.
+
+```bash
+# Option 1: Use default ports (14331, 14332, 14333)
+# Navigate to the tutorial docker directory
+cd "$LIQUIBASE_TUTORIAL_DIR/docker"
+cr compose up -d mssql_dev mssql_stg mssql_prd
+
+# Option 2: Setup dynamic ports first (recommended for multi-user environments)
+# Run the port setup script to configure available ports and save them to .ports file
+$LIQUIBASE_TUTORIAL_DIR/scripts/setup_db_container_ports.sh
+
+# Source the .ports file to use the configured ports
+if [[ -f "$LIQUIBASE_TUTORIAL_DATA_DIR/.ports" ]]; then
+    source "$LIQUIBASE_TUTORIAL_DATA_DIR/.ports"
+    export MSSQL_DEV_PORT MSSQL_STG_PORT MSSQL_PRD_PORT
+fi
+
+# Navigate to the tutorial docker directory and start containers
+cd "$LIQUIBASE_TUTORIAL_DIR/docker"
+cr compose up -d mssql_dev mssql_stg mssql_prd
+
+# Option 3: Use ports from a previous run (if .ports file already exists)
+# Source the existing .ports file
+if [[ -f "$LIQUIBASE_TUTORIAL_DATA_DIR/.ports" ]]; then
+    source "$LIQUIBASE_TUTORIAL_DATA_DIR/.ports"
+    export MSSQL_DEV_PORT MSSQL_STG_PORT MSSQL_PRD_PORT
+fi
+cd "$LIQUIBASE_TUTORIAL_DIR/docker"
+cr compose up -d mssql_dev mssql_stg mssql_prd
+
+# Verify containers are running
+cr ps | grep mssql_
+```
+
+> **Note:** The docker-compose.yml uses `:Z,U` volume options for rootless Podman compatibility:
+> - `:Z` - Relabels the volume for SELinux (private to this container)
+> - `:U` - Recursively changes ownership to match the container user
+> - Data is stored in `$LIQUIBASE_TUTORIAL_DATA_DIR/mssql_dev/`, `mssql_stg/`, `mssql_prd/`
+> - Ports can be customized by:
+>   - Running `setup_db_container_ports.sh` to configure available ports (recommended)
+>   - Setting `MSSQL_DEV_PORT`, `MSSQL_STG_PORT`, `MSSQL_PRD_PORT` environment variables before running docker-compose
+>   - Sourcing an existing `.ports` file from a previous run
+
+**Expected output:**
+
+```text
+mssql_dev   mssql_tutorial:latest   Up X seconds (healthy)   0.0.0.0:14331->1433/tcp
+mssql_stg   mssql_tutorial:latest   Up X seconds (healthy)   0.0.0.0:14332->1433/tcp
+mssql_prd   mssql_tutorial:latest   Up X seconds (healthy)   0.0.0.0:14333->1433/tcp
+```
+
+**What this does:**
+
+- Builds/downloads SQL Server 2025 image (if not already available)
+- Creates three containers: `mssql_dev`, `mssql_stg`, `mssql_prd`
+- Starts SQL Server on ports 14331, 14332, 14333 respectively
+- Uses the password from `$MSSQL_LIQUIBASE_TUTORIAL_PWD`
+- Includes health checks to verify SQL Server is ready
+
+**Wait for SQL Server to be ready:**
+
+Each container has a built-in health check. You can poll for the `(healthy)` status:
+
+```bash
+# Watch the container status until all show (healthy) (Ctrl+C to exit)
+watch -n 2 '"$LIQUIBASE_TUTORIAL_DIR/scripts/cr.sh" ps | grep mssql_'
+```
+
+**Expected output (healthy):** Status shows "Up" and all containers are healthy:
+
+```text
+mssql_dev  ...  Up About a minute (healthy)  0.0.0.0:14331->1433/tcp
+mssql_stg  ...  Up About a minute (healthy)  0.0.0.0:14332->1433/tcp
+mssql_prd  ...  Up About a minute (healthy)  0.0.0.0:14333->1433/tcp
+```
+
+Or check the logs and filter for the ready message:
+
+```bash
+cr logs mssql_dev 2>&1 | grep 'SQL Server is now ready for client connections'
+```
