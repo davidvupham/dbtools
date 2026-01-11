@@ -1,0 +1,24 @@
+# markdownlint-cli2 configuration
+#
+# Configures markdownlint for documentation files in this repository.
+# See: https://github.com/DavidAnson/markdownlint-cli2
+
+globs:
+  - "docs/**/*.md"
+
+config:
+  default: true
+
+  # Line length: allow a bit longer for URLs and tables.
+  MD013:
+    line_length: 120
+    tables: false
+    code_blocks: false
+
+  # Duplicate headings are common across templates.
+  MD024:
+    allow_different_nesting: true
+
+  # Prefer fenced code blocks.
+  MD046:
+    style: fenced
