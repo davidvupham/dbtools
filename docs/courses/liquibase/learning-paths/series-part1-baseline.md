@@ -29,8 +29,13 @@
 - [Cleanup After Tutorial](#cleanup-after-tutorial)
 - [Appendix: Container Networking Details](#appendix-container-networking-details)
 - [Appendix: File Permissions and User Mapping](#appendix-file-permissions-and-user-mapping)
+- [Appendix: Manual SQL Server Container Commands](#appendix-manual-sql-server-container-commands)
+- [Appendix: Manual Creation of Liquibase Properties Files](#appendix-manual-creation-of-liquibase-properties-files)
 - [Appendix: Creating the `app` Schema with Liquibase](#appendix-creating-the-app-schema-with-liquibase)
 - [Appendix: Step 2 Manual Commands (Populate Development)](#appendix-step-2-manual-commands-populate-development)
+- [Appendix: Step 4 Manual Commands (Generate Baseline from Development)](#appendix-step-4-manual-commands-generate-baseline-from-development)
+- [Appendix: Step 5 Manual Commands (Create Master Changelog)](#appendix-step-5-manual-commands-create-master-changelog)
+- [Appendix: Step 5 Manual Commands (Deploy Baseline + Tag)](#appendix-step-5-manual-commands-deploy-baseline--tag)
 
 ---
 
@@ -1072,6 +1077,22 @@ In your master `changelog.xml`, include the schema file **before** the generated
 <include file="baseline/V0000__baseline.mssql.sql" relativeToChangelogFile="true"/>
 ```
 
+## Appendix: Step 2 Manual Commands (Populate Development)
+
+Back to: [Step 2: Populate Development with Existing Objects](#step-2-populate-development-with-existing-objects)
+
+**Alternative: Manual commands**
+
+```bash
+# Create table, view, indexes, and sample data in DEVELOPMENT
+# Note: Script assumes 'app' schema already exists
+sqlcmd-tutorial populate_orderdb_database.sql
+
+# Verify objects were created in development
+sqlcmd-tutorial verify_orderdb_objects.sql
+sqlcmd-tutorial verify_orderdb_data.sql
+```
+
 ## Appendix: Step 4 Manual Commands (Generate Baseline from Development)
 
 Back to: [Step 4: Generate Baseline from Development](#step-4-generate-baseline-from-development)
@@ -1194,20 +1215,4 @@ SELECT ID, AUTHOR, FILENAME, DATEEXECUTED, TAG, EXECTYPE
 FROM DATABASECHANGELOG
 ORDER BY DATEEXECUTED;
 "
-```
-
-## Appendix: Step 2 Manual Commands (Populate Development)
-
-Back to: [Step 2: Populate Development with Existing Objects](#step-2-populate-development-with-existing-objects)
-
-**Alternative: Manual commands**
-
-```bash
-# Create table, view, indexes, and sample data in DEVELOPMENT
-# Note: Script assumes 'app' schema already exists
-sqlcmd-tutorial populate_orderdb_database.sql
-
-# Verify objects were created in development
-sqlcmd-tutorial verify_orderdb_objects.sql
-sqlcmd-tutorial verify_orderdb_data.sql
 ```
