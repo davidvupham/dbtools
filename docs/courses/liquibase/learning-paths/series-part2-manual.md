@@ -198,7 +198,7 @@ The script will:
 **Alternative: Manual query**
 
 ```bash
-sqlcmd-tutorial -Q "
+sqlcmd-tutorial -e dev -Q "
 USE orderdb;
 SELECT
     SCHEMA_NAME(schema_id) AS SchemaName,
