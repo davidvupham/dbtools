@@ -30,6 +30,7 @@
 - [Appendix: Container Networking Details](#appendix-container-networking-details)
 - [Appendix: File Permissions and User Mapping](#appendix-file-permissions-and-user-mapping)
 - [Appendix: Creating the `app` Schema with Liquibase](#appendix-creating-the-app-schema-with-liquibase)
+- [Appendix: Step 2 Manual Commands (Populate Development)](#appendix-step-2-manual-commands-populate-development)
 
 ---
 
@@ -380,15 +381,7 @@ $LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_dev_populate.sh
 
 **Alternative: Manual commands**
 
-```bash
-# Create table, view, indexes, and sample data in DEVELOPMENT
-# Note: Script assumes 'app' schema already exists
-sqlcmd-tutorial populate_orderdb_database.sql
-
-# Verify objects were created in development
-sqlcmd-tutorial verify_orderdb_objects.sql
-sqlcmd-tutorial verify_orderdb_data.sql
-```
+See [Appendix: Step 2 Manual Commands (Populate Development)](#appendix-step-2-manual-commands-populate-development).
 
 **What did we just do?**
 
@@ -1201,4 +1194,20 @@ SELECT ID, AUTHOR, FILENAME, DATEEXECUTED, TAG, EXECTYPE
 FROM DATABASECHANGELOG
 ORDER BY DATEEXECUTED;
 "
+```
+
+## Appendix: Step 2 Manual Commands (Populate Development)
+
+Back to: [Step 2: Populate Development with Existing Objects](#step-2-populate-development-with-existing-objects)
+
+**Alternative: Manual commands**
+
+```bash
+# Create table, view, indexes, and sample data in DEVELOPMENT
+# Note: Script assumes 'app' schema already exists
+sqlcmd-tutorial populate_orderdb_database.sql
+
+# Verify objects were created in development
+sqlcmd-tutorial verify_orderdb_objects.sql
+sqlcmd-tutorial verify_orderdb_data.sql
 ```
