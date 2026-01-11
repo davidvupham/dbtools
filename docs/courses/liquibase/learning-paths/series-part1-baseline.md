@@ -511,22 +511,27 @@ See [Appendix: Step 4 Manual Commands (Generate Baseline)](#appendix-step-4-manu
 
 ## Step 5: Deploy Baseline Across Environments
 
-Now deploy the baseline to each environment. The master changelog (`changelog.xml`) should already exist if you ran `setup_tutorial.sh` or `setup_liquibase_environment.sh`. If not, create it first (see alternative manual commands below).
-
-**Recommended: Use the step script**
+Now deploy the baseline to each environment. The master changelog (`changelog.xml`) should already exist if you ran `setup_tutorial.sh` or `setup_liquibase_environment.sh`. If not, create it first (see [Appendix: Step 5 Manual Commands (Create Master Changelog)](#appendix-step-5-manual-commands-create-master-changelog)).
 
 ```bash
-# Run the automated step script
-# Note: This script is idempotent - safe to run multiple times
 $LIQUIBASE_TUTORIAL_DIR/scripts/deploy_liquibase_baseline.sh
+
+# Optional: deploy to one or more SQL Server environments (comma-separated)
+# (defaults to dev,stg,prd when omitted)
+$LIQUIBASE_TUTORIAL_DIR/scripts/deploy_liquibase_baseline.sh --envs dev,stg
 ```
 
 The script will:
-- Deploy baseline to development (using `changelogSync` - marks as executed without running)
-- Deploy baseline to staging (using `update` - actually executes SQL)
-- Deploy baseline to production (using `update` - actually executes SQL)
+- Deploy baseline to selected environments (default: dev, stg, prd)
+- For `dev`, use `changelogSync` (marks as executed without running)
+- For `stg`/`prd`, use `update` (actually executes SQL)
 - Tag all environments with `baseline`
+  - A tag is a named marker in the change history (stored in `DATABASECHANGELOG`)
+  - Useful for rollback targets later (example: `liquibase rollback baseline` rolls back changes after the tag)
 - Show success/fail indicators for each environment
+
+**Important (baseline / golden / master instance):**
+If a database instance is considered the "baseline" (it already contains the objects), you **must run `changelogSync`** there so Liquibase records the baseline changesets in `DATABASECHANGELOG` **without re-running the SQL**. If you skip this and later run `update` against that database instance, Liquibase will try to execute the baseline DDL and typically fail with "object already exists" errors (or leave your changelog state out of sync).
 
 **Validate Step 5:**
 
@@ -546,28 +551,7 @@ $LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_liquibase_deploy.sh
   - Actually executes the SQL statements to create objects
   - Think of it as "doing the task AND checking it off"
 
-**Alternative: Manual commands**
-
-If you need to create the master changelog manually or prefer step-by-step control:
-
-```bash
-# Create master changelog that includes baseline (if not already created)
-cat > "$LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/changelog/changelog.xml" << 'EOF'
-<?xml version="1.0" encoding="UTF-8"?>
-<databaseChangeLog
-    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
-                        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
-
-    <!-- Baseline: initial database state -->
-    <include file="baseline/V0000__baseline.mssql.sql" relativeToChangelogFile="true"/>
-
-    <!-- Future changes will be added here -->
-
-</databaseChangeLog>
-EOF
-```
+> If you need to create the master `changelog.xml` manually, see [Appendix: Step 5 Manual Commands (Create Master Changelog)](#appendix-step-5-manual-commands-create-master-changelog).
 
 ### Deploy to Development (Sync Only)
 
@@ -580,52 +564,7 @@ Development already has these objects (we created them in Step 2), so we **sync*
 - **When to use sync**: When the database already has the objects (like our dev database)
 - **When to use update**: When the database is empty or missing objects (like our stage/prod databases)
 
-**Manual deployment commands:**
-
-If you prefer to deploy manually instead of using the script:
-
-```bash
-cd "$LIQUIBASE_TUTORIAL_DATA_DIR"
-
-# Development: Sync baseline (marks as executed without running SQL)
-lb -e dev -- changelogSync
-lb -e dev -- tag baseline
-
-# Staging: Deploy baseline (actually executes SQL)
-lb -e stg -- updateSQL  # Preview first
-lb -e stg -- update     # Execute
-lb -e stg -- tag baseline
-
-# Production: Deploy baseline (actually executes SQL)
-lb -e prd -- updateSQL  # Preview first
-lb -e prd -- update     # Execute
-lb -e prd -- tag baseline
-```
-
-**What does tag do?**
-
-- Creates a named marker in the change history
-- Like bookmarking a page in a book
-- Allows you to rollback to this specific point later
-- Example: `liquibase rollback baseline` would undo all changes after this tag
-
-**Why tag the baseline?**
-
-- If future changes cause problems, you can rollback to the baseline
-- Documents the "before Liquibase" state
-- Useful for audit and compliance
-
-**Verify deployment worked:**
-
-```bash
-# Check DATABASECHANGELOG table in any environment
-sqlcmd-tutorial -Q "
-USE orderdb;
-SELECT ID, AUTHOR, FILENAME, DATEEXECUTED, TAG, EXECTYPE
-FROM DATABASECHANGELOG
-ORDER BY DATEEXECUTED;
-"
-```
+> Prefer the manual CLI approach? See [Appendix: Step 5 Manual Commands (Deploy Baseline + Tag)](#appendix-step-5-manual-commands-deploy-baseline--tag).
 
 **What did we accomplish?**
 
@@ -633,20 +572,6 @@ ORDER BY DATEEXECUTED;
 ✅ Liquibase is tracking what ran where (DATABASECHANGELOG table in each environment)
 ✅ Baseline tagged in all environments for rollback capability
 ✅ We can now deploy future changes safely
-
-**Verify deployment summary:**
-
-Run the validation script to confirm everything deployed correctly:
-
-```bash
-$LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_liquibase_deploy.sh
-```
-
-This will check:
-- DATABASECHANGELOG table exists in all environments
-- Baseline changesets tracked in all environments
-- Baseline objects (app.customer) exist in all environments
-- Baseline tag created in all environments
 
 ---
 
@@ -1205,4 +1130,78 @@ lb -e dev -- \
   --schemas=app \
   --include-schema=true \
   generateChangeLog
+```
+
+## Appendix: Step 5 Manual Commands (Create Master Changelog)
+
+Back to: [Step 5: Deploy Baseline Across Environments](#step-5-deploy-baseline-across-environments)
+
+If you need to create the master changelog manually or prefer step-by-step control:
+
+```bash
+# Create master changelog that includes baseline (if not already created)
+cat > "$LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/changelog/changelog.xml" << 'EOF'
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <!-- Baseline: initial database state -->
+    <include file="baseline/V0000__baseline.mssql.sql" relativeToChangelogFile="true"/>
+
+    <!-- Future changes will be added here -->
+
+</databaseChangeLog>
+EOF
+```
+
+## Appendix: Step 5 Manual Commands (Deploy Baseline + Tag)
+
+Back to: [Step 5: Deploy Baseline Across Environments](#step-5-deploy-baseline-across-environments)
+
+If you prefer to deploy manually instead of using the helper script:
+
+```bash
+cd "$LIQUIBASE_TUTORIAL_DATA_DIR"
+
+# Development: Sync baseline (marks as executed without running SQL)
+lb -e dev -- changelogSync
+lb -e dev -- tag baseline
+
+# Staging: Deploy baseline (actually executes SQL)
+lb -e stg -- updateSQL  # Preview first
+lb -e stg -- update     # Execute
+lb -e stg -- tag baseline
+
+# Production: Deploy baseline (actually executes SQL)
+lb -e prd -- updateSQL  # Preview first
+lb -e prd -- update     # Execute
+lb -e prd -- tag baseline
+```
+
+**What does tag do?**
+
+- Creates a named marker in the change history
+- Like bookmarking a page in a book
+- Allows you to rollback to this specific point later
+- Example: `liquibase rollback baseline` would undo all changes after this tag
+
+**Why tag the baseline?**
+
+- If future changes cause problems, you can rollback to the baseline
+- Documents the "before Liquibase" state
+- Useful for audit and compliance
+
+**Verify deployment worked:**
+
+```bash
+# Check DATABASECHANGELOG table in any environment
+sqlcmd-tutorial -Q "
+USE orderdb;
+SELECT ID, AUTHOR, FILENAME, DATEEXECUTED, TAG, EXECTYPE
+FROM DATABASECHANGELOG
+ORDER BY DATEEXECUTED;
+"
 ```

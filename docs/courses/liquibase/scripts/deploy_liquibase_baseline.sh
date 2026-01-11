@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # Deploy Liquibase Baseline
-# Deploys baseline to all environments (dev: changelogSync, stg/prd: update)
+# Deploys baseline to selected environments (default: all).
+# - dev: changelogSync (mark as executed, don't run)
+# - stg/prd: update (actually execute)
 # Reusable across all tutorial parts
 
 set -euo pipefail
@@ -19,6 +21,54 @@ echo "Liquibase Tutorial - Deploy Baseline"
 echo "========================================"
 echo
 
+print_usage() {
+  cat <<'EOF'
+Usage:
+  deploy_liquibase_baseline.sh [--envs dev,stg,prd]
+
+Options:
+  -e, --envs, --servers   Comma-separated list of targets to deploy to.
+                          Defaults to "dev,stg,prd" when omitted.
+  -h, --help              Show help
+
+Examples:
+  # Deploy to all (default)
+  deploy_liquibase_baseline.sh
+
+  # Deploy to one
+  deploy_liquibase_baseline.sh --envs dev
+
+  # Deploy to multiple
+  deploy_liquibase_baseline.sh --envs dev,stg
+
+Notes:
+  - "stage" and "prod" are accepted as aliases for "stg" and "prd".
+EOF
+}
+
+TARGET_ENVS_CSV=""
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -e|--envs|--servers)
+      TARGET_ENVS_CSV="${2:-}"
+      shift 2
+      ;;
+    --envs=*|--servers=*)
+      TARGET_ENVS_CSV="${1#*=}"
+      shift
+      ;;
+    -h|--help)
+      print_usage
+      exit 0
+      ;;
+    *)
+      echo -e "${RED}ERROR: Unknown option: $1${NC}" >&2
+      print_usage >&2
+      exit 2
+      ;;
+  esac
+done
+
 LIQUIBASE_TUTORIAL_DATA_DIR="${LIQUIBASE_TUTORIAL_DATA_DIR:-/data/${USER}/liquibase_tutorial}"
 export LIQUIBASE_TUTORIAL_DATA_DIR
 
@@ -27,6 +77,48 @@ if [[ -z "${MSSQL_LIQUIBASE_TUTORIAL_PWD:-}" ]]; then
     exit 1
 fi
 export MSSQL_LIQUIBASE_TUTORIAL_PWD
+
+normalize_env() {
+  local env="${1//[[:space:]]/}"
+  case "$env" in
+    stage) echo "stg" ;;
+    prod)  echo "prd" ;;
+    *)     echo "$env" ;;
+  esac
+}
+
+pretty_env() {
+  case "$1" in
+    dev) echo "Development" ;;
+    stg) echo "Staging" ;;
+    prd) echo "Production" ;;
+    *)   echo "$1" ;;
+  esac
+}
+
+declare -a TARGET_ENVS=()
+if [[ -z "$TARGET_ENVS_CSV" ]]; then
+  TARGET_ENVS=("dev" "stg" "prd")
+else
+  IFS=',' read -r -a TARGET_ENVS <<<"$TARGET_ENVS_CSV"
+  # Normalize entries and drop empties
+  for i in "${!TARGET_ENVS[@]}"; do
+    TARGET_ENVS[$i]="$(normalize_env "${TARGET_ENVS[$i]}")"
+  done
+  # Remove empty entries (e.g. trailing commas)
+  declare -a _filtered=()
+  for env in "${TARGET_ENVS[@]}"; do
+    if [[ -n "$env" ]]; then
+      _filtered+=("$env")
+    fi
+  done
+  TARGET_ENVS=("${_filtered[@]}")
+  if [[ ${#TARGET_ENVS[@]} -eq 0 ]]; then
+    echo -e "${RED}ERROR: --envs/--servers provided but no targets were parsed${NC}" >&2
+    print_usage >&2
+    exit 2
+  fi
+fi
 
 # Ensure lb command is available (use direct script path if alias not available)
 LB_CMD=""
@@ -92,68 +184,44 @@ tag_baseline_idempotent() {
     return 0
 }
 
-# Deploy to Development (changelogSync - mark as executed, don't run)
-echo "Deploying to Development (changelogSync)..."
-echo
-if "$LB_CMD" -e dev -- changelogSync 2>&1; then
-    if tag_baseline_idempotent dev; then
-        if [[ "$TAG_STATUS" == "new" ]]; then
-            echo -e "${GREEN}✓ Development: Baseline synced and tagged${NC}"
-        elif [[ "$TAG_STATUS" == "exists" ]]; then
-            echo -e "${GREEN}✓ Development: Baseline synced (tag already existed)${NC}"
-        fi
-    else
-        echo -e "${YELLOW}Warning: Failed to tag baseline in dev${NC}"
-    fi
-else
-    echo -e "${RED}✗ Failed to sync baseline in dev${NC}"
-    exit 1
-fi
+declare -a SUMMARY_LINES=()
+for env in "${TARGET_ENVS[@]}"; do
+  pretty="$(pretty_env "$env")"
+  action="update"
+  action_desc="update - actually execute"
+  success_word="deployed"
+  if [[ "$env" == "dev" ]]; then
+    action="changelogSync"
+    action_desc="changelogSync - mark as executed, don't run"
+    success_word="synced"
+  fi
 
-echo
-echo "Deploying to Staging (update - actually execute)..."
-echo
-if "$LB_CMD" -e stg -- update 2>&1; then
-    if tag_baseline_idempotent stg; then
-        if [[ "$TAG_STATUS" == "new" ]]; then
-            echo -e "${GREEN}✓ Staging: Baseline deployed and tagged${NC}"
-        elif [[ "$TAG_STATUS" == "exists" ]]; then
-            echo -e "${GREEN}✓ Staging: Baseline deployed (tag already existed)${NC}"
-        fi
+  echo "Deploying to $pretty ($action_desc)..."
+  echo
+  if "$LB_CMD" -e "$env" -- "$action" 2>&1; then
+    if tag_baseline_idempotent "$env"; then
+      if [[ "$TAG_STATUS" == "new" ]]; then
+        echo -e "${GREEN}✓ $pretty: Baseline $success_word and tagged${NC}"
+      elif [[ "$TAG_STATUS" == "exists" ]]; then
+        echo -e "${GREEN}✓ $pretty: Baseline $success_word (tag already existed)${NC}"
+      fi
     else
-        echo -e "${YELLOW}Warning: Failed to tag baseline in stg${NC}"
+      echo -e "${YELLOW}Warning: Failed to tag baseline in $env${NC}"
     fi
-else
-    echo -e "${RED}✗ Failed to deploy baseline in stg${NC}"
+  else
+    echo -e "${RED}✗ Failed to $action baseline in $env${NC}"
     exit 1
-fi
-
-echo
-echo "Deploying to Production (update - actually execute)..."
-echo
-if "$LB_CMD" -e prd -- update 2>&1; then
-    if tag_baseline_idempotent prd; then
-        if [[ "$TAG_STATUS" == "new" ]]; then
-            echo -e "${GREEN}✓ Production: Baseline deployed and tagged${NC}"
-        elif [[ "$TAG_STATUS" == "exists" ]]; then
-            echo -e "${GREEN}✓ Production: Baseline deployed (tag already existed)${NC}"
-        fi
-    else
-        echo -e "${YELLOW}Warning: Failed to tag baseline in prd${NC}"
-    fi
-else
-    echo -e "${RED}✗ Failed to deploy baseline in prd${NC}"
-    exit 1
-fi
+  fi
+  SUMMARY_LINES+=("  - $pretty: Changes $success_word ($action)")
+  echo
+done
 
 echo
 echo "========================================"
 echo -e "${GREEN}Baseline Deployed${NC}"
 echo "========================================"
-echo "Baseline deployed to all environments:"
-echo "  - Development: Changes synced (changelogSync)"
-echo "  - Staging: Changes executed (update)"
-echo "  - Production: Changes executed (update)"
+echo "Baseline deployed to selected environments:"
+printf '%s\n' "${SUMMARY_LINES[@]}"
 echo
 echo "All environments tagged with 'baseline'"
 echo
