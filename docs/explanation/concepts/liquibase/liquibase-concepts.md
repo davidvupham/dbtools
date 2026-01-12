@@ -1,6 +1,6 @@
 # Liquibase Concepts Guide
 
-**🔗 [← Back to Liquibase Documentation Index](../README.md)** — Start here if you're new to Liquibase
+**🔗 [← Back to Liquibase Documentation Index](../../liquibase/README.md)** — Start here if you're new to Liquibase
 
 > **Document Version:** 1.0
 > **Last Updated:** January 6, 2026

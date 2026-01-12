@@ -7,7 +7,7 @@
 > **Status:** Production
 > **Related Docs:** [Operations Guide](../../how-to/liquibase/liquibase-operations-guide.md) | [Reference](../../reference/liquibase/liquibase-reference.md)
 
-This document explains what database drift is, why it matters, and the conceptual approaches to managing it. For step-by-step procedures, see the [Operations Guide - Drift Detection](../../how-to/liquibase/liquibase-operations-guide.md#drift-detection).
+This document explains what database drift is, why it matters, and the conceptual approaches to managing it. For step-by-step procedures, see the [Operations Guide - Drift Detection](../../how-to/liquibase/liquibase-operations-guide.md#drift-detection-and-remediation).
 
 ## Table of Contents
 
@@ -227,7 +227,7 @@ This approach uses `changelogSync` to update the DATABASECHANGELOG table without
 
 ## Further Reading
 
-- **[Operations Guide - Drift Detection](../../how-to/liquibase/liquibase-operations-guide.md#drift-detection)** - Step-by-step procedures for detecting and remediating drift
+- **[Operations Guide - Drift Detection](../../how-to/liquibase/liquibase-operations-guide.md#drift-detection-and-remediation)** - Step-by-step procedures for detecting and remediating drift
 - **[Reference - Supported Objects](../../reference/liquibase/liquibase-reference.md#drift-detection-supported-objects)** - Which objects Liquibase can detect by platform
 - **[Reference - Diff Commands](../../reference/liquibase/liquibase-reference.md#drift-detection-commands)** - Command reference for drift-related operations
 - **[Official Liquibase Documentation](https://docs.liquibase.com/workflows/liquibase-community/drift-detection.html)** - Liquibase drift detection documentation

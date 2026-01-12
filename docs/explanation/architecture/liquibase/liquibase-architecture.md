@@ -1,6 +1,6 @@
 # Liquibase Architecture Guide
 
-**🔗 [← Back to Liquibase Documentation Index](../README.md)** — Navigation guide for all Liquibase docs
+**🔗 [← Back to Liquibase Documentation Index](../../liquibase/README.md)** — Navigation guide for all Liquibase docs
 
 > **Document Version:** 2.0
 > **Last Updated:** January 6, 2026
@@ -11,7 +11,7 @@
 ![Document Status](https://img.shields.io/badge/Status-Production-green)
 
 > [!IMPORTANT]
-> **New to Liquibase?** Start with the [Liquibase Concepts Guide](../concepts/liquibase/liquibase-concepts.md) first. This document assumes you understand the fundamentals (Changelog, Changeset, Change Types, tracking tables).
+> **New to Liquibase?** Start with the [Liquibase Concepts Guide](../../concepts/liquibase/liquibase-concepts.md) first. This document assumes you understand the fundamentals (Changelog, Changeset, Change Types, tracking tables).
 
 ## Table of Contents
 
@@ -22,6 +22,7 @@
 - [Directory Structure](#directory-structure)
   - [Standard Layout](#standard-layout)
   - [Example Structure](#example-structure)
+  - [Benefits](#benefits)
   - [Repository Strategy](#repository-strategy)
   - [Cross-Platform Database Example](#cross-platform-database-example)
 - [Conventions & Standards](#conventions--standards)
@@ -42,6 +43,8 @@
   - [Kubernetes Init Containers](#kubernetes-init-containers)
   - [CI/CD Integration](#cicd-integration)
 - [Scalability Patterns](#scalability-patterns)
+  - [Managing Large Numbers of Databases](#managing-large-numbers-of-databases)
+  - [Monitoring at Scale](#monitoring-at-scale)
 - [Related Documentation](#related-documentation)
 - [Appendix: Alternative Directory Structures](#appendix-alternative-directory-structures)
   - [Application-First Organization](#application-first-organization)
@@ -83,7 +86,7 @@ Changes are written once and promoted through environments using environment-spe
 5. **Release-Driven Versioning** — Changes grouped by release for clarity and safe rollback
 6. **Environment-Specific Properties** — Connection details differ per environment; changes do not
 
-For detailed rationale on each principle, see [Concepts Guide - Key Decisions](../concepts/liquibase/liquibase-concepts.md#key-decisions-to-make).
+For detailed rationale on each principle, see [Concepts Guide - Key Decisions](../../concepts/liquibase/liquibase-concepts.md#key-decisions-to-make).
 
 [↑ Back to Table of Contents](#table-of-contents)
 
@@ -261,20 +264,20 @@ changeSet:
 Why this format?
 - **Date (`YYYYMMDD`)**: Natural chronological sorting
 - **Uniqueness**: Time component (`HHMM`) prevents collisions
-- **Traceability**: **Mandatory** Jira Ticket ID links to requirement
+- **Traceability**: **Mandatory** Jira ticket ID links to requirements
 - **Readability**: Description makes intent clear
 
 ### Properties Files
 
 **Naming Convention:**
 
-`liquibase.<application>.<platform>.<database>.<dbinstance>.<environment>.properties`
+`liquibase.<application>.<platform>.<database>.<dbinstance>.<environment>.properties.template`
 
 **Example:**
 
 ```text
-liquibase.payments_api.postgres.orders.dbinstance1.dev.properties
-liquibase.inventory_svc.postgres.catalog.dbinstance1.prod.properties
+liquibase.payments_api.postgres.orders.dbinstance1.dev.properties.template
+liquibase.inventory_svc.postgres.catalog.dbinstance1.prod.properties.template
 ```
 
 **Naming Rules:**
@@ -302,7 +305,7 @@ docker run -e LIQUIBASE_SEARCH_PATH=/liquibase/changelog ...
 # GitHub Actions
 - uses: liquibase/liquibase-github-action@v4
   with:
-    changelogFile: "applications/app1/postgres/orders/db.changelog-master.yaml"
+    changelogFile: "platform/postgres/database/orders/changelog/db.changelog-master.yaml"
     searchPath: "${{ github.workspace }}"
 ```
 
@@ -363,7 +366,7 @@ databaseChangeLog:
   - include: { file: releases/1.0/db.changelog-1.0.yaml }
 ```
 
-See [Operations Guide - Baseline Management](../../how-to/liquibase/liquibase-operations-guide.md#baseline-management) for detailed procedures.
+See [Operations Guide - Baseline Management](../../../how-to/liquibase/liquibase-operations-guide.md#baseline-management) for detailed procedures.
 
 ### Tracking Tables Configuration
 
@@ -469,7 +472,7 @@ Deploy changes automatically in your CI/CD pipeline:
 ```yaml
 - uses: liquibase/liquibase-github-action@v4
   with:
-    changelogFile: "applications/app1/postgres/orders/db.changelog-master.yaml"
+    changelogFile: "platform/postgres/database/orders/changelog/db.changelog-master.yaml"
     searchPath: "${{ github.workspace }}"
     url: ${{ secrets.DB_URL }}
     username: ${{ secrets.DB_USER }}
@@ -477,7 +480,7 @@ Deploy changes automatically in your CI/CD pipeline:
     command: update
 ```
 
-See [Operations Guide - Execution Patterns](../../how-to/liquibase/liquibase-operations-guide.md#execution-patterns) for more examples.
+See [Operations Guide - Execution Patterns](../../../how-to/liquibase/liquibase-operations-guide.md#execution-patterns) for more examples.
 
 [↑ Back to Table of Contents](#table-of-contents)
 
@@ -499,12 +502,12 @@ See [Operations Guide - Execution Patterns](../../how-to/liquibase/liquibase-ope
 
 ## Related Documentation
 
-**Start here:** [Liquibase Documentation Index](../README.md)
+**Start here:** [Liquibase Documentation Index](../../liquibase/README.md)
 
-- **[Liquibase Concepts Guide](../concepts/liquibase/liquibase-concepts.md)** — Foundational understanding (read first if new to Liquibase)
-- **[Liquibase Operations Guide](../../how-to/liquibase/liquibase-operations-guide.md)** — Day-to-day tasks: authoring, deploying, troubleshooting
-- **[Liquibase Reference](../../reference/liquibase/liquibase-reference.md)** — Command reference, glossary, limitations, troubleshooting
-- **[Liquibase Secure Implementation Analysis](../liquibase-secure-implementation-analysis.md)** — Evaluating Pro/Secure features
+- **[Liquibase Concepts Guide](../../concepts/liquibase/liquibase-concepts.md)** — Foundational understanding (read first if new to Liquibase)
+- **[Liquibase Operations Guide](../../../how-to/liquibase/liquibase-operations-guide.md)** — Day-to-day tasks: authoring, deploying, troubleshooting
+- **[Liquibase Reference](../../../reference/liquibase/liquibase-reference.md)** — Command reference, glossary, limitations, troubleshooting
+- **[Liquibase Secure Implementation Analysis](../../liquibase/liquibase-secure-implementation-analysis.md)** — Evaluating Pro/Secure features
 
 [↑ Back to Table of Contents](#table-of-contents)
 

@@ -1,5 +1,7 @@
 # GitHub Actions Best Practices for Liquibase Database CI/CD
 
+**🔗 [← Back to Liquibase Documentation Index](../../explanation/liquibase/README.md)** — Navigation guide for all Liquibase docs
+
 ## Table of Contents
 
 - [Executive Summary](#executive-summary)

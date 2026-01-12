@@ -221,7 +221,7 @@ CONCEPTS GUIDE (Foundation)
 
 1. Quick concept review: [Core Concepts - Changeset](../concepts/liquibase/liquibase-concepts.md#changeset)
 2. How to write it: [Operations - Authoring Changes](../../how-to/liquibase/liquibase-operations-guide.md#authoring-changes)
-3. Our naming standards: [Architecture - Conventions](../architecture/liquibase/liquibase-architecture.md#conventions)
+3. Our naming standards: [Architecture - Conventions](../architecture/liquibase/liquibase-architecture.md#conventions--standards)
 
 ### "Everything is too deep, where's a quick intro?"
 
@@ -237,7 +237,7 @@ CONCEPTS GUIDE (Foundation)
 
 1. Skim [Architecture - Repository Strategy](../architecture/liquibase/liquibase-architecture.md#repository-strategy)
 2. Read [Architecture - Directory Structure](../architecture/liquibase/liquibase-architecture.md#directory-structure)
-3. Read [Architecture - Conventions](../architecture/liquibase/liquibase-architecture.md#conventions)
+3. Read [Architecture - Conventions](../architecture/liquibase/liquibase-architecture.md#conventions--standards)
 4. Use it as a checklist when creating your repo
 
 ## 🔍 Search Tips
@@ -245,7 +245,7 @@ CONCEPTS GUIDE (Foundation)
 - **Looking for "changelog"?** → Concepts ([Changelog](../concepts/liquibase/liquibase-concepts.md#changelog))
 - **Looking for "rollback"?** → Operations ([Rollback Strategy](../../how-to/liquibase/liquibase-operations-guide.md#rollback-strategy))
 - **Looking for "preconditions"?** → Operations ([Using Preconditions](../../how-to/liquibase/liquibase-operations-guide.md#using-preconditions))
-- **Looking for "properties"?** → Architecture ([Properties Files](../architecture/liquibase/liquibase-architecture.md#properties-files-architecture))
+- **Looking for "properties"?** → Architecture ([Properties Files](../architecture/liquibase/liquibase-architecture.md#properties-files))
 - **Looking for "directory structure"?** → Architecture ([Directory Structure](../architecture/liquibase/liquibase-architecture.md#directory-structure))
 - **Looking for "drift detection"?** → Concepts ([Understanding Drift](./drift-management.md)) or Operations ([Drift Detection](../../how-to/liquibase/liquibase-operations-guide.md#drift-detection-and-remediation))
 - **Looking for an error message?** → Reference ([Troubleshooting](../../reference/liquibase/liquibase-reference.md#troubleshooting))
