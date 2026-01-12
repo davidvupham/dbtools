@@ -1,5 +1,24 @@
 # syntax=docker/dockerfile:1.7
-FROM python:3.12-slim AS base
+# ------------------------------------------------------------------------------
+# Registry Configuration - Support for Corporate Proxies
+# ------------------------------------------------------------------------------
+# REGISTRY_PREFIX: Allows the base image to be pulled from a corporate proxy
+#                  (e.g., JFrog Artifactory).
+#
+# USAGE:
+#   Corporate proxy:
+#     docker build --build-arg REGISTRY_PREFIX=xyz.jfrog.io/docker-proxy/library/ -t ansible:latest .
+#       (requires ~/.docker/config.json configured with JFrog token via: docker login xyz.jfrog.io)
+#     podman build --build-arg REGISTRY_PREFIX=xyz.jfrog.io/docker-proxy/library/ -t ansible:latest --format docker .
+#       (requires authentication via: podman login xyz.jfrog.io)
+#
+#   Default (Docker Hub):
+#     docker build -t ansible:latest .
+#
+# NOTE: The trailing slash is required in the prefix!
+#
+ARG REGISTRY_PREFIX=docker.io/library/
+FROM ${REGISTRY_PREFIX}python:3.12-slim AS base
 
 ARG ANSIBLE_VERSION=10.4.0
 ARG ANSIBLE_LINT_VERSION=24.9.0

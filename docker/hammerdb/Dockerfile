@@ -1,7 +1,26 @@
 # HammerDB Benchmark Container
 # Based on official HammerDB releases
 
-FROM ubuntu:22.04
+# ------------------------------------------------------------------------------
+# Registry Configuration - Support for Corporate Proxies
+# ------------------------------------------------------------------------------
+# REGISTRY_PREFIX: Allows the base image to be pulled from a corporate proxy
+#                  (e.g., JFrog Artifactory).
+#
+# USAGE:
+#   Corporate proxy:
+#     docker build --build-arg REGISTRY_PREFIX=xyz.jfrog.io/docker-proxy/library/ -t hammerdb:latest .
+#       (requires ~/.docker/config.json configured with JFrog token via: docker login xyz.jfrog.io)
+#     podman build --build-arg REGISTRY_PREFIX=xyz.jfrog.io/docker-proxy/library/ -t hammerdb:latest --format docker .
+#       (requires authentication via: podman login xyz.jfrog.io)
+#
+#   Default (Docker Hub):
+#     docker build -t hammerdb:latest .
+#
+# NOTE: The trailing slash is required in the prefix!
+#
+ARG REGISTRY_PREFIX=docker.io/library/
+FROM ${REGISTRY_PREFIX}ubuntu:22.04
 
 # Avoid interactive prompts during build
 ENV DEBIAN_FRONTEND=noninteractive

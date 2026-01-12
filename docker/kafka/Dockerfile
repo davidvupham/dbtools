@@ -17,6 +17,25 @@
 # ==============================================================================
 
 # ------------------------------------------------------------------------------
+# Registry Configuration - Support for Corporate Proxies
+# ------------------------------------------------------------------------------
+# REGISTRY_PREFIX: Allows the base image to be pulled from a corporate proxy
+#                  (e.g., JFrog Artifactory).
+#
+# USAGE:
+#   Corporate proxy:
+#     docker build --build-arg REGISTRY_PREFIX=xyz.jfrog.io/docker-proxy/ -t kafka:latest .
+#       (requires ~/.docker/config.json configured with JFrog token via: docker login xyz.jfrog.io)
+#     podman build --build-arg REGISTRY_PREFIX=xyz.jfrog.io/docker-proxy/ -t kafka:latest --format docker .
+#       (requires authentication via: podman login xyz.jfrog.io)
+#
+#   Default (Docker Hub):
+#     docker build -t kafka:latest .
+#
+# NOTE: The trailing slash is required in the prefix!
+#
+ARG REGISTRY_PREFIX=docker.io/
+# ------------------------------------------------------------------------------
 # Base Image Selection
 # ------------------------------------------------------------------------------
 # FROM: Specifies the base image to build upon
@@ -31,7 +50,7 @@
 # - Confluent utilities and configurations
 # - User 'appuser' (UID 1000) for running Kafka
 #
-FROM confluentinc/cp-kafka:7.6.0
+FROM ${REGISTRY_PREFIX}confluentinc/cp-kafka:7.6.0
 
 # ------------------------------------------------------------------------------
 # Environment Variables - Kafka Core Configuration

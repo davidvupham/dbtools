@@ -16,6 +16,25 @@
 # ==============================================================================
 
 # ------------------------------------------------------------------------------
+# Registry Configuration - Support for Corporate Proxies
+# ------------------------------------------------------------------------------
+# REGISTRY_PREFIX: Allows the base image to be pulled from a corporate proxy
+#                  (e.g., JFrog Artifactory).
+#
+# USAGE:
+#   Corporate proxy:
+#     docker build --build-arg REGISTRY_PREFIX=xyz.jfrog.io/docker-proxy/ -t mssql:latest .
+#       (requires ~/.docker/config.json configured with JFrog token via: docker login xyz.jfrog.io)
+#     podman build --build-arg REGISTRY_PREFIX=xyz.jfrog.io/docker-proxy/ -t mssql:latest --format docker .
+#       (requires authentication via: podman login xyz.jfrog.io)
+#
+#   Default (Microsoft Container Registry):
+#     docker build -t mssql:latest .
+#
+# NOTE: The trailing slash is required in the prefix!
+#
+ARG REGISTRY_PREFIX=mcr.microsoft.com/
+# ------------------------------------------------------------------------------
 # Base Image Selection
 # ------------------------------------------------------------------------------
 # FROM: Specifies the base image to build upon
@@ -29,7 +48,7 @@
 # - Pre-configured with default settings
 # - User 'mssql' (UID 10001) already created for running SQL Server
 #
-FROM mcr.microsoft.com/mssql/server:2025-latest
+FROM ${REGISTRY_PREFIX}mssql/server:2025-latest
 
 # ------------------------------------------------------------------------------
 # Environment Variables

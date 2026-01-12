@@ -1,6 +1,26 @@
 # syntax=docker/dockerfile:1.7
 ARG AWX_VERSION=24.6.1
-FROM quay.io/ansible/awx:${AWX_VERSION}
+
+# ------------------------------------------------------------------------------
+# Registry Configuration - Support for Corporate Proxies
+# ------------------------------------------------------------------------------
+# REGISTRY_PREFIX: Allows the base image to be pulled from a corporate proxy
+#                  (e.g., JFrog Artifactory).
+#
+# USAGE:
+#   Corporate proxy:
+#     docker build --build-arg REGISTRY_PREFIX=xyz.jfrog.io/docker-proxy/ -t awx:latest .
+#       (requires ~/.docker/config.json configured with JFrog token via: docker login xyz.jfrog.io)
+#     podman build --build-arg REGISTRY_PREFIX=xyz.jfrog.io/docker-proxy/ -t awx:latest --format docker .
+#       (requires authentication via: podman login xyz.jfrog.io)
+#
+#   Default (Quay.io):
+#     docker build -t awx:latest .
+#
+# NOTE: The trailing slash is required in the prefix!
+#
+ARG REGISTRY_PREFIX=quay.io/
+FROM ${REGISTRY_PREFIX}ansible/awx:${AWX_VERSION}
 
 USER root
 
