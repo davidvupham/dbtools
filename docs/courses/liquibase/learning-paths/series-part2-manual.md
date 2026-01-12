@@ -411,8 +411,6 @@ When using Formatted SQL files, you define rollback blocks directly in the SQL f
 
 When using Formatted SQL, you define rollbacks inline using `--rollback`. Update your `V0001__add_orders_table.mssql.sql` to include rollback blocks.
 
-**Recommended: Use the step script**
-
 ```bash
 # Run the automated step script
 $LIQUIBASE_TUTORIAL_DIR/scripts/add_rollback_to_orders_table.sh
