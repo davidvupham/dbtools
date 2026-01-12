@@ -3,7 +3,7 @@
 **🔗 [← Back to Liquibase Documentation Index](../../liquibase/README.md)** — Navigation guide for all Liquibase docs
 
 > **Document Version:** 2.0
-> **Last Updated:** January 6, 2026
+> **Last Updated:** January 12, 2026
 > **Maintainers:** Global Data Services Team
 > **Status:** Production - Actively Maintained
 
@@ -92,7 +92,7 @@ For detailed rationale on each principle, see [Concepts Guide - Key Decisions](.
 
 ## Directory Structure
 
-Our architecture uses a **platform-first organization** for changelogs. This structure aligns with DBA workflows and infrastructure management patterns.
+The chosen directory structure uses a **platform-first organization** for changelogs.
 
 ### Standard Layout
 
@@ -145,7 +145,6 @@ platform/
 
 ### Benefits
 
-- **DBA-Friendly**: Mirrors how DBAs think about infrastructure (platform → database)
 - **Clear Separation**: Each database has isolated changelog, env, and snapshot folders
 - **Drift Management**: Dedicated snapshots folder supports drift detection workflows
 - **Environment Isolation**: Properties files organized per database, per environment
@@ -155,9 +154,9 @@ platform/
 Each database has its own **GitHub repository**, owned by the team responsible for that database:
 
 ```text
-github.com/org/orderdb-liquibase       # Order database (owned by Orders team)
-github.com/org/inventorydb-liquibase   # Inventory database (owned by Inventory team)
-github.com/org/admin-liquibase         # Admin database (owned by DBA team)
+github.com/org/orderdb       # Order database (owned by Orders team)
+github.com/org/inventorydb   # Inventory database (owned by Inventory team)
+github.com/org/admin         # Admin database (owned by DBA team)
 ```
 
 **Benefits:**
@@ -228,7 +227,6 @@ mongodb/      # MongoDB
 ### Database Names
 
 - **Existing Databases:** Directory name MUST match actual database name (e.g., `CustomerServiceDB`)
-- **New Databases:** Use lowercase `snake_case` (e.g., `orders`, `catalog`, `customer_service`)
 
 ### File Naming
 
@@ -271,23 +269,17 @@ Why this format?
 
 **Naming Convention:**
 
-`liquibase.<application>.<platform>.<database>.<dbinstance>.<environment>.properties.template`
+`<dbinstance>.<database>.properties`
 
 **Example:**
 
 ```text
-liquibase.payments_api.postgres.orders.dbinstance1.dev.properties.template
-liquibase.inventory_svc.postgres.catalog.dbinstance1.prod.properties.template
+dbinstance1.Admin.properties
 ```
 
 **Naming Rules:**
-- Use **snake_case** for multi-word names (e.g., `payments_api`)
-- **No dashes** in application names
-- All dimensions separated by periods
 
 **Security:**
-- ✅ Commit `.properties.template` files (no secrets)
-- ✅ Generate actual `.properties` files at runtime from secrets manager
 - ✅ Delete generated files immediately after use
 - ❌ Never commit files containing passwords or API keys
 
