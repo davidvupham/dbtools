@@ -604,7 +604,7 @@ Capture the drift as a proper changeset:
 ```bash
 # Generate a changelog capturing the drift
 $LIQUIBASE_TUTORIAL_DIR/scripts/generate_drift_changelog.sh -e dev \
-    -o platform/mssql/database/orderdb/changelog/changes/V0002__drift_loyalty_points.xml
+    -o platform/mssql/database/orderdb/changelog/changes/V0002__captured_drift.xml
 ```
 
 **Workflow after detecting drift:**
