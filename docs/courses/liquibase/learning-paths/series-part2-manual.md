@@ -36,11 +36,11 @@
   - [Deploy Through Environments](#deploy-through-environments)
 - [Summary](#summary)
 - [Next Steps](#next-steps)
-- [Appendix: Step 6 Manual Commands (Create V0001 Change File)](#appendix-step-6-manual-commands-create-v0001-change-file)
-- [Appendix: Step 6 Manual Commands (Update Changelog for V0001)](#appendix-step-6-manual-commands-update-changelog-for-v0001)
-- [Appendix: Step 9 Manual Commands (Add Rollback to V0001)](#appendix-step-9-manual-commands-add-rollback-to-v0001)
-- [Appendix: Step 11 Manual Commands (Create V0002 Change File)](#appendix-step-11-manual-commands-create-v0002-change-file)
-- [Appendix: Step 11 Manual Commands (Update Changelog for V0002)](#appendix-step-11-manual-commands-update-changelog-for-v0002)
+- [Appendix: Step 6 Direct Commands (Create V0001 Change File)](#appendix-step-6-direct-commands-create-v0001-change-file)
+- [Appendix: Step 6 Direct Commands (Update Changelog for V0001)](#appendix-step-6-direct-commands-update-changelog-for-v0001)
+- [Appendix: Step 9 Direct Commands (Add Rollback to V0001)](#appendix-step-9-direct-commands-add-rollback-to-v0001)
+- [Appendix: Step 11 Direct Commands (Create V0002 Change File)](#appendix-step-11-direct-commands-create-v0002-change-file)
+- [Appendix: Step 11 Direct Commands (Update Changelog for V0002)](#appendix-step-11-direct-commands-update-changelog-for-v0002)
 
 ---
 
@@ -166,9 +166,9 @@ The script will:
 
 > **Note:** This changeset follows the idempotency principle—it uses `IF NOT EXISTS` checks so it can be safely run multiple times without errors.
 
-**Alternative: Manual commands**
+**Alternative: Direct commands**
 
-See [Appendix: Step 6 Manual Commands (Create V0001 Change File)](#appendix-step-6-manual-commands-create-v0001-change-file) and [Appendix: Step 6 Manual Commands (Update Changelog for V0001)](#appendix-step-6-manual-commands-update-changelog-for-v0001).
+See [Appendix: Step 6 Direct Commands (Create V0001 Change File)](#appendix-step-6-direct-commands-create-v0001-change-file) and [Appendix: Step 6 Direct Commands (Update Changelog for V0001)](#appendix-step-6-direct-commands-update-changelog-for-v0001).
 
 ### Deploy to Development
 
@@ -432,9 +432,9 @@ The script will:
 
 This script is idempotent - running it multiple times will only add the rollback block once.
 
-**Alternative: Manual commands**
+**Alternative: Direct commands**
 
-See [Appendix: Step 9 Manual Commands (Add Rollback to V0001)](#appendix-step-9-manual-commands-add-rollback-to-v0001).
+See [Appendix: Step 9 Direct Commands (Add Rollback to V0001)](#appendix-step-9-direct-commands-add-rollback-to-v0001).
 
 ### Practice Rollback (Development Only)
 
@@ -721,9 +721,9 @@ The script will:
 - Show success/fail indicators
 - Display file locations and next steps
 
-**Alternative: Manual commands**
+**Alternative: Direct commands**
 
-See [Appendix: Step 11 Manual Commands (Create V0002 Change File)](#appendix-step-11-manual-commands-create-v0002-change-file) and [Appendix: Step 11 Manual Commands (Update Changelog for V0002)](#appendix-step-11-manual-commands-update-changelog-for-v0002).
+See [Appendix: Step 11 Direct Commands (Create V0002 Change File)](#appendix-step-11-direct-commands-create-v0002-change-file) and [Appendix: Step 11 Direct Commands (Update Changelog for V0002)](#appendix-step-11-direct-commands-update-changelog-for-v0002).
 
 ### Deploy Through Environments
 
@@ -766,11 +766,11 @@ In Part 2, you learned:
 
 ---
 
-## Appendix: Step 6 Manual Commands (Create V0001 Change File)
+## Appendix: Step 6 Direct Commands (Create V0001 Change File)
 
 Back to: [Create the Change File](#create-the-change-file)
 
-If you need to create the change file manually or prefer step-by-step control:
+If you prefer to run the commands directly instead of using the helper script:
 
 ```bash
 # Create the change file
@@ -801,11 +801,11 @@ GO
 EOF
 ```
 
-## Appendix: Step 6 Manual Commands (Update Changelog for V0001)
+## Appendix: Step 6 Direct Commands (Update Changelog for V0001)
 
-Back to: [Include the Change in `changelog.xml`](#include-the-change-in-changelogxml)
+Back to: [Step 6: Making Your First Change](#step-6-making-your-first-change)
 
-If you need to update the master changelog manually or prefer step-by-step control:
+If you prefer to run the commands directly instead of using the helper script:
 
 ```bash
 cat > $LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/changelog/changelog.xml << 'EOF'
@@ -825,11 +825,11 @@ cat > $LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/changelog/cha
 EOF
 ```
 
-## Appendix: Step 9 Manual Commands (Add Rollback to V0001)
+## Appendix: Step 9 Direct Commands (Add Rollback to V0001)
 
 Back to: [Add Rollback to SQL File](#add-rollback-to-sql-file)
 
-If you need to update the V0001 change file to add rollback blocks manually or prefer step-by-step control:
+If you prefer to run the commands directly instead of using the helper script:
 
 ```bash
 cat > $LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/changelog/changes/V0001__add_orders_table.mssql.sql << 'EOF'
@@ -856,11 +856,11 @@ GO
 EOF
 ```
 
-## Appendix: Step 11 Manual Commands (Create V0002 Change File)
+## Appendix: Step 11 Direct Commands (Create V0002 Change File)
 
 Back to: [V0002: Add Index to Orders](#v0002-add-index-to-orders)
 
-If you need to create the V0002 change file manually or prefer step-by-step control:
+If you prefer to run the commands directly instead of using the helper script:
 
 ```bash
 cat > $LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/changelog/changes/V0002__add_orders_index.mssql.sql << 'EOF'
@@ -883,11 +883,11 @@ GO
 EOF
 ```
 
-## Appendix: Step 11 Manual Commands (Update Changelog for V0002)
+## Appendix: Step 11 Direct Commands (Update Changelog for V0002)
 
-Back to: [Update Master Changelog](#update-master-changelog)
+Back to: [Step 11: Additional Changesets](#step-11-additional-changesets)
 
-If you need to update the master changelog manually or prefer step-by-step control:
+If you prefer to run the commands directly instead of using the helper script:
 
 ```bash
 cat > $LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/changelog/changelog.xml << 'EOF'

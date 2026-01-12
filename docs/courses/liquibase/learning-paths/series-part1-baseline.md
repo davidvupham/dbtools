@@ -29,13 +29,13 @@
 - [Cleanup After Tutorial](#cleanup-after-tutorial)
 - [Appendix: Container Networking Details](#appendix-container-networking-details)
 - [Appendix: File Permissions and User Mapping](#appendix-file-permissions-and-user-mapping)
-- [Appendix: Manual SQL Server Container Commands](#appendix-manual-sql-server-container-commands)
-- [Appendix: Manual Creation of Liquibase Properties Files](#appendix-manual-creation-of-liquibase-properties-files)
+- [Appendix: Direct SQL Server Container Commands](#appendix-direct-sql-server-container-commands)
+- [Appendix: Direct Creation of Liquibase Properties Files](#appendix-direct-creation-of-liquibase-properties-files)
 - [Appendix: Creating the `app` Schema with Liquibase](#appendix-creating-the-app-schema-with-liquibase)
-- [Appendix: Step 2 Manual Commands (Populate Development)](#appendix-step-2-manual-commands-populate-development)
-- [Appendix: Step 4 Manual Commands (Generate Baseline from Development)](#appendix-step-4-manual-commands-generate-baseline-from-development)
-- [Appendix: Step 5 Manual Commands (Create Master Changelog)](#appendix-step-5-manual-commands-create-master-changelog)
-- [Appendix: Step 5 Manual Commands (Deploy Baseline + Tag)](#appendix-step-5-manual-commands-deploy-baseline--tag)
+- [Appendix: Step 2 Direct Commands (Populate Development)](#appendix-step-2-direct-commands-populate-development)
+- [Appendix: Step 4 Direct Commands (Generate Baseline from Development)](#appendix-step-4-direct-commands-generate-baseline-from-development)
+- [Appendix: Step 5 Direct Commands (Create Master Changelog)](#appendix-step-5-direct-commands-create-master-changelog)
+- [Appendix: Step 5 Direct Commands (Deploy Baseline + Tag)](#appendix-step-5-direct-commands-deploy-baseline--tag)
 
 ---
 
@@ -190,8 +190,8 @@ The script will:
 - Show container status
 - Display success/fail indicators
 
-For manual compose-based commands and port customization examples, see the appendix:
-[Appendix: Manual SQL Server Container Commands](#appendix-manual-sql-server-container-commands)
+For direct compose-based commands and port customization examples, see the appendix:
+[Appendix: Direct SQL Server Container Commands](#appendix-direct-sql-server-container-commands)
 
 #### Build Liquibase container image
 
@@ -384,9 +384,9 @@ The script will:
 $LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_dev_populate.sh
 ```
 
-**Alternative: Manual commands**
+**Alternative: Direct commands**
 
-See [Appendix: Step 2 Manual Commands (Populate Development)](#appendix-step-2-manual-commands-populate-development).
+See [Appendix: Step 2 Direct Commands (Populate Development)](#appendix-step-2-direct-commands-populate-development).
 
 **What did we just do?**
 
@@ -442,9 +442,9 @@ This script creates:
 $LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_liquibase_properties.sh
 ```
 
-**Alternative: Manual creation**
+**Alternative: Direct creation**
 
-See [Appendix: Manual Creation of Liquibase Properties Files](#appendix-manual-creation-of-liquibase-properties-files).
+See [Appendix: Direct Creation of Liquibase Properties Files](#appendix-direct-creation-of-liquibase-properties-files).
 
 ## Step 4: Generate Baseline from Development
 
@@ -472,9 +472,9 @@ The script will:
 $LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_liquibase_baseline.sh
 ```
 
-**Alternative: Manual commands**
+**Alternative: Direct commands**
 
-See [Appendix: Step 4 Manual Commands (Generate Baseline)](#appendix-step-4-manual-commands-generate-baseline-from-development).
+See [Appendix: Step 4 Direct Commands (Generate Baseline)](#appendix-step-4-direct-commands-generate-baseline-from-development).
 
 **What happened?**
 
@@ -506,7 +506,7 @@ See [Appendix: Step 4 Manual Commands (Generate Baseline)](#appendix-step-4-manu
 
 ## Step 5: Deploy Baseline Across Environments
 
-Now deploy the baseline to each environment. The master changelog (`changelog.xml`) should already exist if you ran `setup_tutorial.sh` or `setup_liquibase_environment.sh`. If not, create it first (see [Appendix: Step 5 Manual Commands (Create Master Changelog)](#appendix-step-5-manual-commands-create-master-changelog)).
+Now deploy the baseline to each environment. The master changelog (`changelog.xml`) should already exist if you ran `setup_tutorial.sh` or `setup_liquibase_environment.sh`. If not, create it first (see [Appendix: Step 5 Direct Commands (Create Master Changelog)](#appendix-step-5-direct-commands-create-master-changelog)).
 
 ```bash
 $LIQUIBASE_TUTORIAL_DIR/scripts/deploy.sh --action baseline
@@ -547,7 +547,7 @@ $LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_liquibase_deploy.sh
   - Actually executes the SQL statements to create objects
   - Think of it as "doing the task AND checking it off"
 
-> If you need to create the master `changelog.xml` manually, see [Appendix: Step 5 Manual Commands (Create Master Changelog)](#appendix-step-5-manual-commands-create-master-changelog).
+> If you need to create the master `changelog.xml` directly, see [Appendix: Step 5 Direct Commands (Create Master Changelog)](#appendix-step-5-direct-commands-create-master-changelog).
 
 ### Deploy to Development (Sync Only)
 
@@ -560,7 +560,7 @@ Development already has these objects (we created them in Step 2), so we **sync*
 - **When to use sync**: When the database already has the objects (like our dev database)
 - **When to use update**: When the database is empty or missing objects (like our stage/prod databases)
 
-> Prefer the manual CLI approach? See [Appendix: Step 5 Manual Commands (Deploy Baseline + Tag)](#appendix-step-5-manual-commands-deploy-baseline--tag).
+> Prefer the direct CLI approach? See [Appendix: Step 5 Direct Commands (Deploy Baseline + Tag)](#appendix-step-5-direct-commands-deploy-baseline--tag).
 
 **What did we accomplish?**
 
@@ -817,13 +817,13 @@ SQL Server requires running as a specific user (`mssql`, UID 10001) inside the c
 
 ---
 
-## Appendix: Manual SQL Server Container Commands
+## Appendix: Direct SQL Server Container Commands
 
 Back to: [Start the Tutorial SQL Server Containers](#start-the-tutorial-sql-server-containers)
 
-**Alternative: Manual commands**
+**Alternative: Direct commands**
 
-> **Important:** These manual commands use **default ports** (14331, 14332, 14333). If these ports are already in use, docker-compose will fail with port conflicts. For multi-user environments or when ports may be in use, first run `setup_db_container_ports.sh` to configure available ports.
+> **Important:** These direct commands use **default ports** (14331, 14332, 14333). If these ports are already in use, docker-compose will fail with port conflicts. For multi-user environments or when ports may be in use, first run `setup_db_container_ports.sh` to configure available ports.
 
 ```bash
 # Option 1: Use default ports (14331, 14332, 14333)
@@ -906,13 +906,13 @@ Or check the logs and filter for the ready message:
 cr logs mssql_dev 2>&1 | grep 'SQL Server is now ready for client connections'
 ```
 
-### Step 1: Manual database and schema commands
+### Step 1: Direct database and schema commands
 
 Back to: [Step 1: Create Three Database Environments](#step-1-create-three-database-environments)
 
-**Alternative: Manual commands**
+**Alternative: Direct commands**
 
-To create databases and schemas manually for all three environments:
+To create databases and schemas directly for all three environments:
 
 ```bash
 # Create orderdb database on each environment
@@ -964,7 +964,7 @@ instance_name      database_name  schema_name
 mssql_dev          orderdb        app
 ```
 
-## Appendix: Manual Creation of Liquibase Properties Files
+## Appendix: Direct Creation of Liquibase Properties Files
 
 Back to: [Step 3: Configure Liquibase for Each Environment](#step-3-configure-liquibase-for-each-environment)
 
@@ -1078,11 +1078,11 @@ In your master `changelog.xml`, include the schema file **before** the generated
 <include file="baseline/V0000__baseline.mssql.sql" relativeToChangelogFile="true"/>
 ```
 
-## Appendix: Step 2 Manual Commands (Populate Development)
+## Appendix: Step 2 Direct Commands (Populate Development)
 
 Back to: [Step 2: Populate Development with Existing Objects](#step-2-populate-development-with-existing-objects)
 
-**Alternative: Manual commands**
+**Alternative: Direct commands**
 
 ```bash
 # Create table, view, indexes, and sample data in DEVELOPMENT
@@ -1094,11 +1094,11 @@ sqlcmd-tutorial verify_orderdb_objects.sql
 sqlcmd-tutorial verify_orderdb_data.sql
 ```
 
-## Appendix: Step 4 Manual Commands (Generate Baseline from Development)
+## Appendix: Step 4 Direct Commands (Generate Baseline from Development)
 
 Back to: [Step 4: Generate Baseline from Development](#step-4-generate-baseline-from-development)
 
-**Alternative: Manual commands**
+**Alternative: Direct commands**
 
 ```bash
 # Change to project directory
@@ -1144,11 +1144,11 @@ lb -e dev -- \
   generateChangeLog
 ```
 
-## Appendix: Step 5 Manual Commands (Create Master Changelog)
+## Appendix: Step 5 Direct Commands (Create Master Changelog)
 
 Back to: [Step 5: Deploy Baseline Across Environments](#step-5-deploy-baseline-across-environments)
 
-If you need to create the master changelog manually or prefer step-by-step control:
+If you prefer to run the commands directly instead of using the helper script:
 
 ```bash
 # Create master changelog that includes baseline (if not already created)
@@ -1169,13 +1169,13 @@ cat > "$LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/changelog/ch
 EOF
 ```
 
-## Appendix: Step 5 Manual Commands (Deploy Baseline + Tag)
+## Appendix: Step 5 Direct Commands (Deploy Baseline + Tag)
 
 Back to: [Step 5: Deploy Baseline Across Environments](#step-5-deploy-baseline-across-environments)
 
-If you prefer to deploy manually instead of using `deploy.sh`:
+If you prefer to run the commands directly instead of using `deploy.sh`:
 
-> **Note:** Using `deploy.sh --action baseline` is recommended because it automatically takes snapshots for drift detection. The manual commands below do NOT create snapshots.
+> **Note:** Using `deploy.sh --action baseline` is recommended because it automatically takes snapshots for drift detection. The direct commands below do NOT create snapshots.
 
 ```bash
 cd "$LIQUIBASE_TUTORIAL_DATA_DIR"
@@ -1194,7 +1194,7 @@ lb -e prd -- updateSQL  # Preview first
 lb -e prd -- update     # Execute
 lb -e prd -- tag baseline
 
-# IMPORTANT: If using manual commands, take snapshots manually after each deployment:
+# IMPORTANT: If using direct commands, take snapshots after each deployment:
 lb -e dev -- snapshot --schemas=app --snapshot-format=json --output-file=/data/platform/mssql/database/orderdb/snapshots/dev_baseline_$(date +%Y%m%d_%H%M%S).json
 lb -e stg -- snapshot --schemas=app --snapshot-format=json --output-file=/data/platform/mssql/database/orderdb/snapshots/stg_baseline_$(date +%Y%m%d_%H%M%S).json
 lb -e prd -- snapshot --schemas=app --snapshot-format=json --output-file=/data/platform/mssql/database/orderdb/snapshots/prd_baseline_$(date +%Y%m%d_%H%M%S).json
