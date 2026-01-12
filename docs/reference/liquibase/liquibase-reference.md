@@ -17,6 +17,10 @@ This document serves as a reference for Liquibase features, limitations, configu
 - [Edition Differences](#edition-differences)
   - [Liquibase Community](#liquibase-community)
   - [Liquibase Secure (Pro/Enterprise)](#liquibase-secure-proenterprise)
+- [Drift Detection Reference](#drift-detection-reference)
+  - [Drift Detection Commands](#drift-detection-commands)
+  - [Drift Detection Supported Objects](#drift-detection-supported-objects)
+  - [diffTypes Parameter Values](#difftypes-parameter-values)
 - [Liquibase Limitations](#liquibase-limitations)
   - [Schema Management](#schema-management)
   - [Other Limitations](#other-limitations)
@@ -67,6 +71,204 @@ This document serves as a reference for Liquibase features, limitations, configu
 - **Targeted Rollback**: Rollback specific changesets without rolling back everything after them.
 
 **Recommendation**: If your platforms rely heavily on stored logic (procedures/functions), Liquibase Secure significantly reduces manual effort.
+
+[↑ Back to Table of Contents](#table-of-contents)
+
+## Drift Detection Reference
+
+> **📖 Concept:** For background on what drift is and why it matters, see [Understanding Database Drift](../../explanation/liquibase/drift-management.md).
+> **📋 How-to:** For step-by-step procedures, see [Operations Guide - Drift Detection](../../how-to/liquibase/liquibase-operations-guide.md#drift-detection-and-remediation).
+
+### Drift Detection Commands
+
+| Command | Description | Output |
+|---------|-------------|--------|
+| `snapshot` | Capture current database state | JSON file |
+| `diff` | Compare two database states | Text report |
+| `diffChangeLog` | Generate changelog from differences | XML/YAML/SQL file |
+| `updateSQL` | Preview SQL without executing | SQL statements |
+| `rollbackSQL` | Preview rollback SQL | SQL statements |
+| `changelogSync` | Mark changesets as executed | Updates DATABASECHANGELOG |
+
+**Snapshot Command:**
+
+```bash
+liquibase snapshot \
+  --url="jdbc:postgresql://localhost:5432/mydb" \
+  --schemas=app \
+  --snapshot-format=json \
+  --output-file=baseline.json
+```
+
+**Diff Command (against snapshot):**
+
+```bash
+liquibase diff \
+  --url="jdbc:postgresql://localhost:5432/mydb" \
+  --schemas=app \
+  --referenceUrl="offline:postgresql?snapshot=baseline.json"
+```
+
+**Diff Command (between databases):**
+
+```bash
+liquibase diff \
+  --url="jdbc:postgresql://localhost:5432/target_db" \
+  --referenceUrl="jdbc:postgresql://localhost:5432/reference_db" \
+  --referenceUsername=user \
+  --referencePassword=pass
+```
+
+**DiffChangeLog Command:**
+
+```bash
+# Generate YAML changelog
+liquibase diffChangeLog \
+  --changelog-file=drift.yaml \
+  --referenceUrl="offline:postgresql?snapshot=baseline.json"
+
+# Generate platform-specific SQL
+liquibase diffChangeLog \
+  --changelog-file=drift.postgresql.sql \
+  --referenceUrl="offline:postgresql?snapshot=baseline.json"
+```
+
+### Drift Detection Supported Objects
+
+Liquibase can detect drift across different object types depending on the database platform and license edition.
+
+#### SQL Server (MSSQL)
+
+| Object Type | Community | Pro | Notes |
+|-------------|:---------:|:---:|-------|
+| Tables | ✅ | ✅ | Full support |
+| Columns | ✅ | ✅ | Data types, nullability, defaults |
+| Primary Keys | ✅ | ✅ | |
+| Foreign Keys | ✅ | ✅ | |
+| Indexes | ✅ | ✅ | Clustered, non-clustered, filtered |
+| Unique Constraints | ✅ | ✅ | |
+| Views | ✅ | ✅ | Definition changes detected |
+| Sequences | ✅ | ✅ | |
+| Schemas | ✅ | ✅ | |
+| Check Constraints | ❌ | ✅ | Pro only |
+| Stored Procedures | ❌ | ✅ | Pro only - checksum comparison |
+| Functions | ❌ | ✅ | Pro only - scalar, table-valued |
+| Triggers | ❌ | ✅ | Pro only |
+| Synonyms | ❌ | ✅ | Pro only |
+| Data (row-level) | ❌ | ✅ | Pro only - with `diffTypes=data` |
+
+#### PostgreSQL
+
+| Object Type | Community | Pro | Notes |
+|-------------|:---------:|:---:|-------|
+| Tables | ✅ | ✅ | Including partitioned tables |
+| Columns | ✅ | ✅ | Data types, nullability, defaults |
+| Primary Keys | ✅ | ✅ | |
+| Foreign Keys | ✅ | ✅ | |
+| Indexes | ✅ | ✅ | B-tree, GIN, GiST, etc. |
+| Unique Constraints | ✅ | ✅ | |
+| Views | ✅ | ✅ | Regular and materialized |
+| Sequences | ✅ | ✅ | |
+| Schemas | ✅ | ✅ | |
+| Check Constraints | ❌ | ✅ | Pro only |
+| Stored Procedures | ❌ | ✅ | Pro only (PostgreSQL 11+) |
+| Functions | ❌ | ✅ | Pro only |
+| Triggers | ❌ | ✅ | Pro only |
+| Extensions | ❌ | ❌ | Not supported - manual tracking required |
+| Row-Level Security | ❌ | ❌ | Not supported - manual tracking required |
+| Data (row-level) | ❌ | ✅ | Pro only |
+
+#### Snowflake
+
+Snowflake's architecture differs from traditional RDBMS, so some object types don't exist.
+
+| Object Type | Community | Pro | Notes |
+|-------------|:---------:|:---:|-------|
+| Tables | ✅ | ✅ | Regular, transient, temporary |
+| Columns | ✅ | ✅ | Data types, nullability |
+| Primary Keys | ✅ | ✅ | Informational only in Snowflake |
+| Foreign Keys | ✅ | ✅ | Informational only in Snowflake |
+| Unique Constraints | ✅ | ✅ | Informational only in Snowflake |
+| Views | ✅ | ✅ | Regular and secure views |
+| Sequences | ✅ | ✅ | |
+| Schemas | ✅ | ✅ | |
+| Stored Procedures | ❌ | ✅ | Pro only - JavaScript, SQL, Python |
+| Functions (UDFs) | ❌ | ✅ | Pro only |
+| Stages | ❌ | ✅ | Pro only - internal and external |
+| File Formats | ❌ | ✅ | Pro only |
+| Streams | ❌ | ❌ | Not supported - manual tracking required |
+| Tasks | ❌ | ❌ | Not supported - manual tracking required |
+| Pipes | ❌ | ❌ | Not supported - manual tracking required |
+| Indexes | N/A | N/A | Snowflake doesn't use traditional indexes |
+| Triggers | N/A | N/A | Snowflake doesn't support triggers |
+
+> **Note:** Constraints in Snowflake are informational/metadata only and not enforced by the database.
+
+#### MongoDB
+
+MongoDB is a document database with different capabilities than relational databases.
+
+| Object Type | Community | Pro | Notes |
+|-------------|:---------:|:---:|-------|
+| Collections | ✅ | ✅ | Equivalent to tables |
+| Indexes | ✅ | ✅ | Single-field, compound, text, geospatial |
+| Validators | ✅ | ✅ | JSON Schema validation rules |
+| Views | ✅ | ✅ | Aggregation pipeline views |
+| Documents (data) | ❌ | ✅ | Pro only - sample comparison |
+
+**MongoDB Limitations:**
+
+| Feature | Supported | Notes |
+|---------|:---------:|-------|
+| `diff` | ✅ | Supported in Liquibase 4.32.0+ |
+| `snapshot` | ✅ | Supported in Liquibase 4.32.0+ |
+| `diffChangeLog` | ❌ | **Not supported** - manual changeset required |
+| `generateChangeLog` | ❌ | **Not supported** - manual changeset required |
+
+> **Important:** Unlike relational databases, Liquibase **cannot automatically generate changelogs** from MongoDB drift. You can detect drift, but you must manually create changesets to remediate it.
+
+#### Summary: Detection vs. Generation
+
+| Platform | Drift Detection | Auto-Generate Changelog | Manual Changeset Needed |
+|----------|:---------------:|:-----------------------:|:-----------------------:|
+| SQL Server | ✅ Full | ✅ Most objects | Complex procedures |
+| PostgreSQL | ✅ Full | ✅ Most objects | Extensions, RLS |
+| Snowflake | ✅ Full | ✅ Most objects | Streams, Tasks, Pipes |
+| MongoDB | ✅ Full | ❌ Not supported | All remediations |
+
+### diffTypes Parameter Values
+
+Control which objects are included in drift detection:
+
+```bash
+# Default types (Community)
+liquibase diff  # tables, columns, foreignkeys, indexes, primarykeys, uniqueconstraints, views
+
+# Specific types only
+liquibase diff --diffTypes="tables,indexes"
+
+# All types including Pro objects
+liquibase diff --diffTypes="catalogs,checkconstraints,columns,data,foreignkeys,functions,indexes,primarykeys,sequences,storedprocedures,tables,triggers,uniqueconstraints,views"
+```
+
+| Value | Description | License |
+|-------|-------------|---------|
+| `catalogs` | Database catalogs | Community |
+| `checkconstraints` | Check constraints | Pro |
+| `columns` | Table columns | Community |
+| `data` | Row-level data comparison | Pro |
+| `databasepackages` | Oracle packages | Pro |
+| `databasepackagebody` | Oracle package bodies | Pro |
+| `foreignkeys` | Foreign key constraints | Community |
+| `functions` | User-defined functions | Pro |
+| `indexes` | Table indexes | Community |
+| `primarykeys` | Primary key constraints | Community |
+| `sequences` | Sequence objects | Community |
+| `storedprocedures` | Stored procedures | Pro |
+| `tables` | Database tables | Community |
+| `triggers` | Database triggers | Pro |
+| `uniqueconstraints` | Unique constraints | Community |
+| `views` | Database views | Community |
 
 [↑ Back to Table of Contents](#table-of-contents)
 

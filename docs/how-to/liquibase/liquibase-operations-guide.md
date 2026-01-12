@@ -30,7 +30,7 @@ This guide covers day-to-day tasks: writing changesets, deploying changes, handl
 - [Execution Patterns](#execution-patterns)
   - [Dry-Run Validation](#dry-run-validation)
   - [Multi-Database Platform Deployment](#multi-database-platform-deployment)
-  - [Drift Detection](#drift-detection)
+  - [Drift Detection and Remediation](#drift-detection-and-remediation)
   - [Using Flow Files (Advanced)](#using-flow-files-advanced)
   - [Running Quality Checks (Pro)](#running-quality-checks-pro)
   - [Structured Logging](#structured-logging)
@@ -279,19 +279,169 @@ for db in app analytics; do
 done
 ```
 
-### Drift Detection
+### Drift Detection and Remediation
 
-Detect drift between two environments:
+> **📖 Concept:** For background on what drift is and why it matters, see [Understanding Database Drift](../../explanation/liquibase/drift-management.md).
+
+Drift occurs when database changes are made outside of Liquibase. Detecting and handling drift is critical for maintaining environment consistency.
+
+#### Capture a Baseline Snapshot
+
+Before you can detect drift, capture a "known good" snapshot after each deployment:
+
+```bash
+# Capture snapshot after deployment
+liquibase \
+  --defaults-file=properties/liquibase.prod.properties \
+  snapshot \
+  --schemas=app \
+  --snapshot-format=json \
+  --output-file=snapshots/prod_baseline_$(date +%Y%m%d).json
+```
+
+**When to capture snapshots:**
+- After every successful deployment
+- Before and after maintenance windows
+- At release milestones
+
+#### Detect Drift Against Snapshot
+
+Compare your current database against the baseline snapshot:
+
+```bash
+# Compare database to snapshot (recommended)
+liquibase \
+  --defaults-file=properties/liquibase.prod.properties \
+  diff \
+  --schemas=app \
+  --referenceUrl="offline:postgresql?snapshot=snapshots/prod_baseline_20260112.json"
+```
+
+#### Detect Drift Between Environments
+
+Compare two live databases:
 
 ```bash
 liquibase \
-  --defaults-file properties/liquibase.stage.properties \
-  --changelog-file platforms/postgres/databases/app/drift/db.changelog-drift.yaml \
-  diffChangeLog \
-  --referenceUrl="${DEV_JDBC_URL}" \
-  --referenceUsername="${DEV_DB_USER}" \
-  --referencePassword="${DEV_DB_PASSWORD}"
+  --defaults-file=properties/liquibase.stage.properties \
+  diff \
+  --schemas=app \
+  --referenceUrl="${PROD_JDBC_URL}" \
+  --referenceUsername="${PROD_DB_USER}" \
+  --referencePassword="${PROD_DB_PASSWORD}"
 ```
+
+#### Generate Remediation Changelog
+
+If drift is detected and you want to capture it as a changeset:
+
+```bash
+# Generate XML changelog from drift
+liquibase \
+  --defaults-file=properties/liquibase.prod.properties \
+  diffChangeLog \
+  --schemas=app \
+  --changelog-file=drift/db.changelog-drift-$(date +%Y%m%d).yaml \
+  --referenceUrl="offline:postgresql?snapshot=snapshots/prod_baseline_20260112.json"
+
+# Or generate SQL format (platform-specific)
+liquibase \
+  --defaults-file=properties/liquibase.prod.properties \
+  diffChangeLog \
+  --schemas=app \
+  --changelog-file=drift/db.changelog-drift-$(date +%Y%m%d).postgresql.sql \
+  --referenceUrl="offline:postgresql?snapshot=snapshots/prod_baseline_20260112.json"
+```
+
+> **Note:** Review generated changelogs before deploying. Some objects (stored procedures, triggers) may need manual adjustment.
+
+#### Remediation Strategies
+
+**Option 1: Revert the Drift**
+
+If drift was unintended, manually reverse it:
+
+```sql
+-- Example: Remove unexpected column
+ALTER TABLE app.customer DROP COLUMN loyalty_points;
+
+-- Example: Restore missing index
+CREATE INDEX IX_orders_date ON app.orders(order_date DESC);
+```
+
+Then verify:
+
+```bash
+liquibase diff --schemas=app \
+  --referenceUrl="offline:postgresql?snapshot=snapshots/prod_baseline_20260112.json"
+# Should show no differences
+```
+
+**Option 2: Accept the Drift**
+
+If drift is legitimate, capture and sync:
+
+```bash
+# 1. Generate changelog from drift
+liquibase diffChangeLog \
+  --changelog-file=drift/db.changelog-captured-drift.yaml \
+  --referenceUrl="offline:postgresql?snapshot=snapshots/prod_baseline_20260112.json"
+
+# 2. Review and add to master changelog
+# Edit drift/db.changelog-captured-drift.yaml as needed
+
+# 3. Mark as already deployed (since it exists in DB)
+liquibase \
+  --changelog-file=drift/db.changelog-captured-drift.yaml \
+  changelogSync
+```
+
+#### Preview SQL for Audit
+
+Always capture the SQL for audit and compliance:
+
+```bash
+# Preview deployment SQL (for approval/audit)
+liquibase \
+  --defaults-file=properties/liquibase.prod.properties \
+  --changelog-file=db.changelog-master.yaml \
+  updateSQL > audit/deployment_$(date +%Y%m%d_%H%M%S).sql
+
+# Preview rollback SQL
+liquibase \
+  --defaults-file=properties/liquibase.prod.properties \
+  --changelog-file=db.changelog-master.yaml \
+  rollbackSQL v1.0 > audit/rollback_$(date +%Y%m%d_%H%M%S).sql
+```
+
+#### CI/CD Integration
+
+Add drift detection to your pipeline:
+
+```bash
+#!/bin/bash
+# pre-deployment-check.sh
+
+# Find latest snapshot
+SNAPSHOT=$(ls -t snapshots/prod_*.json | head -1)
+
+# Run diff and capture output
+DRIFT_OUTPUT=$(liquibase diff \
+  --defaults-file=properties/liquibase.prod.properties \
+  --schemas=app \
+  --referenceUrl="offline:postgresql?snapshot=$SNAPSHOT" 2>&1)
+
+# Check for drift
+if echo "$DRIFT_OUTPUT" | grep -qE "Missing|Unexpected|Changed"; then
+  echo "ERROR: Drift detected in production!"
+  echo "$DRIFT_OUTPUT"
+  exit 1
+fi
+
+echo "No drift detected. Proceeding with deployment."
+```
+
+For supported objects by platform, see [Reference - Drift Detection Supported Objects](../../reference/liquibase/liquibase-reference.md#drift-detection-supported-objects).
 
 ### Using Flow Files (Advanced)
 

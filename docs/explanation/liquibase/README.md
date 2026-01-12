@@ -54,6 +54,7 @@ This directory contains comprehensive documentation for Liquibase database schem
 | I need to create a changeset | Operations | [Authoring Changes](../../how-to/liquibase/liquibase-operations-guide.md#authoring-changes) |
 | I need to deploy changes | Operations | [Execution Patterns](../../how-to/liquibase/liquibase-operations-guide.md#execution-patterns) |
 | I need to roll back changes | Operations | [Rollback Strategy](../../how-to/liquibase/liquibase-operations-guide.md#rollback-strategy) |
+| I need to detect/handle drift | Drift Management | [Understanding Drift](./drift-management.md) + [Operations](../../how-to/liquibase/liquibase-operations-guide.md#drift-detection-and-remediation) |
 | I'm seeing an error | Reference | [Troubleshooting](../../reference/liquibase/liquibase-reference.md#troubleshooting) |
 | I need to integrate with CI/CD | Architecture | [Execution Methods](../concepts/liquibase/liquibase-concepts.md#execution-methods) |
 | I need to migrate an existing database | Operations | [Migration from Legacy](../../how-to/liquibase/liquibase-operations-guide.md#migration-from-legacy) |
@@ -151,7 +152,27 @@ This directory contains comprehensive documentation for Liquibase database schem
 
 ---
 
-### 5. **Secure Implementation Analysis** (Strategic Planning)
+### 5. **Drift Management** (Understanding Drift)
+📄 [drift-management.md](./drift-management.md)
+
+**What it covers:**
+- What database drift is and why it matters
+- Common causes of drift
+- Types of drift (missing, unexpected, changed)
+- Detection vs. generation capabilities
+- Remediation strategies
+- Best practices for prevention
+
+**When to read:**
+- ✅ You want to understand what drift is
+- ✅ You're planning drift management strategy
+- ✅ You need to explain drift to stakeholders
+
+**Prerequisites:** Basic Liquibase concepts
+
+---
+
+### 6. **Secure Implementation Analysis** (Strategic Planning)
 📄 [liquibase-secure-implementation-analysis.md](./liquibase-secure-implementation-analysis.md)
 
 **What it covers:**
@@ -226,7 +247,7 @@ CONCEPTS GUIDE (Foundation)
 - **Looking for "preconditions"?** → Operations ([Using Preconditions](../../how-to/liquibase/liquibase-operations-guide.md#using-preconditions))
 - **Looking for "properties"?** → Architecture ([Properties Files](../architecture/liquibase/liquibase-architecture.md#properties-files-architecture))
 - **Looking for "directory structure"?** → Architecture ([Directory Structure](../architecture/liquibase/liquibase-architecture.md#directory-structure))
-- **Looking for "drift detection"?** → Operations ([Drift Detection](../../how-to/liquibase/liquibase-operations-guide.md#drift-detection))
+- **Looking for "drift detection"?** → Concepts ([Understanding Drift](./drift-management.md)) or Operations ([Drift Detection](../../how-to/liquibase/liquibase-operations-guide.md#drift-detection-and-remediation))
 - **Looking for an error message?** → Reference ([Troubleshooting](../../reference/liquibase/liquibase-reference.md#troubleshooting))
 
 ## 📞 Getting Help

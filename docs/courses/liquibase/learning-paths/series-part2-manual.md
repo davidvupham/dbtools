@@ -487,6 +487,8 @@ The query should now show the `release-v1.0` tagged row (V0001-add-orders-table)
 
 Drift occurs when someone makes direct database changes outside of Liquibase. Detecting drift early prevents deployment surprises.
 
+> **📖 Deep Dive:** For comprehensive coverage of drift management concepts, remediation strategies, SQL generation for audit purposes, and CI/CD integration, see the [Drift Management Guide](./guide-drift-management.md).
+
 ### Snapshots for Drift Detection
 
 Since you used `deploy.sh` for your deployments, snapshots have already been automatically created after each successful operation. You can find them in:
@@ -762,6 +764,7 @@ In Part 2, you learned:
 ## Next Steps
 
 - **[Part 3: CI/CD Automation](./series-part3-cicd.md)** - Wire everything into GitHub Actions for automated deployments.
+- **[Drift Management Guide](./guide-drift-management.md)** - Deep dive into drift detection, remediation, and SQL generation for audit.
 - **[Runner Setup Guide](./guide-runner-setup.md)** - Set up a self-hosted runner for local CI/CD testing.
 
 ---
