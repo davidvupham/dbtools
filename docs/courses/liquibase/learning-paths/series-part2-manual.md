@@ -173,12 +173,14 @@ See [Appendix: Step 6 Manual Commands (Create V0001 Change File)](#appendix-step
 ### Deploy to Development
 
 ```bash
-# See what will run
+# See what will run (preview)
 lb -e dev -- updateSQL
 
-# Deploy change to development
-lb -e dev -- update
+# Deploy change to development (with auto-snapshot)
+$LIQUIBASE_TUTORIAL_DIR/scripts/deploy.sh --action update --env dev
 ```
+
+> **Note:** `deploy.sh` automatically takes a snapshot after successful deployment for drift detection.
 
 Verify in dev:
 
@@ -255,8 +257,8 @@ Once the change is validated in development, promote it to staging and productio
 # Preview what will run
 lb -e stg -- updateSQL
 
-# Deploy to staging
-lb -e stg -- update
+# Deploy to staging (with auto-snapshot)
+$LIQUIBASE_TUTORIAL_DIR/scripts/deploy.sh --action update --env stg
 ```
 
 Verify in staging:
@@ -297,8 +299,8 @@ ORDER BY type_desc, name;
 # Preview what will run
 lb -e prd -- updateSQL
 
-# Deploy to production
-lb -e prd -- update
+# Deploy to production (with auto-snapshot)
+$LIQUIBASE_TUTORIAL_DIR/scripts/deploy.sh --action update --env prd
 ```
 
 Verify in production:
@@ -421,6 +423,15 @@ The script will:
 - Show success/fail indicators
 - Display file location and next steps
 
+**What it adds:**
+
+```sql
+--rollback DROP TABLE IF EXISTS app.orders;
+--rollback GO
+```
+
+This script is idempotent - running it multiple times will only add the rollback block once.
+
 **Alternative: Manual commands**
 
 See [Appendix: Step 9 Manual Commands (Add Rollback to V0001)](#appendix-step-9-manual-commands-add-rollback-to-v0001).
@@ -430,8 +441,6 @@ See [Appendix: Step 9 Manual Commands (Add Rollback to V0001)](#appendix-step-9-
 > **Warning:** Only practice rollback in development. Never rollback production without proper change management.
 
 ```bash
-cd $LIQUIBASE_TUTORIAL_DATA_DIR
-
 # Preview what rollback will do
 # Note: We're rolling back to 'baseline' to remove all changes after baseline
 # You could also rollback to 'release-v1.0' to remove only changes after that tag
@@ -439,25 +448,38 @@ lb -e dev -- rollbackSQL baseline
 
 # Execute rollback to baseline (removes V0001 orders table)
 # This removes all changesets executed after the baseline tag
-lb -e dev -- rollback baseline
+# Using deploy.sh takes a snapshot of the post-rollback state
+$LIQUIBASE_TUTORIAL_DIR/scripts/deploy.sh --action rollback --env dev --tag baseline
 
 # Verify the orders table is gone
-sqlcmd-tutorial -Q "
+sqlcmd-tutorial -e dev -Q "
 USE orderdb;
 SELECT name FROM sys.objects
 WHERE schema_id = SCHEMA_ID('app') AND type = 'U';
 "
+
+# Verify the release row was removed from DATABASECHANGELOG
+$LIQUIBASE_TUTORIAL_DIR/validation/scripts/query_databasechangelog.sh dev
 ```
+
+The query should show only the baseline changesets remain - the `release-v1.0` tagged row (V0001-add-orders-table) should be gone.
+
+> **Note:** `deploy.sh --action rollback` automatically takes a snapshot after rollback, capturing the post-rollback state for drift detection.
 
 ### Re-apply After Rollback
 
 ```bash
-# Re-deploy V0001
-lb -e dev -- update
+# Re-deploy V0001 (with auto-snapshot)
+$LIQUIBASE_TUTORIAL_DIR/scripts/deploy.sh --action update --env dev
 
 # Re-tag the release
 lb -e dev -- tag release-v1.0
+
+# Verify the release row is back in DATABASECHANGELOG
+$LIQUIBASE_TUTORIAL_DIR/validation/scripts/query_databasechangelog.sh dev
 ```
+
+The query should now show the `release-v1.0` tagged row (V0001-add-orders-table) is back, highlighted in yellow.
 
 ---
 
@@ -465,36 +487,59 @@ lb -e dev -- tag release-v1.0
 
 Drift occurs when someone makes direct database changes outside of Liquibase. Detecting drift early prevents deployment surprises.
 
-### Simulate Drift
+### Snapshots for Drift Detection
 
-Create an untracked change directly in the database:
+Since you used `deploy.sh` for your deployments, snapshots have already been automatically created after each successful operation. You can find them in:
 
 ```bash
-sqlcmd-tutorial -Q "
+ls -lt $LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/snapshots/
+```
+
+Each snapshot is timestamped (e.g., `dev_update_20260112_053000.json`) and represents the database state at that moment.
+
+> **Note:** If you used raw `lb` commands instead of `deploy.sh`, you can manually take a snapshot:
+> ```bash
+> lb -e dev -- snapshot --schemas=app --snapshot-format=json \
+>     --output-file=/data/platform/mssql/database/orderdb/snapshots/dev_manual_$(date +%Y%m%d_%H%M%S).json
+> ```
+
+### Simulate Drift
+
+Create an untracked change directly in the database. This simulates someone making a schema change outside of Liquibase (e.g., a DBA adding a column manually):
+
+**Untracked change:** Adding a `loyalty_points` column to the `app.customer` table.
+
+```bash
+sqlcmd-tutorial -e dev -Q "
 USE orderdb;
 -- Someone adds a column without using Liquibase
-ALTER TABLE app.customer ADD loyalty_points INT DEFAULT 0;
+IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('app.customer') AND name = 'loyalty_points')
+    ALTER TABLE app.customer ADD loyalty_points INT DEFAULT 0;
 "
+
+# Verify the column was added (highlighted in yellow)
+$LIQUIBASE_TUTORIAL_DIR/validation/scripts/query_table_columns.sh -e dev -h loyalty_points app.customer
 ```
+
+The output shows all columns in `app.customer` with the new `loyalty_points` column highlighted.
 
 ### Detect Drift with diff
 
-Compare the database against your changelog:
+Compare the current database against the known-good snapshot:
 
 ```bash
-cd $LIQUIBASE_TUTORIAL_DATA_DIR
-
-# Compare dev database to what Liquibase thinks it should be
-lb -e dev -- diff \
-    --referenceUrl="offline:mssql?changeLogFile=platform/mssql/database/orderdb/changelog/changelog.xml"
+# Detect drift against the latest snapshot
+$LIQUIBASE_TUTORIAL_DIR/scripts/detect_drift.sh -e dev
 ```
 
 **Expected output will show:**
 
 ```text
-Missing Column(s):
+Unexpected Column(s):
   app.customer.loyalty_points
 ```
+
+> **Note:** "Unexpected" means the column exists in the database but is NOT in the snapshot (reference) - this is drift. "Missing" would mean the opposite (in snapshot but not in database).
 
 ### Generate a Changelog from Drift
 
@@ -502,9 +547,8 @@ Capture the drift as a proper changeset:
 
 ```bash
 # Generate a changelog capturing the drift
-lb -e dev -- diffChangeLog \
-    --referenceUrl="offline:mssql?changeLogFile=platform/mssql/database/orderdb/changelog/changelog.xml" \
-    --changelogFile=$LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/changelog/changes/V0002__drift_loyalty_points.xml
+$LIQUIBASE_TUTORIAL_DIR/scripts/generate_drift_changelog.sh -e dev \
+    -o platform/mssql/database/orderdb/changelog/changes/V0002__drift_loyalty_points.xml
 ```
 
 **Workflow after detecting drift:**
@@ -515,19 +559,45 @@ lb -e dev -- diffChangeLog \
 
 **Note:** In this tutorial, we'll remove the drift column to restore the original state, so we won't include this generated file. In a real scenario, you would review and decide whether to keep or revert the drift.
 
-### Best Practice: Regular Drift Checks
+### Best Practice: Snapshot-Based Drift Detection in CI/CD
 
-Add drift detection to your CI/CD pipeline before deployments:
+Use `deploy.sh` for deployments - it automatically creates timestamped snapshots.
+
+**1. Deploy using deploy.sh (snapshots created automatically):**
 
 ```bash
-# In CI/CD, fail the build if drift is detected
-lb -e stg -- diff --reportFile=drift-report.txt
-if [ -s drift-report.txt ]; then
-    echo "ERROR: Drift detected in staging!"
+# In your CI/CD pipeline, use deploy.sh for all deployments
+$LIQUIBASE_TUTORIAL_DIR/scripts/deploy.sh --action update --env prd
+
+# Snapshots are automatically saved to:
+# $LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/snapshots/prd_update_YYYYMMDD_HHMMSS.json
+
+# Optionally, copy snapshots to artifact storage for long-term retention
+aws s3 cp $LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/snapshots/prd_*.json \
+    s3://my-bucket/liquibase-snapshots/
+```
+
+**2. Schedule regular drift checks (e.g., daily or before deployments):**
+
+```bash
+# Find the latest snapshot
+LATEST_SNAPSHOT=$(ls -t $LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/snapshots/prd_*.json | head -1)
+
+# Compare current database against the snapshot
+lb -e prd -- diff \
+    --schemas=app \
+    --referenceUrl="offline:mssql?snapshot=$LATEST_SNAPSHOT" \
+    > drift-report.txt
+
+# Fail if drift is detected
+if grep -q "Unexpected\|Missing\|Changed" drift-report.txt; then
+    echo "ERROR: Drift detected in production!"
     cat drift-report.txt
     exit 1
 fi
 ```
+
+> **Why snapshots?** Unlike comparing two live databases (which can both drift), a snapshot is immutable and represents the exact state after your last controlled deployment. Using `deploy.sh` ensures every deployment automatically creates a snapshot.
 
 ---
 
@@ -563,18 +633,20 @@ See [Appendix: Step 11 Manual Commands (Create V0002 Change File)](#appendix-ste
 ### Deploy Through Environments
 
 ```bash
-# Deploy to dev
-lb -e dev -- update
+# Deploy to dev (with auto-snapshot)
+$LIQUIBASE_TUTORIAL_DIR/scripts/deploy.sh --action update --env dev
 lb -e dev -- tag release-v1.1
 
-# Deploy to staging (after dev validation)
-lb -e stg -- update
+# Deploy to staging (after dev validation, with auto-snapshot)
+$LIQUIBASE_TUTORIAL_DIR/scripts/deploy.sh --action update --env stg
 lb -e stg -- tag release-v1.1
 
-# Deploy to production (after staging validation)
-lb -e prd -- update
+# Deploy to production (after staging validation, with auto-snapshot)
+$LIQUIBASE_TUTORIAL_DIR/scripts/deploy.sh --action update --env prd
 lb -e prd -- tag release-v1.1
 ```
+
+> **Tip:** You can deploy to multiple environments at once: `deploy.sh --action update --env dev,stg,prd`
 
 ---
 
@@ -585,11 +657,12 @@ In Part 2, you learned:
 | Topic | Key Commands |
 |-------|--------------|
 | **Make changes** | Create SQL files, update `changelog.xml` |
-| **Deploy** | `lb -e <env> -- update` |
+| **Deploy** | `deploy.sh --action update --env <env>` (auto-snapshot) |
 | **Tags** | `lb -e <env> -- tag <name>` |
-| **Rollback** | `lb -e dev -- rollback <tag>` |
-| **Drift detection** | `lb -e <env> -- diff` |
+| **Rollback** | `deploy.sh --action rollback --env <env> --tag <tag>` (auto-snapshot) |
+| **Drift detection** | `lb -e <env> -- diff` (compare against snapshot) |
 | **Drift capture** | `lb -e <env> -- diffChangeLog` |
+| **Snapshots** | Automatically created after every deployment for drift detection |
 
 ## Next Steps
 
