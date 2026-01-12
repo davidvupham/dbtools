@@ -35,12 +35,14 @@
 # Registry Configuration - Support for Corporate Proxies
 # ------------------------------------------------------------------------------
 # REGISTRY_PREFIX: Allows the base image to be pulled from a corporate proxy
-#                  (e.g., JFrog Artifactory) instead of Docker Hub.
+#                  (e.g., JFrog Artifactory).
 #
 # USAGE:
-#   Corporate proxy (requires ~/.docker/config.json configured with JFrog token):
+#   Corporate proxy:
 #     docker build --build-arg REGISTRY_PREFIX=xyz.jfrog.io/docker-proxy/library/ -t liquibase:latest .
-#     podman build --build-arg REGISTRY_PREFIX=xyz.jfrog.io/docker-proxy/library/ -t liquibase:latest .
+#       (requires ~/.docker/config.json configured with JFrog token via: docker login xyz.jfrog.io)
+#     podman build --build-arg REGISTRY_PREFIX=xyz.jfrog.io/docker-proxy/library/ -t liquibase:latest --format docker .
+#       (requires authentication via: podman login xyz.jfrog.io)
 #
 #   Default (Docker Hub):
 #     docker build -t liquibase:latest .
