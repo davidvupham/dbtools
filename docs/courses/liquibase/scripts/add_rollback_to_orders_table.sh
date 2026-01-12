@@ -41,7 +41,7 @@ if [[ ! -w "$CHANGE_FILE" ]]; then
 fi
 
 # Check if rollback already exists (idempotency)
-if grep -q "--rollback DROP TABLE IF EXISTS app.orders" "$CHANGE_FILE"; then
+if grep -qF -- "--rollback DROP TABLE IF EXISTS app.orders" "$CHANGE_FILE"; then
     echo -e "${YELLOW}Rollback already exists in file${NC}"
     echo -e "${GREEN}✓ Done${NC}"
     echo
@@ -73,7 +73,7 @@ fi
 } >> "$CHANGE_FILE"
 
 # Validate that rollback was added
-if grep -q "--rollback DROP TABLE IF EXISTS app.orders" "$CHANGE_FILE"; then
+if grep -qF -- "--rollback DROP TABLE IF EXISTS app.orders" "$CHANGE_FILE"; then
     echo -e "${GREEN}✓ Done${NC}"
 else
     echo -e "${RED}✗ Failed${NC}"

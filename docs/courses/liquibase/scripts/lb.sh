@@ -189,15 +189,19 @@ fi
 
 JDBC_URL="jdbc:sqlserver://${HOSTNAME}:${PORT};databaseName=orderdb;encrypt=true;trustServerCertificate=true"
 
-# Volume mount flags: Docker doesn't support :z,U, Podman needs it for SELinux
+# Volume mount flags: Docker doesn't support :z, Podman needs it for SELinux
+# For Podman, use --userns=keep-id to preserve host UID (avoids UID remapping issues)
 VOLUME_MOUNT="${PROJECT_DIR}:/data"
+USERNS_ARG=()
 if [[ "$CR" == "podman" ]]; then
-  VOLUME_MOUNT="${PROJECT_DIR}:/data:z,U"
+  VOLUME_MOUNT="${PROJECT_DIR}:/data:z"
+  USERNS_ARG=(--userns=keep-id)
 fi
 
 # docker run invocation
 exec "$CR" run --rm \
   --user "$(id -u):$(id -g)" \
+  "${USERNS_ARG[@]}" \
   "${NETWORK_ARG[@]}" \
   -v "${VOLUME_MOUNT}" \
   "${LB_IMAGE_DEFAULT}" \

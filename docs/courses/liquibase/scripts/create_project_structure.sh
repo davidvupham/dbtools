@@ -39,6 +39,7 @@ echo "Creating folder structure..."
 mkdir -p "${LIQUIBASE_TUTORIAL_DATA_DIR}/platform/mssql/database/orderdb/changelog/baseline"
 mkdir -p "${LIQUIBASE_TUTORIAL_DATA_DIR}/platform/mssql/database/orderdb/changelog/changes"
 mkdir -p "${LIQUIBASE_TUTORIAL_DATA_DIR}/platform/mssql/database/orderdb/env"
+mkdir -p "${LIQUIBASE_TUTORIAL_DATA_DIR}/platform/mssql/database/orderdb/snapshots"
 
 echo
 echo "Project structure created successfully!"
@@ -48,3 +49,4 @@ echo "Created directories:"
 echo "  - changelog/baseline"
 echo "  - changelog/changes"
 echo "  - env"
+echo "  - snapshots"

@@ -461,7 +461,7 @@ The script will:
 - Generate baseline from development database
 - Use `--schemas=app` to capture only the app schema
 - Use `--include-schema=true` to include schema names
-- Save to `V0000__baseline.mssql.sql`
+- Save to `k`
 - Show success/fail indicators
 - Display preview of generated file
 
@@ -509,11 +509,11 @@ See [Appendix: Step 4 Manual Commands (Generate Baseline)](#appendix-step-4-manu
 Now deploy the baseline to each environment. The master changelog (`changelog.xml`) should already exist if you ran `setup_tutorial.sh` or `setup_liquibase_environment.sh`. If not, create it first (see [Appendix: Step 5 Manual Commands (Create Master Changelog)](#appendix-step-5-manual-commands-create-master-changelog)).
 
 ```bash
-$LIQUIBASE_TUTORIAL_DIR/scripts/deploy_liquibase_baseline.sh
+$LIQUIBASE_TUTORIAL_DIR/scripts/deploy.sh --action baseline
 
 # Optional: deploy to one or more SQL Server environments (comma-separated)
 # (defaults to dev,stg,prd when omitted)
-$LIQUIBASE_TUTORIAL_DIR/scripts/deploy_liquibase_baseline.sh --envs dev,stg
+$LIQUIBASE_TUTORIAL_DIR/scripts/deploy.sh --action baseline --env dev,stg
 ```
 
 The script will:
@@ -523,6 +523,7 @@ The script will:
 - Tag all environments with `baseline`
   - A tag is a named marker in the change history (stored in `DATABASECHANGELOG`)
   - Useful for rollback targets later (example: `liquibase rollback baseline` rolls back changes after the tag)
+- **Take a snapshot** of each environment after successful deployment (for drift detection)
 - Show success/fail indicators for each environment
 
 **Important (baseline / golden / master instance):**
@@ -532,7 +533,7 @@ If a database instance is considered the "baseline" (it already contains the obj
 
 ```bash
 # Run the validation script to verify deployment across all environments
-# Note: Ensure deploy_liquibase_baseline.sh completed successfully first
+# Note: Ensure deploy.sh --action baseline completed successfully first
 $LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_liquibase_deploy.sh
 ```
 
@@ -581,7 +582,7 @@ For convenience, here's a summary of all step scripts used in Part 1:
 | [1](#step-1-create-three-database-environments) | `create_orderdb_database.sh` | Create orderdb on all containers | `validate_orderdb_database.sh` |
 | [2](#step-2-populate-development-with-existing-objects) | `populate_dev_database.sh` | Populate dev with sample objects | `validate_dev_populate.sh` |
 | [4](#step-4-generate-baseline-from-development) | `generate_liquibase_baseline.sh` | Generate baseline from dev | `validate_liquibase_baseline.sh` |
-| [5](#step-5-deploy-baseline-across-environments) | `deploy_liquibase_baseline.sh` | Deploy baseline to all environments | `validate_liquibase_deploy.sh` |
+| [5](#step-5-deploy-baseline-across-environments) | `deploy.sh --action baseline` | Deploy baseline to all environments + snapshot | `validate_liquibase_deploy.sh` |
 
 All scripts show success/fail indicators and provide clear next steps.
 
@@ -1172,7 +1173,9 @@ EOF
 
 Back to: [Step 5: Deploy Baseline Across Environments](#step-5-deploy-baseline-across-environments)
 
-If you prefer to deploy manually instead of using the helper script:
+If you prefer to deploy manually instead of using `deploy.sh`:
+
+> **Note:** Using `deploy.sh --action baseline` is recommended because it automatically takes snapshots for drift detection. The manual commands below do NOT create snapshots.
 
 ```bash
 cd "$LIQUIBASE_TUTORIAL_DATA_DIR"
@@ -1190,6 +1193,11 @@ lb -e stg -- tag baseline
 lb -e prd -- updateSQL  # Preview first
 lb -e prd -- update     # Execute
 lb -e prd -- tag baseline
+
+# IMPORTANT: If using manual commands, take snapshots manually after each deployment:
+lb -e dev -- snapshot --schemas=app --snapshot-format=json --output-file=/data/platform/mssql/database/orderdb/snapshots/dev_baseline_$(date +%Y%m%d_%H%M%S).json
+lb -e stg -- snapshot --schemas=app --snapshot-format=json --output-file=/data/platform/mssql/database/orderdb/snapshots/stg_baseline_$(date +%Y%m%d_%H%M%S).json
+lb -e prd -- snapshot --schemas=app --snapshot-format=json --output-file=/data/platform/mssql/database/orderdb/snapshots/prd_baseline_$(date +%Y%m%d_%H%M%S).json
 ```
 
 **What does tag do?**

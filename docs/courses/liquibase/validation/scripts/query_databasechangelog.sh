@@ -8,6 +8,7 @@ set -u
 # Colors
 GREEN='\033[0;32m'
 RED='\033[0;31m'
+YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 echo "========================================"
@@ -81,6 +82,8 @@ if echo "$QUERY_RESULT" | grep -qE "^[A-Z0-9-]+\|"; then
         grep -v "^+" | grep -vE "^[[:space:]]*\|.*ID.*\|.*AUTHOR.*\|" | grep -vE "^[[:space:]]*\|.*--.*\|" | \
         awk -F'|' 'BEGIN {
             header_printed=0
+            yellow="\033[1;33m"
+            nc="\033[0m"
         }
         NF>=6 {
             id=$1; gsub(/^[ \t]+|[ \t]+$/, "", id); if (length(id) > 25) id = substr(id, 1, 22) "..."
@@ -100,8 +103,16 @@ if echo "$QUERY_RESULT" | grep -qE "^[A-Z0-9-]+\|"; then
                 printf "+%s+%s+%s+%s+%s+%s+\n", "-------------------------", "--------------------", "--------------------------------------------------", "-------------------------", "---------------", "----------"
                 header_printed=1
             }
-            # Print data row
-            printf "|%-25s|%-20s|%-50s|%-25s|%-15s|%-10s|\n", id, author, filename, date, tag, exectype
+            # Check if row has a release tag (highlight only release tags, not baseline)
+            is_release_tag = (tag != "" && tag != "NULL" && tag ~ /^release-/)
+            # Format the row first (without color codes affecting width)
+            formatted_row = sprintf("|%-25s|%-20s|%-50s|%-25s|%-15s|%-10s|", id, author, filename, date, tag, exectype)
+            # Print with highlighting if it is a release tag
+            if (is_release_tag) {
+                printf "%s%s%s\n", yellow, formatted_row, nc
+            } else {
+                printf "%s\n", formatted_row
+            }
         }
         END {
             if (header_printed == 1) {
