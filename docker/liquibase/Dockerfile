@@ -34,23 +34,16 @@
 # ------------------------------------------------------------------------------
 # Registry Configuration - Support for Corporate Proxies
 # ------------------------------------------------------------------------------
-# REGISTRY_PREFIX: Allows overriding the container registry for corporate environments
-#
-# WHY IS THIS NEEDED?
-#   - Many corporations require pulling images through an internal proxy (e.g., JFrog Artifactory)
-#   - This ARG allows the same Dockerfile to work in both environments
-#   - Default: docker.io/library/ (Docker Hub - public internet)
-#   - Corporate: xyz.jfrog.io/docker-proxy/library/ (internal proxy)
+# REGISTRY_PREFIX: Allows the base image to be pulled from a corporate proxy
+#                  (e.g., JFrog Artifactory) instead of Docker Hub.
 #
 # USAGE:
+#   Corporate proxy (requires ~/.docker/config.json configured with JFrog token):
+#     docker build --build-arg REGISTRY_PREFIX=xyz.jfrog.io/docker-proxy/library/ -t liquibase:latest .
+#     podman build --build-arg REGISTRY_PREFIX=xyz.jfrog.io/docker-proxy/library/ -t liquibase:latest .
+#
 #   Default (Docker Hub):
 #     docker build -t liquibase:latest .
-#
-#   Corporate JFrog proxy:
-#     docker build --build-arg REGISTRY_PREFIX=xyz.jfrog.io/docker-proxy/library/ -t liquibase:latest .
-#
-#   Auto-detect (using scripts/build_container_image.sh):
-#     ./scripts/build_container_image.sh docker/liquibase
 #
 # NOTE: The trailing slash is required in the prefix!
 #
