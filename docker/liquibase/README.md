@@ -48,6 +48,25 @@ The custom image bundles the JDBC drivers so you do not need to add them at runt
 
 ## Build the image
 
+### Quick build (with auto-detection)
+
+The recommended way to build is using the `build_container_image.sh` script, which automatically detects corporate proxy (JFrog Artifactory) configuration:
+
+```bash
+# From repository root
+./scripts/build_container_image.sh docker/liquibase
+
+# With custom image name and tag
+./scripts/build_container_image.sh docker/liquibase liquibase:v1.0
+
+# Pass additional docker build arguments
+./scripts/build_container_image.sh docker/liquibase liquibase:latest -- --no-cache
+```
+
+The script checks `~/.docker/config.json` for JFrog authentication and automatically uses the corporate registry if configured.
+
+### Manual build
+
 Run the following command from the repository root:
 
 ```bash
@@ -61,15 +80,39 @@ On RHEL with Podman:
 podman build -t liquibase:latest docker/liquibase --format docker
 ```
 
-Build arguments (optional overrides):
+### Corporate proxy (JFrog Artifactory)
 
+In corporate environments that require pulling images through JFrog Artifactory, use the `REGISTRY_PREFIX` build argument:
+
+```bash
+# Using build_container_image.sh with auto-detection (recommended)
+./scripts/build_container_image.sh docker/liquibase
+
+# Manual override via environment variable
+REGISTRY_PREFIX=xyz.jfrog.io/docker-proxy/library/ ./scripts/build_container_image.sh docker/liquibase
+
+# Direct docker build with --build-arg
+docker build \
+  --build-arg REGISTRY_PREFIX=xyz.jfrog.io/docker-proxy/library/ \
+  -t liquibase:latest \
+  docker/liquibase
+```
+
+The `build_container_image.sh` script automatically detects JFrog configuration by checking:
+- `~/.docker/config.json` (Docker authentication)
+- `/etc/docker/daemon.json` (Docker daemon registry mirrors)
+- `~/.config/containers/auth.json` (Podman authentication)
+
+### Build arguments (optional overrides)
+
+- `REGISTRY_PREFIX` (default `docker.io/library/`) - Container registry prefix for base image
 - `LIQUIBASE_VERSION` (default `5.0.1`)
 - `MSSQL_DRIVER_VERSION` (default `13.2.1`)
 - `POSTGRES_DRIVER_VERSION` (default `42.7.8`)
 - `SNOWFLAKE_DRIVER_VERSION` (default `3.27.1`)
 - `MONGODB_DRIVER_VERSION` (default `3.12.14`)
 - `LIQUIBASE_MONGODB_VERSION` (default `5.0.1`)
-- Base image: `eclipse-temurin:21-jre`
+- Base image: `eclipse-temurin:21-jre-ubi9-minimal`
 
 Example overriding the Liquibase version:
 

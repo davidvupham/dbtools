@@ -6,6 +6,7 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 # Derive repository root and tutorial directory robustly relative to this file
 # Resolve repository root (four levels up from scripts directory)
+REPO_ROOT="$(cd "${SCRIPT_DIR}/../../../.." && pwd)"
 export LIQUIBASE_TUTORIAL_DIR="${LIQUIBASE_TUTORIAL_DIR:-$(cd "${SCRIPT_DIR}/.." && pwd)}"
 
 # Default Liquibase project directory (where changelog/env live)
@@ -17,14 +18,17 @@ export LIQUIBASE_TUTORIAL_DATA_DIR="${LIQUIBASE_TUTORIAL_DATA_DIR:-/data/$(whoam
 alias sqlcmd-tutorial="${SCRIPT_DIR}/sqlcmd_tutorial.sh"
 alias lb="${SCRIPT_DIR}/lb.sh"
 alias cr="${SCRIPT_DIR}/cr.sh"   # Container runtime (auto-detects docker/podman)
+alias bci="${REPO_ROOT}/scripts/build_container_image.sh"  # Build container image (auto-detects OS/runtime, JFrog proxy)
 
 echo "Tutorial environment configured."
 echo "Variables:"
 echo "  LIQUIBASE_TUTORIAL_DIR=${LIQUIBASE_TUTORIAL_DIR}"
 echo "  LIQUIBASE_TUTORIAL_DATA_DIR=${LIQUIBASE_TUTORIAL_DATA_DIR}  (override by: export LIQUIBASE_TUTORIAL_DATA_DIR=/your/path)"
-echo "Aliases: sqlcmd-tutorial, lb, cr"
+echo "Aliases: sqlcmd-tutorial, lb, cr, bci"
 echo "  cr = Container Runtime (auto-detects docker/podman based on OS)"
+echo "  bci = Build Container Image (auto-detects OS/runtime, JFrog proxy)"
 echo "Examples:"
 echo "  sqlcmd-tutorial -Q 'SELECT @@SERVERNAME AS ServerName, GETDATE() AS CurrentTime;'"
 echo "  lb -e dev -- status --verbose"
 echo "  cr ps                              # list containers (uses docker or podman)"
+echo "  bci docker/liquibase               # build container image"
