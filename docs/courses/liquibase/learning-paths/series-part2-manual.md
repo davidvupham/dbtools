@@ -111,7 +111,7 @@ Before starting Part 2, validate that Part 1 was completed successfully:
 
 ```bash
 # Run the comprehensive validation script (validates all prerequisites)
-$LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_liquibase_deploy.sh
+$LIQUIBASE_TUTORIAL_DIR/scripts/validate_liquibase_deploy.sh
 ```
 
 **What the script validates (maps to prerequisites above):**
@@ -132,13 +132,13 @@ For granular validation of specific prerequisites:
 
 ```bash
 # Containers and databases
-$LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_orderdb_database.sh
+$LIQUIBASE_TUTORIAL_DIR/scripts/validate_orderdb_database.sh
 
 # Properties files
-$LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_liquibase_properties.sh
+$LIQUIBASE_TUTORIAL_DIR/scripts/validate_liquibase_properties.sh
 
 # Baseline deployment (comprehensive validation, recommended)
-$LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_liquibase_deploy.sh
+$LIQUIBASE_TUTORIAL_DIR/scripts/validate_liquibase_deploy.sh
 ```
 
 If validation fails, complete the missing steps from Part 1 before proceeding.
@@ -188,7 +188,7 @@ Verify in dev:
 
 ```bash
 # Run the validation script
-$LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_app_schema_objects.sh dev
+$LIQUIBASE_TUTORIAL_DIR/scripts/validate_app_schema_objects.sh dev
 ```
 
 The script will:
@@ -267,7 +267,7 @@ Verify in staging:
 
 ```bash
 # Run the validation script
-$LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_app_schema_objects.sh stg
+$LIQUIBASE_TUTORIAL_DIR/scripts/validate_app_schema_objects.sh stg
 ```
 
 The script will:
@@ -309,7 +309,7 @@ Verify in production:
 
 ```bash
 # Run the validation script
-$LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_app_schema_objects.sh prd
+$LIQUIBASE_TUTORIAL_DIR/scripts/validate_app_schema_objects.sh prd
 ```
 
 The script will:
@@ -360,7 +360,7 @@ View what's been deployed and when:
 
 ```bash
 # Run the query script (defaults to dev, or specify environment)
-$LIQUIBASE_TUTORIAL_DIR/validation/scripts/query_databasechangelog.sh dev
+$LIQUIBASE_TUTORIAL_DIR/scripts/query_databasechangelog.sh dev
 ```
 
 The script will:
@@ -459,7 +459,7 @@ WHERE schema_id = SCHEMA_ID('app') AND type = 'U';
 "
 
 # Verify the release row was removed from DATABASECHANGELOG
-$LIQUIBASE_TUTORIAL_DIR/validation/scripts/query_databasechangelog.sh dev
+$LIQUIBASE_TUTORIAL_DIR/scripts/query_databasechangelog.sh dev
 ```
 
 The query should show only the baseline changesets remain - the `release-v1.0` tagged row (V0001-add-orders-table) should be gone.
@@ -476,7 +476,7 @@ $LIQUIBASE_TUTORIAL_DIR/scripts/deploy.sh --action update --env dev
 lb -e dev -- tag release-v1.0
 
 # Verify the release row is back in DATABASECHANGELOG
-$LIQUIBASE_TUTORIAL_DIR/validation/scripts/query_databasechangelog.sh dev
+$LIQUIBASE_TUTORIAL_DIR/scripts/query_databasechangelog.sh dev
 ```
 
 The query should now show the `release-v1.0` tagged row (V0001-add-orders-table) is back, highlighted in yellow.
@@ -530,7 +530,7 @@ IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('app.custom
 "
 
 # Verify the column was added (highlighted in yellow)
-$LIQUIBASE_TUTORIAL_DIR/validation/scripts/query_table_columns.sh -e dev -h loyalty_points app.customer
+$LIQUIBASE_TUTORIAL_DIR/scripts/query_table_columns.sh -e dev -h loyalty_points app.customer
 ```
 
 #### Type 2: Changed (Modified Column)
@@ -546,7 +546,7 @@ ALTER TABLE app.customer ALTER COLUMN first_name NVARCHAR(150);
 "
 
 # Verify the column was changed
-$LIQUIBASE_TUTORIAL_DIR/validation/scripts/query_table_columns.sh -e dev -h first_name app.customer
+$LIQUIBASE_TUTORIAL_DIR/scripts/query_table_columns.sh -e dev -h first_name app.customer
 ```
 
 #### Type 3: Missing (Dropped Index)

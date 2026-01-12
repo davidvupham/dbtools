@@ -1,41 +1,39 @@
 # Validation Directory
 
-This directory contains all validation scripts, reports, and logs for the Liquibase tutorial series.
+This directory contains validation reports and logs for the Liquibase tutorial series. Validation scripts are located in the main `scripts/` directory for easier discoverability.
 
 ## Directory Structure
 
 ```
-validation/
-├── README.md                    # This file
-├── scripts/                     # Validation scripts
-│   ├── cleanup_validation.sh
-│   ├── validate_tutorial_full.sh
-│   ├── validate_tutorial_part2.sh
-│   ├── validate_part3_cicd.sh
-│   ├── validate_tutorial.sh
-│   └── validate_step*.sh        # Individual step validation scripts
-├── reports/                     # Validation reports
-│   ├── part1/                   # Part 1 (Baseline) validation reports
-│   ├── part2/                   # Part 2 (Manual Lifecycle) validation reports
-│   ├── part3/                   # Part 3 (CI/CD) validation reports
-│   └── general/                 # General validation reports
-└── logs/                        # Validation execution logs
-    ├── tutorial_validation_*.log
-    └── part3_validation_*.log
+liquibase/
+├── scripts/                     # All scripts (including validation)
+│   ├── validate_*.sh            # Validation scripts
+│   ├── query_*.sh               # Query helper scripts
+│   └── cleanup_validation.sh    # Validation cleanup
+└── validation/
+    ├── README.md                # This file
+    ├── reports/                 # Validation reports
+    │   ├── part1/               # Part 1 (Baseline) validation reports
+    │   ├── part2/               # Part 2 (Manual Lifecycle) validation reports
+    │   ├── part3/               # Part 3 (CI/CD) validation reports
+    │   └── general/             # General validation reports
+    └── logs/                    # Validation execution logs
+        ├── tutorial_validation_*.log
+        └── part3_validation_*.log
 ```
 
 ## Organization Principles
 
 This directory follows best practices for test/validation organization:
 
-1. **Separation by Type**: Scripts, reports, and logs are in separate directories
+1. **Single Script Location**: All scripts in `scripts/` for easy discovery
 2. **Separation by Part**: Reports are organized by tutorial part for easy navigation
 3. **Clear Documentation**: README files explain structure and usage
 4. **Easy Navigation**: Logical grouping makes it easy to find specific files
 
 ## Validation Scripts
 
-All validation scripts are located in `scripts/`:
+All validation scripts are located in `scripts/` (parent directory):
 
 ### Main Validation Scripts
 
@@ -110,35 +108,35 @@ Logs are timestamped for easy identification and are preserved for review and de
 ```bash
 export LIQUIBASE_TUTORIAL_DIR="/path/to/repo/docs/courses/liquibase"
 export MSSQL_LIQUIBASE_TUTORIAL_PWD="YourPassword123!"
-bash "$LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_tutorial_full.sh"
+bash "$LIQUIBASE_TUTORIAL_DIR/scripts/validate_tutorial_full.sh"
 ```
 
 ### Running Part 2 Validation
 
 ```bash
-bash "$LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_tutorial_part2.sh"
+bash "$LIQUIBASE_TUTORIAL_DIR/scripts/validate_tutorial_part2.sh"
 ```
 
 ### Running Part 3 Validation
 
 ```bash
-bash "$LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_part3_cicd.sh"
+bash "$LIQUIBASE_TUTORIAL_DIR/scripts/validate_part3_cicd.sh"
 ```
 
 ### Running Cleanup
 
 ```bash
-bash "$LIQUIBASE_TUTORIAL_DIR/validation/scripts/cleanup_validation.sh"
+bash "$LIQUIBASE_TUTORIAL_DIR/scripts/cleanup_validation.sh"
 ```
 
 ### Running Validation Scripts
 
 ```bash
-bash "$LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_orderdb_database.sh"
-bash "$LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_dev_populate.sh"
-bash "$LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_liquibase_properties.sh"
-bash "$LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_liquibase_baseline.sh"
-bash "$LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_liquibase_deploy.sh"
+bash "$LIQUIBASE_TUTORIAL_DIR/scripts/validate_orderdb_database.sh"
+bash "$LIQUIBASE_TUTORIAL_DIR/scripts/validate_dev_populate.sh"
+bash "$LIQUIBASE_TUTORIAL_DIR/scripts/validate_liquibase_properties.sh"
+bash "$LIQUIBASE_TUTORIAL_DIR/scripts/validate_liquibase_baseline.sh"
+bash "$LIQUIBASE_TUTORIAL_DIR/scripts/validate_liquibase_deploy.sh"
 ```
 
 ## Best Practices
@@ -165,4 +163,4 @@ bash "$LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_liquibase_deploy.sh"
 
 ---
 
-**Last Updated:** 2026-01-09
+**Last Updated:** 2026-01-12

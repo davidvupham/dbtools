@@ -76,7 +76,7 @@ FIXES_APPLIED=0
 # ============================================================================
 log_section "Pre-Validation: Cleanup Previous Runs"
 
-CLEANUP_SCRIPT="${LIQUIBASE_TUTORIAL_DIR}/validation/scripts/cleanup_validation.sh"
+CLEANUP_SCRIPT="${LIQUIBASE_TUTORIAL_DIR}/scripts/cleanup_validation.sh"
 if [ -f "$CLEANUP_SCRIPT" ]; then
     log "Running cleanup script to ensure clean environment..."
     # Run cleanup non-interactively (skip log file removal prompt)
@@ -178,8 +178,8 @@ if [ -f "$LIQUIBASE_TUTORIAL_DIR/scripts/create_orderdb_database.sh" ]; then
     execute_step "Create Databases" "$LIQUIBASE_TUTORIAL_DIR/scripts/create_orderdb_database.sh"
     CREATE_DB_RESULT=$?
 
-    if [ $CREATE_DB_RESULT -eq 0 ] && [ -f "$LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_orderdb_database.sh" ]; then
-        execute_step "Validate Databases" "$LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_orderdb_database.sh"
+    if [ $CREATE_DB_RESULT -eq 0 ] && [ -f "$LIQUIBASE_TUTORIAL_DIR/scripts/validate_orderdb_database.sh" ]; then
+        execute_step "Validate Databases" "$LIQUIBASE_TUTORIAL_DIR/scripts/validate_orderdb_database.sh"
     fi
 else
     log "✗ ERROR: create_orderdb_database.sh not found"
@@ -193,8 +193,8 @@ if [ -f "$LIQUIBASE_TUTORIAL_DIR/scripts/populate_dev_database.sh" ]; then
     execute_step "Populate Dev" "$LIQUIBASE_TUTORIAL_DIR/scripts/populate_dev_database.sh"
     POPULATE_RESULT=$?
 
-    if [ $POPULATE_RESULT -eq 0 ] && [ -f "$LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_dev_populate.sh" ]; then
-        execute_step "Validate Populate" "$LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_dev_populate.sh"
+    if [ $POPULATE_RESULT -eq 0 ] && [ -f "$LIQUIBASE_TUTORIAL_DIR/scripts/validate_dev_populate.sh" ]; then
+        execute_step "Validate Populate" "$LIQUIBASE_TUTORIAL_DIR/scripts/validate_dev_populate.sh"
     fi
 else
     log "✗ ERROR: populate_dev_database.sh not found"
@@ -208,8 +208,8 @@ if [ -f "$LIQUIBASE_TUTORIAL_DIR/scripts/generate_liquibase_baseline.sh" ]; then
     execute_step "Generate Baseline" "$LIQUIBASE_TUTORIAL_DIR/scripts/generate_liquibase_baseline.sh"
     BASELINE_RESULT=$?
 
-    if [ $BASELINE_RESULT -eq 0 ] && [ -f "$LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_liquibase_baseline.sh" ]; then
-        execute_step "Validate Baseline" "$LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_liquibase_baseline.sh"
+    if [ $BASELINE_RESULT -eq 0 ] && [ -f "$LIQUIBASE_TUTORIAL_DIR/scripts/validate_liquibase_baseline.sh" ]; then
+        execute_step "Validate Baseline" "$LIQUIBASE_TUTORIAL_DIR/scripts/validate_liquibase_baseline.sh"
     fi
 else
     log "✗ ERROR: generate_liquibase_baseline.sh not found"
@@ -223,8 +223,8 @@ if [ -f "$LIQUIBASE_TUTORIAL_DIR/scripts/deploy_liquibase_baseline.sh" ]; then
     execute_step "Deploy Baseline" "$LIQUIBASE_TUTORIAL_DIR/scripts/deploy_liquibase_baseline.sh"
     DEPLOY_RESULT=$?
 
-    if [ $DEPLOY_RESULT -eq 0 ] && [ -f "$LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_liquibase_deploy.sh" ]; then
-        execute_step "Validate Deployment" "$LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_liquibase_deploy.sh"
+    if [ $DEPLOY_RESULT -eq 0 ] && [ -f "$LIQUIBASE_TUTORIAL_DIR/scripts/validate_liquibase_deploy.sh" ]; then
+        execute_step "Validate Deployment" "$LIQUIBASE_TUTORIAL_DIR/scripts/validate_liquibase_deploy.sh"
     fi
 else
     log "✗ ERROR: deploy_liquibase_baseline.sh not found"
@@ -247,7 +247,7 @@ log_section "Post-Validation: Cleanup"
 
 log "Cleaning up containers and resources after validation..."
 
-CLEANUP_SCRIPT="${LIQUIBASE_TUTORIAL_DIR}/validation/scripts/cleanup_validation.sh"
+CLEANUP_SCRIPT="${LIQUIBASE_TUTORIAL_DIR}/scripts/cleanup_validation.sh"
 if [ -f "$CLEANUP_SCRIPT" ]; then
     log "Running cleanup script..."
     export MSSQL_LIQUIBASE_TUTORIAL_PWD="${MSSQL_LIQUIBASE_TUTORIAL_PWD:-TestPassword123!}"

@@ -47,7 +47,29 @@ Scripts use descriptive names that indicate their purpose:
 | Script | Purpose |
 |--------|---------|
 | `cleanup_tutorial.sh` | Removes all tutorial containers, networks, and data |
-| `cleanup_tutorial.sh` | Lightweight cleanup (containers only) |
+| `cleanup_validation.sh` | Cleanup specifically for validation runs |
+
+### Validation Scripts
+
+| Script | Purpose | Used In |
+|--------|---------|---------|
+| `validate_tutorial.sh` | Quick validation of tutorial environment | All Parts |
+| `validate_tutorial_full.sh` | Complete end-to-end validation for Part 1 | Part 1 |
+| `validate_tutorial_part2.sh` | Validation for Part 2 (Manual Lifecycle) | Part 2 |
+| `validate_part3_cicd.sh` | Validation for Part 3 (CI/CD) | Part 3 |
+| `validate_orderdb_database.sh` | Validates database creation | Part 1, Part 2 |
+| `validate_dev_populate.sh` | Validates dev population | Part 1 |
+| `validate_liquibase_properties.sh` | Validates properties files | Part 1, Part 2 |
+| `validate_liquibase_baseline.sh` | Validates baseline generation | Part 1 |
+| `validate_liquibase_deploy.sh` | Validates baseline deployment | Part 1, Part 2 |
+| `validate_app_schema_objects.sh` | Validates app schema objects per environment | Part 2 |
+
+### Query Helper Scripts
+
+| Script | Purpose |
+|--------|---------|
+| `query_databasechangelog.sh` | Query DATABASECHANGELOG table |
+| `query_table_columns.sh` | Query table column definitions |
 
 ## Usage Pattern
 

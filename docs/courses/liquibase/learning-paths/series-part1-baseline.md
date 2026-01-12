@@ -348,7 +348,7 @@ The script will:
 
 ```bash
 # Run the validation script to verify databases and schemas were created
-$LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_orderdb_database.sh
+$LIQUIBASE_TUTORIAL_DIR/scripts/validate_orderdb_database.sh
 ```
 
 The validation script checks:
@@ -381,7 +381,7 @@ The script will:
 
 ```bash
 # Run the validation script to verify objects were created
-$LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_dev_populate.sh
+$LIQUIBASE_TUTORIAL_DIR/scripts/validate_dev_populate.sh
 ```
 
 **Alternative: Direct commands**
@@ -439,7 +439,7 @@ This script creates:
 
 ```bash
 # Run the validation script to verify properties files
-$LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_liquibase_properties.sh
+$LIQUIBASE_TUTORIAL_DIR/scripts/validate_liquibase_properties.sh
 ```
 
 **Alternative: Direct creation**
@@ -469,7 +469,7 @@ The script will:
 
 ```bash
 # Run the validation script to verify baseline format and content
-$LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_liquibase_baseline.sh
+$LIQUIBASE_TUTORIAL_DIR/scripts/validate_liquibase_baseline.sh
 ```
 
 **Alternative: Direct commands**
@@ -534,7 +534,7 @@ If a database instance is considered the "baseline" (it already contains the obj
 ```bash
 # Run the validation script to verify deployment across all environments
 # Note: Ensure deploy.sh --action baseline completed successfully first
-$LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_liquibase_deploy.sh
+$LIQUIBASE_TUTORIAL_DIR/scripts/validate_liquibase_deploy.sh
 ```
 
 **What the script does:**
@@ -608,7 +608,7 @@ Now that your baseline is in place and Liquibase is tracking changes across dev/
 
 ```bash
 # Run the automated cleanup script
-"$LIQUIBASE_TUTORIAL_DIR/validation/scripts/cleanup_validation.sh"
+"$LIQUIBASE_TUTORIAL_DIR/scripts/cleanup_validation.sh"
 ```
 
 **What the cleanup script does:**

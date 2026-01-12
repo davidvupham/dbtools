@@ -272,7 +272,7 @@ rm -rf /data/$USER/liquibase_tutorial
 Run the validation script to check your environment:
 
 ```bash
-$LIQUIBASE_TUTORIAL_DIR/validation/scripts/validate_tutorial.sh
+$LIQUIBASE_TUTORIAL_DIR/scripts/validate_tutorial.sh
 ```
 
 This checks:
@@ -287,6 +287,6 @@ This checks:
 ## Getting Help
 
 1. Check container logs: `podman logs <container_name>`
-2. Run validation: `./validation/scripts/validate_tutorial.sh`
+2. Run validation: `./scripts/validate_tutorial.sh`
 3. Review the [Quick Reference](./quick_reference.md)
 4. Check [Architecture](./architecture.md) for network details
