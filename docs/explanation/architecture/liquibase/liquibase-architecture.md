@@ -20,9 +20,10 @@
   - [Key Decisions](#key-decisions)
 - [Design Principles](#design-principles)
 - [Directory Structure](#directory-structure)
+  - [Standard Layout](#standard-layout)
+  - [Example Structure](#example-structure)
   - [Repository Strategy](#repository-strategy)
-  - [Team Repository Layout](#team-repository-layout)
-  - [Cross-Platform Databases](#cross-platform-databases)
+  - [Cross-Platform Database Example](#cross-platform-database-example)
 - [Conventions & Standards](#conventions--standards)
   - [Platform Names](#platform-names)
   - [Database Names](#database-names)
@@ -42,6 +43,9 @@
   - [CI/CD Integration](#cicd-integration)
 - [Scalability Patterns](#scalability-patterns)
 - [Related Documentation](#related-documentation)
+- [Appendix: Alternative Directory Structures](#appendix-alternative-directory-structures)
+  - [Application-First Organization](#application-first-organization)
+  - [Shared Changelog Patterns](#shared-changelog-patterns)
 
 ## Architecture Overview
 
@@ -62,9 +66,9 @@ Changes are written once and promoted through environments using environment-spe
 
 | Decision | Rationale |
 |:---|:---|
-| **Separate repo per team** | Full isolation, standard GitHub permissions, independent deployments |
-| **Shared GDS-owned repo** | Central `gds-liquibase-shared` for cross-platform databases (e.g., `dbadmin`) deployed by GDS to all platforms |
-| **Application-first structure** | Organize by application first, then platform, then database—aligns with microservices/team ownership |
+| **Separate repo per database** | Each database has its own GitHub repository, owned by the team responsible for that database |
+| **Cross-platform in single repo** | If a database exists on multiple platforms, all platforms are managed in the same repo |
+| **Platform-first structure** | Organize by platform first, then database—aligns with DBA workflows and infrastructure management |
 | **Environment-agnostic changelogs** | Same changes deploy everywhere; environment differences only in properties files |
 | **Release-driven versioning** | Organize changes by release to simplify rollback, tagging, and deployment tracking |
 
@@ -73,9 +77,9 @@ Changes are written once and promoted through environments using environment-spe
 ## Design Principles
 
 1. **Single Source of Truth** — Changes written once, deploy identically to all environments
-2. **Team Isolation** — Each team controls their own repository and deployment schedule
-3. **Application-First Organization** — Directory structure mirrors business/product structure
-4. **Shared Cross-Platform Databases** — GDS manages databases deployed to all platforms
+2. **Database Ownership** — Each database has its own repository, owned by the responsible team
+3. **Platform-First Organization** — Directory structure mirrors infrastructure and DBA workflows
+4. **Cross-Platform in Single Repo** — Databases spanning multiple platforms are managed in one repository
 5. **Release-Driven Versioning** — Changes grouped by release for clarity and safe rollback
 6. **Environment-Specific Properties** — Connection details differ per environment; changes do not
 
@@ -85,106 +89,123 @@ For detailed rationale on each principle, see [Concepts Guide - Key Decisions](.
 
 ## Directory Structure
 
-Our architecture uses an **application-first organization** for changelogs. Each team repository has the same structure:
+Our architecture uses a **platform-first organization** for changelogs. This structure aligns with DBA workflows and infrastructure management patterns.
 
-### Repository Strategy
-
-Each team owns a **separate GitHub repository**:
+### Standard Layout
 
 ```text
-github.com/org/team-alpha-liquibase    # Team Alpha's changelogs
-github.com/org/team-beta-liquibase     # Team Beta's changelogs
-github.com/org/gds-liquibase-shared    # Shared modules (GDS owned, read-only for others)
+platform/<platform>/database/<database_name>/
+├── changelog/       # All changelogs and changesets
+├── env/             # Environment-specific properties files
+└── snapshots/       # Database snapshots for drift detection
 ```
 
-**Benefits:**
-- **Isolation**: Teams manage their own changes independently
-- **Permissions**: Standard GitHub permissions control access
-- **Independence**: Teams can version and deploy independently
-- **Shared Modules**: Include `gds-liquibase-shared` as a Git submodule for cross-platform databases
-
-### Team Repository Layout
-
-Each team's repository uses this structure:
+### Example Structure
 
 ```text
-# Example: team-alpha-liquibase repo
-.
-├── applications/
-│   ├── payments_api/
-│   │   ├── postgres/
-│   │   │   └── orders/
-│   │   │       ├── db.changelog-master.yaml
-│   │   │       ├── baseline/
-│   │   │       │   └── db.changelog-baseline.yaml
-│   │   │       └── releases/
-│   │   │           ├── 1.0/
-│   │   │           ├── 1.1/
-│   │   │           └── 2.0/
-│   │   └── mssql/
-│   │       └── legacy_orders/
-│   │           ├── db.changelog-master.yaml
-│   │           └── releases/...
-│   └── inventory_svc/
-│       ├── postgres/
-│       │   └── catalog/
-│       │       └── db.changelog-master.yaml
-│       └── releases/...
-├── shared/                              # Git submodule: gds-liquibase-shared
-│   └── modules/
-│       └── dbadmin/
-│           ├── db.changelog-dbadmin-common.yaml
-│           ├── postgres/
-│           ├── mssql/
-│           └── snowflake/
-└── properties/
-    ├── liquibase.payments_api.postgres.orders.dbinstance1.dev.properties.template
-    ├── liquibase.payments_api.postgres.orders.dbinstance1.test.properties.template
-    └── ...
+platform/
+└── mssql/
+    └── database/
+        ├── orderdb/
+        │   ├── changelog/
+        │   │   ├── db.changelog-master.yaml
+        │   │   ├── baseline/
+        │   │   │   └── db.changelog-baseline.yaml
+        │   │   └── releases/
+        │   │       ├── 1.0/
+        │   │       ├── 1.1/
+        │   │       └── 2.0/
+        │   ├── env/
+        │   │   ├── liquibase.dev.properties.template
+        │   │   ├── liquibase.test.properties.template
+        │   │   └── liquibase.prod.properties.template
+        │   └── snapshots/
+        │       └── orderdb-snapshot-20260112.json
+        ├── inventorydb/
+        │   ├── changelog/
+        │   ├── env/
+        │   └── snapshots/
+        └── customerdb/
+            ├── changelog/
+            ├── env/
+            └── snapshots/
 ```
 
 **Directory Structure Key:**
-- `applications/` — Organize by application name (matches microservice/team ownership)
-- `<app_name>/` — Each application may span multiple databases/platforms
-- `<platform>/` — PostgreSQL, MSSQL, Snowflake, MongoDB
-- `<database>/` — Logical database name (e.g., `orders`, `catalog`, `legacy_orders`)
-- `releases/` — Changes grouped by release version for clarity and safe rollback
+- `platform/` — Top-level organization by database platform
+- `<platform>/` — Platform name: `mssql`, `postgres`, `snowflake`, `mongodb`
+- `database/` — Container for all databases on this platform
+- `<database_name>/` — Actual name of the database (e.g., `orderdb`, `inventorydb`)
+- `changelog/` — All changelogs and changesets for this database
+- `env/` — Environment-specific properties files (templates, no secrets)
+- `snapshots/` — Database snapshots for drift detection and auditing
 
-### Cross-Platform Databases
+### Benefits
 
-The `gds-liquibase-shared` repository (owned by GDS) contains databases deployed to all platforms (e.g., `dbadmin`).
+- **DBA-Friendly**: Mirrors how DBAs think about infrastructure (platform → database)
+- **Clear Separation**: Each database has isolated changelog, env, and snapshot folders
+- **Drift Management**: Dedicated snapshots folder supports drift detection workflows
+- **Environment Isolation**: Properties files organized per database, per environment
 
-Use a **layered changelog approach** for platform-specific variations:
+### Repository Strategy
+
+Each database has its own **GitHub repository**, owned by the team responsible for that database:
 
 ```text
-shared/modules/dbadmin/
-├── db.changelog-dbadmin-common.yaml      # All platforms
-├── postgres/
-│   └── db.changelog-dbadmin-postgres.yaml # PostgreSQL only
-├── mssql/
-│   └── db.changelog-dbadmin-mssql.yaml    # SQL Server only
-├── snowflake/
-│   └── db.changelog-dbadmin-snowflake.yaml
-└── mongodb/
-    └── db.changelog-dbadmin-mongodb.yaml
+github.com/org/orderdb-liquibase       # Order database (owned by Orders team)
+github.com/org/inventorydb-liquibase   # Inventory database (owned by Inventory team)
+github.com/org/admin-liquibase         # Admin database (owned by DBA team)
 ```
 
-**Master Changelog** (in each platform folder) includes both layers:
+**Benefits:**
+- **Isolation**: Each database has independent version control and deployment
+- **Ownership**: Team that owns the database owns the repo
+- **Permissions**: Standard GitHub permissions control access per database
+- **Cross-Platform Support**: Single repo manages all platforms where the database exists
 
-```yaml
-# platforms/postgres/databases/dbadmin/db.changelog-master.yaml
-databaseChangeLog:
-  # Layer 1: Common objects (all platforms)
-  - include:
-      file: ../../../../shared/modules/dbadmin/db.changelog-dbadmin-common.yaml
+### Cross-Platform Database Example
 
-  # Layer 2: PostgreSQL-specific objects
-  - include:
-      file: ../../../../shared/modules/dbadmin/postgres/db.changelog-dbadmin-postgres.yaml
+If a database exists on multiple platforms (e.g., `Admin` database on MSSQL, PostgreSQL, Snowflake, and MongoDB), the single repository contains all platforms:
 
-  - tagDatabase:
-      tag: v1.0
+```text
+# admin-liquibase repo
+.
+├── platform/
+│   ├── mssql/
+│   │   └── database/
+│   │       └── Admin/
+│   │           ├── changelog/
+│   │           │   ├── db.changelog-master.yaml
+│   │           │   └── releases/
+│   │           ├── env/
+│   │           │   ├── liquibase.dev.properties.template
+│   │           │   └── liquibase.prod.properties.template
+│   │           └── snapshots/
+│   ├── postgres/
+│   │   └── database/
+│   │       └── Admin/
+│   │           ├── changelog/
+│   │           ├── env/
+│   │           └── snapshots/
+│   ├── snowflake/
+│   │   └── database/
+│   │       └── Admin/
+│   │           ├── changelog/
+│   │           ├── env/
+│   │           └── snapshots/
+│   └── mongodb/
+│       └── database/
+│           └── Admin/
+│               ├── changelog/
+│               ├── env/
+│               └── snapshots/
+└── README.md
 ```
+
+**Cross-Platform Benefits:**
+- **Single Source of Truth**: All platforms for a database managed together
+- **Coordinated Changes**: Easy to apply similar changes across platforms
+- **Platform-Specific Variations**: Each platform has its own changelog for platform-specific SQL
 
 [↑ Back to Table of Contents](#table-of-contents)
 
@@ -484,3 +505,102 @@ See [Operations Guide - Execution Patterns](../../how-to/liquibase/liquibase-ope
 - **[Liquibase Operations Guide](../../how-to/liquibase/liquibase-operations-guide.md)** — Day-to-day tasks: authoring, deploying, troubleshooting
 - **[Liquibase Reference](../../reference/liquibase/liquibase-reference.md)** — Command reference, glossary, limitations, troubleshooting
 - **[Liquibase Secure Implementation Analysis](../liquibase-secure-implementation-analysis.md)** — Evaluating Pro/Secure features
+
+[↑ Back to Table of Contents](#table-of-contents)
+
+## Appendix: Alternative Directory Structures
+
+The following alternative directory structures may be useful in specific scenarios.
+
+### Application-First Organization
+
+An **application-first** structure organizes by application name first, then platform, then database. This approach aligns with microservices and team ownership patterns:
+
+```text
+# Example: team-alpha-liquibase repo
+.
+├── applications/
+│   ├── payments_api/
+│   │   ├── postgres/
+│   │   │   └── orders/
+│   │   │       ├── db.changelog-master.yaml
+│   │   │       ├── baseline/
+│   │   │       │   └── db.changelog-baseline.yaml
+│   │   │       └── releases/
+│   │   │           ├── 1.0/
+│   │   │           ├── 1.1/
+│   │   │           └── 2.0/
+│   │   └── mssql/
+│   │       └── legacy_orders/
+│   │           ├── db.changelog-master.yaml
+│   │           └── releases/...
+│   └── inventory_svc/
+│       ├── postgres/
+│       │   └── catalog/
+│       │       └── db.changelog-master.yaml
+│       └── releases/...
+├── shared/                              # Git submodule: gds-liquibase-shared
+│   └── modules/
+│       └── dbadmin/
+│           ├── db.changelog-dbadmin-common.yaml
+│           ├── postgres/
+│           ├── mssql/
+│           └── snowflake/
+└── properties/
+    ├── liquibase.payments_api.postgres.orders.dbinstance1.dev.properties.template
+    ├── liquibase.payments_api.postgres.orders.dbinstance1.test.properties.template
+    └── ...
+```
+
+**When to use:**
+- Microservices architecture where each team owns their databases
+- Application teams manage their own schema changes
+- Databases are tightly coupled to specific applications
+
+### Shared Changelog Patterns
+
+For cross-platform databases where you want to **share common changelog code** across platforms, use a **layered changelog approach** with a shared directory:
+
+```text
+# admin-liquibase repo with shared changelogs
+.
+├── shared/
+│   └── common/
+│       └── db.changelog-common.yaml      # Changes that work on all platforms
+├── platform/
+│   ├── mssql/
+│   │   └── database/
+│   │       └── Admin/
+│   │           └── changelog/
+│   │               └── db.changelog-master.yaml
+│   ├── postgres/
+│   │   └── database/
+│   │       └── Admin/
+│   │           └── changelog/
+│   │               └── db.changelog-master.yaml
+│   └── ...
+```
+
+**Master Changelog** includes both shared and platform-specific layers:
+
+```yaml
+# platform/postgres/database/Admin/changelog/db.changelog-master.yaml
+databaseChangeLog:
+  # Layer 1: Common objects (all platforms)
+  - include:
+      file: ../../../../shared/common/db.changelog-common.yaml
+
+  # Layer 2: PostgreSQL-specific objects
+  - include:
+      file: releases/1.0/db.changelog-1.0-postgres.yaml
+
+  - tagDatabase:
+      tag: v1.0
+```
+
+**When to use:**
+- Database schema is largely identical across platforms
+- Want to avoid duplicating changelog entries
+- Platform differences are minimal and can be handled with `dbms` attribute
+
+[↑ Back to Table of Contents](#table-of-contents)
