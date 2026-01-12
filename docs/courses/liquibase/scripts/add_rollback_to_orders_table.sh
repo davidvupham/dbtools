@@ -8,6 +8,7 @@ set -euo pipefail
 # Colors
 RED='\033[0;31m'
 GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
 NC='\033[0m'
 
 echo "========================================"
@@ -27,35 +28,56 @@ if [[ ! -f "$CHANGE_FILE" ]]; then
     exit 1
 fi
 
-# Update V0001 change file to include rollback
+# Check if file is readable
+if [[ ! -r "$CHANGE_FILE" ]]; then
+    echo -e "${RED}ERROR: Cannot read file: $CHANGE_FILE${NC}"
+    exit 1
+fi
+
+# Check if file is writable
+if [[ ! -w "$CHANGE_FILE" ]]; then
+    echo -e "${RED}ERROR: Cannot write to file: $CHANGE_FILE${NC}"
+    exit 1
+fi
+
+# Check if rollback already exists (idempotency)
+if grep -q "--rollback DROP TABLE IF EXISTS app.orders" "$CHANGE_FILE"; then
+    echo -e "${YELLOW}Rollback already exists in file${NC}"
+    echo -e "${GREEN}✓ Done${NC}"
+    echo
+    echo "========================================"
+    echo -e "${GREEN}Rollback Already Present${NC}"
+    echo "========================================"
+    echo "File: $CHANGE_FILE"
+    echo
+    exit 0
+fi
+
+# Add rollback to V0001 change file
 echo -n "Adding rollback to V0001 change file... "
-cat > "$CHANGE_FILE" << 'EOF'
---liquibase formatted sql
 
---changeset tutorial:V0001-add-orders-table
--- Purpose: Add orders table to track customer purchases
+# Ensure file ends with newline before appending (handle edge case)
+if [[ -s "$CHANGE_FILE" ]]; then
+    # Read last byte to check if file ends with newline
+    LAST_CHAR=$(tail -c1 "$CHANGE_FILE" 2>/dev/null || echo "")
+    if [[ "$LAST_CHAR" != "" ]] && [[ "$LAST_CHAR" != $'\n' ]]; then
+        # File doesn't end with newline, add one
+        echo "" >> "$CHANGE_FILE"
+    fi
+fi
 
-IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID(N'[app].[orders]') AND type = 'U')
-BEGIN
-    CREATE TABLE app.orders (
-        order_id INT IDENTITY(1,1) CONSTRAINT PK_orders PRIMARY KEY,
-        customer_id INT NOT NULL,
-        order_total DECIMAL(18,2) NOT NULL,
-        order_date DATETIME2(3) NOT NULL CONSTRAINT DF_orders_date DEFAULT (SYSUTCDATETIME()),
-        status NVARCHAR(50) NOT NULL DEFAULT 'pending',
-        CONSTRAINT FK_orders_customer FOREIGN KEY (customer_id)
-            REFERENCES app.customer(customer_id)
-    );
-END
-GO
---rollback DROP TABLE IF EXISTS app.orders;
---rollback GO
-EOF
+# Append rollback section
+{
+    echo "--rollback DROP TABLE IF EXISTS app.orders;"
+    echo "--rollback GO"
+} >> "$CHANGE_FILE"
 
+# Validate that rollback was added
 if grep -q "--rollback DROP TABLE IF EXISTS app.orders" "$CHANGE_FILE"; then
     echo -e "${GREEN}✓ Done${NC}"
 else
     echo -e "${RED}✗ Failed${NC}"
+    echo "Rollback section was not added successfully"
     exit 1
 fi
 
