@@ -11,6 +11,7 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 CYAN='\033[0;36m'
+MAGENTA='\033[0;35m'
 NC='\033[0m'
 
 print_usage() {
@@ -140,14 +141,14 @@ MISSING_ITEMS=$(awk '
 
 if [[ -n "$MISSING_ITEMS" ]]; then
     DRIFT_FOUND=true
-    echo -e "${YELLOW}▼ MISSING (in snapshot, not in database):${NC}"
+    echo -e "${RED}▼ MISSING (in snapshot, not in database):${NC}"
     # Get just the indented items
     awk '
         /^Missing [^:]+: *$/ { category=gensub(/Missing ([^:]+):.*/, "\\1", "g"); in_section=1; next }
         in_section && /^     / { print "  [" category "] " gensub(/^     /, "", "g"); next }
         /^[^ ]/ { in_section=0 }
     ' "$TEMP_OUTPUT" | while IFS= read -r line; do
-        echo -e "${YELLOW}$line${NC}"
+        echo -e "${RED}$line${NC}"
     done
     echo
 fi
@@ -160,13 +161,13 @@ UNEXPECTED_ITEMS=$(awk '
 
 if [[ -n "$UNEXPECTED_ITEMS" ]]; then
     DRIFT_FOUND=true
-    echo -e "${RED}▲ UNEXPECTED (in database, not in snapshot):${NC}"
+    echo -e "${MAGENTA}▲ UNEXPECTED (in database, not in snapshot):${NC}"
     awk '
         /^Unexpected [^:]+: *$/ { category=gensub(/Unexpected ([^:]+):.*/, "\\1", "g"); in_section=1; next }
         in_section && /^     / { print "  [" category "] " gensub(/^     /, "", "g"); next }
         /^[^ ]/ { in_section=0 }
     ' "$TEMP_OUTPUT" | while IFS= read -r line; do
-        echo -e "${RED}$line${NC}"
+        echo -e "${MAGENTA}$line${NC}"
     done
     echo
 fi
@@ -196,8 +197,8 @@ if [[ "$DRIFT_FOUND" == "true" ]]; then
     echo "========================================"
     echo
     echo "Legend:"
-    echo -e "  ${RED}▲ Unexpected${NC} = added to database (not in snapshot)"
-    echo -e "  ${YELLOW}▼ Missing${NC}    = removed from database (was in snapshot)"
+    echo -e "  ${RED}▼ Missing${NC}    = removed from database (could break app)"
+    echo -e "  ${MAGENTA}▲ Unexpected${NC} = added without authorization"
     echo -e "  ${YELLOW}● Changed${NC}    = modified since snapshot"
 else
     echo -e "${GREEN}✓  NO DRIFT - database matches snapshot${NC}"

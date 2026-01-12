@@ -505,9 +505,19 @@ Each snapshot is timestamped (e.g., `dev_update_20260112_053000.json`) and repre
 
 ### Simulate Drift
 
-Create an untracked change directly in the database. This simulates someone making a schema change outside of Liquibase (e.g., a DBA adding a column manually):
+There are three types of drift that can occur when changes are made outside of Liquibase:
 
-**Untracked change:** Adding a `loyalty_points` column to the `app.customer` table.
+| Type | Description | Example |
+|------|-------------|---------|
+| **Unexpected** | New object added to database | Column added manually by DBA |
+| **Changed** | Existing object modified | Column data type or size changed |
+| **Missing** | Object removed from database | Column or index dropped |
+
+Let's simulate each type to see how `detect_drift.sh` reports them.
+
+#### Type 1: Unexpected (New Column)
+
+Add a column directly to the database without using Liquibase:
 
 ```bash
 sqlcmd-tutorial -e dev -Q "
@@ -521,25 +531,71 @@ IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('app.custom
 $LIQUIBASE_TUTORIAL_DIR/validation/scripts/query_table_columns.sh -e dev -h loyalty_points app.customer
 ```
 
-The output shows all columns in `app.customer` with the new `loyalty_points` column highlighted.
+#### Type 2: Changed (Modified Column)
+
+Modify an existing column's properties:
+
+```bash
+sqlcmd-tutorial -e dev -Q "
+USE orderdb;
+-- Someone changes a column's size without using Liquibase
+-- Increase first_name column from NVARCHAR(100) to NVARCHAR(150)
+ALTER TABLE app.customer ALTER COLUMN first_name NVARCHAR(150);
+"
+
+# Verify the column was changed
+$LIQUIBASE_TUTORIAL_DIR/validation/scripts/query_table_columns.sh -e dev -h first_name app.customer
+```
+
+#### Type 3: Missing (Dropped Index)
+
+Remove an object that exists in the snapshot:
+
+```bash
+sqlcmd-tutorial -e dev -Q "
+USE orderdb;
+-- Someone drops an index without using Liquibase
+IF EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_orders_order_date' AND object_id = OBJECT_ID('app.orders'))
+    DROP INDEX IX_orders_order_date ON app.orders;
+"
+```
+
+> **Note:** We're dropping an index here rather than a column to avoid breaking the application. In production, missing columns or tables are critical issues.
 
 ### Detect Drift with diff
 
-Compare the current database against the known-good snapshot:
+Now detect all three types of drift at once:
 
 ```bash
 # Detect drift against the latest snapshot
 $LIQUIBASE_TUTORIAL_DIR/scripts/detect_drift.sh -e dev
 ```
 
-**Expected output will show:**
+**Expected output will show all three drift types (each in a distinct color):**
 
 ```text
-Unexpected Column(s):
-  app.customer.loyalty_points
+========================================
+Drift Summary
+========================================
+
+▼ MISSING (in snapshot, not in database):        ← RED
+  [Index(s)] IX_orders_order_date
+
+▲ UNEXPECTED (in database, not in snapshot):     ← MAGENTA
+  [Column(s)] app.customer.loyalty_points
+
+● CHANGED (modified since snapshot):             ← YELLOW
+  [Column(s)] app.customer.first_name
+
+========================================
+⚠  DRIFT DETECTED
+========================================
 ```
 
-> **Note:** "Unexpected" means the column exists in the database but is NOT in the snapshot (reference) - this is drift. "Missing" would mean the opposite (in snapshot but not in database).
+**Interpretation (each type has a distinct color):**
+- **▼ Missing** (red) = removed from database, could break application
+- **▲ Unexpected** (magenta) = added without authorization
+- **● Changed** (yellow) = modified since snapshot
 
 ### Generate a Changelog from Drift
 
@@ -557,7 +613,46 @@ $LIQUIBASE_TUTORIAL_DIR/scripts/generate_drift_changelog.sh -e dev \
 3. Include it in your master `changelog.xml` if you want to keep the drift
 4. Deploy the changeset to track the drift in your version control
 
-**Note:** In this tutorial, we'll remove the drift column to restore the original state, so we won't include this generated file. In a real scenario, you would review and decide whether to keep or revert the drift.
+**Note:** In this tutorial, we'll revert the drift to restore the original state, so we won't include this generated file. In a real scenario, you would review and decide whether to keep or revert the drift.
+
+### Revert the Simulated Drift
+
+Before continuing, let's clean up the drift we created:
+
+```bash
+sqlcmd-tutorial -e dev -Q "
+USE orderdb;
+
+-- Revert Type 1: Remove the unexpected column
+IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('app.customer') AND name = 'loyalty_points')
+    ALTER TABLE app.customer DROP COLUMN loyalty_points;
+
+-- Revert Type 2: Restore the original column size
+ALTER TABLE app.customer ALTER COLUMN first_name NVARCHAR(100);
+
+-- Revert Type 3: Recreate the missing index
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_orders_order_date' AND object_id = OBJECT_ID('app.orders'))
+    CREATE INDEX IX_orders_order_date ON app.orders(order_date DESC);
+"
+```
+
+Verify the drift has been resolved:
+
+```bash
+$LIQUIBASE_TUTORIAL_DIR/scripts/detect_drift.sh -e dev
+```
+
+**Expected output:**
+
+```text
+========================================
+Drift Summary
+========================================
+
+========================================
+✓  NO DRIFT - database matches snapshot
+========================================
+```
 
 ### Best Practice: Snapshot-Based Drift Detection in CI/CD
 

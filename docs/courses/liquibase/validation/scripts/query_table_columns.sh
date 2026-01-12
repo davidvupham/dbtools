@@ -96,12 +96,17 @@ fi
 echo
 
 # Query table columns
+# Note: For NVARCHAR/NCHAR, max_length is in bytes (2 bytes per char), so divide by 2
 QUERY="USE orderdb;
 SELECT
     c.name AS COLUMN_NAME,
     t.name AS DATA_TYPE,
     CASE WHEN c.is_nullable = 1 THEN 'YES' ELSE 'NO' END AS NULLABLE,
-    ISNULL(CAST(c.max_length AS VARCHAR), '') AS MAX_LENGTH,
+    CASE
+        WHEN t.name IN ('nvarchar', 'nchar') AND c.max_length > 0 THEN CAST(c.max_length / 2 AS VARCHAR)
+        WHEN c.max_length = -1 THEN 'MAX'
+        ELSE ISNULL(CAST(c.max_length AS VARCHAR), '')
+    END AS MAX_LENGTH,
     ISNULL(d.definition, '') AS DEFAULT_VALUE
 FROM sys.columns c
 JOIN sys.types t ON c.user_type_id = t.user_type_id
