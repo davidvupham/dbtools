@@ -6,7 +6,7 @@
 > **Last Updated:** January 12, 2026
 > **Maintainers:** Global Data Services Team
 > **Status:** Production - Actively Maintained
-> **Related Docs:** [Architecture](../../architecture/liquibase/liquibase-architecture.md) | [Operations](../../../how-to/liquibase/liquibase-operations-guide.md) | [Reference](../../../reference/liquibase/liquibase-reference.md) | [Formatted SQL](../../../reference/liquibase/formatted-sql-guide.md)
+> **Related Docs:** [Architecture](../../architecture/liquibase/liquibase-architecture.md) | [Operations](../../../how-to/liquibase/liquibase-operations-guide.md) | [Reference](../../../reference/liquibase/liquibase-reference.md) | [Formatted SQL](../../../reference/liquibase/liquibase-formatted-sql-guide.md)
 
 ![Liquibase Version](https://img.shields.io/badge/Liquibase-5.0%2B-blue)
 ![Document Status](https://img.shields.io/badge/Status-Production-green)
@@ -212,7 +212,7 @@ Write database-specific SQL directly using either embedded SQL in YAML or "Forma
 
 Use standard SQL with Liquibase-specific comments to define changesets. This gives you full control over SQL while maintaining tracking.
 
-**[👉 Read the full Formatted SQL Guide](../../../reference/liquibase/formatted-sql-guide.md)** for detailed syntax on rollbacks, preconditions, and attributes.
+**[👉 Read the full Formatted SQL Guide](../../../reference/liquibase/liquibase-formatted-sql-guide.md)** for detailed syntax on rollbacks, preconditions, and attributes.
 
 ```sql
 --liquibase formatted sql

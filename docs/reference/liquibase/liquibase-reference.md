@@ -544,3 +544,4 @@ liquibase releaseLocks
 - **[Liquibase Architecture Guide](../../explanation/architecture/liquibase/liquibase-architecture.md)**
 - **[Liquibase Operations Guide](../../how-to/liquibase/liquibase-operations-guide.md)**
 - **[Liquibase Reference](liquibase-reference.md)**
+- **[Liquibase Formatted SQL Guide](liquibase-formatted-sql-guide.md)**

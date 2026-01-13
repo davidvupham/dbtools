@@ -11,7 +11,7 @@
 ![Document Status](https://img.shields.io/badge/Status-Production-green)
 
 > [!IMPORTANT]
-> **Related Docs:** [Concepts](../../concepts/liquibase/liquibase-concepts.md) | [Operations](../../../how-to/liquibase/liquibase-operations-guide.md) | [Reference](../../../reference/liquibase/liquibase-reference.md) | [Formatted SQL](../../../reference/liquibase/formatted-sql-guide.md)
+> **Related Docs:** [Concepts](../../concepts/liquibase/liquibase-concepts.md) | [Operations](../../../how-to/liquibase/liquibase-operations-guide.md) | [Reference](../../../reference/liquibase/liquibase-reference.md) | [Formatted SQL](../../../reference/liquibase/liquibase-formatted-sql-guide.md)
 
 ## Table of Contents
 
