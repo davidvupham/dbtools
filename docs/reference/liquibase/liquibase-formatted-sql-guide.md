@@ -1,15 +1,17 @@
 # Liquibase Formatted SQL Guide
 
-**🔗 [← Back to Liquibase Concepts](../../explanation/concepts/liquibase/liquibase-concepts.md)**
+**🔗 [← Back to Liquibase Documentation Index](../../explanation/liquibase/README.md)** — Navigation guide for all Liquibase docs
 
 > **Document Version:** 1.0
 > **Last Updated:** January 12, 2026
 > **Maintainers:** Global Data Services Team
 > **Status:** Production
-> **Related Docs:** [Concepts](../../explanation/concepts/liquibase/liquibase-concepts.md) | [Architecture](../../explanation/architecture/liquibase/liquibase-architecture.md) | [Operations](../../how-to/liquibase/liquibase-operations-guide.md) | [Reference](liquibase-reference.md)
 
 ![Liquibase Version](https://img.shields.io/badge/Liquibase-5.0%2B-blue)
 ![Document Status](https://img.shields.io/badge/Status-Production-green)
+
+> [!IMPORTANT]
+> **Related Docs:** [Concepts](../../explanation/concepts/liquibase/liquibase-concepts.md) | [Architecture](../../explanation/architecture/liquibase/liquibase-architecture.md) | [Operations](../../how-to/liquibase/liquibase-operations-guide.md) | [Reference](liquibase-reference.md)
 
 Liquibase **Formatted SQL** allows you to write database changelogs using standard SQL, augmented with special comments that provide Liquibase metadata (author, id, preconditions, etc.).
 
@@ -27,13 +29,15 @@ This is the **primary standard** for all database changesets at Global Data Serv
 - [Includes & Modularity](#includes--modularity)
 - [Best Practices](#best-practices)
 
-
+- [Related Documentation](#related-documentation)
 ## Header
 Every Formatted SQL file **MUST** start with this header line:
 
 ```sql
 --liquibase formatted sql
 ```
+
+[↑ Back to Table of Contents](#table-of-contents)
 
 ## Basic Changeset
 A changeset is defined by a comment starting with `--changeset`. It must include an `author` and an `id`.
@@ -53,9 +57,13 @@ ALTER TABLE customer ADD email VARCHAR(255);
 
 **Syntax:** `--changeset author:id [attributes]`
 
+> [!TIP]
 > **Standard ID Format:** Use `author:id` where ID is descriptive (e.g., `team-a:20260112-add-user`) or matches the filename timestamp.
 
-## attributes
+
+[↑ Back to Table of Contents](#table-of-contents)
+
+## Attributes
 You can add optional attributes to the changeset line to control execution behavior.
 
 | Attribute | Description | Example |
@@ -74,6 +82,8 @@ You can add optional attributes to the changeset line to control execution behav
 --changeset alice:create-view runOnChange:true context:dev
 CREATE OR REPLACE VIEW customer_view AS SELECT * FROM customer;
 ```
+
+[↑ Back to Table of Contents](#table-of-contents)
 
 ## Variable Substitution
 You can use Liquibase properties in your SQL using the `${property}` syntax.
@@ -120,6 +130,8 @@ DROP TABLE old_legacy_table;
 --rollback empty
 ```
 
+[↑ Back to Table of Contents](#table-of-contents)
+
 ## Preconditions
 Preconditions allow you to control whether a changeset runs based on the database state.
 
@@ -131,6 +143,8 @@ Preconditions allow you to control whether a changeset runs based on the databas
 --precondition-sql-check expectedResult:0 SELECT COUNT(*) FROM information_schema.columns WHERE table_name = 'customer' AND column_name = 'phone';
 ALTER TABLE customer ADD phone VARCHAR(20);
 ```
+
+[↑ Back to Table of Contents](#table-of-contents)
 
 ## Stored Procedures & Logic
 
@@ -165,8 +179,11 @@ CREATE PROCEDURE foo AS ... END;
 /
 ```
 
+[↑ Back to Table of Contents](#table-of-contents)
+
 ## Includes & Modularity
 
+> [!IMPORTANT]
 > **Note:** The ability to use `include` or `includeAll` **inside** a formatted SQL file is a **Liquibase Secure** feature. Community users must use the XML master changelog pattern.
 
 **Community Edition:**
@@ -186,6 +203,8 @@ You can reference other SQL files directly:
 --include file:other-file.sql
 ```
 
+[↑ Back to Table of Contents](#table-of-contents)
+
 ## Best Practices
 1.  **File Naming**: Strictly follow `V<Timestamp>__<Jira>_<Description>.<db>.sql`.
 2.  **Atomic Changesets**: Keep changesets granular. One logical change per file.
@@ -193,3 +212,16 @@ You can reference other SQL files directly:
 4.  **Use Unique IDs**: Combine `author` and unique identifier (e.g., `team:20260112-add-table`).
 5.  **Formatting**: Keep the `--changeset` line clean and readable.
 6.  **Idempotency**: Use SQL guards (`IF NOT EXISTS`) instead of complex XML preconditions.
+
+[↑ Back to Table of Contents](#table-of-contents)
+
+## Related Documentation
+
+**Start here:** [Liquibase Documentation Index](../../explanation/liquibase/README.md)
+
+- **[Liquibase Concepts Guide](../../explanation/concepts/liquibase/liquibase-concepts.md)** — Foundational understanding (read first if new to Liquibase)
+- **[Liquibase Operations Guide](../../how-to/liquibase/liquibase-operations-guide.md)** — Day-to-day tasks: authoring, deploying, troubleshooting
+- **[Liquibase Reference](liquibase-reference.md)** — Command reference, glossary, limitations, troubleshooting
+- **[Liquibase Architecture Guide](../../explanation/architecture/liquibase/liquibase-architecture.md)** — Naming conventions and directory structure
+
+[↑ Back to Table of Contents](#table-of-contents)
