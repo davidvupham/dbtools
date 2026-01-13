@@ -291,7 +291,7 @@ done
 
 ### Drift Detection and Remediation
 
-> **📖 Concept:** For background on what drift is and why it matters, see [Understanding Database Drift](../../explanation/liquibase/drift-management.md).
+> **📖 Concept:** For background on what drift is and why it matters, see [Understanding Database Drift](../../explanation/liquibase/liquibase-drift-management.md).
 
 Drift occurs when database changes are made outside of Liquibase. Detecting and handling drift is critical for maintaining environment consistency.
 

@@ -85,7 +85,7 @@ Liquibase Secure (formerly Pro/Enterprise) adds governance, observability, and a
 
 ## Drift Detection Reference
 
-> **📖 Concept:** For background on what drift is and why it matters, see [Understanding Database Drift](../../explanation/liquibase/drift-management.md).
+> **📖 Concept:** For background on what drift is and why it matters, see [Understanding Database Drift](../../explanation/liquibase/liquibase-drift-management.md).
 > **📋 How-to:** For step-by-step procedures, see [Operations Guide - Drift Detection](../../how-to/liquibase/liquibase-operations-guide.md#drift-detection-and-remediation).
 
 ### Drift Detection Commands

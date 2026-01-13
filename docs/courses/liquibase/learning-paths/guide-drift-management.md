@@ -4,7 +4,7 @@
 
 > **📚 Main Documentation:** This guide provides tutorial-specific examples using the course helper scripts. For comprehensive documentation using standard Liquibase commands:
 >
-> - **[Understanding Database Drift](../../../explanation/liquibase/drift-management.md)** - Concepts: What drift is and why it matters
+> - **[Understanding Database Drift](../../../explanation/liquibase/liquibase-drift-management.md)** - Concepts: What drift is and why it matters
 > - **[Operations Guide - Drift Detection](../../../how-to/liquibase/liquibase-operations-guide.md#drift-detection-and-remediation)** - How-to: Step-by-step procedures
 > - **[Reference - Drift Detection](../../../reference/liquibase/liquibase-reference.md#drift-detection-reference)** - Reference: Commands and supported objects
 
@@ -212,7 +212,7 @@ liquibase \
 
 | Type | Document | Description |
 |------|----------|-------------|
-| **Explanation** | [Understanding Database Drift](../../../explanation/liquibase/drift-management.md) | What drift is, why it matters, conceptual strategies |
+| **Explanation** | [Understanding Database Drift](../../../explanation/liquibase/liquibase-drift-management.md) | What drift is, why it matters, conceptual strategies |
 | **How-to** | [Operations Guide - Drift Detection](../../../how-to/liquibase/liquibase-operations-guide.md#drift-detection-and-remediation) | Step-by-step procedures with direct commands |
 | **Reference** | [Drift Detection Reference](../../../reference/liquibase/liquibase-reference.md#drift-detection-reference) | Commands, supported objects by platform, diffTypes |
 
