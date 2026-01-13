@@ -27,7 +27,7 @@ All step-numbered scripts have been renamed to descriptive names:
 
 ### 2. Tutorial Refactoring
 
-**`guide-end-to-end-pipeline.md`:**
+**`tutorial-supplement-end-to-end-pipeline.md`:**
 - Refactored to reference series parts instead of duplicating content
 - Now acts as a "navigation guide" pointing to specific sections
 - Reduced from ~818 lines to ~300 lines (significant reduction)
@@ -80,7 +80,7 @@ docs/courses/liquibase/
 │   ├── generate_liquibase_baseline.sh      # RENAMED from step05
 │   └── deploy_liquibase_baseline.sh        # RENAMED from step06
 ├── learning-paths/
-│   ├── guide-end-to-end-pipeline.md        # REFACTORED: Now references series parts
+│   ├── tutorial-supplement-end-to-end-pipeline.md        # REFACTORED: Now references series parts
 │   ├── series-part1-baseline.md            # UPDATED: Script references
 │   ├── series-part2-manual.md             # (No changes needed)
 │   └── series-part3-cicd.md               # (No changes needed)

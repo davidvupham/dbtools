@@ -1,4 +1,4 @@
-# Tutorial Comparison: Part 3 vs End-to-End Guide
+# Tutorial Comparison: Part 3 vs End-to-End Tutorial Supplement
 
 ## Overview
 
@@ -16,7 +16,7 @@ Both tutorials cover GitHub Actions CI/CD with Liquibase, but they serve differe
 - **Assumes:** You've completed Part 1 and Part 2 first
 - **Focus:** Adding CI/CD to an existing local Liquibase project
 
-#### `guide-end-to-end-pipeline.md` (Standalone End-to-End)
+#### `tutorial-supplement-end-to-end-pipeline.md` (Standalone End-to-End)
 - **Purpose:** Single comprehensive guide from scratch to CI/CD
 - **Audience:** Developers/DBAs who want one complete tutorial
 - **Assumes:** Basic Git/GitHub knowledge, but new to Liquibase/CI/CD
@@ -31,12 +31,12 @@ Both tutorials cover GitHub Actions CI/CD with Liquibase, but they serve differe
 - **Skips:** Local environment setup (covered in Part 1)
 - **Covers:**
   - Git repository creation
-  - Self-hosted runner setup (references `guide-runner-setup.md`)
+  - Self-hosted runner setup (references `tutorial-supplement-runner-setup.md`)
   - GitHub Actions workflows
   - Multi-environment pipeline
   - Branch-based workflow (multi-user tutorial setup)
 
-#### `guide-end-to-end-pipeline.md`
+#### `tutorial-supplement-end-to-end-pipeline.md`
 - **Starts at:** Step 1 (complete local setup)
 - **Covers everything:**
   - Phase 1: Local environment setup (Steps 1-5)
@@ -68,7 +68,7 @@ Both tutorials cover GitHub Actions CI/CD with Liquibase, but they serve differe
 - SQL Server containers running
 - Baseline changelog generated
 
-#### `guide-end-to-end-pipeline.md`
+#### `tutorial-supplement-end-to-end-pipeline.md`
 **Requires:**
 - ✅ Docker installed
 - ✅ Git installed
@@ -100,7 +100,7 @@ Prerequisites (assumes Part 1 & 2 done)
 └── Phase 5: Best practices
 ```
 
-#### `guide-end-to-end-pipeline.md`
+#### `tutorial-supplement-end-to-end-pipeline.md`
 ```
 Prerequisites (minimal - just tools)
 ├── Phase 1: Local Setup (Steps 1-5)
@@ -128,7 +128,7 @@ Prerequisites (minimal - just tools)
   - Each learner has personal branch
 - **Use case:** Classroom/workshop with multiple learners
 
-#### `guide-end-to-end-pipeline.md`
+#### `tutorial-supplement-end-to-end-pipeline.md`
 - **Focus:** Single-user workflow
 - **Workflow:** Main branch → CI/CD pipeline
 - **Use case:** Individual developer learning
@@ -139,11 +139,11 @@ Prerequisites (minimal - just tools)
 
 #### `series-part3-cicd.md`
 - **Step 10:** Provides checklist and basic setup
-- **References:** `guide-runner-setup.md` for detailed instructions
+- **References:** `tutorial-supplement-runner-setup.md` for detailed instructions
 - **Approach:** "Quick setup" with link to comprehensive guide
 - **Verification:** Checklist before proceeding
 
-#### `guide-end-to-end-pipeline.md`
+#### `tutorial-supplement-end-to-end-pipeline.md`
 - **Step 9a:** Inline runner setup instructions
 - **Self-contained:** All setup steps included
 - **Approach:** Complete instructions in one place
@@ -159,7 +159,7 @@ Prerequisites (minimal - just tools)
 - **Network:** `liquibase_tutorial`
 - **JDBC URLs:** `localhost:PORT` (from runner perspective)
 
-#### `guide-end-to-end-pipeline.md`
+#### `tutorial-supplement-end-to-end-pipeline.md`
 - **Uses:** Single container (`mssql_liquibase_tutorial`)
 - **Port:** 14333 (host), 1433 (container)
 - **Network:** `liquibase_tutorial`
@@ -180,7 +180,7 @@ on:
       - 'database/**'
 ```
 
-#### `guide-end-to-end-pipeline.md`
+#### `tutorial-supplement-end-to-end-pipeline.md`
 ```yaml
 on:
   push:
@@ -202,7 +202,7 @@ on:
 - ✅ You want branch-based workflows
 - ✅ You prefer modular learning (one concept per part)
 
-### Use `guide-end-to-end-pipeline.md` when:
+### Use `tutorial-supplement-end-to-end-pipeline.md` when:
 - ✅ You want a single comprehensive tutorial
 - ✅ You're starting from scratch
 - ✅ You prefer self-contained documentation
@@ -214,7 +214,7 @@ on:
 
 ## Relationship to Other Guides
 
-### `guide-runner-setup.md`
+### `tutorial-supplement-runner-setup.md`
 - **Purpose:** Detailed self-hosted runner setup guide
 - **Referenced by:** Both tutorials
 - **Content:** Comprehensive runner configuration, troubleshooting, advanced topics
@@ -223,13 +223,13 @@ on:
 ### `series-part1-baseline.md` & `series-part2-manual.md`
 - **Purpose:** Foundation tutorials (local setup, manual workflows)
 - **Required for:** `series-part3-cicd.md`
-- **Optional for:** `guide-end-to-end-pipeline.md` (includes similar content inline)
+- **Optional for:** `tutorial-supplement-end-to-end-pipeline.md` (includes similar content inline)
 
 ---
 
 ## Summary Table
 
-| Aspect | `series-part3-cicd.md` | `guide-end-to-end-pipeline.md` |
+| Aspect | `series-part3-cicd.md` | `tutorial-supplement-end-to-end-pipeline.md` |
 |--------|------------------------|-------------------------------|
 | **Type** | Part 3 of series | Standalone comprehensive guide |
 | **Prerequisites** | Part 1 & 2 completed | Minimal (just tools) |
@@ -246,14 +246,14 @@ on:
 ## Recommendation
 
 **For new learners:**
-- Start with `guide-end-to-end-pipeline.md` if you want everything in one place
+- Start with `tutorial-supplement-end-to-end-pipeline.md` if you want everything in one place
 - Or follow the series: Part 1 → Part 2 → Part 3 for structured learning
 
 **For classroom/workshop:**
 - Use `series-part3-cicd.md` for its multi-user branch-based approach
 
 **For detailed runner setup:**
-- Both reference `guide-runner-setup.md` for comprehensive runner configuration
+- Both reference `tutorial-supplement-runner-setup.md` for comprehensive runner configuration
 
 ---
 

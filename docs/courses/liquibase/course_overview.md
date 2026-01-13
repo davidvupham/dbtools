@@ -39,8 +39,8 @@ By completing this course, you will be able to:
 
 ## Supplemental Guides
 
-- [Self-Hosted Runner Setup](./learning-paths/guide-runner-setup.md) - Detailed runner configuration
-- [End-to-End Pipeline](./learning-paths/guide-end-to-end-pipeline.md) - Complete local-to-CI workflow
+- [Self-Hosted Runner Setup](./learning-paths/tutorial-supplement-runner-setup.md) - Detailed runner configuration
+- [End-to-End Pipeline](./learning-paths/tutorial-supplement-end-to-end-pipeline.md) - Complete local-to-CI workflow
 
 ## Quick Start
 

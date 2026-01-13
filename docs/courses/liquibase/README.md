@@ -34,9 +34,9 @@ docs/courses/liquibase/
 ├── learning-paths/            <-- All Tutorial Content
 │   ├── series-part1-baseline.md    (Manual: Setup & Baseline)
 │   ├── series-part2-manual.md      (Manual: Deployment Lifecycle)
-│   ├── guide-runner-setup.md       (Infra: Self-Hosted Runner)
+│   ├── tutorial-supplement-runner-setup.md       (Infra: Self-Hosted Runner)
 │   ├── series-part3-cicd.md        (Automation: GitHub Actions)
-│   └── guide-end-to-end-pipeline.md (Advanced: The "All-in-One" Path)
+│   └── tutorial-supplement-end-to-end-pipeline.md (Advanced: The "All-in-One" Path)
 ├── docker/                    <-- Docker Compose for tutorial
 ├── scripts/                   <-- Reusable modular scripts (see scripts/README.md)
 └── runner_config/             <-- Runner environment configs
@@ -63,7 +63,7 @@ Choose the path that fits your experience level.
 2. **[Part 2: Manual Lifecycle](./learning-paths/series-part2-manual.md)**
     - *Goal*: Practice the daily developer workflow (create migration -> deploy -> rollback) locally.
 
-3. **[Infra Guide: Runner Setup](./learning-paths/guide-runner-setup.md)**
+3. **[Infra Guide: Runner Setup](./learning-paths/tutorial-supplement-runner-setup.md)**
     - *Goal*: Set up a free local GitHub Actions runner to test pipelines without cloud costs.
 
 4. **[Part 3: CI/CD Automation](./learning-paths/series-part3-cicd.md)**
@@ -75,7 +75,7 @@ Choose the path that fits your experience level.
 
 *Best for: Experienced DevOps engineers who just want the code.*
 
-- **[End-to-End Pipeline Guide](./learning-paths/guide-end-to-end-pipeline.md)**
+- **[End-to-End Pipeline Guide](./learning-paths/tutorial-supplement-end-to-end-pipeline.md)**
   - The entire process (Local -> CI/CD) in one guide. Acts as a navigation map referencing the series parts. Good for searching or "ctrl+f", less good for step-by-step learning.
 
 ---
@@ -108,7 +108,7 @@ Choose the path that fits your experience level.
 ## 🆘 Troubleshooting & Help
 
 - **Liquibase Issues**: Check `learning-paths/series-part1-baseline.md` troubleshooting section.
-- **Runner Issues**: Check `learning-paths/guide-runner-setup.md`.
+- **Runner Issues**: Check `learning-paths/tutorial-supplement-runner-setup.md`.
 - **Community**:
   - [Liquibase Forum](https://forum.liquibase.org/)
   - [GitHub Community](https://github.com/orgs/community/discussions)

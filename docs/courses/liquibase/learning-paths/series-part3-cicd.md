@@ -200,7 +200,7 @@ For this combined tutorial we will:
 >
 > **Execution timing:** Complete the actions below now (before pushing any workflow files in Steps 12–13). The runner must be online and your secrets defined or initial workflow runs will queue indefinitely. If you are only reading ahead, you may delay the runner start until just before adding `.github/workflows`, but do not push workflow YAML until the runner shows as "Online" in GitHub.
 >
-> **Detailed guide:** For comprehensive setup instructions including Docker/WSL installation, see [Self-Hosted GitHub Actions Runners Guide](./guide-runner-setup.md).
+> **Detailed guide:** For comprehensive setup instructions including Docker/WSL installation, see [Self-Hosted GitHub Actions Runners Tutorial Supplement](./tutorial-supplement-runner-setup.md).
 
 - [ ] **Create a personal access token (PAT)** (once per machine) with at least `repo` scope, following GitHub's "self-hosted runner" instructions.
 - [ ] **Create a registration token** for the runner from your repo’s **Settings → Actions → Runners → New self-hosted runner** page. (This short‑lived token is different from the PAT and is used only during runner registration.)
@@ -252,7 +252,7 @@ Key points:
 
 #### Quick Setup Alternative
 
-If you prefer to set up the runner now without all the detail, follow the comprehensive guide: **[Self-Hosted GitHub Actions Runners Guide](./guide-runner-setup.md)**
+If you prefer to set up the runner now without all the detail, follow the comprehensive guide: **[Self-Hosted GitHub Actions Runners Tutorial Supplement](./tutorial-supplement-runner-setup.md)**
 
 That guide covers Docker/WSL installation, SQL Server setup, runner configuration, network connectivity, and troubleshooting.
 
