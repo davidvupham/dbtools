@@ -1,15 +1,17 @@
 # Liquibase Concepts Guide
 
-**🔗 [← Back to Liquibase Documentation Index](./README.md)** — Start here if you're new to Liquibase
+**🔗 [← Back to Liquibase Documentation Index](./README.md)** — Navigation guide for all Liquibase docs
 
 > **Document Version:** 1.0
 > **Last Updated:** January 12, 2026
 > **Maintainers:** Global Data Services Team
 > **Status:** Production - Actively Maintained
-> **Related Docs:** [Architecture](./liquibase-architecture.md) | [Operations](../../how-to/liquibase/liquibase-operations-guide.md) | [Reference](../../reference/liquibase/liquibase-reference.md) | [Formatted SQL](../../reference/liquibase/liquibase-formatted-sql-guide.md)
 
 ![Liquibase Version](https://img.shields.io/badge/Liquibase-5.0%2B-blue)
 ![Document Status](https://img.shields.io/badge/Status-Production-green)
+
+> [!IMPORTANT]
+> **Related Docs:** [Architecture](./liquibase-architecture.md) | [Operations](../../how-to/liquibase/liquibase-operations-guide.md) | [Reference](../../reference/liquibase/liquibase-reference.md) | [Formatted SQL](../../reference/liquibase/liquibase-formatted-sql-guide.md)
 
 ## Table of Contents
 

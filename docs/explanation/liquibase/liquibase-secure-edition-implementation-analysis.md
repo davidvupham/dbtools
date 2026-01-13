@@ -3,9 +3,15 @@
 **🔗 [← Back to Liquibase Documentation Index](./README.md)** — Navigation guide for all Liquibase docs
 
 > **Document Version:** 1.0
-> **Last Updated:** January 6, 2026
+> **Last Updated:** January 12, 2026
+> **Maintainers:** Global Data Services Team
 > **Status:** Strategic Planning Document
 > **Audience:** Tech leads, architects, budget decision-makers
+
+![Liquibase Version](https://img.shields.io/badge/Liquibase-5.0%2B-blue)
+![Document Status](https://img.shields.io/badge/Status-Strategic_Planning-blue)
+
+> [!IMPORTANT]
 > **Related Docs:** [Concepts](./liquibase-concepts.md) | [Architecture](./liquibase-architecture.md)
 
 This document analyzes the features of **Liquibase Secure** (formerly Liquibase Pro/Enterprise) and assesses what would be required to implement equivalent functionality using the **Community Edition**. Use this to make informed decisions about licensing vs. custom implementation.
@@ -13,7 +19,20 @@ This document analyzes the features of **Liquibase Secure** (formerly Liquibase 
 > [!IMPORTANT]
 > Some Liquibase Secure features are deeply integrated into the core product and would require significant engineering effort to replicate. In many cases, the cost of custom implementation exceeds the cost of licensing.
 
----
+## Table of Contents
+
+- [Feature Comparison Matrix](#feature-comparison-matrix)
+- [Detailed Feature Analysis](#detailed-feature-analysis)
+  - [1. Policy Checks (Quality Checks)](#1-policy-checks-quality-checks)
+  - [2. Secrets Management](#2-secrets-management)
+  - [3. Drift Detection with Automated Reporting](#3-drift-detection-with-automated-reporting)
+  - [4. Stored Logic Management](#4-stored-logic-management)
+  - [5. Targeted Rollback](#5-targeted-rollback)
+  - [6. Flowfiles (Workflow Orchestration)](#6-flowfiles-workflow-orchestration)
+  - [7. Structured Logging (JSON Format)](#7-structured-logging-json-format)
+  - [8. RBAC and SSO Integration](#8-rbac-and-sso-integration)
+  - [9. Audit Trails and Compliance Reporting](#9-audit-trails-and-compliance-reporting)
+- [Legend](#legend)
 
 ## Feature Comparison Matrix
 

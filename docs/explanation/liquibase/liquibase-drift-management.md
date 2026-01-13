@@ -4,7 +4,13 @@
 
 > **Document Version:** 1.0
 > **Last Updated:** January 12, 2026
-> **Status:** Production
+> **Maintainers:** Global Data Services Team
+> **Status:** Production - Actively Maintained
+
+![Liquibase Version](https://img.shields.io/badge/Liquibase-5.0%2B-blue)
+![Document Status](https://img.shields.io/badge/Status-Production-green)
+
+> [!IMPORTANT]
 > **Related Docs:** [Operations Guide](../../how-to/liquibase/liquibase-operations-guide.md) | [Reference](../../reference/liquibase/liquibase-reference.md)
 
 This document explains what database drift is, why it matters, and the conceptual approaches to managing it. For step-by-step procedures, see the [Operations Guide - Drift Detection](../../how-to/liquibase/liquibase-operations-guide.md#drift-detection-and-remediation).
