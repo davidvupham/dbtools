@@ -1,6 +1,6 @@
 # Liquibase Architecture Guide
 
-**🔗 [← Back to Liquibase Documentation Index](../../liquibase/README.md)** — Navigation guide for all Liquibase docs
+**🔗 [← Back to Liquibase Documentation Index](./README.md)** — Navigation guide for all Liquibase docs
 
 > **Document Version:** 1.0
 > **Last Updated:** January 12, 2026
@@ -11,7 +11,7 @@
 ![Document Status](https://img.shields.io/badge/Status-Production-green)
 
 > [!IMPORTANT]
-> **Related Docs:** [Concepts](../../concepts/liquibase/liquibase-concepts.md) | [Operations](../../../how-to/liquibase/liquibase-operations-guide.md) | [Reference](../../../reference/liquibase/liquibase-reference.md) | [Formatted SQL](../../../reference/liquibase/liquibase-formatted-sql-guide.md)
+> **Related Docs:** [Concepts](./liquibase-concepts.md) | [Operations](../../how-to/liquibase/liquibase-operations-guide.md) | [Reference](../../reference/liquibase/liquibase-reference.md) | [Formatted SQL](../../reference/liquibase/liquibase-formatted-sql-guide.md)
 
 ## Table of Contents
 
@@ -89,7 +89,7 @@ Changes are written once and promoted through environments using environment-spe
 5. **Release-Driven Versioning** — Changes grouped by release for clarity and safe rollback
 6. **Environment-Specific Properties** — Connection details differ per environment; changes do not
 
-For detailed rationale on each principle, see [Concepts Guide - Key Decisions](../../concepts/liquibase/liquibase-concepts.md#key-decisions-to-make).
+For detailed rationale on each principle, see [Concepts Guide - Key Decisions](./liquibase-concepts.md#key-decisions-to-make).
 
 [↑ Back to Table of Contents](#table-of-contents)
 
@@ -440,7 +440,7 @@ liquibase generate-changelog \
 </databaseChangeLog>
 ```
 
-See [Operations Guide - Baseline Management](../../../how-to/liquibase/liquibase-operations-guide.md#baseline-management) for detailed procedures.
+See [Operations Guide - Baseline Management](../../how-to/liquibase/liquibase-operations-guide.md#baseline-management) for detailed procedures.
 
 ### Tracking Tables Configuration
 
@@ -561,7 +561,7 @@ Deploy changes automatically in your CI/CD pipeline:
 ```
 
 
-See [Operations Guide - Execution Patterns](../../../how-to/liquibase/liquibase-operations-guide.md#execution-patterns) for more examples.
+See [Operations Guide - Execution Patterns](../../how-to/liquibase/liquibase-operations-guide.md#execution-patterns) for more examples.
 
 [↑ Back to Table of Contents](#table-of-contents)
 
@@ -583,12 +583,12 @@ See [Operations Guide - Execution Patterns](../../../how-to/liquibase/liquibase-
 
 ## Related Documentation
 
-**Start here:** [Liquibase Documentation Index](../../liquibase/README.md)
+**Start here:** [Liquibase Documentation Index](./README.md)
 
-- **[Liquibase Concepts Guide](../../concepts/liquibase/liquibase-concepts.md)** — Foundational understanding (read first if new to Liquibase)
-- **[Liquibase Operations Guide](../../../how-to/liquibase/liquibase-operations-guide.md)** — Day-to-day tasks: authoring, deploying, troubleshooting
-- **[Liquibase Reference](../../../reference/liquibase/liquibase-reference.md)** — Command reference, glossary, limitations, troubleshooting
-- **[Liquibase Secure Implementation Analysis](../../liquibase/liquibase-secure-implementation-analysis.md)** — Evaluating Pro/Secure features
+- **[Liquibase Concepts Guide](./liquibase-concepts.md)** — Foundational understanding (read first if new to Liquibase)
+- **[Liquibase Operations Guide](../../how-to/liquibase/liquibase-operations-guide.md)** — Day-to-day tasks: authoring, deploying, troubleshooting
+- **[Liquibase Reference](../../reference/liquibase/liquibase-reference.md)** — Command reference, glossary, limitations, troubleshooting
+- **[Liquibase Secure Edition Implementation Analysis](./liquibase-secure-edition-implementation-analysis.md)** — Evaluating Pro/Secure features
 
 [↑ Back to Table of Contents](#table-of-contents)
 

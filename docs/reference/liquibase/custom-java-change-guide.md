@@ -1,6 +1,6 @@
 # Liquibase Custom Change Types (Java) Guide
 
-**🔗 [← Back to Liquibase Concepts](../../explanation/concepts/liquibase/liquibase-concepts.md)**
+**🔗 [← Back to Liquibase Concepts](../../explanation/liquibase/liquibase-concepts.md)**
 
 When standard Liquibase change types (like `createTable` or `addColumn`) aren't enough, you can write **Java code** to execute complex logic during your database deployment.
 

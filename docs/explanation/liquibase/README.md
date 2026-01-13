@@ -8,14 +8,14 @@ This directory contains comprehensive documentation for Liquibase database schem
 
 **New to Liquibase?** Start here:
 
-1. **[Liquibase Concepts Guide](../concepts/liquibase/liquibase-concepts.md)**
+1. **[Liquibase Concepts Guide](./liquibase-concepts.md)**
    - What is Liquibase?
    - Core concepts (Changelog, Changeset, Change Types)
    - How it works
    - Different ways to use it
    - Key decisions to make
 
-2. **[Liquibase Architecture Guide](../architecture/liquibase/liquibase-architecture.md)**
+2. **[Liquibase Architecture Guide](./liquibase-architecture.md)**
    - Our directory structure and standards
    - How we organize changelogs across teams
    - Naming conventions
@@ -48,22 +48,22 @@ This directory contains comprehensive documentation for Liquibase database schem
 
 | Scenario | Document | Section |
 |:---|:---|:---|
-| I'm confused about what Liquibase does | Concepts | [What is Liquibase?](../concepts/liquibase/liquibase-concepts.md#what-is-liquibase) |
-| I want to understand the core concepts | Concepts | [Core Concepts](../concepts/liquibase/liquibase-concepts.md#core-concepts) |
-| I want to understand our architecture | Architecture | [Design Principles](../architecture/liquibase/liquibase-architecture.md#design-principles) |
+| I'm confused about what Liquibase does | Concepts | [What is Liquibase?](./liquibase-concepts.md#what-is-liquibase) |
+| I want to understand the core concepts | Concepts | [Core Concepts](./liquibase-concepts.md#core-concepts) |
+| I want to understand our architecture | Architecture | [Design Principles](./liquibase-architecture.md#design-principles) |
 | I need to create a changeset | Operations | [Authoring Changes](../../how-to/liquibase/liquibase-operations-guide.md#authoring-changes) |
 | I need to deploy changes | Operations | [Execution Patterns](../../how-to/liquibase/liquibase-operations-guide.md#execution-patterns) |
 | I need to roll back changes | Operations | [Rollback Strategy](../../how-to/liquibase/liquibase-operations-guide.md#rollback-strategy) |
 | I need to detect/handle drift | Drift Management | [Understanding Drift](./liquibase-drift-management.md) + [Operations](../../how-to/liquibase/liquibase-operations-guide.md#drift-detection-and-remediation) |
 | I'm seeing an error | Reference | [Troubleshooting](../../reference/liquibase/liquibase-reference.md#troubleshooting) |
-| I need to integrate with CI/CD | Architecture | [Execution Methods](../concepts/liquibase/liquibase-concepts.md#execution-methods) |
+| I need to integrate with CI/CD | Architecture | [Execution Methods](./liquibase-concepts.md#execution-methods) |
 | I need to migrate an existing database | Operations | [Migration from Legacy](../../how-to/liquibase/liquibase-operations-guide.md#migration-from-legacy) |
 | Should we use Liquibase Pro/Secure? | Secure Implementation Analysis | All sections |
 
 ## 📖 Full Document List
 
 ### 1. **Concepts Guide** (Read First!)
-📄 [liquibase-concepts.md](../concepts/liquibase/liquibase-concepts.md)
+📄 [liquibase-concepts.md](./liquibase-concepts.md)
 
 **What it covers:**
 - What Liquibase is and why use it
@@ -82,7 +82,7 @@ This directory contains comprehensive documentation for Liquibase database schem
 ---
 
 ### 2. **Architecture Guide** (Our Implementation)
-📄 [architecture/liquibase/liquibase-architecture.md](../architecture/liquibase/liquibase-architecture.md)
+📄 [liquibase-architecture.md](./liquibase-architecture.md)
 
 **What it covers:**
 - Our directory structure for organizing changelogs
@@ -172,8 +172,8 @@ This directory contains comprehensive documentation for Liquibase database schem
 
 ---
 
-### 6. **Secure Implementation Analysis** (Strategic Planning)
-📄 [liquibase-secure-implementation-analysis.md](./liquibase-secure-implementation-analysis.md)
+### 6. **Secure Edition Implementation Analysis** (Strategic Planning)
+📄 [liquibase-secure-edition-implementation-analysis.md](./liquibase-secure-edition-implementation-analysis.md)
 
 **What it covers:**
 - Analysis of Liquibase Pro/Secure features
@@ -219,13 +219,13 @@ CONCEPTS GUIDE (Foundation)
 
 ### "I just want to write a changeset, where do I go?"
 
-1. Quick concept review: [Core Concepts - Changeset](../concepts/liquibase/liquibase-concepts.md#changeset)
+1. Quick concept review: [Core Concepts - Changeset](./liquibase-concepts.md#changeset)
 2. How to write it: [Operations - Authoring Changes](../../how-to/liquibase/liquibase-operations-guide.md#authoring-changes)
-3. Our naming standards: [Architecture - Conventions](../architecture/liquibase/liquibase-architecture.md#conventions--standards)
+3. Our naming standards: [Architecture - Conventions](./liquibase-architecture.md#conventions--standards)
 
 ### "Everything is too deep, where's a quick intro?"
 
-👉 Start with [Concepts Guide - Core Concepts](../concepts/liquibase/liquibase-concepts.md#core-concepts) section. It's written for beginners.
+👉 Start with [Concepts Guide - Core Concepts](./liquibase-concepts.md#core-concepts) section. It's written for beginners.
 
 ### "I found an error, how do I fix it?"
 
@@ -235,18 +235,18 @@ CONCEPTS GUIDE (Foundation)
 
 ### "I need to set up a new repository for my team"
 
-1. Skim [Architecture - Repository Strategy](../architecture/liquibase/liquibase-architecture.md#repository-strategy)
-2. Read [Architecture - Directory Structure](../architecture/liquibase/liquibase-architecture.md#directory-structure)
-3. Read [Architecture - Conventions](../architecture/liquibase/liquibase-architecture.md#conventions--standards)
+1. Skim [Architecture - Repository Strategy](./liquibase-architecture.md#repository-strategy)
+2. Read [Architecture - Directory Structure](./liquibase-architecture.md#directory-structure)
+3. Read [Architecture - Conventions](./liquibase-architecture.md#conventions--standards)
 4. Use it as a checklist when creating your repo
 
 ## 🔍 Search Tips
 
-- **Looking for "changelog"?** → Concepts ([Changelog](../concepts/liquibase/liquibase-concepts.md#changelog))
+- **Looking for "changelog"?** → Concepts ([Changelog](./liquibase-concepts.md#changelog))
 - **Looking for "rollback"?** → Operations ([Rollback Strategy](../../how-to/liquibase/liquibase-operations-guide.md#rollback-strategy))
 - **Looking for "preconditions"?** → Operations ([Using Preconditions](../../how-to/liquibase/liquibase-operations-guide.md#using-preconditions))
-- **Looking for "properties"?** → Architecture ([Properties Files](../architecture/liquibase/liquibase-architecture.md#properties-files))
-- **Looking for "directory structure"?** → Architecture ([Directory Structure](../architecture/liquibase/liquibase-architecture.md#directory-structure))
+- **Looking for "properties"?** → Architecture ([Properties Files](./liquibase-architecture.md#properties-files))
+- **Looking for "directory structure"?** → Architecture ([Directory Structure](./liquibase-architecture.md#directory-structure))
 - **Looking for "drift detection"?** → Concepts ([Understanding Drift](./liquibase-drift-management.md)) or Operations ([Drift Detection](../../how-to/liquibase/liquibase-operations-guide.md#drift-detection-and-remediation))
 - **Looking for an error message?** → Reference ([Troubleshooting](../../reference/liquibase/liquibase-reference.md#troubleshooting))
 

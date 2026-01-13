@@ -6,7 +6,7 @@
 > **Last Updated:** January 12, 2026
 > **Maintainers:** Global Data Services Team
 > **Status:** Production
-> **Related Docs:** [Concepts](../../explanation/concepts/liquibase/liquibase-concepts.md) | [Architecture](../../explanation/architecture/liquibase/liquibase-architecture.md) | [Operations](../../how-to/liquibase/liquibase-operations-guide.md)
+> **Related Docs:** [Concepts](../../explanation/liquibase/liquibase-concepts.md) | [Architecture](../../explanation/liquibase/liquibase-architecture.md) | [Operations](../../how-to/liquibase/liquibase-operations-guide.md)
 
 ![Liquibase Version](https://img.shields.io/badge/Liquibase-5.0%2B-blue)
 ![Document Status](https://img.shields.io/badge/Status-Production-green)
@@ -14,7 +14,7 @@
 This document serves as a reference for Liquibase features, limitations, configuration, and troubleshooting. Use this to look up specific commands, attributes, and error messages.
 
 > [!NOTE]
-> For foundational understanding, see the [Concepts Guide](../../explanation/concepts/liquibase/liquibase-concepts.md). For day-to-day tasks, see the [Operations Guide](../../how-to/liquibase/liquibase-operations-guide.md).
+> For foundational understanding, see the [Concepts Guide](../../explanation/liquibase/liquibase-concepts.md). For day-to-day tasks, see the [Operations Guide](../../how-to/liquibase/liquibase-operations-guide.md).
 
 ## Table of Contents
 
@@ -540,8 +540,8 @@ liquibase releaseLocks
 
 ### Internal Documentation
 
-- **[Liquibase Concepts Guide](../../explanation/concepts/liquibase/liquibase-concepts.md)**
-- **[Liquibase Architecture Guide](../../explanation/architecture/liquibase/liquibase-architecture.md)**
+- **[Liquibase Concepts Guide](../../explanation/liquibase/liquibase-concepts.md)**
+- **[Liquibase Architecture Guide](../../explanation/liquibase/liquibase-architecture.md)**
 - **[Liquibase Operations Guide](../../how-to/liquibase/liquibase-operations-guide.md)**
 - **[Liquibase Reference](liquibase-reference.md)**
 - **[Liquibase Formatted SQL Guide](liquibase-formatted-sql-guide.md)**

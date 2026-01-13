@@ -7,7 +7,7 @@ Explanation documentation provides background, context, and understanding. It ex
 ### Architecture
 - [**Architecture Overview**](architecture/README.md) - High-level system architecture.
 - [**Observability**](architecture/observability/README.md) - Monitoring and metrics architecture.
-- [**Liquibase**](architecture/liquibase/README.md) - Liquibase implementation patterns.
+- [**Liquibase**](liquibase/README.md) - Liquibase implementation patterns.
 - [**Database CI/CD**](architecture/database-change-cicd/README.md) - Database change pipeline architecture.
 
 ### Design Records

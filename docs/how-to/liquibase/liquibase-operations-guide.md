@@ -6,7 +6,7 @@
 > **Last Updated:** January 12, 2026
 > **Maintainers:** Global Data Services Team
 > **Status:** Production
-> **Related Docs:** [Concepts](../../explanation/concepts/liquibase/liquibase-concepts.md) | [Architecture](../../explanation/architecture/liquibase/liquibase-architecture.md) | [Reference](../../reference/liquibase/liquibase-reference.md) | [Formatted SQL](../../reference/liquibase/liquibase-formatted-sql-guide.md)
+> **Related Docs:** [Concepts](../../explanation/liquibase/liquibase-concepts.md) | [Architecture](../../explanation/liquibase/liquibase-architecture.md) | [Reference](../../reference/liquibase/liquibase-reference.md) | [Formatted SQL](../../reference/liquibase/liquibase-formatted-sql-guide.md)
 
 ![Liquibase Version](https://img.shields.io/badge/Liquibase-5.0%2B-blue)
 ![Document Status](https://img.shields.io/badge/Status-Production-green)
@@ -14,7 +14,7 @@
 This guide covers day-to-day tasks: writing changesets, deploying changes, handling rollbacks, testing, and troubleshooting.
 
 > [!IMPORTANT]
-> **Prerequisites:** Understand basic Liquibase concepts (Changelog, Changeset, Change Types). See [Concepts Guide](../../explanation/concepts/liquibase/liquibase-concepts.md) if you're new to Liquibase.
+> **Prerequisites:** Understand basic Liquibase concepts (Changelog, Changeset, Change Types). See [Concepts Guide](../../explanation/liquibase/liquibase-concepts.md) if you're new to Liquibase.
 
 > [!NOTE]
 > Examples use the **Global Data Services (GDS)** team, but these procedures apply to **all teams**.

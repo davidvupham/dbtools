@@ -11,7 +11,7 @@
 ![Document Status](https://img.shields.io/badge/Status-Production-green)
 
 > [!IMPORTANT]
-> **Related Docs:** [Concepts](../../explanation/concepts/liquibase/liquibase-concepts.md) | [Architecture](../../explanation/architecture/liquibase/liquibase-architecture.md) | [Operations](../../how-to/liquibase/liquibase-operations-guide.md) | [Reference](liquibase-reference.md)
+> **Related Docs:** [Concepts](../../explanation/liquibase/liquibase-concepts.md) | [Architecture](../../explanation/liquibase/liquibase-architecture.md) | [Operations](../../how-to/liquibase/liquibase-operations-guide.md) | [Reference](liquibase-reference.md)
 
 Liquibase **Formatted SQL** allows you to write database changelogs using standard SQL, augmented with special comments that provide Liquibase metadata (author, id, preconditions, etc.).
 
@@ -219,9 +219,9 @@ You can reference other SQL files directly:
 
 **Start here:** [Liquibase Documentation Index](../../explanation/liquibase/README.md)
 
-- **[Liquibase Concepts Guide](../../explanation/concepts/liquibase/liquibase-concepts.md)** — Foundational understanding (read first if new to Liquibase)
+- **[Liquibase Concepts Guide](../../explanation/liquibase/liquibase-concepts.md)** — Foundational understanding (read first if new to Liquibase)
 - **[Liquibase Operations Guide](../../how-to/liquibase/liquibase-operations-guide.md)** — Day-to-day tasks: authoring, deploying, troubleshooting
 - **[Liquibase Reference](liquibase-reference.md)** — Command reference, glossary, limitations, troubleshooting
-- **[Liquibase Architecture Guide](../../explanation/architecture/liquibase/liquibase-architecture.md)** — Naming conventions and directory structure
+- **[Liquibase Architecture Guide](../../explanation/liquibase/liquibase-architecture.md)** — Naming conventions and directory structure
 
 [↑ Back to Table of Contents](#table-of-contents)

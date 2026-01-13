@@ -6,7 +6,7 @@
 > **Last Updated:** January 6, 2026
 > **Status:** Strategic Planning Document
 > **Audience:** Tech leads, architects, budget decision-makers
-> **Related Docs:** [Concepts](../concepts/liquibase/liquibase-concepts.md) | [Architecture](../architecture/liquibase/liquibase-architecture.md)
+> **Related Docs:** [Concepts](./liquibase-concepts.md) | [Architecture](./liquibase-architecture.md)
 
 This document analyzes the features of **Liquibase Secure** (formerly Liquibase Pro/Enterprise) and assesses what would be required to implement equivalent functionality using the **Community Edition**. Use this to make informed decisions about licensing vs. custom implementation.
 

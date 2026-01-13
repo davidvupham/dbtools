@@ -1,12 +1,12 @@
 # Liquibase Concepts Guide
 
-**🔗 [← Back to Liquibase Documentation Index](../../liquibase/README.md)** — Start here if you're new to Liquibase
+**🔗 [← Back to Liquibase Documentation Index](./README.md)** — Start here if you're new to Liquibase
 
 > **Document Version:** 1.0
 > **Last Updated:** January 12, 2026
 > **Maintainers:** Global Data Services Team
 > **Status:** Production - Actively Maintained
-> **Related Docs:** [Architecture](../../architecture/liquibase/liquibase-architecture.md) | [Operations](../../../how-to/liquibase/liquibase-operations-guide.md) | [Reference](../../../reference/liquibase/liquibase-reference.md) | [Formatted SQL](../../../reference/liquibase/liquibase-formatted-sql-guide.md)
+> **Related Docs:** [Architecture](./liquibase-architecture.md) | [Operations](../../how-to/liquibase/liquibase-operations-guide.md) | [Reference](../../reference/liquibase/liquibase-reference.md) | [Formatted SQL](../../reference/liquibase/liquibase-formatted-sql-guide.md)
 
 ![Liquibase Version](https://img.shields.io/badge/Liquibase-5.0%2B-blue)
 ![Document Status](https://img.shields.io/badge/Status-Production-green)
@@ -212,7 +212,7 @@ Write database-specific SQL directly using either embedded SQL in YAML or "Forma
 
 Use standard SQL with Liquibase-specific comments to define changesets. This gives you full control over SQL while maintaining tracking.
 
-**[👉 Read the full Formatted SQL Guide](../../../reference/liquibase/liquibase-formatted-sql-guide.md)** for detailed syntax on rollbacks, preconditions, and attributes.
+**[👉 Read the full Formatted SQL Guide](../../reference/liquibase/liquibase-formatted-sql-guide.md)** for detailed syntax on rollbacks, preconditions, and attributes.
 
 ```sql
 --liquibase formatted sql
@@ -233,7 +233,7 @@ WHERE email IS NOT NULL;
 
 **Custom Change Types** (implementing `CustomSqlChange` or `CustomTaskChange`) are **Java-only** because they compile to classes loaded by Liquibase.
 
-**[👉 Read the full Custom Java Change Guide](../../../reference/liquibase/custom-java-change-guide.md)** for implementation details, examples of masking data, and API integration.
+**[👉 Read the full Custom Java Change Guide](../../reference/liquibase/custom-java-change-guide.md)** for implementation details, examples of masking data, and API integration.
 
 However, you can use **`executeCommand`** to run scripts in **Python, bash, PowerShell, Node.js**, or any other language:
 
@@ -665,9 +665,9 @@ Liquibase offers multiple editions with different features:
 
 Now that you understand the core concepts, proceed to:
 
-1. **[Liquibase Architecture Guide](../../architecture/liquibase/liquibase-architecture.md)** - Learn how we've designed our Liquibase implementation
-2. **[Liquibase Operations Guide](../../../how-to/liquibase/liquibase-operations-guide.md)** - Hands-on guides for common tasks
-3. **[Liquibase Reference](../../../reference/liquibase/liquibase-reference.md)** - Command reference, glossary, troubleshooting
+1. **[Liquibase Architecture Guide](./liquibase-architecture.md)** - Learn how we've designed our Liquibase implementation
+2. **[Liquibase Operations Guide](../../how-to/liquibase/liquibase-operations-guide.md)** - Hands-on guides for common tasks
+3. **[Liquibase Reference](../../reference/liquibase/liquibase-reference.md)** - Command reference, glossary, troubleshooting
 
 **Quick Start:**
 1. Install Liquibase CLI
@@ -680,7 +680,7 @@ Now that you understand the core concepts, proceed to:
 
 ## Related Documentation
 
-- **[Liquibase Architecture Guide](../../architecture/liquibase/liquibase-architecture.md)** - Multi-platform, multi-team directory structure and standards
-- **[Liquibase Operations Guide](../../../how-to/liquibase/liquibase-operations-guide.md)** - Step-by-step procedures for deployments, rollbacks, baselines
-- **[Liquibase Reference](../../../reference/liquibase/liquibase-reference.md)** - Command reference, glossary, limitations, troubleshooting
+- **[Liquibase Architecture Guide](./liquibase-architecture.md)** - Multi-platform, multi-team directory structure and standards
+- **[Liquibase Operations Guide](../../how-to/liquibase/liquibase-operations-guide.md)** - Step-by-step procedures for deployments, rollbacks, baselines
+- **[Liquibase Reference](../../reference/liquibase/liquibase-reference.md)** - Command reference, glossary, limitations, troubleshooting
 - **[Official Liquibase Documentation](https://docs.liquibase.com/)** - Liquibase.com official docs
