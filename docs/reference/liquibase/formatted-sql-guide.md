@@ -2,9 +2,31 @@
 
 **🔗 [← Back to Liquibase Concepts](../../explanation/concepts/liquibase/liquibase-concepts.md)**
 
+> **Document Version:** 1.0
+> **Last Updated:** January 12, 2026
+> **Maintainers:** Global Data Services Team
+> **Status:** Production
+> **Related Docs:** [Concepts](../../explanation/concepts/liquibase/liquibase-concepts.md) | [Architecture](../../explanation/architecture/liquibase/liquibase-architecture.md) | [Operations](../../how-to/liquibase/liquibase-operations-guide.md) | [Reference](liquibase-reference.md)
+
+![Liquibase Version](https://img.shields.io/badge/Liquibase-5.0%2B-blue)
+![Document Status](https://img.shields.io/badge/Status-Production-green)
+
 Liquibase **Formatted SQL** allows you to write database changelogs using standard SQL, augmented with special comments that provide Liquibase metadata (author, id, preconditions, etc.).
 
-This format gives you full control over the SQL while maintaining the tracking and deployment benefits of Liquibase.
+This is the **primary standard** for all database changesets at Global Data Services.
+
+## Table of Contents
+
+- [Header](#header)
+- [Basic Changeset](#basic-changeset)
+- [Attributes](#attributes)
+- [Variable Substitution](#variable-substitution)
+- [Rollbacks](#rollbacks)
+- [Preconditions (SQL Guards)](#preconditions-sql-guards)
+- [Stored Procedures & Logic](#stored-procedures--logic)
+- [Includes & Modularity](#includes--modularity)
+- [Best Practices](#best-practices)
+
 
 ## Header
 Every Formatted SQL file **MUST** start with this header line:
@@ -30,6 +52,8 @@ ALTER TABLE customer ADD email VARCHAR(255);
 ```
 
 **Syntax:** `--changeset author:id [attributes]`
+
+> **Standard ID Format:** Use `author:id` where ID is descriptive (e.g., `team-a:20260112-add-user`) or matches the filename timestamp.
 
 ## attributes
 You can add optional attributes to the changeset line to control execution behavior.
@@ -108,44 +132,51 @@ Preconditions allow you to control whether a changeset runs based on the databas
 ALTER TABLE customer ADD phone VARCHAR(20);
 ```
 
-## Multi-Statement Changesets & Stored Procedures
-By default, Liquibase attempts to split statements by `;`. If you are writing a stored procedure or complex block requiring a different delimiter, use `splitStatements:false` or specifying the `endDelimiter`.
+## Stored Procedures & Logic
 
-**Option 1: `splitStatements:false` (Recommended for Native Executors)**
-This sends the entire block to the database as a single command.
+Managing repeatable logic (procedures, views, functions) requires a different pattern than tables.
+
+### Idempotency Pattern
+
+Use `runOnChange:true` combined with `CREATE OR REPLACE` syntax. This allows you to edit the SQL file in place without creating a new changeset ID.
+
 ```sql
---changeset alice:create-procedure splitStatements:false
-CREATE PROCEDURE update_customer AS
+--liquibase formatted sql
+
+--changeset team:update-proc-calculate-total runOnChange:true splitStatements:false
+CREATE OR REPLACE PROCEDURE calculate_total AS
 BEGIN
-  UPDATE customer SET updated_at = NOW();
+  -- Logic here
 END;
 /
 ```
 
-**Option 2: `endDelimiter`**
-Tells Liquibase to split statements by a custom delimiter.
+### File Organization
+
+Keep these files in a dedicated directory (e.g., `database/logic/`) rather than the timestamped `changes/` folder, as they are "state" files, not "delta" files.
+
+### Delimiters (`splitStatements:false`)
+
+By default, Liquibase splits by `;`. For procedures, use `splitStatements:false` to send the whole block.
+
 ```sql
---changeset alice:create-procedure endDelimiter:/
-CREATE PROCEDURE update_customer AS
-BEGIN
-  UPDATE customer SET updated_at = NOW();
-END;
+--changeset alice:create-complex-proc splitStatements:false
+CREATE PROCEDURE foo AS ... END;
 /
 ```
 
 ## Includes & Modularity
-The ability to use `include` or `includeAll` **inside** a formatted SQL file is a **Liquibase Pro** feature (starting from v4.28.0).
+
+> **Note:** The ability to use `include` or `includeAll` **inside** a formatted SQL file is a **Liquibase Secure** feature. Community users must use the XML master changelog pattern.
 
 **Community Edition:**
 You must use an XML, YAML, or JSON "master" changelog to include your formatted SQL files.
 
-```yaml
-# db.changelog-master.yaml
-databaseChangeLog:
-  - include:
-      file: changes/001-initial-schema.sql
-  - include:
-      file: changes/002-add-data.sql
+```xml
+<!-- changelog.xml -->
+<databaseChangeLog ...>
+  <includeAll path="changes/"/>
+</databaseChangeLog>
 ```
 
 **Liquibase Pro:**
@@ -156,9 +187,9 @@ You can reference other SQL files directly:
 ```
 
 ## Best Practices
-1.  **Atomic Changesets:** Keep changesets granular. Avoid mixing DDL (schema) and DML (data) in the same changeset to ensure clean transaction boundaries.
-2.  **Always Define Rollbacks:** Make your deployments reversible.
-3.  **Use Unique IDs:** A common pattern is `YYYYMMDD-ticket-description`.
-4.  **Formatting:** Keep the `--changeset` line clean and readable.
-5.  **Checksums:** If you change a changeset that has already run, Liquibase will fail checkums validation. Use `<validCheckSum>` (XML/YAML) or `validCheckSum` attribute (if supported by your version) or manually clear the checksum in `DATABASECHANGELOG` to fix this, but essentially: **Don't change deployed changesets.**
-6.  **Idempotency:** When using `runOnChange:true` or `runAlways:true`, write your SQL to be idempotent (e.g., `CREATE OR REPLACE VIEW`).
+1.  **File Naming**: Strictly follow `V<Timestamp>__<Jira>_<Description>.<db>.sql`.
+2.  **Atomic Changesets**: Keep changesets granular. One logical change per file.
+3.  **Always Define Rollbacks**: Make your deployments reversible.
+4.  **Use Unique IDs**: Combine `author` and unique identifier (e.g., `team:20260112-add-table`).
+5.  **Formatting**: Keep the `--changeset` line clean and readable.
+6.  **Idempotency**: Use SQL guards (`IF NOT EXISTS`) instead of complex XML preconditions.

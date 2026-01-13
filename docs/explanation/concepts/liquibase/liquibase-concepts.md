@@ -3,9 +3,10 @@
 **🔗 [← Back to Liquibase Documentation Index](../../liquibase/README.md)** — Start here if you're new to Liquibase
 
 > **Document Version:** 1.0
-> **Last Updated:** January 6, 2026
+> **Last Updated:** January 12, 2026
 > **Maintainers:** Global Data Services Team
 > **Status:** Production - Actively Maintained
+> **Related Docs:** [Architecture](../../architecture/liquibase/liquibase-architecture.md) | [Operations](../../../how-to/liquibase/liquibase-operations-guide.md) | [Reference](../../../reference/liquibase/liquibase-reference.md) | [Formatted SQL](../../../reference/liquibase/formatted-sql-guide.md)
 
 ![Liquibase Version](https://img.shields.io/badge/Liquibase-5.0%2B-blue)
 ![Document Status](https://img.shields.io/badge/Status-Production-green)
@@ -451,50 +452,35 @@ Before implementing Liquibase, you need to make several architectural decisions:
 | **XML** | Enterprise shops with XML standards, complex preconditions |
 | **JSON** | API-driven workflows, machine-generated changes |
 
-**Recommendation:** Start with **YAML** for portability and readability. Use SQL for platform-specific optimizations when needed.
+**Recommendation:** Use **Formatted SQL** as the primary standard for all teams. It provides the best balance of control, auditability, and distinct diffs. Use YAML/XML only for the master changelog (`changelog.xml`) to include the SQL files.
 
 ### Directory Structure
 
 **Decision:** How should we organize changelog files?
 
-**Option A: Flat Structure (Simple)**
+**Option A: Flattened (Standard)**
 ```
-changelogs/
-  db.changelog-master.yaml
-  001-create-tables.yaml
-  002-add-indexes.yaml
-  003-seed-data.yaml
+database/
+  changelog/
+    changelog.xml              # Master entry point
+    baseline/
+      V0000__baseline.sql      # Initial schema
+    changes/
+      V20260112__init.sql      # Timestamped changes
+      V20260113__feature.sql
 ```
-**Best for:** Small projects, single database, single team
+**Best for:** Most projects. Simple, sorts chronologically, easy to navigate.
 
-**Option B: Application-First (Recommended)**
+**Option B: Application-First**
 ```
 applications/
   payments_api/
-    postgres/
-      orders/
-        db.changelog-master.yaml
-        releases/
-          1.0/
-          2.0/
-  inventory_svc/
-    postgres/
-      catalog/
+    database/
+      changelog.xml
+      changes/
+        V...
 ```
-**Best for:** Microservices, multiple teams, multiple databases
-
-**Option C: Platform-First**
-```
-platforms/
-  postgres/
-    databases/
-      orders/
-      catalog/
-  mssql/
-    databases/
-      erp/
-```
-**Best for:** Platform teams managing many databases of same type
+**Best for:** Monorepos with multiple distinct services.
 
 ### Change Granularity
 

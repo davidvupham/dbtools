@@ -2,7 +2,7 @@
 
 **🔗 [← Back to Liquibase Documentation Index](../../liquibase/README.md)** — Navigation guide for all Liquibase docs
 
-> **Document Version:** 2.0
+> **Document Version:** 1.0
 > **Last Updated:** January 12, 2026
 > **Maintainers:** Global Data Services Team
 > **Status:** Production - Actively Maintained
@@ -11,7 +11,7 @@
 ![Document Status](https://img.shields.io/badge/Status-Production-green)
 
 > [!IMPORTANT]
-> **New to Liquibase?** Start with the [Liquibase Concepts Guide](../../concepts/liquibase/liquibase-concepts.md) first. This document assumes you understand the fundamentals (Changelog, Changeset, Change Types, tracking tables).
+> **Related Docs:** [Concepts](../../concepts/liquibase/liquibase-concepts.md) | [Operations](../../../how-to/liquibase/liquibase-operations-guide.md) | [Reference](../../../reference/liquibase/liquibase-reference.md) | [Formatted SQL](../../../reference/liquibase/formatted-sql-guide.md)
 
 ## Table of Contents
 
@@ -23,17 +23,20 @@
   - [Standard Layout](#standard-layout)
   - [Example Structure](#example-structure)
   - [Benefits](#benefits)
+  - [Snapshot Naming](#snapshot-naming)
+  - [Snapshot Strategy](#snapshot-strategy)
   - [Repository Strategy](#repository-strategy)
   - [Cross-Platform Database Example](#cross-platform-database-example)
 - [Conventions & Standards](#conventions--standards)
   - [Platform Names](#platform-names)
   - [Database Names](#database-names)
   - [File Naming](#file-naming)
+  - [Formatted SQL Structure](#formatted-sql-structure)
   - [Properties Files](#properties-files)
   - [Search Path Configuration](#search-path-configuration)
 - [Advanced Patterns](#advanced-patterns)
   - [Master Changelog Pattern](#master-changelog-pattern)
-  - [Release-Based Organization](#release-based-organization)
+  - [Benefits of SQL-First Approach](#benefits-of-sql-first-approach)
   - [Baseline Strategy](#baseline-strategy)
   - [Tracking Tables Configuration](#tracking-tables-configuration)
   - [Platform-Specific Changes](#platform-specific-changes)
@@ -407,7 +410,7 @@ For existing databases, create a baseline snapshot to avoid re-running complex h
 
 ```bash
 # Generate baseline
-liquibase generate-changelog --changelog-file=baseline/db.changelog-baseline.yaml
+liquibase generate-changelog --changelog-file=baseline/V0000__baseline.posgres.sql
 
 # Mark as applied (don't re-run)
 liquibase changelog-sync

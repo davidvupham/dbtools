@@ -2,10 +2,14 @@
 
 **🔗 [← Back to Liquibase Documentation Index](../../explanation/liquibase/README.md)** — Navigation guide for all Liquibase docs
 
-> **Document Version:** 2.0
-> **Last Updated:** January 6, 2026
+> **Document Version:** 1.0
+> **Last Updated:** January 12, 2026
+> **Maintainers:** Global Data Services Team
 > **Status:** Production
-> **Related Docs:** [Concepts](../../explanation/concepts/liquibase/liquibase-concepts.md) | [Architecture](../../explanation/architecture/liquibase/liquibase-architecture.md) | [Reference](../../reference/liquibase/liquibase-reference.md)
+> **Related Docs:** [Concepts](../../explanation/concepts/liquibase/liquibase-concepts.md) | [Architecture](../../explanation/architecture/liquibase/liquibase-architecture.md) | [Reference](../../reference/liquibase/liquibase-reference.md) | [Formatted SQL](../../reference/liquibase/formatted-sql-guide.md)
+
+![Liquibase Version](https://img.shields.io/badge/Liquibase-5.0%2B-blue)
+![Document Status](https://img.shields.io/badge/Status-Production-green)
 
 This guide covers day-to-day tasks: writing changesets, deploying changes, handling rollbacks, testing, and troubleshooting.
 
@@ -19,7 +23,7 @@ This guide covers day-to-day tasks: writing changesets, deploying changes, handl
 
 - [Authoring Changes](#authoring-changes)
   - [ChangeSet Best Practices](#changeset-best-practices)
-  - [Using Preconditions](#using-preconditions)
+  - [Using Preconditions (SQL Guards)](#using-preconditions-sql-guards)
   - [Contexts and Labels](#contexts-and-labels)
   - [Platform-Specific Changes](#platform-specific-changes)
   - [Shared Modules](#shared-modules)
@@ -27,6 +31,7 @@ This guide covers day-to-day tasks: writing changesets, deploying changes, handl
 - [Baseline Management](#baseline-management)
   - [Creating a Baseline (Initial Adoption)](#creating-a-baseline-initial-adoption)
   - [Baseline Reset (Consolidation)](#baseline-reset-consolidation)
+- [Security & Secrets Management](#security--secrets-management)
 - [Execution Patterns](#execution-patterns)
   - [Dry-Run Validation](#dry-run-validation)
   - [Multi-Database Platform Deployment](#multi-database-platform-deployment)
@@ -49,98 +54,75 @@ This guide covers day-to-day tasks: writing changesets, deploying changes, handl
 
 ### ChangeSet Best Practices
 
-1. **Unique IDs**: Use format `YYYYMMDD-HHMM-JIRA-description` (e.g., `20251113-1030-PROJ-45-add-user-table`)
-2. **Author**: Include team/person for traceability
-3. **Granularity**: One logical change per changeSet (one table, one index, etc.)
-4. **Rollback**: Always provide explicit rollback for production safety
-5. **Idempotency**: Use preconditions when needed to safely re-run
-6. **DDL vs DML**: Keep schema changes (DDL) separate from data changes (DML) for cleaner rollbacks
+1. **File Naming**: Use `V<Timestamp>__<Jira>_<Description>.<databaseType>.sql` strictly.
+   - Example: `V202601121030__PROJ-45_add_user_table.postgres.sql`
+2. **Changeset ID**: Use `author:id` format (e.g., `team-a:20260112-add-user`).
+3. **Granularity**: One logical change per file/changeset.
+4. **Rollback**: Always provide explicit `--rollback` SQL comments.
+5. **Idempotency**: Use SQL guards (`IF NOT EXISTS`) or `runOnChange:true`.
+6. **Formatted SQL**: Use `--liquibase formatted sql` header.
 
-### Using Preconditions
+### Using Preconditions (SQL Guards)
 
-Preconditions validate the database state before executing a changeset. Use them to:
+In Formatted SQL, prefer native SQL guards (idempotency) over XML preconditions where possible:
 
-- Prevent duplicate table/column creation
-- Check if objects exist before modifying
-- Make changesets safely re-runnable
+**Example: Safe Table Creation (PostgreSQL)**
 
-**Common Precondition Types:**
+```sql
+--liquibase formatted sql
 
-| Type | Purpose |
-|:---|:---|
-| `tableExists` | Check if table exists |
-| `columnExists` | Check if column exists |
-| `not` | Invert a condition |
-| `sqlCheck` | Run SQL returning expected result |
-
-**Example: Safe Column Addition**
-
-```yaml
-- changeSet:
-    id: 20251220-1000-PROJ-100-add-email-verified
-    author: platform-team
-    preconditions:
-      onFail: MARK_RAN
-      - not:
-          - columnExists:
-              tableName: users
-              columnName: email_verified
-    changes:
-      - addColumn:
-          tableName: users
-          columns:
-            - column: { name: email_verified, type: boolean, defaultValueBoolean: false }
+--changeset team:20260112-create-users
+CREATE TABLE IF NOT EXISTS users (
+    id SERIAL PRIMARY KEY,
+    email VARCHAR(255) UNIQUE
+);
+--rollback DROP TABLE IF EXISTS users;
 ```
 
-**onFail Options:**
+**Example: Safe Column Addition (SQL Server)**
 
-| Option | Behavior |
-|:---|:---|
-| `HALT` | Stop deployment (default) |
-| `WARN` | Log warning, continue |
-| `MARK_RAN` | Skip changeset, mark as executed |
-| `CONTINUE` | Skip silently |
+```sql
+--liquibase formatted sql
+
+--changeset team:20260112-add-column
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('users') AND name = 'email_verified')
+BEGIN
+    ALTER TABLE users ADD email_verified BIT DEFAULT 0;
+END
+--rollback ALTER TABLE users DROP COLUMN email_verified;
+```
 
 ### Contexts and Labels
 
-- **Minimize use**: Keep schema changes environment-agnostic
-- **Data seeds only**: Use `context: dev` for dev-only test data
-- **Labels for filtering**: `labels: 'db:app,platform:postgres'` for multi-DB deployments
+- **Minimize use**: Keep schema changes environment-agnostic.
+- **Contexts**: Use `context:dev` for test data.
+- **Labels**: Use for deployment filtering.
 
-Example:
+Example in Formatted SQL:
 
-```yaml
-databaseChangeLog:
-  - changeSet:
-      id: 20251114-01-seed-dev-data
-      author: team
-      context: dev
-      changes:
-        - loadData:
-            file: ../../shared/data/reference/sample_users.csv
-            tableName: users
+```sql
+--changeset team:seed-dev-data context:dev
+INSERT INTO users (username) VALUES ('test_user');
+--rollback DELETE FROM users WHERE username = 'test_user';
 ```
 
 ### Platform-Specific Changes
 
-Use `dbms` attribute for small platform deltas:
+Use `dbms` attribute in SQL comments for platform deltas:
 
-```yaml
-- changeSet:
-    id: 20251113-02-add-json-column
-    dbms: postgresql
-    changes:
-      - addColumn:
-          tableName: config
-          columns:
-            - column: { name: settings, type: jsonb }
+```sql
+--changeset team:add-json-col dbms:postgresql
+ALTER TABLE config ADD settings JSONB;
+
+--changeset team:add-json-col dbms:mssql
+ALTER TABLE config ADD settings NVARCHAR(MAX);
 ```
 
 For larger divergence, use separate files in platform-specific folders.
 
 #### MongoDB-Specific Patterns
 
-MongoDB uses extension change types (`ext:`) for collections and indexes. Use JSON schema changeSets for validation.
+MongoDB uses extension change types (`ext:`) for collections and indexes. Use JSON or YAML changesets as Formatted SQL does not support NoSQL syntax native execution in the same way.
 
 ```yaml
 - changeSet:
@@ -154,17 +136,19 @@ MongoDB uses extension change types (`ext:`) for collections and indexes. Use JS
 
 Reusable patterns go in `shared/modules/` and can be included from any database master:
 
-```yaml
-- include:
-    file: ../../shared/modules/audit/db.changelog-audit.yaml
+```xml
+<include file="../../shared/modules/audit/V0000__audit_schema.sql"/>
 ```
 
 ### Reference Data
 
 Store CSVs in `shared/data/reference/` and load with `loadData`:
 
+Store CSVs in `shared/data/reference/` and load with `loadData` using a YAML/XML wrapper, as Formatted SQL cannot easily load local CSVs without database-specific `COPY` commands.
+
 ```yaml
 - changeSet:
+    id: seed-countries
     changes:
       - loadData:
           file: ../../shared/data/reference/countries.csv
@@ -184,7 +168,7 @@ A baseline is an initial schema snapshot capturing the existing database state b
 # Generate baseline from existing database
 liquibase \
   --defaults-file=properties/liquibase.prod.properties \
-  --changelog-file=applications/payments_api/postgres/orders/baseline/db.changelog-baseline-2025-11-14.yaml \
+  --changelog-file=applications/payments_api/postgres/orders/baseline/V0000__baseline.postgres.sql \
   generateChangeLog
 ```
 
@@ -194,13 +178,13 @@ Mark it as executed without running the SQL (since schema already exists):
 ```bash
 liquibase \
   --defaults-file=properties/liquibase.prod.properties \
-  --changelog-file=applications/payments_api/postgres/orders/baseline/db.changelog-baseline.yaml \
+  --changelog-file=applications/payments_api/postgres/orders/baseline/V0000__baseline.postgres.sql \
   changelogSync
 
 # Tag it
 liquibase \
   --defaults-file=properties/liquibase.prod.properties \
-  --changelog-file=applications/payments_api/postgres/orders/db.changelog-master.yaml \
+  --changelog-file=applications/payments_api/postgres/orders/changelog.xml \
   tag baseline
 ```
 
@@ -221,20 +205,19 @@ Over time, changelogs accumulate. For new database instances, you can consolidat
     ```bash
     liquibase \
       --defaults-file=properties/liquibase.prod.properties \
-      --changelog-file=applications/payments_api/postgres/orders/baseline/db.changelog-baseline-v2.yaml \
+      --changelog-file=applications/payments_api/postgres/orders/baseline/V0000__baseline_v2.postgres.sql \
       generateChangeLog
     ```
 
 2. **Create a new master changelog** referencing the consolidated baseline:
 
-    ```yaml
-    # db.changelog-master-v2.yaml
-    databaseChangeLog:
-      - include:
-          file: baseline/db.changelog-baseline-v2.yaml
-      # Future changes go here
-      - include:
-          file: releases/2.1/db.changelog-2.1.yaml
+    ```xml
+    <!-- changelog.xml -->
+    <databaseChangeLog ...>
+      <include file="baseline/V0000__baseline_v2.sql"/>
+      <!-- Future changes go here -->
+      <includeAll path="changes/"/>
+    </databaseChangeLog>
     ```
 
 3. **For new instances**: Restore from a DB snapshot or run the consolidated baseline.
@@ -244,9 +227,35 @@ Over time, changelogs accumulate. For new database instances, you can consolidat
     ```bash
     liquibase \
       --defaults-file=properties/liquibase.new-instance.properties \
-      --changelog-file=applications/payments_api/postgres/orders/db.changelog-master-v2.yaml \
+      --changelog-file=applications/payments_api/postgres/orders/changelog.xml \
       changelogSync
     ```
+
+[↑ Back to Table of Contents](#table-of-contents)
+
+## Security & Secrets Management
+
+Security is paramount when automating database changes. **Never commit credentials to source control.**
+
+### Credential Handling
+
+1.  **Environment Variables (Recommended)**
+    Liquibase automatically reads standard environment variables. Set these in your CI/CD runner:
+
+    ```bash
+    export LIQUIBASE_COMMAND_URL="jdbc:postgresql://db-prod:5432/myapp"
+    export LIQUIBASE_COMMAND_USERNAME="liquibase_user"
+    export LIQUIBASE_COMMAND_PASSWORD="secure_password_from_vault"
+    ```
+
+2.  **HashiCorp Vault (Enterprise/Secure)**
+    For enterprise environments, the **HashiCorp Vault Extension** is the standard for injecting secrets directly into Liquibase.
+
+    *   **Community Alternative:** Use the `vault` CLI in your CI pipeline to fetch secrets and export them as environment variables (Option 1).
+
+### Search Path Security
+
+Limit `LIQUIBASE_SEARCH_PATH` to your specific changelog directory to prevent loading malicious files from `/tmp` or other unsecured locations.
 
 [↑ Back to Table of Contents](#table-of-contents)
 
@@ -257,9 +266,10 @@ Over time, changelogs accumulate. For new database instances, you can consolidat
 Always validate before applying:
 
 ```bash
+```bash
 liquibase \
   --defaults-file properties/liquibase.dev.properties \
-  --changelog-file platforms/postgres/databases/app/db.changelog-master.yaml \
+  --changelog-file platforms/postgres/databases/app/changelog.xml \
   updateSQL
 ```
 
@@ -271,7 +281,7 @@ Loop through all databases for a platform:
 set -euo pipefail
 platform=postgres
 for db in app analytics; do
-  cf="platforms/$platform/databases/$db/db.changelog-master.yaml"
+  cf="platforms/$platform/databases/$db/changelog.xml"
 
   # Apply
   liquibase --defaults-file properties/liquibase.dev.properties \
@@ -296,7 +306,7 @@ liquibase \
   snapshot \
   --schemas=app \
   --snapshot-format=json \
-  --output-file=snapshots/prod_baseline_$(date +%Y%m%d).json
+  --output-file=snapshots/dbinstance1_prod-post_deploy-$(date +%Y%m%d_%H%M).json
 ```
 
 **When to capture snapshots:**
@@ -314,7 +324,7 @@ liquibase \
   --defaults-file=properties/liquibase.prod.properties \
   diff \
   --schemas=app \
-  --referenceUrl="offline:postgresql?snapshot=snapshots/prod_baseline_20260112.json"
+  --referenceUrl="offline:postgresql?snapshot=snapshots/dbinstance1_prod-post_deploy-20260112_1200.json"
 ```
 
 #### Detect Drift Between Environments
@@ -404,13 +414,13 @@ Always capture the SQL for audit and compliance:
 # Preview deployment SQL (for approval/audit)
 liquibase \
   --defaults-file=properties/liquibase.prod.properties \
-  --changelog-file=db.changelog-master.yaml \
+  --changelog-file=changelog.xml \
   updateSQL > audit/deployment_$(date +%Y%m%d_%H%M%S).sql
 
 # Preview rollback SQL
 liquibase \
   --defaults-file=properties/liquibase.prod.properties \
-  --changelog-file=db.changelog-master.yaml \
+  --changelog-file=changelog.xml \
   rollbackSQL v1.0 > audit/rollback_$(date +%Y%m%d_%H%M%S).sql
 ```
 
@@ -422,8 +432,8 @@ Add drift detection to your pipeline:
 #!/bin/bash
 # pre-deployment-check.sh
 
-# Find latest snapshot
-SNAPSHOT=$(ls -t snapshots/prod_*.json | head -1)
+# Find latest post_deploy snapshot
+SNAPSHOT=$(ls -t snapshots/*-post_deploy-*.json | head -1)
 
 # Run diff and capture output
 DRIFT_OUTPUT=$(liquibase diff \
@@ -443,23 +453,45 @@ echo "No drift detected. Proceeding with deployment."
 
 For supported objects by platform, see [Reference - Drift Detection Supported Objects](../../reference/liquibase/liquibase-reference.md#drift-detection-supported-objects).
 
-### Using Flow Files (Advanced)
+### Orchestration (Community: Shell Scripts)
 
-Run standardized workflows (validate -> checks -> update) using a flow file:
+For Community Edition, use robust shell scripts to chain commands (Validate -> Quality Check -> Update).
 
-```bash
-liquibase flow --flow-file=liquibase.flowfile.yaml
-```
-
-### Running Quality Checks (Pro)
-
-Analyze your changelog for policy violations before deploying:
+**Example `deploy.sh`:**
 
 ```bash
-liquibase checks run \
-  --changelog-file=db.changelog-master.yaml \
-  --checks-scope=changelog
+#!/bin/bash
+set -euo pipefail
+
+changelog="changelog.xml"
+
+# 1. Validation
+echo "Validating changelog..."
+liquibase --changelog-file="$changelog" validate
+
+# 2. Quality Checks (see below)
+echo "Running Linter..."
+sqlfluff lint database/changes/*.sql
+
+# 3. Deployment
+echo "Deploying..."
+liquibase --changelog-file="$changelog" update
 ```
+
+> **Note:** **Liquibase Secure** users can use **Flow Files** for cross-platform orchestration without aggressive shell scripting.
+
+### Quality Checks (Community: SQLFluff)
+
+Instead of Liquibase Pro's Policy Checks, usage **[SQLFluff](https://sqlfluff.com/)** or similar linters to enforce SQL standards (naming conventions, casing, etc.) in your CI/CD pipeline.
+
+**Example `sqlfluff` run:**
+
+```bash
+pip install sqlfluff
+sqlfluff lint platforms/postgres/changes/ --dialect postgres
+```
+
+> **Liquibase Secure Alternative:** Use `liquibase checks run` for database-aware policy checks (e.g., detecting `GRANT` statements or large table drops).
 
 ### Structured Logging
 
@@ -483,7 +515,7 @@ docker run --rm \
   -e LIQUIBASE_SEARCH_PATH=/liquibase/changelog \
   liquibase:latest \
   --defaults-file properties/liquibase.dev.properties \
-  --changelog-file platforms/postgres/databases/app/db.changelog-master.yaml \
+  --changelog-file platforms/postgres/databases/app/changelog.xml \
   update
 ```
 
@@ -497,7 +529,7 @@ Roll back to a specific release tag:
 
 ```bash
 liquibase --defaults-file properties/liquibase.prod.properties \
-  --changelog-file platforms/postgres/databases/app/db.changelog-master.yaml \
+  --changelog-file platforms/postgres/databases/app/changelog.xml \
   rollback v1.0
 ```
 
@@ -513,26 +545,38 @@ liquibase ... rollbackCount 3
 
 ## Testing Strategy
 
-### 1. Changelog Validation
+### 1. Unit Testing (Validation)
 
-Validate syntax in CI/CD:
+Run static analysis on every commit to catch syntax errors early.
 
 ```bash
+# Verify XML/YAML/SQL validity
 liquibase --changelog-file="$changelog" validate
 ```
 
-### 2. Ephemeral Database Testing
+### 2. Integration Testing with Testcontainers
 
-Test changes on temporary databases:
+For robust testing, spin up an ephemeral, identical database version using **Testcontainers** (Java/Go/Python).
 
-1. Create temp DB.
-2. Run `liquibase update`.
-3. Run unit tests.
-4. Drop temp DB.
+**Pattern:**
+1.  **Start Container:** Spin up `postgres:15-alpine` (or your target DB).
+2.  **Deploy Schema:** Run `liquibase update` against the container.
+3.  **Run Tests:** Execute application integration tests against this schema.
+4.  **Teardown:** Docker container is destroyed automatically.
 
-### 3. Rollback Testing
+**Why?** Prevents "it works on my machine" issues and tests destructively without risk.
 
-Deploy → Tag → Deploy New → Rollback → Verify State.
+### 3. Dry-Run Verification
+
+Before applying to Production, execute a dry run request:
+
+```bash
+# 1. Update Testing Rollback (Verifies rollback SQL works)
+liquibase updateTestingRollback
+
+# 2. Preview SQL (Manual Review)
+liquibase updateSQL
+```
 
 [↑ Back to Table of Contents](#table-of-contents)
 

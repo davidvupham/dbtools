@@ -3,9 +3,13 @@
 **🔗 [← Back to Liquibase Documentation Index](../../explanation/liquibase/README.md)** — Navigation guide for all Liquibase docs
 
 > **Document Version:** 1.0
-> **Last Updated:** January 6, 2026
+> **Last Updated:** January 12, 2026
+> **Maintainers:** Global Data Services Team
 > **Status:** Production
 > **Related Docs:** [Concepts](../../explanation/concepts/liquibase/liquibase-concepts.md) | [Architecture](../../explanation/architecture/liquibase/liquibase-architecture.md) | [Operations](../../how-to/liquibase/liquibase-operations-guide.md)
+
+![Liquibase Version](https://img.shields.io/badge/Liquibase-5.0%2B-blue)
+![Document Status](https://img.shields.io/badge/Status-Production-green)
 
 This document serves as a reference for Liquibase features, limitations, configuration, and troubleshooting. Use this to look up specific commands, attributes, and error messages.
 
@@ -16,7 +20,7 @@ This document serves as a reference for Liquibase features, limitations, configu
 
 - [Edition Differences](#edition-differences)
   - [Liquibase Community](#liquibase-community)
-  - [Liquibase Secure (Pro/Enterprise)](#liquibase-secure-proenterprise)
+  - [Liquibase Secure](#liquibase-secure)
 - [Drift Detection Reference](#drift-detection-reference)
   - [Drift Detection Commands](#drift-detection-commands)
   - [Drift Detection Supported Objects](#drift-detection-supported-objects)
@@ -34,6 +38,7 @@ This document serves as a reference for Liquibase features, limitations, configu
   - [Environment Variables](#environment-variables)
 - [ChangeSet Attributes Reference](#changeset-attributes-reference)
 - [Flowfile Actions Reference](#flowfile-actions-reference)
+- [Performance Tuning](#performance-tuning)
 - [Troubleshooting](#troubleshooting)
   - [Lock Issues](#lock-issues)
   - [Checksum Mismatches](#checksum-mismatches)
@@ -60,19 +65,23 @@ This document serves as a reference for Liquibase features, limitations, configu
 - No automated extraction of stored logic.
 - No advanced policy checks or compliance reporting.
 
-### Liquibase Secure (Pro/Enterprise)
-
-**Adds to Community:**
-
-- ✅ **Automated Stored Logic Extraction**: Generates `pro:` change types for functions, triggers, etc.
-- **Drift Reporting**: Automated reports and alerts.
-- **Flow Files**: Orchestration of multi-stage deployments.
-- **Policy Checks**: Compliance rules to block bad patterns.
-- **Targeted Rollback**: Rollback specific changesets without rolling back everything after them.
-
-**Recommendation**: If your platforms rely heavily on stored logic (procedures/functions), Liquibase Secure significantly reduces manual effort.
-
 [↑ Back to Table of Contents](#table-of-contents)
+
+### Liquibase Secure
+
+Liquibase Secure (formerly Pro/Enterprise) adds governance, observability, and advanced automation.
+
+**Missing Features & Community Alternatives:**
+
+| Secure Feature | Community Alternative | Trade-off |
+| :--- | :--- | :--- |
+| **Flow Files** | Shell Scripts | More verbose, OS-dependent |
+| **Policy Checks** | SQLFluff / Custom Linters | Manual setup, no database-awareness |
+| **Drift Reporting** | `diff` command | Manual parsing of text output |
+| **Targeted Rollback** | Manual Rollback SQL | Higher risk of human error |
+| **Stored Logic Extraction** | Manual SQL files | Requires discipline to manage |
+
+**Recommendation**: Start with Community. If orchestration or compliance overhead becomes too high (e.g., managing 100+ pipelines), evaluate Secure.
 
 ## Drift Detection Reference
 
@@ -97,7 +106,7 @@ liquibase snapshot \
   --url="jdbc:postgresql://localhost:5432/mydb" \
   --schemas=app \
   --snapshot-format=json \
-  --output-file=baseline.json
+  --output-file=snapshots/dbinstance1_prod-manual-20260112.json
 ```
 
 **Diff Command (against snapshot):**
@@ -106,7 +115,7 @@ liquibase snapshot \
 liquibase diff \
   --url="jdbc:postgresql://localhost:5432/mydb" \
   --schemas=app \
-  --referenceUrl="offline:postgresql?snapshot=baseline.json"
+  --referenceUrl="offline:postgresql?snapshot=snapshots/dbinstance1_prod-manual-20260112.json"
 ```
 
 **Diff Command (between databases):**
@@ -124,13 +133,13 @@ liquibase diff \
 ```bash
 # Generate YAML changelog
 liquibase diffChangeLog \
-  --changelog-file=drift.yaml \
-  --referenceUrl="offline:postgresql?snapshot=baseline.json"
+  --changelog-file=drift/drift_remediation.xml \
+  --referenceUrl="offline:postgresql?snapshot=snapshots/dbinstance1_prod-manual-20260112.json"
 
 # Generate platform-specific SQL
 liquibase diffChangeLog \
-  --changelog-file=drift.postgresql.sql \
-  --referenceUrl="offline:postgresql?snapshot=baseline.json"
+  --changelog-file=drift/V20260112__drift_fix.postgres.sql \
+  --referenceUrl="offline:postgresql?snapshot=snapshots/dbinstance1_prod-manual-20260112.json"
 ```
 
 ### Drift Detection Supported Objects
@@ -155,7 +164,7 @@ Liquibase can detect drift across different object types depending on the databa
 | Functions | ❌ | ✅ | Pro only - scalar, table-valued |
 | Triggers | ❌ | ✅ | Pro only |
 | Synonyms | ❌ | ✅ | Pro only |
-| Data (row-level) | ❌ | ✅ | Pro only - with `diffTypes=data` |
+| Data (row-level) | ❌ | ✅ | Secure only - with `diffTypes=data` |
 
 #### PostgreSQL
 
@@ -399,37 +408,29 @@ Beyond basic `id` and `author`, changesets support these advanced attributes:
 
 **Example: runOnChange for Views**
 
-```yaml
-- changeSet:
-    id: 20251220-1000-PROJ-100-create-user-summary-view
-    author: platform-team
-    runOnChange: true
-    changes:
-      - createView:
-          viewName: user_summary
-          selectQuery: SELECT id, email, created_at FROM users WHERE active = true
+```sql
+--changeset platform-team:create-user-summary-view runOnChange:true
+CREATE OR REPLACE VIEW user_summary AS
+SELECT id, email, created_at FROM users WHERE active = true;
 ```
 
-**Example: modifySql for Platform-Specific SQL**
+**Example: dbms attribute for Platform-Specific SQL**
 
-Add platform-specific clauses to generated SQL:
+```sql
+--changeset platform-team:create-orders-table dbms:mysql
+CREATE TABLE orders (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY
+) ENGINE=InnoDB;
 
-```yaml
-- changeSet:
-    id: 20251220-1100-PROJ-101-create-orders-table
-    author: platform-team
-    changes:
-      - createTable:
-          tableName: orders
-          columns:
-            - column: { name: id, type: bigint, autoIncrement: true }
-    modifySql:
-      - append:
-          dbms: mysql
-          value: " ENGINE=InnoDB"
+--changeset platform-team:create-orders-table dbms:postgresql
+CREATE TABLE orders (
+    id BIGSERIAL PRIMARY KEY
+);
 ```
 
-## Flowfile Actions Reference
+## Flowfile Actions Reference (Secure Only)
+
+> **Note:** Community users should use shell scripts for orchestration. See [Operations Guide](../../how-to/liquibase/liquibase-operations-guide.md#orchestration-community-shell-scripts).
 
 Common actions used in `liquibase.flowfile.yaml`:
 
@@ -443,34 +444,72 @@ Common actions used in `liquibase.flowfile.yaml`:
 
 [↑ Back to Table of Contents](#table-of-contents)
 
+## Performance Tuning
+
+### Handling Large Data
+
+> [!WARNING]
+> **Avoid `loadData` for bulk imports.** Liquibase's `loadData` is slow for datasets > 1000 rows.
+
+**Recommendation:**
+1.  **Native Tools:** Use database-specific bulk tools (`COPY` for Postgres, `BCP` for SQL Server, `SQLLoader` for Oracle).
+2.  **External Scripts:** Wrap these calls in a shell script or custom extension.
+3.  **Disable Indexing:** Drop indexes before load, recreate after.
+
+### Transaction Management
+
+By default, Liquibase runs each changeset in a transaction.
+-   **Performance:** For massive updates, standard transactions may fill undo logs.
+-   **Optimization:** Use `runInTransaction:false` for long-running operations or creating indexes concurrently.
+
+```sql
+--changeset team:add-index-concurrently runInTransaction:false
+CREATE INDEX CONCURRENTLY idx_users_email ON users(email);
+```
+
+### Optimizing Changelogs
+
+-   **Split Files:** Don't keep all history in one file. Split by release or object type.
+-   **IncludeAll:** Use `<includeAll>` for rapid scanning of timestamped files.
+-   **Status Check:** `liquibase status --verbose` can be slow on large changelogs. Use standard `status` for quick checks.
+
+[↑ Back to Table of Contents](#table-of-contents)
+
 ## Troubleshooting
 
 ### Lock Issues
 
-If a deployment crashes, the lock may remain held.
-
+**Symptom:** "Waiting for changelog lock..."
+**Cause:** Previous deployment crashed or multiple pipelines running.
+**Fix:**
 ```bash
-# Release stuck lock
-liquibase --defaults-file properties/liquibase.dev.properties releaseLocks
+liquibase releaseLocks
 ```
 
 ### Checksum Mismatches
 
-Occurs when a changeSet is edited *after* it has been deployed.
-**Best Practice**: Never edit deployed changeSets. Create new ones.
+**Symptom:** "Validation Failed: Checksum changed for changeset..."
+**Cause:** A deployed file was modified locally.
+**Fix:**
+1.  **Revert:** Undo local changes to match deployed version.
+2.  **New Changeset:** Add new logic in a *new* file.
+3.  **Emergency:** `liquibase clearCheckSums` (Forces re-calculation).
 
-```bash
-# Clear checksums (use with caution - forces re-validation)
-liquibase --defaults-file properties/liquibase.dev.properties clearCheckSums
-```
+### Slow Deployments
 
-### Manual Interventions
+**Symptom:** `update` takes forever.
+**Cause:** Large data operations, missing indexes, or network latency.
+**Fix:**
+-   Check "Performance Tuning" section.
+-   Enable JSON logging to identify slow changesets.
 
-To mark changeSets as executed without actually running the SQL (e.g., fixing a hotfix mismatch):
+### Deployment Hanged
 
-```bash
-liquibase --defaults-file properties/liquibase.env.properties changelogSync
-```
+**Symptom:** Process stuck without output.
+**Fix:**
+-   Check database active queries.
+-   Verify network connectivity (VPN/Bastion).
+-   Check `DATABASECHANGELOGLOCK` manually.
 
 [↑ Back to Table of Contents](#table-of-contents)
 
@@ -501,5 +540,7 @@ liquibase --defaults-file properties/liquibase.env.properties changelogSync
 
 ### Internal Documentation
 
-- [Liquibase Architecture Guide](../../explanation/architecture/liquibase/liquibase-architecture.md): Design principles and directory structure.
-- [Liquibase Operations Guide](../../how-to/liquibase/liquibase-operations-guide.md): Day-to-day procedures.
+- **[Liquibase Concepts Guide](../../explanation/concepts/liquibase/liquibase-concepts.md)**
+- **[Liquibase Architecture Guide](../../explanation/architecture/liquibase/liquibase-architecture.md)**
+- **[Liquibase Operations Guide](../../how-to/liquibase/liquibase-operations-guide.md)**
+- **[Liquibase Reference](liquibase-reference.md)**
