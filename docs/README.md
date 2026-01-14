@@ -18,17 +18,17 @@ This directory contains all project documentation organized by category.
 - [Component Documentation](#component-documentation)
 - [Quick Links](#quick-links)
 
-## 🗂️ Browse by Topic
+## Browse by Topic
 
 Find documentation across all categories (Tutorials, How-to, Reference) for specific technologies:
 
 | Topic | Main Entry Point | How-to / Reference |
-|-------|------------------|--------------------|
+| :--- | :--- | :--- |
 | **Python** | [Tutorials](tutorials/python/README.md) | [How-to](how-to/python/README.md) • [Ref](reference/python/README.md) |
 | **UV (Pkg Mgr)** | [Tutorials](tutorials/python/uv/README.md) | [How-to](how-to/python/README.md) • [Ref](reference/python/uv/uv-reference.md) |
 | **PowerShell** | [Tutorials](tutorials/powershell/README.md) | [How-to](how-to/powershell/README.md) • [Ref](reference/README.md) |
 | **Docker** | [Tutorials](tutorials/docker/README.md) | [Standards](best-practices/docker/README.md) |
-| **Podman** | [Overview](explanation/podman/README.md) | [Install](how-to/podman/install-podman-rhel.md) • [Troubleshoot](how-to/podman/troubleshooting.md) • [Ref](reference/podman/cheatsheet.md) |
+| **Podman** | [Overview](explanation/podman/README.md) | [Install](how-to/podman/install-podman-rhel.md) • [Systemd](how-to/podman/systemd-integration.md) • [Troubleshoot](how-to/podman/troubleshooting.md) • [Ref](reference/podman/cheatsheet.md) |
 | **Kubernetes** | [Tutorials](tutorials/kubernetes/README.md) | |
 | **AWS** | [Tutorials](tutorials/aws/README.md) | |
 | **Terraform** | [Tutorials](tutorials/terraform/README.md) | |
@@ -40,16 +40,21 @@ Find documentation across all categories (Tutorials, How-to, Reference) for spec
 | **System Design** | [Tutorials](system-design/README.md) | |
 | **Linux** | [Tutorials](linux/README.md) | [Ref](reference/linux/README.md) |
 
-## 📚 Documentation Organization
+## Documentation Organization
 
-This documentation follows the **[Diátaxis Framework](https://diataxis.fr/)**, a systematic approach to technical documentation that organizes content by **user intent**.
+This documentation follows the **[Diátaxis Framework](https://diataxis.fr/)**, a systematic approach to technical
+documentation that organizes content by **user intent**.
 
 The framework divides documentation into four distinct quadrants:
 
-1. **[Tutorials](tutorials/README.md)** (Learning-oriented): *"Teach me."* Lessons that lead the user through a series of steps to complete a project.
-2. **[How-to Guides](how-to/README.md)** (Problem-oriented): *"Help me do it."* Steps to solve a specific problem or real-world task.
-3. **[Reference](reference/README.md)** (Information-oriented): *"Describe it."* Technical descriptions of the machinery and how to operate it.
-4. **[Explanation](explanation/README.md)** (Understanding-oriented): *"Explain it."* Discussion that clarifies and illuminates a particular topic.
+1. **[Tutorials](tutorials/README.md)** (Learning-oriented): *"Teach me."* Lessons that lead the user through a
+    series of steps to complete a project.
+2. **[How-to Guides](how-to/README.md)** (Problem-oriented): *"Help me do it."* Steps to solve a specific problem or
+    real-world task.
+3. **[Reference](reference/README.md)** (Information-oriented): *"Describe it."* Technical descriptions of the
+    machinery and how to operate it.
+4. **[Explanation](explanation/README.md)** (Understanding-oriented): *"Explain it."* Discussion that clarifies and
+    illuminates a particular topic.
 
 For more information, visit the [official Diátaxis documentation](https://diataxis.fr/).
 

@@ -60,7 +60,20 @@ loginctl enable-linger $USER
 
 ## Networking
 
-Rootless Podman uses `slirp4netns` by default.
+### Network Backends (Netavark vs Slirp4netns)
+
+* **Slirp4netns**: The legacy/default implementation for rootless networking. It is stable but can have performance
+    overhead.
+* **Netavark**: The modern network stack (default in RHEL 9/Podman 4.0+). It offers better performance and supports
+    advanced features like distinct IP addresses for containers in rootless mode.
+
+To verify which backend you are using:
+
+```bash
+podman info --format '{{.Host.NetworkBackend}}'
+```
+
+If you need to switch (e.g., to enable IPv6 or better performance), edit `containers.conf`.
 
 ### Exposing Ports
 
