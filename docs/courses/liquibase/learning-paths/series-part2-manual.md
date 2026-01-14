@@ -111,20 +111,20 @@ Before starting Part 2, validate that Part 1 was completed successfully:
 
 ```bash
 # Run the comprehensive validation script (validates all prerequisites)
-$LIQUIBASE_TUTORIAL_DIR/scripts/validate_liquibase_deploy.sh
+$LIQUIBASE_TUTORIAL_DIR/scripts/validate_liquibase_deploy.sh --db mssql_dev,mssql_stg,mssql_prd
 ```
 
 **What the script validates (maps to prerequisites above):**
 
 - ✅ **Containers running** - Validates containers are accessible (implicit via database connections)
-- ✅ **Database `orderdb` exists** - Validates by connecting to each environment
+- ✅ **Database `orderdb` exists** - Validates by connecting to each instance
 - ✅ **Baseline file exists** - Validates `V0000__baseline.mssql.sql` exists
 - ✅ **Master changelog exists** - Validates `changelog.xml` exists and includes baseline
 - ✅ **Properties files** - Validates via database connections (full validation: `validate_liquibase_properties.sh`)
-- ✅ **DATABASECHANGELOG table exists** - Validates in all environments (dev, stg, prd)
-- ✅ **Baseline changesets tracked** - Validates ≥4 changesets in all environments
-- ✅ **Baseline objects exist** - Validates app.customer table exists in all environments
-- ✅ **Baseline tagged** - Validates `baseline` tag exists in all environments
+- ✅ **DATABASECHANGELOG table exists** - Validates in all specified instances
+- ✅ **Baseline changesets tracked** - Validates ≥4 changesets in all specified instances
+- ✅ **Baseline objects exist** - Validates app.customer table exists in all specified instances
+- ✅ **Baseline tagged** - Validates `baseline` tag exists in all specified instances
 
 **Optional: Individual validation scripts**
 
@@ -138,7 +138,7 @@ $LIQUIBASE_TUTORIAL_DIR/scripts/validate_orderdb_database.sh
 $LIQUIBASE_TUTORIAL_DIR/scripts/validate_liquibase_properties.sh
 
 # Baseline deployment (comprehensive validation, recommended)
-$LIQUIBASE_TUTORIAL_DIR/scripts/validate_liquibase_deploy.sh
+$LIQUIBASE_TUTORIAL_DIR/scripts/validate_liquibase_deploy.sh --db mssql_dev,mssql_stg,mssql_prd
 ```
 
 If validation fails, complete the missing steps from Part 1 before proceeding.
@@ -177,7 +177,7 @@ See [Appendix: Step 6 Direct Commands (Create V0001 Change File)](#appendix-step
 lb -e dev -- updateSQL
 
 # Deploy change to development (with auto-snapshot)
-$LIQUIBASE_TUTORIAL_DIR/scripts/deploy.sh --action update --env dev
+$LIQUIBASE_TUTORIAL_DIR/scripts/deploy.sh --action update --db mssql_dev
 ```
 
 > **Note:** `deploy.sh` automatically takes a snapshot after successful deployment for drift detection.
@@ -258,7 +258,7 @@ Once the change is validated in development, promote it to staging and productio
 lb -e stg -- updateSQL
 
 # Deploy to staging (with auto-snapshot)
-$LIQUIBASE_TUTORIAL_DIR/scripts/deploy.sh --action update --env stg
+$LIQUIBASE_TUTORIAL_DIR/scripts/deploy.sh --action update --db mssql_stg
 ```
 
 Verify in staging:
@@ -300,7 +300,7 @@ ORDER BY type_desc, name;
 lb -e prd -- updateSQL
 
 # Deploy to production (with auto-snapshot)
-$LIQUIBASE_TUTORIAL_DIR/scripts/deploy.sh --action update --env prd
+$LIQUIBASE_TUTORIAL_DIR/scripts/deploy.sh --action update --db mssql_prd
 ```
 
 Verify in production:
@@ -449,7 +449,7 @@ lb -e dev -- rollbackSQL baseline
 # Execute rollback to baseline (removes V0001 orders table)
 # This removes all changesets executed after the baseline tag
 # Using deploy.sh takes a snapshot of the post-rollback state
-$LIQUIBASE_TUTORIAL_DIR/scripts/deploy.sh --action rollback --env dev --tag baseline
+$LIQUIBASE_TUTORIAL_DIR/scripts/deploy.sh --action rollback --db mssql_dev --tag baseline
 
 # Verify the orders table is gone
 sqlcmd-tutorial -S mssql_dev -Q "
@@ -470,7 +470,7 @@ The query should show only the baseline changesets remain - the `release-v1.0` t
 
 ```bash
 # Re-deploy V0001 (with auto-snapshot)
-$LIQUIBASE_TUTORIAL_DIR/scripts/deploy.sh --action update --env dev
+$LIQUIBASE_TUTORIAL_DIR/scripts/deploy.sh --action update --db mssql_dev
 
 # Re-tag the release
 lb -e dev -- tag release-v1.0
@@ -664,10 +664,10 @@ Use `deploy.sh` for deployments - it automatically creates timestamped snapshots
 
 ```bash
 # In your CI/CD pipeline, use deploy.sh for all deployments
-$LIQUIBASE_TUTORIAL_DIR/scripts/deploy.sh --action update --env prd
+$LIQUIBASE_TUTORIAL_DIR/scripts/deploy.sh --action update --db mssql_prd
 
 # Snapshots are automatically saved to:
-# $LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/snapshots/prd_update_YYYYMMDD_HHMMSS.json
+# $LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/snapshots/mssql_prd_update_YYYYMMDD_HHMMSS.json
 
 # Optionally, copy snapshots to artifact storage for long-term retention
 aws s3 cp $LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/snapshots/prd_*.json \
@@ -731,19 +731,19 @@ See [Appendix: Step 11 Direct Commands (Create V0002 Change File)](#appendix-ste
 
 ```bash
 # Deploy to dev (with auto-snapshot)
-$LIQUIBASE_TUTORIAL_DIR/scripts/deploy.sh --action update --env dev
+$LIQUIBASE_TUTORIAL_DIR/scripts/deploy.sh --action update --db mssql_dev
 lb -e dev -- tag release-v1.1
 
 # Deploy to staging (after dev validation, with auto-snapshot)
-$LIQUIBASE_TUTORIAL_DIR/scripts/deploy.sh --action update --env stg
+$LIQUIBASE_TUTORIAL_DIR/scripts/deploy.sh --action update --db mssql_stg
 lb -e stg -- tag release-v1.1
 
 # Deploy to production (after staging validation, with auto-snapshot)
-$LIQUIBASE_TUTORIAL_DIR/scripts/deploy.sh --action update --env prd
+$LIQUIBASE_TUTORIAL_DIR/scripts/deploy.sh --action update --db mssql_prd
 lb -e prd -- tag release-v1.1
 ```
 
-> **Tip:** You can deploy to multiple environments at once: `deploy.sh --action update --env dev,stg,prd`
+> **Tip:** You can deploy to multiple instances at once: `deploy.sh --action update --db mssql_dev,mssql_stg,mssql_prd`
 
 ---
 
@@ -754,9 +754,9 @@ In Part 2, you learned:
 | Topic | Key Commands |
 |-------|--------------|
 | **Make changes** | Create SQL files, update `changelog.xml` |
-| **Deploy** | `deploy.sh --action update --env <env>` (auto-snapshot) |
+| **Deploy** | `deploy.sh --action update --db <instance>` (auto-snapshot) |
 | **Tags** | `lb -e <env> -- tag <name>` |
-| **Rollback** | `deploy.sh --action rollback --env <env> --tag <tag>` (auto-snapshot) |
+| **Rollback** | `deploy.sh --action rollback --db <instance> --tag <tag>` (auto-snapshot) |
 | **Drift detection** | `lb -e <env> -- diff` (compare against snapshot) |
 | **Drift capture** | `lb -e <env> -- diffChangeLog` |
 | **Snapshots** | Automatically created after every deployment for drift detection |

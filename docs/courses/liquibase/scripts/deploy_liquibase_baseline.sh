@@ -226,4 +226,4 @@ echo
 echo "All environments tagged with 'baseline'"
 echo
 echo "Next: Continue with Part 2 (Manual Lifecycle)"
-echo "  Or run: validate_liquibase_deploy.sh to verify deployment"
+echo "  Or run: validate_liquibase_deploy.sh --db mssql_dev,mssql_stg,mssql_prd to verify deployment"

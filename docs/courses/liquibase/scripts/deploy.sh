@@ -18,7 +18,7 @@
 # SNAPSHOT STRATEGY:
 #   - Every successful deployment creates a new timestamped snapshot
 #   - Snapshots are NEVER deleted - they form an audit trail
-#   - Each snapshot filename includes: environment, action, and timestamp
+#   - Each snapshot filename includes: instance, action, and timestamp
 #   - Drift detection compares against the most recent snapshot
 #
 # SUPPORTED ACTIONS:
@@ -30,47 +30,46 @@
 #   status         - Show pending changesets (no snapshot taken)
 #
 # USAGE:
-#   deploy.sh --action <action> [--env <env>] [options]
+#   deploy.sh --action <action> --db <instances> [options]
 #
 # OPTIONS:
 #   -a, --action <action>   Action to perform (required)
 #                           Values: baseline, update, rollback, rollback-count, status
-#   -e, --env <env>         Target environment(s) - comma-separated
-#                           Values: dev, stg, prd (default: dev)
-#                           For baseline: defaults to dev,stg,prd
+#   -d, --db <instances>    Target database instance(s) - comma-separated (required)
+#                           Values: mssql_dev, mssql_stg, mssql_prd
 #   -t, --tag <tag>         Tag name for rollback action (required for rollback)
 #   -c, --count <n>         Number of changesets for rollback-count (required for rollback-count)
 #   --no-snapshot           Skip snapshot creation (not recommended)
 #   -h, --help              Show this help message
 #
 # EXAMPLES:
-#   # Deploy baseline to all environments (dev, stg, prd)
-#   deploy.sh --action baseline
+#   # Deploy baseline to all database instances
+#   deploy.sh --action baseline --db mssql_dev,mssql_stg,mssql_prd
 #
 #   # Deploy baseline to dev only
-#   deploy.sh --action baseline --env dev
+#   deploy.sh --action baseline --db mssql_dev
 #
 #   # Deploy pending changesets to dev
-#   deploy.sh --action update --env dev
+#   deploy.sh --action update --db mssql_dev
 #
-#   # Deploy to multiple environments
-#   deploy.sh --action update --env dev,stg
+#   # Deploy to multiple instances
+#   deploy.sh --action update --db mssql_dev,mssql_stg
 #
 #   # Rollback dev to baseline tag
-#   deploy.sh --action rollback --env dev --tag baseline
+#   deploy.sh --action rollback --db mssql_dev --tag baseline
 #
 #   # Rollback last 1 changeset in dev
-#   deploy.sh --action rollback-count --env dev --count 1
+#   deploy.sh --action rollback-count --db mssql_dev --count 1
 #
 #   # Check pending changesets (no snapshot)
-#   deploy.sh --action status --env dev
+#   deploy.sh --action status --db mssql_dev
 #
 # SNAPSHOT NAMING:
-#   Format: {env}_{action}_{YYYYMMDD}_{HHMMSS}.json
+#   Format: {instance}_{action}_{YYYYMMDD}_{HHMMSS}.json
 #   Examples:
-#     dev_baseline_20260112_050000.json
-#     dev_update_20260112_053000.json
-#     stg_rollback_20260112_060000.json
+#     mssql_dev_baseline_20260112_050000.json
+#     mssql_dev_update_20260112_053000.json
+#     mssql_stg_rollback_20260112_060000.json
 #
 # SNAPSHOT LOCATION:
 #   $LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/snapshots/
@@ -131,23 +130,24 @@ log_error() {
     echo -e "${RED}✗${NC} $*" >&2
 }
 
-# Normalize environment names (stage -> stg, prod -> prd)
-normalize_env() {
-    local env="${1//[[:space:]]/}"
-    case "$env" in
-        stage) echo "stg" ;;
-        prod)  echo "prd" ;;
-        *)     echo "$env" ;;
+# Extract environment from database instance name (mssql_dev -> dev)
+instance_to_env() {
+    local instance="${1//[[:space:]]/}"
+    case "$instance" in
+        mssql_dev) echo "dev" ;;
+        mssql_stg) echo "stg" ;;
+        mssql_prd) echo "prd" ;;
+        *)         echo "" ;;
     esac
 }
 
-# Get human-readable environment name
-pretty_env() {
+# Get human-readable instance name
+pretty_instance() {
     case "$1" in
-        dev) echo "Development" ;;
-        stg) echo "Staging" ;;
-        prd) echo "Production" ;;
-        *)   echo "$1" ;;
+        mssql_dev) echo "Development (mssql_dev)" ;;
+        mssql_stg) echo "Staging (mssql_stg)" ;;
+        mssql_prd) echo "Production (mssql_prd)" ;;
+        *)         echo "$1" ;;
     esac
 }
 
@@ -156,7 +156,7 @@ pretty_env() {
 ################################################################################
 
 ACTION=""
-ENVS_CSV=""
+INSTANCES_CSV=""
 TAG=""
 COUNT=""
 TAKE_SNAPSHOT=true
@@ -167,8 +167,8 @@ while [[ $# -gt 0 ]]; do
             ACTION="$2"
             shift 2
             ;;
-        -e|--env|--envs)
-            ENVS_CSV="$2"
+        -d|--db|--database|--instances)
+            INSTANCES_CSV="$2"
             shift 2
             ;;
         -t|--tag)
@@ -225,26 +225,26 @@ if [[ "$ACTION" == "rollback-count" ]] && [[ -z "$COUNT" ]]; then
     exit 2
 fi
 
-# Set default environments
-if [[ -z "$ENVS_CSV" ]]; then
-    if [[ "$ACTION" == "baseline" ]]; then
-        ENVS_CSV="dev,stg,prd"
-    else
-        ENVS_CSV="dev"
-    fi
+# Validate database instances (required)
+if [[ -z "$INSTANCES_CSV" ]]; then
+    log_error "Database instance(s) required. Use --db <instances>"
+    log_error "Valid instances: mssql_dev, mssql_stg, mssql_prd"
+    print_usage
+    exit 2
 fi
 
-# Parse environments into array
-declare -a TARGET_ENVS=()
-IFS=',' read -r -a TARGET_ENVS <<< "$ENVS_CSV"
-for i in "${!TARGET_ENVS[@]}"; do
-    TARGET_ENVS[$i]="$(normalize_env "${TARGET_ENVS[$i]}")"
-done
+# Parse instances into array
+declare -a TARGET_INSTANCES=()
+IFS=',' read -r -a TARGET_INSTANCES <<< "$INSTANCES_CSV"
 
-# Validate environments
-for env in "${TARGET_ENVS[@]}"; do
-    if [[ ! "$env" =~ ^(dev|stg|prd)$ ]]; then
-        log_error "Invalid environment: $env (must be dev, stg, or prd)"
+# Validate database instances
+VALID_INSTANCES="mssql_dev mssql_stg mssql_prd"
+for instance in "${TARGET_INSTANCES[@]}"; do
+    # Trim whitespace
+    instance="${instance//[[:space:]]/}"
+    if [[ ! " $VALID_INSTANCES " =~ " $instance " ]]; then
+        log_error "Invalid database instance: $instance"
+        log_error "Valid instances: $VALID_INSTANCES"
         exit 2
     fi
 done
@@ -275,24 +275,26 @@ fi
 
 # Take a snapshot of the current database state
 # Arguments:
-#   $1 - environment (dev, stg, prd)
+#   $1 - database instance (mssql_dev, mssql_stg, mssql_prd)
 #   $2 - action name (for filename)
 take_snapshot() {
-    local env="$1"
+    local instance="$1"
     local action_name="$2"
+    local env
+    env=$(instance_to_env "$instance")
     local timestamp
     timestamp=$(date +%Y%m%d_%H%M%S)
-    local snapshot_file="${SNAPSHOT_DIR}/${env}_${action_name}_${timestamp}.json"
+    local snapshot_file="${SNAPSHOT_DIR}/${instance}_${action_name}_${timestamp}.json"
     
     # Ensure snapshot directory exists
     mkdir -p "$SNAPSHOT_DIR"
     
-    log_info "Taking snapshot: ${env}_${action_name}_${timestamp}.json"
+    log_info "Taking snapshot: ${instance}_${action_name}_${timestamp}.json"
     
     if "$LB_CMD" -e "$env" -- snapshot \
         --schemas=app \
         --snapshot-format=json \
-        --output-file="/data/platform/mssql/database/orderdb/snapshots/${env}_${action_name}_${timestamp}.json" \
+        --output-file="/data/platform/mssql/database/orderdb/snapshots/${instance}_${action_name}_${timestamp}.json" \
         2>&1; then
         log_success "Snapshot saved: $snapshot_file"
         return 0
@@ -307,18 +309,20 @@ take_snapshot() {
 ################################################################################
 
 # Deploy baseline
-# - dev: changelogSync (mark as executed without running)
-# - stg/prd: update (actually execute)
+# - mssql_dev: changelogSync (mark as executed without running)
+# - mssql_stg/mssql_prd: update (actually execute)
 # - All: tag as "baseline"
 do_baseline() {
-    local env="$1"
+    local instance="$1"
+    local env
+    env=$(instance_to_env "$instance")
     local pretty
-    pretty=$(pretty_env "$env")
+    pretty=$(pretty_instance "$instance")
     
     local lb_action="update"
     local action_desc="update - execute changesets"
     
-    if [[ "$env" == "dev" ]]; then
+    if [[ "$instance" == "mssql_dev" ]]; then
         lb_action="changelogSync"
         action_desc="changelogSync - mark as executed"
     fi
@@ -344,9 +348,11 @@ do_baseline() {
 
 # Deploy updates (pending changesets)
 do_update() {
-    local env="$1"
+    local instance="$1"
+    local env
+    env=$(instance_to_env "$instance")
     local pretty
-    pretty=$(pretty_env "$env")
+    pretty=$(pretty_instance "$instance")
     
     log_info "Deploying updates to $pretty..."
     
@@ -361,10 +367,12 @@ do_update() {
 
 # Rollback to a specific tag
 do_rollback() {
-    local env="$1"
+    local instance="$1"
     local tag="$2"
+    local env
+    env=$(instance_to_env "$instance")
     local pretty
-    pretty=$(pretty_env "$env")
+    pretty=$(pretty_instance "$instance")
     
     log_info "Rolling back $pretty to tag '$tag'..."
     
@@ -379,10 +387,12 @@ do_rollback() {
 
 # Rollback last N changesets
 do_rollback_count() {
-    local env="$1"
+    local instance="$1"
     local count="$2"
+    local env
+    env=$(instance_to_env "$instance")
     local pretty
-    pretty=$(pretty_env "$env")
+    pretty=$(pretty_instance "$instance")
     
     log_info "Rolling back last $count changeset(s) in $pretty..."
     
@@ -397,9 +407,11 @@ do_rollback_count() {
 
 # Show status (pending changesets)
 do_status() {
-    local env="$1"
+    local instance="$1"
+    local env
+    env=$(instance_to_env "$instance")
     local pretty
-    pretty=$(pretty_env "$env")
+    pretty=$(pretty_instance "$instance")
     
     log_info "Checking status in $pretty..."
     
@@ -416,7 +428,7 @@ echo "Liquibase Deployment"
 echo "========================================"
 echo
 echo "Action:       $ACTION"
-echo "Environment:  ${TARGET_ENVS[*]}"
+echo "Instances:    ${TARGET_INSTANCES[*]}"
 if [[ -n "$TAG" ]]; then
     echo "Tag:          $TAG"
 fi
@@ -429,39 +441,39 @@ echo
 cd "$LIQUIBASE_TUTORIAL_DATA_DIR"
 
 # Track results
-declare -a SUCCESS_ENVS=()
-declare -a FAILED_ENVS=()
+declare -a SUCCESS_INSTANCES=()
+declare -a FAILED_INSTANCES=()
 
-for env in "${TARGET_ENVS[@]}"; do
+for instance in "${TARGET_INSTANCES[@]}"; do
     echo "----------------------------------------"
-    echo "Processing: $(pretty_env "$env")"
+    echo "Processing: $(pretty_instance "$instance")"
     echo "----------------------------------------"
     
     action_success=false
     
     case "$ACTION" in
         baseline)
-            if do_baseline "$env"; then
+            if do_baseline "$instance"; then
                 action_success=true
             fi
             ;;
         update)
-            if do_update "$env"; then
+            if do_update "$instance"; then
                 action_success=true
             fi
             ;;
         rollback)
-            if do_rollback "$env" "$TAG"; then
+            if do_rollback "$instance" "$TAG"; then
                 action_success=true
             fi
             ;;
         rollback-count)
-            if do_rollback_count "$env" "$COUNT"; then
+            if do_rollback_count "$instance" "$COUNT"; then
                 action_success=true
             fi
             ;;
         status)
-            do_status "$env"
+            do_status "$instance"
             # Status doesn't trigger snapshot
             action_success=true
             TAKE_SNAPSHOT=false
@@ -469,14 +481,14 @@ for env in "${TARGET_ENVS[@]}"; do
     esac
     
     if [[ "$action_success" == "true" ]]; then
-        SUCCESS_ENVS+=("$env")
+        SUCCESS_INSTANCES+=("$instance")
         
         # Take snapshot after successful action (except status)
         if [[ "$TAKE_SNAPSHOT" == "true" ]] && [[ "$ACTION" != "status" ]]; then
-            take_snapshot "$env" "$ACTION" || true
+            take_snapshot "$instance" "$ACTION" || true
         fi
     else
-        FAILED_ENVS+=("$env")
+        FAILED_INSTANCES+=("$instance")
     fi
     
     echo
@@ -490,12 +502,12 @@ echo "========================================"
 echo "Deployment Summary"
 echo "========================================"
 
-if [[ ${#SUCCESS_ENVS[@]} -gt 0 ]]; then
-    echo -e "${GREEN}Successful:${NC} ${SUCCESS_ENVS[*]}"
+if [[ ${#SUCCESS_INSTANCES[@]} -gt 0 ]]; then
+    echo -e "${GREEN}Successful:${NC} ${SUCCESS_INSTANCES[*]}"
 fi
 
-if [[ ${#FAILED_ENVS[@]} -gt 0 ]]; then
-    echo -e "${RED}Failed:${NC} ${FAILED_ENVS[*]}"
+if [[ ${#FAILED_INSTANCES[@]} -gt 0 ]]; then
+    echo -e "${RED}Failed:${NC} ${FAILED_INSTANCES[*]}"
 fi
 
 if [[ "$TAKE_SNAPSHOT" == "true" ]] && [[ "$ACTION" != "status" ]]; then
@@ -506,7 +518,7 @@ fi
 
 echo
 
-if [[ ${#FAILED_ENVS[@]} -gt 0 ]]; then
+if [[ ${#FAILED_INSTANCES[@]} -gt 0 ]]; then
     log_error "Deployment completed with errors"
     exit 1
 else

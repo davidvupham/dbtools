@@ -1,7 +1,28 @@
 #!/bin/bash
-# Validate Liquibase Baseline Deployment
-# Validates that baseline is deployed to all environments and tracked in Liquibase
-# Reusable across all tutorial parts
+################################################################################
+# validate_liquibase_deploy.sh - Validate Liquibase Baseline Deployment
+################################################################################
+#
+# PURPOSE:
+#   Validates that baseline is deployed to specified database instances and
+#   tracked in Liquibase. Reusable across all tutorial parts.
+#
+# USAGE:
+#   validate_liquibase_deploy.sh --db <instances>
+#
+# OPTIONS:
+#   -d, --db <instances>    Target database instance(s) - comma-separated (required)
+#                           Values: mssql_dev, mssql_stg, mssql_prd
+#   -h, --help              Show this help message
+#
+# EXAMPLES:
+#   # Validate all database instances
+#   validate_liquibase_deploy.sh --db mssql_dev,mssql_stg,mssql_prd
+#
+#   # Validate specific instance
+#   validate_liquibase_deploy.sh --db mssql_dev
+#
+################################################################################
 
 set -u
 
@@ -11,9 +32,104 @@ RED='\033[0;31m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
+################################################################################
+# Helper Functions
+################################################################################
+
+print_usage() {
+    cat <<'EOF'
+Usage:
+  validate_liquibase_deploy.sh --db <instances>
+
+Options:
+  -d, --db <instances>    Target database instance(s) - comma-separated (required)
+                          Values: mssql_dev, mssql_stg, mssql_prd
+  -h, --help              Show this help message
+
+Examples:
+  validate_liquibase_deploy.sh --db mssql_dev,mssql_stg,mssql_prd
+  validate_liquibase_deploy.sh --db mssql_dev
+EOF
+}
+
+# Extract environment from database instance name (mssql_dev -> dev)
+instance_to_env() {
+    local instance="${1//[[:space:]]/}"
+    case "$instance" in
+        mssql_dev) echo "dev" ;;
+        mssql_stg) echo "stg" ;;
+        mssql_prd) echo "prd" ;;
+        *)         echo "" ;;
+    esac
+}
+
+# Get human-readable instance name
+pretty_instance() {
+    case "$1" in
+        mssql_dev) echo "Development (mssql_dev)" ;;
+        mssql_stg) echo "Staging (mssql_stg)" ;;
+        mssql_prd) echo "Production (mssql_prd)" ;;
+        *)         echo "$1" ;;
+    esac
+}
+
+################################################################################
+# Argument Parsing
+################################################################################
+
+INSTANCES_CSV=""
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -d|--db|--database|--instances)
+            INSTANCES_CSV="$2"
+            shift 2
+            ;;
+        -h|--help)
+            print_usage
+            exit 0
+            ;;
+        *)
+            echo -e "${RED}ERROR: Unknown option: $1${NC}"
+            print_usage
+            exit 2
+            ;;
+    esac
+done
+
+################################################################################
+# Validation
+################################################################################
+
+# Validate database instances (required)
+if [[ -z "$INSTANCES_CSV" ]]; then
+    echo -e "${RED}ERROR: Database instance(s) required. Use --db <instances>${NC}"
+    echo -e "${RED}Valid instances: mssql_dev, mssql_stg, mssql_prd${NC}"
+    print_usage
+    exit 2
+fi
+
+# Parse instances into array
+declare -a TARGET_INSTANCES=()
+IFS=',' read -r -a TARGET_INSTANCES <<< "$INSTANCES_CSV"
+
+# Validate database instances
+VALID_INSTANCES="mssql_dev mssql_stg mssql_prd"
+for instance in "${TARGET_INSTANCES[@]}"; do
+    # Trim whitespace
+    instance="${instance//[[:space:]]/}"
+    if [[ ! " $VALID_INSTANCES " =~ " $instance " ]]; then
+        echo -e "${RED}ERROR: Invalid database instance: $instance${NC}"
+        echo -e "${RED}Valid instances: $VALID_INSTANCES${NC}"
+        exit 2
+    fi
+done
+
 echo "========================================"
 echo "Validating Liquibase Baseline Deployment"
 echo "========================================"
+echo
+echo "Instances: ${TARGET_INSTANCES[*]}"
 echo
 
 if [[ -z "${MSSQL_LIQUIBASE_TUTORIAL_PWD:-}" ]]; then
@@ -78,18 +194,19 @@ fi
 echo "Checking Liquibase tracking tables..."
 echo
 
-# Check each environment
-for env in dev stg prd; do
-    case "$env" in
-        dev) port="$MSSQL_DEV_PORT";;
-        stg) port="$MSSQL_STG_PORT";;
-        prd) port="$MSSQL_PRD_PORT";;
+# Check each database instance
+for instance in "${TARGET_INSTANCES[@]}"; do
+    env=$(instance_to_env "$instance")
+    case "$instance" in
+        mssql_dev) port="$MSSQL_DEV_PORT";;
+        mssql_stg) port="$MSSQL_STG_PORT";;
+        mssql_prd) port="$MSSQL_PRD_PORT";;
     esac
 
-    echo "Checking $env environment (port $port)..."
+    echo "Checking $(pretty_instance "$instance") (port $port)..."
 
     # Check if DATABASECHANGELOG table exists first
-    table_check=$($CR_CMD exec "mssql_${env}" /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa \
+    table_check=$($CR_CMD exec "$instance" /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa \
         -P "$MSSQL_LIQUIBASE_TUTORIAL_PWD" \
         -d orderdb \
         -Q "SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'dbo' AND TABLE_NAME = 'DATABASECHANGELOG';" \
@@ -98,7 +215,7 @@ for env in dev stg prd; do
     # Check DATABASECHANGELOG table exists and baseline is tracked
     if [[ "$table_check" == "1" ]]; then
         # Table exists, check if any changesets are tracked (baseline should have multiple changesets)
-        total_changesets=$($CR_CMD exec "mssql_${env}" /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa \
+        total_changesets=$($CR_CMD exec "$instance" /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa \
             -P "$MSSQL_LIQUIBASE_TUTORIAL_PWD" \
             -d orderdb \
             -Q "SELECT COUNT(*) FROM DATABASECHANGELOG;" \
@@ -106,20 +223,20 @@ for env in dev stg prd; do
 
         # Baseline should have at least 4 changesets (table, constraints, index, view, etc.)
         if [[ "${total_changesets:-0}" -ge 4 ]]; then
-            pass "  $env: Baseline tracked in DATABASECHANGELOG ($total_changesets changesets)"
+            pass "  $instance: Baseline tracked in DATABASECHANGELOG ($total_changesets changesets)"
         elif [[ "${total_changesets:-0}" -gt 0 ]]; then
             # Some changesets exist but might not be complete
-            fail "  $env: DATABASECHANGELOG exists but baseline incomplete ($total_changesets changesets, expected >= 4)"
+            fail "  $instance: DATABASECHANGELOG exists but baseline incomplete ($total_changesets changesets, expected >= 4)"
         else
-            fail "  $env: DATABASECHANGELOG exists but baseline not tracked (0 changesets)"
+            fail "  $instance: DATABASECHANGELOG exists but baseline not tracked (0 changesets)"
         fi
     else
-        fail "  $env: DATABASECHANGELOG table not found"
+        fail "  $instance: DATABASECHANGELOG table not found"
     fi
 
     # Check objects exist in database (baseline was actually applied)
     echo -n "    Checking baseline objects exist... "
-    customer_exists=$($CR_CMD exec "mssql_${env}" /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa \
+    customer_exists=$($CR_CMD exec "$instance" /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa \
         -P "$MSSQL_LIQUIBASE_TUTORIAL_PWD" \
         -d orderdb \
         -Q "SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'app' AND TABLE_NAME = 'customer';" \
@@ -136,7 +253,7 @@ for env in dev stg prd; do
     if [[ "$table_check" == "1" ]]; then
         # Get tag data from DATABASECHANGELOG - show the changeset with the tag
         # Use -h -1 to suppress headers, -s "|" for pipe separator, and -W to remove trailing spaces
-        tag_query_result=$($CR_CMD exec "mssql_${env}" /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa \
+        tag_query_result=$($CR_CMD exec "$instance" /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa \
             -P "$MSSQL_LIQUIBASE_TUTORIAL_PWD" \
             -d orderdb \
             -Q "SELECT TOP 1 ID, AUTHOR, FILENAME, TAG, DATEEXECUTED, EXECTYPE FROM DATABASECHANGELOG WHERE TAG IS NOT NULL AND TAG = 'baseline' ORDER BY ORDEREXECUTED DESC;" \
@@ -198,13 +315,13 @@ if [[ "$FAILURES" -eq 0 ]]; then
     echo "========================================"
     echo
     echo "Expected output summary:"
-    echo "  ✓ DATABASECHANGELOG table exists in all environments"
-    echo "  ✓ Baseline changesets tracked in all environments"
-    echo "  ✓ Baseline objects (app.customer) exist in all environments"
-    echo "  ✓ Baseline tag created in all environments"
+    echo "  ✓ DATABASECHANGELOG table exists in all validated instances"
+    echo "  ✓ Baseline changesets tracked in all validated instances"
+    echo "  ✓ Baseline objects (app.customer) exist in all validated instances"
+    echo "  ✓ Baseline tag created in all validated instances"
     echo
-    echo "For dev: Changes marked as EXECUTED (changelogSync)"
-    echo "For stg/prd: Changes executed (update)"
+    echo "For mssql_dev: Changes marked as EXECUTED (changelogSync)"
+    echo "For mssql_stg/mssql_prd: Changes executed (update)"
     echo
     exit 0
 else
@@ -219,12 +336,12 @@ else
     echo "  lb -e prd -- tag baseline"
     echo
     echo "If baseline is not deployed yet:"
-    echo "  $LIQUIBASE_TUTORIAL_DIR/scripts/deploy_liquibase_baseline.sh"
+    echo "  \$LIQUIBASE_TUTORIAL_DIR/scripts/deploy.sh --action baseline --db mssql_dev,mssql_stg,mssql_prd"
     echo
     echo "Or deploy manually:"
-    echo "  1. Dev: lb -e dev -- changelogSync && lb -e dev -- tag baseline"
-    echo "  2. Stg: lb -e stg -- update && lb -e stg -- tag baseline"
-    echo "  3. Prd: lb -e prd -- update && lb -e prd -- tag baseline"
+    echo "  1. mssql_dev: lb -e dev -- changelogSync && lb -e dev -- tag baseline"
+    echo "  2. mssql_stg: lb -e stg -- update && lb -e stg -- tag baseline"
+    echo "  3. mssql_prd: lb -e prd -- update && lb -e prd -- tag baseline"
     echo
     exit 1
 fi

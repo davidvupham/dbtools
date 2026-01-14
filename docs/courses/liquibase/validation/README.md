@@ -136,7 +136,7 @@ bash "$LIQUIBASE_TUTORIAL_DIR/scripts/validate_orderdb_database.sh"
 bash "$LIQUIBASE_TUTORIAL_DIR/scripts/validate_dev_populate.sh"
 bash "$LIQUIBASE_TUTORIAL_DIR/scripts/validate_liquibase_properties.sh"
 bash "$LIQUIBASE_TUTORIAL_DIR/scripts/validate_liquibase_baseline.sh"
-bash "$LIQUIBASE_TUTORIAL_DIR/scripts/validate_liquibase_deploy.sh"
+bash "$LIQUIBASE_TUTORIAL_DIR/scripts/validate_liquibase_deploy.sh" --db mssql_dev,mssql_stg,mssql_prd
 ```
 
 ## Best Practices

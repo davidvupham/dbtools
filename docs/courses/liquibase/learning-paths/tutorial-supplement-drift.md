@@ -47,7 +47,7 @@ The `deploy.sh` script automatically captures snapshots after each deployment:
 ls -lt $LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/snapshots/
 
 # If no snapshots exist, deploy to create one
-$LIQUIBASE_TUTORIAL_DIR/scripts/deploy.sh --action update --env dev
+$LIQUIBASE_TUTORIAL_DIR/scripts/deploy.sh --action update --db mssql_dev
 ```
 
 ### Step 2: Simulate Drift
