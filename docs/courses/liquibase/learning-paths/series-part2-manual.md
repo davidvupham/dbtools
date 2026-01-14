@@ -151,10 +151,7 @@ Now let's make a new database change: add an `orders` table.
 
 ### Create the Change File
 
-**Recommended: Use the step script**
-
 ```bash
-# Run the automated step script
 $LIQUIBASE_TUTORIAL_DIR/scripts/create_orders_table_changelog.sh
 ```
 
@@ -687,10 +684,7 @@ Now add more changes following the established pattern.
 
 ### V0002: Add Index to Orders
 
-**Recommended: Use the step script**
-
 ```bash
-# Run the automated step script
 $LIQUIBASE_TUTORIAL_DIR/scripts/create_orders_index_changelog.sh
 ```
 
