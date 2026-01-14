@@ -146,7 +146,7 @@ EOF
 }
 
 log_info() {
-    echo "[INFO] $*"
+    echo "[INFO] $*" >&2
 }
 
 log_warn() {
@@ -158,7 +158,7 @@ log_error() {
 }
 
 log_success() {
-    echo "[✓] $*"
+    echo "[✓] $*" >&2
 }
 
 # Check if a file contains JFrog registry reference
