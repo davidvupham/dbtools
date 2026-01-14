@@ -633,7 +633,7 @@ Capture the drift as a proper changeset:
 
 ```bash
 # Generate a changelog capturing the drift
-$LIQUIBASE_TUTORIAL_DIR/scripts/generate_drift_changelog.sh -e dev \
+$LIQUIBASE_TUTORIAL_DIR/scripts/generate_drift_changelog.sh --dbi mssql_dev \
     -o platform/mssql/database/orderdb/changelog/changes/V0002__captured_drift.xml
 ```
 

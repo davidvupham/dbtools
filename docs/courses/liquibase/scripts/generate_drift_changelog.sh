@@ -1,6 +1,27 @@
 #!/usr/bin/env bash
-# Generate Drift Changelog - Create a changelog file from detected drift
-# Usage: generate_drift_changelog.sh -e <dev|stg|prd> -o <output-file> [OPTIONS]
+################################################################################
+# generate_drift_changelog.sh - Create a changelog file from detected drift
+################################################################################
+#
+# PURPOSE:
+#   Generate a changelog file capturing database drift compared to a snapshot.
+#
+# USAGE:
+#   generate_drift_changelog.sh --dbi <instance> -o <output-file> [OPTIONS]
+#
+# OPTIONS:
+#   -d, --dbi <instance>   Target database instance (required)
+#                          Values: mssql_dev, mssql_stg, mssql_prd
+#   -o, --output <file>    Output changelog file path (relative to /data) [required]
+#   -s, --snapshot <path>  Specific snapshot file (default: latest for instance)
+#   --schemas <list>       Schemas to compare (default: app)
+#   -h, --help             Show this help message
+#
+# EXAMPLES:
+#   generate_drift_changelog.sh --dbi mssql_dev -o platform/mssql/database/orderdb/changelog/changes/V0002__drift.xml
+#   generate_drift_changelog.sh --dbi mssql_dev -o changelog/drift.xml --schemas "app,dbo"
+#
+################################################################################
 
 set -euo pipefail
 
@@ -15,28 +36,39 @@ NC='\033[0m'
 
 print_usage() {
     cat <<'EOF'
-Usage: generate_drift_changelog.sh -e <dev|stg|prd> -o <output-file> [OPTIONS]
+Usage: generate_drift_changelog.sh --dbi <instance> -o <output-file> [OPTIONS]
 
 Generate a changelog file capturing database drift compared to a snapshot.
 
 Options:
-  -e, --env <name>       Environment to check (dev|stg|prd) [required]
+  -d, --dbi <instance>   Target database instance (required)
+                         Values: mssql_dev, mssql_stg, mssql_prd
   -o, --output <file>    Output changelog file path (relative to /data) [required]
-  -s, --snapshot <path>  Specific snapshot file (default: latest for environment)
+  -s, --snapshot <path>  Specific snapshot file (default: latest for instance)
   --schemas <list>       Schemas to compare (default: app)
   -h, --help             Show this help message
 
 Examples:
-  generate_drift_changelog.sh -e dev -o platform/mssql/database/orderdb/changelog/changes/V0002__drift.xml
-  generate_drift_changelog.sh -e dev -o changelog/drift.xml --schemas "app,dbo"
+  generate_drift_changelog.sh --dbi mssql_dev -o platform/mssql/database/orderdb/changelog/changes/V0002__drift.xml
+  generate_drift_changelog.sh --dbi mssql_dev -o changelog/drift.xml --schemas "app,dbo"
 
 EOF
+}
+
+# Get human-readable instance name
+pretty_instance() {
+    case "$1" in
+        mssql_dev) echo "Development (mssql_dev)" ;;
+        mssql_stg) echo "Staging (mssql_stg)" ;;
+        mssql_prd) echo "Production (mssql_prd)" ;;
+        *)         echo "$1" ;;
+    esac
 }
 
 # Defaults
 LIQUIBASE_TUTORIAL_DATA_DIR="${LIQUIBASE_TUTORIAL_DATA_DIR:-/data/${USER}/liquibase_tutorial}"
 export LIQUIBASE_TUTORIAL_DATA_DIR
-ENVIRONMENT=""
+INSTANCE=""
 SNAPSHOT_PATH=""
 OUTPUT_FILE=""
 SCHEMAS="app"
@@ -44,8 +76,8 @@ SCHEMAS="app"
 # Parse arguments
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        -e|--env)
-            ENVIRONMENT="$2"; shift 2;;
+        -d|--dbi|--database|--instance)
+            INSTANCE="$2"; shift 2;;
         -s|--snapshot)
             SNAPSHOT_PATH="$2"; shift 2;;
         -o|--output)
@@ -61,15 +93,19 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-# Validate environment
-case "$ENVIRONMENT" in
-    stage) ENVIRONMENT="stg";;
-    prod)  ENVIRONMENT="prd";;
-esac
-
-if [[ "$ENVIRONMENT" != "dev" && "$ENVIRONMENT" != "stg" && "$ENVIRONMENT" != "prd" ]]; then
-    echo -e "${RED}Error: Environment must be dev|stg|prd${NC}" >&2
+# Validate database instance (required)
+if [[ -z "$INSTANCE" ]]; then
+    echo -e "${RED}Error: Database instance required. Use --dbi <instance>${NC}" >&2
+    echo -e "${RED}Valid instances: mssql_dev, mssql_stg, mssql_prd${NC}" >&2
     print_usage
+    exit 2
+fi
+
+# Validate instance name
+VALID_INSTANCES="mssql_dev mssql_stg mssql_prd"
+if [[ ! " $VALID_INSTANCES " =~ " $INSTANCE " ]]; then
+    echo -e "${RED}Error: Invalid database instance '$INSTANCE'${NC}" >&2
+    echo -e "${RED}Valid instances: $VALID_INSTANCES${NC}" >&2
     exit 2
 fi
 
@@ -84,12 +120,12 @@ SNAPSHOTS_DIR="$LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/snap
 
 # Find or validate snapshot
 if [[ -z "$SNAPSHOT_PATH" ]]; then
-    # Find latest snapshot for environment
-    SNAPSHOT_PATH=$(ls -t "$SNAPSHOTS_DIR/${ENVIRONMENT}"_*.json 2>/dev/null | head -1 || true)
+    # Find latest snapshot for instance
+    SNAPSHOT_PATH=$(ls -t "$SNAPSHOTS_DIR/${INSTANCE}"_*.json 2>/dev/null | head -1 || true)
     
     if [[ -z "$SNAPSHOT_PATH" ]]; then
-        echo -e "${RED}Error: No snapshots found for environment '$ENVIRONMENT'${NC}" >&2
-        echo "Expected pattern: $SNAPSHOTS_DIR/${ENVIRONMENT}_*.json"
+        echo -e "${RED}Error: No snapshots found for instance '$INSTANCE'${NC}" >&2
+        echo "Expected pattern: $SNAPSHOTS_DIR/${INSTANCE}_*.json"
         echo
         echo "Available snapshots:"
         ls -la "$SNAPSHOTS_DIR"/*.json 2>/dev/null || echo "  (none)"
@@ -107,7 +143,7 @@ echo "========================================"
 echo "Liquibase Tutorial - Generate Drift Changelog"
 echo "========================================"
 echo
-echo -e "Environment:  ${CYAN}$ENVIRONMENT${NC}"
+echo -e "Instance:     ${CYAN}$(pretty_instance "$INSTANCE")${NC}"
 echo -e "Snapshot:     ${CYAN}$SNAPSHOT_PATH${NC}"
 echo -e "Output:       ${CYAN}$OUTPUT_FILE${NC}"
 echo -e "Schemas:      ${CYAN}$SCHEMAS${NC}"
@@ -123,7 +159,7 @@ echo -e "${YELLOW}Generating changelog from drift...${NC}"
 echo
 
 # Run the diffChangeLog command
-"$SCRIPT_DIR/lb.sh" -e "$ENVIRONMENT" -- diffChangeLog \
+"$SCRIPT_DIR/lb.sh" --dbi "$INSTANCE" -- diffChangeLog \
     --schemas="$SCHEMAS" \
     --referenceUrl="offline:mssql?snapshot=$RELATIVE_SNAPSHOT_PATH" \
     --changelog-file="$OUTPUT_FILE"

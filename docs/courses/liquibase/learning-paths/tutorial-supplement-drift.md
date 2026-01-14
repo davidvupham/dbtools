@@ -112,7 +112,7 @@ If the drift is legitimate and should be tracked:
 
 ```bash
 # Generate a changelog capturing the drift
-$LIQUIBASE_TUTORIAL_DIR/scripts/generate_drift_changelog.sh -e dev \
+$LIQUIBASE_TUTORIAL_DIR/scripts/generate_drift_changelog.sh --dbi mssql_dev \
     -o platform/mssql/database/orderdb/changelog/changes/V0003__captured_drift.xml
 
 # Review the generated file
