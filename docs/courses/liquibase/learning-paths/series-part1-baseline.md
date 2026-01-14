@@ -219,7 +219,7 @@ The Liquibase container is a "run-once" tool (not a long-running service), so we
 cd "${LIQUIBASE_TUTORIAL_DIR%/docs/courses/liquibase}/docker/liquibase"
 
 # Build the custom Liquibase image with SQL Server drivers
-cr build --format docker -t liquibase:latest .
+cr build -t liquibase:latest .
 
 # Verify the image was created
 cr images | grep liquibase
