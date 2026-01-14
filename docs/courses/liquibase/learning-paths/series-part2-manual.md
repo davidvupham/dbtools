@@ -35,6 +35,7 @@
   - [Deploy Through Environments](#deploy-through-environments)
 - [Summary](#summary)
 - [Next Steps](#next-steps)
+- [Cleanup After Tutorial](#cleanup-after-tutorial)
 - [Appendix: Best Practices](#appendix-best-practices)
 - [Appendix: Step 6 Direct Commands (Create V0001 Change File)](#appendix-step-6-direct-commands-create-v0001-change-file)
 - [Appendix: Step 6 Direct Commands (Update Changelog for V0001)](#appendix-step-6-direct-commands-update-changelog-for-v0001)
@@ -777,6 +778,47 @@ In Part 2, you learned:
 - **[Part 3: CI/CD Automation](./series-part3-cicd.md)** - Wire everything into GitHub Actions for automated deployments.
 - **[Drift Management Tutorial Supplement](./tutorial-supplement-drift.md)** - Deep dive into drift detection, remediation, and SQL generation for audit.
 - **[Runner Setup Tutorial Supplement](./tutorial-supplement-runner-setup.md)** - Set up a self-hosted runner for local CI/CD testing.
+
+---
+
+## Cleanup After Tutorial
+
+If you're done with the tutorial and want to free up resources, run the cleanup scripts.
+
+### Quick Cleanup (Containers Only)
+
+Stops and removes containers while preserving your changelog files and data:
+
+```bash
+$LIQUIBASE_TUTORIAL_DIR/scripts/cleanup_validation.sh
+```
+
+This removes:
+
+- SQL Server containers (`mssql_dev`, `mssql_stg`, `mssql_prd`)
+- Liquibase containers
+- Docker/Podman networks
+
+Your changelogs and data in `$LIQUIBASE_TUTORIAL_DATA_DIR` are preserved for future use.
+
+### Full Cleanup (Everything)
+
+Removes all containers **and** the data directory:
+
+```bash
+$LIQUIBASE_TUTORIAL_DIR/scripts/cleanup_tutorial.sh
+```
+
+This removes:
+
+- All containers and networks (same as quick cleanup)
+- The entire `$LIQUIBASE_TUTORIAL_DATA_DIR` directory (with confirmation prompt)
+- All changelogs, snapshots, and database data
+
+> **When to use each:**
+>
+> - **Quick cleanup** - When you want to restart containers but keep your work
+> - **Full cleanup** - When you're completely done or want to start fresh from Part 1
 
 ---
 
