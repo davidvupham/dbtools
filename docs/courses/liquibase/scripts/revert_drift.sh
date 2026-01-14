@@ -26,6 +26,10 @@
 
 set -u
 
+# Get script directory
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+SQLCMD="$SCRIPT_DIR/sqlcmd_tutorial.sh"
+
 # Colors
 GREEN='\033[0;32m'
 RED='\033[0;31m'
@@ -127,7 +131,7 @@ revert_instance() {
     # Type 1: Remove the unexpected column (must drop default constraint first)
     echo ""
     echo -e "${YELLOW}[Type 1] Removing loyalty_points column...${NC}"
-    if sqlcmd-tutorial -S "$instance" -Q "
+    if "$SQLCMD" -S "$instance" -Q "
 USE orderdb;
 DECLARE @constraint_name NVARCHAR(200);
 SELECT @constraint_name = dc.name 
@@ -150,7 +154,7 @@ IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('app.customer')
     # Type 2: Restore the original column size (must drop/recreate index first)
     echo ""
     echo -e "${YELLOW}[Type 2] Restoring first_name column definition...${NC}"
-    if sqlcmd-tutorial -S "$instance" -Q "
+    if "$SQLCMD" -S "$instance" -Q "
 USE orderdb;
 -- Drop the index that depends on first_name
 IF EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_customer_name' AND object_id = OBJECT_ID('app.customer'))
@@ -174,7 +178,7 @@ CREATE INDEX IX_customer_name ON app.customer(last_name, first_name);
     # Type 3: Recreate the missing index
     echo ""
     echo -e "${YELLOW}[Type 3] Recreating IX_orders_order_date index...${NC}"
-    if sqlcmd-tutorial -S "$instance" -Q "
+    if "$SQLCMD" -S "$instance" -Q "
 USE orderdb;
 IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_orders_order_date' AND object_id = OBJECT_ID('app.orders'))
     CREATE INDEX IX_orders_order_date ON app.orders(order_date DESC);
