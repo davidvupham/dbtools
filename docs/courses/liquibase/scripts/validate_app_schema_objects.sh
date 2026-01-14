@@ -1,7 +1,25 @@
 #!/bin/bash
-# Validate App Schema Objects
-# Validates objects in the app schema and displays them in a formatted table with borders
-# Reusable across all tutorial parts
+################################################################################
+# validate_app_schema_objects.sh - Validate App Schema Objects
+################################################################################
+#
+# PURPOSE:
+#   Validates objects in the app schema and displays them in a formatted table
+#   with borders. Reusable across all tutorial parts.
+#
+# USAGE:
+#   validate_app_schema_objects.sh --db <instance>
+#
+# OPTIONS:
+#   -d, --db <instance>     Target database instance (required)
+#                           Values: mssql_dev, mssql_stg, mssql_prd
+#   -h, --help              Show this help message
+#
+# EXAMPLES:
+#   validate_app_schema_objects.sh --db mssql_dev
+#   validate_app_schema_objects.sh --db mssql_stg
+#
+################################################################################
 
 set -u
 
@@ -11,17 +29,86 @@ RED='\033[0;31m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
+################################################################################
+# Helper Functions
+################################################################################
+
+print_usage() {
+    cat <<'EOF'
+Usage:
+  validate_app_schema_objects.sh --db <instance>
+
+Options:
+  -d, --db <instance>     Target database instance (required)
+                          Values: mssql_dev, mssql_stg, mssql_prd
+  -h, --help              Show this help message
+
+Examples:
+  validate_app_schema_objects.sh --db mssql_dev
+  validate_app_schema_objects.sh --db mssql_stg
+EOF
+}
+
+# Get human-readable instance name
+pretty_instance() {
+    case "$1" in
+        mssql_dev) echo "Development (mssql_dev)" ;;
+        mssql_stg) echo "Staging (mssql_stg)" ;;
+        mssql_prd) echo "Production (mssql_prd)" ;;
+        *)         echo "$1" ;;
+    esac
+}
+
+################################################################################
+# Argument Parsing
+################################################################################
+
+INSTANCE=""
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -d|--db|--database|--instance)
+            INSTANCE="$2"
+            shift 2
+            ;;
+        -h|--help)
+            print_usage
+            exit 0
+            ;;
+        *)
+            echo -e "${RED}ERROR: Unknown option: $1${NC}"
+            print_usage
+            exit 2
+            ;;
+    esac
+done
+
+################################################################################
+# Validation
+################################################################################
+
+# Validate database instance (required)
+if [[ -z "$INSTANCE" ]]; then
+    echo -e "${RED}ERROR: Database instance required. Use --db <instance>${NC}"
+    echo -e "${RED}Valid instances: mssql_dev, mssql_stg, mssql_prd${NC}"
+    print_usage
+    exit 2
+fi
+
+# Validate instance name
+VALID_INSTANCES="mssql_dev mssql_stg mssql_prd"
+if [[ ! " $VALID_INSTANCES " =~ " $INSTANCE " ]]; then
+    echo -e "${RED}ERROR: Invalid database instance: $INSTANCE${NC}"
+    echo -e "${RED}Valid instances: $VALID_INSTANCES${NC}"
+    exit 2
+fi
+
 echo "========================================"
 echo "Validating App Schema Objects"
 echo "========================================"
 echo
-
-ENV="${1:-dev}"
-
-if [[ ! "$ENV" =~ ^(dev|stg|prd)$ ]]; then
-    echo -e "${RED}ERROR: Invalid environment '$ENV'. Use dev, stg, or prd${NC}"
-    exit 1
-fi
+echo "Instance: $(pretty_instance "$INSTANCE")"
+echo
 
 if [[ -z "${MSSQL_LIQUIBASE_TUTORIAL_PWD:-}" ]]; then
     echo -e "${RED}ERROR: MSSQL_LIQUIBASE_TUTORIAL_PWD not set${NC}"
@@ -44,7 +131,7 @@ else
     exit 1
 fi
 
-CONTAINER_NAME="mssql_${ENV}"
+CONTAINER_NAME="$INSTANCE"
 
 # Check container is running
 if ! $CR_CMD ps --format "{{.Names}}" | grep -q "^${CONTAINER_NAME}$"; then
@@ -52,7 +139,6 @@ if ! $CR_CMD ps --format "{{.Names}}" | grep -q "^${CONTAINER_NAME}$"; then
     exit 1
 fi
 
-echo "Environment: $ENV"
 echo "Container: $CONTAINER_NAME"
 echo
 

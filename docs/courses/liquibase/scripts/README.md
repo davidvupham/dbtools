@@ -62,7 +62,7 @@ Scripts use descriptive names that indicate their purpose:
 | `validate_liquibase_properties.sh` | Validates properties files | Part 1, Part 2 |
 | `validate_liquibase_baseline.sh` | Validates baseline generation | Part 1 |
 | `validate_liquibase_deploy.sh` | Validates baseline deployment | Part 1, Part 2 |
-| `validate_app_schema_objects.sh` | Validates app schema objects per environment | Part 2 |
+| `validate_app_schema_objects.sh` | Validates app schema objects per database instance | Part 2 |
 
 ### Query Helper Scripts
 

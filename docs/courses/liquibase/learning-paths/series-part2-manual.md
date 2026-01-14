@@ -188,7 +188,7 @@ Verify in dev:
 
 ```bash
 # Run the validation script
-$LIQUIBASE_TUTORIAL_DIR/scripts/validate_app_schema_objects.sh dev
+$LIQUIBASE_TUTORIAL_DIR/scripts/validate_app_schema_objects.sh --db mssql_dev
 ```
 
 The script will:
@@ -267,7 +267,7 @@ Verify in staging:
 
 ```bash
 # Run the validation script
-$LIQUIBASE_TUTORIAL_DIR/scripts/validate_app_schema_objects.sh stg
+$LIQUIBASE_TUTORIAL_DIR/scripts/validate_app_schema_objects.sh --db mssql_stg
 ```
 
 The script will:
@@ -309,7 +309,7 @@ Verify in production:
 
 ```bash
 # Run the validation script
-$LIQUIBASE_TUTORIAL_DIR/scripts/validate_app_schema_objects.sh prd
+$LIQUIBASE_TUTORIAL_DIR/scripts/validate_app_schema_objects.sh --db mssql_prd
 ```
 
 The script will:
