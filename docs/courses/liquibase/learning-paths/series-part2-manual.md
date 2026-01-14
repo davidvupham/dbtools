@@ -485,7 +485,12 @@ The query should now show the `release-v1.0` tagged row (V0001-add-orders-table)
 
 ## Step 10: Drift Detection
 
-Drift occurs when someone makes direct database changes outside of Liquibase. Detecting drift early prevents deployment surprises.
+Drift occurs when someone makes direct database changes outside of Liquibase. Detecting drift early prevents:
+
+- **Deployment failures** - Liquibase fails when it tries to create objects that already exist or modify objects that have changed
+- **Environment inconsistency** - Dev, staging, and production diverge, making testing unreliable
+- **Rollback failures** - Rollback scripts may not work correctly if the actual schema doesn't match expectations
+- **Audit/compliance violations** - Untracked changes break change management policies and audit trails
 
 > **📖 Deep Dive:** For comprehensive coverage of drift management concepts, remediation strategies, SQL generation for audit purposes, and CI/CD integration, see the [Drift Management Tutorial Supplement](./tutorial-supplement-drift.md) which references the [Explanation Guide](../../../explanation/liquibase/liquibase-drift-management.md).
 
