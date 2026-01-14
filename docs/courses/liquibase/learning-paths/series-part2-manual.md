@@ -686,23 +686,25 @@ Drift Summary
 | Changelogs (XML/YAML/SQL) | ✅ Yes | Source of truth for all database changes |
 | SQL scripts | ✅ Yes | Part of your deployment code |
 | Liquibase properties files | ✅ Yes | Configuration as code (exclude passwords) |
-| Snapshots | ❌ No | Large derived artifacts; store in artifact storage |
+| Snapshot (single file) | ✅ Yes | Represents expected database state; provides audit trail |
 | DATABASECHANGELOG exports | ❌ No | Runtime state; regenerate as needed |
 
-**Snapshots in CI/CD pipelines:**
+**Recommended: Single snapshot file in Git**
 
-Snapshots are valuable for drift detection but should not be committed to Git because they:
+Maintain a single snapshot file (e.g., `snapshots/orderdb.json`) that is updated after each deployment and committed to Git:
 
-- Are large JSON files that change with every deployment
-- Represent point-in-time state (derived artifacts, not source)
-- Can be regenerated from the actual database
+- **Audit trail** - Git history tracks every schema change with commit messages that include Jira tickets and descriptions
+- **Correlation** - Snapshot updates are tied directly to changelog commits
+- **Simplicity** - No separate artifact storage infrastructure required
+- **Diffable** - `git diff` shows exactly what changed in the schema between versions
+- **Compliance** - Single source of truth for auditors to review
 
-Instead, snapshots should be:
+**Workflow:**
 
-1. **Generated automatically** after each successful deployment
-2. **Stored in artifact storage** (S3, Artifactory, Azure Blob, etc.) with timestamps
-3. **Referenced by CI/CD jobs** for scheduled drift checks (daily, weekly, or pre-deployment)
-4. **Retained based on policy** (e.g., keep last 30 days or last N deployments)
+1. Deploy changelog changes to the database
+2. Generate a fresh snapshot
+3. Commit the updated snapshot with a descriptive message (e.g., `"PROJ-123: Add customer loyalty_points column"`)
+4. CI/CD compares live database against the committed snapshot to detect drift
 
 **Why snapshots for drift detection?**
 
