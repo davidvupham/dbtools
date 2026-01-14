@@ -66,6 +66,19 @@ podman ps -a
 sudo dnf update -y container-tools
 ```
 
+### Automatic Container Updates (`podman auto-update`)
+
+You can automate image updates for running containers managed by systemd.
+
+1. **Label your container**: Start it with `--label "io.containers.autoupdate=registry"`.
+2. **Enable the timer**:
+
+    ```bash
+    systemctl --user enable --now podman-auto-update.timer
+    ```
+
+This timer will check for regular updates (default: daily) and restart containers if a newer image is found in the registry.
+
 ### Post-Upgrade Validation
 
 After an upgrade, it is recommended to run `podman system migrate` to apply any internal storage or namespace changes

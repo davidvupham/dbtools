@@ -11,11 +11,13 @@ Podman interacts with the image, container, and storage registry directly, witho
 * **Daemonless**: No single point of failure or root-owned daemon process running in the background.
 * **Rootless by Design**: Containers can be run easily by unprivileged users, significantly improving security
     posture.
-* **Docker Compatible**: Podman provides a Docker-compatible command line interface. In most cases, you can simply alias `docker=podman`.
+* **Docker Compatible**: Podman provides a Docker-compatible command line interface. In most cases, you can simply alias
+    `docker=podman`.
 
 ## Architecture: Daemonless and Fork/Exec
 
-Unlike Docker, which uses a client-server architecture (CLI client talks to Docker Daemon), Podman uses a traditional **Fork/Exec** model.
+Unlike Docker, which uses a client-server architecture (CLI client talks to Docker Daemon), Podman uses a traditional
+**Fork/Exec** model.
 
 * When you run a `podman` command, the Podman binary itself performs the operation.
 * It creates a child process ensuring that the container itself is a direct descendant of the process that launched it.
@@ -50,4 +52,4 @@ privileges of the unprivileged user on the host.
 * You need improved security (Rootless).
 * You are running on Red Hat Enterprise Linux (RHEL), where it is the native tool.
 * You want to generate Kubernetes YAML from your local containers (`podman generate kube`).
-* You want integration with systemd (`podman generate systemd`).
+* You want integration with systemd (via **Quadlet** or `podman generate systemd`).
