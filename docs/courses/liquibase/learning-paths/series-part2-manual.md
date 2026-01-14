@@ -565,6 +565,16 @@ USE orderdb;
 IF EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_orders_order_date' AND object_id = OBJECT_ID('app.orders'))
     DROP INDEX IX_orders_order_date ON app.orders;
 "
+
+# Validate: Confirm index was dropped
+sqlcmd-tutorial -S mssql_dev -Q "
+USE orderdb;
+SELECT CASE 
+    WHEN EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_orders_order_date' AND object_id = OBJECT_ID('app.orders'))
+    THEN 'ERROR: Index still exists'
+    ELSE 'OK: Index IX_orders_order_date was dropped'
+END AS ValidationResult;
+"
 ```
 
 > **Note:** We're dropping an index here rather than a column to avoid breaking the application. In production, missing columns or tables are critical issues.
