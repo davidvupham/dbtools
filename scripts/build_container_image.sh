@@ -454,12 +454,16 @@ main() {
             REGISTRY_PREFIX=$(build_registry_prefix "$jfrog_url")
             log_success "JFrog proxy detected!"
         else
-            REGISTRY_PREFIX="$DEFAULT_REGISTRY_PREFIX"
-            log_info "No JFrog proxy detected, using Docker Hub"
+            REGISTRY_PREFIX=""
+            log_info "No JFrog proxy detected, using Dockerfile defaults"
         fi
     fi
 
-    log_info "Registry prefix: $REGISTRY_PREFIX"
+    if [[ -n "$REGISTRY_PREFIX" ]]; then
+        log_info "Registry prefix: $REGISTRY_PREFIX"
+    else
+        log_info "Registry prefix: (using Dockerfile default)"
+    fi
     log_info ""
 
     # Build the image
@@ -469,9 +473,13 @@ main() {
     # Construct build command
     BUILD_CMD=(
         "$CONTAINER_RUNTIME" build
-        --build-arg "REGISTRY_PREFIX=${REGISTRY_PREFIX}"
         -t "${IMAGE_NAME}:${IMAGE_TAG}"
     )
+
+    # Only add REGISTRY_PREFIX if explicitly set (JFrog detected or manual override)
+    if [[ -n "$REGISTRY_PREFIX" ]]; then
+        BUILD_CMD+=(--build-arg "REGISTRY_PREFIX=${REGISTRY_PREFIX}")
+    fi
 
     # Add --format docker for podman (required for HEALTHCHECK)
     if [[ "$CONTAINER_RUNTIME" == "podman" ]]; then

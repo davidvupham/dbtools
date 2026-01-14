@@ -159,14 +159,19 @@ fi
 
 # Build SQL Server image if it doesn't exist
 MSSQL_IMAGE="mssql_tutorial:latest"
+
+# Path to build_container_image.sh (relative to SCRIPT_DIR, which is docs/courses/liquibase/scripts/)
+BUILD_SCRIPT="$SCRIPT_DIR/../../../../scripts/build_container_image.sh"
+
 if ! $CR_CMD image exists "$MSSQL_IMAGE" 2>/dev/null; then
     echo "Building SQL Server image..."
-    cd "$DOCKER_DIR"
-    # Use docker format for Podman to support HEALTHCHECK instruction
-    if [[ "$CR_CMD" == "podman" ]]; then
-        $CR_CMD build --format docker -t "$MSSQL_IMAGE" -f ../../../../docker/mssql/Dockerfile ../../../../docker/mssql
+    if [[ -x "$BUILD_SCRIPT" ]]; then
+        # Use the centralized build script with JFrog proxy auto-detection
+        # Pass CONTAINER_RUNTIME to ensure build uses the same runtime
+        CONTAINER_RUNTIME="$CR_CMD" "$BUILD_SCRIPT" docker/mssql "$MSSQL_IMAGE"
     else
-        $CR_CMD build -t "$MSSQL_IMAGE" -f ../../../../docker/mssql/Dockerfile ../../../../docker/mssql
+        echo -e "${RED}ERROR: Build script not found at $BUILD_SCRIPT${NC}"
+        exit 1
     fi
     echo
 fi
