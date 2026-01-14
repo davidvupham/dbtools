@@ -1,55 +1,61 @@
-# Podman Overview
+# Podman Documentation - Where to Start
 
-Podman (Pod Manager) is a daemonless container engine for developing, managing, and running OCI (Open Container Initiative)
-containers and pods on your Linux system.
+> **Last Updated:** January 13, 2026
 
-## What is Podman?
+This directory contains key documentation for Podman, the daemonless container engine.
 
-Podman interacts with the image, container, and storage registry directly, without requiring a central "daemon" process
-(like `dockerd`). This architecture provides several key benefits:
+## 🚀 Quick Start
 
-* **Daemonless**: No single point of failure or root-owned daemon process running in the background.
-* **Rootless by Design**: Containers can be run easily by unprivileged users, significantly improving security
-    posture.
-* **Docker Compatible**: Podman provides a Docker-compatible command line interface. In most cases, you can simply alias
-    `docker=podman`.
+1. **[Podman Architecture Guide](./podman-architecture.md)**
+   - What is Podman?
+   - Architecture and Key Concepts (Pods, Rootless)
+   - Comparison with Docker
+   - Usage Scenarios
 
-## Architecture: Daemonless and Fork/Exec
+2. **[Installation Guide](../../how-to/podman/install-podman-rhel.md)**
+   - How to install on RHEL
 
-Unlike Docker, which uses a client-server architecture (CLI client talks to Docker Daemon), Podman uses a traditional
-**Fork/Exec** model.
+3. **[Runbooks](../../runbooks/podman/)**
+   - Operational guides
 
-* When you run a `podman` command, the Podman binary itself performs the operation.
-* It creates a child process ensuring that the container itself is a direct descendant of the process that launched it.
-* This fits naturally into systemd and other process managers.
+4. **[Reference](../../reference/podman/)**
+   - Command reference
 
-## Comparison: Podman vs Docker
+## 📚 Document Map
 
-| Feature | Docker | Podman |
-| :--- | :--- | :--- |
-| **Architecture** | Client-Server (Daemon) | Daemonless (Fork/Exec) |
-| **Root Privileges** | Required for Daemon (mostly) | Not Required (Rootless) |
-| **Orchestration** | Docker Swarm | Kubernetes (Podman can generate K8s YAML) |
-| **Process Model** | Container is child of Daemon | Container is child of generic process |
-| **Image Standard** | OCI Compliant | OCI Compliant |
+| Scenario | Document |
+|:---|:---|
+| I want to understand how Podman works | [Architecture Guide](./podman-architecture.md) |
+| I need to install it | [Installation Guide](../../how-to/podman/install-podman-rhel.md) |
+| I have a problem or task | [Runbooks](../../runbooks/podman/) |
+| I need command help | [Reference](../../reference/podman/) |
 
-## Key Concepts
+## 📖 Full Document List
 
-### Pods
+### 1. **Architecture Guide** (Read First!)
+📄 [podman-architecture.md](./podman-architecture.md)
 
-Podman supports the concept of **Pods**, similar to Kubernetes Pods. A Pod is a group of one or more containers sharing
-the same network, pid, and ipc namespaces. This allows you to manage closely related containers as a single unit
-locally, mirroring how they would run in Kubernetes.
+**What it covers:**
+- Core concepts (Daemonless, Rootless, Pods)
+- Architecture design
+- Comparison with Docker
+- When to use Podman
 
-### Rootless Mode
+**When to read:**
+- ✅ You're new to Podman
+- ✅ You're planning your container strategy
+- ✅ You need to generate systemd units or K8s YAML
 
-Running containers as a non-root user is a core feature. It maps the user's UID on the host to root (UID 0) inside the
-container using `user_namespaces`. This ensures that even if a container breakout occurs, the attacker only has the
-privileges of the unprivileged user on the host.
+---
 
-## When to use Podman?
+## 🔗 Document Relationships
 
-* You need improved security (Rootless).
-* You are running on Red Hat Enterprise Linux (RHEL), where it is the native tool.
-* You want to generate Kubernetes YAML from your local containers (`podman generate kube`).
-* You want integration with systemd (via **Quadlet** or `podman generate systemd`).
+```
+ARCHITECTURE GUIDE (Concepts)
+    ↓
+    ├─→ INSTALLATION GUIDE (Setup)
+    │
+    └─→ RUNBOOKS (Operations)
+             ↓
+             └─→ REFERENCE GUIDE (Lookup)
+```

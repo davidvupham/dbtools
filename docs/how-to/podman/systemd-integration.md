@@ -1,23 +1,41 @@
 # Podman Systemd Integration
 
-Integrating Podman with Systemd allows you to manage containers as native system services. This ensures containers start
-at boot, restart on failure, and can be managed with standard `systemctl` commands.
+**🔗 [← Back to Podman Documentation Index](../../explanation/podman/README.md)**
 
-## Methods
+> **Document Version:** 1.0
+> **Last Updated:** January 13, 2026
+> **Maintainers:** Application Infrastructure Team
+> **Status:** Production
 
-There are two primary methods for integrating Podman with Systemd:
+![Status](https://img.shields.io/badge/Status-Production-green)
+![Feature](https://img.shields.io/badge/Feature-Systemd-blue)
 
-1. **Quadlet (Recommended for Podman v4.6+)**: A declarative, file-based approach using `.container` files. It is the
-    modern standard for RHEL 9.
-2. **`podman generate systemd` (Legacy)**: Generates standard systemd unit files from existing containers. Useful for
-    RHEL 8 or older Podman versions.
+> [!IMPORTANT]
+> **Related Docs:** [Installation](./install-podman-rhel.md) | [Reference](../../reference/podman/cheatsheet.md)
 
----
+## Table of Contents
+
+- [Overview](#overview)
+- [Method 1: Quadlet (Recommended)](#method-1-quadlet-recommended)
+- [Method 2: Legacy Generation](#method-2-legacy-generation)
+- [Auto-Update Configuration](#auto-update-configuration)
+
+## Overview
+
+Integrating Podman with Systemd allows you to manage containers as native system services. This ensures containers start at boot, restart on failure, and can be managed with standard `systemctl` commands.
+
+### Methods
+
+| Method | Description | Use Case |
+|:---|:---|:---|
+| **Quadlet** | Declarative `.container` files managed by a generator. | **Recommended** for RHEL 9 / Podman v4.6+ |
+| **`podman generate systemd`** | Generates standard unit files from existing containers. | Legacy / RHEL 8 / Older Podman |
+
+[↑ Back to Table of Contents](#table-of-contents)
 
 ## Method 1: Quadlet (Recommended)
 
-Quadlet allows you to define containers in a simplified format, which a systemd generator then converts into full
-service units automatically.
+Quadlet allows you to define containers in a simplified format, which a systemd generator then converts into full service units automatically.
 
 ### 1. Create a `.container` file
 
@@ -67,9 +85,9 @@ systemctl --user enable my-web.service
 systemctl --user status my-web.service
 ```
 
----
+[↑ Back to Table of Contents](#table-of-contents)
 
-## Method 2: `podman generate systemd` (Legacy)
+## Method 2: Legacy Generation
 
 This method involves running a container first, then asking Podman to create a unit file for it.
 
@@ -101,19 +119,25 @@ systemctl --user daemon-reload
 systemctl --user enable --now container-my-old-web.service
 ```
 
----
+[↑ Back to Table of Contents](#table-of-contents)
 
-## Auto-Update
+## Auto-Update Configuration
 
 Podman and Systemd can work together to automatically update your containers when a new image is available.
 
-1. **Tag the container**: Add the label `io.containers.autoupdate=registry`.
-    * In Quadlet: `AutoUpdate=registry` under `[Container]`.
-    * In CLI: `--label "io.containers.autoupdate=registry"`.
+### Setup Steps
+
+1. **Tag the container**:
+   * **Quadlet:** Add `AutoUpdate=registry` under `[Container]`.
+   * **CLI:** Add `--label "io.containers.autoupdate=registry"`.
+
 2. **Enable the timer**:
 
-    ```bash
-    systemctl --user enable --now podman-auto-update.timer
-    ```
+   ```bash
+   systemctl --user enable --now podman-auto-update.timer
+   ```
 
-This timer typically runs once per day, checks for newer images, pulls them, and restarts the affected services.
+**How it works:**
+The timer runs (default: daily), checks the registry for newer image digests, pulls them, and restarts any affected services transparently.
+
+[↑ Back to Table of Contents](#table-of-contents)

@@ -1,5 +1,26 @@
 # Podman Cheatsheet
 
+**🔗 [← Back to Podman Documentation Index](../../explanation/podman/README.md)**
+
+> **Document Version:** 1.0
+> **Last Updated:** January 13, 2026
+> **Maintainers:** Application Infrastructure Team
+> **Status:** Production
+
+![Status](https://img.shields.io/badge/Status-Production-green)
+![Topic](https://img.shields.io/badge/Topic-Cheatsheet-purple)
+
+> [!IMPORTANT]
+> **Related Docs:** [Runbooks](../../runbooks/podman/maintenance.md) | [Architecture](../../explanation/podman/podman-architecture.md)
+
+## Table of Contents
+
+- [Basic Management](#basic-management)
+- [Images](#images)
+- [Containers](#containers)
+- [Pods](#pods)
+- [System & Maintenance](#system--maintenance)
+
 ## Basic Management
 
 | Action | Command |
@@ -8,6 +29,8 @@
 | **System Info** | `podman info` |
 | **Login to Registry** | `podman login docker.io` |
 | **Logout** | `podman logout` |
+
+[↑ Back to Table of Contents](#table-of-contents)
 
 ## Images
 
@@ -19,6 +42,8 @@
 | **Remove Image** | `podman rmi <image_id>` |
 | **Build Image** | `podman build -t <tag> .` |
 | **Inspect Image** | `podman inspect <image_id>` |
+
+[↑ Back to Table of Contents](#table-of-contents)
 
 ## Containers
 
@@ -34,7 +59,9 @@
 | **View Logs** | `podman logs <name>` |
 | **Execute Command** | `podman exec -it <name> /bin/bash` |
 
-## Pods (Podman Specific)
+[↑ Back to Table of Contents](#table-of-contents)
+
+## Pods
 
 | Action | Command |
 | :--- | :--- |
@@ -46,6 +73,8 @@
 | **Generate Kube** | `podman generate kube <pod_name> > pod.yaml` |
 | **Play Kube** | `podman play kube pod.yaml` |
 
+[↑ Back to Table of Contents](#table-of-contents)
+
 ## System & Maintenance
 
 | Action | Command |
@@ -54,10 +83,6 @@
 | **Prune Unused** | `podman system prune` |
 | **Prune All** | `podman system prune -a --volumes` |
 | **Reset Storage** | `podman system reset` (Warning: Deletes everything) |
+| **Run as User** | `podman run --userns=keep-id ...` |
 
-## Advanced
-
-| Action | Command |
-| :--- | :--- |
-| **Generate Systemd** | `podman generate systemd --name <container> --files` |
-| **Run as User** | `podman run --userns=keep-id ...` (Map user ID directly) |
+[↑ Back to Table of Contents](#table-of-contents)

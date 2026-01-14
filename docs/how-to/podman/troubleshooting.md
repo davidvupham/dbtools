@@ -1,6 +1,26 @@
-# Troubleshooting Podman
+# Podman Troubleshooting
 
-This guide provides solutions for common issues encountered when running Podman, with a focus on rootless configurations.
+**🔗 [← Back to Podman Documentation Index](../../explanation/podman/README.md)**
+
+> **Document Version:** 1.0
+> **Last Updated:** January 13, 2026
+> **Maintainers:** Application Infrastructure Team
+> **Status:** Production
+
+![Status](https://img.shields.io/badge/Status-Production-green)
+![Topic](https://img.shields.io/badge/Topic-Troubleshooting-orange)
+
+> [!IMPORTANT]
+> **Related Docs:** [Runbooks](../../runbooks/podman/maintenance.md) | [Operations Guide](../../how-to/podman/configure-rootless.md)
+
+## Table of Contents
+
+- [Common Issues](#common-issues)
+  - [Permission Denied (Mounts)](#1-permission-denied-mounting-volumes)
+  - [OOMKilled](#2-oomkilled-or-unexpected-exits)
+  - [Network Namespace Error](#3-error-error-joining-network-namespace)
+  - [Binding Port 80/443](#4-container-cannot-bind-to-port-80-or-443)
+- [Debugging Workflow](#debugging-workflow)
 
 ## Common Issues
 
@@ -14,17 +34,20 @@ SELinux is blocking access, or file ownership on the host doesn't match the cont
 
 **Solution:**
 
-* **SELinux**: Append `:Z` (private) or `:z` (shared) to the volume mount options.
+* **SELinux Relabeling**: Append `:Z` (private) or `:z` (shared) to the volume mount options.
 
     ```bash
     podman run -v ./data:/data:Z nginx
     ```
 
-* **Ownership**: Use `podman unshare chown` to set permissions from the container's perspective.
+* **Fix Ownership**: Use `podman unshare chown` to set permissions from the container's perspective.
 
     ```bash
+    # Maps host user to container root to set ownership
     podman unshare chown -R 1000:1000 ./data
     ```
+
+[↑ Back to Table of Contents](#table-of-contents)
 
 ### 2. "OOMKilled" or Unexpected Exits
 
@@ -48,19 +71,27 @@ Increase memory limits using `--memory`:
 podman run --memory 1g ...
 ```
 
-### 3. "Error: error joining network namespace ... failed to create new network namespace"
+[↑ Back to Table of Contents](#table-of-contents)
+
+### 3. "Error: error joining network namespace"
 
 **Symptom:**
-Podman fails to start containers in rootless mode.
+Podman fails to start containers in rootless mode with text like `failed to create new network namespace`.
 
 **Cause:**
-`slirp4netns` might be missing or broken, or the user lacks sufficient subordinate UIDs.
+`slirp4netns` might be missing, broken, or the user lacks sufficient subordinate UIDs.
 
 **Solution:**
 
-* Ensure `slirp4netns` is installed: `sudo dnf install slirp4netns`.
-* Check `/etc/subuid` for your user entry.
-* Run `podman system migrate` to reset the user's namespace configuration.
+1. Ensure `slirp4netns` is installed: `sudo dnf install slirp4netns`.
+2. Check `/etc/subuid` for your user entry.
+3. Run migration tool to reset the user's namespace configuration:
+
+   ```bash
+   podman system migrate
+   ```
+
+[↑ Back to Table of Contents](#table-of-contents)
 
 ### 4. Container cannot bind to port 80 or 443
 
@@ -72,13 +103,15 @@ Rootless users cannot bind to ports < 1024 by default.
 
 **Solution:**
 
-* Map to a high port (e.g., `-p 8080:80`).
-* Enable unprivileged port binding system-wide:
+* **Option A**: Map to a high port (e.g., `-p 8080:80`).
+* **Option B**: Enable unprivileged port binding system-wide:
 
     ```bash
     echo "net.ipv4.ip_unprivileged_port_start=80" | sudo tee -a /etc/sysctl.conf
     sudo sysctl -p
     ```
+
+[↑ Back to Table of Contents](#table-of-contents)
 
 ## Debugging Workflow
 
@@ -100,7 +133,7 @@ podman inspect <container_name>
 
 ### 3. Access Shell
 
-If the container is running but behaving strangely, exec into it:
+If the container is running but behaving strangely, exec into it for manual investigation:
 
 ```bash
 podman exec -it <container_name> /bin/bash
@@ -113,3 +146,5 @@ If Podman becomes unresponsive or inconsistent (often after an upgrade):
 ```bash
 podman system migrate
 ```
+
+[↑ Back to Table of Contents](#table-of-contents)

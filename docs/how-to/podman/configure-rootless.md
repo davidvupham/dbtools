@@ -1,24 +1,46 @@
 # Configure Rootless Podman
 
-Rootless Podman allows unprivileged users to run containers directly without requiring root privileges or a setuid
-binary. This significantly improves security by ensuring that even if a container is compromised, the attacker does not
-gain root access to the host.
+**🔗 [← Back to Podman Documentation Index](../../explanation/podman/README.md)**
+
+> **Document Version:** 1.0
+> **Last Updated:** January 13, 2026
+> **Maintainers:** Application Infrastructure Team
+> **Status:** Production
+
+![Status](https://img.shields.io/badge/Status-Production-green)
+![Security](https://img.shields.io/badge/Security-Rootless-blue)
+
+> [!IMPORTANT]
+> **Related Docs:** [Installation](./install-podman-rhel.md) | [Troubleshooting](./troubleshooting.md)
+
+## Table of Contents
+
+- [Overview](#overview)
+- [Prerequisites](#prerequisites)
+- [User Configuration](#user-configuration)
+- [Networking](#networking)
+- [Caveats and Limitations](#caveats-and-limitations)
+- [Troubleshooting](#troubleshooting)
+
+## Overview
+
+Rootless Podman allows unprivileged users to run containers directly without requiring root privileges or a setuid binary. This significantly improves security by ensuring that even if a container is compromised, the attacker does not gain root access to the host.
 
 ## Prerequisites
 
-On RHEL 8/9, rootless Podman works out of the box for users created after the `container-tools` module is installed,
-provided `shadow-utils` (`useradd`, `usermod`) are up to date.
+On RHEL 8/9, rootless Podman works out of the box for users created after the `container-tools` module is installed, provided `shadow-utils` are up to date.
 
-Key components required:
+**Required Components:**
+* `slirp4netns`: User-mode networking
+* `fuse-overlayfs`: User-mode filesystem implementation
 
-* `slirp4netns`: User-mode networking.
-* `fuse-overlayfs`: User-mode filesystem.
-
-Ensure dependencies are installed:
+**Install Dependencies:**
 
 ```bash
 sudo dnf install -y slirp4netns fuse-overlayfs
 ```
+
+[↑ Back to Table of Contents](#table-of-contents)
 
 ## User Configuration
 
@@ -26,7 +48,7 @@ sudo dnf install -y slirp4netns fuse-overlayfs
 
 Rootless Podman relies on `/etc/subuid` and `/etc/subgid` to map a range of UIDs/GIDs to the unprivileged user.
 
-Check if your user has a range defined:
+**Check for existing range:**
 
 ```bash
 grep $USER /etc/subuid
@@ -34,90 +56,96 @@ grep $USER /etc/subgid
 ```
 
 **Expected Output:**
-
 ```text
 username:100000:65536
 ```
-
-(This means `username` can use 65,536 UIDs starting from ID 100,000).
+*(This allows `username` to use 65,536 UIDs starting from ID 100,000)*
 
 **If no output:**
-You need to add entries for the user:
+Add entries for the user manually:
 
 ```bash
 sudo usermod --add-subuids 100000-165535 --add-subgids 100000-165535 $USER
 ```
+> **Note:** You must log out and log back in for these changes to take effect.
 
-*Note: You must log out and log back in for these changes to take effect.*
+### 2. Enable User Linger
 
-### 2. Enable User Linger (Optional but Recommended)
-
-If you want long-running containers (like web servers or databases) to persist after you log out:
+Recommended for long-running containers (web servers, databases) to ensure they persist after logout.
 
 ```bash
 loginctl enable-linger $USER
 ```
 
+[↑ Back to Table of Contents](#table-of-contents)
+
 ## Networking
 
-### Network Backends (Netavark vs Slirp4netns)
+### Network Backends
 
-* **Slirp4netns**: The legacy/default implementation for rootless networking. It is stable but can have performance
-    overhead.
-* **Netavark**: The modern network stack (default in RHEL 9/Podman 4.0+). It offers better performance and supports
-    advanced features like distinct IP addresses for containers in rootless mode.
+| Backend | Description | Status |
+|:---|:---|:---|
+| **Netavark** | Modern, high-performance stack supporting IPv6 and complex setups. | Default in RHEL 9 (Podman 4.0+) |
+| **Slirp4netns** | Legacy user-mode networking. Stable but slower. | Default in RHEL 8 |
 
-To verify which backend you are using:
-
+**Check current backend:**
 ```bash
 podman info --format '{{.Host.NetworkBackend}}'
 ```
 
-If you need to switch (e.g., to enable IPv6 or better performance), edit `containers.conf`.
-
 ### Exposing Ports
 
-Rootless users usually cannot bind to ports < 1024 (privileged ports).
+Rootless users cannot bind to privileged ports (< 1024) by default.
 
-**Attempting to bind port 80:**
-
+**Problem:**
 ```bash
 podman run -p 80:80 nginx
 # Error: bind: permission denied
 ```
 
-**Solution 1: Use unprivileged ports**
-Map to a high port (e.g., 8080):
-
+**Solution 1: Use Unprivileged Ports (Recommended)**
+Map to a high port (e.g., 8080) instead.
 ```bash
 podman run -p 8080:80 nginx
 ```
 
-**Solution 2: Allow lower ports (System-wide)**
-This allows **all** unprivileged users to bind to ports >= 80.
-
+**Solution 2: Allow Low Ports System-wide**
+Configure sysctl to lower the privileged port threshold.
 ```bash
 echo "net.ipv4.ip_unprivileged_port_start=80" | sudo tee -a /etc/sysctl.conf
 sudo sysctl -p
 ```
 
+[↑ Back to Table of Contents](#table-of-contents)
+
 ## Caveats and Limitations
 
-1. **Ping**: ICMP ping might not work inside containers unless configured in `sysctl`.
-2. **Resource Limits**: Rootless containers are subject to the user's cgroup limits.
+1. **Ping**: ICMP ping might not work inside containers unless configured in `sysctl` (`net.ipv4.ping_group_range`).
+2. **Resource Limits**: Rootless containers are strictly bound by the user's systemd cgroup limits.
+3. **Storage Performance**: `fuse-overlayfs` is slightly slower than kernel native overlayfs (though difference is negligible for most apps).
+
+[↑ Back to Table of Contents](#table-of-contents)
 
 ## Troubleshooting
 
-### "there might not be enough IDs available in the namespace"
+### "There might not be enough IDs available in the namespace"
 
-* Check `/etc/subuid` and `/etc/subgid`.
-* Run `podman system migrate` to reset local configuration if standard processing changes.
+**Fix:**
+1. Verify `/etc/subuid` entries exist.
+2. Run migration tool to reset configuration:
+   ```bash
+   podman system migrate
+   ```
 
-### "permission denied" on volume mounts
+### "Permission denied" on volume mounts
 
-* Files on the host owned by the user might appear as `root` inside the container.
-* Use the `:Z` flag when mounting SELinux protected volumes:
+**Fix:**
+Private files on the host (like in `$HOME`) may be inaccessible to the container process. Use the `:Z` flag (SELinux) to relabel them correctly.
 
-    ```bash
-    podman run -v ./data:/data:Z ...
-    ```
+```bash
+podman run -v ./data:/data:Z ...
+```
+
+See [Troubleshooting Guide](./troubleshooting.md) for more details.
+
+[↑ Back to Table of Contents](#table-of-contents)

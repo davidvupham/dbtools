@@ -1,6 +1,23 @@
 # Podman Operations & Maintenance
 
-This runbook outlines standard operational tasks for maintaining a healthy Podman environment.
+**🔗 [← Back to Podman Documentation Index](../../explanation/podman/README.md)**
+
+> **Document Version:** 1.0
+> **Last Updated:** January 13, 2026
+> **Maintainers:** Application Infrastructure Team
+> **Status:** Production
+
+![Status](https://img.shields.io/badge/Status-Production-green)
+![Topic](https://img.shields.io/badge/Topic-Runbook-orange)
+
+> [!IMPORTANT]
+> **Related Docs:** [Cheatsheet](../../reference/podman/cheatsheet.md) | [Systemd Integration](../../how-to/podman/systemd-integration.md)
+
+## Table of Contents
+
+- [Disk Space Management](#disk-space-management)
+- [Updates and Upgrades](#updates-and-upgrades)
+- [Backup & Restore](#backup--restore)
 
 ## Disk Space Management
 
@@ -15,7 +32,6 @@ podman system df
 ```
 
 **Output Example:**
-
 ```text
 TYPE            TOTAL   ACTIVE   SIZE    RECLAIMABLE
 Images          5       2        1.1GB   500MB (45%)
@@ -25,7 +41,8 @@ Local Volumes   2       1        200MB   100MB (50%)
 
 ### Pruning (Cleanup)
 
-**Warning:** These commands are destructive.
+> [!WARNING]
+> These commands are destructive.
 
 1. **Remove stopped containers:**
 
@@ -39,22 +56,21 @@ Local Volumes   2       1        200MB   100MB (50%)
     podman image prune
     ```
 
-3. **Remove ALL unused data (images, containers, networks):**
+3. **Remove ALL unused data:** (images, containers, networks)
 
     ```bash
-    podman system prune --volumes
+    # -a (all): Remove all unused images, not just dangling ones
+    # --volumes: Prune unused volumes as well
+    podman system prune -a --volumes
     ```
 
-    * `--all` (`-a`): Remove all unused images, not just dangling ones.
-    * `--volumes`: Prune unused volumes as well.
+[↑ Back to Table of Contents](#table-of-contents)
 
 ## Updates and Upgrades
 
-Podman on RHEL is updated via `dnf`.
-
 ### Check usage before upgrade
 
-Before upgrading, ensure critical containers are healthy.
+Before upgrading RHEL packages, ensure critical containers are healthy.
 
 ```bash
 podman ps -a
@@ -66,9 +82,9 @@ podman ps -a
 sudo dnf update -y container-tools
 ```
 
-### Automatic Container Updates (`podman auto-update`)
+### Automatic Container Updates
 
-You can automate image updates for running containers managed by systemd.
+Automate image updates for running containers managed by systemd.
 
 1. **Label your container**: Start it with `--label "io.containers.autoupdate=registry"`.
 2. **Enable the timer**:
@@ -81,18 +97,19 @@ This timer will check for regular updates (default: daily) and restart container
 
 ### Post-Upgrade Validation
 
-After an upgrade, it is recommended to run `podman system migrate` to apply any internal storage or namespace changes
-required by the new version.
+After an upgrade, it is recommended to run `podman system migrate` to apply any internal storage or namespace changes.
 
 ```bash
 podman system migrate
 ```
 
+[↑ Back to Table of Contents](#table-of-contents)
+
 ## Backup & Restore
 
 ### Exporting Containers
 
-You can export a container's filesystem to a tarball:
+Export a container's filesystem content to a tarball:
 
 ```bash
 podman export <container_id> -o my_container.tar
@@ -100,7 +117,7 @@ podman export <container_id> -o my_container.tar
 
 ### Saving Images
 
-Save an image for transfer to an air-gapped system:
+Save an image (layers + metadata) for transfer to an air-gapped system:
 
 ```bash
 podman save -o my_image.tar <image_name>
@@ -113,3 +130,5 @@ Load an image from a tarball:
 ```bash
 podman load -i my_image.tar
 ```
+
+[↑ Back to Table of Contents](#table-of-contents)
