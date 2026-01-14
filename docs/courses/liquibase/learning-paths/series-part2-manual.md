@@ -677,45 +677,36 @@ Drift Summary
 ========================================
 ```
 
-### Best Practice: Snapshot-Based Drift Detection in CI/CD
+### Best Practice: Version Control and Drift Detection
 
-Use `deploy.sh` for deployments - it automatically creates timestamped snapshots.
+**What to check into version control (Git):**
 
-**1. Deploy using deploy.sh (snapshots created automatically):**
+| Artifact | Version Control? | Reason |
+|----------|-----------------|--------|
+| Changelogs (XML/YAML/SQL) | ✅ Yes | Source of truth for all database changes |
+| SQL scripts | ✅ Yes | Part of your deployment code |
+| Liquibase properties files | ✅ Yes | Configuration as code (exclude passwords) |
+| Snapshots | ❌ No | Large derived artifacts; store in artifact storage |
+| DATABASECHANGELOG exports | ❌ No | Runtime state; regenerate as needed |
 
-```bash
-# In your CI/CD pipeline, use deploy.sh for all deployments
-$LIQUIBASE_TUTORIAL_DIR/scripts/deploy.sh --action update --dbi mssql_prd
+**Snapshots in CI/CD pipelines:**
 
-# Snapshots are automatically saved to:
-# $LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/snapshots/mssql_prd_update_YYYYMMDD_HHMMSS.json
+Snapshots are valuable for drift detection but should not be committed to Git because they:
 
-# Optionally, copy snapshots to artifact storage for long-term retention
-aws s3 cp $LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/snapshots/prd_*.json \
-    s3://my-bucket/liquibase-snapshots/
-```
+- Are large JSON files that change with every deployment
+- Represent point-in-time state (derived artifacts, not source)
+- Can be regenerated from the actual database
 
-**2. Schedule regular drift checks (e.g., daily or before deployments):**
+Instead, snapshots should be:
 
-```bash
-# Find the latest snapshot
-LATEST_SNAPSHOT=$(ls -t $LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/snapshots/prd_*.json | head -1)
+1. **Generated automatically** after each successful deployment
+2. **Stored in artifact storage** (S3, Artifactory, Azure Blob, etc.) with timestamps
+3. **Referenced by CI/CD jobs** for scheduled drift checks (daily, weekly, or pre-deployment)
+4. **Retained based on policy** (e.g., keep last 30 days or last N deployments)
 
-# Compare current database against the snapshot
-lb --dbi mssql_prd -- diff \
-    --schemas=app \
-    --referenceUrl="offline:mssql?snapshot=$LATEST_SNAPSHOT" \
-    > drift-report.txt
+**Why snapshots for drift detection?**
 
-# Fail if drift is detected
-if grep -q "Unexpected\|Missing\|Changed" drift-report.txt; then
-    echo "ERROR: Drift detected in production!"
-    cat drift-report.txt
-    exit 1
-fi
-```
-
-> **Why snapshots?** Unlike comparing two live databases (which can both drift), a snapshot is immutable and represents the exact state after your last controlled deployment. Using `deploy.sh` ensures every deployment automatically creates a snapshot.
+Unlike comparing two live databases (which can both drift), a snapshot is immutable and represents the exact state after your last controlled deployment. This provides a reliable baseline for detecting unauthorized changes.
 
 ---
 
