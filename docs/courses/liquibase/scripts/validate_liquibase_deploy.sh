@@ -300,10 +300,10 @@ for instance in "${TARGET_INSTANCES[@]}"; do
                 }'
         else
             # Baseline is tracked but not tagged - suggest tagging
-            fail "Baseline tag not found. Baseline changesets are tracked, but tag is missing. Run: lb -e $env -- tag baseline"
+            fail "Baseline tag not found. Baseline changesets are tracked, but tag is missing. Run: lb --db $instance -- tag baseline"
         fi
     else
-        fail "Baseline tag not found (run: lb -e $env -- tag baseline)"
+        fail "Baseline tag not found (run: lb --db $instance -- tag baseline)"
     fi
 
     echo
@@ -331,17 +331,17 @@ else
     echo "Common issues and fixes:"
     echo
     echo "If baseline changesets are tracked but tags are missing:"
-    echo "  lb -e dev -- tag baseline"
-    echo "  lb -e stg -- tag baseline"
-    echo "  lb -e prd -- tag baseline"
+    echo "  lb --db mssql_dev -- tag baseline"
+    echo "  lb --db mssql_stg -- tag baseline"
+    echo "  lb --db mssql_prd -- tag baseline"
     echo
     echo "If baseline is not deployed yet:"
     echo "  \$LIQUIBASE_TUTORIAL_DIR/scripts/deploy.sh --action baseline --db mssql_dev,mssql_stg,mssql_prd"
     echo
     echo "Or deploy manually:"
-    echo "  1. mssql_dev: lb -e dev -- changelogSync && lb -e dev -- tag baseline"
-    echo "  2. mssql_stg: lb -e stg -- update && lb -e stg -- tag baseline"
-    echo "  3. mssql_prd: lb -e prd -- update && lb -e prd -- tag baseline"
+    echo "  1. mssql_dev: lb --db mssql_dev -- changelogSync && lb --db mssql_dev -- tag baseline"
+    echo "  2. mssql_stg: lb --db mssql_stg -- update && lb --db mssql_stg -- tag baseline"
+    echo "  3. mssql_prd: lb --db mssql_prd -- update && lb --db mssql_prd -- tag baseline"
     echo
     exit 1
 fi

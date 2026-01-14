@@ -291,7 +291,7 @@ take_snapshot() {
     
     log_info "Taking snapshot: ${instance}_${action_name}_${timestamp}.json"
     
-    if "$LB_CMD" -e "$env" -- snapshot \
+    if "$LB_CMD" --db "$instance" -- snapshot \
         --schemas=app \
         --snapshot-format=json \
         --output-file="/data/platform/mssql/database/orderdb/snapshots/${instance}_${action_name}_${timestamp}.json" \
@@ -314,8 +314,6 @@ take_snapshot() {
 # - All: tag as "baseline"
 do_baseline() {
     local instance="$1"
-    local env
-    env=$(instance_to_env "$instance")
     local pretty
     pretty=$(pretty_instance "$instance")
     
@@ -330,14 +328,14 @@ do_baseline() {
     log_info "Deploying baseline to $pretty ($action_desc)..."
     
     # Deploy
-    if ! "$LB_CMD" -e "$env" -- "$lb_action" 2>&1; then
+    if ! "$LB_CMD" --db "$instance" -- "$lb_action" 2>&1; then
         log_error "Failed to deploy baseline to $pretty"
         return 1
     fi
     
     # Tag as baseline
     log_info "Tagging as 'baseline'..."
-    if ! "$LB_CMD" -e "$env" -- tag baseline 2>&1; then
+    if ! "$LB_CMD" --db "$instance" -- tag baseline 2>&1; then
         # Tag might already exist (idempotent)
         log_warn "Tag 'baseline' may already exist in $pretty"
     fi
@@ -349,14 +347,12 @@ do_baseline() {
 # Deploy updates (pending changesets)
 do_update() {
     local instance="$1"
-    local env
-    env=$(instance_to_env "$instance")
     local pretty
     pretty=$(pretty_instance "$instance")
     
     log_info "Deploying updates to $pretty..."
     
-    if "$LB_CMD" -e "$env" -- update 2>&1; then
+    if "$LB_CMD" --db "$instance" -- update 2>&1; then
         log_success "Updates deployed to $pretty"
         return 0
     else
@@ -369,14 +365,12 @@ do_update() {
 do_rollback() {
     local instance="$1"
     local tag="$2"
-    local env
-    env=$(instance_to_env "$instance")
     local pretty
     pretty=$(pretty_instance "$instance")
     
     log_info "Rolling back $pretty to tag '$tag'..."
     
-    if "$LB_CMD" -e "$env" -- rollback "$tag" 2>&1; then
+    if "$LB_CMD" --db "$instance" -- rollback "$tag" 2>&1; then
         log_success "Rolled back $pretty to '$tag'"
         return 0
     else
@@ -389,14 +383,12 @@ do_rollback() {
 do_rollback_count() {
     local instance="$1"
     local count="$2"
-    local env
-    env=$(instance_to_env "$instance")
     local pretty
     pretty=$(pretty_instance "$instance")
     
     log_info "Rolling back last $count changeset(s) in $pretty..."
     
-    if "$LB_CMD" -e "$env" -- rollbackCount "$count" 2>&1; then
+    if "$LB_CMD" --db "$instance" -- rollbackCount "$count" 2>&1; then
         log_success "Rolled back last $count changeset(s) in $pretty"
         return 0
     else
@@ -408,14 +400,12 @@ do_rollback_count() {
 # Show status (pending changesets)
 do_status() {
     local instance="$1"
-    local env
-    env=$(instance_to_env "$instance")
     local pretty
     pretty=$(pretty_instance "$instance")
     
     log_info "Checking status in $pretty..."
     
-    "$LB_CMD" -e "$env" -- status --verbose 2>&1
+    "$LB_CMD" --db "$instance" -- status --verbose 2>&1
     return $?
 }
 

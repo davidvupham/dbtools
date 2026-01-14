@@ -4,21 +4,21 @@
 
 | Command | Description |
 |---------|-------------|
-| `lb -e dev -- status` | Show pending changes for dev |
-| `lb -e dev -- update` | Apply pending changes |
-| `lb -e dev -- updateSQL` | Preview SQL without applying |
-| `lb -e dev -- rollback-count 1` | Rollback last changeset |
-| `lb -e dev -- rollback-to-tag v1.0` | Rollback to tag |
-| `lb -e dev -- tag v1.0` | Create a tag |
-| `lb -e dev -- history` | Show deployment history |
-| `lb -e dev -- diff` | Compare database to changelog |
+| `lb --db mssql_dev -- status` | Show pending changes for dev |
+| `lb --db mssql_dev -- update` | Apply pending changes |
+| `lb --db mssql_dev -- updateSQL` | Preview SQL without applying |
+| `lb --db mssql_dev -- rollback-count 1` | Rollback last changeset |
+| `lb --db mssql_dev -- rollback-to-tag v1.0` | Rollback to tag |
+| `lb --db mssql_dev -- tag v1.0` | Create a tag |
+| `lb --db mssql_dev -- history` | Show deployment history |
+| `lb --db mssql_dev -- diff` | Compare database to changelog |
 
-## Environment Options
+## Database Instance Options
 
 ```bash
-lb -e dev -- <command>    # Development (port 14331)
-lb -e stg -- <command>    # Staging (port 14332)
-lb -e prd -- <command>    # Production (port 14333)
+lb --db mssql_dev -- <command>    # Development (port 14331)
+lb --db mssql_stg -- <command>    # Staging (port 14332)
+lb --db mssql_prd -- <command>    # Production (port 14333)
 ```
 
 ## Setup Scripts

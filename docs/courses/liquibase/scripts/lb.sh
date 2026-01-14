@@ -1,21 +1,48 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Liquibase Docker wrapper for the tutorial
-# Usage examples:
-#   lb.sh -e dev -- status --verbose
-#   lb.sh -e stg -- update
-#   lb.sh -e prd -- tag release-v1.2
-#   LIQUIBASE_TUTORIAL_DATA_DIR=/some/dir lb.sh -e dev -- updateSQL
+################################################################################
+# lb.sh - Liquibase Docker wrapper for the tutorial
+################################################################################
 #
-# Requirements:
+# PURPOSE:
+#   Wrapper script to run Liquibase commands against SQL Server database
+#   instances using Docker/Podman containers.
+#
+# USAGE:
+#   lb.sh --db <instance> -- <liquibase-args>
+#
+# OPTIONS:
+#   -d, --db <instance>    Target database instance (required)
+#                          Values: mssql_dev, mssql_stg, mssql_prd
+#   --net <network>        Container network (default: auto)
+#   --image <name>         Liquibase image (default: liquibase:latest)
+#   --project <dir>        Project dir to mount (default: /data/$USER/liquibase_tutorial)
+#   -h, --help             Show help
+#
+# EXAMPLES:
+#   lb.sh --db mssql_dev -- status --verbose
+#   lb.sh --db mssql_dev -- update
+#   lb.sh --db mssql_stg -- updateSQL
+#   lb.sh --db mssql_prd -- tag release-v1.2
+#   LIQUIBASE_TUTORIAL_DATA_DIR=/some/dir lb.sh --db mssql_dev -- updateSQL
+#
+# ENVIRONMENT VARIABLES:
+#   MSSQL_LIQUIBASE_TUTORIAL_PWD   Required. SA password used by CLI
+#   LIQUIBASE_TUTORIAL_DATA_DIR    Optional. Overrides --project
+#   LB_IMAGE                       Optional. Overrides --image
+#   LB_NETWORK                     Optional. Overrides --net
+#
+# REQUIREMENTS:
 #   - Docker image 'liquibase:latest' built via the repo's docker/liquibase directory
 #   - SQL Server containers running (mssql_dev/mssql_stg/mssql_prd)
-#   - env files at $LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/env/liquibase.mssql_<env>.properties
+#   - Properties files at $LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/env/
 #   - MSSQL_LIQUIBASE_TUTORIAL_PWD exported in the shell
 #
-# Runtime detection:
+# RUNTIME DETECTION:
 #   Checks CONTAINER_RUNTIME env var, then searches for docker, then podman.
+#
+################################################################################
 
 detect_runtime() {
   # 1. Allow override via env var
@@ -59,34 +86,46 @@ detect_runtime() {
 
 CR="$(detect_runtime)"
 
-ENVIRONMENT=""
+INSTANCE=""
 EXTRA_DOCKER_OPTS=()
 PASS_ARGS=()
 
 print_usage() {
   cat <<'EOF'
 Usage:
-  lb.sh -e <dev|stg|prd> -- <liquibase-args>
+  lb.sh --db <instance> -- <liquibase-args>
+
+Options:
+  -d, --db <instance>    Target database instance (required)
+                         Values: mssql_dev, mssql_stg, mssql_prd
+  --net <network>        Container network (default: auto)
+  --image <name>         Liquibase image (default: liquibase:latest)
+  --project <dir>        Project dir to mount (default: /data/$USER/liquibase_tutorial)
+  -h, --help             Show help
 
 Examples:
-  lb.sh -e dev -- status --verbose
-  lb.sh -e dev -- update
-  lb.sh -e stg -- updateSQL
-  lb.sh -e prd -- tag release-v1.2
-
-Options before '--' apply to docker run:
-  -e, --env <name>   Environment (dev|stg|prd) [required]
-  --net <network>    Container network (default: auto)
-  --image <name>     Liquibase image (default: liquibase:latest)
-  --project <dir>    Project dir to mount (default: /data/$USER/liquibase_tutorial)
-  -h, --help         Show help
+  lb.sh --db mssql_dev -- status --verbose
+  lb.sh --db mssql_dev -- update
+  lb.sh --db mssql_stg -- updateSQL
+  lb.sh --db mssql_prd -- tag release-v1.2
 
 Environment variables:
   MSSQL_LIQUIBASE_TUTORIAL_PWD   Required. SA password used by CLI
-  LIQUIBASE_TUTORIAL_DATA_DIR                 Optional. Overrides --project
+  LIQUIBASE_TUTORIAL_DATA_DIR    Optional. Overrides --project
   LB_IMAGE                       Optional. Overrides --image
   LB_NETWORK                     Optional. Overrides --net
 EOF
+}
+
+# Extract environment from database instance name (mssql_dev -> dev)
+instance_to_env() {
+  local instance="${1//[[:space:]]/}"
+  case "$instance" in
+    mssql_dev) echo "dev" ;;
+    mssql_stg) echo "stg" ;;
+    mssql_prd) echo "prd" ;;
+    *)         echo "" ;;
+  esac
 }
 
 # Defaults
@@ -97,8 +136,8 @@ LB_NETWORK_DEFAULT="${LB_NETWORK:-}"
 # Parse args until '--'
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    -e|--env)
-      ENVIRONMENT="$2"; shift 2;;
+    -d|--db|--database|--instance)
+      INSTANCE="$2"; shift 2;;
     --net)
       LB_NETWORK_DEFAULT="$2"; shift 2;;
     --image)
@@ -114,23 +153,24 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-# Backward compatibility: accept stage/prod as aliases
-case "$ENVIRONMENT" in
-  stage) ENVIRONMENT="stg";;
-  prod)  ENVIRONMENT="prd";;
-esac
-
-if [[ "$ENVIRONMENT" != "dev" && "$ENVIRONMENT" != "stg" && "$ENVIRONMENT" != "prd" ]]; then
-  echo "Error: invalid environment '$ENVIRONMENT' (expected dev|stg|prd)." >&2
+# Validate database instance (required)
+if [[ -z "$INSTANCE" ]]; then
+  echo "Error: Database instance required. Use --db <instance>" >&2
+  echo "Valid instances: mssql_dev, mssql_stg, mssql_prd" >&2
   print_usage
   exit 2
 fi
 
-if [[ -z "$ENVIRONMENT" ]]; then
-  echo "Error: environment not specified. Use -e dev|stage|prod" >&2
-  print_usage
+# Validate instance name
+VALID_INSTANCES="mssql_dev mssql_stg mssql_prd"
+if [[ ! " $VALID_INSTANCES " =~ " $INSTANCE " ]]; then
+  echo "Error: Invalid database instance '$INSTANCE'" >&2
+  echo "Valid instances: $VALID_INSTANCES" >&2
   exit 2
 fi
+
+# Extract environment from instance name
+ENVIRONMENT=$(instance_to_env "$INSTANCE")
 
 if [[ -z "${MSSQL_LIQUIBASE_TUTORIAL_PWD:-}" ]]; then
   echo "Error: MSSQL_LIQUIBASE_TUTORIAL_PWD is not set." >&2
@@ -163,11 +203,11 @@ MSSQL_DEV_PORT="${MSSQL_DEV_PORT:-14331}"
 MSSQL_STG_PORT="${MSSQL_STG_PORT:-14332}"
 MSSQL_PRD_PORT="${MSSQL_PRD_PORT:-14333}"
 
-# Select port based on environment
-case "$ENVIRONMENT" in
-  dev) PORT="$MSSQL_DEV_PORT";;
-  stg) PORT="$MSSQL_STG_PORT";;
-  prd) PORT="$MSSQL_PRD_PORT";;
+# Select port based on instance
+case "$INSTANCE" in
+  mssql_dev) PORT="$MSSQL_DEV_PORT";;
+  mssql_stg) PORT="$MSSQL_STG_PORT";;
+  mssql_prd) PORT="$MSSQL_PRD_PORT";;
 esac
 
 # If network not explicitly set, pick a safe default per runtime

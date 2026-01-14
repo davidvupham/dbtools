@@ -174,7 +174,7 @@ See [Appendix: Step 6 Direct Commands (Create V0001 Change File)](#appendix-step
 
 ```bash
 # See what will run (preview)
-lb -e dev -- updateSQL
+lb --db mssql_dev -- updateSQL
 
 # Deploy change to development (with auto-snapshot)
 $LIQUIBASE_TUTORIAL_DIR/scripts/deploy.sh --action update --db mssql_dev
@@ -255,7 +255,7 @@ Once the change is validated in development, promote it to staging and productio
 
 ```bash
 # Preview what will run
-lb -e stg -- updateSQL
+lb --db mssql_stg -- updateSQL
 
 # Deploy to staging (with auto-snapshot)
 $LIQUIBASE_TUTORIAL_DIR/scripts/deploy.sh --action update --db mssql_stg
@@ -297,7 +297,7 @@ ORDER BY type_desc, name;
 
 ```bash
 # Preview what will run
-lb -e prd -- updateSQL
+lb --db mssql_prd -- updateSQL
 
 # Deploy to production (with auto-snapshot)
 $LIQUIBASE_TUTORIAL_DIR/scripts/deploy.sh --action update --db mssql_prd
@@ -347,9 +347,9 @@ After deploying V0001, tag the current state as a release:
 
 ```bash
 # Tag all environments with the release version
-lb -e dev -- tag release-v1.0
-lb -e stg -- tag release-v1.0
-lb -e prd -- tag release-v1.0
+lb --db mssql_dev -- tag release-v1.0
+lb --db mssql_stg -- tag release-v1.0
+lb --db mssql_prd -- tag release-v1.0
 ```
 
 ### Query DATABASECHANGELOG
@@ -444,7 +444,7 @@ See [Appendix: Step 9 Direct Commands (Add Rollback to V0001)](#appendix-step-9-
 # Preview what rollback will do
 # Note: We're rolling back to 'baseline' to remove all changes after baseline
 # You could also rollback to 'release-v1.0' to remove only changes after that tag
-lb -e dev -- rollbackSQL baseline
+lb --db mssql_dev -- rollbackSQL baseline
 
 # Execute rollback to baseline (removes V0001 orders table)
 # This removes all changesets executed after the baseline tag
@@ -473,7 +473,7 @@ The query should show only the baseline changesets remain - the `release-v1.0` t
 $LIQUIBASE_TUTORIAL_DIR/scripts/deploy.sh --action update --db mssql_dev
 
 # Re-tag the release
-lb -e dev -- tag release-v1.0
+lb --db mssql_dev -- tag release-v1.0
 
 # Verify the release row is back in DATABASECHANGELOG
 $LIQUIBASE_TUTORIAL_DIR/scripts/query_databasechangelog.sh dev
@@ -501,8 +501,8 @@ Each snapshot is timestamped (e.g., `dev_update_20260112_053000.json`) and repre
 
 > **Note:** If you used raw `lb` commands instead of `deploy.sh`, you can manually take a snapshot:
 > ```bash
-> lb -e dev -- snapshot --schemas=app --snapshot-format=json \
->     --output-file=/data/platform/mssql/database/orderdb/snapshots/dev_manual_$(date +%Y%m%d_%H%M%S).json
+> lb --db mssql_dev -- snapshot --schemas=app --snapshot-format=json \
+>     --output-file=/data/platform/mssql/database/orderdb/snapshots/mssql_dev_manual_$(date +%Y%m%d_%H%M%S).json
 > ```
 
 ### Simulate Drift
@@ -681,7 +681,7 @@ aws s3 cp $LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/snapshots
 LATEST_SNAPSHOT=$(ls -t $LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/snapshots/prd_*.json | head -1)
 
 # Compare current database against the snapshot
-lb -e prd -- diff \
+lb --db mssql_prd -- diff \
     --schemas=app \
     --referenceUrl="offline:mssql?snapshot=$LATEST_SNAPSHOT" \
     > drift-report.txt
@@ -732,15 +732,15 @@ See [Appendix: Step 11 Direct Commands (Create V0002 Change File)](#appendix-ste
 ```bash
 # Deploy to dev (with auto-snapshot)
 $LIQUIBASE_TUTORIAL_DIR/scripts/deploy.sh --action update --db mssql_dev
-lb -e dev -- tag release-v1.1
+lb --db mssql_dev -- tag release-v1.1
 
 # Deploy to staging (after dev validation, with auto-snapshot)
 $LIQUIBASE_TUTORIAL_DIR/scripts/deploy.sh --action update --db mssql_stg
-lb -e stg -- tag release-v1.1
+lb --db mssql_stg -- tag release-v1.1
 
 # Deploy to production (after staging validation, with auto-snapshot)
 $LIQUIBASE_TUTORIAL_DIR/scripts/deploy.sh --action update --db mssql_prd
-lb -e prd -- tag release-v1.1
+lb --db mssql_prd -- tag release-v1.1
 ```
 
 > **Tip:** You can deploy to multiple instances at once: `deploy.sh --action update --db mssql_dev,mssql_stg,mssql_prd`
@@ -755,10 +755,10 @@ In Part 2, you learned:
 |-------|--------------|
 | **Make changes** | Create SQL files, update `changelog.xml` |
 | **Deploy** | `deploy.sh --action update --db <instance>` (auto-snapshot) |
-| **Tags** | `lb -e <env> -- tag <name>` |
+| **Tags** | `lb --db <instance> -- tag <name>` |
 | **Rollback** | `deploy.sh --action rollback --db <instance> --tag <tag>` (auto-snapshot) |
-| **Drift detection** | `lb -e <env> -- diff` (compare against snapshot) |
-| **Drift capture** | `lb -e <env> -- diffChangeLog` |
+| **Drift detection** | `lb --db <instance> -- diff` (compare against snapshot) |
+| **Drift capture** | `lb --db <instance> -- diffChangeLog` |
 | **Snapshots** | Automatically created after every deployment for drift detection |
 
 ## Next Steps
