@@ -118,6 +118,22 @@ Before starting this tutorial, you should have:
 
 Set the `LIQUIBASE_TUTORIAL_DIR` environment variable to point to your repository's tutorial directory. This variable will be used throughout the tutorial.
 
+**Option 1: Auto-detect (recommended)**
+
+If you're inside the repository directory (or any subdirectory), use the helper script to automatically find and export the tutorial directory:
+
+```bash
+# From anywhere inside the dbtools repository:
+source "$(git rev-parse --show-toplevel)/docs/courses/liquibase/scripts/find_tutorial_dir.sh"
+```
+
+The script searches for `docs/courses/liquibase` in:
+- Current directory and parent directories
+- Git repository root
+- Common locations (`$HOME/src/dbtools`, `/data/dbtools`, etc.)
+
+**Option 2: Manual export**
+
 ```bash
 # Set this to YOUR repository path (adjust as needed)
 export LIQUIBASE_TUTORIAL_DIR="/path/to/your/repo/docs/courses/liquibase"
