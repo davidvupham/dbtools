@@ -510,6 +510,21 @@ Each snapshot is timestamped (e.g., `dev_update_20260112_053000.json`) and repre
 >     --output-file=/data/platform/mssql/database/orderdb/snapshots/mssql_dev_manual_$(date +%Y%m%d_%H%M%S).json
 > ```
 
+### Take a Fresh Snapshot
+
+Before simulating drift, take a fresh snapshot to capture the current known-good state (including the orders table and its index):
+
+```bash
+# Take a snapshot of the current state
+lb --dbi mssql_dev -- snapshot --schemas=app --snapshot-format=json \
+    --output-file=/data/platform/mssql/database/orderdb/snapshots/mssql_dev_pre_drift_$(date +%Y%m%d_%H%M%S).json
+
+# Verify the snapshot was created
+ls -lt $LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/snapshots/ | head -3
+```
+
+This ensures the snapshot includes all current objects (customer table, orders table, indexes) so drift detection can identify any changes.
+
 ### Simulate Drift
 
 There are three types of drift that can occur when changes are made outside of Liquibase:
