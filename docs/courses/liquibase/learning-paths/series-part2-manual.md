@@ -650,46 +650,14 @@ $LIQUIBASE_TUTORIAL_DIR/scripts/generate_drift_changelog.sh --dbi mssql_dev \
 Before continuing, let's clean up the drift we created:
 
 ```bash
-# Revert Type 1: Remove the unexpected column (must drop default constraint first)
-sqlcmd-tutorial -S mssql_dev -Q "
-USE orderdb;
-DECLARE @constraint_name NVARCHAR(200);
-SELECT @constraint_name = dc.name 
-FROM sys.default_constraints dc
-JOIN sys.columns c ON dc.parent_object_id = c.object_id AND dc.parent_column_id = c.column_id
-WHERE c.object_id = OBJECT_ID('app.customer') AND c.name = 'loyalty_points';
-
-IF @constraint_name IS NOT NULL
-    EXEC('ALTER TABLE app.customer DROP CONSTRAINT ' + @constraint_name);
-
-IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('app.customer') AND name = 'loyalty_points')
-    ALTER TABLE app.customer DROP COLUMN loyalty_points;
-"
-
-# Revert Type 2: Restore the original column size (must drop/recreate index first)
-sqlcmd-tutorial -S mssql_dev -Q "
-USE orderdb;
--- Drop the index that depends on first_name
-IF EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_customer_name' AND object_id = OBJECT_ID('app.customer'))
-    DROP INDEX IX_customer_name ON app.customer;
-
--- Update any NULL values
-UPDATE app.customer SET first_name = '' WHERE first_name IS NULL;
-
--- Restore original column definition
-ALTER TABLE app.customer ALTER COLUMN first_name NVARCHAR(100) NOT NULL;
-
--- Recreate the index
-CREATE INDEX IX_customer_name ON app.customer(last_name, first_name);
-"
-
-# Revert Type 3: Recreate the missing index
-sqlcmd-tutorial -S mssql_dev -Q "
-USE orderdb;
-IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_orders_order_date' AND object_id = OBJECT_ID('app.orders'))
-    CREATE INDEX IX_orders_order_date ON app.orders(order_date DESC);
-"
+$LIQUIBASE_TUTORIAL_DIR/scripts/revert_drift.sh --dbi mssql_dev
 ```
+
+The script handles:
+
+- **Type 1**: Removes the `loyalty_points` column (drops default constraint first)
+- **Type 2**: Restores `first_name` to `NVARCHAR(100) NOT NULL` (drops/recreates dependent index)
+- **Type 3**: Recreates the `IX_orders_order_date` index if missing
 
 Verify the drift has been resolved:
 
