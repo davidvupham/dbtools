@@ -700,19 +700,59 @@ See [Appendix: Step 11 Direct Commands (Create V0002 Change File)](#appendix-ste
 
 ### Deploy Through Environments
 
+**Deploy to Development:**
+
 ```bash
-# Deploy to dev (with auto-snapshot)
 $LIQUIBASE_TUTORIAL_DIR/scripts/deploy.sh --action update --dbi mssql_dev
 lb --dbi mssql_dev -- tag release-v1.1
+```
 
-# Deploy to staging (after dev validation, with auto-snapshot)
+This will:
+
+- Execute V0002 SQL to create the `IX_orders_order_date` index
+- Record the changeset in the `DATABASECHANGELOG` table
+- Create a timestamped snapshot for drift detection
+- Apply the `release-v1.1` tag for rollback reference
+
+**Validate Development:**
+
+```bash
+# Verify the index was created (see Step 6 for script details)
+$LIQUIBASE_TUTORIAL_DIR/scripts/validate_app_schema_objects.sh --dbi mssql_dev
+
+# Verify DATABASECHANGELOG shows V0002 (see Step 8 for script details)
+$LIQUIBASE_TUTORIAL_DIR/scripts/query_databasechangelog.sh --dbi mssql_dev
+```
+
+**Deploy to Staging and Production:**
+
+After validating development, promote the changes:
+
+```bash
+# Deploy to staging
 $LIQUIBASE_TUTORIAL_DIR/scripts/deploy.sh --action update --dbi mssql_stg
 lb --dbi mssql_stg -- tag release-v1.1
 
-# Deploy to production (after staging validation, with auto-snapshot)
+# Deploy to production
 $LIQUIBASE_TUTORIAL_DIR/scripts/deploy.sh --action update --dbi mssql_prd
 lb --dbi mssql_prd -- tag release-v1.1
 ```
+
+**Validate All Environments:**
+
+```bash
+# Verify schema objects across all instances
+$LIQUIBASE_TUTORIAL_DIR/scripts/validate_app_schema_objects.sh --dbi mssql_dev,mssql_stg,mssql_prd
+
+# Verify DATABASECHANGELOG across all instances
+$LIQUIBASE_TUTORIAL_DIR/scripts/query_databasechangelog.sh --dbi mssql_dev,mssql_stg,mssql_prd
+```
+
+**Expected Result:**
+
+- All three database instances have the new `IX_orders_order_date` index
+- `DATABASECHANGELOG` in each instance shows V0002 changeset with `release-v1.1` tag
+- Snapshots created for each instance enable future drift detection
 
 > **Tip:** You can deploy to multiple instances at once: `deploy.sh --action update --dbi mssql_dev,mssql_stg,mssql_prd`
 
