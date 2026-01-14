@@ -230,9 +230,23 @@ detect_jfrog_config() {
     return 1
 }
 
+# Detect if we're building a Microsoft SQL Server image
+# Checks the Dockerfile for Microsoft Container Registry references
+is_microsoft_sql_server_image() {
+    local dockerfile="$1"
+    if [[ -f "$dockerfile" ]]; then
+        # Check if Dockerfile uses mcr.microsoft.com or mssql/server
+        if grep -qE "(mcr\.microsoft\.com|mssql/server)" "$dockerfile" 2>/dev/null; then
+            return 0
+        fi
+    fi
+    return 1
+}
+
 # Build the registry prefix from JFrog URL
 build_registry_prefix() {
     local jfrog_url="$1"
+    local proxy_path="$2"
 
     # Remove protocol if present
     jfrog_url="${jfrog_url#https://}"
@@ -241,9 +255,9 @@ build_registry_prefix() {
     # Remove trailing slash
     jfrog_url="${jfrog_url%/}"
 
-    # If URL doesn't include proxy path, add the default
-    if [[ ! "$jfrog_url" =~ $JFROG_PROXY_PATH ]]; then
-        echo "${jfrog_url}/${JFROG_PROXY_PATH}/"
+    # If URL doesn't include proxy path, add the specified proxy path
+    if [[ ! "$jfrog_url" =~ $proxy_path ]]; then
+        echo "${jfrog_url}/${proxy_path}/"
     else
         echo "${jfrog_url}/"
     fi
@@ -451,7 +465,13 @@ main() {
         log_info "Checking for JFrog proxy configuration..."
 
         if jfrog_url=$(detect_jfrog_config); then
-            REGISTRY_PREFIX=$(build_registry_prefix "$jfrog_url")
+            # Detect if this is a Microsoft SQL Server image
+            local proxy_path="$JFROG_PROXY_PATH"
+            if is_microsoft_sql_server_image "$CONTEXT_DIR/Dockerfile"; then
+                proxy_path="docker-microsoft-proxy"
+                log_info "Microsoft SQL Server image detected, using docker-microsoft-proxy"
+            fi
+            REGISTRY_PREFIX=$(build_registry_prefix "$jfrog_url" "$proxy_path")
             log_success "JFrog proxy detected!"
         else
             REGISTRY_PREFIX=""
