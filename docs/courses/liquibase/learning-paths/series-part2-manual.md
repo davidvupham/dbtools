@@ -29,13 +29,13 @@
   - [Simulate Drift](#simulate-drift)
   - [Detect Drift with diff](#detect-drift-with-diff)
   - [Generate a Changelog from Drift](#generate-a-changelog-from-drift)
-  - [Best Practice: Regular Drift Checks](#best-practice-regular-drift-checks)
 - [Step 11: Additional Changesets](#step-11-additional-changesets)
   - [V0002: Add Index to Orders](#v0002-add-index-to-orders)
   - [Update Master Changelog](#update-master-changelog)
   - [Deploy Through Environments](#deploy-through-environments)
 - [Summary](#summary)
 - [Next Steps](#next-steps)
+- [Appendix: Best Practices](#appendix-best-practices)
 - [Appendix: Step 6 Direct Commands (Create V0001 Change File)](#appendix-step-6-direct-commands-create-v0001-change-file)
 - [Appendix: Step 6 Direct Commands (Update Changelog for V0001)](#appendix-step-6-direct-commands-update-changelog-for-v0001)
 - [Appendix: Step 9 Direct Commands (Add Rollback to V0001)](#appendix-step-9-direct-commands-add-rollback-to-v0001)
@@ -677,38 +677,7 @@ Drift Summary
 ========================================
 ```
 
-### Best Practice: Version Control and Drift Detection
-
-**What to check into version control (Git):**
-
-| Artifact | Version Control? | Reason |
-|----------|-----------------|--------|
-| Changelogs (XML/YAML/SQL) | ✅ Yes | Source of truth for all database changes |
-| SQL scripts | ✅ Yes | Part of your deployment code |
-| Liquibase properties files | ✅ Yes | Configuration as code (exclude passwords) |
-| Snapshot (single file) | ✅ Yes | Represents expected database state; provides audit trail |
-| DATABASECHANGELOG exports | ❌ No | Runtime state; regenerate as needed |
-
-**Recommended: Single snapshot file in Git**
-
-Maintain a single snapshot file (e.g., `snapshots/orderdb.json`) that is updated after each deployment and committed to Git:
-
-- **Audit trail** - Git history tracks every schema change with commit messages that include Jira tickets and descriptions
-- **Correlation** - Snapshot updates are tied directly to changelog commits
-- **Simplicity** - No separate artifact storage infrastructure required
-- **Diffable** - `git diff` shows exactly what changed in the schema between versions
-- **Compliance** - Single source of truth for auditors to review
-
-**Workflow:**
-
-1. Deploy changelog changes to the database
-2. Generate a fresh snapshot
-3. Commit the updated snapshot with a descriptive message (e.g., `"PROJ-123: Add customer loyalty_points column"`)
-4. CI/CD compares live database against the committed snapshot to detect drift
-
-**Why snapshots for drift detection?**
-
-Unlike comparing two live databases (which can both drift), a snapshot is immutable and represents the exact state after your last controlled deployment. This provides a reliable baseline for detecting unauthorized changes.
+> **Best Practices:** For guidance on version control, snapshots, and drift detection workflows, see [Appendix: Best Practices](#appendix-best-practices).
 
 ---
 
@@ -780,6 +749,43 @@ In Part 2, you learned:
 - **[Part 3: CI/CD Automation](./series-part3-cicd.md)** - Wire everything into GitHub Actions for automated deployments.
 - **[Drift Management Tutorial Supplement](./tutorial-supplement-drift.md)** - Deep dive into drift detection, remediation, and SQL generation for audit.
 - **[Runner Setup Tutorial Supplement](./tutorial-supplement-runner-setup.md)** - Set up a self-hosted runner for local CI/CD testing.
+
+---
+
+## Appendix: Best Practices
+
+Back to: [Step 10: Drift Detection](#step-10-drift-detection)
+
+### Version Control Guidelines
+
+| Artifact | Version Control? | Reason |
+|----------|-----------------|--------|
+| Changelogs (XML/YAML/SQL) | ✅ Yes | Source of truth for all database changes |
+| SQL scripts | ✅ Yes | Part of your deployment code |
+| Liquibase properties files | ✅ Yes | Configuration as code (exclude passwords) |
+| Snapshot (single file) | ✅ Yes | Represents expected database state; provides audit trail |
+| DATABASECHANGELOG exports | ❌ No | Runtime state; regenerate as needed |
+
+### Recommended: Single Snapshot File in Git
+
+Maintain a single snapshot file (e.g., `snapshots/orderdb.json`) that is updated after each deployment and committed to Git:
+
+- **Audit trail** - Git history tracks every schema change with commit messages that include Jira tickets and descriptions
+- **Correlation** - Snapshot updates are tied directly to changelog commits
+- **Simplicity** - No separate artifact storage infrastructure required
+- **Diffable** - `git diff` shows exactly what changed in the schema between versions
+- **Compliance** - Single source of truth for auditors to review
+
+### Workflow
+
+1. Deploy changelog changes to the database
+2. Generate a fresh snapshot
+3. Commit the updated snapshot with a descriptive message (e.g., `"PROJ-123: Add customer loyalty_points column"`)
+4. CI/CD compares live database against the committed snapshot to detect drift
+
+### Why Snapshots for Drift Detection?
+
+Unlike comparing two live databases (which can both drift), a snapshot is immutable and represents the exact state after your last controlled deployment. This provides a reliable baseline for detecting unauthorized changes.
 
 ---
 
