@@ -1,4 +1,17 @@
 # How to Use UV Workspaces for Monorepos
+ 
+**🔗 [← Back to UV How-to Index](./README.md)**
+ 
+> **Document Version:** 1.0
+> **Last Updated:** January 13, 2026
+> **Maintainers:** Application Infrastructure Team
+> **Status:** Production
+ 
+![Status](https://img.shields.io/badge/Status-Production-green)
+![Topic](https://img.shields.io/badge/Topic-Structure-purple)
+ 
+> [!IMPORTANT]
+> **Related Docs:** [Dependency Management](./uv-dependency-management.md) | [CI/CD Integration](./uv-ci-cd-integration.md)
 
 This guide covers setting up and managing UV workspaces for monorepo projects with multiple Python packages.
 

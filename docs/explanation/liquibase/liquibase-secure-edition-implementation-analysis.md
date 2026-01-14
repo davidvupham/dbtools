@@ -12,7 +12,7 @@
 ![Document Status](https://img.shields.io/badge/Status-Strategic_Planning-blue)
 
 > [!IMPORTANT]
-> **Related Docs:** [Concepts](./liquibase-concepts.md) | [Architecture](./liquibase-architecture.md)
+> **Related Docs:** [Concepts](./liquibase-concepts.md) | [Architecture](./liquibase-architecture.md) | [Operations](../../how-to/liquibase/liquibase-operations-guide.md) | [Reference](../../reference/liquibase/liquibase-reference.md) | [Drift Management](./liquibase-drift-management.md)
 
 This document analyzes the features of **Liquibase Secure** (formerly Liquibase Pro/Enterprise) and assesses what would be required to implement equivalent functionality using the **Community Edition**. Use this to make informed decisions about licensing vs. custom implementation.
 

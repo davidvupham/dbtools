@@ -1,4 +1,17 @@
-# How to manage Python versions with `uv`
+# How to Manage Python Versions with UV
+ 
+**🔗 [← Back to UV How-to Index](./README.md)**
+ 
+> **Document Version:** 1.0
+> **Last Updated:** January 13, 2026
+> **Maintainers:** Application Infrastructure Team
+> **Status:** Production
+ 
+![Status](https://img.shields.io/badge/Status-Production-green)
+![Topic](https://img.shields.io/badge/Topic-Environment-green)
+ 
+> [!IMPORTANT]
+> **Related Docs:** [Interactive Python](./uv-interactive-python.md) | [Tool Management](./uv-tool-management.md)
 
 `uv` simplifies globally installing and managing Python versions.
 

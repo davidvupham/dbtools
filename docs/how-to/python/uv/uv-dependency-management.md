@@ -1,4 +1,17 @@
-# How to manage dependencies with `uv`
+# How to Manage Dependencies with UV
+ 
+**🔗 [← Back to UV How-to Index](./README.md)**
+ 
+> **Document Version:** 1.0
+> **Last Updated:** January 13, 2026
+> **Maintainers:** Application Infrastructure Team
+> **Status:** Production
+ 
+![Status](https://img.shields.io/badge/Status-Production-green)
+![Topic](https://img.shields.io/badge/Topic-Dependencies-green)
+ 
+> [!IMPORTANT]
+> **Related Docs:** [Migration Guide](./uv-migrate-from-pip.md) | [Workspaces](./uv-workspaces.md)
 
 ## Table of contents
 

@@ -1,4 +1,17 @@
 # How to Migrate from pip/Poetry to UV
+ 
+**🔗 [← Back to UV How-to Index](./README.md)**
+ 
+> **Document Version:** 1.0
+> **Last Updated:** January 13, 2026
+> **Maintainers:** Application Infrastructure Team
+> **Status:** Production
+ 
+![Status](https://img.shields.io/badge/Status-Production-green)
+![Topic](https://img.shields.io/badge/Topic-Migration-purple)
+ 
+> [!IMPORTANT]
+> **Related Docs:** [Dependency Management](./uv-dependency-management.md) | [Workspaces](./uv-workspaces.md)
 
 This guide walks you through migrating existing Python projects to UV from traditional tools like pip, pip-tools, Poetry, or Pipenv.
 

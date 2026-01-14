@@ -1,4 +1,17 @@
 # Getting Started with UV: A Beginner's Guide
+ 
+**🔗 [← Back to UV Documentation Index](../../../explanation/python/uv/README.md)**
+ 
+> **Document Version:** 1.0
+> **Last Updated:** January 13, 2026
+> **Maintainers:** Application Infrastructure Team
+> **Status:** Production
+ 
+![Status](https://img.shields.io/badge/Status-Production-green)
+![Topic](https://img.shields.io/badge/Topic-Tutorial-blue)
+ 
+> [!IMPORTANT]
+> **Related Docs:** [Architecture](../../../explanation/python/uv/uv-architecture.md) | [Comprehensive Tutorial](./uv_tutorial.md) | [How-to Guides](../../../how-to/python/uv/) | [Reference](../../../reference/python/uv/uv-reference.md)
 
 A step-by-step tutorial to get you up and running with `uv`, the modern Python package manager.
 

@@ -11,7 +11,7 @@
 ![Security](https://img.shields.io/badge/Security-Rootless-blue)
 
 > [!IMPORTANT]
-> **Related Docs:** [Installation](./install-podman-rhel.md) | [Troubleshooting](./troubleshooting.md)
+> **Related Docs:** [Architecture](../../explanation/podman/podman-architecture.md) | [Installation](./install-podman-rhel.md) | [Cheatsheet](../../reference/podman/cheatsheet.md) | [Troubleshooting](./troubleshooting.md) | [Tutorial](../../tutorials/podman/getting-started.md)
 
 ## Table of Contents
 

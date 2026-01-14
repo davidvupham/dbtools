@@ -11,7 +11,7 @@
 ![Topic](https://img.shields.io/badge/Topic-Troubleshooting-orange)
 
 > [!IMPORTANT]
-> **Related Docs:** [Runbooks](../../runbooks/podman/maintenance.md) | [Operations Guide](../../how-to/podman/configure-rootless.md)
+> **Related Docs:** [Architecture](../../explanation/podman/podman-architecture.md) | [Installation](./install-podman-rhel.md) | [Cheatsheet](../../reference/podman/cheatsheet.md) | [Maintenance](../../runbooks/podman/maintenance.md) | [Tutorial](../../tutorials/podman/getting-started.md)
 
 ## Table of Contents
 

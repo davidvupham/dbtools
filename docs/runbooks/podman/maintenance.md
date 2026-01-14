@@ -11,7 +11,7 @@
 ![Topic](https://img.shields.io/badge/Topic-Runbook-orange)
 
 > [!IMPORTANT]
-> **Related Docs:** [Cheatsheet](../../reference/podman/cheatsheet.md) | [Systemd Integration](../../how-to/podman/systemd-integration.md)
+> **Related Docs:** [Architecture](../../explanation/podman/podman-architecture.md) | [Installation](../../how-to/podman/install-podman-rhel.md) | [Cheatsheet](../../reference/podman/cheatsheet.md) | [Systemd Integration](../../how-to/podman/systemd-integration.md) | [Troubleshooting](../../how-to/podman/troubleshooting.md)
 
 ## Table of Contents
 

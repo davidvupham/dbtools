@@ -1,4 +1,17 @@
 # How to Use UV in CI/CD Pipelines
+ 
+**🔗 [← Back to UV How-to Index](./README.md)**
+ 
+> **Document Version:** 1.0
+> **Last Updated:** January 13, 2026
+> **Maintainers:** Application Infrastructure Team
+> **Status:** Production
+ 
+![Status](https://img.shields.io/badge/Status-Production-green)
+![Topic](https://img.shields.io/badge/Topic-CI%2FCD-blue)
+ 
+> [!IMPORTANT]
+> **Related Docs:** [Docker Integration](./uv-docker-integration.md) | [Workspaces](./uv-workspaces.md)
 
 This guide covers integrating UV into various CI/CD platforms for testing, building, and deploying Python applications.
 

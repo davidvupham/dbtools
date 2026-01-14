@@ -1,4 +1,17 @@
 # How to Use UV with Docker
+ 
+**🔗 [← Back to UV How-to Index](./README.md)**
+ 
+> **Document Version:** 1.0
+> **Last Updated:** January 13, 2026
+> **Maintainers:** Application Infrastructure Team
+> **Status:** Production
+ 
+![Status](https://img.shields.io/badge/Status-Production-green)
+![Topic](https://img.shields.io/badge/Topic-Containers-blue)
+ 
+> [!IMPORTANT]
+> **Related Docs:** [CI/CD Integration](./uv-ci-cd-integration.md) | [Workspaces](./uv-workspaces.md)
 
 This guide covers best practices for using UV in Docker containers for both development and production.
 
