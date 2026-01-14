@@ -16,7 +16,8 @@ Welcome to the dbtools tutorials library. These guides are designed to help you 
 
 - **[Python](python/README.md)**: Fundamentals, modern tooling (uv), and app development.
 - **[PowerShell](powershell/README.md)**: Automation, scripting, and Windows management.
-- **[Shell Scripting](shell-scripting/README.md)**: Linux command line and bash scripts.
+- **[PowerShell DSC v3](powershell-dsc-v3/README.md)**: Desired State Configuration with PowerShell.
+- **[Shell Scripting](shell-scripting/01-basics.md)**: Linux command line and bash scripts.
 - **[OOP](oop/README.md)**: Object-Oriented Programming concepts and patterns.
 
 ### Infrastructure & Cloud
@@ -24,6 +25,7 @@ Welcome to the dbtools tutorials library. These guides are designed to help you 
 - **[AWS](aws/README.md)**: Cloud infrastructure and services.
 - **[Terraform](terraform/README.md)**: Infrastructure as Code (IaC).
 - **[Docker](docker/README.md)**: Containerization basics and patterns.
+- **[Podman](podman/getting-started.md)**: Rootless container management.
 - **[Kubernetes](kubernetes/README.md)**: Container orchestration.
 - **[Ansible](ansible/README.md)**: Configuration management.
 - **[Vault](gds-vault/README.md)**: Secrets management with HashiCorp Vault.
@@ -31,7 +33,7 @@ Welcome to the dbtools tutorials library. These guides are designed to help you 
 ### DevOps & CI/CD
 
 - **[GitHub Actions](github-actions/README.md)**: CI/CD workflows and automation.
-- **[ArgoCD](argocd/README.md)**: GitOps continuous delivery.
+- **[ArgoCD](argocd/01-gitops.md)**: GitOps continuous delivery.
 - **[Git](git/README.md)**: Version control basics and flows.
 
 ### Databases & Data
@@ -49,6 +51,13 @@ Welcome to the dbtools tutorials library. These guides are designed to help you 
 - **[Linux](linux/README.md)**: Operating system basics.
 - **[Certs](certs/README.md)**: SSL/TLS certificates.
 - **[SSH Agent](ssh-agent/README.md)**: Secure authentication management.
+
+---
+
+## 🎯 Practice & Projects
+
+- **[Exercises](exercises/README.md)**: Hands-on Python exercises with solutions.
+- **[DevOps Project Ideas](devops-projects/01-ideas.md)**: Project ideas for building your portfolio.
 
 ---
 
