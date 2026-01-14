@@ -56,7 +56,7 @@ Create drift by making changes outside of Liquibase:
 
 ```bash
 # Add an unexpected column
-sqlcmd-tutorial -e dev -Q "
+sqlcmd-tutorial -S mssql_dev -Q "
 USE orderdb;
 IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('app.customer') AND name = 'loyalty_points')
     ALTER TABLE app.customer ADD loyalty_points INT DEFAULT 0;
@@ -95,7 +95,7 @@ If the drift was unintended:
 
 ```bash
 # Remove the unauthorized column
-sqlcmd-tutorial -e dev -Q "
+sqlcmd-tutorial -S mssql_dev -Q "
 USE orderdb;
 IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('app.customer') AND name = 'loyalty_points')
     ALTER TABLE app.customer DROP COLUMN loyalty_points;

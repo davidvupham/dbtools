@@ -200,7 +200,7 @@ The script will:
 **Alternative: Manual query**
 
 ```bash
-sqlcmd-tutorial -e dev -Q "
+sqlcmd-tutorial -S mssql_dev -Q "
 USE orderdb;
 SELECT
     SCHEMA_NAME(schema_id) AS SchemaName,
@@ -279,7 +279,7 @@ The script will:
 **Alternative: Manual query**
 
 ```bash
-sqlcmd-tutorial -e stg -Q "
+sqlcmd-tutorial -S mssql_stg -Q "
 USE orderdb;
 SELECT
     SCHEMA_NAME(schema_id) AS SchemaName,
@@ -321,7 +321,7 @@ The script will:
 **Alternative: Manual query**
 
 ```bash
-sqlcmd-tutorial -e prd -Q "
+sqlcmd-tutorial -S mssql_prd -Q "
 USE orderdb;
 SELECT
     SCHEMA_NAME(schema_id) AS SchemaName,
@@ -371,7 +371,7 @@ The script will:
 **Alternative: Manual query**
 
 ```bash
-sqlcmd-tutorial -e dev -Q "
+sqlcmd-tutorial -S mssql_dev -Q "
 USE orderdb;
 SELECT
     ID,
@@ -452,7 +452,7 @@ lb -e dev -- rollbackSQL baseline
 $LIQUIBASE_TUTORIAL_DIR/scripts/deploy.sh --action rollback --env dev --tag baseline
 
 # Verify the orders table is gone
-sqlcmd-tutorial -e dev -Q "
+sqlcmd-tutorial -S mssql_dev -Q "
 USE orderdb;
 SELECT name FROM sys.objects
 WHERE schema_id = SCHEMA_ID('app') AND type = 'U';
@@ -522,7 +522,7 @@ Let's simulate each type to see how `detect_drift.sh` reports them.
 Add a column directly to the database without using Liquibase:
 
 ```bash
-sqlcmd-tutorial -e dev -Q "
+sqlcmd-tutorial -S mssql_dev -Q "
 USE orderdb;
 -- Someone adds a column without using Liquibase
 IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('app.customer') AND name = 'loyalty_points')
@@ -538,7 +538,7 @@ $LIQUIBASE_TUTORIAL_DIR/scripts/query_table_columns.sh -e dev -h loyalty_points 
 Modify an existing column's properties:
 
 ```bash
-sqlcmd-tutorial -e dev -Q "
+sqlcmd-tutorial -S mssql_dev -Q "
 USE orderdb;
 -- Someone changes a column's size without using Liquibase
 -- Increase first_name column from NVARCHAR(100) to NVARCHAR(150)
@@ -554,7 +554,7 @@ $LIQUIBASE_TUTORIAL_DIR/scripts/query_table_columns.sh -e dev -h first_name app.
 Remove an object that exists in the snapshot:
 
 ```bash
-sqlcmd-tutorial -e dev -Q "
+sqlcmd-tutorial -S mssql_dev -Q "
 USE orderdb;
 -- Someone drops an index without using Liquibase
 IF EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_orders_order_date' AND object_id = OBJECT_ID('app.orders'))
@@ -622,7 +622,7 @@ $LIQUIBASE_TUTORIAL_DIR/scripts/generate_drift_changelog.sh -e dev \
 Before continuing, let's clean up the drift we created:
 
 ```bash
-sqlcmd-tutorial -e dev -Q "
+sqlcmd-tutorial -S mssql_dev -Q "
 USE orderdb;
 
 -- Revert Type 1: Remove the unexpected column

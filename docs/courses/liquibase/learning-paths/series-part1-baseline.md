@@ -246,8 +246,8 @@ To simplify running SQL commands inside the tutorial SQL Server container, use t
 
 ```bash
 # EXAMPLE ONLY – DO NOT RUN YET
-# Note: Use -e dev/stg/prd to specify which SQL Server instance to connect to
-sqlcmd-tutorial -e dev -Q "SELECT @@SERVERNAME AS ServerName, GETDATE() AS CurrentTime;"
+# Note: Use -s mssql_dev/mssql_stg/mssql_prd to specify the database instance name
+sqlcmd-tutorial -S mssql_dev -Q "SELECT @@SERVERNAME AS ServerName, GETDATE() AS CurrentTime;"
 ```
 
 - Run a `.sql` file:
@@ -263,13 +263,13 @@ Now verify you can connect to all three SQL Server instances. This test ensures 
 
 ```bash
 # Test connection to dev instance (should show server name and date)
-sqlcmd-tutorial -e dev -Q "SELECT @@SERVERNAME AS ServerName, GETDATE() AS CurrentTime"
+sqlcmd-tutorial -S mssql_dev -Q "SELECT @@SERVERNAME AS ServerName, GETDATE() AS CurrentTime"
 
 # Test connection to stg instance
-sqlcmd-tutorial -e stg -Q "SELECT @@SERVERNAME AS ServerName, GETDATE() AS CurrentTime"
+sqlcmd-tutorial -S mssql_stg -Q "SELECT @@SERVERNAME AS ServerName, GETDATE() AS CurrentTime"
 
 # Test connection to prd instance
-sqlcmd-tutorial -e prd -Q "SELECT @@SERVERNAME AS ServerName, GETDATE() AS CurrentTime"
+sqlcmd-tutorial -S mssql_prd -Q "SELECT @@SERVERNAME AS ServerName, GETDATE() AS CurrentTime"
 ```
 
 **Expected output:**
@@ -427,7 +427,7 @@ See [Appendix: Step 2 Direct Commands (Populate Development)](#appendix-step-2-d
 > podman exec -it mssql_dev /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P "$MSSQL_LIQUIBASE_TUTORIAL_PWD" -d orderdb
 >
 > # Or run a single query
-> sqlcmd-tutorial -e dev -Q "SELECT * FROM app.customer;"
+> sqlcmd-tutorial -S mssql_dev -Q "SELECT * FROM app.customer;"
 > ```
 >
 > In the interactive session, type `GO` after each query to execute, and `EXIT` to quit.
@@ -781,7 +781,7 @@ SQL Server on Linux uses the container's hostname as its `@@SERVERNAME` when it 
 # Check server name for each environment
 for env in dev stg prd; do
     echo "=== mssql_${env} ==="
-    sqlcmd-tutorial -e "$env" -Q "SELECT @@SERVERNAME AS ServerName" -h -1 -W
+    sqlcmd-tutorial -S "mssql_$env" -Q "SELECT @@SERVERNAME AS ServerName" -h -1 -W
 done
 ```
 
@@ -932,24 +932,24 @@ To create databases and schemas directly for all three environments:
 
 ```bash
 # Create orderdb database on each environment
-sqlcmd-tutorial -e dev create_orderdb_database.sql
-sqlcmd-tutorial -e stg create_orderdb_database.sql
-sqlcmd-tutorial -e prd create_orderdb_database.sql
+sqlcmd-tutorial -S mssql_dev create_orderdb_database.sql
+sqlcmd-tutorial -S mssql_stg create_orderdb_database.sql
+sqlcmd-tutorial -S mssql_prd create_orderdb_database.sql
 
 # Create app schema in each orderdb (required for Liquibase)
-sqlcmd-tutorial -e dev -d orderdb create_app_schema.sql
-sqlcmd-tutorial -e stg -d orderdb create_app_schema.sql
-sqlcmd-tutorial -e prd -d orderdb create_app_schema.sql
+sqlcmd-tutorial -S mssql_dev -d orderdb create_app_schema.sql
+sqlcmd-tutorial -S mssql_stg -d orderdb create_app_schema.sql
+sqlcmd-tutorial -S mssql_prd -d orderdb create_app_schema.sql
 
 # Verify orderdb exists on each environment
-sqlcmd-tutorial -e dev verify_orderdb_database.sql
-sqlcmd-tutorial -e stg verify_orderdb_database.sql
-sqlcmd-tutorial -e prd verify_orderdb_database.sql
+sqlcmd-tutorial -S mssql_dev verify_orderdb_database.sql
+sqlcmd-tutorial -S mssql_stg verify_orderdb_database.sql
+sqlcmd-tutorial -S mssql_prd verify_orderdb_database.sql
 
 # Verify app schema exists in each orderdb
-sqlcmd-tutorial -e dev -d orderdb verify_app_schema.sql
-sqlcmd-tutorial -e stg -d orderdb verify_app_schema.sql
-sqlcmd-tutorial -e prd -d orderdb verify_app_schema.sql
+sqlcmd-tutorial -S mssql_dev -d orderdb verify_app_schema.sql
+sqlcmd-tutorial -S mssql_stg -d orderdb verify_app_schema.sql
+sqlcmd-tutorial -S mssql_prd -d orderdb verify_app_schema.sql
 ```
 
 Or use a loop to run for all environments:
@@ -957,10 +957,10 @@ Or use a loop to run for all environments:
 ```bash
 # Create databases and schemas for all environments
 for env in dev stg prd; do
-    sqlcmd-tutorial -e "$env" create_orderdb_database.sql
-    sqlcmd-tutorial -e "$env" -d orderdb create_app_schema.sql
-    sqlcmd-tutorial -e "$env" verify_orderdb_database.sql
-    sqlcmd-tutorial -e "$env" -d orderdb verify_app_schema.sql
+    sqlcmd-tutorial -S "mssql_$env" create_orderdb_database.sql
+    sqlcmd-tutorial -S "mssql_$env" -d orderdb create_app_schema.sql
+    sqlcmd-tutorial -S "mssql_$env" verify_orderdb_database.sql
+    sqlcmd-tutorial -S "mssql_$env" -d orderdb verify_app_schema.sql
 done
 ```
 
@@ -1107,18 +1107,18 @@ The `populate_dev_database.sh` script executes SQL scripts to create database ob
 ```bash
 # Create table, view, indexes, and sample data in DEVELOPMENT
 # Note: Script assumes 'app' schema already exists
-sqlcmd-tutorial -e dev populate_orderdb_database.sql
+sqlcmd-tutorial -S mssql_dev populate_orderdb_database.sql
 
 # Verify objects were created in development
-sqlcmd-tutorial -e dev verify_orderdb_objects.sql
-sqlcmd-tutorial -e dev verify_orderdb_data.sql
+sqlcmd-tutorial -S mssql_dev verify_orderdb_objects.sql
+sqlcmd-tutorial -S mssql_dev verify_orderdb_data.sql
 ```
 
 ### Understanding the Commands
 
 | Command | Purpose |
 |---------|---------|
-| `sqlcmd-tutorial -e dev` | Connect to the development SQL Server container (`mssql_dev`) |
+| `sqlcmd-tutorial -S mssql_dev` | Connect to the development SQL Server container (`mssql_dev`) |
 | `populate_orderdb_database.sql` | SQL script that creates `app.customer` table, indexes, view, and sample data |
 | `verify_orderdb_objects.sql` | SQL script that verifies database objects exist |
 | `verify_orderdb_data.sql` | SQL script that verifies sample data was inserted |
@@ -1410,7 +1410,7 @@ lb -e dev -- snapshot --schemas=app --snapshot-format=json --output-file=/data/.
 
 ```bash
 # Check DATABASECHANGELOG table in any environment
-sqlcmd-tutorial -e dev -Q "
+sqlcmd-tutorial -S mssql_dev -Q "
 USE orderdb;
 SELECT ID, AUTHOR, FILENAME, DATEEXECUTED, TAG, EXECTYPE
 FROM DATABASECHANGELOG
