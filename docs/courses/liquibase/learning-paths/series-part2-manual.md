@@ -360,7 +360,7 @@ View what's been deployed and when:
 
 ```bash
 # Run the query script (defaults to dev, or specify environment)
-$LIQUIBASE_TUTORIAL_DIR/scripts/query_databasechangelog.sh dev
+$LIQUIBASE_TUTORIAL_DIR/scripts/query_databasechangelog.sh --db mssql_dev
 ```
 
 The script will:
@@ -459,7 +459,7 @@ WHERE schema_id = SCHEMA_ID('app') AND type = 'U';
 "
 
 # Verify the release row was removed from DATABASECHANGELOG
-$LIQUIBASE_TUTORIAL_DIR/scripts/query_databasechangelog.sh dev
+$LIQUIBASE_TUTORIAL_DIR/scripts/query_databasechangelog.sh --db mssql_dev
 ```
 
 The query should show only the baseline changesets remain - the `release-v1.0` tagged row (V0001-add-orders-table) should be gone.
@@ -476,7 +476,7 @@ $LIQUIBASE_TUTORIAL_DIR/scripts/deploy.sh --action update --db mssql_dev
 lb --db mssql_dev -- tag release-v1.0
 
 # Verify the release row is back in DATABASECHANGELOG
-$LIQUIBASE_TUTORIAL_DIR/scripts/query_databasechangelog.sh dev
+$LIQUIBASE_TUTORIAL_DIR/scripts/query_databasechangelog.sh --db mssql_dev
 ```
 
 The query should now show the `release-v1.0` tagged row (V0001-add-orders-table) is back, highlighted in yellow.
