@@ -50,8 +50,8 @@ Find documentation across all categories (Tutorials, How-to, Reference) for spec
 | **GDS Vault** | [Tutorials](tutorials/gds-vault/README.md) | [How-to](how-to/vault/README.md) |
 | **Kafka** | [Tutorials](tutorials/kafka/README.md) | |
 | **Observability** | [Course](courses/observability/README.md) | |
-| **System Design** | [Tutorials](system-design/README.md) | |
-| **Linux** | [Tutorials](linux/README.md) | [Ref](reference/linux/README.md) |
+| **System Design** | [Tutorials](tutorials/system-design/README.md) | |
+| **Linux** | [Tutorials](tutorials/linux/README.md) | [Ref](reference/linux/README.md) |
 
 ## Documentation Organization
 
