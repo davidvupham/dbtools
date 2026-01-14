@@ -111,7 +111,7 @@ Before starting Part 2, validate that Part 1 was completed successfully:
 
 ```bash
 # Run the comprehensive validation script (validates all prerequisites)
-$LIQUIBASE_TUTORIAL_DIR/scripts/validate_liquibase_deploy.sh --db mssql_dev,mssql_stg,mssql_prd
+$LIQUIBASE_TUTORIAL_DIR/scripts/validate_liquibase_deploy.sh --dbi mssql_dev,mssql_stg,mssql_prd
 ```
 
 **What the script validates (maps to prerequisites above):**
@@ -138,7 +138,7 @@ $LIQUIBASE_TUTORIAL_DIR/scripts/validate_orderdb_database.sh
 $LIQUIBASE_TUTORIAL_DIR/scripts/validate_liquibase_properties.sh
 
 # Baseline deployment (comprehensive validation, recommended)
-$LIQUIBASE_TUTORIAL_DIR/scripts/validate_liquibase_deploy.sh --db mssql_dev,mssql_stg,mssql_prd
+$LIQUIBASE_TUTORIAL_DIR/scripts/validate_liquibase_deploy.sh --dbi mssql_dev,mssql_stg,mssql_prd
 ```
 
 If validation fails, complete the missing steps from Part 1 before proceeding.
@@ -174,10 +174,10 @@ See [Appendix: Step 6 Direct Commands (Create V0001 Change File)](#appendix-step
 
 ```bash
 # See what will run (preview)
-lb --db mssql_dev -- updateSQL
+lb --dbi mssql_dev -- updateSQL
 
 # Deploy change to development (with auto-snapshot)
-$LIQUIBASE_TUTORIAL_DIR/scripts/deploy.sh --action update --db mssql_dev
+$LIQUIBASE_TUTORIAL_DIR/scripts/deploy.sh --action update --dbi mssql_dev
 ```
 
 > **Note:** `deploy.sh` automatically takes a snapshot after successful deployment for drift detection.
@@ -188,7 +188,7 @@ Verify in dev:
 
 ```bash
 # Run the validation script
-$LIQUIBASE_TUTORIAL_DIR/scripts/validate_app_schema_objects.sh --db mssql_dev
+$LIQUIBASE_TUTORIAL_DIR/scripts/validate_app_schema_objects.sh --dbi mssql_dev
 ```
 
 The script will:
@@ -255,10 +255,10 @@ Once the change is validated in development, promote it to staging and productio
 
 ```bash
 # Preview what will run
-lb --db mssql_stg -- updateSQL
+lb --dbi mssql_stg -- updateSQL
 
 # Deploy to staging (with auto-snapshot)
-$LIQUIBASE_TUTORIAL_DIR/scripts/deploy.sh --action update --db mssql_stg
+$LIQUIBASE_TUTORIAL_DIR/scripts/deploy.sh --action update --dbi mssql_stg
 ```
 
 Verify in staging:
@@ -267,7 +267,7 @@ Verify in staging:
 
 ```bash
 # Run the validation script
-$LIQUIBASE_TUTORIAL_DIR/scripts/validate_app_schema_objects.sh --db mssql_stg
+$LIQUIBASE_TUTORIAL_DIR/scripts/validate_app_schema_objects.sh --dbi mssql_stg
 ```
 
 The script will:
@@ -297,10 +297,10 @@ ORDER BY type_desc, name;
 
 ```bash
 # Preview what will run
-lb --db mssql_prd -- updateSQL
+lb --dbi mssql_prd -- updateSQL
 
 # Deploy to production (with auto-snapshot)
-$LIQUIBASE_TUTORIAL_DIR/scripts/deploy.sh --action update --db mssql_prd
+$LIQUIBASE_TUTORIAL_DIR/scripts/deploy.sh --action update --dbi mssql_prd
 ```
 
 Verify in production:
@@ -309,7 +309,7 @@ Verify in production:
 
 ```bash
 # Run the validation script
-$LIQUIBASE_TUTORIAL_DIR/scripts/validate_app_schema_objects.sh --db mssql_prd
+$LIQUIBASE_TUTORIAL_DIR/scripts/validate_app_schema_objects.sh --dbi mssql_prd
 ```
 
 The script will:
@@ -347,9 +347,9 @@ After deploying V0001, tag the current state as a release:
 
 ```bash
 # Tag all environments with the release version
-lb --db mssql_dev -- tag release-v1.0
-lb --db mssql_stg -- tag release-v1.0
-lb --db mssql_prd -- tag release-v1.0
+lb --dbi mssql_dev -- tag release-v1.0
+lb --dbi mssql_stg -- tag release-v1.0
+lb --dbi mssql_prd -- tag release-v1.0
 ```
 
 ### Query DATABASECHANGELOG
@@ -360,7 +360,7 @@ View what's been deployed and when:
 
 ```bash
 # Run the query script (defaults to dev, or specify environment)
-$LIQUIBASE_TUTORIAL_DIR/scripts/query_databasechangelog.sh --db mssql_dev
+$LIQUIBASE_TUTORIAL_DIR/scripts/query_databasechangelog.sh --dbi mssql_dev
 ```
 
 The script will:
@@ -444,12 +444,12 @@ See [Appendix: Step 9 Direct Commands (Add Rollback to V0001)](#appendix-step-9-
 # Preview what rollback will do
 # Note: We're rolling back to 'baseline' to remove all changes after baseline
 # You could also rollback to 'release-v1.0' to remove only changes after that tag
-lb --db mssql_dev -- rollbackSQL baseline
+lb --dbi mssql_dev -- rollbackSQL baseline
 
 # Execute rollback to baseline (removes V0001 orders table)
 # This removes all changesets executed after the baseline tag
 # Using deploy.sh takes a snapshot of the post-rollback state
-$LIQUIBASE_TUTORIAL_DIR/scripts/deploy.sh --action rollback --db mssql_dev --tag baseline
+$LIQUIBASE_TUTORIAL_DIR/scripts/deploy.sh --action rollback --dbi mssql_dev --tag baseline
 
 # Verify the orders table is gone
 sqlcmd-tutorial -S mssql_dev -Q "
@@ -459,7 +459,7 @@ WHERE schema_id = SCHEMA_ID('app') AND type = 'U';
 "
 
 # Verify the release row was removed from DATABASECHANGELOG
-$LIQUIBASE_TUTORIAL_DIR/scripts/query_databasechangelog.sh --db mssql_dev
+$LIQUIBASE_TUTORIAL_DIR/scripts/query_databasechangelog.sh --dbi mssql_dev
 ```
 
 The query should show only the baseline changesets remain - the `release-v1.0` tagged row (V0001-add-orders-table) should be gone.
@@ -470,13 +470,13 @@ The query should show only the baseline changesets remain - the `release-v1.0` t
 
 ```bash
 # Re-deploy V0001 (with auto-snapshot)
-$LIQUIBASE_TUTORIAL_DIR/scripts/deploy.sh --action update --db mssql_dev
+$LIQUIBASE_TUTORIAL_DIR/scripts/deploy.sh --action update --dbi mssql_dev
 
 # Re-tag the release
-lb --db mssql_dev -- tag release-v1.0
+lb --dbi mssql_dev -- tag release-v1.0
 
 # Verify the release row is back in DATABASECHANGELOG
-$LIQUIBASE_TUTORIAL_DIR/scripts/query_databasechangelog.sh --db mssql_dev
+$LIQUIBASE_TUTORIAL_DIR/scripts/query_databasechangelog.sh --dbi mssql_dev
 ```
 
 The query should now show the `release-v1.0` tagged row (V0001-add-orders-table) is back, highlighted in yellow.
@@ -501,7 +501,7 @@ Each snapshot is timestamped (e.g., `dev_update_20260112_053000.json`) and repre
 
 > **Note:** If you used raw `lb` commands instead of `deploy.sh`, you can manually take a snapshot:
 > ```bash
-> lb --db mssql_dev -- snapshot --schemas=app --snapshot-format=json \
+> lb --dbi mssql_dev -- snapshot --schemas=app --snapshot-format=json \
 >     --output-file=/data/platform/mssql/database/orderdb/snapshots/mssql_dev_manual_$(date +%Y%m%d_%H%M%S).json
 > ```
 
@@ -664,7 +664,7 @@ Use `deploy.sh` for deployments - it automatically creates timestamped snapshots
 
 ```bash
 # In your CI/CD pipeline, use deploy.sh for all deployments
-$LIQUIBASE_TUTORIAL_DIR/scripts/deploy.sh --action update --db mssql_prd
+$LIQUIBASE_TUTORIAL_DIR/scripts/deploy.sh --action update --dbi mssql_prd
 
 # Snapshots are automatically saved to:
 # $LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/snapshots/mssql_prd_update_YYYYMMDD_HHMMSS.json
@@ -681,7 +681,7 @@ aws s3 cp $LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/snapshots
 LATEST_SNAPSHOT=$(ls -t $LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/snapshots/prd_*.json | head -1)
 
 # Compare current database against the snapshot
-lb --db mssql_prd -- diff \
+lb --dbi mssql_prd -- diff \
     --schemas=app \
     --referenceUrl="offline:mssql?snapshot=$LATEST_SNAPSHOT" \
     > drift-report.txt
@@ -731,19 +731,19 @@ See [Appendix: Step 11 Direct Commands (Create V0002 Change File)](#appendix-ste
 
 ```bash
 # Deploy to dev (with auto-snapshot)
-$LIQUIBASE_TUTORIAL_DIR/scripts/deploy.sh --action update --db mssql_dev
-lb --db mssql_dev -- tag release-v1.1
+$LIQUIBASE_TUTORIAL_DIR/scripts/deploy.sh --action update --dbi mssql_dev
+lb --dbi mssql_dev -- tag release-v1.1
 
 # Deploy to staging (after dev validation, with auto-snapshot)
-$LIQUIBASE_TUTORIAL_DIR/scripts/deploy.sh --action update --db mssql_stg
-lb --db mssql_stg -- tag release-v1.1
+$LIQUIBASE_TUTORIAL_DIR/scripts/deploy.sh --action update --dbi mssql_stg
+lb --dbi mssql_stg -- tag release-v1.1
 
 # Deploy to production (after staging validation, with auto-snapshot)
-$LIQUIBASE_TUTORIAL_DIR/scripts/deploy.sh --action update --db mssql_prd
-lb --db mssql_prd -- tag release-v1.1
+$LIQUIBASE_TUTORIAL_DIR/scripts/deploy.sh --action update --dbi mssql_prd
+lb --dbi mssql_prd -- tag release-v1.1
 ```
 
-> **Tip:** You can deploy to multiple instances at once: `deploy.sh --action update --db mssql_dev,mssql_stg,mssql_prd`
+> **Tip:** You can deploy to multiple instances at once: `deploy.sh --action update --dbi mssql_dev,mssql_stg,mssql_prd`
 
 ---
 
@@ -754,11 +754,11 @@ In Part 2, you learned:
 | Topic | Key Commands |
 |-------|--------------|
 | **Make changes** | Create SQL files, update `changelog.xml` |
-| **Deploy** | `deploy.sh --action update --db <instance>` (auto-snapshot) |
-| **Tags** | `lb --db <instance> -- tag <name>` |
-| **Rollback** | `deploy.sh --action rollback --db <instance> --tag <tag>` (auto-snapshot) |
-| **Drift detection** | `lb --db <instance> -- diff` (compare against snapshot) |
-| **Drift capture** | `lb --db <instance> -- diffChangeLog` |
+| **Deploy** | `deploy.sh --action update --dbi <instance>` (auto-snapshot) |
+| **Tags** | `lb --dbi <instance> -- tag <name>` |
+| **Rollback** | `deploy.sh --action rollback --dbi <instance> --tag <tag>` (auto-snapshot) |
+| **Drift detection** | `lb --dbi <instance> -- diff` (compare against snapshot) |
+| **Drift capture** | `lb --dbi <instance> -- diffChangeLog` |
 | **Snapshots** | Automatically created after every deployment for drift detection |
 
 ## Next Steps

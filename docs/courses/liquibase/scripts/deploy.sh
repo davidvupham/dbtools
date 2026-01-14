@@ -30,12 +30,12 @@
 #   status         - Show pending changesets (no snapshot taken)
 #
 # USAGE:
-#   deploy.sh --action <action> --db <instances> [options]
+#   deploy.sh --action <action> --dbi <instances> [options]
 #
 # OPTIONS:
 #   -a, --action <action>   Action to perform (required)
 #                           Values: baseline, update, rollback, rollback-count, status
-#   -d, --db <instances>    Target database instance(s) - comma-separated (required)
+#   -d, --dbi <instances>    Target database instance(s) - comma-separated (required)
 #                           Values: mssql_dev, mssql_stg, mssql_prd
 #   -t, --tag <tag>         Tag name for rollback action (required for rollback)
 #   -c, --count <n>         Number of changesets for rollback-count (required for rollback-count)
@@ -44,25 +44,25 @@
 #
 # EXAMPLES:
 #   # Deploy baseline to all database instances
-#   deploy.sh --action baseline --db mssql_dev,mssql_stg,mssql_prd
+#   deploy.sh --action baseline --dbi mssql_dev,mssql_stg,mssql_prd
 #
 #   # Deploy baseline to dev only
-#   deploy.sh --action baseline --db mssql_dev
+#   deploy.sh --action baseline --dbi mssql_dev
 #
 #   # Deploy pending changesets to dev
-#   deploy.sh --action update --db mssql_dev
+#   deploy.sh --action update --dbi mssql_dev
 #
 #   # Deploy to multiple instances
-#   deploy.sh --action update --db mssql_dev,mssql_stg
+#   deploy.sh --action update --dbi mssql_dev,mssql_stg
 #
 #   # Rollback dev to baseline tag
-#   deploy.sh --action rollback --db mssql_dev --tag baseline
+#   deploy.sh --action rollback --dbi mssql_dev --tag baseline
 #
 #   # Rollback last 1 changeset in dev
-#   deploy.sh --action rollback-count --db mssql_dev --count 1
+#   deploy.sh --action rollback-count --dbi mssql_dev --count 1
 #
 #   # Check pending changesets (no snapshot)
-#   deploy.sh --action status --db mssql_dev
+#   deploy.sh --action status --dbi mssql_dev
 #
 # SNAPSHOT NAMING:
 #   Format: {instance}_{action}_{YYYYMMDD}_{HHMMSS}.json
@@ -167,7 +167,7 @@ while [[ $# -gt 0 ]]; do
             ACTION="$2"
             shift 2
             ;;
-        -d|--db|--database|--instances)
+        -d|--dbi|--database|--instances)
             INSTANCES_CSV="$2"
             shift 2
             ;;
@@ -227,7 +227,7 @@ fi
 
 # Validate database instances (required)
 if [[ -z "$INSTANCES_CSV" ]]; then
-    log_error "Database instance(s) required. Use --db <instances>"
+    log_error "Database instance(s) required. Use --dbi <instances>"
     log_error "Valid instances: mssql_dev, mssql_stg, mssql_prd"
     print_usage
     exit 2
@@ -291,7 +291,7 @@ take_snapshot() {
     
     log_info "Taking snapshot: ${instance}_${action_name}_${timestamp}.json"
     
-    if "$LB_CMD" --db "$instance" -- snapshot \
+    if "$LB_CMD" --dbi "$instance" -- snapshot \
         --schemas=app \
         --snapshot-format=json \
         --output-file="/data/platform/mssql/database/orderdb/snapshots/${instance}_${action_name}_${timestamp}.json" \
@@ -328,14 +328,14 @@ do_baseline() {
     log_info "Deploying baseline to $pretty ($action_desc)..."
     
     # Deploy
-    if ! "$LB_CMD" --db "$instance" -- "$lb_action" 2>&1; then
+    if ! "$LB_CMD" --dbi "$instance" -- "$lb_action" 2>&1; then
         log_error "Failed to deploy baseline to $pretty"
         return 1
     fi
     
     # Tag as baseline
     log_info "Tagging as 'baseline'..."
-    if ! "$LB_CMD" --db "$instance" -- tag baseline 2>&1; then
+    if ! "$LB_CMD" --dbi "$instance" -- tag baseline 2>&1; then
         # Tag might already exist (idempotent)
         log_warn "Tag 'baseline' may already exist in $pretty"
     fi
@@ -352,7 +352,7 @@ do_update() {
     
     log_info "Deploying updates to $pretty..."
     
-    if "$LB_CMD" --db "$instance" -- update 2>&1; then
+    if "$LB_CMD" --dbi "$instance" -- update 2>&1; then
         log_success "Updates deployed to $pretty"
         return 0
     else
@@ -370,7 +370,7 @@ do_rollback() {
     
     log_info "Rolling back $pretty to tag '$tag'..."
     
-    if "$LB_CMD" --db "$instance" -- rollback "$tag" 2>&1; then
+    if "$LB_CMD" --dbi "$instance" -- rollback "$tag" 2>&1; then
         log_success "Rolled back $pretty to '$tag'"
         return 0
     else
@@ -388,7 +388,7 @@ do_rollback_count() {
     
     log_info "Rolling back last $count changeset(s) in $pretty..."
     
-    if "$LB_CMD" --db "$instance" -- rollbackCount "$count" 2>&1; then
+    if "$LB_CMD" --dbi "$instance" -- rollbackCount "$count" 2>&1; then
         log_success "Rolled back last $count changeset(s) in $pretty"
         return 0
     else
@@ -405,7 +405,7 @@ do_status() {
     
     log_info "Checking status in $pretty..."
     
-    "$LB_CMD" --db "$instance" -- status --verbose 2>&1
+    "$LB_CMD" --dbi "$instance" -- status --verbose 2>&1
     return $?
 }
 

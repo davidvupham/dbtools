@@ -8,19 +8,19 @@
 #   tracked in Liquibase. Reusable across all tutorial parts.
 #
 # USAGE:
-#   validate_liquibase_deploy.sh --db <instances>
+#   validate_liquibase_deploy.sh --dbi <instances>
 #
 # OPTIONS:
-#   -d, --db <instances>    Target database instance(s) - comma-separated (required)
+#   -d, --dbi <instances>    Target database instance(s) - comma-separated (required)
 #                           Values: mssql_dev, mssql_stg, mssql_prd
 #   -h, --help              Show this help message
 #
 # EXAMPLES:
 #   # Validate all database instances
-#   validate_liquibase_deploy.sh --db mssql_dev,mssql_stg,mssql_prd
+#   validate_liquibase_deploy.sh --dbi mssql_dev,mssql_stg,mssql_prd
 #
 #   # Validate specific instance
-#   validate_liquibase_deploy.sh --db mssql_dev
+#   validate_liquibase_deploy.sh --dbi mssql_dev
 #
 ################################################################################
 
@@ -39,16 +39,16 @@ NC='\033[0m' # No Color
 print_usage() {
     cat <<'EOF'
 Usage:
-  validate_liquibase_deploy.sh --db <instances>
+  validate_liquibase_deploy.sh --dbi <instances>
 
 Options:
-  -d, --db <instances>    Target database instance(s) - comma-separated (required)
+  -d, --dbi <instances>    Target database instance(s) - comma-separated (required)
                           Values: mssql_dev, mssql_stg, mssql_prd
   -h, --help              Show this help message
 
 Examples:
-  validate_liquibase_deploy.sh --db mssql_dev,mssql_stg,mssql_prd
-  validate_liquibase_deploy.sh --db mssql_dev
+  validate_liquibase_deploy.sh --dbi mssql_dev,mssql_stg,mssql_prd
+  validate_liquibase_deploy.sh --dbi mssql_dev
 EOF
 }
 
@@ -81,7 +81,7 @@ INSTANCES_CSV=""
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        -d|--db|--database|--instances)
+        -d|--dbi|--database|--instances)
             INSTANCES_CSV="$2"
             shift 2
             ;;
@@ -103,7 +103,7 @@ done
 
 # Validate database instances (required)
 if [[ -z "$INSTANCES_CSV" ]]; then
-    echo -e "${RED}ERROR: Database instance(s) required. Use --db <instances>${NC}"
+    echo -e "${RED}ERROR: Database instance(s) required. Use --dbi <instances>${NC}"
     echo -e "${RED}Valid instances: mssql_dev, mssql_stg, mssql_prd${NC}"
     print_usage
     exit 2
@@ -300,10 +300,10 @@ for instance in "${TARGET_INSTANCES[@]}"; do
                 }'
         else
             # Baseline is tracked but not tagged - suggest tagging
-            fail "Baseline tag not found. Baseline changesets are tracked, but tag is missing. Run: lb --db $instance -- tag baseline"
+            fail "Baseline tag not found. Baseline changesets are tracked, but tag is missing. Run: lb --dbi $instance -- tag baseline"
         fi
     else
-        fail "Baseline tag not found (run: lb --db $instance -- tag baseline)"
+        fail "Baseline tag not found (run: lb --dbi $instance -- tag baseline)"
     fi
 
     echo
@@ -331,17 +331,17 @@ else
     echo "Common issues and fixes:"
     echo
     echo "If baseline changesets are tracked but tags are missing:"
-    echo "  lb --db mssql_dev -- tag baseline"
-    echo "  lb --db mssql_stg -- tag baseline"
-    echo "  lb --db mssql_prd -- tag baseline"
+    echo "  lb --dbi mssql_dev -- tag baseline"
+    echo "  lb --dbi mssql_stg -- tag baseline"
+    echo "  lb --dbi mssql_prd -- tag baseline"
     echo
     echo "If baseline is not deployed yet:"
-    echo "  \$LIQUIBASE_TUTORIAL_DIR/scripts/deploy.sh --action baseline --db mssql_dev,mssql_stg,mssql_prd"
+    echo "  \$LIQUIBASE_TUTORIAL_DIR/scripts/deploy.sh --action baseline --dbi mssql_dev,mssql_stg,mssql_prd"
     echo
     echo "Or deploy manually:"
-    echo "  1. mssql_dev: lb --db mssql_dev -- changelogSync && lb --db mssql_dev -- tag baseline"
-    echo "  2. mssql_stg: lb --db mssql_stg -- update && lb --db mssql_stg -- tag baseline"
-    echo "  3. mssql_prd: lb --db mssql_prd -- update && lb --db mssql_prd -- tag baseline"
+    echo "  1. mssql_dev: lb --dbi mssql_dev -- changelogSync && lb --dbi mssql_dev -- tag baseline"
+    echo "  2. mssql_stg: lb --dbi mssql_stg -- update && lb --dbi mssql_stg -- tag baseline"
+    echo "  3. mssql_prd: lb --dbi mssql_prd -- update && lb --dbi mssql_prd -- tag baseline"
     echo
     exit 1
 fi

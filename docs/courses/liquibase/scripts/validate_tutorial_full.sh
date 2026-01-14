@@ -224,7 +224,7 @@ if [ -f "$LIQUIBASE_TUTORIAL_DIR/scripts/deploy_liquibase_baseline.sh" ]; then
     DEPLOY_RESULT=$?
 
     if [ $DEPLOY_RESULT -eq 0 ] && [ -f "$LIQUIBASE_TUTORIAL_DIR/scripts/validate_liquibase_deploy.sh" ]; then
-        execute_step "Validate Deployment" "$LIQUIBASE_TUTORIAL_DIR/scripts/validate_liquibase_deploy.sh --db mssql_dev,mssql_stg,mssql_prd"
+        execute_step "Validate Deployment" "$LIQUIBASE_TUTORIAL_DIR/scripts/validate_liquibase_deploy.sh --dbi mssql_dev,mssql_stg,mssql_prd"
     fi
 else
     log "✗ ERROR: deploy_liquibase_baseline.sh not found"

@@ -10,10 +10,10 @@ set -euo pipefail
 #   instances using Docker/Podman containers.
 #
 # USAGE:
-#   lb.sh --db <instance> -- <liquibase-args>
+#   lb.sh --dbi <instance> -- <liquibase-args>
 #
 # OPTIONS:
-#   -d, --db <instance>    Target database instance (required)
+#   -d, --dbi <instance>    Target database instance (required)
 #                          Values: mssql_dev, mssql_stg, mssql_prd
 #   --net <network>        Container network (default: auto)
 #   --image <name>         Liquibase image (default: liquibase:latest)
@@ -21,11 +21,11 @@ set -euo pipefail
 #   -h, --help             Show help
 #
 # EXAMPLES:
-#   lb.sh --db mssql_dev -- status --verbose
-#   lb.sh --db mssql_dev -- update
-#   lb.sh --db mssql_stg -- updateSQL
-#   lb.sh --db mssql_prd -- tag release-v1.2
-#   LIQUIBASE_TUTORIAL_DATA_DIR=/some/dir lb.sh --db mssql_dev -- updateSQL
+#   lb.sh --dbi mssql_dev -- status --verbose
+#   lb.sh --dbi mssql_dev -- update
+#   lb.sh --dbi mssql_stg -- updateSQL
+#   lb.sh --dbi mssql_prd -- tag release-v1.2
+#   LIQUIBASE_TUTORIAL_DATA_DIR=/some/dir lb.sh --dbi mssql_dev -- updateSQL
 #
 # ENVIRONMENT VARIABLES:
 #   MSSQL_LIQUIBASE_TUTORIAL_PWD   Required. SA password used by CLI
@@ -93,10 +93,10 @@ PASS_ARGS=()
 print_usage() {
   cat <<'EOF'
 Usage:
-  lb.sh --db <instance> -- <liquibase-args>
+  lb.sh --dbi <instance> -- <liquibase-args>
 
 Options:
-  -d, --db <instance>    Target database instance (required)
+  -d, --dbi <instance>    Target database instance (required)
                          Values: mssql_dev, mssql_stg, mssql_prd
   --net <network>        Container network (default: auto)
   --image <name>         Liquibase image (default: liquibase:latest)
@@ -104,10 +104,10 @@ Options:
   -h, --help             Show help
 
 Examples:
-  lb.sh --db mssql_dev -- status --verbose
-  lb.sh --db mssql_dev -- update
-  lb.sh --db mssql_stg -- updateSQL
-  lb.sh --db mssql_prd -- tag release-v1.2
+  lb.sh --dbi mssql_dev -- status --verbose
+  lb.sh --dbi mssql_dev -- update
+  lb.sh --dbi mssql_stg -- updateSQL
+  lb.sh --dbi mssql_prd -- tag release-v1.2
 
 Environment variables:
   MSSQL_LIQUIBASE_TUTORIAL_PWD   Required. SA password used by CLI
@@ -136,7 +136,7 @@ LB_NETWORK_DEFAULT="${LB_NETWORK:-}"
 # Parse args until '--'
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    -d|--db|--database|--instance)
+    -d|--dbi|--database|--instance)
       INSTANCE="$2"; shift 2;;
     --net)
       LB_NETWORK_DEFAULT="$2"; shift 2;;
@@ -155,7 +155,7 @@ done
 
 # Validate database instance (required)
 if [[ -z "$INSTANCE" ]]; then
-  echo "Error: Database instance required. Use --db <instance>" >&2
+  echo "Error: Database instance required. Use --dbi <instance>" >&2
   echo "Valid instances: mssql_dev, mssql_stg, mssql_prd" >&2
   print_usage
   exit 2

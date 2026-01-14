@@ -4,21 +4,21 @@
 
 | Command | Description |
 |---------|-------------|
-| `lb --db mssql_dev -- status` | Show pending changes for dev |
-| `lb --db mssql_dev -- update` | Apply pending changes |
-| `lb --db mssql_dev -- updateSQL` | Preview SQL without applying |
-| `lb --db mssql_dev -- rollback-count 1` | Rollback last changeset |
-| `lb --db mssql_dev -- rollback-to-tag v1.0` | Rollback to tag |
-| `lb --db mssql_dev -- tag v1.0` | Create a tag |
-| `lb --db mssql_dev -- history` | Show deployment history |
-| `lb --db mssql_dev -- diff` | Compare database to changelog |
+| `lb --dbi mssql_dev -- status` | Show pending changes for dev |
+| `lb --dbi mssql_dev -- update` | Apply pending changes |
+| `lb --dbi mssql_dev -- updateSQL` | Preview SQL without applying |
+| `lb --dbi mssql_dev -- rollback-count 1` | Rollback last changeset |
+| `lb --dbi mssql_dev -- rollback-to-tag v1.0` | Rollback to tag |
+| `lb --dbi mssql_dev -- tag v1.0` | Create a tag |
+| `lb --dbi mssql_dev -- history` | Show deployment history |
+| `lb --dbi mssql_dev -- diff` | Compare database to changelog |
 
 ## Database Instance Options
 
 ```bash
-lb --db mssql_dev -- <command>    # Development (port 14331)
-lb --db mssql_stg -- <command>    # Staging (port 14332)
-lb --db mssql_prd -- <command>    # Production (port 14333)
+lb --dbi mssql_dev -- <command>    # Development (port 14331)
+lb --dbi mssql_stg -- <command>    # Staging (port 14332)
+lb --dbi mssql_prd -- <command>    # Production (port 14333)
 ```
 
 ## Setup Scripts

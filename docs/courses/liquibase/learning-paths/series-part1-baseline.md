@@ -526,14 +526,14 @@ Now deploy the baseline to each environment. The master changelog (`changelog.xm
 
 ```bash
 # Deploy baseline to all database instances
-$LIQUIBASE_TUTORIAL_DIR/scripts/deploy.sh --action baseline --db mssql_dev,mssql_stg,mssql_prd
+$LIQUIBASE_TUTORIAL_DIR/scripts/deploy.sh --action baseline --dbi mssql_dev,mssql_stg,mssql_prd
 
 # Deploy baseline to specific database instances (comma-separated)
-$LIQUIBASE_TUTORIAL_DIR/scripts/deploy.sh --action baseline --db mssql_dev,mssql_stg
+$LIQUIBASE_TUTORIAL_DIR/scripts/deploy.sh --action baseline --dbi mssql_dev,mssql_stg
 ```
 
 The script will:
-- Deploy baseline to specified database instances (--db is required)
+- Deploy baseline to specified database instances (--dbi is required)
 - For `dev`, use `changelogSync` (marks as executed without running)
 - For `stg`/`prd`, use `update` (actually executes SQL)
 - Tag all environments with `baseline`
@@ -550,7 +550,7 @@ If a database instance is considered the "baseline" (it already contains the obj
 ```bash
 # Run the validation script to verify deployment across all database instances
 # Note: Ensure deploy.sh --action baseline completed successfully first
-$LIQUIBASE_TUTORIAL_DIR/scripts/validate_liquibase_deploy.sh --db mssql_dev,mssql_stg,mssql_prd
+$LIQUIBASE_TUTORIAL_DIR/scripts/validate_liquibase_deploy.sh --dbi mssql_dev,mssql_stg,mssql_prd
 ```
 
 **What the script does:**
@@ -598,7 +598,7 @@ For convenience, here's a summary of all step scripts used in Part 1:
 | [1](#step-1-create-three-database-environments) | `create_orderdb_database.sh` | Create orderdb on all containers | `validate_orderdb_database.sh` |
 | [2](#step-2-populate-development-with-existing-objects) | `populate_dev_database.sh` | Populate dev with sample objects | `validate_dev_populate.sh` |
 | [4](#step-4-generate-baseline-from-development) | `generate_liquibase_baseline.sh` | Generate baseline from dev | `validate_liquibase_baseline.sh` |
-| [5](#step-5-deploy-baseline-across-environments) | `deploy.sh --action baseline --db <instances>` | Deploy baseline to specified instances + snapshot | `validate_liquibase_deploy.sh --db <instances>` |
+| [5](#step-5-deploy-baseline-across-environments) | `deploy.sh --action baseline --dbi <instances>` | Deploy baseline to specified instances + snapshot | `validate_liquibase_deploy.sh --dbi <instances>` |
 
 All scripts show success/fail indicators and provide clear next steps.
 
@@ -1262,11 +1262,11 @@ EOF
 
 Back to: [Step 5: Deploy Baseline Across Environments](#step-5-deploy-baseline-across-environments)
 
-This appendix shows the direct Liquibase commands that `deploy.sh --action baseline --db <instances>` executes. Understanding these commands is essential for customizing deployments and troubleshooting.
+This appendix shows the direct Liquibase commands that `deploy.sh --action baseline --dbi <instances>` executes. Understanding these commands is essential for customizing deployments and troubleshooting.
 
 ### What the Helper Script Does
 
-The `deploy.sh --action baseline --db <instances>` script runs different Liquibase commands depending on the database instance:
+The `deploy.sh --action baseline --dbi <instances>` script runs different Liquibase commands depending on the database instance:
 
 - **mssql_dev**: `changelogSync` (objects already exist)
 - **mssql_stg/mssql_prd**: `update` (objects need to be created)

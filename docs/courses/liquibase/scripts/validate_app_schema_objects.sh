@@ -8,16 +8,16 @@
 #   with borders. Reusable across all tutorial parts.
 #
 # USAGE:
-#   validate_app_schema_objects.sh --db <instances>
+#   validate_app_schema_objects.sh --dbi <instances>
 #
 # OPTIONS:
-#   -d, --db <instances>    Target database instance(s) - comma-separated (required)
+#   -d, --dbi <instances>    Target database instance(s) - comma-separated (required)
 #                           Values: mssql_dev, mssql_stg, mssql_prd
 #   -h, --help              Show this help message
 #
 # EXAMPLES:
-#   validate_app_schema_objects.sh --db mssql_dev
-#   validate_app_schema_objects.sh --db mssql_dev,mssql_stg,mssql_prd
+#   validate_app_schema_objects.sh --dbi mssql_dev
+#   validate_app_schema_objects.sh --dbi mssql_dev,mssql_stg,mssql_prd
 #
 ################################################################################
 
@@ -36,16 +36,16 @@ NC='\033[0m' # No Color
 print_usage() {
     cat <<'EOF'
 Usage:
-  validate_app_schema_objects.sh --db <instances>
+  validate_app_schema_objects.sh --dbi <instances>
 
 Options:
-  -d, --db <instances>    Target database instance(s) - comma-separated (required)
+  -d, --dbi <instances>    Target database instance(s) - comma-separated (required)
                           Values: mssql_dev, mssql_stg, mssql_prd
   -h, --help              Show this help message
 
 Examples:
-  validate_app_schema_objects.sh --db mssql_dev
-  validate_app_schema_objects.sh --db mssql_dev,mssql_stg,mssql_prd
+  validate_app_schema_objects.sh --dbi mssql_dev
+  validate_app_schema_objects.sh --dbi mssql_dev,mssql_stg,mssql_prd
 EOF
 }
 
@@ -67,7 +67,7 @@ INSTANCES_CSV=""
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        -d|--db|--database|--instances)
+        -d|--dbi|--database|--instances)
             INSTANCES_CSV="$2"
             shift 2
             ;;
@@ -89,7 +89,7 @@ done
 
 # Validate database instances (required)
 if [[ -z "$INSTANCES_CSV" ]]; then
-    echo -e "${RED}ERROR: Database instance(s) required. Use --db <instances>${NC}"
+    echo -e "${RED}ERROR: Database instance(s) required. Use --dbi <instances>${NC}"
     echo -e "${RED}Valid instances: mssql_dev, mssql_stg, mssql_prd${NC}"
     print_usage
     exit 2
