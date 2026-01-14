@@ -32,10 +32,10 @@
 - [Appendix: Direct SQL Server Container Commands](#appendix-direct-sql-server-container-commands)
 - [Appendix: Direct Creation of Liquibase Properties Files](#appendix-direct-creation-of-liquibase-properties-files)
 - [Appendix: Creating the `app` Schema with Liquibase](#appendix-creating-the-app-schema-with-liquibase)
-- [Appendix: Step 2 Direct Commands (Populate Development)](#appendix-step-2-direct-commands-populate-development)
-- [Appendix: Step 4 Direct Commands (Generate Baseline from Development)](#appendix-step-4-direct-commands-generate-baseline-from-development)
-- [Appendix: Step 5 Direct Commands (Create Master Changelog)](#appendix-step-5-direct-commands-create-master-changelog)
-- [Appendix: Step 5 Direct Commands (Deploy Baseline + Tag)](#appendix-step-5-direct-commands-deploy-baseline--tag)
+- [Appendix: Step 2 Direct Commands (Populate Development)](#appendix-step-2-direct-commands-populate-development) — SQL commands for populating dev database
+- [Appendix: Step 4 Direct Commands (Generate Baseline)](#appendix-step-4-direct-commands-generate-baseline-from-development) — `generateChangeLog` command reference
+- [Appendix: Step 5 Direct Commands (Create Master Changelog)](#appendix-step-5-direct-commands-create-master-changelog) — Master changelog structure
+- [Appendix: Step 5 Direct Commands (Deploy Baseline + Tag)](#appendix-step-5-direct-commands-deploy-baseline--tag) — `changelogSync`, `update`, `tag`, `snapshot` commands
 
 ---
 
@@ -1082,76 +1082,139 @@ In your master `changelog.xml`, include the schema file **before** the generated
 
 Back to: [Step 2: Populate Development with Existing Objects](#step-2-populate-development-with-existing-objects)
 
-**Alternative: Direct commands**
+This appendix shows the direct commands that `populate_dev_database.sh` executes. Step 2 uses SQL commands (not Liquibase) to populate the development database with existing objects.
+
+### What the Helper Script Does
+
+The `populate_dev_database.sh` script executes SQL scripts to create database objects in development. Here are the equivalent direct commands:
 
 ```bash
 # Create table, view, indexes, and sample data in DEVELOPMENT
 # Note: Script assumes 'app' schema already exists
-sqlcmd-tutorial populate_orderdb_database.sql
+sqlcmd-tutorial -e dev populate_orderdb_database.sql
 
 # Verify objects were created in development
-sqlcmd-tutorial verify_orderdb_objects.sql
-sqlcmd-tutorial verify_orderdb_data.sql
+sqlcmd-tutorial -e dev verify_orderdb_objects.sql
+sqlcmd-tutorial -e dev verify_orderdb_data.sql
 ```
+
+### Understanding the Commands
+
+| Command | Purpose |
+|---------|---------|
+| `sqlcmd-tutorial -e dev` | Connect to the development SQL Server container (`mssql_dev`) |
+| `populate_orderdb_database.sql` | SQL script that creates `app.customer` table, indexes, view, and sample data |
+| `verify_orderdb_objects.sql` | SQL script that verifies database objects exist |
+| `verify_orderdb_data.sql` | SQL script that verifies sample data was inserted |
+
+**Note:** This step does not use Liquibase commands. The purpose is to simulate an existing database that you want to start managing with Liquibase.
 
 ## Appendix: Step 4 Direct Commands (Generate Baseline from Development)
 
 Back to: [Step 4: Generate Baseline from Development](#step-4-generate-baseline-from-development)
 
-**Alternative: Direct commands**
+This appendix shows the direct Liquibase commands that `generate_liquibase_baseline.sh` executes. Understanding these commands helps you customize baseline generation for your specific needs.
+
+### What the Helper Script Does
+
+The `generate_liquibase_baseline.sh` script runs the Liquibase `generateChangeLog` command to capture the current database state.
+
+### Direct Liquibase Command
 
 ```bash
 # Change to project directory
 cd "$LIQUIBASE_TUTORIAL_DATA_DIR"
 
-# Generate baseline from development database (using lb wrapper)
-# IMPORTANT: Use --schemas=app to capture only the app schema
-# IMPORTANT: Use --include-schema=true to include schemaName attributes in the SQL
-# IMPORTANT: Use .sql extension to generate Formatted SQL
-# IMPORTANT: Use --overwrite-output-file=true if baseline already exists and you want to regenerate it
-# Note: The lb wrapper automatically handles network configuration based on your container runtime (Docker/Podman)
+# Generate baseline from development database
 lb -e dev -- \
   --changelog-file=/data/platform/mssql/database/orderdb/changelog/baseline/V0000__baseline.mssql.sql \
   --schemas=app \
   --include-schema=true \
   generateChangeLog
+```
 
-# Check the generated file
+### Command Breakdown
+
+| Component | Description |
+|-----------|-------------|
+| `lb -e dev --` | Run Liquibase against the development environment. The `--` separates `lb` wrapper options from Liquibase options. |
+| `generateChangeLog` | **Liquibase command** that reverse-engineers the database and creates a changelog file representing its current state. |
+
+### Parameter Reference
+
+| Parameter | Value | Purpose |
+|-----------|-------|---------|
+| `--changelog-file` | `/data/.../V0000__baseline.mssql.sql` | Output file path. The `.sql` extension generates **Formatted SQL** format (human-readable SQL with Liquibase metadata comments). |
+| `--schemas` | `app` | **Schema filter** - only capture objects in the `app` schema. Without this, Liquibase captures ALL schemas including system schemas (`dbo`, `sys`, etc.). |
+| `--include-schema` | `true` | Include schema names in generated SQL (e.g., `CREATE TABLE app.customer` instead of `CREATE TABLE customer`). Essential for multi-schema databases. |
+| `--overwrite-output-file` | `true` | (Optional) Replace existing baseline file if regenerating. Only needed when re-running the command. |
+
+### Understanding the Output Format
+
+The `generateChangeLog` command produces a **Formatted SQL** file (because of the `.sql` extension) with this structure:
+
+```sql
+-- liquibase formatted sql
+
+-- changeset liquibase:1234567890-1
+CREATE TABLE app.customer (
+    customer_id INT NOT NULL,
+    name NVARCHAR(100) NOT NULL,
+    ...
+);
+
+-- changeset liquibase:1234567890-2
+CREATE INDEX IX_customer_email ON app.customer(email);
+```
+
+Each `-- changeset` comment marks a trackable unit of change that Liquibase records in `DATABASECHANGELOG`.
+
+### Alternative Output Formats
+
+| Extension | Format | Use Case |
+|-----------|--------|----------|
+| `.sql` | Formatted SQL | Human-readable, easy to review and edit |
+| `.xml` | XML changelog | Full Liquibase XML with explicit change types |
+| `.yaml` | YAML changelog | More readable than XML, less verbose |
+| `.json` | JSON changelog | Machine-readable, good for automation |
+
+### Verify the Generated File
+
+```bash
+# Check the generated file exists and has content
 cat platform/mssql/database/orderdb/changelog/baseline/V0000__baseline.mssql.sql
+
+# Or use the validation script
+$LIQUIBASE_TUTORIAL_DIR/scripts/validate_liquibase_baseline.sh
 ```
 
-**Expected Output:**
+### Regenerating the Baseline
 
-```text
-[PASS] File exists: V0000__baseline.mssql.sql
-[PASS] Header matches '-- liquibase formatted sql'
-[PASS] Found ... occurrences of 'app.' schema prefix
-[PASS] Found CREATE TABLE app.customer
-...
-Step 4 VALIDATION SUCCESSFUL
-```
-
-### If something looks off
-
-- Regenerate the baseline with the exact flags (only `app` schema, include schema attributes):
-  - **If baseline already exists**, add `--overwrite-output-file=true` to replace the existing file:
+If you need to regenerate the baseline (e.g., after adding more objects to dev):
 
 ```bash
 lb -e dev -- \
   --changelog-file=/data/platform/mssql/database/orderdb/changelog/baseline/V0000__baseline.mssql.sql \
   --schemas=app \
   --include-schema=true \
+  --overwrite-output-file=true \
   generateChangeLog
 ```
+
+**Important:** Add `--overwrite-output-file=true` when the baseline file already exists.
 
 ## Appendix: Step 5 Direct Commands (Create Master Changelog)
 
 Back to: [Step 5: Deploy Baseline Across Environments](#step-5-deploy-baseline-across-environments)
 
-If you prefer to run the commands directly instead of using the helper script:
+This appendix shows how to create the master changelog file manually. The master changelog is the "table of contents" that tells Liquibase which changesets to apply and in what order.
+
+### What the Helper Script Does
+
+The `setup_liquibase_environment.sh` script creates the master `changelog.xml` file. Here's the equivalent direct command:
 
 ```bash
-# Create master changelog that includes baseline (if not already created)
+# Create master changelog that includes baseline
 cat > "$LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/changelog/changelog.xml" << 'EOF'
 <?xml version="1.0" encoding="UTF-8"?>
 <databaseChangeLog
@@ -1169,58 +1232,174 @@ cat > "$LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/changelog/ch
 EOF
 ```
 
+### Understanding the Master Changelog
+
+| Element | Purpose |
+|---------|---------|
+| `<databaseChangeLog>` | Root element that contains all changelog includes |
+| `<include file="...">` | Includes another changelog file. Liquibase processes includes in order. |
+| `relativeToChangelogFile="true"` | File paths are relative to this changelog's location (not the working directory) |
+
+**Note:** This step creates a file structure—it does not run any Liquibase commands. The actual Liquibase commands are in the next section (Deploy Baseline + Tag).
+
 ## Appendix: Step 5 Direct Commands (Deploy Baseline + Tag)
 
 Back to: [Step 5: Deploy Baseline Across Environments](#step-5-deploy-baseline-across-environments)
 
-If you prefer to run the commands directly instead of using `deploy.sh`:
+This appendix shows the direct Liquibase commands that `deploy.sh --action baseline` executes. Understanding these commands is essential for customizing deployments and troubleshooting.
 
-> **Note:** Using `deploy.sh --action baseline` is recommended because it automatically takes snapshots for drift detection. The direct commands below do NOT create snapshots.
+### What the Helper Script Does
+
+The `deploy.sh --action baseline` script runs different Liquibase commands depending on the environment:
+
+- **Development**: `changelogSync` (objects already exist)
+- **Staging/Production**: `update` (objects need to be created)
+- **All environments**: `tag` and `snapshot` after deployment
+
+### Liquibase Commands Reference
+
+| Command | Purpose | When to Use |
+|---------|---------|-------------|
+| `changelogSync` | Mark changesets as executed **without running SQL** | Database already has the objects (baseline scenario) |
+| `updateSQL` | **Preview** the SQL that would be executed | Always run before `update` to verify changes |
+| `update` | **Execute** changesets to create/modify database objects | Database is empty or missing objects |
+| `tag <name>` | Create a named marker in change history | After each deployment for rollback capability |
+| `snapshot` | Capture current database state for drift detection | After each deployment to enable comparisons |
+
+### Direct Commands for Development (Sync Only)
+
+Development already has the objects (created in Step 2), so we **sync** instead of **update**:
 
 ```bash
 cd "$LIQUIBASE_TUTORIAL_DATA_DIR"
 
-# Development: Sync baseline (marks as executed without running SQL)
+# Mark baseline as executed WITHOUT running the SQL
 lb -e dev -- changelogSync
+
+# Create a rollback marker named "baseline"
 lb -e dev -- tag baseline
-
-# Staging: Deploy baseline (actually executes SQL)
-lb -e stg -- updateSQL  # Preview first
-lb -e stg -- update     # Execute
-lb -e stg -- tag baseline
-
-# Production: Deploy baseline (actually executes SQL)
-lb -e prd -- updateSQL  # Preview first
-lb -e prd -- update     # Execute
-lb -e prd -- tag baseline
-
-# IMPORTANT: If using direct commands, take snapshots after each deployment:
-lb -e dev -- snapshot --schemas=app --snapshot-format=json --output-file=/data/platform/mssql/database/orderdb/snapshots/dev_baseline_$(date +%Y%m%d_%H%M%S).json
-lb -e stg -- snapshot --schemas=app --snapshot-format=json --output-file=/data/platform/mssql/database/orderdb/snapshots/stg_baseline_$(date +%Y%m%d_%H%M%S).json
-lb -e prd -- snapshot --schemas=app --snapshot-format=json --output-file=/data/platform/mssql/database/orderdb/snapshots/prd_baseline_$(date +%Y%m%d_%H%M%S).json
 ```
 
-**What does tag do?**
+#### changelogSync Command Breakdown
 
-- Creates a named marker in the change history
-- Like bookmarking a page in a book
-- Allows you to rollback to this specific point later
-- Example: `liquibase rollback baseline` would undo all changes after this tag
+```bash
+lb -e dev -- changelogSync
+```
 
-**Why tag the baseline?**
+| Component | Description |
+|-----------|-------------|
+| `lb -e dev --` | Run Liquibase against development environment |
+| `changelogSync` | **Liquibase command** that records all pending changesets as executed in `DATABASECHANGELOG` without running them |
 
-- If future changes cause problems, you can rollback to the baseline
-- Documents the "before Liquibase" state
-- Useful for audit and compliance
+**Use Case:** When the database already contains the objects defined in your changelog (e.g., baselining an existing database).
 
-**Verify deployment worked:**
+### Direct Commands for Staging/Production (Update)
+
+Staging and production are empty, so we **update** to actually execute the SQL:
+
+```bash
+cd "$LIQUIBASE_TUTORIAL_DATA_DIR"
+
+# Staging: Preview first, then execute
+lb -e stg -- updateSQL  # Preview the SQL
+lb -e stg -- update     # Execute the SQL
+lb -e stg -- tag baseline
+
+# Production: Preview first, then execute
+lb -e prd -- updateSQL  # Preview the SQL
+lb -e prd -- update     # Execute the SQL
+lb -e prd -- tag baseline
+```
+
+#### updateSQL Command Breakdown
+
+```bash
+lb -e stg -- updateSQL
+```
+
+| Component | Description |
+|-----------|-------------|
+| `lb -e stg --` | Run Liquibase against staging environment |
+| `updateSQL` | **Liquibase command** that outputs the SQL that `update` would execute, without actually running it |
+
+**Use Case:** Always preview changes before executing to catch potential issues.
+
+#### update Command Breakdown
+
+```bash
+lb -e stg -- update
+```
+
+| Component | Description |
+|-----------|-------------|
+| `lb -e stg --` | Run Liquibase against staging environment |
+| `update` | **Liquibase command** that executes all pending changesets and records them in `DATABASECHANGELOG` |
+
+**Use Case:** Apply database changes to an environment.
+
+#### tag Command Breakdown
+
+```bash
+lb -e stg -- tag baseline
+```
+
+| Component | Description |
+|-----------|-------------|
+| `lb -e stg --` | Run Liquibase against staging environment |
+| `tag baseline` | **Liquibase command** that creates a named marker called "baseline" in `DATABASECHANGELOG` |
+
+**Use Case:** Create rollback points. You can later run `lb -e stg -- rollback baseline` to undo all changes after this tag.
+
+### Direct Commands for Snapshots (Drift Detection)
+
+After deployment, take snapshots for drift detection:
+
+```bash
+# Create snapshots directory if it doesn't exist
+mkdir -p "$LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/snapshots"
+
+# Take snapshot of each environment
+lb -e dev -- snapshot --schemas=app --snapshot-format=json \
+  --output-file=/data/platform/mssql/database/orderdb/snapshots/dev_baseline_$(date +%Y%m%d_%H%M%S).json
+
+lb -e stg -- snapshot --schemas=app --snapshot-format=json \
+  --output-file=/data/platform/mssql/database/orderdb/snapshots/stg_baseline_$(date +%Y%m%d_%H%M%S).json
+
+lb -e prd -- snapshot --schemas=app --snapshot-format=json \
+  --output-file=/data/platform/mssql/database/orderdb/snapshots/prd_baseline_$(date +%Y%m%d_%H%M%S).json
+```
+
+#### snapshot Command Breakdown
+
+```bash
+lb -e dev -- snapshot --schemas=app --snapshot-format=json --output-file=/data/.../snapshot.json
+```
+
+| Parameter | Value | Purpose |
+|-----------|-------|---------|
+| `snapshot` | (command) | **Liquibase command** that captures the current database structure |
+| `--schemas` | `app` | Only capture objects in the `app` schema |
+| `--snapshot-format` | `json` | Output format (also supports `yaml`, `txt`) |
+| `--output-file` | `/data/.../snapshot.json` | Where to save the snapshot |
+
+**Use Case:** Snapshots enable drift detection—comparing the actual database state against expected state to find unauthorized changes.
+
+### Why Tag the Baseline?
+
+- **Rollback capability**: If future changes cause problems, run `lb -e <env> -- rollback baseline` to undo all changes after this tag
+- **Documentation**: Marks the "before Liquibase" state clearly
+- **Audit trail**: Provides a clear point-in-time reference for compliance
+
+### Verify Deployment Worked
 
 ```bash
 # Check DATABASECHANGELOG table in any environment
-sqlcmd-tutorial -Q "
+sqlcmd-tutorial -e dev -Q "
 USE orderdb;
 SELECT ID, AUTHOR, FILENAME, DATEEXECUTED, TAG, EXECTYPE
 FROM DATABASECHANGELOG
 ORDER BY DATEEXECUTED;
 "
 ```
+
+**Expected output:** You should see the baseline changeset(s) with `EXECTYPE` showing `EXECUTED` (for stg/prd) or `MARK_RAN` (for dev, from `changelogSync`).
