@@ -577,15 +577,13 @@ END AS ValidationResult;
 "
 ```
 
-> **Note:** We're dropping an index here rather than a column to avoid breaking the application. In production, missing columns or tables are critical issues.
-
 ### Detect Drift with diff
 
 Now detect all three types of drift at once:
 
 ```bash
 # Detect drift against the latest snapshot
-$LIQUIBASE_TUTORIAL_DIR/scripts/detect_drift.sh -e dev
+$LIQUIBASE_TUTORIAL_DIR/scripts/detect_drift.sh --dbi mssql_dev
 ```
 
 **Expected output will show all three drift types (each in a distinct color):**
@@ -656,7 +654,7 @@ IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_orders_order_date' AND
 Verify the drift has been resolved:
 
 ```bash
-$LIQUIBASE_TUTORIAL_DIR/scripts/detect_drift.sh -e dev
+$LIQUIBASE_TUTORIAL_DIR/scripts/detect_drift.sh --dbi mssql_dev
 ```
 
 **Expected output:**

@@ -28,7 +28,7 @@
 | Task | Tutorial Script | Direct Liquibase Command |
 |------|-----------------|--------------------------|
 | Capture snapshot | `deploy.sh --action update` (auto) | `liquibase snapshot --snapshot-format=json` |
-| Detect drift | `detect_drift.sh -e dev` | `liquibase diff --referenceUrl="offline:mssql?snapshot=..."` |
+| Detect drift | `detect_drift.sh --dbi mssql_dev` | `liquibase diff --referenceUrl="offline:mssql?snapshot=..."` |
 | Generate remediation | `generate_drift_changelog.sh` | `liquibase diffChangeLog --changelog-file=...` |
 | Preview SQL | `lb -e dev -- updateSQL` | `liquibase updateSQL` |
 
@@ -67,7 +67,7 @@ IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('app.custom
 
 ```bash
 # Run drift detection
-$LIQUIBASE_TUTORIAL_DIR/scripts/detect_drift.sh -e dev
+$LIQUIBASE_TUTORIAL_DIR/scripts/detect_drift.sh --dbi mssql_dev
 ```
 
 **Expected output:**
@@ -102,7 +102,7 @@ IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('app.customer')
 "
 
 # Verify drift is resolved
-$LIQUIBASE_TUTORIAL_DIR/scripts/detect_drift.sh -e dev
+$LIQUIBASE_TUTORIAL_DIR/scripts/detect_drift.sh --dbi mssql_dev
 # Expected: ✓ NO DRIFT - database matches snapshot
 ```
 

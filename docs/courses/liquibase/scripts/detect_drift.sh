@@ -1,6 +1,27 @@
 #!/usr/bin/env bash
-# Detect Drift - Compare database against a known-good snapshot
-# Usage: detect_drift.sh -e <dev|stg|prd> [--snapshot <path>] [--schemas <schemas>]
+################################################################################
+# detect_drift.sh - Compare database against a known-good snapshot
+################################################################################
+#
+# PURPOSE:
+#   Detects drift by comparing a database instance against a known-good snapshot.
+#
+# USAGE:
+#   detect_drift.sh --dbi <instance> [OPTIONS]
+#
+# OPTIONS:
+#   -d, --dbi <instance>   Target database instance (required)
+#                          Values: mssql_dev, mssql_stg, mssql_prd
+#   -s, --snapshot <path>  Specific snapshot file (default: latest for instance)
+#   --schemas <list>       Schemas to compare (default: app)
+#   -h, --help             Show this help message
+#
+# EXAMPLES:
+#   detect_drift.sh --dbi mssql_dev
+#   detect_drift.sh --dbi mssql_dev --schemas "app,dbo"
+#   detect_drift.sh --dbi mssql_prd -s /path/to/snapshot.json
+#
+################################################################################
 
 set -euo pipefail
 
@@ -16,36 +37,58 @@ NC='\033[0m'
 
 print_usage() {
     cat <<'EOF'
-Usage: detect_drift.sh -e <dev|stg|prd> [OPTIONS]
+Usage: detect_drift.sh --dbi <instance> [OPTIONS]
 
 Compare a database against a known-good snapshot to detect drift.
 
 Options:
-  -e, --env <name>       Environment to check (dev|stg|prd) [required]
-  -s, --snapshot <path>  Specific snapshot file (default: latest for environment)
+  -d, --dbi <instance>   Target database instance (required)
+                         Values: mssql_dev, mssql_stg, mssql_prd
+  -s, --snapshot <path>  Specific snapshot file (default: latest for instance)
   --schemas <list>       Schemas to compare (default: app)
   -h, --help             Show this help message
 
 Examples:
-  detect_drift.sh -e dev
-  detect_drift.sh -e dev --schemas "app,dbo"
-  detect_drift.sh -e prd -s /path/to/snapshot.json
+  detect_drift.sh --dbi mssql_dev
+  detect_drift.sh --dbi mssql_dev --schemas "app,dbo"
+  detect_drift.sh --dbi mssql_prd -s /path/to/snapshot.json
 
 EOF
+}
+
+# Extract environment from database instance name (mssql_dev -> dev)
+instance_to_env() {
+    local instance="${1//[[:space:]]/}"
+    case "$instance" in
+        mssql_dev) echo "dev" ;;
+        mssql_stg) echo "stg" ;;
+        mssql_prd) echo "prd" ;;
+        *)         echo "" ;;
+    esac
+}
+
+# Get human-readable instance name
+pretty_instance() {
+    case "$1" in
+        mssql_dev) echo "Development (mssql_dev)" ;;
+        mssql_stg) echo "Staging (mssql_stg)" ;;
+        mssql_prd) echo "Production (mssql_prd)" ;;
+        *)         echo "$1" ;;
+    esac
 }
 
 # Defaults
 LIQUIBASE_TUTORIAL_DATA_DIR="${LIQUIBASE_TUTORIAL_DATA_DIR:-/data/${USER}/liquibase_tutorial}"
 export LIQUIBASE_TUTORIAL_DATA_DIR
-ENVIRONMENT=""
+INSTANCE=""
 SNAPSHOT_PATH=""
 SCHEMAS="app"
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        -e|--env)
-            ENVIRONMENT="$2"; shift 2;;
+        -d|--dbi|--database|--instance)
+            INSTANCE="$2"; shift 2;;
         -s|--snapshot)
             SNAPSHOT_PATH="$2"; shift 2;;
         --schemas)
@@ -59,15 +102,19 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-# Validate environment
-case "$ENVIRONMENT" in
-    stage) ENVIRONMENT="stg";;
-    prod)  ENVIRONMENT="prd";;
-esac
-
-if [[ "$ENVIRONMENT" != "dev" && "$ENVIRONMENT" != "stg" && "$ENVIRONMENT" != "prd" ]]; then
-    echo -e "${RED}Error: Environment must be dev|stg|prd${NC}" >&2
+# Validate database instance (required)
+if [[ -z "$INSTANCE" ]]; then
+    echo -e "${RED}Error: Database instance required. Use --dbi <instance>${NC}" >&2
+    echo -e "${RED}Valid instances: mssql_dev, mssql_stg, mssql_prd${NC}" >&2
     print_usage
+    exit 2
+fi
+
+# Validate instance name
+VALID_INSTANCES="mssql_dev mssql_stg mssql_prd"
+if [[ ! " $VALID_INSTANCES " =~ " $INSTANCE " ]]; then
+    echo -e "${RED}Error: Invalid database instance '$INSTANCE'${NC}" >&2
+    echo -e "${RED}Valid instances: $VALID_INSTANCES${NC}" >&2
     exit 2
 fi
 
@@ -75,12 +122,12 @@ SNAPSHOTS_DIR="$LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/snap
 
 # Find or validate snapshot
 if [[ -z "$SNAPSHOT_PATH" ]]; then
-    # Find latest snapshot for environment
-    SNAPSHOT_PATH=$(ls -t "$SNAPSHOTS_DIR/${ENVIRONMENT}"_*.json 2>/dev/null | head -1 || true)
+    # Find latest snapshot for instance
+    SNAPSHOT_PATH=$(ls -t "$SNAPSHOTS_DIR/${INSTANCE}"_*.json 2>/dev/null | head -1 || true)
     
     if [[ -z "$SNAPSHOT_PATH" ]]; then
-        echo -e "${RED}Error: No snapshots found for environment '$ENVIRONMENT'${NC}" >&2
-        echo "Expected pattern: $SNAPSHOTS_DIR/${ENVIRONMENT}_*.json"
+        echo -e "${RED}Error: No snapshots found for instance '$INSTANCE'${NC}" >&2
+        echo "Expected pattern: $SNAPSHOTS_DIR/${INSTANCE}_*.json"
         echo
         echo "Available snapshots:"
         ls -la "$SNAPSHOTS_DIR"/*.json 2>/dev/null || echo "  (none)"
@@ -98,7 +145,7 @@ echo "========================================"
 echo "Liquibase Tutorial - Detect Drift"
 echo "========================================"
 echo
-echo -e "Environment:  ${CYAN}$ENVIRONMENT${NC}"
+echo -e "Instance:     ${CYAN}$(pretty_instance "$INSTANCE")${NC}"
 echo -e "Snapshot:     ${CYAN}$SNAPSHOT_PATH${NC}"
 echo -e "Schemas:      ${CYAN}$SCHEMAS${NC}"
 echo
@@ -117,7 +164,7 @@ TEMP_OUTPUT=$(mktemp)
 trap "rm -f $TEMP_OUTPUT" EXIT
 
 # Run the diff command and capture output
-"$SCRIPT_DIR/lb.sh" -e "$ENVIRONMENT" -- diff \
+"$SCRIPT_DIR/lb.sh" --dbi "$INSTANCE" -- diff \
     --schemas="$SCHEMAS" \
     --referenceUrl="offline:mssql?snapshot=$RELATIVE_SNAPSHOT_PATH" 2>&1 | tee "$TEMP_OUTPUT"
 
