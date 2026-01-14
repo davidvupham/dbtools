@@ -36,7 +36,7 @@ Welcome to the VS Code and Dev Container documentation for the dbtools project. 
 
 ### Development Workflows
 
-#### 3. [features.md](features.md) - VS Code Features Guide
+#### 3. [vscode-features.md](vscode-features.md) - VS Code Features Guide
 
 **Master VS Code for productive development**
 
@@ -138,7 +138,20 @@ Welcome to the VS Code and Dev Container documentation for the dbtools project. 
 - Matrix builds
 - Best practices
 
-**Best for**: Setting up CI/CD, ensuring consistency between local and remote
+**Best for**: Setting up CI/CD, ensuring consistency between well-local and remote
+
+---
+
+#### 9. [vscode-extensions.md](vscode-extensions.md) - Must-Use Extensions
+
+**Top 15 extensions for 2026**
+
+- Essentials (Prettier, ESLint, GitLens)
+- Web Development tools
+- Productivity boosters
+- AI tools (Copilot, IntelliCode)
+
+**Best for**: Discovering new tools to enhance productivity
 
 ---
 
@@ -167,7 +180,7 @@ Welcome to the VS Code and Dev Container documentation for the dbtools project. 
 1. Read: devcontainer-beginners-guide.md
 2. Setup: platform-specific.md (your platform section)
 3. Security: security-best-practices.md (create .env file)
-4. Features: features.md (learn debugging and tasks)
+4. Features: vscode-features.md (learn debugging and tasks)
 5. Database: devcontainer-sqltools.md (when needed)
 ```
 
@@ -176,7 +189,7 @@ Welcome to the VS Code and Dev Container documentation for the dbtools project. 
 ```
 1. Read: devcontainer.md
 2. Review: platform-specific.md (platform optimization)
-3. Reference: features.md (as needed)
+3. Reference: vscode-features.md (as needed)
 ```
 
 ### Path 3: Security-First Setup
@@ -227,14 +240,14 @@ Welcome to the VS Code and Dev Container documentation for the dbtools project. 
 - **Via Task**: Press `Ctrl+Shift+B` → "Run All Tests"
 - **Via Debug**: Press `F5` → Select test configuration
 - **Via Terminal**: `pytest -v`
-- See: [features.md](features.md#testing-integration)
+- See: [vscode-features.md](vscode-features.md#testing-integration)
 
 ### Debugging
 
 - **Current File**: Press `F5`
 - **Specific Module**: F5 → "Python: Module"
 - **Tests**: F5 → "Debug: Current Test File"
-- See: [features.md](features.md#debugging)
+- See: [vscode-features.md](vscode-features.md#debugging)
 
 ### Connecting to Databases
 
@@ -317,7 +330,7 @@ The project includes a comprehensive VS Code workspace file: `dbtools.code-works
 code dbtools.code-workspace
 ```
 
-See: [features.md](features.md)
+See: [vscode-features.md](vscode-features.md)
 
 ---
 
@@ -330,9 +343,9 @@ See: [features.md](features.md)
 | Container won't build | [devcontainer-beginners-guide.md](devcontainer-beginners-guide.md) | Troubleshooting |
 | Slow performance (WSL2) | [platform-specific.md](platform-specific.md) | WSL2 Best Practices |
 | Database connection fails | [devcontainer-sqltools.md](devcontainer-sqltools.md) | Troubleshooting |
-| Extension not working | [features.md](features.md) | Extensions |
-| Port not forwarding | [features.md](features.md) | Port Forwarding |
-| Tests not discovered | [features.md](features.md) | Testing Integration |
+| Extension not working | [vscode-features.md](vscode-features.md) | Extensions |
+| Port not forwarding | [vscode-features.md](vscode-features.md) | Port Forwarding |
+| Tests not discovered | [vscode-features.md](vscode-features.md) | Testing Integration |
 | Jupyter kernel not found | [jupyter-validation.md](jupyter-validation.md) | Common Issues |
 | Notebook using wrong Python | [jupyter-validation.md](jupyter-validation.md) | Common Issues |
 | Permission denied errors | [platform-specific.md](platform-specific.md) | Platform-specific issues |
@@ -363,10 +376,11 @@ docs/development/vscode/
 ├── devcontainer-beginners-guide.md     # Detailed guide
 ├── devcontainer-sqltools.md            # Database connectivity
 ├── jupyter-validation.md               # Jupyter notebook validation
-├── features.md                         # VS Code features
+├── vscode-features.md                         # VS Code features
 ├── platform-specific.md                # Platform optimization
 ├── cicd-integration.md                 # CI/CD patterns
-└── security-best-practices.md          # Security guide
+├── security-best-practices.md          # Security guide
+└── vscode-extensions.md                # 15 Must-Use Extensions
 ```
 
 ---
@@ -374,7 +388,7 @@ docs/development/vscode/
 ## 💡 Tips
 
 1. **Use the workspace file**: `code dbtools.code-workspace` for best experience
-2. **Learn keyboard shortcuts**: See [features.md](features.md)
+2. **Learn keyboard shortcuts**: See [vscode-features.md](vscode-features.md)
 3. **Optimize for your platform**: Critical for WSL2 users
 4. **Use tasks**: Press `Ctrl+Shift+B` for quick access
 5. **Debug don't print**: Use VS Code debugging instead of print statements

@@ -120,6 +120,7 @@ VS Code tasks automate common development workflows. Create tasks in `.vscode/ta
 ### Testing Tasks
 
 #### Run All Tests
+
 ```json
 {
   "label": "Run All Tests",
@@ -139,6 +140,7 @@ VS Code tasks automate common development workflows. Create tasks in `.vscode/ta
 ```
 
 #### Run Tests with Coverage
+
 ```json
 {
   "label": "Run Tests with Coverage HTML",
@@ -151,6 +153,7 @@ VS Code tasks automate common development workflows. Create tasks in `.vscode/ta
 ```
 
 #### Run Specific Test File
+
 ```json
 {
   "label": "Run Current Test File",
@@ -165,6 +168,7 @@ VS Code tasks automate common development workflows. Create tasks in `.vscode/ta
 ### Code Quality Tasks
 
 #### Format with Ruff
+
 ```json
 {
   "label": "Format Code (Ruff)",
@@ -177,6 +181,7 @@ VS Code tasks automate common development workflows. Create tasks in `.vscode/ta
 ```
 
 #### Lint with Ruff
+
 ```json
 {
   "label": "Lint (Ruff)",
@@ -200,6 +205,7 @@ VS Code tasks automate common development workflows. Create tasks in `.vscode/ta
 ```
 
 #### Type Check with mypy
+
 ```json
 {
   "label": "Type Check (mypy)",
@@ -214,6 +220,7 @@ VS Code tasks automate common development workflows. Create tasks in `.vscode/ta
 ### Database Tasks
 
 #### PostgreSQL Connection Test
+
 ```json
 {
   "label": "Test PostgreSQL Connection",
@@ -225,6 +232,7 @@ VS Code tasks automate common development workflows. Create tasks in `.vscode/ta
 ```
 
 #### Run Database Migration
+
 ```json
 {
   "label": "Run Database Migration",
@@ -238,6 +246,7 @@ VS Code tasks automate common development workflows. Create tasks in `.vscode/ta
 ### PowerShell Tasks
 
 #### Run PowerShell Script
+
 ```json
 {
   "label": "Run PowerShell Script",
@@ -249,6 +258,7 @@ VS Code tasks automate common development workflows. Create tasks in `.vscode/ta
 ```
 
 #### Run Pester Tests
+
 ```json
 {
   "label": "Run Pester Tests",
@@ -354,15 +364,18 @@ Add to workspace or `.vscode/settings.json`:
 ### Running Tests
 
 **From Test Explorer:**
+
 - Click play button to run
 - Click debug icon to debug
 - Right-click for more options
 
 **From Editor:**
+
 - Hover over test function
 - Click "Run Test" or "Debug Test" CodeLens
 
 **From Command Palette:**
+
 - `Ctrl+Shift+P` → "Python: Run All Tests"
 - `Ctrl+Shift+P` → "Python: Debug All Tests"
 
@@ -389,6 +402,8 @@ Install Coverage Gutters extension and add task:
 Then use `Ctrl+Shift+P` → "Coverage Gutters: Display Coverage" to see coverage in editor gutters.
 
 ## Extensions
+
+For a curated list of top recommended extensions for 2026, see [Must-Use VS Code Extensions](vscode-extensions.md).
 
 ### Recommended Extensions for dbtools
 
@@ -442,20 +457,26 @@ Add to `devcontainer.json`:
 ### Extension Highlights
 
 #### SQLTools
+
 Connect to databases directly from VS Code:
+
 1. Install SQLTools + driver extensions
 2. Configure connection in SQLTools panel
 3. Run queries in `.sql` files
 4. Browse database schema
 
 #### Coverage Gutters
+
 Show test coverage in editor:
+
 - Green: Covered lines
 - Red: Uncovered lines
 - Yellow: Partially covered
 
 #### PowerShell
+
 Full PowerShell development support:
+
 - Syntax highlighting
 - IntelliSense
 - Debugging
@@ -601,12 +622,14 @@ Priority: Dev Container > Workspace > User
 ### Remote Development
 
 The dev container uses VS Code's Remote Development:
+
 - Local VS Code connects to container
 - Extensions run in container
 - Files are in container filesystem
 - Terminal is in container
 
 **Benefits:**
+
 - Consistent environment
 - No local dependency conflicts
 - Easy sharing with team

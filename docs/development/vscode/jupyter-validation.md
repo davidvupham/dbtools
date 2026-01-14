@@ -358,7 +358,7 @@ from gds_database import DatabaseConnection
   .venv/bin/python -m pip list | grep <package-name>
   ```
 
-2. Install missing packages: `.venv/bin/python -m pip install <package-name>`
+1. Install missing packages: `.venv/bin/python -m pip install <package-name>`
 2. Restart kernel in notebook: Kernel menu → "Restart Kernel"
 
 ### Issue: Kernel dies or crashes
@@ -401,11 +401,11 @@ After completing all steps, you should have:
 - Start creating your notebooks in `docs/tutorials/python/modules/pandas/notebooks/`
 - Explore VS Code's Jupyter features: variable explorer, interactive debugging
 - Set up database connections for data analysis notebooks
-- Review [features.md](features.md) for more VS Code productivity tips
+- Review [vscode-features.md](vscode-features.md) for more VS Code productivity tips
 
 ## Related Documentation
 
 - [DEVCONTAINER.md](DEVCONTAINER.md) - Dev container overview
 - [devcontainer-beginners-guide.md](devcontainer-beginners-guide.md) - Detailed setup guide
-- [features.md](features.md) - VS Code features and productivity tips
+- [vscode-features.md](vscode-features.md) - VS Code features and productivity tips
 - [devcontainer-sqltools.md](devcontainer-sqltools.md) - Database connectivity from notebooks
