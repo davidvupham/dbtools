@@ -30,7 +30,7 @@ services:
   
   mssql_dev:
     build:
-      context: ../../../../docker/mssql
+      context: ./mssql
       dockerfile: Dockerfile
     image: mssql_tutorial:latest
     container_name: mssql_dev
@@ -52,7 +52,7 @@ services:
 
   mssql_stg:
     build:
-      context: ../../../../docker/mssql
+      context: ./mssql
       dockerfile: Dockerfile
     image: mssql_tutorial:latest
     container_name: mssql_stg
@@ -74,7 +74,7 @@ services:
 
   mssql_prd:
     build:
-      context: ../../../../docker/mssql
+      context: ./mssql
       dockerfile: Dockerfile
     image: mssql_tutorial:latest
     container_name: mssql_prd
@@ -100,7 +100,7 @@ services:
   
   liquibase:
     build:
-      context: ../../../../docker/liquibase
+      context: ./liquibase
       dockerfile: Dockerfile
     image: liquibase:latest
     container_name: liquibase_tutorial

@@ -465,8 +465,8 @@
 
 **Evidence:**
 - Dockerfiles referenced via `build.context` in docker-compose.yml
-  - SQL Server: `context: ../../../../docker/mssql`
-  - Liquibase: `context: ../../../../docker/liquibase`
+  - SQL Server: `context: ./mssql`
+  - Liquibase: `context: ./liquibase`
 - No pre-build required - compose handles building
 - Uses relative paths from compose file location
 

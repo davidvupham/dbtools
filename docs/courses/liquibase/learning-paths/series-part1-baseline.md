@@ -214,9 +214,8 @@ For direct compose-based commands and port customization examples, see the appen
 The Liquibase container is a "run-once" tool (not a long-running service), so we just need to build the image:
 
 ```bash
-# Navigate to the liquibase docker directory (from your repo root)
-# This removes '/docs/courses/liquibase' from the path to get repo root, then goes to docker/liquibase
-cd "${LIQUIBASE_TUTORIAL_DIR%/docs/courses/liquibase}/docker/liquibase"
+# Navigate to the liquibase docker directory (local to tutorial)
+cd "${LIQUIBASE_TUTORIAL_DIR}/docker/liquibase"
 
 # Build the custom Liquibase image with SQL Server drivers
 cr build -t liquibase:latest .

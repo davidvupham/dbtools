@@ -1,0 +1,437 @@
+# ==============================================================================
+# Liquibase Database Migration Tool - Docker Image
+# ==============================================================================
+#
+# PURPOSE:
+# This Dockerfile creates a containerized version of Liquibase, a database
+# schema change management tool, with support for multiple database platforms.
+#
+# WHAT IS LIQUIBASE?
+# Liquibase tracks, versions, and deploys database schema changes. It's like
+# Git for your database schema - you can:
+# - Version control database changes
+# - Apply changes across different environments (dev, test, prod)
+# - Rollback changes if needed
+# - Support multiple database types from one tool
+#
+# DATABASES SUPPORTED IN THIS IMAGE:
+# - SQL Server (Microsoft)
+# - PostgreSQL
+# - Snowflake
+# - MongoDB
+#
+# LEARNING OBJECTIVES FOR BEGINNERS:
+# 1. How to use build arguments (ARG) for version management
+# 2. Environment variable configuration (ENV)
+# 3. Multi-step RUN commands with && chaining
+# 4. Downloading and extracting software in Docker
+# 5. JDBC driver management for Java applications
+# 6. Creating symbolic links for command availability
+# 7. ENTRYPOINT vs CMD usage patterns
+#
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# Registry Configuration - Support for Corporate Proxies
+# ------------------------------------------------------------------------------
+# REGISTRY_PREFIX: Allows the base image to be pulled from a corporate proxy
+#                  (e.g., JFrog Artifactory).
+#
+# USAGE:
+#   Corporate proxy:
+#     docker build --build-arg REGISTRY_PREFIX=xyz.jfrog.io/docker-proxy/library/ -t liquibase:latest .
+#       (requires ~/.docker/config.json configured with JFrog token via: docker login xyz.jfrog.io)
+#     podman build --build-arg REGISTRY_PREFIX=xyz.jfrog.io/docker-proxy/library/ -t liquibase:latest --format docker .
+#       (requires authentication via: podman login xyz.jfrog.io)
+#
+#   Default (Docker Hub):
+#     docker build -t liquibase:latest .
+#
+# NOTE: The trailing slash is required in the prefix!
+#
+ARG REGISTRY_PREFIX=docker.io/library/
+
+# ------------------------------------------------------------------------------
+# Base Image Selection
+# ------------------------------------------------------------------------------
+# FROM: Specifies the parent image to build upon
+#
+# eclipse-temurin:21-jre-ubi9-minimal:
+#   - Eclipse Temurin is an OpenJDK distribution (open-source Java)
+#   - 21 = Java version 21 (LTS - Long Term Support release)
+#   - jre = Java Runtime Environment (enough to run Java apps, not compile them)
+#   - ubi9-minimal = Red Hat Universal Base Image 9 (minimal variant)
+#   - UBI images work on both RHEL and Ubuntu hosts
+#
+# WHY JAVA?
+#   - Liquibase is a Java application
+#   - Requires Java Runtime to execute
+#   - JDBC drivers (database connectors) are Java libraries
+#
+# WHY UBI9-MINIMAL?
+#   - Cross-platform: works on RHEL, Ubuntu, and other Linux distributions
+#   - Smaller footprint than full UBI images
+#   - Enterprise-ready with Red Hat security updates
+#
+FROM ${REGISTRY_PREFIX}eclipse-temurin:21-jre-ubi9-minimal
+
+# ------------------------------------------------------------------------------
+# Build Arguments - Version Control
+# ------------------------------------------------------------------------------
+# ARG: Build-time variables (only available during image build, not runtime)
+# These can be overridden when building: docker build --build-arg LIQUIBASE_VERSION=5.0.2
+#
+# WHY USE ARG?
+#   - Easy version upgrades (change one number, rebuild)
+#   - No hardcoded versions scattered throughout Dockerfile
+#   - Can customize versions without editing Dockerfile
+#   - Self-documenting: shows exact versions being installed
+#
+# VERSION MANAGEMENT STRATEGY:
+#   - Keep these ARGs at the top for easy updates
+#   - Use variables in URLs below (${LIQUIBASE_VERSION})
+#   - To upgrade: just change the version number and rebuild
+#
+ARG LIQUIBASE_VERSION=5.0.1           # Liquibase core version
+ARG MSSQL_DRIVER_VERSION=13.2.1       # SQL Server JDBC driver
+ARG MSSQL_DRIVER_JAR=mssql-jdbc-${MSSQL_DRIVER_VERSION}.jre11.jar  # Full JAR filename
+ARG POSTGRES_DRIVER_VERSION=42.7.8    # PostgreSQL JDBC driver
+ARG SNOWFLAKE_DRIVER_VERSION=3.27.1   # Snowflake JDBC driver
+ARG MONGODB_DRIVER_VERSION=3.12.14    # MongoDB Java driver
+ARG LIQUIBASE_MONGODB_VERSION=5.0.1   # Liquibase extension for MongoDB
+
+# ------------------------------------------------------------------------------
+# Environment Variables - Runtime Configuration
+# ------------------------------------------------------------------------------
+# ENV: Sets environment variables that persist in the running container
+# Unlike ARG, these are available when the container runs
+#
+# LIQUIBASE_HOME=/opt/liquibase:
+#   - Installation directory for Liquibase
+#   - /opt is Linux convention for optional/add-on software
+#   - Other applications can reference $LIQUIBASE_HOME
+#
+# PATH=/opt/liquibase:${PATH}:
+#   - Adds Liquibase directory to system PATH
+#   - Allows running 'liquibase' command without full path
+#   - ${PATH} preserves existing PATH entries
+#   - Format: new_path:old_path (colon-separated on Linux)
+#
+ENV LIQUIBASE_HOME=/opt/liquibase \
+    PATH=/opt/liquibase:${PATH}
+
+# ------------------------------------------------------------------------------
+# Software Installation - Multi-Step Process
+# ------------------------------------------------------------------------------
+# RUN: Executes commands during image build (creates a new layer)
+#
+# WHY CHAIN COMMANDS WITH && ?
+#   - Each RUN creates a new layer in the Docker image
+#   - More layers = larger image size
+#   - && chains commands into one RUN = one layer = smaller image
+#   - If any command fails, entire RUN fails (safer)
+#
+# CLEANUP STRATEGY:
+#   - Download → Extract → Delete download in same layer
+#   - Removes temporary files from the final image
+#   - Keeps image size small
+#
+# COMMAND BREAKDOWN:
+#
+RUN set -eux; \
+    # ----------------------------------------------------------------------
+    # Install required utilities using microdnf (RHEL UBI minimal)
+    # - Use microdnf when available (smaller UBI images)
+    # - Fall back to dnf for full RHEL/Fedora images
+    # ----------------------------------------------------------------------
+    if command -v microdnf >/dev/null 2>&1; then \
+        PM=microdnf; \
+        INSTALL_CMD="$PM -y --refresh install"; \
+        CLEAN_CMD="$PM -y clean all"; \
+    elif command -v dnf >/dev/null 2>&1; then \
+        PM=dnf; \
+        INSTALL_CMD="$PM -y --setopt=timeout=600 --setopt=retries=10 install"; \
+        CLEAN_CMD="$PM -y clean all"; \
+    else \
+        echo "ERROR: No supported package manager found (dnf or microdnf)"; \
+        exit 1; \
+    fi; \
+    # ----------------------------------------------------------------------
+    # Install required utilities:
+    # - curl: Download files from URLs
+    # - unzip: Extract .zip archives (if needed)
+    # - ca-certificates: SSL/TLS certificates for HTTPS downloads
+    # - tar: Extract .tar.gz archives (Liquibase distribution)
+    # ----------------------------------------------------------------------
+    sh -xc "$INSTALL_CMD unzip ca-certificates tar"; \
+    # ----------------------------------------------------------------------
+    # Clean up package manager cache to reduce image size
+    # ----------------------------------------------------------------------
+    sh -xc "$CLEAN_CMD"; \
+    rm -rf /var/cache/yum /var/cache/dnf; \
+    # ----------------------------------------------------------------------
+    # Download Liquibase from GitHub releases
+    # ----------------------------------------------------------------------
+    curl -fsSL -o /tmp/liquibase.tar.gz \
+    https://github.com/liquibase/liquibase/releases/download/v${LIQUIBASE_VERSION}/liquibase-${LIQUIBASE_VERSION}.tar.gz \
+    # ----------------------------------------------------------------------
+    # Download Liquibase from GitHub releases
+    #
+    # curl flags:
+    # - -f: Fail silently on server errors (don't download error pages)
+    # - -s: Silent mode (no progress bar)
+    # - -S: Show errors if -s is used
+    # - -L: Follow redirects (GitHub releases often redirect)
+    # - -o: Output to file (instead of stdout)
+    #
+    # ${LIQUIBASE_VERSION}: Substitutes ARG value (5.0.1)
+    # Downloads to /tmp (temporary directory)
+    # ----------------------------------------------------------------------
+    && mkdir -p ${LIQUIBASE_HOME} \
+    # ----------------------------------------------------------------------
+    # Create Liquibase installation directory
+    # -p flag: Create parent directories if needed, don't error if exists
+    # ----------------------------------------------------------------------
+    && tar -xzf /tmp/liquibase.tar.gz -C ${LIQUIBASE_HOME} \
+    # ----------------------------------------------------------------------
+    # Extract Liquibase archive
+    #
+    # tar flags:
+    # - -x: Extract
+    # - -z: Decompress with gzip
+    # - -f: File to extract (next argument)
+    # - -C: Change to directory (extract to ${LIQUIBASE_HOME})
+    #
+    # Result: Liquibase files now in /opt/liquibase/
+    # ----------------------------------------------------------------------
+    && rm /tmp/liquibase.tar.gz \
+    # ----------------------------------------------------------------------
+    # Delete the downloaded archive
+    # We've extracted it, don't need the .tar.gz anymore
+    # Saves space in the final image
+    # ----------------------------------------------------------------------
+    && curl -fsSL -o ${LIQUIBASE_HOME}/lib/${MSSQL_DRIVER_JAR} \
+    https://github.com/microsoft/mssql-jdbc/releases/download/v${MSSQL_DRIVER_VERSION}/${MSSQL_DRIVER_JAR} \
+    # ----------------------------------------------------------------------
+    # Download SQL Server JDBC driver
+    #
+    # WHAT IS A JDBC DRIVER?
+    # - Java Database Connectivity driver
+    # - Allows Java applications to connect to databases
+    # - Each database type needs its own driver (SQL Server, Postgres, etc.)
+    # - Drivers are .jar files (Java archives)
+    #
+    # WHY IN lib/ DIRECTORY?
+    # - Liquibase automatically loads drivers from lib/ directory
+    # - No additional configuration needed
+    #
+    # Downloads to: /opt/liquibase/lib/mssql-jdbc-13.2.1.jre11.jar
+    # ----------------------------------------------------------------------
+    && curl -fsSL -o ${LIQUIBASE_HOME}/lib/postgresql-${POSTGRES_DRIVER_VERSION}.jar \
+    https://repo1.maven.org/maven2/org/postgresql/postgresql/${POSTGRES_DRIVER_VERSION}/postgresql-${POSTGRES_DRIVER_VERSION}.jar \
+    # ----------------------------------------------------------------------
+    # Download PostgreSQL JDBC driver
+    # From Maven Central Repository (standard Java package repository)
+    # Downloads to: /opt/liquibase/lib/postgresql-42.7.8.jar
+    # ----------------------------------------------------------------------
+    && curl -fsSL -o ${LIQUIBASE_HOME}/lib/snowflake-jdbc-${SNOWFLAKE_DRIVER_VERSION}.jar \
+    https://repo1.maven.org/maven2/net/snowflake/snowflake-jdbc/${SNOWFLAKE_DRIVER_VERSION}/snowflake-jdbc-${SNOWFLAKE_DRIVER_VERSION}.jar \
+    # ----------------------------------------------------------------------
+    # Download Snowflake JDBC driver
+    # Snowflake is a cloud data warehouse platform
+    # Downloads to: /opt/liquibase/lib/snowflake-jdbc-3.27.1.jar
+    # ----------------------------------------------------------------------
+    && curl -fsSL -o ${LIQUIBASE_HOME}/lib/mongo-java-driver-${MONGODB_DRIVER_VERSION}.jar \
+    https://repo1.maven.org/maven2/org/mongodb/mongo-java-driver/${MONGODB_DRIVER_VERSION}/mongo-java-driver-${MONGODB_DRIVER_VERSION}.jar \
+    # ----------------------------------------------------------------------
+    # Download MongoDB Java driver
+    # Base driver for MongoDB connectivity
+    # Downloads to: /opt/liquibase/lib/mongo-java-driver-3.12.14.jar
+    # ----------------------------------------------------------------------
+    && mkdir -p ${LIQUIBASE_HOME}/lib/ext \
+    # ----------------------------------------------------------------------
+    # Create extensions directory
+    # Liquibase looks in lib/ext/ for extension plugins
+    # Extensions add support for non-standard databases
+    # ----------------------------------------------------------------------
+    && curl -fsSL -o ${LIQUIBASE_HOME}/lib/ext/liquibase-mongodb-${LIQUIBASE_MONGODB_VERSION}.jar \
+    https://repo1.maven.org/maven2/org/liquibase/ext/liquibase-mongodb/${LIQUIBASE_MONGODB_VERSION}/liquibase-mongodb-${LIQUIBASE_MONGODB_VERSION}.jar \
+    # ----------------------------------------------------------------------
+    # Download Liquibase MongoDB extension
+    # Adds MongoDB-specific functionality to Liquibase
+    # Extensions go in lib/ext/ (not lib/)
+    # Downloads to: /opt/liquibase/lib/ext/liquibase-mongodb-${LIQUIBASE_MONGODB_VERSION}.jar
+    # ----------------------------------------------------------------------
+    && ln -s ${LIQUIBASE_HOME}/liquibase /usr/local/bin/liquibase
+# ----------------------------------------------------------------------
+# Create symbolic link (like a Windows shortcut)
+#
+# ln -s source target:
+# - Creates a symlink from /usr/local/bin/liquibase
+#   → /opt/liquibase/liquibase
+# - /usr/local/bin is in system PATH
+# - Allows running 'liquibase' from anywhere
+#
+# WITHOUT SYMLINK:
+#   Must type: /opt/liquibase/liquibase <command>
+#
+# WITH SYMLINK:
+#   Can type: liquibase <command>
+# ----------------------------------------------------------------------
+
+# ------------------------------------------------------------------------------
+# Working Directory
+# ------------------------------------------------------------------------------
+# WORKDIR: Sets the default directory for subsequent commands
+# - Creates the directory if it doesn't exist
+# - Like "cd /data" but persists
+# - When you run the container, you start in this directory
+# - All relative paths in commands are relative to this directory
+#
+# WHY /data?
+# - Users mount their tutorial project directory here
+# - Example: docker run -v /data/dpham/liquibase_tutorial:/data liquibase update
+#
+WORKDIR /data
+
+# ------------------------------------------------------------------------------
+# Health Check - Container Health Monitoring
+# ------------------------------------------------------------------------------
+# HEALTHCHECK: Tells Docker how to verify the container is working properly
+#
+# WHY HEALTHCHECK?
+#   - Docker/Podman can detect if the container is healthy or unhealthy
+#   - Orchestrators (Docker Compose, Kubernetes) use health status for:
+#     * Restarting unhealthy containers automatically
+#     * Load balancing (only route to healthy containers)
+#     * Deployment rollouts (wait for healthy before continuing)
+#
+# OPTIONS EXPLAINED:
+#   --interval=30s   : Check health every 30 seconds
+#   --timeout=10s    : Wait up to 10 seconds for command to complete
+#   --start-period=5s: Grace period for container startup before checks count
+#   --retries=3      : Mark unhealthy after 3 consecutive failures
+#
+# THE CHECK:
+#   liquibase --version: Verifies Liquibase is installed and executable
+#   If exit code 0 → healthy, otherwise → unhealthy
+#
+# PODMAN NOTE:
+#   Podman users see "HEALTHCHECK is not supported for OCI image format".
+#   To resolve, build with: podman build --format docker ...
+#
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD ["liquibase", "--version"]
+
+# ------------------------------------------------------------------------------
+# Security - Non-Root User
+# ------------------------------------------------------------------------------
+# Create and switch to a non-root user for security best practices.
+# Running as root inside containers is a security risk (CKV_DOCKER_3).
+#
+# WHY NON-ROOT?
+#   - Limits blast radius if container is compromised
+#   - Required by CKV_DOCKER_3 security policy
+#   - Best practice for production containers
+#
+# USER CONFIGURATION:
+#   - UID 1001: Standard non-root UID (avoids system user conflicts)
+#   - GID 0: Root group for OpenShift/enterprise compatibility
+#   - Named user: Provides cleaner logs and better tool compatibility
+#
+# RUNTIME OVERRIDE:
+#   You can still run as a different user at runtime:
+#   docker run --user $(id -u):$(id -g) liquibase --version
+#
+RUN useradd --uid 1001 --gid 0 --create-home liquibase \
+    && chown -R 1001:0 ${LIQUIBASE_HOME} /data
+
+USER liquibase
+
+# ------------------------------------------------------------------------------
+# Container Entry Point and Default Command
+# ------------------------------------------------------------------------------
+# ENTRYPOINT vs CMD - IMPORTANT DISTINCTION:
+#
+# ENTRYPOINT:
+#   - The main command that always runs
+#   - Cannot be easily overridden (need --entrypoint flag)
+#   - Arguments passed to container are appended to ENTRYPOINT
+#
+# CMD:
+#   - Default arguments for ENTRYPOINT
+#   - Easily overridden by arguments in docker run
+#   - If ENTRYPOINT is set, CMD provides default parameters
+#
+# HOW THEY WORK TOGETHER:
+#   Final command = ENTRYPOINT + CMD (or user arguments)
+#
+# EXAMPLES:
+#   docker run liquibase
+#     → Runs: liquibase --help (ENTRYPOINT + CMD)
+#
+#   docker run liquibase update
+#     → Runs: liquibase update (ENTRYPOINT + user arg, CMD ignored)
+#
+#   docker run liquibase --version
+#     → Runs: liquibase --version (ENTRYPOINT + user arg)
+#
+# WHY THIS PATTERN?
+#   - Container is purpose-built to run Liquibase
+#   - Users can easily pass any Liquibase command/flags
+#   - Default behavior shows help (user-friendly)
+#
+ENTRYPOINT ["liquibase"]
+CMD ["--help"]
+
+# ==============================================================================
+# BUILD INSTRUCTIONS:
+# ==============================================================================
+# From the docker/liquibase directory:
+#
+#   docker build -t liquibase:latest .
+#
+# On RHEL with Podman (use --format docker for healthcheck support):
+#   podman build -t liquibase:latest . --format docker
+#
+# To customize versions:
+#   docker build \
+#     --build-arg LIQUIBASE_VERSION=5.0.2 \
+#     --build-arg POSTGRES_DRIVER_VERSION=42.7.9 \
+#     -t liquibase:custom .
+#
+# ==============================================================================
+# RUN INSTRUCTIONS:
+# ==============================================================================
+# Show help:
+#   docker run --rm liquibase
+#
+# Run Liquibase update (example):
+#   docker run --rm \
+#     -v ./changelogs:/data \
+#     liquibase \
+#     --url=jdbc:postgresql://host.docker.internal:5432/mydb \
+#     --username=user \
+#     --password=pass \
+#     --changelog-file=changelog.xml \
+#     update
+#
+# Check Liquibase version:
+#   docker run --rm liquibase --version
+#
+# ==============================================================================
+# SUPPORTED DATABASES:
+# ==============================================================================
+# SQL Server:
+#   --url=jdbc:sqlserver://host:1433;databaseName=mydb
+#
+# PostgreSQL:
+#   --url=jdbc:postgresql://host:5432/mydb
+#
+# Snowflake:
+#   --url=jdbc:snowflake://account.snowflakecomputing.com/?db=mydb
+#
+# MongoDB:
+#   --url=jdbc:mongodb://host:27017/mydb
+#
+# ==============================================================================

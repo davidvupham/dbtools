@@ -1,0 +1,140 @@
+# ==============================================================================
+# Liquibase Docker Compose Configuration
+# ==============================================================================
+#
+# PURPOSE:
+# This docker-compose file provides a convenient way to run Liquibase
+# database migrations with proper volume mounts and network configuration.
+#
+# USAGE:
+# This is a "run-once" service pattern - Liquibase runs a migration and exits
+# It's not a long-running service like a database or web server
+#
+# ==============================================================================
+
+services:
+  # ----------------------------------------------------------------------------
+  # Liquibase Service
+  # ----------------------------------------------------------------------------
+  # This service runs Liquibase commands against your databases
+  # By default, it shows help and exits - override with specific commands
+  liquibase:
+    # Build configuration - uses local Dockerfile
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        # You can override these versions at build time
+        LIQUIBASE_VERSION: 5.0.1
+        MSSQL_DRIVER_VERSION: 13.2.1
+        POSTGRES_DRIVER_VERSION: 42.7.8
+        SNOWFLAKE_DRIVER_VERSION: 3.27.1
+        MONGODB_DRIVER_VERSION: 3.12.14
+        LIQUIBASE_MONGODB_VERSION: 5.0.1
+
+    # Image name after build
+    image: liquibase:latest
+
+    # Working directory inside container (canonical path)
+    working_dir: /liquibase
+
+    # Volume Mounts - CRITICAL FOR OPERATIONS
+    # Maps your local changelog files into the container
+    volumes:
+      # Canonical mount: host changelog root -> /liquibase in container
+      # Set LIQUIBASE_HOST_ROOT to an absolute host path like /data/liquibase (host), or
+      # leave unset to default to the local ./changelogs folder in this repo.
+      # For SELinux systems (e.g., RHEL with Podman), set LIQUIBASE_VOLUME_SUFFIX=:Z
+      - ${LIQUIBASE_HOST_ROOT:-/data/liquibase}:/liquibase${LIQUIBASE_VOLUME_SUFFIX:-}
+      # Note: Use :ro (read-only) for production changelogs, omit for dev/tutorial
+
+      # Optional: Output directory for generated SQL, reports, etc.
+      - ./output:/liquibase/output${LIQUIBASE_VOLUME_SUFFIX:-}
+
+    # Environment Variables
+    # These can be referenced in your liquibase.properties or changelogs
+    environment:
+      # Optional: Set default log level
+      - LIQUIBASE_LOG_LEVEL=INFO
+
+      # Optional: License key for Liquibase Pro features
+      # - LIQUIBASE_LICENSE_KEY=${LIQUIBASE_LICENSE_KEY}
+
+    # Command override example
+    # By default, runs 'liquibase --help' (from Dockerfile CMD)
+    # Override with specific commands when running, e.g.:
+    # command: >-
+    #   --defaults-file /data/liquibase/env/liquibase.dev.properties
+    #   --changelog-file /data/liquibase/platforms/postgres/databases/app/db.changelog-master.yaml
+    #   updateSQL
+
+    # Restart policy - "no" is appropriate for run-once tools
+    # Liquibase runs a migration and exits, shouldn't restart automatically
+    restart: "no"
+
+    # Match container UID/GID for rootless Podman or to avoid root-owned files
+    user: "${LIQUIBASE_UID:-0}:${LIQUIBASE_GID:-0}"
+# ==============================================================================
+# USAGE EXAMPLES:
+# ==============================================================================
+#
+# Show help:
+#   docker compose run --rm liquibase --help
+#   # On RHEL: podman-compose run --rm liquibase --help
+#
+# Run update (apply all pending changes):
+#   docker compose run --rm liquibase \
+#     --url=jdbc:postgresql://postgres:5432/mydb \
+#     --username=dbuser \
+#     --password=dbpass \
+#     --changelog-file=changelogs/master.xml \
+#     update
+#
+# Check status (what changes are pending):
+#   docker compose run --rm liquibase \
+#     --url=jdbc:sqlserver://mssql1:1433;databaseName=mydb \
+#     --username=SA \
+#     --password=YourStrong!Passw0rd \
+#     --changelog-file=changelogs/master.xml \
+#     status --verbose
+#
+# Rollback last change:
+#   docker compose run --rm liquibase \
+#     --url=jdbc:postgresql://postgres:5432/mydb \
+#     --username=dbuser \
+#     --password=dbpass \
+#     --changelog-file=changelogs/master.xml \
+#     rollback-count 1
+#
+# Generate SQL without applying (dry run):
+#   docker compose run --rm liquibase \
+#     --url=jdbc:postgresql://postgres:5432/mydb \
+#     --username=dbuser \
+#     --password=dbpass \
+#     --changelog-file=changelogs/master.xml \
+#     update-sql
+#
+# Using properties file:
+#   docker compose run --rm liquibase \
+#     --defaults-file=/liquibase/liquibase.properties \
+#     update
+#
+# ==============================================================================
+# DATABASE CONNECTION STRINGS:
+# ==============================================================================
+#
+# PostgreSQL:
+#   --url=jdbc:postgresql://postgres:5432/dbname
+#   or from host: jdbc:postgresql://localhost:5432/dbname
+#
+# SQL Server:
+#   --url=jdbc:sqlserver://mssql1:1433;databaseName=dbname
+#   or from host: jdbc:sqlserver://localhost:1433;databaseName=dbname
+#
+# Snowflake:
+#   --url=jdbc:snowflake://account.snowflakecomputing.com/?db=dbname&warehouse=wh
+#
+# MongoDB:
+#   --url=jdbc:mongodb://mongodb1:27017/dbname
+#
+# ==============================================================================

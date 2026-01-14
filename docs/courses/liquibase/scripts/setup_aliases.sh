@@ -4,9 +4,8 @@
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-# Derive repository root and tutorial directory robustly relative to this file
-# Resolve repository root (four levels up from scripts directory)
-REPO_ROOT="$(cd "${SCRIPT_DIR}/../../../.." && pwd)"
+# Derive tutorial directory robustly relative to this file
+# Tutorial directory is one level up from scripts directory
 export LIQUIBASE_TUTORIAL_DIR="${LIQUIBASE_TUTORIAL_DIR:-$(cd "${SCRIPT_DIR}/.." && pwd)}"
 
 # Default Liquibase project directory (where changelog/env live)
@@ -18,7 +17,7 @@ export LIQUIBASE_TUTORIAL_DATA_DIR="${LIQUIBASE_TUTORIAL_DATA_DIR:-/data/$(whoam
 alias sqlcmd-tutorial="${SCRIPT_DIR}/sqlcmd_tutorial.sh"
 alias lb="${SCRIPT_DIR}/lb.sh"
 alias cr="${SCRIPT_DIR}/cr.sh"   # Container runtime (auto-detects docker/podman)
-alias bci="${REPO_ROOT}/scripts/build_container_image.sh"  # Build container image (auto-detects OS/runtime, JFrog proxy)
+alias bci="${SCRIPT_DIR}/build_container_image.sh"  # Build container image (auto-detects OS/runtime, JFrog proxy)
 
 echo "Tutorial environment configured."
 echo "Variables:"

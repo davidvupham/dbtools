@@ -17,7 +17,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-BUILD_SCRIPT="$SCRIPT_DIR/../../../../scripts/build_container_image.sh"
+BUILD_SCRIPT="$SCRIPT_DIR/build_container_image.sh"
 
 detect_runtime() {
   # 1. Allow override via env var

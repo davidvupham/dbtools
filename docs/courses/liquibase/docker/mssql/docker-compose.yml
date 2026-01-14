@@ -1,0 +1,24 @@
+services:
+  mssql1:
+    build: .
+    image: gds-mssql:latest
+    container_name: mssql1
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_PID=Developer
+      # MSSQL_SA_PASSWORD must be set in environment before running docker-compose
+      - MSSQL_SA_PASSWORD=${MSSQL_SA_PASSWORD}
+    ports:
+      - "1433:1433"
+    volumes:
+      # Bind-mount host paths into the container and map instance data to SQL's data directory
+      - /data/mssql:/data/mssql
+      - /logs/mssql:/logs/mssql
+      - /data/mssql/mssql1:/var/opt/mssql
+    restart: unless-stopped
+    networks:
+      - devcontainer-network
+
+networks:
+  devcontainer-network:
+    external: true

@@ -151,7 +151,7 @@ fi
 # Step 2: Build Liquibase Image
 log_section "Step 2: Build Liquibase Container Image"
 
-LIQUIBASE_DOCKER_DIR="${LIQUIBASE_TUTORIAL_DIR%/docs/courses/liquibase}/docker/liquibase"
+LIQUIBASE_DOCKER_DIR="${LIQUIBASE_TUTORIAL_DIR}/docker/liquibase"
 if [ -d "$LIQUIBASE_DOCKER_DIR" ]; then
     log "Building Liquibase image from $LIQUIBASE_DOCKER_DIR"
     cd "$LIQUIBASE_DOCKER_DIR"

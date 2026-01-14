@@ -160,15 +160,15 @@ fi
 # Build SQL Server image if it doesn't exist
 MSSQL_IMAGE="mssql_tutorial:latest"
 
-# Path to build_container_image.sh (relative to SCRIPT_DIR, which is docs/courses/liquibase/scripts/)
-BUILD_SCRIPT="$SCRIPT_DIR/../../../../scripts/build_container_image.sh"
+# Path to build_container_image.sh (local to liquibase course directory)
+BUILD_SCRIPT="$SCRIPT_DIR/build_container_image.sh"
 
 if ! $CR_CMD image exists "$MSSQL_IMAGE" 2>/dev/null; then
     echo "Building SQL Server image..."
     if [[ -x "$BUILD_SCRIPT" ]]; then
         # Use the centralized build script with JFrog proxy auto-detection
         # Pass CONTAINER_RUNTIME to ensure build uses the same runtime
-        CONTAINER_RUNTIME="$CR_CMD" "$BUILD_SCRIPT" docker/mssql "$MSSQL_IMAGE"
+        CONTAINER_RUNTIME="$CR_CMD" "$BUILD_SCRIPT" "$TUTORIAL_ROOT/docker/mssql" "$MSSQL_IMAGE"
     else
         echo -e "${RED}ERROR: Build script not found at $BUILD_SCRIPT${NC}"
         exit 1
