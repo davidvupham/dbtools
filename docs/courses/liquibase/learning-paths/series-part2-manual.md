@@ -685,12 +685,6 @@ Drift Summary
 
 Now add more changes following the established pattern.
 
-> **Note:** If you generated a drift detection file `V0002__drift_loyalty_points.xml` in Step 10, you have two options:
-> - Remove or rename that file if you don't want to include the drift
-> - Use `V0003` for the index changeset below if you want to keep the drift file
->
-> For this tutorial, we'll proceed with `V0002` for the index, assuming the drift file was not included in the master changelog.
-
 ### V0002: Add Index to Orders
 
 **Recommended: Use the step script**
