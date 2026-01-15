@@ -54,13 +54,13 @@ FILES_TO_DELETE=(
     "scripts/validate_part3_cicd.sh"
     "scripts/verify-self-hosted-env.sh"
 
-    # Internal/development scripts
-    "scripts/build_container_image.sh"
+    # Internal/development scripts (NOT used by Part 1 or Part 2)
+    # Note: build_container_image.sh is USED by start_mssql_containers.sh
+    # Note: setup_environment.sh is USED by setup_tutorial.sh
+    # Note: sqlcmd_tutorial.sh is USED via alias from setup_aliases.sh
     "scripts/deploy_liquibase_baseline.sh"
     "scripts/manual_review_part2.md"
     "scripts/review_tutorial_grammar.sh"
-    "scripts/setup_environment.sh"
-    "scripts/sqlcmd_tutorial.sh"
     "scripts/validate_tutorial.sh"
     "scripts/validate_tutorial_full.sh"
     "scripts/validate_tutorial_part2.sh"
