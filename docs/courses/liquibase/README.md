@@ -1,4 +1,17 @@
-# 🚀 Start Here: Liquibase + Database DevOps Tutorial Series
+# Liquibase + Database DevOps Tutorial Series
+
+**[← Back to Courses Index](../README.md)**
+
+> **Document Version:** 1.0
+> **Last Updated:** January 15, 2026
+> **Maintainers:** Global Data Services Team
+> **Status:** Production
+
+![Status](https://img.shields.io/badge/Status-Production-green)
+![Topic](https://img.shields.io/badge/Topic-Liquibase-blue)
+
+> [!IMPORTANT]
+> **Related Docs:** [Course Overview](./course_overview.md) | [Quick Reference](./quick_reference.md) | [Glossary](./glossary.md)
 
 ## Introduction
 

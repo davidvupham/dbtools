@@ -34,11 +34,11 @@ All step-numbered scripts have been renamed to descriptive names:
 - Each phase now references the appropriate series part
 
 **Structure:**
-- Phase 1 → References [Part 1](./series-part1-baseline.md)
-- Phase 2 → References [Part 3, Phase 2](./series-part3-cicd.md#phase-2)
-- Phase 3 → References [Part 3, Phase 3](./series-part3-cicd.md#phase-3)
-- Phase 4 → References [Part 3, Phase 4](./series-part3-cicd.md#phase-4)
-- Phase 5 → References [Part 3, Phase 5](./series-part3-cicd.md#phase-5)
+- Phase 1 → References [Part 1](./learning-paths/series-part1-baseline.md)
+- Phase 2 → References [Part 3, Phase 2](./learning-paths/series-part3-cicd.md#phase-2)
+- Phase 3 → References [Part 3, Phase 3](./learning-paths/series-part3-cicd.md#phase-3)
+- Phase 4 → References [Part 3, Phase 4](./learning-paths/series-part3-cicd.md#phase-4)
+- Phase 5 → References [Part 3, Phase 5](./learning-paths/series-part3-cicd.md#phase-5)
 
 **Benefits:**
 - Single source of truth for each concept

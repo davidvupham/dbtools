@@ -166,8 +166,8 @@ echo "Next: Run next_script.sh"
 ### Cross-References
 
 1. **Use relative links**
-   - `./series-part1-baseline.md` (same directory)
-   - `../scripts/README.md` (parent directory)
+   - `./learning-paths/series-part1-baseline.md` (subdirectory)
+   - `./scripts/README.md` (sibling directory)
    - Avoid absolute paths
 
 2. **Link to specific sections**
@@ -230,7 +230,7 @@ When migrating from step-numbered to descriptive names:
 ```markdown
 ## Phase 1: Local Setup
 
-Follow [Part 1: Baseline](./series-part1-baseline.md) to set up your local environment.
+Follow [Part 1: Baseline](./learning-paths/series-part1-baseline.md) to set up your local environment.
 
 **Quick start:**
 ```bash
@@ -238,7 +238,7 @@ $LIQUIBASE_TUTORIAL_DIR/scripts/setup_liquibase_environment.sh
 $LIQUIBASE_TUTORIAL_DIR/scripts/start_mssql_containers.sh
 ```
 
-**For detailed explanations**, see [Part 1, Step 0](./series-part1-baseline.md#step-0-configure-environment-and-aliases).
+**For detailed explanations**, see [Part 1, Step 0](./learning-paths/series-part1-baseline.md#step-0-configure-environment-and-aliases).
 ```
 
 ### Bad: Duplicated Content

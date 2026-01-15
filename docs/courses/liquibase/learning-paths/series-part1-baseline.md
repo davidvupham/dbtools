@@ -113,7 +113,7 @@ Before starting this tutorial, you should have:
 
 ---
 
-kk## Environment Setup
+## Environment Setup
 
 ### Step 0: Configure Environment and Aliases
 

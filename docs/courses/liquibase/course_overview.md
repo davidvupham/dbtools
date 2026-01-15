@@ -1,5 +1,18 @@
 # Liquibase Course Overview
 
+**[← Back to Course Index](./README.md)**
+
+> **Document Version:** 1.0
+> **Last Updated:** January 15, 2026
+> **Maintainers:** Global Data Services Team
+> **Status:** Production
+
+![Status](https://img.shields.io/badge/Status-Production-green)
+![Topic](https://img.shields.io/badge/Topic-Liquibase-blue)
+
+> [!IMPORTANT]
+> **Related Docs:** [Quick Reference](./quick_reference.md) | [Troubleshooting](./troubleshooting.md)
+
 ## Course Description
 
 This comprehensive course teaches database change management using Liquibase with Microsoft SQL Server. You'll learn to version control your database schema, deploy changes safely across environments, and integrate database CI/CD into your workflow.

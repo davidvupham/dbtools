@@ -1,5 +1,18 @@
 # Liquibase Quick Reference
 
+**[← Back to Course Index](./README.md)**
+
+> **Document Version:** 1.0
+> **Last Updated:** January 15, 2026
+> **Maintainers:** Global Data Services Team
+> **Status:** Production
+
+![Status](https://img.shields.io/badge/Status-Production-green)
+![Topic](https://img.shields.io/badge/Topic-Liquibase-blue)
+
+> [!IMPORTANT]
+> **Related Docs:** [Glossary](./glossary.md) | [Troubleshooting](./troubleshooting.md)
+
 ## Common Commands
 
 | Command | Description |

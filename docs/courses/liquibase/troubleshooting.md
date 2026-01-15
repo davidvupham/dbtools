@@ -1,5 +1,18 @@
 # Liquibase Tutorial Troubleshooting
 
+**[← Back to Course Index](./README.md)**
+
+> **Document Version:** 1.0
+> **Last Updated:** January 15, 2026
+> **Maintainers:** Global Data Services Team
+> **Status:** Production
+
+![Status](https://img.shields.io/badge/Status-Production-green)
+![Topic](https://img.shields.io/badge/Topic-Liquibase-blue)
+
+> [!IMPORTANT]
+> **Related Docs:** [Quick Reference](./quick_reference.md) | [Reference Guide](../../reference/liquibase/liquibase-reference.md#troubleshooting)
+
 This guide covers common issues and their solutions for the Liquibase tutorial.
 
 ---
