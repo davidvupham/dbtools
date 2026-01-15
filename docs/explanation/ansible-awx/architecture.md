@@ -48,8 +48,8 @@ This document is intended for:
 
 Modern AWX (since version 18+) adopts a container-native architecture that separates the control plane from the execution plane.
 
-- **Control Plane**: Manages the Web UI, API, Scheduler, and Inventory updates. It runs as a set of deployments on Kubernetes (managed by the AWX Operator).
-- **Execution Plane**: Runs the actual automation jobs. Uses **Execution Environments (EE)**, which are container images containing Ansible, Python, and required collections.
+- **Control Plane**: Manages the Web UI, API, Scheduler, and Inventory updates. It runs as a set of deployments on Kubernetes (managed by the AWX Operator). The Docker image for this is located in `docker/awx`.
+- **Execution Plane**: Runs the actual automation jobs. Uses **Execution Environments (EE)**, which are container images containing Ansible, Python, and required collections. The custom EE Docker image is in `docker/awx-ee`.
 
 [↑ Back to Table of Contents](#table-of-contents)
 

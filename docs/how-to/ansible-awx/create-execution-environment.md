@@ -57,8 +57,8 @@ This guide is for:
 Create a directory for your Docker build context:
 
 ```bash
-mkdir -p docker/ansible-awx
-cd docker/ansible-awx
+mkdir -p docker/awx-ee
+cd docker/awx-ee
 ```
 
 [↑ Back to Table of Contents](#table-of-contents)
@@ -68,7 +68,7 @@ cd docker/ansible-awx
 Create a `Dockerfile` that extends the official Ansible Runner or AWX EE base image.
 
 > [!NOTE]
-> See `docker/ansible-awx/Dockerfile` in the codebase for the reference implementation.
+> See `docker/awx-ee/Dockerfile` in the codebase for the reference implementation.
 
 ```dockerfile
 # Start from the official AWX Execution Environment
