@@ -39,8 +39,8 @@ RUN --mount=type=cache,target=/var/cache/dnf \
 COPY healthcheck.sh /usr/local/bin/awx-healthcheck
 RUN chmod +x /usr/local/bin/awx-healthcheck
 
-ENV AWX_HTTP_PORT=8052 \
-    AWX_HEALTHCHECK_HOST=http://127.0.0.1:${AWX_HTTP_PORT}
+ENV AWX_HTTP_PORT=8052
+ENV AWX_HEALTHCHECK_HOST=http://127.0.0.1:8052
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=90s --retries=5 CMD /usr/local/bin/awx-healthcheck
 
