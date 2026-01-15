@@ -29,6 +29,7 @@
 - [Cleanup After Tutorial](#cleanup-after-tutorial)
 - [Appendix: Container Networking Details](#appendix-container-networking-details)
 - [Appendix: File Permissions and User Mapping](#appendix-file-permissions-and-user-mapping)
+- [Appendix: Connecting from the Host Machine](#appendix-connecting-from-the-host-machine)
 - [Appendix: Direct SQL Server Container Commands](#appendix-direct-sql-server-container-commands)
 - [Appendix: Direct Creation of Liquibase Properties Files](#appendix-direct-creation-of-liquibase-properties-files)
 - [Appendix: Creating the `app` Schema with Liquibase](#appendix-creating-the-app-schema-with-liquibase)
@@ -255,6 +256,8 @@ sqlcmd-tutorial -S mssql_dev -Q "SELECT @@SERVERNAME AS ServerName, GETDATE() AS
 # EXAMPLE ONLY – DO NOT RUN YET
 sqlcmd-tutorial create_orderdb_database.sql
 ```
+
+> **💡 Tip:** For interactive SQL sessions or connecting from your host machine using GUI tools like Azure Data Studio, see [Appendix: Connecting from the Host Machine](#appendix-connecting-from-the-host-machine).
 
 ### Check SQL Server is Running
 
@@ -829,6 +832,68 @@ MSSQL containers use the `--userns=keep-id` flag with rootless Podman (applied a
 ### Why Different Approaches?
 
 SQL Server requires running as a specific user (`mssql`, UID 10001) inside the container, so we can't use `--user` to override it. Instead, we use `--userns=keep-id` to map container UIDs to your host user's namespace. Liquibase, on the other hand, can run as any user, so we use `--user` to run it directly as your user.
+
+---
+
+## Appendix: Connecting from the Host Machine
+
+Back to: [Helper Script for sqlcmd](#helper-script-for-sqlcmd)
+
+The SQL Server containers expose ports to the host machine, allowing you to connect directly from your host using any SQL client tool. You can also start an interactive session inside the container.
+
+### Interactive Session Inside Container
+
+The `sqlcmd-tutorial` helper doesn't support interactive mode, so use the container runtime directly with the `-it` flags:
+
+```bash
+# Interactive SQL session to mssql_dev (use -it for interactive terminal)
+podman exec -it mssql_dev /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P "$MSSQL_LIQUIBASE_TUTORIAL_PWD"
+
+# Or with docker:
+docker exec -it mssql_dev /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P "$MSSQL_LIQUIBASE_TUTORIAL_PWD"
+```
+
+Replace `mssql_dev` with `mssql_stg` or `mssql_prd` to connect to the staging or production instances.
+
+> In the interactive session, type your SQL query and press `GO` to execute. Type `EXIT` to quit.
+
+### Port Mappings
+
+| Instance   | Host Port | Container Port |
+|------------|-----------|----------------|
+| mssql_dev  | 14331     | 1433           |
+| mssql_stg  | 14332     | 1433           |
+| mssql_prd  | 14333     | 1433           |
+
+> **Note:** If using dynamic ports (multi-user environments), check your actual ports with `source "$LIQUIBASE_TUTORIAL_DATA_DIR/.ports" && echo $MSSQL_DEV_PORT`.
+
+### Using sqlcmd from Host
+
+If you have `sqlcmd` installed on your host machine:
+
+```bash
+# Connect to dev instance from host (interactive)
+sqlcmd -S localhost,14331 -U sa -P "$MSSQL_LIQUIBASE_TUTORIAL_PWD" -C
+
+# Connect to stg instance from host
+sqlcmd -S localhost,14332 -U sa -P "$MSSQL_LIQUIBASE_TUTORIAL_PWD" -C
+
+# Connect to prd instance from host
+sqlcmd -S localhost,14333 -U sa -P "$MSSQL_LIQUIBASE_TUTORIAL_PWD" -C
+```
+
+> **Note:** SQL Server uses a **comma** (not colon) to separate host and port in the `-S` parameter.
+
+### Using GUI Tools
+
+You can also connect using GUI tools like Azure Data Studio, DBeaver, or SQL Server Management Studio (SSMS):
+
+- **Server/Host:** `localhost,14331` (or 14332/14333 for stg/prd)
+- **Authentication:** SQL Server Authentication
+- **Username:** `sa`
+- **Password:** Value of `$MSSQL_LIQUIBASE_TUTORIAL_PWD`
+- **Encrypt:** True
+- **Trust Server Certificate:** True (required for self-signed certs)
 
 ---
 
