@@ -104,7 +104,7 @@ Every documentation file **MUST** start with the following H1 and metadata block
 
 ### Grammar and Mechanics
 
-* **Capitalization**: usage **Sentence case** for all headings (H1-H6).
+* **Capitalization**: Use **Sentence case** for all headings (H1-H6).
   * ✅ `## Configure the database connection`
   * ❌ `## Configure The Database Connection`
 * **Lists**:
