@@ -19,7 +19,7 @@ And an optional run-once Liquibase tool container (profile `tools`):
 Set the SQL Server SA password as an environment variable:
 
 ```bash
-export MSSQL_LIQUIBASE_TUTORIAL_PWD='YourStrong!Passw0rd'
+export MSSQL_LIQUIBASE_TUTORIAL_PWD='<YOUR_STRONG_PASSWORD>'
 ```
 
 **Important**: The password must meet SQL Server complexity requirements:

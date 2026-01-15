@@ -154,7 +154,7 @@ changelogs/
 changelog-file=changelogs/master.xml
 url=jdbc:postgresql://postgres:5432/mydb
 username=dbuser
-password=dbpass
+password=<YOUR_DB_PASSWORD>
 driver=org.postgresql.Driver
 
 # Liquibase Settings
@@ -211,7 +211,7 @@ podman-compose run --rm liquibase \
 docker compose run --rm liquibase \
   --url=jdbc:postgresql://postgres:5432/mydb \
   --username=dbuser \
-  --password=dbpass \
+  --password=<YOUR_DB_PASSWORD> \
   --changelog-file=changelogs/master.xml \
   update
 ```
@@ -223,7 +223,7 @@ docker compose run --rm liquibase \
 docker compose run --rm liquibase \
   --url=jdbc:postgresql://postgres:5432/mydb \
   --username=dbuser \
-  --password=dbpass \
+  --password=<YOUR_DB_PASSWORD> \
   --changelog-file=changelogs/master.xml \
   --contexts=dev \
   update
@@ -232,7 +232,7 @@ docker compose run --rm liquibase \
 docker compose run --rm liquibase \
   --url=jdbc:postgresql://postgres:5432/mydb \
   --username=dbuser \
-  --password=dbpass \
+  --password=<YOUR_DB_PASSWORD> \
   --changelog-file=changelogs/master.xml \
   --labels="v1.0,critical" \
   update
@@ -268,7 +268,7 @@ podman build -t gds-mssql:latest docker/mssql --format docker
 ```bash
 # PostgreSQL (port 5432)
 podman run -d --name psql1 -p 5432:5432 \
-  -e POSTGRES_PASSWORD=YourStrong\!Passw0rd -e POSTGRES_DB=postgres -e POSTGRES_USER=postgres \
+  -e POSTGRES_PASSWORD=<YOUR_STRONG_PASSWORD> -e POSTGRES_DB=postgres -e POSTGRES_USER=postgres \
   -v /data/postgresql:/data/postgresql \
   -v /logs/postgresql:/logs/postgresql \
   -v /data/postgresql/psql1:/var/lib/postgresql \
@@ -277,7 +277,7 @@ podman run -d --name psql1 -p 5432:5432 \
 # SQL Server (port 1433)
 podman run -d --name mssql1 -p 1433:1433 \
   -e ACCEPT_EULA=Y -e MSSQL_PID=Developer \
-  -e MSSQL_SA_PASSWORD=YourStrong\!Passw0rd \
+  -e MSSQL_SA_PASSWORD=<YOUR_STRONG_PASSWORD> \
   -v /data/mssql:/data/mssql \
   -v /logs/mssql:/logs/mssql \
   -v /data/mssql/mssql1:/var/opt/mssql \
@@ -287,7 +287,7 @@ podman run -d --name mssql1 -p 1433:1433 \
 SQL Server readiness check:
 
 ```bash
-podman exec mssql1 /opt/mssql-tools18/bin/sqlcmd -S localhost -U SA -P 'YourStrong!Passw0rd' -C -Q "SELECT @@VERSION"
+podman exec mssql1 /opt/mssql-tools18/bin/sqlcmd -S localhost -U SA -P '<YOUR_STRONG_PASSWORD>' -C -Q "SELECT @@VERSION"
 ```
 
 ### 3) Apply the sample changelog (v1.0) to both databases
@@ -302,10 +302,10 @@ podman run --rm --entrypoint /bin/sh \
   -c "LIQUIBASE_SEARCH_PATH=/data/liquibase/platforms/postgres/databases/app/releases/1.0 \
       liquibase --changeLogFile=db.changelog-1.0.yaml \
       --url=jdbc:postgresql://host.containers.internal:5432/postgres \
-      --username=postgres --password=YourStrong\!Passw0rd update"
+      --username=postgres --password=<YOUR_STRONG_PASSWORD> update"
 
 # SQL Server (ensure DB exists)
-podman exec mssql1 /opt/mssql-tools18/bin/sqlcmd -S localhost -U SA -P 'YourStrong!Passw0rd' -C \
+podman exec mssql1 /opt/mssql-tools18/bin/sqlcmd -S localhost -U SA -P '<YOUR_STRONG_PASSWORD>' -C \
   -Q "IF DB_ID('LiquibaseDemo') IS NULL CREATE DATABASE LiquibaseDemo;"
 
 podman run --rm --entrypoint /bin/sh \
@@ -314,7 +314,7 @@ podman run --rm --entrypoint /bin/sh \
   -c "LIQUIBASE_SEARCH_PATH=/data/liquibase/platforms/postgres/databases/app/releases/1.0 \
       liquibase --changeLogFile=db.changelog-1.0.yaml \
       --url='jdbc:sqlserver://host.containers.internal:1433;databaseName=LiquibaseDemo;encrypt=false;trustServerCertificate=true' \
-      --username=SA --password=YourStrong\!Passw0rd update"
+      --username=SA --password=<YOUR_STRONG_PASSWORD> update"
 ```
 
 ### 4) Apply the master changelog (adds tag v1.0)
@@ -329,7 +329,7 @@ podman run --rm --entrypoint /bin/sh \
   -c "LIQUIBASE_SEARCH_PATH=/data/liquibase/platforms/postgres/databases/app,/data/liquibase/platforms/postgres/databases/app/releases/1.0 \
       liquibase --changeLogFile=db.changelog-master.yaml \
       --url=jdbc:postgresql://host.containers.internal:5432/postgres \
-      --username=postgres --password=YourStrong\!Passw0rd update"
+      --username=postgres --password=<YOUR_STRONG_PASSWORD> update"
 
 # SQL Server
 podman run --rm --entrypoint /bin/sh \
@@ -338,7 +338,7 @@ podman run --rm --entrypoint /bin/sh \
   -c "LIQUIBASE_SEARCH_PATH=/data/liquibase/platforms/postgres/databases/app,/data/liquibase/platforms/postgres/databases/app/releases/1.0 \
       liquibase --changeLogFile=db.changelog-master.yaml \
       --url='jdbc:sqlserver://host.containers.internal:1433;databaseName=LiquibaseDemo;encrypt=false;trustServerCertificate=true' \
-      --username=SA --password=YourStrong\!Passw0rd update"
+      --username=SA --password=<YOUR_STRONG_PASSWORD> update"
 ```
 
 ### 5) Verify history (expects tag v1.0 and the demo changeset)
@@ -351,7 +351,7 @@ podman run --rm --entrypoint /bin/sh \
   -c "LIQUIBASE_SEARCH_PATH=/data/liquibase/platforms/postgres/databases/app,/data/liquibase/platforms/postgres/databases/app/releases/1.0 \
       liquibase --changeLogFile=db.changelog-master.yaml \
       --url=jdbc:postgresql://host.containers.internal:5432/postgres \
-      --username=postgres --password=YourStrong\!Passw0rd history"
+      --username=postgres --password=<YOUR_STRONG_PASSWORD> history"
 
 # SQL Server
 podman run --rm --entrypoint /bin/sh \
@@ -360,7 +360,7 @@ podman run --rm --entrypoint /bin/sh \
   -c "LIQUIBASE_SEARCH_PATH=/data/liquibase/platforms/postgres/databases/app,/data/liquibase/platforms/postgres/databases/app/releases/1.0 \
       liquibase --changeLogFile=db.changelog-master.yaml \
       --url='jdbc:sqlserver://host.containers.internal:1433;databaseName=LiquibaseDemo;encrypt=false;trustServerCertificate=true' \
-      --username=SA --password=YourStrong\!Passw0rd history"
+      --username=SA --password=<YOUR_STRONG_PASSWORD> history"
 ```
 
 Expected: both DBs show `001-create-demo-table.yaml::20251114-01-create-demo::sample` and `db.changelog-master.yaml::tag-v1.0::dpham` with tag `v1.0`.
@@ -374,7 +374,7 @@ Expected: both DBs show `001-create-demo-table.yaml::20251114-01-create-demo::sa
 docker compose run --rm liquibase \
   --url=jdbc:postgresql://postgres:5432/mydb \
   --username=dbuser \
-  --password=dbpass \
+  --password=<YOUR_DB_PASSWORD> \
   --changelog-file=changelogs/master.xml \
   status --verbose
 
@@ -382,7 +382,7 @@ docker compose run --rm liquibase \
 docker compose run --rm liquibase \
   --url=jdbc:postgresql://postgres:5432/mydb \
   --username=dbuser \
-  --password=dbpass \
+  --password=<YOUR_DB_PASSWORD> \
   --changelog-file=changelogs/master.xml \
   status --verbose | grep -c "NOT RUN"
 ```
@@ -403,7 +403,7 @@ docker compose run --rm liquibase \
 docker compose run --rm liquibase \
   --url=jdbc:postgresql://postgres:5432/mydb \
   --username=dbuser \
-  --password=dbpass \
+  --password=<YOUR_DB_PASSWORD> \
   --changelog-file=changelogs/master.xml \
   update
 
@@ -411,7 +411,7 @@ docker compose run --rm liquibase \
 docker compose run --rm liquibase \
   --url=jdbc:postgresql://postgres:5432/mydb \
   --username=dbuser \
-  --password=dbpass \
+  --password=<YOUR_DB_PASSWORD> \
   --changelog-file=changelogs/master.xml \
   update-count 2
 
@@ -419,7 +419,7 @@ docker compose run --rm liquibase \
 docker compose run --rm liquibase \
   --url=jdbc:postgresql://postgres:5432/mydb \
   --username=dbuser \
-  --password=dbpass \
+  --password=<YOUR_DB_PASSWORD> \
   --changelog-file=changelogs/master.xml \
   update-to-tag v1.0
 ```
@@ -431,7 +431,7 @@ docker compose run --rm liquibase \
 docker compose run --rm liquibase \
   --url=jdbc:postgresql://postgres:5432/mydb \
   --username=dbuser \
-  --password=dbpass \
+  --password=<YOUR_DB_PASSWORD> \
   --changelog-file=changelogs/master.xml \
   update-sql
 
@@ -439,7 +439,7 @@ docker compose run --rm liquibase \
 docker compose run --rm liquibase \
   --url=jdbc:postgresql://postgres:5432/mydb \
   --username=dbuser \
-  --password=dbpass \
+  --password=<YOUR_DB_PASSWORD> \
   --changelog-file=changelogs/master.xml \
   update-sql > /tmp/migration.sql
 ```
@@ -451,7 +451,7 @@ docker compose run --rm liquibase \
 docker compose run --rm liquibase \
   --url=jdbc:postgresql://postgres:5432/mydb \
   --username=dbuser \
-  --password=dbpass \
+  --password=<YOUR_DB_PASSWORD> \
   --changelog-file=changelogs/master.xml \
   rollback-count 1
 
@@ -459,7 +459,7 @@ docker compose run --rm liquibase \
 docker compose run --rm liquibase \
   --url=jdbc:postgresql://postgres:5432/mydb \
   --username=dbuser \
-  --password=dbpass \
+  --password=<YOUR_DB_PASSWORD> \
   --changelog-file=changelogs/master.xml \
   rollback v1.0
 
@@ -467,7 +467,7 @@ docker compose run --rm liquibase \
 docker compose run --rm liquibase \
   --url=jdbc:postgresql://postgres:5432/mydb \
   --username=dbuser \
-  --password=dbpass \
+  --password=<YOUR_DB_PASSWORD> \
   --changelog-file=changelogs/master.xml \
   rollback-to-date "2025-01-01"
 
@@ -475,7 +475,7 @@ docker compose run --rm liquibase \
 docker compose run --rm liquibase \
   --url=jdbc:postgresql://postgres:5432/mydb \
   --username=dbuser \
-  --password=dbpass \
+  --password=<YOUR_DB_PASSWORD> \
   --changelog-file=changelogs/master.xml \
   rollback-count-sql 1
 ```
@@ -487,7 +487,7 @@ docker compose run --rm liquibase \
 docker compose run --rm liquibase \
   --url=jdbc:postgresql://postgres:5432/mydb \
   --username=dbuser \
-  --password=dbpass \
+  --password=<YOUR_DB_PASSWORD> \
   --changelog-file=changelogs/master.xml \
   tag v1.0-production
 ```
@@ -499,20 +499,20 @@ docker compose run --rm liquibase \
 docker compose run --rm liquibase \
   --url=jdbc:postgresql://postgres:5432/source_db \
   --username=dbuser \
-  --password=dbpass \
+  --password=<YOUR_DB_PASSWORD> \
   --reference-url=jdbc:postgresql://postgres:5432/target_db \
   --reference-username=dbuser \
-  --reference-password=dbpass \
+  --reference-password=<YOUR_DB_PASSWORD> \
   diff
 
 # Generate changelog from diff
 docker compose run --rm liquibase \
   --url=jdbc:postgresql://postgres:5432/source_db \
   --username=dbuser \
-  --password=dbpass \
+  --password=<YOUR_DB_PASSWORD> \
   --reference-url=jdbc:postgresql://postgres:5432/target_db \
   --reference-username=dbuser \
-  --reference-password=dbpass \
+  --reference-password=<YOUR_DB_PASSWORD> \
   diff-changelog \
   --changelog-file=generated-diff.xml
 ```
@@ -533,7 +533,7 @@ docker compose run --rm liquibase \
 docker compose run --rm liquibase \
   --url=jdbc:postgresql://postgres:5432/mydb \
   --username=dbuser \
-  --password=dbpass \
+  --password=<YOUR_DB_PASSWORD> \
   --changelog-file=changelogs/master.xml \
   db-doc /liquibase/output/dbdoc
 ```
@@ -555,7 +555,7 @@ docker compose run --rm liquibase \
 docker compose run --rm liquibase \
   --url=jdbc:postgresql://postgres:5432/mydb \
   --username=dbuser \
-  --password=dbpass \
+  --password=<YOUR_DB_PASSWORD> \
   --changelog-file=changelogs/master.xml \
   status
 
@@ -563,7 +563,7 @@ docker compose run --rm liquibase \
 docker compose run --rm liquibase \
   --url=jdbc:postgresql://postgres:5432/mydb \
   --username=dbuser \
-  --password=dbpass \
+  --password=<YOUR_DB_PASSWORD> \
   --changelog-file=changelogs/master.xml \
   status --verbose
 
@@ -571,7 +571,7 @@ docker compose run --rm liquibase \
 docker compose run --rm liquibase \
   --url=jdbc:postgresql://postgres:5432/mydb \
   --username=dbuser \
-  --password=dbpass \
+  --password=<YOUR_DB_PASSWORD> \
   --changelog-file=changelogs/master.xml \
   update-sql | tee /tmp/migration-preview.sql
 ```
@@ -583,7 +583,7 @@ docker compose run --rm liquibase \
 docker compose run --rm liquibase \
   --url=jdbc:postgresql://postgres:5432/mydb \
   --username=dbuser \
-  --password=dbpass \
+  --password=<YOUR_DB_PASSWORD> \
   --changelog-file=changelogs/master.xml \
   status
 
@@ -639,7 +639,7 @@ echo "=== All health checks passed ==="
 docker compose run --rm liquibase \
   --url=jdbc:postgresql://postgres:5432/mydb \
   --username=dbuser \
-  --password=dbpass \
+  --password=<YOUR_DB_PASSWORD> \
   --changelog-file=changelogs/master.xml \
   --log-level=DEBUG \
   update
@@ -648,7 +648,7 @@ docker compose run --rm liquibase \
 docker compose run --rm liquibase \
   --url=jdbc:postgresql://postgres:5432/mydb \
   --username=dbuser \
-  --password=dbpass \
+  --password=<YOUR_DB_PASSWORD> \
   --changelog-file=changelogs/master.xml \
   update 2>&1 | tee liquibase-$(date +%Y%m%d-%H%M%S).log
 ```
@@ -663,7 +663,7 @@ docker exec postgres psql -U dbuser -d mydb -c \
   "SELECT * FROM databasechangelog ORDER BY dateexecuted DESC LIMIT 10;"
 
 # SQL Server - View changelog history
-docker exec mssql1 /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U SA -P 'YourStrong!Passw0rd' -Q \
+docker exec mssql1 /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U SA -P '<YOUR_STRONG_PASSWORD>' -Q \
   "SELECT TOP 10 * FROM DATABASECHANGELOG ORDER BY DATEEXECUTED DESC;"
 
 # PostgreSQL - View lock status
@@ -678,7 +678,7 @@ docker exec postgres psql -U dbuser -d mydb -c \
 docker compose run --rm liquibase \
   --url=jdbc:postgresql://postgres:5432/mydb \
   --username=dbuser \
-  --password=dbpass \
+  --password=<YOUR_DB_PASSWORD> \
   release-locks
 
 # Verify lock is released
@@ -765,7 +765,7 @@ password=${DB_PASSWORD}
 
 # Set environment variables
 export DB_USERNAME=dbuser
-export DB_PASSWORD=secure_password
+export DB_PASSWORD=<YOUR_SECURE_PASSWORD>
 
 # Or use an .env file (recommended). This repo's convention is docker/liquibase/.env
 # (from this directory, that path is just .env).

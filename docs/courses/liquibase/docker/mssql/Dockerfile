@@ -269,7 +269,7 @@ CMD ["/opt/mssql/bin/sqlservr"]
 #
 #   docker run -d \
 #     --name mssql1 \
-#     -e MSSQL_SA_PASSWORD='YourStrong!Passw0rd' \
+#     -e MSSQL_SA_PASSWORD='<YOUR_STRONG_PASSWORD>' \
 #     -p 1433:1433 \
 #     -v /data/mssql/mssql1:/var/opt/mssql \
 #     gds-mssql:latest

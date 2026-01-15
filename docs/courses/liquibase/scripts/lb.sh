@@ -174,7 +174,7 @@ ENVIRONMENT=$(instance_to_env "$INSTANCE")
 
 if [[ -z "${MSSQL_LIQUIBASE_TUTORIAL_PWD:-}" ]]; then
   echo "Error: MSSQL_LIQUIBASE_TUTORIAL_PWD is not set." >&2
-  echo "Export it, e.g.: export MSSQL_LIQUIBASE_TUTORIAL_PWD='YourStrong@Passw0rd'" >&2
+  echo "Export it, e.g.: export MSSQL_LIQUIBASE_TUTORIAL_PWD='<YOUR_STRONG_PASSWORD>'" >&2
   exit 1
 fi
 
