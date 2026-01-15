@@ -1,3 +1,16 @@
+FROM python:3.11-slim AS builder
+
+# Install uv
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+
+WORKDIR /app
+
+# Copy dependency files
+COPY pyproject.toml ./
+
+# Install dependencies into a virtual environment
+RUN uv venv /app/.venv && uv pip install --python /app/.venv/bin/python -r pyproject.toml
+
 FROM python:3.11-slim
 
 # Do not generate .pyc files and ensure output is unbuffered
@@ -6,11 +19,9 @@ ENV PYTHONUNBUFFERED=1
 
 WORKDIR /app
 
-# Copy only package requirements first to leverage docker cache
-COPY requirements.txt ./requirements.txt
-
-# Install runtime dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+# Copy the virtual environment from builder
+COPY --from=builder /app/.venv /app/.venv
+ENV PATH="/app/.venv/bin:$PATH"
 
 # Create a non-root user to run the service
 RUN addgroup --system snmp && adduser --system --ingroup snmp snmp
