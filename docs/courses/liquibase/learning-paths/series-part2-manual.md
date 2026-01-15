@@ -261,8 +261,6 @@ $LIQUIBASE_TUTORIAL_DIR/scripts/deploy.sh --action update --dbi mssql_stg
 
 Verify in staging:
 
-**Recommended: Use the validation script**
-
 ```bash
 # Run the validation script
 $LIQUIBASE_TUTORIAL_DIR/scripts/validate_app_schema_objects.sh --dbi mssql_stg
@@ -302,8 +300,6 @@ $LIQUIBASE_TUTORIAL_DIR/scripts/deploy.sh --action update --dbi mssql_prd
 ```
 
 Verify in production:
-
-**Recommended: Use the validation script**
 
 ```bash
 # Run the validation script
@@ -345,9 +341,9 @@ After deploying V0001, tag the current state as a release:
 
 ```bash
 # Tag all environments with the release version
-lb --dbi mssql_dev -- tag release-v1.0
-lb --dbi mssql_stg -- tag release-v1.0
-lb --dbi mssql_prd -- tag release-v1.0
+lb --dbi mssql_dev -- tag release-v1.1
+lb --dbi mssql_stg -- tag release-v1.1
+lb --dbi mssql_prd -- tag release-v1.1
 ```
 
 ### Query DATABASECHANGELOG
@@ -357,7 +353,7 @@ View what's been deployed and when:
 **Recommended: Use the query script**
 
 ```bash
-# Run the query script (defaults to dev, or specify environment)
+# Run the query script (defaults to dev, or specify database instance name)
 $LIQUIBASE_TUTORIAL_DIR/scripts/query_databasechangelog.sh --dbi mssql_dev
 ```
 
@@ -386,7 +382,7 @@ ORDER BY ORDEREXECUTED DESC;
 **Expected output:**
 
 You should see all changesets in DATABASECHANGELOG, including:
-- V0001 changeset with `release-v1.0` tag and `EXECUTED` type
+- V0001 changeset with `release-v1.1` tag and `EXECUTED` type
 - Baseline changesets with `baseline` tag and `MARK_RAN` type
 
 The formatted output will show entries in a table with borders, ordered by execution time (most recent first).
@@ -441,7 +437,7 @@ See [Appendix: Step 9 Direct Commands (Add Rollback to V0001)](#appendix-step-9-
 ```bash
 # Preview what rollback will do
 # Note: We're rolling back to 'baseline' to remove all changes after baseline
-# You could also rollback to 'release-v1.0' to remove only changes after that tag
+# You could also rollback to 'release-v1.1' to remove only changes after that tag
 lb --dbi mssql_dev -- rollbackSQL baseline
 
 # Execute rollback to baseline (removes V0001 orders table)
@@ -460,7 +456,7 @@ WHERE schema_id = SCHEMA_ID('app') AND type = 'U';
 $LIQUIBASE_TUTORIAL_DIR/scripts/query_databasechangelog.sh --dbi mssql_dev
 ```
 
-The query should show only the baseline changesets remain - the `release-v1.0` tagged row (V0001-add-orders-table) should be gone.
+The query should show only the baseline changesets remain - the `release-v1.1` tagged row (V0001-add-orders-table) should be gone.
 
 > **Note:** `deploy.sh --action rollback` automatically takes a snapshot after rollback, capturing the post-rollback state for drift detection.
 
@@ -471,13 +467,13 @@ The query should show only the baseline changesets remain - the `release-v1.0` t
 $LIQUIBASE_TUTORIAL_DIR/scripts/deploy.sh --action update --dbi mssql_dev
 
 # Re-tag the release
-lb --dbi mssql_dev -- tag release-v1.0
+lb --dbi mssql_dev -- tag release-v1.1
 
 # Verify the release row is back in DATABASECHANGELOG
 $LIQUIBASE_TUTORIAL_DIR/scripts/query_databasechangelog.sh --dbi mssql_dev
 ```
 
-The query should now show the `release-v1.0` tagged row (V0001-add-orders-table) is back, highlighted in yellow.
+The query should now show the `release-v1.1` tagged row (V0001-add-orders-table) is back, highlighted in yellow.
 
 ---
 
@@ -675,7 +671,10 @@ Drift Summary
 ========================================
 ```
 
-> **Best Practices:** For guidance on version control, snapshots, and drift detection workflows, see [Appendix: Best Practices](#appendix-best-practices).
+> **Best Practices:** For guidance on version control, snapshots, and drift detection workflows, see [Appendix: Best Practices](#a
+
+
+ppendix-best-practices).
 
 ---
 
@@ -705,7 +704,7 @@ See [Appendix: Step 11 Direct Commands (Create V0002 Change File)](#appendix-ste
 
 ```bash
 $LIQUIBASE_TUTORIAL_DIR/scripts/deploy.sh --action update --dbi mssql_dev
-lb --dbi mssql_dev -- tag release-v1.1
+lb --dbi mssql_dev -- tag release-v1.2
 ```
 
 This will:
@@ -713,7 +712,7 @@ This will:
 - Execute V0002 SQL to create the `IX_orders_order_date` index
 - Record the changeset in the `DATABASECHANGELOG` table
 - Create a timestamped snapshot for drift detection
-- Apply the `release-v1.1` tag for rollback reference
+- Apply the `release-v1.2` tag for rollback reference
 
 **Validate Development:**
 
@@ -732,11 +731,11 @@ After validating development, promote the changes:
 ```bash
 # Deploy to staging
 $LIQUIBASE_TUTORIAL_DIR/scripts/deploy.sh --action update --dbi mssql_stg
-lb --dbi mssql_stg -- tag release-v1.1
+lb --dbi mssql_stg -- tag release-v1.2
 
 # Deploy to production
 $LIQUIBASE_TUTORIAL_DIR/scripts/deploy.sh --action update --dbi mssql_prd
-lb --dbi mssql_prd -- tag release-v1.1
+lb --dbi mssql_prd -- tag release-v1.2
 ```
 
 **Validate All Environments:**
@@ -752,7 +751,7 @@ $LIQUIBASE_TUTORIAL_DIR/scripts/query_databasechangelog.sh --dbi mssql_dev,mssql
 **Expected Result:**
 
 - All three database instances have the new `IX_orders_order_date` index
-- `DATABASECHANGELOG` in each instance shows V0002 changeset with `release-v1.1` tag
+- `DATABASECHANGELOG` in each instance shows V0002 changeset with `release-v1.2` tag
 - Snapshots created for each instance enable future drift detection
 
 > **Tip:** You can deploy to multiple instances at once: `deploy.sh --action update --dbi mssql_dev,mssql_stg,mssql_prd`
@@ -825,6 +824,8 @@ This removes:
 ## Appendix: Best Practices
 
 Back to: [Step 10: Drift Detection](#step-10-drift-detection)
+
+> **See also:** [Versioning and Changeset Best Practices](../../../best-practices/liquibase/versioning-and-changesets.md) for versioning conventions, changeset numbering, and release tag guidelines.
 
 ### Version Control Guidelines
 
