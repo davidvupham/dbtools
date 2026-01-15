@@ -11,9 +11,12 @@
 ![Topic](https://img.shields.io/badge/Topic-Migration-purple)
  
 > [!IMPORTANT]
-> **Related Docs:** [Dependency Management](./uv-dependency-management.md) | [Workspaces](./uv-workspaces.md)
+> **Related Docs:** [Migrate from Distributions](./uv-migrate-from-distributions.md) | [Dependency Management](./uv-dependency-management.md) | [Workspaces](./uv-workspaces.md)
 
 This guide walks you through migrating existing Python projects to UV from traditional tools like pip, pip-tools, Poetry, or Pipenv.
+
+> [!NOTE]
+> For migrating from Anaconda, python.org, Microsoft Store Python, or system Python, see [Migrate from Python Distributions](./uv-migrate-from-distributions.md).
 
 ## Table of contents
 

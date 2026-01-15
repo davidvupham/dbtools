@@ -24,7 +24,8 @@ Task-oriented guides for common UV workflows and integrations.
 
 | Guide | Description |
 |-------|-------------|
-| [Migrate from pip/Poetry](./uv-migrate-from-pip.md) | Step-by-step migration from traditional tools |
+| [Migrate from pip/Poetry](./uv-migrate-from-pip.md) | Step-by-step migration from pip, Poetry, Pipenv, pip-tools |
+| [Migrate from Python Distributions](./uv-migrate-from-distributions.md) | Migration from Anaconda, python.org, Microsoft Store, system Python |
 | [Docker Integration](./uv-docker-integration.md) | Best practices for UV in Docker containers |
 | [CI/CD Integration](./uv-ci-cd-integration.md) | GitHub Actions, GitLab CI, Azure DevOps, and more |
 | [Workspaces (Monorepos)](./uv-workspaces.md) | Managing multiple packages in a single repository |
