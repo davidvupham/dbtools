@@ -60,6 +60,7 @@ USER=${USER_NAME:-SA}
 DB=""
 QUERY=""
 SQL_FILE=""
+DEBUG=false
 
 print_usage() {
   cat <<'EOF'
@@ -74,6 +75,7 @@ Options:
   --container    <name>          Container name (default: mssql_dev)
   --server       <host>          SQL Server hostname (default: localhost)
   --user         <name>          SQL login user (default: SA)
+  --debug                        Show debug info for troubleshooting
   -h, --help                     Show this help and exit
 
 Environment:
@@ -116,6 +118,8 @@ while [[ $# -gt 0 ]]; do
       SERVER="$2"; shift 2;;
     --user)
       USER="$2"; shift 2;;
+    --debug)
+      DEBUG=true; shift;;
     -h|--help)
       print_usage; exit 0;;
     --)
@@ -185,6 +189,26 @@ if [[ -n "$SQL_FILE" ]]; then
 fi
 
 # Check container status
+if [[ "$DEBUG" == true ]]; then
+  echo "=== DEBUG INFO ===" >&2
+  echo "Container runtime: $CR" >&2
+  echo "Container runtime path: $(command -v "$CR")" >&2
+  echo "Looking for container: '$CONTAINER_NAME'" >&2
+  echo "Command: $CR ps --format '{{.Names}}'" >&2
+  echo "Output:" >&2
+  "$CR" ps --format '{{.Names}}' 2>&1 | while IFS= read -r line; do
+    echo "  '$line' (length: ${#line})" >&2
+  done
+  echo "Grep pattern: ^${CONTAINER_NAME}\$" >&2
+  echo "Grep result:" >&2
+  if "$CR" ps --format '{{.Names}}' 2>&1 | grep -q "^${CONTAINER_NAME}$"; then
+    echo "  MATCH FOUND" >&2
+  else
+    echo "  NO MATCH" >&2
+  fi
+  echo "==================" >&2
+fi
+
 if ! "$CR" ps --format '{{.Names}}' | grep -q "^${CONTAINER_NAME}$"; then
   echo "Error: Container '${CONTAINER_NAME}' is not running." >&2
   echo "Start it first (see tutorial Step 0)." >&2
