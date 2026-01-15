@@ -56,7 +56,7 @@ CR="$(detect_runtime)"
 CONTAINER_NAME=${CONTAINER_NAME:-mssql_dev}
 SQLCMD_BIN=/opt/mssql-tools18/bin/sqlcmd
 SERVER=${SERVER:-localhost}
-USER=${USER_NAME:-SA}
+SQL_USER=${SQL_USER_NAME:-SA}
 DB=""
 QUERY=""
 SQL_FILE=""
@@ -117,7 +117,7 @@ while [[ $# -gt 0 ]]; do
     --server)
       SERVER="$2"; shift 2;;
     --user)
-      USER="$2"; shift 2;;
+      SQL_USER="$2"; shift 2;;
     --debug)
       DEBUG=true; shift;;
     -h|--help)
@@ -216,7 +216,7 @@ if ! "$CR" ps --format '{{.Names}}' | grep -q "^${CONTAINER_NAME}$"; then
 fi
 
 # Build sqlcmd args
-SQLCMD_ARGS=("${SQLCMD_BIN}" -C -S "${SERVER}" -U "${USER}" -P "${MSSQL_LIQUIBASE_TUTORIAL_PWD}")
+SQLCMD_ARGS=("${SQLCMD_BIN}" -C -S "${SERVER}" -U "${SQL_USER}" -P "${MSSQL_LIQUIBASE_TUTORIAL_PWD}")
 if [[ -n "$DB" ]]; then
   SQLCMD_ARGS+=( -d "$DB" )
 fi
