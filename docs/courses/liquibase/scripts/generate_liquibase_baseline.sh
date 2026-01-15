@@ -31,7 +31,7 @@ echo
 
 # Use lb.sh wrapper to run Liquibase generateChangeLog
 # IMPORTANT: Use --include-schema=true to include schema names in SQL (app. prefix)
-"$SCRIPT_DIR/lb.sh" -e dev -- \
+"$SCRIPT_DIR/lb.sh" --dbi mssql_dev -- \
     --changelog-file=/data/platform/mssql/database/orderdb/changelog/baseline/V0000__baseline.mssql.sql \
     --schemas=app \
     --include-schema=true \

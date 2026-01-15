@@ -194,8 +194,6 @@ This tutorial uses three dedicated SQL Server containers (one per environment) t
 
 #### Build and start SQL Server containers
 
-**Recommended: Use the step script**
-
 ```bash
 # Run the automated step script
 $LIQUIBASE_TUTORIAL_DIR/scripts/start_mssql_containers.sh
@@ -349,8 +347,6 @@ $LIQUIBASE_TUTORIAL_DATA_DIR/              # e.g., /data/$USER/liquibase_tutoria
 
 Create the `orderdb` database on each SQL Server container to represent dev, staging, and production environments.
 
-**Recommended: Use the step script**
-
 ```bash
 # Run the automated step script
 $LIQUIBASE_TUTORIAL_DIR/scripts/create_orderdb_database.sh
@@ -429,7 +425,7 @@ See [Appendix: Step 2 Direct Commands (Populate Development)](#appendix-step-2-d
 > podman exec -it mssql_dev /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P "$MSSQL_LIQUIBASE_TUTORIAL_PWD" -d orderdb
 >
 > # Or run a single query
-> sqlcmd-tutorial -S mssql_dev -Q "SELECT * FROM app.customer;"
+> sqlcmd-tutorial -S mssql_dev -Q "SELECT * FROM orderdb.app.customer;"
 > ```
 >
 > In the interactive session, type `GO` after each query to execute, and `EXIT` to quit.
@@ -467,8 +463,6 @@ See [Appendix: Direct Creation of Liquibase Properties Files](#appendix-direct-c
 ## Step 4: Generate Baseline from Development
 
 Now use Liquibase to capture the current state of development as a **baseline**:
-
-**Recommended: Use the step script**
 
 ```bash
 # Run the automated step script
