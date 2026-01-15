@@ -123,7 +123,7 @@ This script will:
 **Option B: Set manually**
 
 ```bash
-export MSSQL_SA_PASSWORD='YourStrong@Passw0rd123'
+export MSSQL_SA_PASSWORD='<YOUR_STRONG_PASSWORD>'
 ```
 
 **Password Requirements:**
@@ -219,7 +219,7 @@ This means you forgot to set the password. Stop the container, set the password,
 
 ```bash
 docker-compose down
-export MSSQL_SA_PASSWORD='YourStrong@Passw0rd123'
+export MSSQL_SA_PASSWORD='<YOUR_STRONG_PASSWORD>'
 docker-compose up -d
 ```
 
@@ -317,7 +317,7 @@ The dev container must publish port 1433 to the WSL host. This is configured in 
 From a WSL terminal (outside VS Code):
 
 ```bash
-sqlcmd -C -S localhost,1433 -U SA -P 'YourStrong!Passw0rd'
+sqlcmd -C -S localhost,1433 -U SA -P '<YOUR_STRONG_PASSWORD>'
 ```
 
 **Connection flow:**
@@ -587,10 +587,10 @@ docker events --filter container=mssql1 --since 1h
 
 ⚠️ **Important Security Considerations:**
 
-1. **Default Password**: The default password `YourStrong!Passw0rd` is for development only. Change it for production:
+1. **Default Password**: There is no default password. You must set one. Change it for production:
 
    ```bash
-   export MSSQL_SA_PASSWORD='YourProductionPassword123!'
+   export MSSQL_SA_PASSWORD='<YOUR_PRODUCTION_PASSWORD>'
    docker-compose up -d
    ```
 

@@ -80,14 +80,22 @@ CLEANUP_SCRIPT="${LIQUIBASE_TUTORIAL_DIR}/scripts/cleanup_validation.sh"
 if [ -f "$CLEANUP_SCRIPT" ]; then
     log "Running cleanup script to ensure clean environment..."
     # Run cleanup non-interactively (skip log file removal prompt)
-    export MSSQL_LIQUIBASE_TUTORIAL_PWD="${MSSQL_LIQUIBASE_TUTORIAL_PWD:-TestPassword123!}"
+    if [ -z "${MSSQL_LIQUIBASE_TUTORIAL_PWD:-}" ]; then
+        log "Error: MSSQL_LIQUIBASE_TUTORIAL_PWD must be set"
+        exit 1
+    fi
+    export MSSQL_LIQUIBASE_TUTORIAL_PWD="${MSSQL_LIQUIBASE_TUTORIAL_PWD}"
     echo "n" | bash "$CLEANUP_SCRIPT" >> "$VALIDATION_LOG" 2>&1 || log "Warning: Cleanup script had issues (may be normal if nothing to clean)"
     log "✓ Cleanup complete"
 else
     log "⚠ Cleanup script not found, attempting manual cleanup..."
     # Manual cleanup fallback
     cd "${LIQUIBASE_TUTORIAL_DIR}/docker" 2>/dev/null || true
-    export MSSQL_LIQUIBASE_TUTORIAL_PWD="${MSSQL_LIQUIBASE_TUTORIAL_PWD:-TestPassword123!}"
+    if [ -z "${MSSQL_LIQUIBASE_TUTORIAL_PWD:-}" ]; then
+        log "Error: MSSQL_LIQUIBASE_TUTORIAL_PWD must be set"
+        exit 1
+    fi
+    export MSSQL_LIQUIBASE_TUTORIAL_PWD="${MSSQL_LIQUIBASE_TUTORIAL_PWD}"
     docker compose down -v >> "$VALIDATION_LOG" 2>&1 || true
     docker ps -a --filter "name=mssql_" --format "{{.Names}}" | xargs -r docker rm -f >> "$VALIDATION_LOG" 2>&1 || true
     log "✓ Manual cleanup complete"
@@ -125,7 +133,11 @@ fi
 if [ -f "$LIQUIBASE_TUTORIAL_DIR/scripts/setup_tutorial.sh" ]; then
     log "Sourcing setup_tutorial.sh"
     # Set password for non-interactive execution
-    export MSSQL_LIQUIBASE_TUTORIAL_PWD="${MSSQL_LIQUIBASE_TUTORIAL_PWD:-TestPassword123!}"
+    if [ -z "${MSSQL_LIQUIBASE_TUTORIAL_PWD:-}" ]; then
+        log "Error: MSSQL_LIQUIBASE_TUTORIAL_PWD must be set"
+        exit 1
+    fi
+    export MSSQL_LIQUIBASE_TUTORIAL_PWD="${MSSQL_LIQUIBASE_TUTORIAL_PWD}"
     source "$LIQUIBASE_TUTORIAL_DIR/scripts/setup_tutorial.sh" >> "$VALIDATION_LOG" 2>&1 || log "Warning: setup_tutorial.sh had issues"
 fi
 
@@ -250,7 +262,11 @@ log "Cleaning up containers and resources after validation..."
 CLEANUP_SCRIPT="${LIQUIBASE_TUTORIAL_DIR}/scripts/cleanup_validation.sh"
 if [ -f "$CLEANUP_SCRIPT" ]; then
     log "Running cleanup script..."
-    export MSSQL_LIQUIBASE_TUTORIAL_PWD="${MSSQL_LIQUIBASE_TUTORIAL_PWD:-TestPassword123!}"
+    if [ -z "${MSSQL_LIQUIBASE_TUTORIAL_PWD:-}" ]; then
+        log "Error: MSSQL_LIQUIBASE_TUTORIAL_PWD must be set"
+        exit 1
+    fi
+    export MSSQL_LIQUIBASE_TUTORIAL_PWD="${MSSQL_LIQUIBASE_TUTORIAL_PWD}"
     # Run cleanup non-interactively (skip log file removal prompt)
     echo "n" | bash "$CLEANUP_SCRIPT" >> "$VALIDATION_LOG" 2>&1 || log "Warning: Cleanup script had issues"
     log "✓ Cleanup complete"
@@ -258,7 +274,11 @@ else
     log "⚠ Cleanup script not found, attempting manual cleanup..."
     # Manual cleanup fallback
     cd "${LIQUIBASE_TUTORIAL_DIR}/docker" 2>/dev/null || true
-    export MSSQL_LIQUIBASE_TUTORIAL_PWD="${MSSQL_LIQUIBASE_TUTORIAL_PWD:-TestPassword123!}"
+    if [ -z "${MSSQL_LIQUIBASE_TUTORIAL_PWD:-}" ]; then
+        log "Error: MSSQL_LIQUIBASE_TUTORIAL_PWD must be set"
+        exit 1
+    fi
+    export MSSQL_LIQUIBASE_TUTORIAL_PWD="${MSSQL_LIQUIBASE_TUTORIAL_PWD}"
     docker compose down -v >> "$VALIDATION_LOG" 2>&1 || true
     docker ps -a --filter "name=mssql_" --format "{{.Names}}" | xargs -r docker rm -f >> "$VALIDATION_LOG" 2>&1 || true
     log "✓ Manual cleanup complete"

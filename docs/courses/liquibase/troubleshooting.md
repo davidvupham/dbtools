@@ -234,7 +234,7 @@ type lb
 
 ```bash
 # Set password (minimum 8 chars, uppercase, lowercase, number)
-export MSSQL_LIQUIBASE_TUTORIAL_PWD="YourStr0ngP@ssword"
+export MSSQL_LIQUIBASE_TUTORIAL_PWD="<YOUR_STRONG_PASSWORD>"
 
 # Or use the prompt script
 $LIQUIBASE_TUTORIAL_DIR/scripts/prompt_mssql_password.sh

@@ -107,7 +107,7 @@ Logs are timestamped for easy identification and are preserved for review and de
 
 ```bash
 export LIQUIBASE_TUTORIAL_DIR="/path/to/repo/docs/courses/liquibase"
-export MSSQL_LIQUIBASE_TUTORIAL_PWD="YourPassword123!"
+export MSSQL_LIQUIBASE_TUTORIAL_PWD="<YOUR_STRONG_PASSWORD>"
 bash "$LIQUIBASE_TUTORIAL_DIR/scripts/validate_tutorial_full.sh"
 ```
 

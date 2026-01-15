@@ -37,10 +37,10 @@ This report documents the validation of the Liquibase Tutorial Part 1 on Red Hat
 ```bash
 LIQUIBASE_TUTORIAL_DIR="/home/dpham/src/dbtools/docs/courses/liquibase"
 LIQUIBASE_TUTORIAL_DATA_DIR="/data/dpham/liquibase_tutorial"
-MSSQL_LIQUIBASE_TUTORIAL_PWD="MssqlPass123$"
+MSSQL_LIQUIBASE_TUTORIAL_PWD="******"
 ```
 
-**Note:** Changed password from `TestPassword123!` to `MssqlPass123$` to avoid shell interpretation issues with `!`.
+**Note:** Changed password from `******` to `******` to avoid shell interpretation issues with `!`.
 
 ---
 
@@ -92,21 +92,21 @@ Started containers manually using `podman run` with port mapping:
 ```bash
 podman run -d --name mssql_dev -p 14331:1433 \
   -e ACCEPT_EULA=Y \
-  -e MSSQL_SA_PASSWORD='MssqlPass123$' \
+  -e MSSQL_SA_PASSWORD='******' \
   -e MSSQL_PID=Developer \
   -v "$LIQUIBASE_TUTORIAL_DATA_DIR/mssql_dev:/var/opt/mssql:Z,U" \
   mssql_tutorial:latest
 
 podman run -d --name mssql_stg -p 14332:1433 \
   -e ACCEPT_EULA=Y \
-  -e MSSQL_SA_PASSWORD='MssqlPass123$' \
+  -e MSSQL_SA_PASSWORD='******' \
   -e MSSQL_PID=Developer \
   -v "$LIQUIBASE_TUTORIAL_DATA_DIR/mssql_stg:/var/opt/mssql:Z,U" \
   mssql_tutorial:latest
 
 podman run -d --name mssql_prd -p 14333:1433 \
   -e ACCEPT_EULA=Y \
-  -e MSSQL_SA_PASSWORD='MssqlPass123$' \
+  -e MSSQL_SA_PASSWORD='******' \
   -e MSSQL_PID=Developer \
   -v "$LIQUIBASE_TUTORIAL_DATA_DIR/mssql_prd:/var/opt/mssql:Z,U" \
   mssql_tutorial:latest

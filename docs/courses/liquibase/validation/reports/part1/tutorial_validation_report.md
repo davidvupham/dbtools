@@ -315,7 +315,7 @@ This script:
 **Usage:**
 ```bash
 export LIQUIBASE_TUTORIAL_DIR="/path/to/repo/docs/courses/liquibase"
-export MSSQL_LIQUIBASE_TUTORIAL_PWD="YourPassword123!"
+export MSSQL_LIQUIBASE_TUTORIAL_PWD="******"
 source "$LIQUIBASE_TUTORIAL_DIR/scripts/setup_tutorial.sh"
 "$LIQUIBASE_TUTORIAL_DIR/scripts/validate_tutorial_full.sh"
 ```

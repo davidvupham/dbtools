@@ -30,7 +30,12 @@ else
 fi
 
 # Set password for docker-compose (required even for down)
-export MSSQL_LIQUIBASE_TUTORIAL_PWD="${MSSQL_LIQUIBASE_TUTORIAL_PWD:-TestPassword123!}"
+# Set password for docker-compose (required even for down)
+if [ -z "${MSSQL_LIQUIBASE_TUTORIAL_PWD:-}" ]; then
+    echo -e "${RED}ERROR: MSSQL_LIQUIBASE_TUTORIAL_PWD must be set${NC}"
+    exit 1
+fi
+export MSSQL_LIQUIBASE_TUTORIAL_PWD="${MSSQL_LIQUIBASE_TUTORIAL_PWD}"
 
 # Step 1: Stop and remove containers via docker-compose
 echo -e "${YELLOW}Step 1: Stopping containers via docker-compose...${NC}"

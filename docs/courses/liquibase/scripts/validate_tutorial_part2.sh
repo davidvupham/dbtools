@@ -125,7 +125,12 @@ fi
 # Source setup script
 if [ -f "$LIQUIBASE_TUTORIAL_DIR/scripts/setup_tutorial.sh" ]; then
     log "Sourcing setup_tutorial.sh"
-    export MSSQL_LIQUIBASE_TUTORIAL_PWD="${MSSQL_LIQUIBASE_TUTORIAL_PWD:-TestPassword123!}"
+    if [ -z "${MSSQL_LIQUIBASE_TUTORIAL_PWD:-}" ]; then
+        log "Error: MSSQL_LIQUIBASE_TUTORIAL_PWD must be set"
+        ((ISSUES_FOUND++))
+        exit 1
+    fi
+    export MSSQL_LIQUIBASE_TUTORIAL_PWD="${MSSQL_LIQUIBASE_TUTORIAL_PWD}"
     # Source in a way that captures errors
     if ! source "$LIQUIBASE_TUTORIAL_DIR/scripts/setup_tutorial.sh" >> "$VALIDATION_LOG" 2>&1; then
         log "⚠ Warning: setup_tutorial.sh had issues (may be normal if already sourced)"

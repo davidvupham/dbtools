@@ -49,17 +49,20 @@ check_data_permissions() {
 # IS_SOURCED flag already set above
 
 # Prompt for SQL password (hidden input)
-DEFAULT_STRONG_PWD="MssqlPass123$"
-
 if [[ -z "${MSSQL_LIQUIBASE_TUTORIAL_PWD:-}" ]]; then
-  read -s -rp "Enter SQL Server SA password (default: ${DEFAULT_STRONG_PWD}): " INPUT_PWD
-  echo
+  while [[ -z "${INPUT_PWD:-}" ]]; do
+    read -s -rp "Enter SQL Server SA password (required): " INPUT_PWD
+    echo
+    if [[ -z "${INPUT_PWD:-}" ]]; then
+      echo "Error: Password cannot be empty." >&2
+    fi
+  done
 else
   read -s -rp "Enter SQL Server SA password [set in env]: " INPUT_PWD || true
   echo
 fi
 
-PASSWORD_VALUE="${INPUT_PWD:-${MSSQL_LIQUIBASE_TUTORIAL_PWD:-$DEFAULT_STRONG_PWD}}"
+PASSWORD_VALUE="${INPUT_PWD:-${MSSQL_LIQUIBASE_TUTORIAL_PWD}}"
 
 if [[ -z "${PASSWORD_VALUE}" ]]; then
   echo "Error: Password is required." >&2
