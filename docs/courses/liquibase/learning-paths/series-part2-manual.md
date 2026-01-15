@@ -671,10 +671,7 @@ Drift Summary
 ========================================
 ```
 
-> **Best Practices:** For guidance on version control, snapshots, and drift detection workflows, see [Appendix: Best Practices](#a
-
-
-ppendix-best-practices).
+> **Best Practices:** For guidance on version control, snapshots, and drift detection workflows, see [Appendix: Best Practices](#appendix-best-practices).
 
 ---
 
