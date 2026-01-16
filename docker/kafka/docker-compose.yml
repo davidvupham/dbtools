@@ -32,7 +32,8 @@ services:
     # Image: Official Confluent Zookeeper image
     # - Version 7.6.0 matches our Kafka version
     # - Provides stable, production-ready Zookeeper
-    image: confluentinc/cp-zookeeper:7.6.0
+    # - REGISTRY_PREFIX supports corporate proxy (e.g., xyz.jfrog.io/docker-proxy/)
+    image: ${REGISTRY_PREFIX:-}confluentinc/cp-zookeeper:7.6.0
 
     # Container name for easy reference
     # - Use 'docker logs zookeeper' to view logs
@@ -126,6 +127,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        REGISTRY_PREFIX: ${REGISTRY_PREFIX:-docker.io/}
 
     # Image name after building
     # - Tagged as gds-kafka:latest

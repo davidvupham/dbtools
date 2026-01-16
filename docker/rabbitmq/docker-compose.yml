@@ -3,6 +3,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        REGISTRY_PREFIX: ${REGISTRY_PREFIX:-docker.io/library/}
     image: gds-rabbitmq:latest
     container_name: rabbitmq1
     environment:

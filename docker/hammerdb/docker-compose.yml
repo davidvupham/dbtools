@@ -1,8 +1,10 @@
 services:
   hammerdb:
     build:
-      context: /workspaces/dbtools
+      context: ../..
       dockerfile: docker/hammerdb/Dockerfile
+      args:
+        REGISTRY_PREFIX: ${REGISTRY_PREFIX:-docker.io/library/}
     container_name: hammerdb
     stdin_open: true
     tty: true

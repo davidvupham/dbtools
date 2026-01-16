@@ -1,6 +1,10 @@
 services:
   psql1:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        REGISTRY_PREFIX: ${REGISTRY_PREFIX:-docker.io/library/}
     image: gds-postgresql:latest
     container_name: psql1
     environment:
@@ -22,7 +26,11 @@ services:
       - devcontainer-network
 
   psql2:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        REGISTRY_PREFIX: ${REGISTRY_PREFIX:-docker.io/library/}
     image: gds-postgresql:latest
     container_name: psql2
     environment:

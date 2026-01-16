@@ -3,6 +3,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        REGISTRY_PREFIX: ${REGISTRY_PREFIX:-docker.io/library/}
     image: gds-mongodb:latest
     container_name: mongodb1
     environment:
@@ -24,6 +26,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        REGISTRY_PREFIX: ${REGISTRY_PREFIX:-docker.io/library/}
     image: gds-mongodb:latest
     container_name: mongodb2
     environment:
@@ -45,6 +49,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        REGISTRY_PREFIX: ${REGISTRY_PREFIX:-docker.io/library/}
     image: gds-mongodb:latest
     container_name: mongodb3
     environment:
