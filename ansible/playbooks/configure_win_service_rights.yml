@@ -1,0 +1,63 @@
+# Usage:
+#   ansible-playbook configure_win_service_rights.yml -e "target_hosts=production"
+#   ansible-playbook configure_win_service_rights.yml -e "target_hosts=sql_servers"
+#
+# To run for a single specific service (Recommended):
+#    ansible-playbook configure_win_service_rights.yml \
+#      -e "target_hosts=sql_servers target_service_name=SQLSentryServer"
+#
+# To remove user rights for a service (Recommended):
+#    ansible-playbook configure_win_service_rights.yml \
+#      -e "target_hosts=sql_servers target_service_name=SQLSentryServer target_state=absent"
+#
+# To run for a custom service (overriding the service list directly):
+#    ansible-playbook configure_win_service_rights.yml \
+#      -e "target_hosts=sql_servers" \
+#      -e '{"win_service_rights_assignments": [ \
+#            {"service_name": "MyCustomService", \
+#             "rights": ["SeServiceLogonRight"]}]}'
+#
+# To remove user rights for a service (Advanced - explicit override):
+#    ansible-playbook configure_win_service_rights.yml \
+#      -e "target_hosts=sql_servers" \
+#      -e '{"win_service_rights_assignments": [ \
+#            {"service_name": "SQLSentryServer", \
+#             "state": "absent", \
+#             "rights": ["SeServiceLogonRight"]}]}'
+
+- name: Configure Windows Service Account User Rights
+  hosts: "{{ target_hosts }}"
+  gather_facts: false
+
+  vars:
+    # Customize these variables as needed.
+    # Each item is one Windows service + desired rights state for the account that runs it.
+    win_service_rights_assignments:
+      - service_name: MSSQLSERVER
+        state: present
+        rights:
+          - SeServiceLogonRight
+          - SeManageVolumePrivilege
+          - SeLockMemoryPrivilege
+
+      - service_name: SQLSentryServer
+        state: present
+        rights:
+          - SeServiceLogonRight
+
+      - service_name: IgnitePl
+        state: present
+        rights:
+          - SeServiceLogonRight
+
+  roles:
+    - win_service_rights
+
+  # Example: remove two rights from MSSQLSERVER (uncomment to use)
+  # vars:
+  #   win_service_rights_assignments:
+  #     - service_name: MSSQLSERVER
+  #       state: absent
+  #       rights:
+  #         - SeManageVolumePrivilege
+  #         - SeLockMemoryPrivilege

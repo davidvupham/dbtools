@@ -1,17 +1,17 @@
 ---
-# defaults file for windows_service_account_rights
+# defaults file for win_service_rights
 
 # Manage Windows user rights for the account running one or more Windows services.
 #
 # Variable schema:
-#   windows_service_account_rights_assignments:
+#   win_service_rights_assignments:
 #     - service_name: <Windows service name>
 #       state: present|absent            # present=grant, absent=revoke (default: present)
 #       rights: [SeServiceLogonRight, ...]  # one or more user rights to manage
 #       service_account: ""             # optional override (DOMAIN\\user, .\\user, HOST\\user)
 #       fail_on_builtin_account: true   # fail if service runs as LocalSystem/LocalService/NetworkService
 
-windows_service_account_rights_assignments:
+win_service_rights_assignments:
   - service_name: MSSQLSERVER
     state: present
     rights:

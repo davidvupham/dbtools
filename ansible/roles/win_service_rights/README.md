@@ -1,4 +1,4 @@
-# Windows Service Account Rights
+# Windows Service Account Rights (win_service_rights)
 
 An Ansible role to retrieve the "Log On As" account for one or more Windows services and add/remove Windows user rights assignments for those accounts.
 
@@ -23,9 +23,9 @@ This is useful for SQL Server, monitoring agents, and any other service that run
 
 ### Required Variables
 
-You must provide (or accept the defaults for) `windows_service_account_rights_assignments`.
+You must provide (or accept the defaults for) `win_service_rights_assignments`.
 
-### Primary Variable: `windows_service_account_rights_assignments`
+### Primary Variable: `win_service_rights_assignments`
 
 This is a list of "assignments". Each assignment describes:
 
@@ -34,7 +34,7 @@ This is a list of "assignments". Each assignment describes:
 - which rights to manage (`rights` list)
 
 ```yaml
-windows_service_account_rights_assignments:
+win_service_rights_assignments:
   - service_name: MSSQLSERVER
     state: present
     rights:
@@ -72,7 +72,7 @@ By default, the role is configured with these services:
 - name: Configure service account user rights
   hosts: sql_servers
   roles:
-    - windows_service_account_rights
+    - win_service_rights
 ```
 
 ### Configure multiple services (recommended)
@@ -82,9 +82,9 @@ By default, the role is configured with these services:
 - name: Configure multiple services in one run
   hosts: windows_servers
   roles:
-    - role: windows_service_account_rights
+    - role: win_service_rights
       vars:
-        windows_service_account_rights_assignments:
+        win_service_rights_assignments:
           - service_name: MSSQLSERVER
             state: present
             rights:
@@ -110,9 +110,9 @@ By default, the role is configured with these services:
 - name: Remove rights from a service account
   hosts: sql_servers
   roles:
-    - role: windows_service_account_rights
+    - role: win_service_rights
       vars:
-        windows_service_account_rights_assignments:
+        win_service_rights_assignments:
           - service_name: MSSQLSERVER
             state: absent
             rights:
@@ -127,9 +127,9 @@ By default, the role is configured with these services:
 - name: Configure named SQL Server instance
   hosts: sql_servers
   roles:
-    - role: windows_service_account_rights
+    - role: win_service_rights
       vars:
-        windows_service_account_rights_assignments:
+        win_service_rights_assignments:
           - service_name: "MSSQL$PROD"
             state: present
             rights:
@@ -147,9 +147,9 @@ Use this when you want to manage rights for a specific account directly.
 - name: Override service account
   hosts: windows
   roles:
-    - role: windows_service_account_rights
+    - role: win_service_rights
       vars:
-        windows_service_account_rights_assignments:
+        win_service_rights_assignments:
           - service_name: MSSQLSERVER
             state: present
             service_account: "DOMAIN\\sqlsvc"
@@ -164,17 +164,15 @@ Use this when you want to manage rights for a specific account directly.
 2. Decide the desired `state`:
    - `present` to grant
    - `absent` to remove
-3. Add an item under `windows_service_account_rights_assignments`:
+3. Add an item under `win_service_rights_assignments`:
 
 ```yaml
-windows_service_account_rights_assignments:
+win_service_rights_assignments:
   - service_name: MyCustomService
     state: present
     rights:
       - SeServiceLogonRight
 ```
-
-
 
 ## User Rights Explained
 

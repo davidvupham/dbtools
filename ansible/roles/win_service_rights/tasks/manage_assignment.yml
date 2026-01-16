@@ -1,5 +1,5 @@
 ---
-# This task file is executed once per item in windows_service_account_rights_assignments.
+# This task file is executed once per item in win_service_rights_assignments.
 #
 # The current assignment is available as the variable named "assignment".
 # Example assignment structure:
@@ -25,7 +25,7 @@
       - assignment.rights is iterable
       - (assignment.rights | length) > 0
     fail_msg: >-
-      Each item in windows_service_account_rights_assignments must be a dict like:
+      Each item in win_service_rights_assignments must be a dict like:
         - service_name: <service>
           state: present|absent
           rights: [SeServiceLogonRight, ...]
@@ -34,8 +34,8 @@
 # input, and translate it to the win_user_right module's "action" (add/remove).
 - name: Normalize assignment state and compute module action
   ansible.builtin.set_fact:
-    _wsar_state: "{{ assignment.state | default('present') | lower }}"
-    _wsar_action: "{{ 'add' if (assignment.state | default('present') | lower) == 'present' else 'remove' }}"
+    _wsar_state: "{{ target_state | default(assignment.state) | default('present') | lower }}"
+    _wsar_action: "{{ 'add' if (target_state | default(assignment.state) | default('present') | lower) == 'present' else 'remove' }}"
 
 - name: Validate assignment state
   ansible.builtin.assert:

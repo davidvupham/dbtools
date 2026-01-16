@@ -288,6 +288,38 @@ ansible-playbook -i inventory/test test_single_service_present.yml
 - First run may report `changed=true`
 - Second run should be `changed=false` (or minimal/no changes)
 
+### TC8: Target specific service (filtering)
+
+**Objective:** Validate that `target_service_name` strictly limits execution to that service.
+
+**Steps:**
+
+```bash
+ansible-playbook -i inventory/test configure_win_service_rights.yml \
+  -e "target_hosts=windows target_service_name=SQLSentryServer"
+```
+
+**Expected results:**
+
+- Role only processes `SQLSentryServer`
+- Other configured services (e.g., MSSQLSERVER) are **ignored** (skipped)
+
+### TC9: Force revoke via target_state
+
+**Objective:** Validate that `target_state=absent` overrides the default `present` state.
+
+**Steps:**
+
+```bash
+ansible-playbook -i inventory/test configure_win_service_rights.yml \
+  -e "target_hosts=windows target_service_name=SQLSentryServer target_state=absent"
+```
+
+**Expected results:**
+
+- Rights for `SQLSentryServer` are revoked (state forced to absent)
+- Output shows removal (or `ok` if already absent) for that specific service
+
 ## Verification (Windows host)
 
 ### Verify with `secedit`

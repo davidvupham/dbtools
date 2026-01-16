@@ -1,0 +1,64 @@
+---
+# tasks file for win_service_rights
+#
+# This role manages Windows User Rights Assignments for the account that runs one (or more)
+# Windows services.
+#
+# Key idea for beginners:
+# 1) You provide a list of service "assignments" (service name + rights + desired state).
+# 2) For each assignment, the role detects which account the service runs under.
+# 3) The role adds/removes the specified rights for that account.
+
+# Basic input validation so mistakes fail fast with a clear message.
+- name: Validate win_service_rights_assignments
+  ansible.builtin.assert:
+    that:
+      - win_service_rights_assignments is defined
+      - win_service_rights_assignments is iterable
+      - win_service_rights_assignments | length > 0
+    fail_msg: >-
+      win_service_rights_assignments must be a non-empty list.
+      Example:
+        win_service_rights_assignments:
+          - service_name: MSSQLSERVER
+            state: present
+            rights: [SeServiceLogonRight]
+
+- name: Validate target_state
+  ansible.builtin.assert:
+    that:
+      - target_state in ['present', 'absent']
+    fail_msg: "target_state must be 'present' or 'absent', got '{{ target_state }}'"
+  when: target_state is defined
+
+# Filter the list if target_service_name is defined.
+- name: Filter assignments by service_name
+  ansible.builtin.set_fact:
+    _assignments_to_process: >-
+      {{
+        win_service_rights_assignments
+        | selectattr('service_name', 'equalto', target_service_name)
+        | list
+      }}
+  when: target_service_name is defined
+
+- name: Use all assignments if no filter is provided
+  ansible.builtin.set_fact:
+    _assignments_to_process: "{{ win_service_rights_assignments }}"
+  when: target_service_name is not defined
+
+- name: Fail if filter matched nothing
+  ansible.builtin.fail:
+    msg: "No service found matching target_service_name='{{ target_service_name }}'"
+  when:
+    - target_service_name is defined
+    - (_assignments_to_process | length) == 0
+
+# We keep the per-service logic in a separate task file to make the flow easier
+# to follow (especially for novice Ansible users).
+- name: Process service account rights assignments
+  ansible.builtin.include_tasks: manage_assignment.yml
+  loop: "{{ _assignments_to_process }}"
+  loop_control:
+    loop_var: assignment
+    label: "{{ assignment.service_name | default('missing-service_name') }}"
