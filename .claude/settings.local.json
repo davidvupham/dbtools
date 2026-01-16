@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git pull:*)",
+      "Bash(bash -n:*)",
+      "Bash(/home/dpham/src/dbtools/docs/courses/liquibase/scripts/test_part1_baseline.sh --help)",
+      "Bash(./test_part1_baseline.sh:*)",
+      "Bash(docker logs:*)",
+      "Bash(docker rm:*)",
+      "Bash(git push:*)",
+      "Bash(chmod:*)",
+      "Bash(./test_part2_manual.sh:*)"
+    ]
+  }
+}

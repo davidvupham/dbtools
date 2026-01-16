@@ -245,3 +245,4 @@ docs/tutorials/liquibase/runner_config/runner.env.local
 node_modules
 package-lock.json
 package.json
+uv.lock
