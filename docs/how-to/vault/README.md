@@ -59,5 +59,5 @@ Configure HashiCorp Vault's Active Directory Secrets Engine to:
 
 ### Package Documentation
 
-- [gds_vault Developer's Guide](../../../gds_vault/docs/DEVELOPERS_GUIDE.md) - Complete API usage
-- [gds_vault Beginner's Guide](../../../gds_vault/docs/BEGINNERS_GUIDE.md) - Python concepts explained
+- [gds_vault Developer's Guide](../../../python/gds_vault/docs/DEVELOPERS_GUIDE.md) - Complete API usage
+- [gds_vault Beginner's Guide](../../../python/gds_vault/docs/BEGINNERS_GUIDE.md) - Python concepts explained

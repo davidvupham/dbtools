@@ -13,7 +13,7 @@ When connecting to Vault servers with self-signed certificates or custom Certifi
 Copy your Vault server's CA certificate bundle to this directory:
 
 ```bash
-cp /path/to/your/vault-ca.crt gds_vault/certs/vault-ca.crt
+cp /path/to/your/vault-ca.crt python/gds_vault/certs/vault-ca.crt
 ```
 
 ### 2. Configure Your VaultClient
@@ -26,11 +26,11 @@ from gds_vault import VaultClient
 # Option 1: Specify path directly
 client = VaultClient(
     vault_addr="https://vault.example.com",
-    ssl_cert_path="/path/to/gds_vault/certs/vault-ca.crt"
+    ssl_cert_path="/path/to/python/gds_vault/certs/vault-ca.crt"
 )
 
 # Option 2: Use environment variable
-# Set VAULT_SSL_CERT=/path/to/gds_vault/certs/vault-ca.crt
+# Set VAULT_SSL_CERT=/path/to/python/gds_vault/certs/vault-ca.crt
 client = VaultClient(vault_addr="https://vault.example.com")
 
 # Option 3: Disable SSL verification (NOT RECOMMENDED for production)
@@ -131,16 +131,16 @@ Hostname mismatch, certificate is not valid for 'vault.example.com'
 
 ```bash
 # 1. Create certs directory (if not exists)
-mkdir -p gds_vault/certs
+mkdir -p python/gds_vault/certs
 
 # 2. Copy your certificate
-cp ~/Downloads/vault-ca.crt gds_vault/certs/
+cp ~/Downloads/vault-ca.crt python/gds_vault/certs/
 
 # 3. Set secure permissions
-chmod 600 gds_vault/certs/vault-ca.crt
+chmod 600 python/gds_vault/certs/vault-ca.crt
 
 # 4. Set environment variable (optional)
-export VAULT_SSL_CERT="$(pwd)/gds_vault/certs/vault-ca.crt"
+export VAULT_SSL_CERT="$(pwd)/python/gds_vault/certs/vault-ca.crt"
 
 # 5. Run your application
 python your_app.py

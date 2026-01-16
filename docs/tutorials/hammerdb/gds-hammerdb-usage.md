@@ -7,7 +7,7 @@ Automated HammerDB benchmarking for PostgreSQL and SQL Server.
 ```bash
 # Install both packages
 cd gds_benchmark && pip install -e .
-cd ../gds_hammerdb && pip install -e .
+cd ../python/gds_hammerdb && pip install -e .
 ```
 
 ## Quick Start

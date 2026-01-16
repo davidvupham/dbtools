@@ -3,9 +3,9 @@
 Insert minimal docstrings into pytest test functions across packages.
 
 Targets:
-- gds_snowflake/tests
-- gds_vault/tests
-- gds_postgres/tests
+- python/gds_snowflake/tests
+- python/gds_vault/tests
+- python/gds_postgres/tests
 
 Rules:
 - Add a one-line docstring as the first statement of any function whose name

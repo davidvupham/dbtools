@@ -54,8 +54,8 @@ ENV HAMMERDB_CLI_PATH="/opt/hammerdb/hammerdbcli"
 
 # Install gds_benchmark and gds_hammerdb
 WORKDIR /app
-COPY gds_benchmark/ /app/gds_benchmark/
-COPY gds_hammerdb/ /app/gds_hammerdb/
+COPY python/gds_benchmark/ /app/gds_benchmark/
+COPY python/gds_hammerdb/ /app/gds_hammerdb/
 
 RUN pip3 install /app/gds_benchmark && \
     pip3 install /app/gds_hammerdb

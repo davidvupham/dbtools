@@ -171,9 +171,9 @@ The `gds_vault` Python package has additional documentation in its source direct
 
 | Document | Purpose |
 |:---|:---|
-| [gds_vault/docs/DEVELOPERS_GUIDE.md](../../../gds_vault/docs/DEVELOPERS_GUIDE.md) | Complete API usage guide |
-| [gds_vault/docs/BEGINNERS_GUIDE.md](../../../gds_vault/docs/BEGINNERS_GUIDE.md) | Learning Python through Vault |
-| [gds_vault/docs/ROTATION_AWARE_TTL_GUIDE.md](../../../gds_vault/docs/ROTATION_AWARE_TTL_GUIDE.md) | Rotation-aware caching |
+| [gds_vault/docs/DEVELOPERS_GUIDE.md](../../../python/gds_vault/docs/DEVELOPERS_GUIDE.md) | Complete API usage guide |
+| [gds_vault/docs/BEGINNERS_GUIDE.md](../../../python/gds_vault/docs/BEGINNERS_GUIDE.md) | Learning Python through Vault |
+| [gds_vault/docs/ROTATION_AWARE_TTL_GUIDE.md](../../../python/gds_vault/docs/ROTATION_AWARE_TTL_GUIDE.md) | Rotation-aware caching |
 
 ## Tutorials
 

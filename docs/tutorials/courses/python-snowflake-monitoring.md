@@ -490,7 +490,7 @@ We've created comprehensive documentation to help you master the `gds_vault` pac
 
 ### Quick Links
 
-- 📘 **[Beginner's Guide](../../../gds_vault/BEGINNERS_GUIDE.md)** - Start here! Complete guide from zero
+- 📘 **[Beginner's Guide](../../../python/gds_vault/BEGINNERS_GUIDE.md)** - Start here! Complete guide from zero
 - 🐍 **[Python Concepts](../gds-vault/05-gds-vault-python-concepts.md)** - All Python features used in gds_vault
 - 🗺️ **[Learning Path](../gds-vault/gds-vault-learning-path.md)** - Customized roadmap for your skill level
 - 📋 **[Quick Reference](../gds-vault/gds-vault-quick-reference.md)** - Fast lookup and navigation
@@ -555,7 +555,7 @@ See **[GDS_VAULT_LEARNING_PATH.md](../gds-vault/gds-vault-learning-path.md)** fo
 
 | Module | Purpose | Key Classes | Tutorial |
 |--------|---------|-------------|----------|
-| `gds_vault` | Secret management | `VaultClient` | [Beginner's Guide](../../gds_vault/BEGINNERS_GUIDE.md) |
+| `gds_vault` | Secret management | `VaultClient` | [Beginner's Guide](../../python/gds_vault/BEGINNERS_GUIDE.md) |
 | `gds_snowflake` | Snowflake operations | `SnowflakeConnection` | [Connection Tutorial](gds-snowflake/03-connection-module-tutorial.md) |
 | `replication` | Replication monitoring | `SnowflakeReplication` | [Replication Tutorial](gds-snowflake/04-replication-module-tutorial.md) |
 | `base` | Abstract base classes | `BaseMonitor`, `DatabaseConnection` | Part 1 & 2 |

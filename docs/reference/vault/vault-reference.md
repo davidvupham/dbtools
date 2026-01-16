@@ -726,8 +726,8 @@ curl https://vault.example.com:8200/v1/sys/health
 
 ### Package Documentation
 
-- [gds_vault Developer's Guide](../../../gds_vault/docs/DEVELOPERS_GUIDE.md) - Complete API usage
-- [gds_vault Beginner's Guide](../../../gds_vault/docs/BEGINNERS_GUIDE.md) - Python concepts explained
-- [Rotation-Aware TTL Guide](../../../gds_vault/docs/ROTATION_AWARE_TTL_GUIDE.md) - Rotation-aware caching
+- [gds_vault Developer's Guide](../../../python/gds_vault/docs/DEVELOPERS_GUIDE.md) - Complete API usage
+- [gds_vault Beginner's Guide](../../../python/gds_vault/docs/BEGINNERS_GUIDE.md) - Python concepts explained
+- [Rotation-Aware TTL Guide](../../../python/gds_vault/docs/ROTATION_AWARE_TTL_GUIDE.md) - Rotation-aware caching
 
 [↑ Back to Table of Contents](#table-of-contents)

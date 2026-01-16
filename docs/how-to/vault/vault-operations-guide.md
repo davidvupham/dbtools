@@ -803,4 +803,4 @@ with VaultClient() as client:
 - **[Vault Architecture Guide](../../explanation/vault/vault-architecture.md)** - Deployment and security
 - **[Vault Reference](../../reference/vault/vault-reference.md)** - API reference and troubleshooting
 - **[Rotate AD Passwords](./rotate-ad-passwords.md)** - AD password rotation how-to
-- **[gds_vault Developer's Guide](../../../gds_vault/docs/DEVELOPERS_GUIDE.md)** - Complete package documentation
+- **[gds_vault Developer's Guide](../../../python/gds_vault/docs/DEVELOPERS_GUIDE.md)** - Complete package documentation

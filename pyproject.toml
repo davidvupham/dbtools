@@ -29,7 +29,7 @@ python-preference = "managed"
 
 # Workspace configuration: all gds_* packages are members
 [tool.uv.workspace]
-members = ["gds_*"]
+members = ["python/gds_*"]
 
 # =============================================================================
 # Dependency Groups (UV-native format)
@@ -76,7 +76,7 @@ jupyter = [
 ]
 
 [tool.setuptools.packages.find]
-where = ["."]
+where = ["python"]
 include = ["gds_*"]
 
 [tool.ruff]
@@ -148,7 +148,7 @@ dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
     "S101",    # Use of assert (OK in tests)
     "PLR2004", # Magic values (OK in tests)
 ]
-"gds_snowflake/test_modules.py" = [
+"python/gds_snowflake/test_modules.py" = [
     "F401", # Unused imports (testing import functionality)
 ]
 "docs/tutorials/exercises/*_exercises.py" = [
@@ -195,21 +195,21 @@ docstring-code-line-length = 80
 addopts = "--import-mode=prepend"
 pythonpath = [
     ".",
-    "gds_benchmark/src",
-    "gds_certs/src",
-    "gds_database/src",
-    "gds_hammerdb/src",
-    "gds_kafka/src",
-    "gds_liquibase/src",
-    "gds_metrics/src",
-    "gds_mongodb/src",
-    "gds_mssql/src",
-    "gds_notification/src",
-    "gds_postgres/src",
-    "gds_snmp_receiver/src",
-    "gds_snowflake/src",
-    "gds_vault/src",
+    "python/gds_benchmark/src",
+    "python/gds_certs/src",
+    "python/gds_database/src",
+    "python/gds_hammerdb/src",
+    "python/gds_kafka/src",
+    "python/gds_liquibase/src",
+    "python/gds_metrics/src",
+    "python/gds_mongodb/src",
+    "python/gds_mssql/src",
+    "python/gds_notification/src",
+    "python/gds_postgres/src",
+    "python/gds_snmp_receiver/src",
+    "python/gds_snowflake/src",
+    "python/gds_vault/src",
 ]
 
-testpaths = ["tests", "gds_*/tests"]
+testpaths = ["tests", "python/gds_*/tests"]
 python_files = "test_*.py"

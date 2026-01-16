@@ -17,19 +17,21 @@ This repository is the shared engineering workspace for the Global Data Services
 
 ### Python packages
 
-- `gds_database/` – Common abstractions and base classes for database connectivity
-- `gds_postgres/` – PostgreSQL implementation on top of `gds-database`
-- `gds_mssql/` – Microsoft SQL Server client with Kerberos and pooling support
-- `gds_mongodb/` – MongoDB client with advanced configuration and CRUD helpers
-- `gds_snowflake/` – Snowflake utilities used by monitoring tools and automation
-- `gds_vault/` – HashiCorp Vault client with pluggable authentication and caching
-- `gds_liquibase/` – Database change management with Liquibase integration and CI/CD workflows
-- `gds_kafka/` – Kafka producer/consumer clients, metrics, and logging handlers
-- `gds_metrics/` – Unified metrics collector supporting OpenTelemetry, Prometheus, and Kafka backends
-- `gds_benchmark/` – Abstract interfaces and models for performance benchmarking tools
-- `gds_hammerdb/` – Automated HammerDB benchmarking for PostgreSQL and SQL Server
-- `gds_notification/` – Design docs and stubs for the alert ingestion service
-- `gds_snmp_receiver/` – SNMP trap receiver service with FastAPI and worker pipeline
+All Python packages are located in the `python/` directory:
+
+- `python/gds_database/` – Common abstractions and base classes for database connectivity
+- `python/gds_postgres/` – PostgreSQL implementation on top of `gds-database`
+- `python/gds_mssql/` – Microsoft SQL Server client with Kerberos and pooling support
+- `python/gds_mongodb/` – MongoDB client with advanced configuration and CRUD helpers
+- `python/gds_snowflake/` – Snowflake utilities used by monitoring tools and automation
+- `python/gds_vault/` – HashiCorp Vault client with pluggable authentication and caching
+- `python/gds_liquibase/` – Database change management with Liquibase integration and CI/CD workflows
+- `python/gds_kafka/` – Kafka producer/consumer clients, metrics, and logging handlers
+- `python/gds_metrics/` – Unified metrics collector supporting OpenTelemetry, Prometheus, and Kafka backends
+- `python/gds_benchmark/` – Abstract interfaces and models for performance benchmarking tools
+- `python/gds_hammerdb/` – Automated HammerDB benchmarking for PostgreSQL and SQL Server
+- `python/gds_notification/` – Design docs and stubs for the alert ingestion service
+- `python/gds_snmp_receiver/` – SNMP trap receiver service with FastAPI and worker pipeline
 - `snowflake_monitoring/` – Application that monitors Snowflake replication health
 
 Each package exposes its own README with full installation, configuration, and API guidance.

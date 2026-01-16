@@ -425,9 +425,9 @@ WORKDIR /app
 
 # Copy workspace root and all packages
 COPY pyproject.toml uv.lock ./
-COPY gds_database/ gds_database/
-COPY gds_mssql/ gds_mssql/
-COPY gds_postgres/ gds_postgres/
+COPY python/gds_database/ python/gds_database/
+COPY python/gds_mssql/ python/gds_mssql/
+COPY python/gds_postgres/ python/gds_postgres/
 # ... other workspace members
 
 RUN uv sync --frozen --no-dev
@@ -447,28 +447,29 @@ UV reads the root `pyproject.toml` to discover workspace members:
 ```toml
 # pyproject.toml
 [tool.uv.workspace]
-members = ["gds_*"]   # Pattern tells UV where to look
+members = ["python/gds_*"]   # Pattern tells UV where to look
 ```
 
-This means UV looks for any directory matching `gds_*` that contains a `pyproject.toml`:
+This means UV looks for any directory matching `python/gds_*` that contains a `pyproject.toml`:
 
 ```
 /app/                           ← WORKDIR in Docker
 ├── pyproject.toml              ← Root config with [tool.uv.workspace]
 ├── uv.lock                     ← Lock file
-├── gds_database/               ← Matches "gds_*" pattern
-│   ├── pyproject.toml          ← UV finds this → installs as package
-│   └── src/gds_database/
-├── gds_mssql/
-│   ├── pyproject.toml
-│   └── src/gds_mssql/
-└── gds_postgres/
-    ├── pyproject.toml
-    └── src/gds_postgres/
+├── python/
+│   ├── gds_database/           ← Matches "python/gds_*" pattern
+│   │   ├── pyproject.toml      ← UV finds this → installs as package
+│   │   └── src/gds_database/
+│   ├── gds_mssql/
+│   │   ├── pyproject.toml
+│   │   └── src/gds_mssql/
+│   └── gds_postgres/
+│       ├── pyproject.toml
+│       └── src/gds_postgres/
 ```
 
 > [!IMPORTANT]
-> The `gds_*` directories must be copied to the **same relative paths** as defined in your workspace config. If the root config says `members = ["gds_*"]`, then UV expects `/app/gds_database/pyproject.toml`, `/app/gds_mssql/pyproject.toml`, etc.
+> The `python/gds_*` directories must be copied to the **same relative paths** as defined in your workspace config. If the root config says `members = ["python/gds_*"]`, then UV expects `/app/python/gds_database/pyproject.toml`, `/app/python/gds_mssql/pyproject.toml`, etc.
 
 ### Option 2: Build and Install Specific Wheels
 

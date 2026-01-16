@@ -10,7 +10,7 @@ This directory contains comprehensive tutorials and exercises to help you unders
 
 ### Core Documentation
 
-1. **[BEGINNERS_GUIDE.md](../../../gds_vault/BEGINNERS_GUIDE.md)** - Start here!
+1. **[BEGINNERS_GUIDE.md](../../../python/gds_vault/BEGINNERS_GUIDE.md)** - Start here!
    - What problem does gds_vault solve?
    - Complete architecture overview
    - Core concepts explained with analogies
@@ -71,7 +71,7 @@ This directory contains comprehensive tutorials and exercises to help you unders
 
 **Week 4: GDS Vault Deep Dive**
 
-1. Read [BEGINNERS_GUIDE.md](../../../gds_vault/BEGINNERS_GUIDE.md)
+1. Read [BEGINNERS_GUIDE.md](../../../python/gds_vault/BEGINNERS_GUIDE.md)
 2. Read [02-vault-module-tutorial.md](02-vault-module-tutorial.md)
 3. Complete [exercises/gds_vault_exercises.py](../exercises/gds_vault_exercises.py)
 4. Build your own mini-client!
@@ -80,7 +80,7 @@ This directory contains comprehensive tutorials and exercises to help you unders
 
 **Day 1-2: Understanding the Architecture**
 
-1. Read [BEGINNERS_GUIDE.md](../../../gds_vault/BEGINNERS_GUIDE.md)
+1. Read [BEGINNERS_GUIDE.md](../../../python/gds_vault/BEGINNERS_GUIDE.md)
    - Focus on "Understanding the Architecture" section
    - Study the component diagram
    - Understand separation of concerns
@@ -110,7 +110,7 @@ This directory contains comprehensive tutorials and exercises to help you unders
 
 **Quick Start**
 
-1. Skim [BEGINNERS_GUIDE.md](../../../gds_vault/BEGINNERS_GUIDE.md) - Architecture section
+1. Skim [BEGINNERS_GUIDE.md](../../../python/gds_vault/BEGINNERS_GUIDE.md) - Architecture section
 2. Review [05-gds-vault-python-concepts.md](05-gds-vault-python-concepts.md) - Any unfamiliar patterns
 3. Try Exercise 9 in [gds_vault_exercises.py](../exercises/gds_vault_exercises.py) - Complete mini-client
 
@@ -281,13 +281,13 @@ Build a complete client combining all concepts.
 
 **Know Python Basics?**
 
-- Jump to [BEGINNERS_GUIDE.md](../../gds_vault/BEGINNERS_GUIDE.md)
+- Jump to [BEGINNERS_GUIDE.md](../../python/gds_vault/BEGINNERS_GUIDE.md)
 - Review [05_GDS_VAULT_PYTHON_CONCEPTS.md](05_GDS_VAULT_PYTHON_CONCEPTS.md) for any unfamiliar concepts
 - Start with Exercise 5
 
 **Experienced Developer?**
 
-- Skim [BEGINNERS_GUIDE.md](../../gds_vault/BEGINNERS_GUIDE.md)
+- Skim [BEGINNERS_GUIDE.md](../../python/gds_vault/BEGINNERS_GUIDE.md)
 - Try Exercise 9 directly
 - Refer back to earlier exercises if needed
 

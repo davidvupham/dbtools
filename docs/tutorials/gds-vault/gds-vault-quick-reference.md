@@ -51,7 +51,7 @@ docs/tutorials/
    - Focus on: ABC, Properties, Magic Methods, Context Managers
 
 3. **Week 4:** GDS Vault Deep Dive
-   - `../../../gds_vault/BEGINNERS_GUIDE.md`
+   - `../../../python/gds_vault/BEGINNERS_GUIDE.md`
    - `02-vault-module-tutorial.md`
    - `../exercises/gds_vault_exercises.py`
 
@@ -64,7 +64,7 @@ docs/tutorials/
    - Focus on concepts you haven't seen before
 
 2. **Day 3-5:** GDS Vault Architecture
-   - `../../../gds_vault/BEGINNERS_GUIDE.md`
+   - `../../../python/gds_vault/BEGINNERS_GUIDE.md`
    - Pay attention to architecture and design patterns
 
 3. **Day 6-7:** Hands-On Practice
@@ -76,13 +76,13 @@ docs/tutorials/
 **Path: Quick Start → Source Code → Extensions**
 
 1. **2 Hours:** Quick Overview
-   - `../../../gds_vault/BEGINNERS_GUIDE.md` (Architecture section)
+   - `../../../python/gds_vault/BEGINNERS_GUIDE.md` (Architecture section)
    - `05-gds-vault-python-concepts.md` (Skim)
 
 2. **3 Hours:** Source Code Review
-   - Read `../../../gds_vault/base.py`
-   - Read `../../../gds_vault/auth.py`
-   - Read `../../../gds_vault/client.py`
+   - Read `../../../python/gds_vault/base.py`
+   - Read `../../../python/gds_vault/auth.py`
+   - Read `../../../python/gds_vault/client.py`
 
 3. **5 Hours:** Build Something
    - Exercise 9 in `../exercises/gds_vault_exercises.py`
@@ -97,15 +97,15 @@ docs/tutorials/
 
 **"Why do I need this?"**
 
-- `../../../gds_vault/BEGINNERS_GUIDE.md` → "What Problem Does This Package Solve?"
+- `../../../python/gds_vault/BEGINNERS_GUIDE.md` → "What Problem Does This Package Solve?"
 - `02-vault-module-tutorial.md` → "What is Vault?"
 
 ### Architecture and Design
 
 **"How is it structured?"**
 
-- `../../../gds_vault/BEGINNERS_GUIDE.md` → "Understanding the Architecture"
-- `../../../gds_vault/BEGINNERS_GUIDE.md` → "Core Concepts Explained"
+- `../../../python/gds_vault/BEGINNERS_GUIDE.md` → "Understanding the Architecture"
+- `../../../python/gds_vault/BEGINNERS_GUIDE.md` → "Core Concepts Explained"
 - `05-gds-vault-python-concepts.md` → "Design Patterns"
 
 ### Python Concepts
@@ -127,17 +127,17 @@ docs/tutorials/
 
 **"Show me the code!"**
 
-- `../../../gds_vault/BEGINNERS_GUIDE.md` → "Module-by-Module Deep Dive"
+- `../../../python/gds_vault/BEGINNERS_GUIDE.md` → "Module-by-Module Deep Dive"
 - `02-vault-module-tutorial.md` → "Step-by-Step Code Walkthrough"
 
 ### Usage Examples
 
 **"How do I use it?"**
 
-- `../../../gds_vault/README.md` → "Quick Start"
-- `../../../gds_vault/examples/vault_client_example.py`
-- `../../../gds_vault/examples/enhanced_client.py`
-- `../../../gds_vault/BEGINNERS_GUIDE.md` → "Complete Usage Examples"
+- `../../../python/gds_vault/README.md` → "Quick Start"
+- `../../../python/gds_vault/examples/vault_client_example.py`
+- `../../../python/gds_vault/examples/enhanced_client.py`
+- `../../../python/gds_vault/BEGINNERS_GUIDE.md` → "Complete Usage Examples"
 
 ### Hands-On Practice
 

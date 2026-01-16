@@ -91,13 +91,13 @@ clean: ## Clean up Python cache and artifacts
 build-all: build-gds-snmp build-gds-notification ## Build all GDS application images
 
 build-gds-snmp: ## Build SNMP Receiver image
-	docker build -t $(SNMP_IMAGE) gds_snmp_receiver/
+	docker build -t $(SNMP_IMAGE) python/gds_snmp_receiver/
 
 build-gds-notification: ## Build Notification Service image
-	@if [ -d gds_notification ]; then \
-	  docker build -t $(NOTIF_IMAGE) gds_notification/; \
+	@if [ -d python/gds_notification ]; then \
+	  docker build -t $(NOTIF_IMAGE) python/gds_notification/; \
 	else \
-	  echo "gds_notification/ not present, skipping"; \
+	  echo "python/gds_notification/ not present, skipping"; \
 	fi
 
 ## --- Dev Container ---
@@ -147,7 +147,7 @@ test-pwsh: ## Run PowerShell Pester tests (requires pwsh)
 ## --- Additional Utilities ---
 
 install: ## Install all packages in development mode
-	@for pkg in gds_*/; do \
+	@for pkg in python/gds_*/; do \
 		if [ -f "$$pkg/pyproject.toml" ]; then \
 			echo "Installing $$pkg..."; \
 			pip install -e "$$pkg"; \

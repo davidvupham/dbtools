@@ -11,7 +11,7 @@
 ![Document Status](https://img.shields.io/badge/Status-Production-green)
 
 > [!IMPORTANT]
-> **Related Docs:** [Architecture](./vault-architecture.md) | [Operations](../../how-to/vault/vault-operations-guide.md) | [Reference](../../reference/vault/vault-reference.md) | [gds_vault Guide](../../../gds_vault/docs/DEVELOPERS_GUIDE.md)
+> **Related Docs:** [Architecture](./vault-architecture.md) | [Operations](../../how-to/vault/vault-operations-guide.md) | [Reference](../../reference/vault/vault-reference.md) | [gds_vault Guide](../../../python/gds_vault/docs/DEVELOPERS_GUIDE.md)
 
 ## Table of Contents
 

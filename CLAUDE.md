@@ -16,10 +16,10 @@ make pre-commit       # Run all pre-commit hooks
 make clean            # Clean caches and build artifacts
 
 # Run a single test file
-PYTHONPATH=.:gds_database/src:gds_vault/src pytest tests/test_example.py -v
+PYTHONPATH=.:python/gds_database/src:python/gds_vault/src pytest tests/test_example.py -v
 
 # Run tests for a specific package
-cd gds_vault && pytest tests/ -v
+cd python/gds_vault && pytest tests/ -v
 
 # PowerShell tests
 make test-pwsh        # Run Pester tests
@@ -33,7 +33,7 @@ make dev-shell            # Open shell in dev container
 
 ### Monorepo Structure
 
-This is a UV workspace monorepo with 13 Python packages (`gds_*`) sharing a common lockfile. Each package has a `src/` layout and can depend on others.
+This is a UV workspace monorepo with Python packages in `python/` (`gds_*`) sharing a common lockfile. Each package has a `src/` layout and can depend on others.
 
 **Core abstraction pattern:**
 - `gds_database` - Abstract base classes defining database connection interfaces

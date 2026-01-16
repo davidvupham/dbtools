@@ -168,7 +168,7 @@ Deprecated documentation and reports.
 
 For component-specific documentation, see:
 
-- **Package**: [../gds_snowflake/README.md](../gds_snowflake/README.md)
+- **Package**: [../python/gds_snowflake/README.md](../python/gds_snowflake/README.md)
 - **Application**: [../snowflake_monitoring/README.md](../snowflake_monitoring/README.md)
 
 ## Quick Links

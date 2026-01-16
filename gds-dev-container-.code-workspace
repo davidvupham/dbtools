@@ -139,7 +139,7 @@
         "request": "launch",
         "module": "pytest",
         "args": [
-          "gds_database/tests",
+          "python/gds_database/tests",
           "-v",
           "--tb=short"
         ],
@@ -153,7 +153,7 @@
         "request": "launch",
         "module": "pytest",
         "args": [
-          "gds_postgres/tests",
+          "python/gds_postgres/tests",
           "-v",
           "--tb=short"
         ],
@@ -167,7 +167,7 @@
         "request": "launch",
         "module": "pytest",
         "args": [
-          "gds_snowflake/tests",
+          "python/gds_snowflake/tests",
           "-v",
           "--tb=short"
         ],
@@ -414,7 +414,7 @@
         "command": "bash",
         "args": [
           "-c",
-          "for pkg in gds_database gds_postgres gds_snowflake gds_vault gds_mongodb gds_mssql gds_notification gds_snmp_receiver; do echo \"Building $pkg...\"; cd $pkg && python -m build && cd ..; done"
+          "for pkg in gds_database gds_postgres gds_snowflake gds_vault gds_mongodb gds_mssql gds_notification gds_snmp_receiver; do echo \"Building $pkg...\"; cd python/$pkg && python -m build && cd ../..; done"
         ],
         "group": "build",
         "presentation": {
@@ -560,16 +560,16 @@
         "type": "pickString",
         "description": "Select package",
         "options": [
-          "gds_database",
-          "gds_postgres",
-          "gds_snowflake",
-          "gds_vault",
-          "gds_mongodb",
-          "gds_mssql",
-          "gds_notification",
-          "gds_snmp_receiver"
+          "python/gds_database",
+          "python/gds_postgres",
+          "python/gds_snowflake",
+          "python/gds_vault",
+          "python/gds_mongodb",
+          "python/gds_mssql",
+          "python/gds_notification",
+          "python/gds_snmp_receiver"
         ],
-        "default": "gds_database"
+        "default": "python/gds_database"
       }
     ]
   },

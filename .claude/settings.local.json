@@ -11,7 +11,9 @@
       "Bash(docker rm:*)",
       "Bash(git push:*)",
       "Bash(chmod:*)",
-      "Bash(./test_part2_manual.sh:*)"
+      "Bash(./test_part2_manual.sh:*)",
+      "Bash(ls:*)",
+      "Bash(grep:*)"
     ]
   }
 }
