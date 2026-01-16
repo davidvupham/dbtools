@@ -82,6 +82,7 @@ When modifying the Liquibase tutorial in `docs/courses/liquibase/`, ensure the c
 |----------|-------------|
 | `learning-paths/series-part1-baseline.md` | `scripts/test_part1_baseline.sh` |
 | `learning-paths/series-part2-manual.md` | `scripts/test_part2_manual.sh` |
+| `learning-paths/series-part3-cicd.md` | Manual validation (see `docs/courses/liquibase/CLAUDE.md`) |
 
 After making changes to a tutorial or its scripts, run the test to verify everything works:
 

@@ -5,6 +5,26 @@
 
 set -euo pipefail
 
+# Parse arguments
+FORCE=false
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -f|--force)
+            FORCE=true
+            shift
+            ;;
+        -h|--help)
+            echo "Usage: $0 [-f|--force]"
+            echo "  -f, --force    Skip confirmation prompt"
+            exit 0
+            ;;
+        *)
+            echo "Unknown option: $1"
+            exit 1
+            ;;
+    esac
+done
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TUTORIAL_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
@@ -35,10 +55,13 @@ LIQUIBASE_TUTORIAL_DATA_DIR="${LIQUIBASE_TUTORIAL_DATA_DIR:-/data/${USER}/liquib
 echo -e "${YELLOW}WARNING: This will remove all tutorial containers AND data!${NC}"
 echo "Data directory: $LIQUIBASE_TUTORIAL_DATA_DIR"
 echo
-read -p "Are you sure? (y/N): " confirm
-if [[ "$confirm" != "y" && "$confirm" != "Y" ]]; then
-    echo "Cleanup cancelled."
-    exit 0
+
+if [[ "$FORCE" != "true" ]]; then
+    read -p "Are you sure? (y/N): " confirm
+    if [[ "$confirm" != "y" && "$confirm" != "Y" ]]; then
+        echo "Cleanup cancelled."
+        exit 0
+    fi
 fi
 
 echo
