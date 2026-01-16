@@ -3,6 +3,7 @@
 ## Table of Contents
 
 - [Prerequisites](#prerequisites)
+  - [Quick Setup: Recreate Part 1 Environment](#quick-setup-recreate-part-1-environment)
 - [Phase 2: From Local Project to GitHub Repository](#phase-2-from-local-project-to-github-repository)
   - [Step 6: Create a GitHub Repository](#step-6-create-a-github-repository)
   - [Step 7: Initialize Git and Push Initial Project (First Person Only)](#step-7-initialize-git-and-push-initial-project-first-person-only)
@@ -30,6 +31,61 @@ This Part 3 assumes you already have:
   - `platform/mssql/database/orderdb/changelog/changelog.xml` that includes the baseline and any subsequent changes
   - `platform/mssql/database/orderdb/env/liquibase.mssql_dev.properties`, `platform/mssql/database/orderdb/env/liquibase.mssql_stg.properties`, `platform/mssql/database/orderdb/env/liquibase.mssql_prd.properties`
 - Baseline deployed to dev/stg/prd and tagged appropriately (for example `baseline`, `release-v1.x`).
+
+### Quick Setup: Recreate Part 1 Environment
+
+If you previously completed Part 1 but your environment is no longer available (containers stopped, data cleaned up, etc.), run these commands to quickly recreate it. For detailed explanations of each step, see [Part 1: Baseline SQL Server + Liquibase Setup](series-part1-baseline.md).
+
+```bash
+# Step 0: Configure environment and aliases
+source "$(git rev-parse --show-toplevel)/docs/courses/liquibase/scripts/find_tutorial_dir.sh"
+sudo "$LIQUIBASE_TUTORIAL_DIR/scripts/setup_user_directory.sh"
+source "$LIQUIBASE_TUTORIAL_DIR/scripts/setup_tutorial.sh"
+
+# Clean up any previous runs (optional but recommended)
+"$LIQUIBASE_TUTORIAL_DIR/scripts/cleanup_tutorial.sh"
+
+# Start SQL Server containers (mssql_dev, mssql_stg, mssql_prd)
+$LIQUIBASE_TUTORIAL_DIR/scripts/start_mssql_containers.sh
+
+# Build Liquibase container image
+cd "${LIQUIBASE_TUTORIAL_DIR}/docker/liquibase"
+cr build -t liquibase:latest .
+
+# Verify SQL Server is running
+sqlcmd-tutorial -S mssql_dev -Q "SELECT @@SERVERNAME AS ServerName, GETDATE() AS CurrentTime"
+sqlcmd-tutorial -S mssql_stg -Q "SELECT @@SERVERNAME AS ServerName, GETDATE() AS CurrentTime"
+sqlcmd-tutorial -S mssql_prd -Q "SELECT @@SERVERNAME AS ServerName, GETDATE() AS CurrentTime"
+
+# Create project structure
+"$LIQUIBASE_TUTORIAL_DIR/scripts/create_project_structure.sh"
+
+# Step 1: Create databases on all environments
+$LIQUIBASE_TUTORIAL_DIR/scripts/create_orderdb_database.sh
+$LIQUIBASE_TUTORIAL_DIR/scripts/validate_orderdb_database.sh
+
+# Step 2: Populate development with sample objects
+$LIQUIBASE_TUTORIAL_DIR/scripts/populate_dev_database.sh
+$LIQUIBASE_TUTORIAL_DIR/scripts/validate_dev_populate.sh
+
+# Step 3: Configure Liquibase (creates properties files and master changelog)
+$LIQUIBASE_TUTORIAL_DIR/scripts/setup_liquibase_environment.sh
+$LIQUIBASE_TUTORIAL_DIR/scripts/validate_liquibase_properties.sh
+
+# Step 4: Generate baseline from development
+$LIQUIBASE_TUTORIAL_DIR/scripts/generate_liquibase_baseline.sh
+$LIQUIBASE_TUTORIAL_DIR/scripts/validate_liquibase_baseline.sh
+
+# Step 5: Deploy baseline to all environments
+$LIQUIBASE_TUTORIAL_DIR/scripts/deploy.sh --action baseline --dbi mssql_dev,mssql_stg,mssql_prd
+$LIQUIBASE_TUTORIAL_DIR/scripts/validate_liquibase_deploy.sh --dbi mssql_dev,mssql_stg,mssql_prd
+```
+
+After running these commands, you should have:
+- Three SQL Server containers running (`mssql_dev`, `mssql_stg`, `mssql_prd`)
+- `orderdb` database with `app` schema on each container
+- Baseline changelog generated and deployed to all environments
+- Liquibase tracking tables (`DATABASECHANGELOG`, `DATABASECHANGELOGLOCK`) in each database
 
 From here, this tutorial focuses only on:
 
