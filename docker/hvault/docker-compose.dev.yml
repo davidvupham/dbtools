@@ -1,10 +1,13 @@
 # HashiCorp Vault Development Docker Compose Configuration
 # WARNING: This configuration is for DEVELOPMENT ONLY
 # DO NOT use in production environments
+#
+# Corporate Proxy Support:
+#   REGISTRY_PREFIX=xyz.jfrog.io/docker-proxy/ docker compose -f docker-compose.dev.yml up -d
 
 services:
   vault-dev:
-    image: hashicorp/vault:latest
+    image: ${REGISTRY_PREFIX:-}hashicorp/vault:latest
     container_name: vault-dev
     hostname: vault-dev
 

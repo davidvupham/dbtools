@@ -7,6 +7,8 @@ services:
     build:
       context: ../..
       dockerfile: docker/hvault/Dockerfile
+      args:
+        REGISTRY_PREFIX: ${REGISTRY_PREFIX:-docker.io/}
     image: gds-vault:latest
     container_name: vault1
     hostname: vault1
@@ -71,8 +73,9 @@ services:
       # - ./certs/vault1:/vault/certs:ro
 
     # Healthcheck: Monitor Vault status
+    # Note: vault status returns exit code 2 when sealed (valid during init)
     healthcheck:
-      test: ["CMD", "vault", "status"]
+      test: ["CMD", "sh", "-c", "vault status || [ $$? -eq 2 ]"]
       interval: 30s
       timeout: 5s
       retries: 3
@@ -87,6 +90,8 @@ services:
     build:
       context: ../..
       dockerfile: docker/hvault/Dockerfile
+      args:
+        REGISTRY_PREFIX: ${REGISTRY_PREFIX:-docker.io/}
     image: gds-vault:latest
     container_name: vault2
     hostname: vault2
@@ -150,8 +155,9 @@ services:
       # - ./certs/vault2:/vault/certs:ro
 
     # Healthcheck: Monitor Vault status
+    # Note: vault status returns exit code 2 when sealed (valid during init)
     healthcheck:
-      test: ["CMD", "vault", "status"]
+      test: ["CMD", "sh", "-c", "vault status || [ $$? -eq 2 ]"]
       interval: 30s
       timeout: 5s
       retries: 3
