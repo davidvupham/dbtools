@@ -2,14 +2,14 @@
 
 This tutorial shows how to use GitHub as a lightweight-yet-powerful project management platform. You’ll set up a workflow that supports planning, tracking, collaboration, and delivery—without leaving your repo.
 
- 
+
 ## Who this is for
 
 - Teams managing work directly in code repositories
 - Project leads who need visibility without heavy tooling
 - Individual contributors who want clear prioritization and status
 
- 
+
 ## Outcomes
 
 By the end, you will:
@@ -301,4 +301,3 @@ area:database,1abc9c,Database related
 - Review and prune labels quarterly
 - Keep PRs small (≤ 300 LoC) to speed review
 - Write decisions in `docs/` to capture context
-

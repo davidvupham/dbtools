@@ -42,4 +42,3 @@
 - name: Display UV version
   ansible.builtin.debug:
     msg: "UV installed: {{ uv_version.stdout }}"
-

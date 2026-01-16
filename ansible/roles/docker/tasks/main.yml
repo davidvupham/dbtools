@@ -23,4 +23,3 @@
       User '{{ dev_user }}' has been added to the docker group.
       You need to log out and log back in for this to take effect,
       or run: newgrp docker
-

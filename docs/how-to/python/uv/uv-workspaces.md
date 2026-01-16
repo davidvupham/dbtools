@@ -1,15 +1,15 @@
 # How to Use UV Workspaces for Monorepos
- 
+
 **🔗 [← Back to UV How-to Index](./README.md)**
- 
+
 > **Document Version:** 1.0
 > **Last Updated:** January 13, 2026
 > **Maintainers:** Application Infrastructure Team
 > **Status:** Production
- 
+
 ![Status](https://img.shields.io/badge/Status-Production-green)
 ![Topic](https://img.shields.io/badge/Topic-Structure-purple)
- 
+
 > [!IMPORTANT]
 > **Related Docs:** [Dependency Management](./uv-dependency-management.md) | [CI/CD Integration](./uv-ci-cd-integration.md)
 
@@ -379,16 +379,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v4
-      
+
       - name: Sync all packages
         run: uv sync
-      
+
       - name: Test core
         run: uv run --package my-core pytest
-      
+
       - name: Test api
         run: uv run --package my-api pytest
-      
+
       - name: Test cli
         run: uv run --package my-cli pytest
 ```

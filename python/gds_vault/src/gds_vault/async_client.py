@@ -48,7 +48,7 @@ if TYPE_CHECKING:
                 pass
 else:
     try:
-        from gds_metrics import MetricsCollector, NoOpMetrics
+        from gds_metrics import NoOpMetrics
     except ImportError:
 
         class NoOpMetrics:

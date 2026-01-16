@@ -4,7 +4,7 @@
 
 A new `database.py` module has been successfully added to the `gds_snowflake` package, providing comprehensive metadata retrieval capabilities for Snowflake database objects.
 
-**Date**: October 3, 2025  
+**Date**: October 3, 2025
 **Status**: ✅ COMPLETED
 
 ---
@@ -135,10 +135,10 @@ with SnowflakeConnection(
 ) as conn:
     # Create metadata retriever
     metadata = SnowflakeMetadata(conn)
-    
+
     # Get comprehensive metadata for a database
     all_metadata = metadata.get_all_metadata(database_name='MYDB')
-    
+
     # Print summary
     print("Summary:")
     print(f"  Databases: {all_metadata['summary']['database_count']}")
@@ -226,11 +226,11 @@ def get_<object_type>(
 ) -> List[Dict[str, Any]]:
     """
     Get metadata about <object_type>.
-    
+
     Args:
         database_name: Optional database name to filter
         schema_name: Optional schema name to filter
-        
+
     Returns:
         List of dictionaries containing metadata
     """

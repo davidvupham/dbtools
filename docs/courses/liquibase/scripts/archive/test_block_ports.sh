@@ -23,7 +23,7 @@ PID_FILE="$SCRIPT_DIR/.test_block_ports.pids"
 # Check if a port is already in use
 is_port_in_use() {
     local port=$1
-    
+
     # Check using ss (most common on Linux)
     if command -v ss &>/dev/null; then
         if ss -tuln 2>/dev/null | grep -q ":${port} "; then
@@ -40,7 +40,7 @@ is_port_in_use() {
             return 0
         fi
     fi
-    
+
     # Check if container runtime is using this port
     if command -v podman &>/dev/null; then
         if podman ps --format '{{.Ports}}' 2>/dev/null | grep -q "0.0.0.0:${port}->"; then
@@ -52,7 +52,7 @@ is_port_in_use() {
             return 0
         fi
     fi
-    
+
     return 1
 }
 
@@ -60,7 +60,7 @@ is_port_in_use() {
 block_with_socat() {
     local port=$1
     local pid
-    
+
     # Create a TCP listener that accepts connections but does nothing
     socat TCP-LISTEN:${port},fork,reuseaddr /dev/null 2>/dev/null &
     pid=$!
@@ -71,7 +71,7 @@ block_with_socat() {
 block_with_nc() {
     local port=$1
     local pid
-    
+
     # nc -l listens and exits after first connection, so we need a loop
     while true; do
         nc -l -p ${port} >/dev/null 2>&1 || true
@@ -84,7 +84,7 @@ block_with_nc() {
 block_with_python() {
     local port=$1
     local pid
-    
+
     python3 -c "
 import socket
 import sys
@@ -109,18 +109,18 @@ while True:
 
 start_blockers() {
     echo "Blocking ports ${PORTS[*]}..."
-    
+
     # Check if ports are already blocked
     for port in "${PORTS[@]}"; do
         if is_port_in_use "$port"; then
             echo -e "${YELLOW}Warning: Port $port is already in use${NC}"
         fi
     done
-    
+
     # Choose blocking method
     local method=""
     local pids=()
-    
+
     if command -v socat &>/dev/null; then
         method="socat"
         echo "Using socat to block ports..."
@@ -162,7 +162,7 @@ start_blockers() {
         echo "Install one of: socat, nc (netcat), or python3"
         exit 1
     fi
-    
+
     # Save PIDs to file
     if [[ ${#pids[@]} -gt 0 ]]; then
         printf "%s\n" "${pids[@]}" > "$PID_FILE"
@@ -175,12 +175,12 @@ start_blockers() {
 
 stop_blockers() {
     echo "Unblocking ports ${PORTS[*]}..."
-    
+
     if [[ ! -f "$PID_FILE" ]]; then
         echo -e "${YELLOW}No PID file found - ports may not be blocked by this script${NC}"
         return 0
     fi
-    
+
     local killed=0
     while IFS= read -r pid; do
         if [[ -n "$pid" ]] && kill -0 "$pid" 2>/dev/null; then
@@ -189,9 +189,9 @@ stop_blockers() {
             ((killed++)) || true
         fi
     done < "$PID_FILE"
-    
+
     rm -f "$PID_FILE"
-    
+
     if [[ $killed -gt 0 ]]; then
         echo -e "${GREEN}✓ Unblocked ports (killed $killed processes)${NC}"
     else
@@ -208,7 +208,7 @@ check_status() {
             echo -e "  Port $port: ${GREEN}AVAILABLE${NC}"
         fi
     done
-    
+
     if [[ -f "$PID_FILE" ]]; then
         echo
         echo "Active blocker processes:"

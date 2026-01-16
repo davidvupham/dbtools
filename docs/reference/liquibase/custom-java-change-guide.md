@@ -24,7 +24,7 @@ Use this when you want your Java code to **produce SQL strings**. Liquibase will
 ```java
 public class CreateAuditTableChange implements CustomSqlChange {
     private String tableName;
-    
+
     // Setters for parameters from changelog
     public void setTableName(String tableName) { this.tableName = tableName; }
 
@@ -34,7 +34,7 @@ public class CreateAuditTableChange implements CustomSqlChange {
             new RawSqlStatement("CREATE TABLE " + tableName + "_AUDIT (...)")
         };
     }
-    
+
     // ... setup and confirmation methods
 }
 ```
@@ -73,7 +73,7 @@ import liquibase.resource.ResourceAccessor;
 public class BackfillOrderTotals implements CustomTaskChange {
 
     private String targetTable;
-    
+
     public void setTargetTable(String targetTable) {
         this.targetTable = targetTable;
     }

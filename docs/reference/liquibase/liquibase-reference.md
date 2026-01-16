@@ -7,7 +7,7 @@
 > **Maintainers:** Global Data Services Team
 > **Status:** Production
 ![Document Status](https://img.shields.io/badge/Status-Production-green)
- 
+
 > [!IMPORTANT]
 > **Related Docs:** [Concepts](../../explanation/liquibase/liquibase-concepts.md) | [Architecture](../../explanation/liquibase/liquibase-architecture.md) | [Operations](../../how-to/liquibase/liquibase-operations-guide.md) | [Drift Management](../../explanation/liquibase/liquibase-drift-management.md) | [Formatted SQL](./liquibase-formatted-sql-guide.md)
 

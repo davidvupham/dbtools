@@ -495,4 +495,3 @@ After completing this implementation:
 3. Document break-glass procedures for emergency access
 4. Train operations team on troubleshooting steps
 5. Consider migrating to GitHub OIDC for Vault authentication
-

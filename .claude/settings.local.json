@@ -13,7 +13,9 @@
       "Bash(chmod:*)",
       "Bash(./test_part2_manual.sh:*)",
       "Bash(ls:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(uv run ruff:*)",
+      "Bash(uv run pre-commit:*)"
     ]
   }
 }

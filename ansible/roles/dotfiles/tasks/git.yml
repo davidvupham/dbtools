@@ -72,4 +72,3 @@
       Git user.email not configured. Set it manually:
         git config --global user.email "your.email@example.com"
   when: git_user_email | length == 0
-

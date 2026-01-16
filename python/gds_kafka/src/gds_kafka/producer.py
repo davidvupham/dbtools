@@ -2,7 +2,7 @@
 
 import json
 import logging
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 from kafka import KafkaProducer
 from kafka.errors import (
@@ -56,7 +56,7 @@ class KafkaProducerClient:
         except KafkaError as e:
             raise KafkaConnectionError(f"Kafka connection error: {e}") from e
 
-    def send(self, topic: str, value: Dict[str, Any], key: Optional[str] = None) -> None:
+    def send(self, topic: str, value: dict[str, Any], key: Optional[str] = None) -> None:
         """Send a message to a Kafka topic.
 
         Args:

@@ -47,10 +47,9 @@ import signal
 import socket
 import threading
 import time
-from collections.abc import Iterable
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any
 from urllib.parse import urlparse
 
 import pika
@@ -71,6 +70,9 @@ except Exception:
     _PYSNMP_BACKEND = "asyncio"
 from pysnmp.entity import config, engine
 from pysnmp.entity.rfc3413 import ntfrcv
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 logger = logging.getLogger("gds_snmp_receiver")
 
@@ -345,7 +347,7 @@ class SNMPReceiver:
         self.rabbitmq_wait_timeout = config_obj.rabbitmq_wait_timeout
 
         # SNMP engine state
-        self._snmp_engine: Optional[engine.SnmpEngine] = None
+        self._snmp_engine: engine.SnmpEngine | None = None
         self._snmp_transport = None  # UDP transport, set during setup
         self._use_asyncio_backend = False  # pysnmp 7.x uses asyncio
 
@@ -353,7 +355,7 @@ class SNMPReceiver:
         self._running = threading.Event()  # Tracks receiver state
 
         # RabbitMQ connection state (reused across publishes)
-        self._pika_conn: Optional[pika.BlockingConnection] = None
+        self._pika_conn: pika.BlockingConnection | None = None
         self._pika_ch = None  # pika.BlockingChannel
 
         self._setup_logging()
@@ -752,7 +754,7 @@ class SNMPReceiver:
                 return
 
             # Parse trap details from varbinds
-            alert_name: Optional[str] = None
+            alert_name: str | None = None
             details: dict[str, str] = {}
 
             # Step 1: Extract all OID-value pairs

@@ -134,27 +134,27 @@ validate_instance() {
     local instance="$1"
     local container_name="$instance"
     local failures=0
-    
+
     pass() { echo -e "[${GREEN}PASS${NC}] $1"; }
     fail() { echo -e "[${RED}FAIL${NC}] $1"; failures=$((failures+1)); }
     warn() { echo -e "[${YELLOW}WARN${NC}] $1"; }
-    
+
     echo "========================================"
     echo "Validating App Schema Objects"
     echo "========================================"
     echo
     echo "Instance: $(pretty_instance "$instance")"
     echo
-    
+
     # Check container is running
     if ! $CR_CMD ps --format "{{.Names}}" | grep -q "^${container_name}$"; then
         fail "Container $container_name is not running"
         return 1
     fi
-    
+
     echo "Container: $container_name"
     echo
-    
+
     # Query objects in app schema
     local query="USE orderdb;
 SELECT
@@ -164,10 +164,10 @@ SELECT
 FROM sys.objects
 WHERE schema_id = SCHEMA_ID('app')
 ORDER BY type_desc, name;"
-    
+
     echo "Querying objects in app schema..."
     echo
-    
+
     # Execute query and format output with borders
     local query_result
     query_result=$($CR_CMD exec "$container_name" /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa \
@@ -175,7 +175,7 @@ ORDER BY type_desc, name;"
         -d orderdb \
         -Q "$query" \
         -s "|" -h -1 -W 2>&1)
-    
+
     # Check if query succeeded (look for expected output patterns)
     if echo "$query_result" | grep -qE "^app\|"; then
         # Format and display as table with borders
@@ -211,20 +211,20 @@ ORDER BY type_desc, name;"
                     printf "+%-13s+%-43s+%-30s+\n", "-------------", "-------------------------------------------", "------------------------------"
                 }
             }'
-        
+
         # Count objects
         local object_count
         object_count=$(echo "$query_result" | grep -E "^app\|" | wc -l | tr -d ' ')
         echo
         echo "Total objects: $object_count"
-        
+
         # Check for expected objects (basic validation)
         if echo "$query_result" | grep -q "customer"; then
             pass "customer table found"
         else
             fail "customer table not found"
         fi
-        
+
         if echo "$query_result" | grep -q "orders"; then
             pass "orders table found"
         else
@@ -236,7 +236,7 @@ ORDER BY type_desc, name;"
         echo "$query_result"
         return 1
     fi
-    
+
     echo
     if [[ "$failures" -eq 0 ]]; then
         echo -e "${GREEN}VALIDATION SUCCESSFUL${NC}"
@@ -258,14 +258,14 @@ declare -a FAILED_INSTANCES=()
 for instance in "${TARGET_INSTANCES[@]}"; do
     # Trim whitespace
     instance="${instance//[[:space:]]/}"
-    
+
     if validate_instance "$instance"; then
         SUCCESS_INSTANCES+=("$instance")
     else
         FAILED_INSTANCES+=("$instance")
         TOTAL_FAILURES=$((TOTAL_FAILURES+1))
     fi
-    
+
     echo
 done
 
@@ -277,11 +277,11 @@ if [[ ${#TARGET_INSTANCES[@]} -gt 1 ]]; then
     echo "========================================"
     echo "Validation Summary"
     echo "========================================"
-    
+
     if [[ ${#SUCCESS_INSTANCES[@]} -gt 0 ]]; then
         echo -e "${GREEN}Successful:${NC} ${SUCCESS_INSTANCES[*]}"
     fi
-    
+
     if [[ ${#FAILED_INSTANCES[@]} -gt 0 ]]; then
         echo -e "${RED}Failed:${NC} ${FAILED_INSTANCES[*]}"
     fi

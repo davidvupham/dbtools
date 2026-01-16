@@ -148,7 +148,7 @@ class TestSnowflakeConnectionConnectivity:
 
     def test_connect_with_all_parameters(self, mock_vault_success, mock_snowflake_connect):
         """Test connection with all parameters"""
-        mock_connect, mock_conn, _ = mock_snowflake_connect
+        mock_connect, _mock_conn, _ = mock_snowflake_connect
 
         conn = SnowflakeConnection(
             account="test_account",
@@ -211,7 +211,7 @@ class TestSnowflakeConnectionConnectivity:
 
     def test_close_connection(self, mock_vault_success, mock_snowflake_connect):
         """Test connection closing"""
-        mock_connect, mock_conn, _ = mock_snowflake_connect
+        _mock_connect, mock_conn, _ = mock_snowflake_connect
 
         conn = SnowflakeConnection(account="test_account", vault_secret_path="secret/snowflake")
         conn.connect()
@@ -235,7 +235,7 @@ class TestSnowflakeConnectionQueries:
 
     def test_execute_query_success(self, mock_vault_success, mock_snowflake_connect):
         """Test successful query execution"""
-        mock_connect, mock_conn, mock_cursor = mock_snowflake_connect
+        _mock_connect, _mock_conn, mock_cursor = mock_snowflake_connect
         mock_cursor.fetchall.return_value = [
             ("row1", "val1"),
             ("row2", "val2"),
@@ -251,7 +251,7 @@ class TestSnowflakeConnectionQueries:
 
     def test_execute_query_with_params(self, mock_vault_success, mock_snowflake_connect):
         """Test query execution with parameters"""
-        mock_connect, mock_conn, mock_cursor = mock_snowflake_connect
+        _mock_connect, _mock_conn, mock_cursor = mock_snowflake_connect
         mock_cursor.fetchall.return_value = [("filtered_result",)]
 
         conn = SnowflakeConnection(account="test_account", vault_secret_path="secret/snowflake")
@@ -265,7 +265,7 @@ class TestSnowflakeConnectionQueries:
 
     def test_execute_query_error_handling(self, mock_vault_success, mock_snowflake_connect):
         """Test query execution error handling"""
-        mock_connect, mock_conn, mock_cursor = mock_snowflake_connect
+        _mock_connect, _mock_conn, mock_cursor = mock_snowflake_connect
         mock_cursor.execute.side_effect = Exception("Query failed")
 
         conn = SnowflakeConnection(account="test_account", vault_secret_path="secret/snowflake")
@@ -277,7 +277,7 @@ class TestSnowflakeConnectionQueries:
 
     def test_execute_query_dict_success(self, mock_vault_success, mock_snowflake_connect):
         """Test successful dictionary query execution"""
-        mock_connect, mock_conn, mock_cursor = mock_snowflake_connect
+        _mock_connect, mock_conn, mock_cursor = mock_snowflake_connect
 
         # Create a separate mock for DictCursor that returns dicts
         mock_dict_cursor = Mock()
@@ -309,7 +309,7 @@ class TestSnowflakeConnectionQueries:
 
     def test_execute_query_dict_error_handling(self, mock_vault_success, mock_snowflake_connect):
         """Test dictionary query execution error handling"""
-        mock_connect, mock_conn, mock_cursor = mock_snowflake_connect
+        _mock_connect, mock_conn, mock_cursor = mock_snowflake_connect
 
         # Create mock dict cursor that raises exception
         mock_dict_cursor = Mock()
@@ -336,7 +336,7 @@ class TestSnowflakeConnectionAdvanced:
 
     def test_test_connectivity_success(self, mock_vault_success, mock_snowflake_connect):
         """Test successful connectivity test"""
-        mock_connect, mock_conn, mock_cursor = mock_snowflake_connect
+        _mock_connect, _mock_conn, mock_cursor = mock_snowflake_connect
         # Return tuple with 7 values matching CURRENT_ACCOUNT(), CURRENT_USER(), CURRENT_ROLE(), CURRENT_WAREHOUSE(), CURRENT_DATABASE(), CURRENT_VERSION(), CURRENT_REGION()
         mock_cursor.fetchone.return_value = (
             "test_account",  # account_name
@@ -373,7 +373,7 @@ class TestSnowflakeConnectionAdvanced:
 
     def test_switch_account(self, mock_vault_success, mock_snowflake_connect):
         """Test account switching functionality"""
-        mock_connect, mock_conn, _ = mock_snowflake_connect
+        _mock_connect, mock_conn, _ = mock_snowflake_connect
 
         conn = SnowflakeConnection(account="test_account", vault_secret_path="secret/snowflake")
         conn.connect()
@@ -391,7 +391,7 @@ class TestSnowflakeConnectionAdvanced:
 
     def test_context_manager(self, mock_vault_success, mock_snowflake_connect):
         """Test context manager functionality"""
-        mock_connect, mock_conn, _ = mock_snowflake_connect
+        _mock_connect, mock_conn, _ = mock_snowflake_connect
 
         with SnowflakeConnection(account="test_account", vault_secret_path="secret/snowflake") as conn:
             assert conn.connection == mock_conn
@@ -402,7 +402,7 @@ class TestSnowflakeConnectionAdvanced:
 
     def test_context_manager_with_exception(self, mock_vault_success, mock_snowflake_connect):
         """Test context manager with exception handling"""
-        mock_connect, mock_conn, _ = mock_snowflake_connect
+        _mock_connect, mock_conn, _ = mock_snowflake_connect
 
         try:
             with SnowflakeConnection(account="test_account", vault_secret_path="secret/snowflake") as conn:
@@ -435,7 +435,7 @@ class TestSnowflakeConnectionEdgeCases:
 
     def test_multiple_connections(self, mock_vault_success, mock_snowflake_connect):
         """Test handling multiple connection attempts"""
-        mock_connect, mock_conn, _ = mock_snowflake_connect
+        _mock_connect, mock_conn, _ = mock_snowflake_connect
 
         conn = SnowflakeConnection(account="test_account", vault_secret_path="secret/snowflake")
 
@@ -449,7 +449,7 @@ class TestSnowflakeConnectionEdgeCases:
 
     def test_connection_state_tracking(self, mock_vault_success, mock_snowflake_connect):
         """Test connection state tracking"""
-        mock_connect, mock_conn, _ = mock_snowflake_connect
+        _mock_connect, mock_conn, _ = mock_snowflake_connect
 
         conn = SnowflakeConnection(account="test_account", vault_secret_path="secret/snowflake")
 

@@ -123,16 +123,16 @@ with PostgreSQLConnection(
             "INSERT INTO users (name, email) VALUES (%s, %s)",
             ('John Doe', 'john@example.com')
         )
-        
+
         conn.execute_query(
             "UPDATE user_stats SET login_count = login_count + 1 WHERE user_id = %s",
             (user_id,)
         )
-        
+
         # Commit transaction
         conn.commit()
         print("Transaction completed successfully")
-        
+
     except Exception as e:
         # Rollback on error
         conn.rollback()
@@ -146,12 +146,12 @@ with PostgreSQLConnection(connection_url=db_url) as conn:
     # Get all table names
     tables = conn.get_table_names()
     print(f"Tables: {tables}")
-    
+
     # Get column information for a table
     columns = conn.get_column_info('users')
     for col in columns:
         print(f"{col['column_name']}: {col['data_type']} ({'NULL' if col['is_nullable'] == 'YES' else 'NOT NULL'})")
-    
+
     # Get connection information
     info = conn.get_connection_info()
     print(f"Connected to PostgreSQL {info.get('server_version', 'unknown')}")
@@ -166,7 +166,7 @@ with PostgreSQLConnection(config=config) as conn:
         "SELECT * FROM users WHERE age >= %s AND city = %s",
         (18, 'New York')
     )
-    
+
     # Insert with parameters
     result = conn.execute_query(
         "INSERT INTO products (name, price, category) VALUES (%s, %s, %s)",
@@ -189,13 +189,13 @@ try:
         password='mypass'
     )
     conn.connect()
-    
+
 except ConnectionError as e:
     print(f"Failed to connect: {e}")
-    
+
 except QueryError as e:
     print(f"Query failed: {e}")
-    
+
 except Exception as e:
     print(f"Unexpected error: {e}")
 ```

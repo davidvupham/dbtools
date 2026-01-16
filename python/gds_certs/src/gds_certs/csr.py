@@ -52,9 +52,7 @@ class CertificateRequest:
     key_size: int = 2048  # RSA key size (2048, 4096)
     curve: str = "secp256r1"  # ECDSA curve
 
-    _private_key: rsa.RSAPrivateKey | ec.EllipticCurvePrivateKey | None = field(
-        default=None, repr=False, compare=False
-    )
+    _private_key: rsa.RSAPrivateKey | ec.EllipticCurvePrivateKey | None = field(default=None, repr=False, compare=False)
     _csr: x509.CertificateSigningRequest | None = field(default=None, repr=False, compare=False)
 
     def generate(self) -> None:

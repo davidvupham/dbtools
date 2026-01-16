@@ -457,7 +457,7 @@ class TestVaultClientSSLBehavior(unittest.TestCase):
         client = VaultClient(ssl_cert_path="/tmp/ca.pem")
         client.get_secret("secret/data/x", use_cache=False)
 
-        args, kwargs = mock_get.call_args
+        _args, kwargs = mock_get.call_args
         self.assertEqual(kwargs.get("verify"), "/tmp/ca.pem")
 
     @patch.dict(
@@ -480,7 +480,7 @@ class TestVaultClientSSLBehavior(unittest.TestCase):
         client = VaultClient(verify_ssl=False)
         client.get_secret("secret/data/x", use_cache=False)
 
-        args, kwargs = mock_get.call_args
+        _args, kwargs = mock_get.call_args
         self.assertFalse(kwargs.get("verify"))
 
 

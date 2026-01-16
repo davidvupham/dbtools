@@ -54,4 +54,3 @@
     name: "{{ docker_packages }}"
     state: present
     update_cache: true
-

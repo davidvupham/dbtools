@@ -54,7 +54,7 @@ This is a thin CLI wrapper that:
 def main(argv: Optional[list[str]] = None) -> None:
     parser = argparse.ArgumentParser(description="gds_snmp_receiver CLI")
     # ... parse arguments ...
-    
+
     receiver = SNMPReceiver(
         listen_host=args.host,
         listen_port=args.port,
@@ -310,11 +310,11 @@ Convention for unused parameters. Signals to readers (and linters) that these ar
            oid_str.endswith('1.3.6.1.6.3.1.1.4.1.0')):
        alert_name = str(val)
    ```
-   
+
    **SNMPv2 Standard:**
    - OID `1.3.6.1.6.3.1.1.4.1.0` = `snmpTrapOID.0`
    - Value is the trap type (e.g., `1.3.6.1.6.3.1.1.5.3` = linkDown)
-   
+
    **Why check both with/without leading dot?**
    pysnmp may return OIDs with or without leading dot depending on version. Defensive programming.
 
@@ -324,14 +324,14 @@ Convention for unused parameters. Signals to readers (and linters) that these ar
        first = var_binds_list[0]
        alert_name = f"snmp:{str(first[0])}"
    ```
-   
+
    If trap doesn't follow SNMPv2 standard, use first OID as alert name. Better than `None`.
 
 5. **Generate Idempotency Key**
    ```python
    idempotency_id = self.compute_idempotency_from_trap(var_binds_list)
    ```
-   
+
    SHA-256 hash of varbinds + timestamp. Enables downstream duplicate detection.
 
 6. **Build Payload**
@@ -346,7 +346,7 @@ Convention for unused parameters. Signals to readers (and linters) that these ar
        'body_text': json.dumps(details, indent=2),
    }
    ```
-   
+
    **Payload Design:**
    - `idempotency_id`: For deduplication
    - `alert_name`: For routing/filtering
@@ -491,17 +491,17 @@ def stop(self) -> None:
     # 1. Close SNMP dispatcher
     if self._snmp_engine is not None:
         self._snmp_engine.transportDispatcher.closeDispatcher()
-    
+
     # 2. Close RabbitMQ connection
     if self._pika_conn is not None:
         self._pika_conn.close()
         self._pika_conn = None
         self._pika_ch = None
-    
+
     # 3. Remove readiness marker
     if os.path.exists("/tmp/gds_snmp_ready"):
         os.remove("/tmp/gds_snmp_ready")
-    
+
     # 4. Clear running flag
     self._running.clear()
 ```
@@ -534,7 +534,7 @@ from pysnmp import hlapi
 
 def _setup_snmp_engine(self):
     # ... existing code ...
-    
+
     # Add USM user for SNMPv3
     addV3User(
         snmp_engine,
@@ -551,12 +551,12 @@ def _setup_snmp_engine(self):
 ```python
 def _trap_callback(self, ...):
     # ... parse trap ...
-    
+
     # Filter by OID
     if self._should_filter(alert_name):
         logger.debug("Filtered trap: %s", alert_name)
         return
-    
+
     # Continue processing
     self.publish_alert(payload)
 
@@ -574,7 +574,7 @@ from prometheus_client import Counter, Histogram
 class SNMPReceiver:
     def __init__(self, ...):
         # ... existing code ...
-        
+
         # Metrics
         self.traps_received = Counter(
             'snmp_traps_received_total',
@@ -588,14 +588,14 @@ class SNMPReceiver:
             'snmp_publish_duration_seconds',
             'Time to publish to RabbitMQ'
         )
-    
+
     def _trap_callback(self, ...):
         self.traps_received.inc()
         # ... process trap ...
-        
+
         with self.publish_duration.time():
             self.publish_alert(payload)
-        
+
         self.traps_published.inc()
 ```
 
@@ -612,26 +612,26 @@ class SNMPReceiver:
         # ... existing code ...
         self._publish_queue = queue.Queue(maxsize=1000)
         self._publisher_thread = None
-    
+
     def run(self):
         # ... existing code ...
-        
+
         # Start publisher thread
         self._publisher_thread = threading.Thread(
             target=self._publisher_loop
         )
         self._publisher_thread.start()
-        
+
         # ... run dispatcher ...
-    
+
     def _trap_callback(self, ...):
         # ... parse trap ...
-        
+
         try:
             self._publish_queue.put_nowait(payload)
         except queue.Full:
             logger.error("Publish queue full, dropping trap")
-    
+
     def _publisher_loop(self):
         while self._running.is_set():
             try:
@@ -656,16 +656,16 @@ class TestTrapParsing(unittest.TestCase):
     def test_parse_varbinds(self):
         receiver = SNMPReceiver()
         receiver.publish_alert = Mock()
-        
+
         # Mock varbinds
         varbinds = [
             (ObjectIdentifier('1.3.6.1.2.1.1.3.0'), Integer(12345)),
-            (ObjectIdentifier('1.3.6.1.6.3.1.1.4.1.0'), 
+            (ObjectIdentifier('1.3.6.1.6.3.1.1.4.1.0'),
              ObjectIdentifier('1.3.6.1.6.3.1.1.5.3')),
         ]
-        
+
         receiver._trap_callback(None, None, None, None, varbinds, None)
-        
+
         # Verify publish was called
         assert receiver.publish_alert.called
         payload = receiver.publish_alert.call_args[0][0]
@@ -678,10 +678,10 @@ class TestTrapParsing(unittest.TestCase):
 def test_publish_to_real_rabbitmq():
     receiver = SNMPReceiver(rabbit_url='amqp://localhost/')
     receiver._ensure_pika_connection()
-    
+
     payload = {'test': 'data'}
     receiver.publish_alert(payload)
-    
+
     # Verify message in queue
     import pika
     conn = pika.BlockingConnection(pika.URLParameters('amqp://localhost/'))

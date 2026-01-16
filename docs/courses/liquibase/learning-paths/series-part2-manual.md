@@ -578,7 +578,7 @@ IF EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_orders_order_date' AND obj
 # Validate: Confirm index was dropped
 sqlcmd-tutorial -S mssql_dev -Q "
 USE orderdb;
-SELECT CASE 
+SELECT CASE
     WHEN EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_orders_order_date' AND object_id = OBJECT_ID('app.orders'))
     THEN 'ERROR: Index still exists'
     ELSE 'OK: Index IX_orders_order_date was dropped'

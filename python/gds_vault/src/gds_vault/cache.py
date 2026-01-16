@@ -359,11 +359,10 @@ class RotationAwareCache(SecretCache):
             return None
 
         # Check standard TTL expiration
-        if key in self._expiry:
-            if time.time() >= self._expiry[key]:
-                logger.debug("Secret TTL expired: %s", key)
-                self.remove(key)
-                return None
+        if key in self._expiry and time.time() >= self._expiry[key]:
+            logger.debug("Secret TTL expired: %s", key)
+            self.remove(key)
+            return None
 
         return super().get(key)
 

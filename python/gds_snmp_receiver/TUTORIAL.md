@@ -278,7 +278,7 @@ def run(self) -> None:
 
 ```python
 def _trap_callback(
-    self, _snmpEngine, _stateReference, _contextEngineId, 
+    self, _snmpEngine, _stateReference, _contextEngineId,
     _contextName, varBinds, _cbCtx
 ) -> None:
 ```
@@ -717,7 +717,7 @@ Modify `core.py` to accept multiple community strings:
 ```python
 def _setup_snmp_engine(self) -> None:
     # ... existing code ...
-    
+
     # Accept multiple community strings
     communities = ['public', 'private', 'monitoring']
     for comm in communities:
@@ -751,17 +751,17 @@ Add filtering logic in `_trap_callback`:
 ```python
 def _trap_callback(self, ...):
     # ... parse trap ...
-    
+
     # Filter by OID
     if alert_name.startswith('1.3.6.1.6.3.1.1.5.1'):
         logger.debug("Ignoring coldStart trap")
         return
-    
+
     # Filter by content
     if 'test' in json.dumps(details).lower():
         logger.debug("Ignoring test trap")
         return
-    
+
     # Continue with publish
     self.publish_alert(payload)
 ```
@@ -773,7 +773,7 @@ Add additional data to published messages:
 ```python
 def _trap_callback(self, ...):
     # ... existing code ...
-    
+
     payload = {
         'idempotency_id': idempotency_id,
         'alert_name': alert_name,
@@ -782,7 +782,7 @@ def _trap_callback(self, ...):
         'raw': details,
         'subject': f'SNMP Trap: {alert_name}',
         'body_text': json.dumps(details, indent=2),
-        
+
         # Add enrichment
         'receiver_host': socket.gethostname(),
         'environment': os.environ.get('ENV', 'production'),
@@ -800,11 +800,11 @@ services:
   snmp-receiver-1:
     image: gds-snmp-receiver:latest
     # ... config ...
-  
+
   snmp-receiver-2:
     image: gds-snmp-receiver:latest
     # ... config ...
-  
+
   haproxy:
     image: haproxy:latest
     ports:

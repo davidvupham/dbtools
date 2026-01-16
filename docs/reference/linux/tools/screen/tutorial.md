@@ -29,11 +29,11 @@
 
 ### 2. Core Concepts
 *   **Command Key (Prefix)**: Screen's prefix is **`Ctrl + a`** (written as `C-a`).
-    
+
     **How to use it (two-step process):**
     1. Press and hold `Ctrl`, tap `a`, then release both keys.
     2. Now press the command key (e.g., `d` to detach).
-    
+
     For example, `C-a d` means: Press `Ctrl + a` → release → press `d`.
 
 *   **Detaching**: The primary "superpower" of screen. Leaving the session running while you disconnect.

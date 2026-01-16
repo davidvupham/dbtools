@@ -1,8 +1,8 @@
 # Liquibase Tutorial Part 1 Validation Report - RHEL 10.1
 
-**Date:** 2026-01-09  
-**Platform:** Red Hat Enterprise Linux 10.1 (WSL2)  
-**Container Runtime:** Podman 5.6.0  
+**Date:** 2026-01-09
+**Platform:** Red Hat Enterprise Linux 10.1 (WSL2)
+**Container Runtime:** Podman 5.6.0
 **Tutorial:** Part 1 - Baseline SQL Server + Liquibase Setup
 
 ---
@@ -303,6 +303,6 @@ With the documented workarounds, users should be able to complete the tutorial, 
 
 ---
 
-**Report Generated:** 2026-01-09  
-**Validated By:** Automated Validation Process  
+**Report Generated:** 2026-01-09
+**Validated By:** Automated Validation Process
 **Platform:** RHEL 10.1 (WSL2) with Podman 5.6.0

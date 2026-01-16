@@ -4,7 +4,6 @@ import json
 from unittest.mock import MagicMock, patch
 
 import pytest
-
 from gds_notification.exceptions import (
     NotificationConfigError,
     NotificationDeliveryError,

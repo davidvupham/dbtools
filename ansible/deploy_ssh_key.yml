@@ -89,4 +89,3 @@
             ssh {{ target_user }}@{{ ansible_host | default(inventory_hostname) }}
           ============================================================
       run_once: true
-

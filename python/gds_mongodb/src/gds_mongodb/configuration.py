@@ -12,7 +12,7 @@ options.
 Reference: https://www.mongodb.com/docs/manual/reference/command/getParameter/
 """
 
-from typing import TYPE_CHECKING, Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Optional
 
 from pymongo.database import Database
 from pymongo.errors import PyMongoError
@@ -121,7 +121,7 @@ class MongoDBConfiguration:
         except PyMongoError as e:
             raise PyMongoError(f"Failed to retrieve configuration '{name}': {e!s}")
 
-    def get_details(self, name: str) -> Dict[str, Any]:
+    def get_details(self, name: str) -> dict[str, Any]:
         """
         Retrieve detailed information about a configuration setting.
 
@@ -163,7 +163,7 @@ class MongoDBConfiguration:
         except PyMongoError as e:
             raise PyMongoError(f"Failed to retrieve configuration details for '{name}': {e!s}")
 
-    def get_all(self, include_details: bool = False) -> Dict[str, Any]:
+    def get_all(self, include_details: bool = False) -> dict[str, Any]:
         """
         Retrieve all available configuration settings.
 
@@ -203,7 +203,7 @@ class MongoDBConfiguration:
         except PyMongoError as e:
             raise PyMongoError(f"Failed to retrieve all configurations: {e!s}")
 
-    def get_all_details(self) -> List[Dict[str, Any]]:
+    def get_all_details(self) -> list[dict[str, Any]]:
         """
         Retrieve all configurations as a list of detail dictionaries.
 
@@ -242,7 +242,7 @@ class MongoDBConfiguration:
         except PyMongoError as e:
             raise PyMongoError(f"Failed to retrieve configuration details: {e!s}")
 
-    def get_runtime_configurable(self) -> Dict[str, Any]:
+    def get_runtime_configurable(self) -> dict[str, Any]:
         """
         Retrieve all configurations that can be set at runtime.
 
@@ -279,7 +279,7 @@ class MongoDBConfiguration:
                 return {s["name"]: s["value"] for s in all_settings if s.get("settable_at_runtime")}
             raise PyMongoError(f"Failed to retrieve runtime configurations: {e!s}")
 
-    def get_startup_configurable(self) -> Dict[str, Any]:
+    def get_startup_configurable(self) -> dict[str, Any]:
         """
         Retrieve all configurations that can be set at startup.
 
@@ -316,7 +316,7 @@ class MongoDBConfiguration:
                 return {s["name"]: s["value"] for s in all_settings if s.get("settable_at_startup")}
             raise PyMongoError(f"Failed to retrieve startup configurations: {e!s}")
 
-    def get_by_prefix(self, prefix: str) -> Dict[str, Any]:
+    def get_by_prefix(self, prefix: str) -> dict[str, Any]:
         """
         Get all configurations whose names start with the given prefix.
 
@@ -338,7 +338,7 @@ class MongoDBConfiguration:
         all_settings = self.get_all()
         return {name: value for name, value in all_settings.items() if name.startswith(prefix)}
 
-    def search(self, keyword: str, case_sensitive: bool = False) -> Dict[str, Any]:
+    def search(self, keyword: str, case_sensitive: bool = False) -> dict[str, Any]:
         """
         Search for configurations containing the given keyword in their name.
 
@@ -365,7 +365,7 @@ class MongoDBConfiguration:
         keyword_lower = keyword.lower()
         return {name: value for name, value in all_settings.items() if keyword_lower in name.lower()}
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """
         Export all configurations as a dictionary.
 
@@ -374,7 +374,7 @@ class MongoDBConfiguration:
         """
         return self.get_all()
 
-    def set(self, name: str, value: Any, comment: Optional[str] = None) -> Dict[str, Any]:
+    def set(self, name: str, value: Any, comment: Optional[str] = None) -> dict[str, Any]:
         """
         Set a runtime-configurable setting value.
 
@@ -423,7 +423,7 @@ class MongoDBConfiguration:
                 raise PyMongoError(f"Configuration '{name}' can only be set at startup, not at runtime: {error_msg}")
             raise PyMongoError(f"Failed to set configuration '{name}': {error_msg}")
 
-    def set_multiple(self, settings: Dict[str, Any], comment: Optional[str] = None) -> Dict[str, Any]:
+    def set_multiple(self, settings: dict[str, Any], comment: Optional[str] = None) -> dict[str, Any]:
         """
         Set multiple runtime-configurable settings at once.
 

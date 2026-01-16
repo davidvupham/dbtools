@@ -168,7 +168,7 @@ for group in failover_groups:
     print(f"Group: {group.name}")
     print(f"Type: {group.type}")
     print(f"Primary: {group.primary_account}")
-    
+
 # Close connection
 conn.close()
 ```
@@ -337,7 +337,7 @@ with SnowflakeConnection(
     # Execute queries
     results = conn.execute_query("SELECT CURRENT_VERSION()")
     print(f"Version: {results[0][0]}")
-    
+
     # Execute with dictionary results
     results = conn.execute_query_dict(
         "SELECT CURRENT_ACCOUNT() as ACCOUNT, CURRENT_USER() as USER"
@@ -365,12 +365,12 @@ for fg in failover_groups:
     print(f"Failover Group: {fg.name}")
     print(f"  Primary: {fg.primary_account}")
     print(f"  Schedule: {fg.replication_schedule}")
-    
+
     # Check for failures
     is_failed, error_msg = replication.check_replication_failure(fg)
     if is_failed:
         print(f"  Status: FAILED - {error_msg}")
-    
+
     # Check for latency
     has_latency, latency_msg = replication.check_replication_latency(fg)
     if has_latency:

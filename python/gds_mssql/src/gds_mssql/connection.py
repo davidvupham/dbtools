@@ -6,10 +6,9 @@ interface for Microsoft SQL Server databases using pyodbc.
 """
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 import pyodbc
-
 from gds_database import (
     ConfigurableComponent,
     ConfigurationError,
@@ -73,7 +72,7 @@ class MSSQLConnection(DatabaseConnection, ConfigurableComponent, ResourceManager
         authentication: Optional[str] = None,
         driver: Optional[str] = None,
         port: Optional[int] = None,
-        config: Optional[Dict[str, Any]] = None,
+        config: Optional[dict[str, Any]] = None,
         **kwargs,
     ):
         """
@@ -91,7 +90,7 @@ class MSSQLConnection(DatabaseConnection, ConfigurableComponent, ResourceManager
             **kwargs: Additional pyodbc connection parameters
         """
         # Build configuration from parameters
-        conn_config: Dict[str, Any] = dict(config) if config else {}
+        conn_config: dict[str, Any] = dict(config) if config else {}
 
         if server is not None:
             conn_config["server"] = server
@@ -222,7 +221,7 @@ class MSSQLConnection(DatabaseConnection, ConfigurableComponent, ResourceManager
         params: Optional[tuple] = None,
         fetch_all: bool = True,
         return_dict: bool = False,
-    ) -> List[Any]:
+    ) -> list[Any]:
         """
         Execute a query and return results.
 
@@ -292,7 +291,7 @@ class MSSQLConnection(DatabaseConnection, ConfigurableComponent, ResourceManager
             logger.error(error_msg)
             raise QueryError(error_msg) from e
 
-    def execute_query_dict(self, query: str, params: Optional[tuple] = None) -> List[Dict[str, Any]]:
+    def execute_query_dict(self, query: str, params: Optional[tuple] = None) -> list[dict[str, Any]]:
         """
         Execute query and return results as dictionaries.
 
@@ -328,7 +327,7 @@ class MSSQLConnection(DatabaseConnection, ConfigurableComponent, ResourceManager
         except pyodbc.Error:
             return False
 
-    def get_connection_info(self) -> Dict[str, Any]:
+    def get_connection_info(self) -> dict[str, Any]:
         """
         Get connection information.
 
@@ -393,7 +392,7 @@ class MSSQLConnection(DatabaseConnection, ConfigurableComponent, ResourceManager
             logger.error(error_msg)
             raise QueryError(error_msg) from e
 
-    def get_table_names(self, schema: str = "dbo") -> List[str]:
+    def get_table_names(self, schema: str = "dbo") -> list[str]:
         """
         Get list of table names in specified schema.
 
@@ -413,7 +412,7 @@ class MSSQLConnection(DatabaseConnection, ConfigurableComponent, ResourceManager
         results = self.execute_query(query, (schema,))
         return [row[0] for row in results]
 
-    def get_column_info(self, table_name: str, schema: str = "dbo") -> List[Dict[str, Any]]:
+    def get_column_info(self, table_name: str, schema: str = "dbo") -> list[dict[str, Any]]:
         """
         Get column information for specified table.
 

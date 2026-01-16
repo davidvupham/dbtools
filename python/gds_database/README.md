@@ -40,23 +40,23 @@ from abc import ABC
 
 class MyDatabaseConnection(DatabaseConnection):
     """Custom database connection implementation."""
-    
+
     def connect(self):
         # Implement connection logic
         pass
-    
+
     def disconnect(self):
         # Implement disconnection logic
         pass
-    
+
     def execute_query(self, query, params=None):
         # Implement query execution
         pass
-    
+
     def is_connected(self):
         # Check connection status
         pass
-    
+
     def get_connection_info(self):
         # Return connection information
         pass
@@ -91,11 +91,11 @@ from gds_database import ResourceManager
 class DatabaseManager(ResourceManager):
     def initialize(self):
         self.connection = create_connection()
-    
+
     def cleanup(self):
         if hasattr(self, 'connection'):
             self.connection.close()
-    
+
     def is_initialized(self):
         return hasattr(self, 'connection') and self.connection.is_open()
 
@@ -112,7 +112,7 @@ The package is built around several core abstract base classes:
 ### DatabaseConnection
 The main interface that all database connections should implement:
 - `connect()` - Establish database connection
-- `disconnect()` - Close database connection  
+- `disconnect()` - Close database connection
 - `execute_query()` - Execute queries
 - `is_connected()` - Check connection status
 - `get_connection_info()` - Get connection metadata

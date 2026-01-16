@@ -1,6 +1,6 @@
 #!/bin/bash
 # compare_directories.sh
-# 
+#
 # Description:
 #   Traverses recursively a source directory to compare with a destination directory.
 #   Identifies:

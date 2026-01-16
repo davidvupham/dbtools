@@ -260,7 +260,7 @@ class SnowflakeReplication:
             last_run = history[0]
             status = last_run.get("STATUS", "").upper()
 
-            if status == "FAILED" or status == "PARTIALLY_FAILED":
+            if status in {"FAILED", "PARTIALLY_FAILED"}:
                 message = last_run.get("MESSAGE", "No error message available")
                 logger.warning("Replication failed for %s: %s", failover_group.name, message)
                 return True, message

@@ -24,9 +24,12 @@ import re
 import sys
 import textwrap
 import traceback
-from collections.abc import Iterable, Iterator, Sequence
 from dataclasses import dataclass
 from pathlib import Path
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable, Iterator, Sequence
 
 CODE_FENCE_PATTERN = re.compile(
     r"```(?P<lang>python|py|python3)\s*\n(?P<code>.*?)```",
@@ -74,8 +77,7 @@ def should_skip(block: CodeBlock) -> bool:
 
 
 def iter_markdown_files(root: Path) -> Iterator[Path]:
-    for path in sorted(root.rglob("*.md")):
-        yield path
+    yield from sorted(root.rglob("*.md"))
 
 
 def main(argv: Sequence[str] | None = None) -> int:

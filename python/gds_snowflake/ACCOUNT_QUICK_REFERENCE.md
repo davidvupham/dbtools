@@ -141,17 +141,17 @@ account_mgr = SnowflakeAccount(conn)
 try:
     # Get accounts
     accounts = account_mgr.get_all_accounts()
-    
+
     # Save to JSON
     filepath = account_mgr.save_accounts_to_json(accounts)
     print(f"Saved to: {filepath}")
-    
+
     # Analyze
     summary = account_mgr.get_account_summary(accounts)
     print(f"\nSummary:")
     print(f"  Total: {summary['total_accounts']}")
     print(f"  Regions: {list(summary['regions'].keys())}")
-    
+
 finally:
     conn.close()
 ```

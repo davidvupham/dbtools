@@ -8,14 +8,13 @@ MongoDB replica sets.
 import unittest
 from unittest.mock import MagicMock
 
-from pymongo.errors import OperationFailure, ServerSelectionTimeoutError
-
 from gds_database import (
     ConfigurationError,
     DatabaseConnectionError,
     QueryError,
 )
 from gds_mongodb.replica_set import MongoDBReplicaSetManager
+from pymongo.errors import OperationFailure, ServerSelectionTimeoutError
 
 
 class TestMongoDBReplicaSetManager(unittest.TestCase):
@@ -23,9 +22,8 @@ class TestMongoDBReplicaSetManager(unittest.TestCase):
 
     def setUp(self):
         """Set up test fixtures."""
-        from pymongo import MongoClient
-
         from gds_mongodb.connection import MongoDBConnection
+        from pymongo import MongoClient
 
         # Create mock MongoClient
         self.mock_client = MagicMock(spec=MongoClient)

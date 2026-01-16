@@ -441,9 +441,9 @@ class VaultClient:
 @retry_with_backoff(max_retries=3, initial_delay=1.0)
 def get_secret_from_vault(
     secret_path: str,
-    vault_addr: str = None,
-    mount_point: str = None,
-    namespace: str = None,
+    vault_addr: Optional[str] = None,
+    mount_point: Optional[str] = None,
+    namespace: Optional[str] = None,
 ) -> dict:
     """
     Retrieve a secret from HashiCorp Vault using AppRole authentication.

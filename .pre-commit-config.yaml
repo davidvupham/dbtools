@@ -12,7 +12,7 @@ repos:
       - id: ruff
         args: [--fix]
         types_or: [python, pyi]
-      
+
       # Run the formatter
       - id: ruff-format
         types_or: [python, pyi]

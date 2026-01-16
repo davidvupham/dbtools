@@ -8,4 +8,3 @@
 - name: Install NVM (Node Version Manager)
   ansible.builtin.include_tasks: nvm.yml
   tags: [nvm, node]
-

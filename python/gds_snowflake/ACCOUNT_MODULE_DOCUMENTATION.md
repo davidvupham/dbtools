@@ -18,19 +18,19 @@ SnowflakeAccount
 
 The module follows these OOP principles:
 
-1. **Single Responsibility Principle (SRP)**: 
+1. **Single Responsibility Principle (SRP)**:
    - `SnowflakeAccount` handles account information retrieval and storage
    - `AccountInfo` represents account data
    - `SnowflakeConnection` manages database connections
 
-2. **Dependency Injection**: 
+2. **Dependency Injection**:
    - `SnowflakeAccount` receives a `SnowflakeConnection` instance, allowing for loose coupling and easier testing
 
-3. **Encapsulation**: 
+3. **Encapsulation**:
    - Data directory management is encapsulated within the class
    - Private methods (prefixed with `_`) handle internal operations
 
-4. **Composition over Inheritance**: 
+4. **Composition over Inheritance**:
    - Uses composition by accepting a connection object rather than inheriting from connection classes
 
 ## Classes
@@ -301,7 +301,7 @@ latest_file = account_mgr.get_latest_account_file()
 if latest_file:
     # Load historical data
     accounts = account_mgr.load_accounts_from_json(latest_file.name)
-    
+
     # Analyze
     summary = account_mgr.get_account_summary(accounts)
     print(f"Historical snapshot from {latest_file.name}")
@@ -362,29 +362,29 @@ python -m pytest tests/test_account.py -v
 
 ## Performance Considerations
 
-1. **Database Queries**: 
+1. **Database Queries**:
    - Queries use indexed system views for optimal performance
    - Connection pooling handled by `SnowflakeConnection`
 
-2. **File I/O**: 
+2. **File I/O**:
    - JSON files are written atomically
    - Large account lists are handled efficiently with streaming
 
-3. **Memory Usage**: 
+3. **Memory Usage**:
    - Account data is loaded into memory as needed
    - No unnecessary data duplication
 
 ## Security Considerations
 
-1. **Authentication**: 
+1. **Authentication**:
    - Uses existing `SnowflakeConnection` authentication
    - No credential storage in this module
 
-2. **File Permissions**: 
+2. **File Permissions**:
    - JSON files inherit system umask
    - Data directory permissions should be set appropriately
 
-3. **Data Privacy**: 
+3. **Data Privacy**:
    - Account metadata may contain sensitive information
    - Ensure proper access controls on data directory
 

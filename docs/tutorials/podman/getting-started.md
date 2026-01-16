@@ -9,10 +9,10 @@
 
 ![Status](https://img.shields.io/badge/Status-Production-green)
 ![Topic](https://img.shields.io/badge/Topic-Tutorial-blue)
- 
+
 > [!IMPORTANT]
 > **Related Docs:** [Architecture](../../explanation/podman/podman-architecture.md) | [Installation](../../how-to/podman/install-podman-rhel.md) | [Cheatsheet](../../reference/podman/cheatsheet.md) | [Maintenance](../../runbooks/podman/maintenance.md) | [Troubleshooting](../../how-to/podman/troubleshooting.md)
- 
+
 > [!IMPORTANT]
 > **Prerequisites:** Podman installed ([Installation Guide](../../how-to/podman/install-podman-rhel.md)) | basic terminal knowledge.
 

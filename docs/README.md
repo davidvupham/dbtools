@@ -1,15 +1,15 @@
 # Project Documentation Index
- 
+
 **🔗 [← Back to Workspace Root](../README.md)**
- 
+
 > **Document Version:** 1.0
 > **Last Updated:** January 13, 2026
 > **Maintainers:** Application Infrastructure Team
 > **Status:** Production
- 
+
 ![Status](https://img.shields.io/badge/Status-Production-green)
 ![Topic](https://img.shields.io/badge/Topic-Index-blue)
- 
+
 > [!IMPORTANT]
 > **Key Docs:** [Documentation Standards](./best-practices/documentation-standards.md) | [Technical Project Management](./best-practices/technical-project-management.md) | [Diátaxis Framework](https://diataxis.fr/)
 

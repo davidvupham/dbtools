@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import List, Optional
+from typing import Optional
 
 from .constants import (
     BM_TPCC,
@@ -20,7 +20,7 @@ class HammerDBConfig:
     duration_minutes: int = DEFAULT_DURATION_MINUTES
     tpch_scale_factor: int = 1
     autopilot: bool = False
-    autopilot_sequence: List[int] = field(default_factory=list)
+    autopilot_sequence: list[int] = field(default_factory=list)
 
 
 @dataclass

@@ -59,7 +59,7 @@ def on_message(ch, method, properties, body):
         db_instance_id = payload.get("db_instance_id")
         subject = payload.get("subject")
         body_text = payload.get("body_text")
-        idempotency_id = payload.get("idempotency_id")
+        payload.get("idempotency_id")
 
         recipients = get_mock_recipients(alert_name, db_instance_id)
         if not recipients:

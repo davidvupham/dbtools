@@ -124,7 +124,7 @@ SNAPSHOTS_DIR="$LIQUIBASE_TUTORIAL_DATA_DIR/platform/mssql/database/orderdb/snap
 if [[ -z "$SNAPSHOT_PATH" ]]; then
     # Find latest snapshot for instance
     SNAPSHOT_PATH=$(ls -t "$SNAPSHOTS_DIR/${INSTANCE}"_*.json 2>/dev/null | head -1 || true)
-    
+
     if [[ -z "$SNAPSHOT_PATH" ]]; then
         echo -e "${RED}Error: No snapshots found for instance '$INSTANCE'${NC}" >&2
         echo "Expected pattern: $SNAPSHOTS_DIR/${INSTANCE}_*.json"

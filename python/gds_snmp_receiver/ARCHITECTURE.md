@@ -396,7 +396,7 @@ self._running.is_set() # Check if running
    ```python
    # Accumulate payloads
    self._batch.append(payload)
-   
+
    # Publish in batches of 100
    if len(self._batch) >= 100:
        self._publish_batch(self._batch)
@@ -551,9 +551,9 @@ def test_trap_callback_parses_varbinds():
     ]
     # Mock publish
     receiver.publish_alert = Mock()
-    
+
     receiver._trap_callback(None, None, None, None, varbinds, None)
-    
+
     assert receiver.publish_alert.called
     payload = receiver.publish_alert.call_args[0][0]
     assert payload['alert_name'] == '1.3.6.1.6.3.1.1.5.3'
@@ -566,10 +566,10 @@ def test_trap_callback_parses_varbinds():
 def test_publish_to_rabbitmq():
     receiver = SNMPReceiver(rabbit_url='amqp://localhost:5672/')
     receiver._ensure_pika_connection()
-    
+
     payload = {'test': 'data'}
     receiver.publish_alert(payload)
-    
+
     # Verify message in queue
     conn = pika.BlockingConnection(...)
     method, properties, body = conn.channel().basic_get('alerts')
@@ -631,8 +631,8 @@ logger.info(
 Parse with ELK/Splunk/Loki:
 ```
 # Count traps by OID
-SELECT trap_oid, COUNT(*) FROM logs 
-WHERE message='Trap received' 
+SELECT trap_oid, COUNT(*) FROM logs
+WHERE message='Trap received'
 GROUP BY trap_oid
 ```
 
@@ -646,11 +646,11 @@ groups:
       - alert: SNMPReceiverDown
         expr: up{job="snmp-receiver"} == 0
         for: 1m
-        
+
       - alert: HighPublishFailureRate
         expr: rate(snmp_publish_errors_total[5m]) > 0.01
         for: 5m
-        
+
       - alert: QueueDepthHigh
         expr: rabbitmq_queue_messages{queue="alerts"} > 10000
         for: 10m

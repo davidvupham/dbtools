@@ -3,7 +3,7 @@
 import json
 import logging
 from collections.abc import Generator
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 from kafka import KafkaConsumer
 from kafka.errors import (
@@ -67,7 +67,7 @@ class KafkaConsumerClient:
         except KafkaError as e:
             raise KafkaConnectionError(f"Kafka connection error: {e}") from e
 
-    def messages(self) -> Generator[Dict[str, Any], None, None]:
+    def messages(self) -> Generator[dict[str, Any], None, None]:
         """Yield messages from the topic.
 
         Yields:

@@ -4,7 +4,6 @@ import tempfile
 from pathlib import Path
 
 import pytest
-
 from gds_liquibase import (
     ChangelogManager,
     ConfigurationError,

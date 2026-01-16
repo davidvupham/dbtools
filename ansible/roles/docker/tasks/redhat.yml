@@ -35,4 +35,3 @@
   ansible.builtin.dnf:
     name: "{{ docker_packages }}"
     state: present
-

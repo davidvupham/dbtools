@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, Dict
+from typing import Any
 
 from .models import BenchmarkResult
 
@@ -8,7 +8,7 @@ class BenchmarkRunner(ABC):
     """Abstract base class for benchmark runners."""
 
     @abstractmethod
-    def run(self, config: Dict[str, Any]) -> BenchmarkResult:
+    def run(self, config: dict[str, Any]) -> BenchmarkResult:
         """
         Execute the benchmark with the given configuration.
 
@@ -21,7 +21,7 @@ class BenchmarkRunner(ABC):
         pass
 
     @abstractmethod
-    def validate_config(self, config: Dict[str, Any]) -> bool:
+    def validate_config(self, config: dict[str, Any]) -> bool:
         """
         Validate the configuration before running.
 

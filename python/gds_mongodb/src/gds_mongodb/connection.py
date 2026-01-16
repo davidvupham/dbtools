@@ -6,15 +6,8 @@ interface for MongoDB databases using pymongo.
 """
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 from urllib.parse import quote_plus
-
-from pymongo import MongoClient
-from pymongo.errors import (
-    ConnectionFailure,
-    OperationFailure,
-    ServerSelectionTimeoutError,
-)
 
 from gds_database import (
     ConfigurableComponent,
@@ -23,6 +16,12 @@ from gds_database import (
     DatabaseConnectionError,
     QueryError,
     ResourceManager,
+)
+from pymongo import MongoClient
+from pymongo.errors import (
+    ConnectionFailure,
+    OperationFailure,
+    ServerSelectionTimeoutError,
 )
 
 from .connection_config import MongoDBConnectionConfig
@@ -82,7 +81,7 @@ class MongoDBConnection(DatabaseConnection, ConfigurableComponent, ResourceManag
         auth_mechanism: Optional[str] = None,
         replica_set: Optional[str] = None,
         tls: Optional[bool] = None,
-        config: Optional["MongoDBConnectionConfig | Dict[str, Any]"] = None,
+        config: Optional["MongoDBConnectionConfig | dict[str, Any]"] = None,
         **kwargs,
     ):
         """
@@ -105,10 +104,10 @@ class MongoDBConnection(DatabaseConnection, ConfigurableComponent, ResourceManag
         """
         # Handle MongoDBConnectionConfig instance
         if isinstance(config, MongoDBConnectionConfig):
-            conn_config: Dict[str, Any] = config.to_dict()
+            conn_config: dict[str, Any] = config.to_dict()
         else:
             # Build configuration from parameters
-            conn_config: Dict[str, Any] = dict(config) if config else {}
+            conn_config: dict[str, Any] = dict(config) if config else {}
 
         if connection_string:
             conn_config["connection_string"] = connection_string
@@ -281,12 +280,12 @@ class MongoDBConnection(DatabaseConnection, ConfigurableComponent, ResourceManag
     def execute_query(
         self,
         collection: str,
-        filter_query: Optional[Dict[str, Any]] = None,
-        projection: Optional[Dict[str, Any]] = None,
+        filter_query: Optional[dict[str, Any]] = None,
+        projection: Optional[dict[str, Any]] = None,
         limit: int = 0,
         skip: int = 0,
-        sort: Optional[List[tuple]] = None,
-    ) -> List[Dict[str, Any]]:
+        sort: Optional[list[tuple]] = None,
+    ) -> list[dict[str, Any]]:
         """
         Execute a query and return results.
 
@@ -343,8 +342,8 @@ class MongoDBConnection(DatabaseConnection, ConfigurableComponent, ResourceManag
             raise QueryError(error_msg) from e
 
     def execute_query_dict(
-        self, collection: str, filter_query: Optional[Dict[str, Any]] = None
-    ) -> List[Dict[str, Any]]:
+        self, collection: str, filter_query: Optional[dict[str, Any]] = None
+    ) -> list[dict[str, Any]]:
         """
         Execute query and return results as dictionaries.
 
@@ -359,7 +358,7 @@ class MongoDBConnection(DatabaseConnection, ConfigurableComponent, ResourceManag
         """
         return self.execute_query(collection, filter_query)
 
-    def insert_one(self, collection: str, document: Dict[str, Any]) -> Dict[str, Any]:
+    def insert_one(self, collection: str, document: dict[str, Any]) -> dict[str, Any]:
         """
         Insert a single document into a collection.
 
@@ -394,7 +393,7 @@ class MongoDBConnection(DatabaseConnection, ConfigurableComponent, ResourceManag
             logger.error(error_msg)
             raise QueryError(error_msg) from e
 
-    def insert_many(self, collection: str, documents: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def insert_many(self, collection: str, documents: list[dict[str, Any]]) -> dict[str, Any]:
         """
         Insert multiple documents into a collection.
 
@@ -432,10 +431,10 @@ class MongoDBConnection(DatabaseConnection, ConfigurableComponent, ResourceManag
     def update_one(
         self,
         collection: str,
-        filter_query: Dict[str, Any],
-        update: Dict[str, Any],
+        filter_query: dict[str, Any],
+        update: dict[str, Any],
         upsert: bool = False,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Update a single document in a collection.
 
@@ -479,10 +478,10 @@ class MongoDBConnection(DatabaseConnection, ConfigurableComponent, ResourceManag
     def update_many(
         self,
         collection: str,
-        filter_query: Dict[str, Any],
-        update: Dict[str, Any],
+        filter_query: dict[str, Any],
+        update: dict[str, Any],
         upsert: bool = False,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Update multiple documents in a collection.
 
@@ -523,7 +522,7 @@ class MongoDBConnection(DatabaseConnection, ConfigurableComponent, ResourceManag
             logger.error(error_msg)
             raise QueryError(error_msg) from e
 
-    def delete_one(self, collection: str, filter_query: Dict[str, Any]) -> Dict[str, Any]:
+    def delete_one(self, collection: str, filter_query: dict[str, Any]) -> dict[str, Any]:
         """
         Delete a single document from a collection.
 
@@ -558,7 +557,7 @@ class MongoDBConnection(DatabaseConnection, ConfigurableComponent, ResourceManag
             logger.error(error_msg)
             raise QueryError(error_msg) from e
 
-    def delete_many(self, collection: str, filter_query: Dict[str, Any]) -> Dict[str, Any]:
+    def delete_many(self, collection: str, filter_query: dict[str, Any]) -> dict[str, Any]:
         """
         Delete multiple documents from a collection.
 
@@ -610,7 +609,7 @@ class MongoDBConnection(DatabaseConnection, ConfigurableComponent, ResourceManag
         except Exception:
             return False
 
-    def get_connection_info(self) -> Dict[str, Any]:
+    def get_connection_info(self) -> dict[str, Any]:
         """
         Get connection information.
 
@@ -673,7 +672,7 @@ class MongoDBConnection(DatabaseConnection, ConfigurableComponent, ResourceManag
 
         logger.debug("Transaction rolled back")
 
-    def get_collection_names(self) -> List[str]:
+    def get_collection_names(self) -> list[str]:
         """
         Get list of collection names in the database.
 
@@ -693,7 +692,7 @@ class MongoDBConnection(DatabaseConnection, ConfigurableComponent, ResourceManag
             logger.error(error_msg)
             raise QueryError(error_msg) from e
 
-    def get_table_names(self, schema: Optional[str] = None) -> List[str]:
+    def get_table_names(self, schema: Optional[str] = None) -> list[str]:
         """
         Get list of collection names (MongoDB equivalent of tables).
 
@@ -705,7 +704,7 @@ class MongoDBConnection(DatabaseConnection, ConfigurableComponent, ResourceManag
         """
         return self.get_collection_names()
 
-    def get_column_info(self, collection: str, sample_size: int = 100) -> List[Dict[str, Any]]:
+    def get_column_info(self, collection: str, sample_size: int = 100) -> list[dict[str, Any]]:
         """
         Get field information for a collection by sampling documents.
 
@@ -807,7 +806,7 @@ class MongoDBConnection(DatabaseConnection, ConfigurableComponent, ResourceManag
         # Note: database is not in connection string, accessed after
         return f"mongodb://{auth_part}{host_part}/{options_part}"
 
-    def _build_connection_params(self) -> Dict[str, Any]:
+    def _build_connection_params(self) -> dict[str, Any]:
         """Build additional connection parameters for MongoClient."""
         params = {}
 

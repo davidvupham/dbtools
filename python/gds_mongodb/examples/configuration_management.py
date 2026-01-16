@@ -7,13 +7,12 @@ to retrieve and modify MongoDB server configuration settings.
 Reference: https://www.mongodb.com/docs/manual/reference/command/getParameter/
 """
 
-from pymongo.errors import PyMongoError
-
 from gds_mongodb import (
     MongoDBConfiguration,
     MongoDBConnection,
     MongoDBConnectionConfig,
 )
+from pymongo.errors import PyMongoError
 
 
 def example_basic_configuration_retrieval():
@@ -79,7 +78,7 @@ def example_all_configurations():
 
         print(f"Total configurations: {len(all_settings)}")
         print("\nSample configurations:")
-        for i, (name, value) in enumerate(list(all_settings.items())[:10]):
+        for _i, (name, value) in enumerate(list(all_settings.items())[:10]):
             print(f"  {name}: {value}")
 
         print(f"\n... (and {len(all_settings) - 10} more)")
@@ -101,7 +100,7 @@ def example_all_configurations_with_details():
 
         print(f"Total configurations: {len(all_detailed)}")
         print("\nSample configurations with details:")
-        for i, (name, details) in enumerate(list(all_detailed.items())[:5]):
+        for _i, (name, details) in enumerate(list(all_detailed.items())[:5]):
             if isinstance(details, dict):
                 value = details.get("value", details)
                 runtime = details.get("settableAtRuntime", "N/A")
@@ -152,7 +151,7 @@ def example_runtime_configurations():
 
             print(f"Runtime-settable configurations: {len(runtime_settings)}")
             print("\nFirst 10 runtime-settable configurations:")
-            for i, (name, value) in enumerate(list(runtime_settings.items())[:10]):
+            for _i, (name, value) in enumerate(list(runtime_settings.items())[:10]):
                 print(f"  {name}: {value}")
 
         except PyMongoError as e:
@@ -177,7 +176,7 @@ def example_startup_configurations():
 
             print(f"Startup-only configurations: {len(startup_settings)}")
             print("\nFirst 10 startup-only configurations:")
-            for i, (name, value) in enumerate(list(startup_settings.items())[:10]):
+            for _i, (name, value) in enumerate(list(startup_settings.items())[:10]):
                 print(f"  {name}: {value}")
 
         except PyMongoError as e:
@@ -361,7 +360,7 @@ def example_to_dict():
 
         print(f"Total configurations: {len(config_dict)}")
         print("\nFirst 10 configurations:")
-        for i, (name, value) in enumerate(list(config_dict.items())[:10]):
+        for _i, (name, value) in enumerate(list(config_dict.items())[:10]):
             print(f"  {name}: {value}")
 
 

@@ -11,12 +11,11 @@ from __future__ import annotations
 import argparse
 import logging
 import os
-from typing import Optional
 
 from .core import SNMPReceiver
 
 
-def main(argv: Optional[list[str]] = None) -> None:
+def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description="gds_snmp_receiver CLI")
     parser.add_argument(
         "--host",

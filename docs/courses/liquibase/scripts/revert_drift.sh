@@ -134,7 +134,7 @@ revert_instance() {
     if "$SQLCMD" -S "$instance" -Q "
 USE orderdb;
 DECLARE @constraint_name NVARCHAR(200);
-SELECT @constraint_name = dc.name 
+SELECT @constraint_name = dc.name
 FROM sys.default_constraints dc
 JOIN sys.columns c ON dc.parent_object_id = c.object_id AND dc.parent_column_id = c.column_id
 WHERE c.object_id = OBJECT_ID('app.customer') AND c.name = 'loyalty_points';

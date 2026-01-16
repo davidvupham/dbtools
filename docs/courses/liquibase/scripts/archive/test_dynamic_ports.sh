@@ -30,12 +30,12 @@ cleanup() {
     echo "========================================"
     echo "Cleaning up test environment..."
     echo "========================================"
-    
+
     # Stop port blockers
     if [[ -f "$SCRIPT_DIR/test_block_ports.sh" ]]; then
         "$SCRIPT_DIR/test_block_ports.sh" stop || true
     fi
-    
+
     # Stop and remove test containers
     if command -v podman &>/dev/null; then
         podman stop mssql_dev mssql_stg mssql_prd 2>/dev/null || true
@@ -45,7 +45,7 @@ cleanup() {
         docker stop mssql_dev mssql_stg mssql_prd 2>/dev/null || true
         docker rm -f mssql_dev mssql_stg mssql_prd 2>/dev/null || true
     fi
-    
+
     # Clean up test data directory if in quick mode
     if [[ "$TEST_MODE" == "cleanup" ]]; then
         if [[ -d "$TEST_DATA_DIR" ]] && [[ "$TEST_DATA_DIR" == /tmp/test_* ]]; then
@@ -53,7 +53,7 @@ cleanup() {
             rm -rf "$TEST_DATA_DIR" || true
         fi
     fi
-    
+
     echo -e "${GREEN}✓ Cleanup complete${NC}"
 }
 
@@ -64,19 +64,19 @@ test_block_ports() {
     echo "========================================"
     echo "Test 1: Block Default Ports"
     echo "========================================"
-    
+
     if [[ ! -f "$SCRIPT_DIR/test_block_ports.sh" ]]; then
         echo -e "${RED}ERROR: test_block_ports.sh not found${NC}"
         return 1
     fi
-    
+
     echo "Starting port blockers on ports 14331-14333..."
     "$SCRIPT_DIR/test_block_ports.sh" start
-    
+
     echo
     echo "Verifying ports are blocked..."
     "$SCRIPT_DIR/test_block_ports.sh" status
-    
+
     echo -e "${GREEN}✓ Test 1 passed: Ports blocked${NC}"
     echo
 }
@@ -86,22 +86,22 @@ test_port_discovery() {
     echo "========================================"
     echo "Test 2: Dynamic Port Discovery"
     echo "========================================"
-    
+
     # Ensure data directory exists
     mkdir -p "$TEST_DATA_DIR"
-    
+
     # Remove any existing .ports file
     rm -f "$TEST_DATA_DIR/.ports"
-    
+
     echo "Running start_mssql_containers.sh..."
     echo "Test data directory: $TEST_DATA_DIR"
     echo
-    
+
     if ! "$SCRIPT_DIR/start_mssql_containers.sh"; then
         echo -e "${RED}ERROR: start_mssql_containers.sh failed${NC}"
         return 1
     fi
-    
+
     echo
     echo -e "${GREEN}✓ Test 2 passed: Script executed successfully${NC}"
     echo
@@ -112,45 +112,45 @@ test_ports_file() {
     echo "========================================"
     echo "Test 3: Verify .ports File"
     echo "========================================"
-    
+
     local ports_file="$TEST_DATA_DIR/.ports"
-    
+
     if [[ ! -f "$ports_file" ]]; then
         echo -e "${RED}ERROR: .ports file not found at $ports_file${NC}"
         return 1
     fi
-    
+
     echo "Reading .ports file:"
     cat "$ports_file"
     echo
-    
+
     # Source the file and check variables
     source "$ports_file"
-    
+
     if [[ -z "${MSSQL_DEV_PORT:-}" ]] || [[ -z "${MSSQL_STG_PORT:-}" ]] || [[ -z "${MSSQL_PRD_PORT:-}" ]]; then
         echo -e "${RED}ERROR: Missing port variables in .ports file${NC}"
         return 1
     fi
-    
+
     echo "Port assignments:"
     echo "  DEV: $MSSQL_DEV_PORT"
     echo "  STG: $MSSQL_STG_PORT"
     echo "  PRD: $MSSQL_PRD_PORT"
     echo
-    
+
     # Verify ports are NOT the default blocked ports
     if [[ "$MSSQL_DEV_PORT" == "14331" ]] || [[ "$MSSQL_STG_PORT" == "14332" ]] || [[ "$MSSQL_PRD_PORT" == "14333" ]]; then
         echo -e "${RED}ERROR: Script did not find alternate ports!${NC}"
         echo "Ports still using defaults (14331-14333) which should be blocked"
         return 1
     fi
-    
+
     # Verify ports are consecutive
     if [[ "$MSSQL_STG_PORT" -ne $((MSSQL_DEV_PORT + 1)) ]] || [[ "$MSSQL_PRD_PORT" -ne $((MSSQL_STG_PORT + 1)) ]]; then
         echo -e "${YELLOW}WARNING: Ports are not consecutive (this may be OK if ports were found incrementally)${NC}"
         echo "  Expected consecutive, got: $MSSQL_DEV_PORT, $MSSQL_STG_PORT, $MSSQL_PRD_PORT"
     fi
-    
+
     echo -e "${GREEN}✓ Test 3 passed: .ports file created with alternate ports${NC}"
     echo "  Assigned ports: $MSSQL_DEV_PORT, $MSSQL_STG_PORT, $MSSQL_PRD_PORT (not 14331-14333)"
     echo
@@ -161,9 +161,9 @@ test_container_ports() {
     echo "========================================"
     echo "Test 4: Verify Container Ports"
     echo "========================================"
-    
+
     source "$TEST_DATA_DIR/.ports"
-    
+
     local cr_cmd=""
     if command -v podman &>/dev/null; then
         cr_cmd="podman"
@@ -173,22 +173,22 @@ test_container_ports() {
         echo -e "${RED}ERROR: No container runtime found${NC}"
         return 1
     fi
-    
+
     echo "Checking container port mappings..."
-    
+
     for container in mssql_dev mssql_stg mssql_prd; do
         case "$container" in
             mssql_dev) expected_port="$MSSQL_DEV_PORT" ;;
             mssql_stg) expected_port="$MSSQL_STG_PORT" ;;
             mssql_prd) expected_port="$MSSQL_PRD_PORT" ;;
         esac
-        
+
         # Check if container is running
         if ! $cr_cmd ps --format "{{.Names}}" 2>/dev/null | grep -q "^${container}$"; then
             echo -e "${RED}ERROR: Container $container is not running${NC}"
             return 1
         fi
-        
+
         # Check port mapping
         if $cr_cmd ps --format "{{.Ports}}" 2>/dev/null | grep "^${container}" | grep -q ":${expected_port}->"; then
             echo -e "  ${GREEN}✓${NC} $container: port $expected_port mapped correctly"
@@ -198,7 +198,7 @@ test_container_ports() {
             return 1
         fi
     done
-    
+
     echo -e "${GREEN}✓ Test 4 passed: All containers using correct ports${NC}"
     echo
 }
@@ -212,18 +212,18 @@ main() {
     echo "Test data directory: $TEST_DATA_DIR"
     echo "Test password: [hidden]"
     echo
-    
+
     if [[ "$TEST_MODE" == "cleanup" ]]; then
         cleanup
         exit 0
     fi
-    
+
     # Run tests
     test_block_ports || exit 1
     test_port_discovery || exit 1
     test_ports_file || exit 1
     test_container_ports || exit 1
-    
+
     echo "========================================"
     echo -e "${GREEN}All Tests Passed!${NC}"
     echo "========================================"

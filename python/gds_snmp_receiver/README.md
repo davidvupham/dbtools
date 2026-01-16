@@ -332,15 +332,15 @@ Add filtering logic in `_trap_callback`:
 ```python
 def _trap_callback(self, ...):
     # ... parse trap ...
-    
+
     # Filter by OID
     if alert_name.startswith('1.3.6.1.6.3.1.1.5.1'):
         return  # Ignore coldStart traps
-    
+
     # Filter by content
     if 'test' in str(details).lower():
         return  # Ignore test traps
-    
+
     self.publish_alert(payload)
 ```
 

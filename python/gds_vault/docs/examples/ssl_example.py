@@ -13,6 +13,8 @@ from pathlib import Path
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+from typing import Optional
+
 from gds_vault import VaultClient
 from gds_vault.exceptions import VaultError
 
@@ -326,7 +328,7 @@ def example_10_comprehensive_error_handling():
 
     import requests
 
-    def safe_vault_connection(vault_addr: str, cert_path: str = None):
+    def safe_vault_connection(vault_addr: str, cert_path: Optional[str] = None):
         """Safely connect to Vault with comprehensive error handling."""
         try:
             client = VaultClient(vault_addr=vault_addr, ssl_cert_path=cert_path)

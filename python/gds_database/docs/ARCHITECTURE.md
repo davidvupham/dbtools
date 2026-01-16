@@ -103,7 +103,7 @@ gds_database/
 # In gds_database/base.py
 class DatabaseConnection(ABC):
     """The TEMPLATE - defines WHAT to do"""
-    
+
     @abstractmethod
     def connect(self):
         """Subclasses define HOW to connect"""
@@ -112,7 +112,7 @@ class DatabaseConnection(ABC):
 # Your implementation
 class PostgresConnection(DatabaseConnection):
     """Fill in the HOW"""
-    
+
     def connect(self):
         # Specific PostgreSQL connection logic
         import psycopg2
@@ -289,19 +289,19 @@ class DatabaseConnection(ABC):
     @abstractmethod
     def connect(self) -> Any:
         """Establish connection"""
-        
+
     @abstractmethod
     def disconnect(self) -> None:
         """Close connection"""
-        
+
     @abstractmethod
     def execute_query(self, query: str, params: Optional[tuple[Any, ...]] = None) -> list[Any]:
         """Execute SQL and return results"""
-        
+
     @abstractmethod
     def is_connected(self) -> bool:
         """Check connection status"""
-        
+
     @abstractmethod
     def get_connection_info(self) -> dict[str, Any]:
         """Get connection metadata"""
@@ -320,12 +320,12 @@ class ConfigurableComponent(ABC):
     def __init__(self, config: Optional[dict[str, Any]] = None):
         self.config = config or {}
         self.validate_config()  # Validate on creation
-        
+
     @abstractmethod
     def validate_config(self) -> bool:
         """Check if configuration is valid"""
         pass
-        
+
     def set_config(self, key: str, value: Any) -> None:
         """Set value and re-validate"""
         self.config[key] = value
@@ -344,7 +344,7 @@ class ResourceManager(ABC):
     def __enter__(self) -> "ResourceManager":
         self.initialize()
         return self
-        
+
     def __exit__(self, exc_type, exc_val, exc_tb) -> Literal[False]:
         self.cleanup()
         return False  # Don't suppress exceptions
@@ -435,24 +435,24 @@ from gds_database import DatabaseConnection
 
 class MyDatabaseConnection(DatabaseConnection):
     """Implement all abstract methods"""
-    
+
     def connect(self):
         # Your database connection code
         self._conn = my_db_library.connect(...)
         return self._conn
-    
+
     def disconnect(self):
         if hasattr(self, '_conn'):
             self._conn.close()
-    
+
     def execute_query(self, query, params=None):
         cursor = self._conn.cursor()
         cursor.execute(query, params or ())
         return cursor.fetchall()
-    
+
     def is_connected(self):
         return hasattr(self, '_conn') and self._conn.is_open
-    
+
     def get_connection_info(self):
         return {
             'database': self._conn.database_name,
@@ -468,26 +468,26 @@ from gds_database import TransactionalConnection
 
 class MyTransactionalDB(TransactionalConnection):
     """Extend DatabaseConnection with transactions"""
-    
+
     def __init__(self):
         super().__init__()
         self._in_transaction = False
-    
+
     # Implement all DatabaseConnection methods...
     # Plus transaction methods:
-    
+
     def begin_transaction(self):
         self._conn.execute("BEGIN")
         self._in_transaction = True
-    
+
     def commit(self):
         self._conn.execute("COMMIT")
         self._in_transaction = False
-    
+
     def rollback(self):
         self._conn.execute("ROLLBACK")
         self._in_transaction = False
-    
+
     def in_transaction(self):
         return self._in_transaction
 ```
@@ -500,25 +500,25 @@ from queue import Queue
 
 class MyConnectionPool(ConnectionPool):
     """Manage a pool of database connections"""
-    
+
     def __init__(self, size=10):
         self._pool = Queue(maxsize=size)
         self._size = size
         # Pre-create connections
         for _ in range(size):
             self._pool.put(MyDatabaseConnection())
-    
+
     def get_connection(self):
         return self._pool.get()  # Block if none available
-    
+
     def release_connection(self, conn):
         self._pool.put(conn)
-    
+
     def close_all(self):
         while not self._pool.empty():
             conn = self._pool.get()
             conn.disconnect()
-    
+
     def get_pool_status(self):
         return {
             'size': self._size,
@@ -534,12 +534,12 @@ from gds_database import PerformanceMonitored, DatabaseConnection
 
 class MonitoredConnection(PerformanceMonitored, DatabaseConnection):
     """Database connection with automatic timing"""
-    
+
     def execute_query(self, query, params=None):
         with self._measure_time("execute_query"):
             # Your query execution code
             return self._do_query(query, params)
-    
+
     # The _measure_time context manager automatically logs:
     # "execute_query took 45.23ms"
 ```
@@ -551,20 +551,20 @@ from gds_database import AsyncDatabaseConnection
 
 class MyAsyncDB(AsyncDatabaseConnection):
     """Async/await database operations"""
-    
+
     async def connect(self):
         self._conn = await asyncpg.connect(...)
         return self._conn
-    
+
     async def disconnect(self):
         await self._conn.close()
-    
+
     async def execute_query(self, query, params=None):
         return await self._conn.fetch(query, *(params or ()))
-    
+
     async def is_connected(self):
         return self._conn and not self._conn.is_closed()
-    
+
     def get_connection_info(self):
         return {'database': self._conn.get_dsn_parameters()}
 
@@ -634,10 +634,10 @@ class MyComponent(ConfigurableComponent):
         for key in required:
             if key not in self.config:
                 raise ConfigurationError(f"Missing: {key}")
-        
+
         if not isinstance(self.config['port'], int):
             raise ConfigurationError("Port must be integer")
-        
+
         return True
 ```
 
@@ -682,14 +682,14 @@ raise ConfigurationError(
 def execute_query(self, query: str, params: Optional[tuple] = None):
     """
     Execute a SQL query.
-    
+
     Args:
         query: SQL query string
         params: Optional query parameters
-        
+
     Returns:
         List of result rows
-        
+
     Example:
         >>> db = MyDatabase()
         >>> results = db.execute_query(

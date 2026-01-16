@@ -75,13 +75,13 @@ with SnowflakeMonitor(account="your-account") as monitor:
     connectivity = monitor.monitor_connectivity()
     if connectivity.success:
         print(f"✓ Connected in {connectivity.response_time_ms}ms")
-    
+
     # Check replication failures
     failures = monitor.monitor_replication_failures()
     for result in failures:
         if result.has_failure:
             print(f"✗ {result.failover_group}: {result.failure_message}")
-    
+
     # Check replication latency
     latency_issues = monitor.monitor_replication_latency()
     for result in latency_issues:
@@ -179,18 +179,18 @@ print(f"Duration: {summary['monitoring_duration_ms']} ms")
 monitor = SnowflakeMonitor(
     # Required
     account="your-snowflake-account",
-    
+
     # Optional Snowflake connection
     user="username",                    # Or use SNOWFLAKE_USER env var
     warehouse="warehouse_name",
     role="role_name",
     database="database_name",
-    
+
     # Monitoring configuration
     connectivity_timeout=30,            # Seconds
     latency_threshold_minutes=30.0,     # Minutes
     enable_email_alerts=True,
-    
+
     # Email configuration
     smtp_server="smtp.gmail.com",
     smtp_port=587,
@@ -198,7 +198,7 @@ monitor = SnowflakeMonitor(
     smtp_password="app_password",
     from_email="snowflake-monitor@company.com",
     to_emails=["admin@company.com", "ops@company.com"],
-    
+
     # Vault configuration (optional)
     vault_namespace="namespace",
     vault_secret_path="secret/snowflake",
@@ -387,12 +387,12 @@ class CustomSnowflakeMonitor(SnowflakeMonitor):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.custom_metrics = {}
-    
+
     def monitor_custom_metrics(self):
         """Add custom monitoring logic."""
         # Your custom monitoring code here
         pass
-    
+
     def send_custom_alert(self, message, severity=AlertSeverity.WARNING):
         """Send custom alerts."""
         self._send_email(
@@ -445,7 +445,7 @@ def send_to_datadog(metrics):
 # Monitor and export metrics
 with SnowflakeMonitor(account="prod-account") as monitor:
     results = monitor.monitor_all()
-    
+
     # Convert to metrics format
     metrics = {
         'snowflake_connectivity': 1 if results['summary']['connectivity_ok'] else 0,
@@ -453,7 +453,7 @@ with SnowflakeMonitor(account="prod-account") as monitor:
         'snowflake_replication_failures': results['summary']['groups_with_failures'],
         'snowflake_latency_issues': results['summary']['groups_with_latency']
     }
-    
+
     # Export to monitoring systems
     send_to_prometheus(metrics)
     send_to_datadog(metrics)
@@ -536,7 +536,7 @@ monitor._send_email(
    ```python
    # Old
    from monitor_snowflake_replication import check_connectivity
-   
+
    # New
    from gds_snowflake import SnowflakeMonitor
    ```
@@ -546,7 +546,7 @@ monitor._send_email(
    # Old
    if check_connectivity(account):
        check_replication_failures()
-   
+
    # New
    with SnowflakeMonitor(account=account) as monitor:
        results = monitor.monitor_all()

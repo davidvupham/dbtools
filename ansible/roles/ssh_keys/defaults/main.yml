@@ -12,4 +12,3 @@ ssh_key_comment: "{{ dev_user }}@{{ ansible_hostname }}"
 
 # Path for the SSH key
 ssh_key_path: "{{ dev_user_home }}/.ssh/id_{{ ssh_key_type }}"
-

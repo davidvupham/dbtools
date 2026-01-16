@@ -158,17 +158,17 @@ if "apple" in fruits:
 ```python
 def monitor_all(self) -> MonitoringResult:
     """Monitor everything and return results."""
-    
+
     # Create empty lists to store results
     failure_results = []
     latency_results = []
-    
+
     # Add results as we find them
     for fg in failover_groups:
         result = self.check_replication_failure(fg)
         if result.has_failure:
             failure_results.append(result)  # Add to list
-    
+
     # Return all results
     return MonitoringResult(
         failures=failure_results,
@@ -424,11 +424,11 @@ def connect(self) -> snowflake.connector.SnowflakeConnection:
             "user": self.user,
             "private_key": self.private_key,
         }
-        
+
         self.connection = snowflake.connector.connect(**connection_params)
         logger.info("Successfully connected to Snowflake account: %s", self.account)
         return self.connection
-        
+
     except Exception as e:
         # If anything goes wrong, log it and raise a custom error
         logger.error("Failed to connect to Snowflake account %s: %s", self.account, str(e))
@@ -490,11 +490,11 @@ except InvalidAgeError as e:
 ```python
 class SnowflakeConnectionError(Exception):
     """Exception raised for Snowflake connection errors."""
-    
+
     def __init__(self, message: str, account: Optional[str] = None):
         """
         Initialize the exception.
-        
+
         Args:
             message: Error message
             account: Snowflake account name (optional)
@@ -502,7 +502,7 @@ class SnowflakeConnectionError(Exception):
         self.message = message
         self.account = account
         super().__init__(self.message)
-    
+
     def __str__(self):
         """String representation of the error."""
         if self.account:
@@ -641,19 +641,19 @@ class SnowflakeConnection:
         """Initialize connection."""
         self.account = account
         self.user = user
-    
+
     def connect(self) -> snowflake.connector.SnowflakeConnection:
         """Returns a Snowflake connection object."""
         # ...
-    
+
     def execute_query(
-        self, 
+        self,
         query: str,                    # Query must be a string
         params: Optional[tuple] = None  # Params can be tuple or None
     ) -> List[Any]:                    # Returns list of any type
         """Execute a query."""
         # ...
-    
+
     def get_connection_info(self) -> Dict[str, Any]:
         """Returns dictionary with string keys and any values."""
         return {
@@ -661,7 +661,7 @@ class SnowflakeConnection:
             'user': self.user,
             'connected': self.is_connected()
         }
-    
+
     def is_connected(self) -> bool:
         """Returns True or False."""
         return self.connection is not None
@@ -725,7 +725,7 @@ from datetime import datetime
 
 class BaseMonitor(ABC):
     def __init__(
-        self, 
+        self,
         name: str,              # Name must be string
         timeout: int = 30,      # Timeout must be int, defaults to 30
         log_level: int = logging.INFO  # Log level must be int
@@ -734,12 +734,12 @@ class BaseMonitor(ABC):
         self.timeout: int = timeout
         self._start_time: Optional[datetime] = None  # datetime or None
         self._check_count: int = 0
-    
+
     @abstractmethod
     def check(self) -> Dict[str, Any]:
         """Must return a dictionary."""
         pass
-    
+
     def get_stats(self) -> Dict[str, Any]:
         """Returns dictionary with statistics."""
         return {

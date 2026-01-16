@@ -35,14 +35,14 @@ check_data_permissions() {
     echo "  You may need to create it with: sudo mkdir -p /data && sudo chmod 1777 /data" >&2
     return 1
   fi
-  
+
   if [[ ! -w "/data" ]]; then
     echo "Warning: No write permission on /data directory." >&2
     echo "  Ask your administrator to run: sudo chmod 1777 /data" >&2
     echo "  Or use a different project directory (e.g., your home directory)" >&2
     return 1
   fi
-  
+
   return 0
 }
 

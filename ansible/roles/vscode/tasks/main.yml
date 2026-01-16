@@ -16,10 +16,10 @@
       This is expected if:
         - You're on WSL and haven't opened VS Code from Windows yet
         - VS Code is not installed
-      
+
       To install extensions manually later, run:
         code --install-extension <extension-id>
-      
+
       Or open VS Code and it will prompt to install recommended extensions
       from .vscode/extensions.json
   when: vscode_available.rc != 0
@@ -77,4 +77,3 @@
   become: true
   become_user: "{{ dev_user }}"
   when: vscode_available.rc == 0
-

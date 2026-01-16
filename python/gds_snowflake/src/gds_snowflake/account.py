@@ -370,7 +370,7 @@ class SnowflakeAccount:
         """
         summary = {
             "total_accounts": len(accounts),
-            "organizations": len(set(a.organization_name for a in accounts if a.organization_name)),
+            "organizations": len({a.organization_name for a in accounts if a.organization_name}),
             "regions": {},
             "cloud_providers": {},
             "editions": {},

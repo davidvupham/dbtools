@@ -13,7 +13,7 @@ The `gds_snowflake` module has been restructured to better organize metadata ret
 - **Methods**:
   - `get_tables()` - Retrieve table information
   - `get_table_info()` - Get detailed info about a specific table
-  - `get_views()` - Retrieve view information  
+  - `get_views()` - Retrieve view information
   - `get_columns()` - Retrieve column metadata
   - `get_all_table_metadata()` - Comprehensive table metadata retrieval
 
@@ -74,7 +74,7 @@ __all__ = [
 #### Updated Test File: `tests/test_database.py`
 - **Test Class Renamed**: `TestSnowflakeMetadata` → `TestSnowflakeDatabase`
 - **Tests Removed**: All table/view/column-related tests (moved to `test_table.py`)
-- **Tests Updated**: 
+- **Tests Updated**:
   - `test_get_all_metadata()` → `test_get_all_database_metadata()`
   - `test_get_all_metadata_with_database_filter()` → `test_get_all_database_metadata_with_database_filter()`
 - **Test Count**: 17 tests
@@ -85,7 +85,7 @@ __all__ = [
 #### Created: `BUILD_AND_DEPLOY.md`
 Comprehensive guide covering:
 - **Prerequisites**: Python, pip, git requirements
-- **Local Development**: 
+- **Local Development**:
   - Clone, install dependencies
   - Editable mode installation
 - **Building the Package**:
@@ -137,7 +137,7 @@ Complete rewrite demonstrating:
 #### Testing Results
 ```
 tests/test_database.py: 17 tests PASSED ✅
-tests/test_table.py: 15 tests PASSED ✅  
+tests/test_table.py: 15 tests PASSED ✅
 tests/test_snowflake_replication.py: 33 tests PASSED ✅
 Total: 65 tests PASSED (100% pass rate)
 ```
@@ -256,7 +256,7 @@ all_table_metadata = table_metadata.get_all_table_metadata()
 1. **Update README.md**: Add examples using new class structure
 2. **Version Bump**: Update version number in `setup.py`/`pyproject.toml` to reflect breaking changes (e.g., 0.1.0 → 0.2.0)
 3. **CHANGELOG**: Document breaking changes and migration guide
-4. **Build & Test**: 
+4. **Build & Test**:
    ```bash
    python -m build
    pip install dist/gds_snowflake-*.whl

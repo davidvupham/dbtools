@@ -1,7 +1,6 @@
 """Tests for custom exceptions."""
 
 import pytest
-
 from gds_kafka import (
     GdsKafkaError,
     KafkaConnectionError,

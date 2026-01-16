@@ -69,7 +69,7 @@ GO
 -- Reset and insert sample data (idempotent)
 DELETE FROM app.customer;
 INSERT INTO app.customer (first_name, last_name, email)
-VALUES 
+VALUES
     ('Alice', 'Johnson', 'alice.johnson@example.com'),
     ('Bob', 'Smith', 'bob.smith@example.com'),
     ('Carol', 'Williams', 'carol.williams@example.com');
@@ -78,8 +78,8 @@ GO
 
 -- Verify objects
 SELECT 'Created objects:' AS Status;
-SELECT TABLE_SCHEMA + '.' + TABLE_NAME AS ObjectName, TABLE_TYPE 
-FROM INFORMATION_SCHEMA.TABLES 
+SELECT TABLE_SCHEMA + '.' + TABLE_NAME AS ObjectName, TABLE_TYPE
+FROM INFORMATION_SCHEMA.TABLES
 WHERE TABLE_SCHEMA = 'app';
 GO
 EOSQL

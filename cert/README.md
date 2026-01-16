@@ -118,7 +118,7 @@ requests.exceptions.SSLError: [SSL: CERTIFICATE_VERIFY_FAILED]
 ### Hostname Mismatch
 
 ```
-[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: 
+[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed:
 Hostname mismatch, certificate is not valid for 'vault.example.com'
 ```
 

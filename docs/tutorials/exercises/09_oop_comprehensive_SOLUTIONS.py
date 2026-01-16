@@ -14,7 +14,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import List, Optional
+from typing import Optional
 
 # ============================================================================
 # EXERCISE 1: Build a Task Management System (Medium)
@@ -37,7 +37,7 @@ class Task:
 
 class TaskManager:
     def __init__(self):
-        self.tasks: List[Task] = []
+        self.tasks: list[Task] = []
         self._next_id = 1
 
     def add_task(self, title: str) -> Task:
@@ -53,7 +53,7 @@ class TaskManager:
                 return True
         return False
 
-    def get_tasks_by_status(self, status: TaskStatus) -> List[Task]:
+    def get_tasks_by_status(self, status: TaskStatus) -> list[Task]:
         return [task for task in self.tasks if task.status == status]
 
     def get_statistics(self) -> dict:
@@ -313,13 +313,13 @@ class Book:
 class Member:
     name: str
     member_id: str
-    borrowed_books: List[Book] = field(default_factory=list)
+    borrowed_books: list[Book] = field(default_factory=list)
 
 
 class Library:
     def __init__(self):
-        self.books: List[Book] = []
-        self.members: List[Member] = []
+        self.books: list[Book] = []
+        self.members: list[Member] = []
 
     def add_book(self, book: Book):
         self.books.append(book)
@@ -361,7 +361,7 @@ class Library:
         member.borrowed_books.remove(book)
         return True
 
-    def get_available_books(self) -> List[Book]:
+    def get_available_books(self) -> list[Book]:
         borrowed_books = [b for m in self.members for b in m.borrowed_books]
         return [b for b in self.books if b not in borrowed_books]
 
@@ -461,7 +461,7 @@ class OrderItem:
 class Order:
     id: str
     customer_name: str
-    items: List[OrderItem] = field(default_factory=list)
+    items: list[OrderItem] = field(default_factory=list)
     status: OrderStatus = OrderStatus.PENDING
     created_at: datetime = field(default_factory=datetime.now)
 
@@ -475,7 +475,7 @@ class Order:
         self.items.append(OrderItem(product, quantity))
 
     @classmethod
-    def from_cart(cls, customer_name: str, cart_items: List[OrderItem]):
+    def from_cart(cls, customer_name: str, cart_items: list[OrderItem]):
         import uuid
 
         order_id = str(uuid.uuid4())[:8]

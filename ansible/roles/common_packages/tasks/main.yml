@@ -44,4 +44,3 @@
     mode: "0644"
   become: true
   become_user: "{{ dev_user }}"
-

@@ -331,7 +331,7 @@ if __name__ == "__main__":
     assert config.max_size == 200
     try:
         config.max_size = -5
-        assert False, "Should raise ValueError"
+        raise AssertionError("Should raise ValueError")
     except ValueError:
         pass
     print("✅ Passed\n")

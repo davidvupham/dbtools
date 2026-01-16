@@ -33,32 +33,32 @@ from gds_vault.retry import RetryPolicy, retry_with_backoff
 __version__ = "0.2.0"
 
 __all__ = [
-    # Core client
-    "VaultClient",
-    "get_secret_from_vault",
-    # Exceptions
-    "VaultError",
-    "VaultAuthError",
-    "VaultConnectionError",
-    "VaultSecretNotFoundError",
-    "VaultPermissionError",
-    "VaultConfigurationError",
-    "VaultCacheError",
     # Authentication
     "AppRoleAuth",
-    "TokenAuth",
+    "AuthStrategy",
+    "Configurable",
     "EnvironmentAuth",
-    # Caching
-    "SecretCache",
-    "TTLCache",
-    "RotationAwareCache",
     "NoOpCache",
+    "ResourceManager",
     # Retry
     "RetryPolicy",
-    "retry_with_backoff",
+    "RotationAwareCache",
+    # Caching
+    "SecretCache",
     # Base classes
     "SecretProvider",
-    "AuthStrategy",
-    "ResourceManager",
-    "Configurable",
+    "TTLCache",
+    "TokenAuth",
+    "VaultAuthError",
+    "VaultCacheError",
+    # Core client
+    "VaultClient",
+    "VaultConfigurationError",
+    "VaultConnectionError",
+    # Exceptions
+    "VaultError",
+    "VaultPermissionError",
+    "VaultSecretNotFoundError",
+    "get_secret_from_vault",
+    "retry_with_backoff",
 ]

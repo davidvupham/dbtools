@@ -31,5 +31,5 @@ OS_TYPE=$(detect_os)
 # - Directory: Blue (33/39) - navigational info
 # - Separator (@): Yellow (226/220) - visual separator
 
-export PS1="\[$(tput setaf 135)\][$OS_TYPE]  \[$(tput setaf 208)\]\d  \[$(tput setaf 82)\]\u\[$(tput setaf 226)\]@\[$(tput setaf 87)\]\h \[$(tput setaf 39)\]\w 
+export PS1="\[$(tput setaf 135)\][$OS_TYPE]  \[$(tput setaf 208)\]\d  \[$(tput setaf 82)\]\u\[$(tput setaf 226)\]@\[$(tput setaf 87)\]\h \[$(tput setaf 39)\]\w
 \[$(tput sgr0)\]$ "

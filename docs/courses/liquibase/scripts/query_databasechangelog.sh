@@ -133,23 +133,23 @@ fi
 query_instance() {
     local instance="$1"
     local container_name="$instance"
-    
+
     echo "========================================"
     echo "Querying DATABASECHANGELOG"
     echo "========================================"
     echo
     echo "Instance: $(pretty_instance "$instance")"
     echo
-    
+
     # Check container is running
     if ! $CR_CMD ps --format "{{.Names}}" | grep -q "^${container_name}$"; then
         echo -e "${RED}ERROR: Container $container_name is not running${NC}"
         return 1
     fi
-    
+
     echo "Container: $container_name"
     echo
-    
+
     # Query DATABASECHANGELOG
     local query="USE orderdb;
 SELECT
@@ -161,10 +161,10 @@ SELECT
     EXECTYPE
 FROM DATABASECHANGELOG
 ORDER BY ORDEREXECUTED DESC;"
-    
+
     echo "Querying DATABASECHANGELOG..."
     echo
-    
+
     # Execute query and format output with borders
     local query_result
     query_result=$($CR_CMD exec "$container_name" /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa \
@@ -172,7 +172,7 @@ ORDER BY ORDEREXECUTED DESC;"
         -d orderdb \
         -Q "$query" \
         -s "|" -h -1 -W 2>&1)
-    
+
     # Check if query succeeded
     if echo "$query_result" | grep -qE "^[A-Z0-9-]+\|"; then
         # Format and display as table with borders
@@ -219,7 +219,7 @@ ORDER BY ORDEREXECUTED DESC;"
                     printf "+%s+%s+%s+%s+%s+%s+\n", "-------------------------", "--------------------", "--------------------------------------------------", "-------------------------", "---------------", "----------"
                 }
             }'
-        
+
         # Count entries
         local entry_count
         entry_count=$(echo "$query_result" | grep -E "^[A-Z0-9-]+\|" | wc -l | tr -d ' ')
@@ -245,11 +245,11 @@ FAILURES=0
 for instance in "${TARGET_INSTANCES[@]}"; do
     # Trim whitespace
     instance="${instance//[[:space:]]/}"
-    
+
     if ! query_instance "$instance"; then
         FAILURES=$((FAILURES+1))
     fi
-    
+
     echo
 done
 

@@ -7,4 +7,3 @@ git_user_email: ""
 
 # Shell configuration
 shell_rc_file: "{{ dev_user_home }}/.bashrc"
-

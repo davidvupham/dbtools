@@ -82,6 +82,3 @@ Get-ChildItem Cert:\LocalMachine\My | Select-Object Subject, HasPrivateKey, Thum
 *`HasPrivateKey` must be True.*
 
 ---
-
-
-

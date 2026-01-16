@@ -6,4 +6,3 @@
 dev_directories:
   - "{{ dev_user_home }}/dev"
   - "{{ dev_user_home }}/.local/bin"
-

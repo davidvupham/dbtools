@@ -8,19 +8,20 @@ and monitoring replica set health.
 
 import logging
 import time
-from typing import Any, Dict, List, Optional, Union
-
-from pymongo import MongoClient
-from pymongo.errors import OperationFailure, ServerSelectionTimeoutError
+from typing import TYPE_CHECKING, Any, Optional, Union
 
 from gds_database import (
     ConfigurationError,
     DatabaseConnectionError,
     QueryError,
 )
+from pymongo import MongoClient
+from pymongo.errors import OperationFailure, ServerSelectionTimeoutError
 
 from .connection import MongoDBConnection
-from .monitoring import Alert, AlertType
+
+if TYPE_CHECKING:
+    from .monitoring import Alert, AlertType
 
 logger = logging.getLogger(__name__)
 
@@ -99,7 +100,7 @@ class MongoDBReplicaSetManager:
         if not self.client:
             raise ValueError("Connection not established")
 
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> dict[str, Any]:
         """
         Get replica set status.
 
@@ -148,7 +149,7 @@ class MongoDBReplicaSetManager:
             logger.error(error_msg)
             raise QueryError(error_msg) from e
 
-    def get_config(self) -> Dict[str, Any]:
+    def get_config(self) -> dict[str, Any]:
         """
         Get replica set configuration.
 
@@ -202,8 +203,8 @@ class MongoDBReplicaSetManager:
         arbiter_only: bool = False,
         hidden: bool = False,
         slave_delay: int = 0,
-        tags: Optional[Dict[str, str]] = None,
-    ) -> Dict[str, Any]:
+        tags: Optional[dict[str, str]] = None,
+    ) -> dict[str, Any]:
         """
         Add a new member to the replica set.
 
@@ -269,7 +270,7 @@ class MongoDBReplicaSetManager:
             new_member_id = max_id + 1
 
             # Build new member configuration
-            new_member: Dict[str, Any] = {
+            new_member: dict[str, Any] = {
                 "_id": new_member_id,
                 "host": host,
             }
@@ -319,7 +320,7 @@ class MongoDBReplicaSetManager:
             logger.error(error_msg)
             raise QueryError(error_msg) from e
 
-    def remove_member(self, host: str) -> Dict[str, Any]:
+    def remove_member(self, host: str) -> dict[str, Any]:
         """
         Remove a member from the replica set.
 
@@ -411,7 +412,7 @@ class MongoDBReplicaSetManager:
             logger.error(error_msg)
             raise QueryError(error_msg) from e
 
-    def get_secondaries(self) -> List[str]:
+    def get_secondaries(self) -> list[str]:
         """
         Get list of secondary members in the replica set.
 
@@ -439,7 +440,7 @@ class MongoDBReplicaSetManager:
             logger.error(error_msg)
             raise QueryError(error_msg) from e
 
-    def get_arbiters(self) -> List[str]:
+    def get_arbiters(self) -> list[str]:
         """
         Get list of arbiter members in the replica set.
 
@@ -467,7 +468,7 @@ class MongoDBReplicaSetManager:
             logger.error(error_msg)
             raise QueryError(error_msg) from e
 
-    def get_member_health(self) -> Dict[str, bool]:
+    def get_member_health(self) -> dict[str, bool]:
         """
         Get health status of all replica set members.
 
@@ -499,7 +500,7 @@ class MongoDBReplicaSetManager:
             logger.error(error_msg)
             raise QueryError(error_msg) from e
 
-    def get_member_states(self) -> Dict[str, str]:
+    def get_member_states(self) -> dict[str, str]:
         """
         Get current state of all replica set members.
 
@@ -530,7 +531,7 @@ class MongoDBReplicaSetManager:
             logger.error(error_msg)
             raise QueryError(error_msg) from e
 
-    def get_replication_lag(self) -> Dict[str, int]:
+    def get_replication_lag(self) -> dict[str, int]:
         """
         Get replication lag (in seconds) for all secondary members.
 
@@ -579,7 +580,7 @@ class MongoDBReplicaSetManager:
             logger.error(error_msg)
             raise QueryError(error_msg) from e
 
-    def reconfigure(self, config: Dict[str, Any], force: bool = False) -> Dict[str, Any]:
+    def reconfigure(self, config: dict[str, Any], force: bool = False) -> dict[str, Any]:
         """
         Apply a new replica set configuration.
 
@@ -638,7 +639,7 @@ class MongoDBReplicaSetManager:
             logger.error(error_msg)
             raise QueryError(error_msg) from e
 
-    def step_down(self, seconds: int = 60) -> Dict[str, Any]:
+    def step_down(self, seconds: int = 60) -> dict[str, Any]:
         """
         Force the primary to step down and become a secondary.
 
@@ -675,7 +676,7 @@ class MongoDBReplicaSetManager:
             logger.error(error_msg)
             raise QueryError(error_msg) from e
 
-    def freeze(self, seconds: int) -> Dict[str, Any]:
+    def freeze(self, seconds: int) -> dict[str, Any]:
         """
         Prevent a replica set member from seeking election for specified time.
 
@@ -711,7 +712,7 @@ class MongoDBReplicaSetManager:
             logger.error(error_msg)
             raise QueryError(error_msg) from e
 
-    def monitor_health(self, alert_manager: Optional[Any] = None) -> Dict[str, Any]:
+    def monitor_health(self, alert_manager: Optional[Any] = None) -> dict[str, Any]:
         """
         Comprehensive health monitoring for the replica set.
 
@@ -780,7 +781,7 @@ class MongoDBReplicaSetManager:
             logger.error(error_msg)
             raise QueryError(error_msg) from e
 
-    def troubleshoot_replication_issues(self) -> Dict[str, Any]:
+    def troubleshoot_replication_issues(self) -> dict[str, Any]:
         """
         Comprehensive troubleshooting for replica set replication issues.
 
@@ -825,7 +826,7 @@ class MongoDBReplicaSetManager:
             logger.error(error_msg)
             raise QueryError(error_msg) from e
 
-    def get_replication_metrics(self) -> Dict[str, Any]:
+    def get_replication_metrics(self) -> dict[str, Any]:
         """
         Get detailed replication metrics for monitoring and alerting.
 
@@ -875,7 +876,7 @@ class MongoDBReplicaSetManager:
             logger.error(error_msg)
             raise QueryError(error_msg) from e
 
-    def _check_replica_set_status(self, status: Dict[str, Any]) -> Dict[str, Any]:
+    def _check_replica_set_status(self, status: dict[str, Any]) -> dict[str, Any]:
         """Check overall replica set status."""
         check_result = {"status": "healthy", "details": {}, "issues": []}
 
@@ -904,7 +905,7 @@ class MongoDBReplicaSetManager:
 
         return check_result
 
-    def _check_member_health(self, member_health: Dict[str, bool]) -> Dict[str, Any]:
+    def _check_member_health(self, member_health: dict[str, bool]) -> dict[str, Any]:
         """Check individual member health."""
         check_result = {"status": "healthy", "details": {}, "issues": []}
 
@@ -917,7 +918,7 @@ class MongoDBReplicaSetManager:
 
         return check_result
 
-    def _check_replication_lag(self, replication_lag: Dict[str, int]) -> Dict[str, Any]:
+    def _check_replication_lag(self, replication_lag: dict[str, int]) -> dict[str, Any]:
         """Check replication lag across members."""
         check_result = {"status": "healthy", "details": {}, "issues": []}
 
@@ -937,12 +938,12 @@ class MongoDBReplicaSetManager:
             max_severity = max(severity for _, _, severity in high_lag_members)
             check_result["status"] = max_severity
 
-            for member, lag, severity in high_lag_members:
+            for member, lag, _severity in high_lag_members:
                 check_result["issues"].append(f"High replication lag on {member}: {lag}s")
 
         return check_result
 
-    def _check_primary_availability(self, primary: Optional[str], status: Dict[str, Any]) -> Dict[str, Any]:
+    def _check_primary_availability(self, primary: Optional[str], status: dict[str, Any]) -> dict[str, Any]:
         """Check primary availability."""
         check_result = {"status": "healthy", "details": {}, "issues": []}
 
@@ -960,7 +961,7 @@ class MongoDBReplicaSetManager:
 
         return check_result
 
-    def _check_configuration_consistency(self, config: Dict[str, Any], status: Dict[str, Any]) -> Dict[str, Any]:
+    def _check_configuration_consistency(self, config: dict[str, Any], status: dict[str, Any]) -> dict[str, Any]:
         """Check configuration consistency."""
         check_result = {"status": "healthy", "details": {}, "issues": []}
 
@@ -984,12 +985,12 @@ class MongoDBReplicaSetManager:
 
         return check_result
 
-    def _determine_overall_health(self, checks: Dict[str, Any]) -> str:
+    def _determine_overall_health(self, checks: dict[str, Any]) -> str:
         """Determine overall health from individual checks."""
         severity_levels = {"healthy": 0, "warning": 1, "error": 2, "critical": 3}
 
         max_severity = 0
-        for check_name, check_result in checks.items():
+        for _check_name, check_result in checks.items():
             status = check_result.get("status", "healthy")
             severity = severity_levels.get(status, 0)
             max_severity = max(max_severity, severity)
@@ -997,7 +998,7 @@ class MongoDBReplicaSetManager:
         severity_names = {0: "healthy", 1: "warning", 2: "error", 3: "critical"}
         return severity_names[max_severity]
 
-    def _generate_replica_set_alerts(self, health_data: Dict[str, Any]) -> List["Alert"]:
+    def _generate_replica_set_alerts(self, health_data: dict[str, Any]) -> list["Alert"]:
         """Generate alerts from health check results."""
         alerts = []
 
@@ -1042,7 +1043,7 @@ class MongoDBReplicaSetManager:
 
         return mapping.get(check_name, AlertType.REPLICA_SET_SPLIT_BRAIN)
 
-    def _diagnose_primary_issues(self, status: Dict[str, Any], diagnostics: Dict[str, Any]):
+    def _diagnose_primary_issues(self, status: dict[str, Any], diagnostics: dict[str, Any]):
         """Diagnose primary-related issues."""
         primary = None
         for member in status.get("members", []):
@@ -1072,7 +1073,7 @@ class MongoDBReplicaSetManager:
                 }
             )
 
-    def _diagnose_member_issues(self, status: Dict[str, Any], diagnostics: Dict[str, Any]):
+    def _diagnose_member_issues(self, status: dict[str, Any], diagnostics: dict[str, Any]):
         """Diagnose member-related issues."""
         members = status.get("members", [])
 
@@ -1102,7 +1103,7 @@ class MongoDBReplicaSetManager:
                     }
                 )
 
-    def _diagnose_network_issues(self, status: Dict[str, Any], diagnostics: Dict[str, Any]):
+    def _diagnose_network_issues(self, status: dict[str, Any], diagnostics: dict[str, Any]):
         """Diagnose network-related issues."""
         members = status.get("members", [])
 
@@ -1120,7 +1121,7 @@ class MongoDBReplicaSetManager:
                     }
                 )
 
-    def _diagnose_oplog_issues(self, status: Dict[str, Any], diagnostics: Dict[str, Any]):
+    def _diagnose_oplog_issues(self, status: dict[str, Any], diagnostics: dict[str, Any]):
         """Diagnose oplog-related issues."""
         # Get oplog information
         try:
@@ -1147,7 +1148,7 @@ class MongoDBReplicaSetManager:
                 }
             )
 
-    def _get_oplog_info(self) -> Dict[str, Any]:
+    def _get_oplog_info(self) -> dict[str, Any]:
         """Get oplog information."""
         try:
             # Switch to local database
@@ -1192,7 +1193,7 @@ class MongoDBReplicaSetManager:
             logger.warning(f"Could not get oplog info: {e}")
             return {}
 
-    def _calculate_replication_throughput(self, status: Dict[str, Any]) -> Dict[str, Any]:
+    def _calculate_replication_throughput(self, status: dict[str, Any]) -> dict[str, Any]:
         """Calculate replication throughput metrics."""
         throughput = {"oplog_entries_per_second": 0, "data_replicated_mb_per_second": 0}
 

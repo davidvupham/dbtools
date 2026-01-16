@@ -85,7 +85,7 @@ class TestSnowflakeConnectionConnect:
 
     def test_connect_success_with_vault(self, connection_params, mock_snowflake_connection, mock_vault_working):
         """Test successful connection with vault"""
-        mock_connect, mock_conn = mock_snowflake_connection
+        _mock_connect, mock_conn = mock_snowflake_connection
 
         params = connection_params.copy()
         params["vault_secret_path"] = "secret/snowflake"
@@ -109,7 +109,7 @@ class TestSnowflakeConnectionQueries:
 
     def test_execute_query(self, connection_params, mock_snowflake_connection, mock_vault_working):
         """Test query execution"""
-        mock_connect, mock_conn = mock_snowflake_connection
+        _mock_connect, _mock_conn = mock_snowflake_connection
 
         params = connection_params.copy()
         params["vault_secret_path"] = "secret/snowflake"
@@ -123,7 +123,7 @@ class TestSnowflakeConnectionQueries:
 
     def test_execute_query_dict(self, connection_params, mock_snowflake_connection, mock_vault_working):
         """Test query execution returning dictionaries"""
-        mock_connect, mock_conn = mock_snowflake_connection
+        _mock_connect, mock_conn = mock_snowflake_connection
 
         # Create mock dict cursor
         mock_dict_cursor = Mock()
@@ -155,7 +155,7 @@ class TestSnowflakeConnectionLifecycle:
 
     def test_close_connection(self, connection_params, mock_snowflake_connection, mock_vault_working):
         """Test connection closing"""
-        mock_connect, mock_conn = mock_snowflake_connection
+        _mock_connect, mock_conn = mock_snowflake_connection
 
         params = connection_params.copy()
         params["vault_secret_path"] = "secret/snowflake"
@@ -181,7 +181,7 @@ class TestSnowflakeConnectionLifecycle:
 
     def test_context_manager(self, connection_params, mock_snowflake_connection, mock_vault_working):
         """Test context manager functionality"""
-        mock_connect, mock_conn = mock_snowflake_connection
+        _mock_connect, mock_conn = mock_snowflake_connection
 
         params = connection_params.copy()
         params["vault_secret_path"] = "secret/snowflake"
@@ -197,7 +197,7 @@ class TestSnowflakeConnectionAdvanced:
 
     def test_test_connectivity_success(self, connection_params, mock_snowflake_connection, mock_vault_working):
         """Test connectivity testing success"""
-        mock_connect, mock_conn = mock_snowflake_connection
+        _mock_connect, _mock_conn = mock_snowflake_connection
 
         params = connection_params.copy()
         params["vault_secret_path"] = "secret/snowflake"

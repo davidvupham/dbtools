@@ -97,14 +97,14 @@ The `main()` function in `gds_snmp_receiver/receiver.py` is the entry point for 
 ```python
 def main(argv: Optional[list[str]] = None) -> None:
     """Entry point for the CLI tool.
-    
+
     Args:
         argv: Optional list of arguments. If None, sys.argv is used.
               This parameter enables testing without modifying sys.argv.
     """
     # 1. Create argument parser
     parser = argparse.ArgumentParser(description="gds_snmp_receiver CLI")
-    
+
     # 2. Define arguments with defaults from environment
     parser.add_argument(
         "--host",
@@ -132,17 +132,17 @@ def main(argv: Optional[list[str]] = None) -> None:
         default=os.environ.get("SNMP_LOG_LEVEL", "INFO"),
         help="Logging level"
     )
-    
+
     # 3. Parse arguments
     args = parser.parse_args(argv)
-    
+
     # 4. Configure logging
     numeric_level = getattr(logging, args.log_level.upper(), logging.INFO)
     logging.basicConfig(
         level=numeric_level,
         format="%(asctime)s %(levelname)s [%(name)s] %(message)s"
     )
-    
+
     # 5. Create and run the service
     receiver = SNMPReceiver(
         listen_host=args.host,
@@ -471,7 +471,7 @@ def test_cli_parses_arguments():
     # Mock SNMPReceiver.run() to prevent actual execution
     with patch('gds_snmp_receiver.receiver.SNMPReceiver') as mock:
         main(["--port", "9162", "--host", "127.0.0.1"])
-        
+
         # Verify SNMPReceiver was called with correct args
         mock.assert_called_once_with(
             listen_host="127.0.0.1",
@@ -484,10 +484,10 @@ def test_environment_variable_defaults():
     """Test that environment variables are used as defaults."""
     import os
     os.environ["SNMP_LISTEN_PORT"] = "1234"
-    
+
     with patch('gds_snmp_receiver.receiver.SNMPReceiver') as mock:
         main([])  # No CLI args
-        
+
         # Should use env var for port
         assert mock.call_args[1]['listen_port'] == 1234
 ```
@@ -554,7 +554,7 @@ parser = argparse.ArgumentParser(
 Examples:
   %(prog)s --port 9162
   %(prog)s --rabbit amqp://localhost/ --log-level DEBUG
-  
+
 Environment variables:
   SNMP_LISTEN_PORT    UDP port (default: 162)
   RABBIT_URL          RabbitMQ URL
@@ -589,9 +589,9 @@ if args.log_level.upper() not in ["DEBUG", "INFO", "WARNING", "ERROR"]:
 ```python
 def main(argv: Optional[list[str]] = None) -> None:
     args = parser.parse_args(argv)
-    
+
     receiver = SNMPReceiver(...)
-    
+
     try:
         receiver.run()
     except KeyboardInterrupt:
@@ -640,29 +640,29 @@ if args.config:
 ```python
 def main(argv: Optional[list[str]] = None) -> None:
     """Main entry point for the gds-snmp-receiver CLI tool.
-    
+
     This function is called when users run 'gds-snmp-receiver' command.
     It parses command-line arguments, configures logging, creates an
     SNMPReceiver instance, and starts the service.
-    
+
     Args:
         argv: Optional list of command-line arguments. If None,
               sys.argv is used. This parameter exists to enable
               testing without modifying sys.argv.
-    
+
     Returns:
         None. The function blocks until the service is terminated.
-    
+
     Raises:
         SystemExit: On argument parsing errors or --help/--version.
-    
+
     Examples:
         # Run with defaults
         $ gds-snmp-receiver
-        
+
         # Run with custom port
         $ gds-snmp-receiver --port 9162
-        
+
         # Run with environment variables
         $ SNMP_LISTEN_PORT=9162 gds-snmp-receiver
     """

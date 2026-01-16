@@ -28,7 +28,7 @@ Describe 'Set-GDSSqlServiceUserRights' {
 
         It 'Looks up service account from Win32_Service and calls Set-GDSWindowsUserRight' {
             Mock Set-GDSWindowsUserRight { } -ModuleName 'GDS.Windows'
-            Mock Get-CimInstance { 
+            Mock Get-CimInstance {
                 return [PSCustomObject]@{
                     Name      = 'MSSQLSERVER'
                     StartName = 'NT SERVICE\MSSQLSERVER'

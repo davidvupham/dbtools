@@ -203,8 +203,8 @@ Write database-specific SQL directly using either embedded SQL in YAML or "Forma
     changes:
       - sql:
           sql: |
-            CREATE INDEX idx_customer_email 
-            ON customer(email) 
+            CREATE INDEX idx_customer_email
+            ON customer(email)
             WHERE email IS NOT NULL;
       - rollback:
           sql: DROP INDEX idx_customer_email;
@@ -220,8 +220,8 @@ Use standard SQL with Liquibase-specific comments to define changesets. This giv
 --liquibase formatted sql
 
 --changeset alice:3
-CREATE INDEX idx_customer_email 
-ON customer(email) 
+CREATE INDEX idx_customer_email
+ON customer(email)
 WHERE email IS NOT NULL;
 --rollback DROP INDEX idx_customer_email;
 ```

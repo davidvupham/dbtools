@@ -1,4 +1,4 @@
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 from gds_benchmark.models import BenchmarkResult, BenchmarkStatus
 
@@ -6,7 +6,7 @@ from gds_benchmark.models import BenchmarkResult, BenchmarkStatus
 class ResultAnalyzer:
     """Analyzes HammerDB benchmark results."""
 
-    def analyze(self, result: BenchmarkResult, baseline_nopm: Optional[float] = None) -> Dict[str, Any]:
+    def analyze(self, result: BenchmarkResult, baseline_nopm: Optional[float] = None) -> dict[str, Any]:
         """
         Analyzes the result against a baseline.
 

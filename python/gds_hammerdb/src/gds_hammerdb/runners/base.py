@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime
-from typing import Any, Dict
+from typing import Any
 
 from gds_benchmark.interfaces import BenchmarkRunner
 from gds_benchmark.models import BenchmarkResult, BenchmarkStatus
@@ -19,7 +19,7 @@ class HammerDBRunner(BenchmarkRunner):
         self.generator = ScriptGenerator()
         self.parser = ResultParser()
 
-    def run(self, config: Dict[str, Any]) -> BenchmarkResult:
+    def run(self, config: dict[str, Any]) -> BenchmarkResult:
         """
         Executes the HammerDB benchmark.
 
@@ -31,7 +31,7 @@ class HammerDBRunner(BenchmarkRunner):
         # and calling _execute.
         raise NotImplementedError("Subclasses must implement run()")
 
-    def build_schema(self, config: Dict[str, Any]) -> BenchmarkResult:
+    def build_schema(self, config: dict[str, Any]) -> BenchmarkResult:
         """
         Builds the schema (Drop and Recreate) for the target database.
 
@@ -40,7 +40,7 @@ class HammerDBRunner(BenchmarkRunner):
         """
         raise NotImplementedError("Subclasses must implement build_schema()")
 
-    def run_with_rebuild(self, config: Dict[str, Any]) -> BenchmarkResult:
+    def run_with_rebuild(self, config: dict[str, Any]) -> BenchmarkResult:
         """
         Orchestrates a schema build followed by a benchmark run.
 
@@ -79,6 +79,6 @@ class HammerDBRunner(BenchmarkRunner):
                 error_message=str(e),
             )
 
-    def validate_config(self, config: Dict[str, Any]) -> bool:
+    def validate_config(self, config: dict[str, Any]) -> bool:
         # basic validation
         return True

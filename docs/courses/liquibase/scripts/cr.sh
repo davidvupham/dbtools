@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Container Runtime Helper - Auto-detects docker/podman based on OS
-# 
+#
 # Usage:
 #   cr run --rm liquibase:latest --version
 #   cr ps
@@ -64,7 +64,7 @@ handle_build() {
   local image_name=""
   local context_dir=""
   local extra_args=()
-  
+
   # Parse build arguments to extract -t/--tag and context directory
   while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -111,21 +111,21 @@ handle_build() {
         ;;
     esac
   done
-  
+
   # Validate we have required arguments
   if [[ -z "$context_dir" ]]; then
     echo "Error: No build context directory specified" >&2
     echo "Usage: cr build -t image:tag /path/to/context" >&2
     exit 1
   fi
-  
+
   # Check if build_container_image.sh exists
   if [[ ! -x "$BUILD_SCRIPT" ]]; then
     echo "Warning: build_container_image.sh not found, falling back to direct $CR build" >&2
     CR="$(detect_runtime)"
     exec "$CR" build ${image_name:+-t "$image_name"} "${extra_args[@]}" "$context_dir"
   fi
-  
+
   # Delegate to build_container_image.sh
   # Format: build_container_image.sh <context_dir> [image_name:tag] [-- extra_args...]
   local build_args=("$context_dir")
@@ -135,7 +135,7 @@ handle_build() {
   if [[ ${#extra_args[@]} -gt 0 ]]; then
     build_args+=("--" "${extra_args[@]}")
   fi
-  
+
   exec "$BUILD_SCRIPT" "${build_args[@]}"
 }
 

@@ -1,6 +1,7 @@
-from typing import Any, Dict
+from typing import Any
 
 from gds_benchmark.models import BenchmarkResult
+
 from gds_hammerdb.constants import BM_TPCC, BM_TPCH
 from gds_hammerdb.models import HammerDBConfig, PostgresConnectionConfig
 from gds_hammerdb.runners.base import HammerDBRunner
@@ -9,7 +10,7 @@ from gds_hammerdb.runners.base import HammerDBRunner
 class PostgresRunner(HammerDBRunner):
     """HammerDB Runner for PostgreSQL."""
 
-    def run(self, config: Dict[str, Any]) -> BenchmarkResult:
+    def run(self, config: dict[str, Any]) -> BenchmarkResult:
         """
         Runs the benchmark against PostgreSQL.
 
@@ -32,7 +33,7 @@ class PostgresRunner(HammerDBRunner):
         # Execute
         return self._execute(script, h_config)
 
-    def build_schema(self, config: Dict[str, Any]) -> BenchmarkResult:
+    def build_schema(self, config: dict[str, Any]) -> BenchmarkResult:
         """
         Builds the schema for PostgreSQL.
         """

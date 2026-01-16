@@ -18,14 +18,14 @@ echo ""
 # Function to check if a port is available
 is_port_available() {
     local port=$1
-    
+
     # Check if Docker is using this port
     if command -v docker &> /dev/null; then
         if docker ps --format '{{.Ports}}' 2>/dev/null | grep -q "0.0.0.0:${port}->"; then
             return 1  # Port is in use by Docker
         fi
     fi
-    
+
     # Check using lsof if available (most reliable)
     if command -v lsof &> /dev/null; then
         ! lsof -i":${port}" -sTCP:LISTEN -t >/dev/null 2>&1
@@ -46,9 +46,9 @@ find_available_port() {
     local start_port=${1:-14333}
     local max_attempts=100
     local port=$start_port
-    
+
     echo "Searching for available port starting from ${start_port}..." >&2
-    
+
     for ((i=0; i<max_attempts; i++)); do
         if is_port_available $port; then
             echo $port
@@ -57,7 +57,7 @@ find_available_port() {
         echo "  Port ${port} is in use, trying next..." >&2
         ((port++))
     done
-    
+
     # If no port found in range, return error
     return 1
 }

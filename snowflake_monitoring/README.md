@@ -292,7 +292,7 @@ See `example_module_usage.py` for detailed examples of:
 ### No Failover Groups Found
 
 **Issue:** "No failover groups found" message
-**Solution:** 
+**Solution:**
 - Verify account has ACCOUNTADMIN or equivalent role
 - Check that replication is configured
 - Ensure account is part of a failover group

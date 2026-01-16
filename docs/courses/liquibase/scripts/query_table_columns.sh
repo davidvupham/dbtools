@@ -170,7 +170,7 @@ if echo "$QUERY_RESULT" | grep -qE "^[a-zA-Z_]+\|"; then
                 printf "+%s+%s+%s+%s+%s+\n", "----------------------", "---------------", "----------", "------------", "--------------------------------"
             }
         }'
-    
+
     # Count columns
     COL_COUNT=$(echo "$QUERY_RESULT" | grep -E "^[a-zA-Z_]+\|" | wc -l | tr -d ' ')
     echo

@@ -285,12 +285,12 @@ take_snapshot() {
     local timestamp
     timestamp=$(date +%Y%m%d_%H%M%S)
     local snapshot_file="${SNAPSHOT_DIR}/${instance}_${action_name}_${timestamp}.json"
-    
+
     # Ensure snapshot directory exists
     mkdir -p "$SNAPSHOT_DIR"
-    
+
     log_info "Taking snapshot: ${instance}_${action_name}_${timestamp}.json"
-    
+
     if "$LB_CMD" --dbi "$instance" -- snapshot \
         --schemas=app \
         --snapshot-format=json \
@@ -316,30 +316,30 @@ do_baseline() {
     local instance="$1"
     local pretty
     pretty=$(pretty_instance "$instance")
-    
+
     local lb_action="update"
     local action_desc="update - execute changesets"
-    
+
     if [[ "$instance" == "mssql_dev" ]]; then
         lb_action="changelogSync"
         action_desc="changelogSync - mark as executed"
     fi
-    
+
     log_info "Deploying baseline to $pretty ($action_desc)..."
-    
+
     # Deploy
     if ! "$LB_CMD" --dbi "$instance" -- "$lb_action" 2>&1; then
         log_error "Failed to deploy baseline to $pretty"
         return 1
     fi
-    
+
     # Tag as baseline
     log_info "Tagging as 'baseline'..."
     if ! "$LB_CMD" --dbi "$instance" -- tag baseline 2>&1; then
         # Tag might already exist (idempotent)
         log_warn "Tag 'baseline' may already exist in $pretty"
     fi
-    
+
     log_success "Baseline deployed to $pretty"
     return 0
 }
@@ -349,9 +349,9 @@ do_update() {
     local instance="$1"
     local pretty
     pretty=$(pretty_instance "$instance")
-    
+
     log_info "Deploying updates to $pretty..."
-    
+
     if "$LB_CMD" --dbi "$instance" -- update 2>&1; then
         log_success "Updates deployed to $pretty"
         return 0
@@ -367,9 +367,9 @@ do_rollback() {
     local tag="$2"
     local pretty
     pretty=$(pretty_instance "$instance")
-    
+
     log_info "Rolling back $pretty to tag '$tag'..."
-    
+
     if "$LB_CMD" --dbi "$instance" -- rollback "$tag" 2>&1; then
         log_success "Rolled back $pretty to '$tag'"
         return 0
@@ -385,9 +385,9 @@ do_rollback_count() {
     local count="$2"
     local pretty
     pretty=$(pretty_instance "$instance")
-    
+
     log_info "Rolling back last $count changeset(s) in $pretty..."
-    
+
     if "$LB_CMD" --dbi "$instance" -- rollbackCount "$count" 2>&1; then
         log_success "Rolled back last $count changeset(s) in $pretty"
         return 0
@@ -402,9 +402,9 @@ do_status() {
     local instance="$1"
     local pretty
     pretty=$(pretty_instance "$instance")
-    
+
     log_info "Checking status in $pretty..."
-    
+
     "$LB_CMD" --dbi "$instance" -- status --verbose 2>&1
     return $?
 }
@@ -438,9 +438,9 @@ for instance in "${TARGET_INSTANCES[@]}"; do
     echo "----------------------------------------"
     echo "Processing: $(pretty_instance "$instance")"
     echo "----------------------------------------"
-    
+
     action_success=false
-    
+
     case "$ACTION" in
         baseline)
             if do_baseline "$instance"; then
@@ -469,10 +469,10 @@ for instance in "${TARGET_INSTANCES[@]}"; do
             TAKE_SNAPSHOT=false
             ;;
     esac
-    
+
     if [[ "$action_success" == "true" ]]; then
         SUCCESS_INSTANCES+=("$instance")
-        
+
         # Take snapshot after successful action (except status)
         if [[ "$TAKE_SNAPSHOT" == "true" ]] && [[ "$ACTION" != "status" ]]; then
             take_snapshot "$instance" "$ACTION" || true
@@ -480,7 +480,7 @@ for instance in "${TARGET_INSTANCES[@]}"; do
     else
         FAILED_INSTANCES+=("$instance")
     fi
-    
+
     echo
 done
 

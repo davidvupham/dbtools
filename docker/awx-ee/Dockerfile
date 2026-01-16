@@ -3,9 +3,9 @@
 # ==============================================================================
 #
 # PURPOSE:
-# This Dockerfile creates a custom Ansible Execution Environment (EE) compatible 
+# This Dockerfile creates a custom Ansible Execution Environment (EE) compatible
 # with Ansible AWX / Automation Controller. It serves as a portable container
-# image that bundles Ansible Core with specific Python dependencies and 
+# image that bundles Ansible Core with specific Python dependencies and
 # System Libraries required for automation tasks.
 #
 # SYSTEM REQUIREMENTS:

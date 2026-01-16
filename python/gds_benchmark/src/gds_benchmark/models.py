@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 
 class BenchmarkStatus(str, Enum):
@@ -30,8 +30,8 @@ class BenchmarkResult:
     status: BenchmarkStatus
     start_time: datetime
     end_time: Optional[datetime] = None
-    metrics: List[Metric] = field(default_factory=list)
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metrics: list[Metric] = field(default_factory=list)
+    metadata: dict[str, Any] = field(default_factory=dict)
     raw_output: Optional[str] = None
     error_message: Optional[str] = None
 

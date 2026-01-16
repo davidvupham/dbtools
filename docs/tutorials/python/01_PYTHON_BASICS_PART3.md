@@ -35,15 +35,15 @@ class Person:
         self.name = name
         self.age = age
         self.email = email
-    
+
     def __repr__(self):
         return f"Person(name={self.name!r}, age={self.age!r}, email={self.email!r})"
-    
+
     def __eq__(self, other):
         if not isinstance(other, Person):
             return False
-        return (self.name == other.name and 
-                self.age == other.age and 
+        return (self.name == other.name and
+                self.age == other.age and
                 self.email == other.email)
 
 # Create a person
@@ -224,7 +224,7 @@ class ShoppingCart:
     customer: str
     items: list = field(default_factory=list)  # Mutable default
     total: float = 0.0
-    
+
     def add_item(self, item, price):
         self.items.append(item)
         self.total += price
@@ -493,21 +493,21 @@ A **class method** is a method that works with the class itself, not instances. 
 ```python
 class Person:
     population = 0  # Class variable
-    
+
     def __init__(self, name, age):
         self.name = name  # Instance variable
         self.age = age
         Person.population += 1
-    
+
     # Instance method - works with self (the instance)
     def greet(self):
         return f"Hello, I'm {self.name}"
-    
+
     # Class method - works with cls (the class)
     @classmethod
     def get_population(cls):
         return cls.population
-    
+
     # Class method as alternative constructor
     @classmethod
     def from_birth_year(cls, name, birth_year):
@@ -548,12 +548,12 @@ class OperationResult:
     data: Optional[Dict[str, Any]] = None
     error: Optional[str] = None
     duration_ms: float = 0.0
-    
+
     @classmethod
     def success_result(cls, message: str, data: Optional[Dict[str, Any]] = None) -> 'OperationResult':
         """Factory method for successful results."""
         return cls(success=True, message=message, data=data)
-    
+
     @classmethod
     def failure_result(cls, message: str, error: Optional[str] = None) -> 'OperationResult':
         """Factory method for failed results."""
@@ -595,20 +595,20 @@ class Date:
         self.year = year
         self.month = month
         self.day = day
-    
+
     @classmethod
     def from_string(cls, date_string):
         """Create Date from string like '2025-01-15'"""
         year, month, day = map(int, date_string.split('-'))
         return cls(year, month, day)
-    
+
     @classmethod
     def today(cls):
         """Create Date for today"""
         import datetime
         today = datetime.date.today()
         return cls(today.year, today.month, today.day)
-    
+
     def __repr__(self):
         return f"Date({self.year}, {self.month}, {self.day})"
 
@@ -627,12 +627,12 @@ print(date3)  # Date(2025, 1, 15) (if today is Jan 15)
 ```python
 class MathOperations:
     multiplier = 2  # Class variable
-    
+
     @classmethod
     def multiply_by_class_multiplier(cls, x):
         """Has access to class and its variables"""
         return x * cls.multiplier
-    
+
     @staticmethod
     def add(x, y):
         """No access to class or instance, just a function"""
@@ -658,17 +658,17 @@ class DatabaseConnection:
         self.host = host
         self.port = port
         self.database = database
-    
+
     @classmethod
     def for_development(cls):
         """Factory for development environment"""
         return cls("localhost", 5432, "dev_db")
-    
+
     @classmethod
     def for_production(cls):
         """Factory for production environment"""
         return cls("prod-db.company.com", 5432, "prod_db")
-    
+
     @classmethod
     def from_config(cls, config_dict):
         """Factory from configuration dictionary"""
@@ -717,7 +717,7 @@ class Animal:
     def __init__(self, name):
         self.name = name
         print(f"Animal created: {name}")
-    
+
     def speak(self):
         return "Some sound"
 
@@ -727,7 +727,7 @@ class Dog(Animal):
         super().__init__(name)
         self.breed = breed
         print(f"Dog breed: {breed}")
-    
+
     def speak(self):
         # Can still call parent's method if needed
         parent_sound = super().speak()
@@ -755,9 +755,9 @@ From `monitor.py`:
 ```python
 class BaseMonitor(ABC):
     """Abstract base class for all monitoring operations."""
-    
+
     def __init__(
-        self, 
+        self,
         name: str,
         timeout: int = 30,
         log_level: int = logging.INFO
@@ -770,7 +770,7 @@ class BaseMonitor(ABC):
 
 class SnowflakeMonitor(BaseMonitor):
     """Snowflake-specific monitor."""
-    
+
     def __init__(
         self,
         account: str,
@@ -783,7 +783,7 @@ class SnowflakeMonitor(BaseMonitor):
             name=f"SnowflakeMonitor-{account}",
             timeout=connectivity_timeout
         )
-        
+
         # Then add our own initialization
         self.account = account
         self.user = user
@@ -861,7 +861,7 @@ print(C.__mro__)
 class Shape:
     def area(self):
         return 0
-    
+
     def describe(self):
         return f"Shape with area {self.area()}"
 
@@ -869,10 +869,10 @@ class Rectangle(Shape):
     def __init__(self, width, height):
         self.width = width
         self.height = height
-    
+
     def area(self):
         return self.width * self.height
-    
+
     def describe(self):
         # Call parent's describe, then add more info
         parent_desc = super().describe()
@@ -1125,11 +1125,11 @@ From `monitor.py`:
 def _send_email(self, subject: str, body: str):
     """Send email notification."""
     # ... email setup code ...
-    
+
     # Build email body with numbered items
     parts = body.split('\n')
     formatted_body = []
-    
+
     for i, part in enumerate(parts):
         if i == 0:
             # First part is the header
@@ -1137,7 +1137,7 @@ def _send_email(self, subject: str, body: str):
         else:
             # Other parts are content
             formatted_body.append(f"<p>{part}</p>")
-    
+
     html_body = '\n'.join(formatted_body)
 ```
 
@@ -1253,19 +1253,19 @@ From `monitor.py`:
 class SnowflakeMonitor(BaseMonitor):
     def __init__(self, account: str, **kwargs):
         # ... other initialization ...
-        
+
         # Track which failures we've already notified about
         # Using set because:
         # 1. Only unique failure names
         # 2. Fast membership testing
         # 3. Easy to add/remove
         self.notified_failures: Set[str] = set()
-    
+
     def monitor_replication_latency(self):
         """Monitor replication latency."""
         for fg in failover_groups:
             result = self.check_replication_latency(fg)
-            
+
             if result.has_latency:
                 # Check if we've already notified about this
                 if fg.name not in self.notified_failures:

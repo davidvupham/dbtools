@@ -9,7 +9,7 @@ not server PARAMETER configuration (which is managed by server_config.py).
 """
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 from urllib.parse import quote_plus
 
 from gds_database import ConfigurableComponent, ConfigurationError
@@ -84,9 +84,9 @@ class MongoDBConnectionConfig(ConfigurableComponent):
         instance_name: Optional[str] = None,
         environment: Optional[str] = None,
         description: Optional[str] = None,
-        tags: Optional[List[str]] = None,
-        metadata: Optional[Dict[str, Any]] = None,
-        config: Optional[Dict[str, Any]] = None,
+        tags: Optional[list[str]] = None,
+        metadata: Optional[dict[str, Any]] = None,
+        config: Optional[dict[str, Any]] = None,
         **kwargs,
     ):
         """
@@ -112,7 +112,7 @@ class MongoDBConnectionConfig(ConfigurableComponent):
             **kwargs: Additional MongoDB connection parameters
         """
         # Build configuration dictionary
-        config_dict: Dict[str, Any] = dict(config) if config else {}
+        config_dict: dict[str, Any] = dict(config) if config else {}
 
         # Add individual parameters to config
         if host is not None:
@@ -162,7 +162,7 @@ class MongoDBConnectionConfig(ConfigurableComponent):
         super().__init__(config_dict)
 
     @classmethod
-    def from_dict(cls, config_dict: Dict[str, Any]) -> "MongoDBConnectionConfig":
+    def from_dict(cls, config_dict: dict[str, Any]) -> "MongoDBConnectionConfig":
         """
         Create MongoDBConnectionConfig from dictionary.
 
@@ -313,7 +313,7 @@ class MongoDBConnectionConfig(ConfigurableComponent):
 
         return f"mongodb://{auth_part}{host_part}/{options_part}"
 
-    def build_connection_params(self) -> Dict[str, Any]:
+    def build_connection_params(self) -> dict[str, Any]:
         """
         Build additional connection parameters for MongoClient.
 
@@ -390,15 +390,15 @@ class MongoDBConnectionConfig(ConfigurableComponent):
         """Get instance description."""
         return self.config.get("description")
 
-    def get_tags(self) -> List[str]:
+    def get_tags(self) -> list[str]:
         """Get instance tags."""
         return self.config.get("tags", [])
 
-    def get_metadata(self) -> Dict[str, Any]:
+    def get_metadata(self) -> dict[str, Any]:
         """Get instance metadata."""
         return self.config.get("metadata", {})
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """
         Convert configuration to dictionary.
 
@@ -412,7 +412,7 @@ class MongoDBConnectionConfig(ConfigurableComponent):
         # Return a copy to prevent external modification
         return dict(self.config)
 
-    def to_safe_dict(self) -> Dict[str, Any]:
+    def to_safe_dict(self) -> dict[str, Any]:
         """
         Convert configuration to dictionary without sensitive data.
 

@@ -590,7 +590,7 @@ rm -rf ~/ssl-test
    ```bash
    # Check format
    file ~/corporate-certs/corporate-ca.crt
-   
+
    # Convert DER to PEM if needed
    openssl x509 -inform DER -in cert.cer -out cert.crt
    ```

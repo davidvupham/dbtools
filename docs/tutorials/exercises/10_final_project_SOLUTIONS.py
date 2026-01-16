@@ -14,7 +14,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from typing import Dict, List, Optional
+from typing import Optional
 
 # ============================================================================
 # Enums
@@ -85,7 +85,7 @@ class Monitor(ABC):
         pass
 
     @abstractmethod
-    def get_metrics(self) -> List[Metric]:
+    def get_metrics(self) -> list[Metric]:
         """Get current metrics"""
         pass
 
@@ -110,7 +110,7 @@ class ConnectionMonitor(Monitor):
             return MonitorStatus.HEALTHY
         return MonitorStatus.CRITICAL
 
-    def get_metrics(self) -> List[Metric]:
+    def get_metrics(self) -> list[Metric]:
         now = datetime.now()
         return [
             Metric("connection_status", 1.0 if self.is_connected else 0.0, now, "boolean"),
@@ -134,7 +134,7 @@ class PerformanceMonitor(Monitor):
             return MonitorStatus.WARNING
         return MonitorStatus.CRITICAL
 
-    def get_metrics(self) -> List[Metric]:
+    def get_metrics(self) -> list[Metric]:
         now = datetime.now()
         return [
             Metric("query_latency", self.query_time, now, "ms"),
@@ -159,7 +159,7 @@ class StorageMonitor(Monitor):
             return MonitorStatus.WARNING
         return MonitorStatus.CRITICAL
 
-    def get_metrics(self) -> List[Metric]:
+    def get_metrics(self) -> list[Metric]:
         now = datetime.now()
         total_gb = 1000
         used_gb = total_gb * (self.current_usage / 100)
@@ -180,15 +180,15 @@ class StorageMonitor(Monitor):
 
 class MonitoringSystem:
     def __init__(self):
-        self.monitors: List[Monitor] = []
-        self.alerts: List[Alert] = []
-        self.last_check_results: Dict[str, MonitorStatus] = {}
+        self.monitors: list[Monitor] = []
+        self.alerts: list[Alert] = []
+        self.last_check_results: dict[str, MonitorStatus] = {}
 
     def add_monitor(self, monitor: Monitor):
         """Add a monitor to the system"""
         self.monitors.append(monitor)
 
-    def run_checks(self) -> Dict[str, MonitorStatus]:
+    def run_checks(self) -> dict[str, MonitorStatus]:
         """Run health checks on all monitors"""
         self.last_check_results.clear()
         self.alerts.clear()
@@ -207,14 +207,14 @@ class MonitoringSystem:
 
         return self.last_check_results
 
-    def get_all_metrics(self) -> List[Metric]:
+    def get_all_metrics(self) -> list[Metric]:
         """Get all metrics from all monitors"""
         all_metrics = []
         for monitor in self.monitors:
             all_metrics.extend(monitor.get_metrics())
         return all_metrics
 
-    def get_alerts(self, level: Optional[AlertLevel] = None) -> List[Alert]:
+    def get_alerts(self, level: Optional[AlertLevel] = None) -> list[Alert]:
         """Get all alerts, optionally filtered by level"""
         if level is None:
             return self.alerts

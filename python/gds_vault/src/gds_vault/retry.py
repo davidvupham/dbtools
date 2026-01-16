@@ -95,6 +95,7 @@ class RetryPolicy:
         # Should never reach here, but just in case
         if last_exception:
             raise last_exception
+        return None
 
     def __repr__(self) -> str:
         """Developer-friendly representation."""

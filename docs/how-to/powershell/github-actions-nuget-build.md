@@ -64,7 +64,7 @@ jobs:
             $analysis | Format-Table
             exit 1
           }
-          
+
           # Pester tests
           $results = Invoke-Pester -Path $env:MODULES_PATH -PassThru
           if ($results.FailedCount -gt 0) { exit 1 }
@@ -74,13 +74,13 @@ jobs:
         run: |
           # Create output directory
           New-Item -ItemType Directory -Path $env:BUILD_OUTPUT -Force
-          
+
           # Register temporary local repository
           Register-PSRepository -Name 'LocalBuild' `
             -SourceLocation $env:BUILD_OUTPUT `
             -PublishLocation $env:BUILD_OUTPUT `
             -InstallationPolicy Trusted
-          
+
           # Build each module
           Get-ChildItem -Path $env:MODULES_PATH -Directory | ForEach-Object {
             $manifest = Join-Path $_.FullName "$($_.Name).psd1"
@@ -89,7 +89,7 @@ jobs:
               Publish-Module -Path $_.FullName -Repository 'LocalBuild' -Force
             }
           }
-          
+
           # List built packages
           Get-ChildItem $env:BUILD_OUTPUT -Filter "*.nupkg" | Format-Table Name, Length
 
@@ -114,15 +114,15 @@ on:
     branches: [main, develop]
     paths:
       - 'PowerShell/Modules/**'  # Only when modules change
-  
+
   # On pull requests
   pull_request:
     branches: [main]
-  
+
   # On release
   release:
     types: [published]
-  
+
   # Manual trigger with inputs
   workflow_dispatch:
     inputs:
@@ -149,7 +149,7 @@ To publish packages to a repository, add a publish job:
 
     steps:
       - uses: actions/checkout@v4
-      
+
       - uses: actions/download-artifact@v4
         with:
           name: nuget-packages
@@ -183,7 +183,7 @@ To publish packages to a repository, add a publish job:
             -SourceLocation $env:AZURE_FEED `
             -PublishLocation $env:AZURE_FEED `
             -InstallationPolicy Trusted
-          
+
           Get-ChildItem $env:MODULES_PATH -Directory | ForEach-Object {
             Publish-Module -Path $_.FullName `
               -Repository 'Azure' `

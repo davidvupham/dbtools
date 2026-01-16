@@ -29,7 +29,7 @@ class TestRotationUtils(unittest.TestCase):
 
     def test_cron_parser_weekly(self):
         """Test weekly cron schedule parsing."""
-        cron = CronParser("0 2 * * 0")  # Weekly on Sunday at 2 AM
+        CronParser("0 2 * * 0")  # Weekly on Sunday at 2 AM
 
         # Note: This is a simplified test - full cron parsing is complex
         # In production, you might want to use a dedicated cron library
@@ -144,7 +144,7 @@ class TestRotationAwareCache(unittest.TestCase):
 
         # Rotation schedule that should trigger refresh (very recent rotation)
         current_time = datetime.now()
-        next_rotation = current_time + timedelta(minutes=5)  # 5 minutes from now
+        current_time + timedelta(minutes=5)  # 5 minutes from now
 
         rotation_metadata = {
             "last_rotation": (current_time - timedelta(hours=23, minutes=55)).isoformat(),

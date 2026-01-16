@@ -8,4 +8,3 @@
 - name: Configure git
   ansible.builtin.include_tasks: git.yml
   tags: [git]
-

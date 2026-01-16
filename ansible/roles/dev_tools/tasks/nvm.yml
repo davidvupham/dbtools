@@ -47,4 +47,3 @@
 - name: Display NVM installation status
   ansible.builtin.debug:
     msg: "NVM installed at {{ dev_user_home }}/.nvm with Node.js {{ node_version }}"
-

@@ -186,10 +186,10 @@ tmux has-session -t $SESSION 2>/dev/null
 if [ $? != 0 ]; then
   tmux new-session -d -s $SESSION -n "editor"
   tmux send-keys -t $SESSION:1 "vim" C-m
-  
+
   tmux new-window -t $SESSION -n "server"
   tmux send-keys -t $SESSION:2 "npm run start" C-m
-  
+
   tmux select-window -t $SESSION:1
 fi
 

@@ -1,15 +1,15 @@
 # How to Use UV with Docker
- 
+
 **🔗 [← Back to UV How-to Index](./README.md)**
- 
+
 > **Document Version:** 1.0
 > **Last Updated:** January 13, 2026
 > **Maintainers:** Application Infrastructure Team
 > **Status:** Production
- 
+
 ![Status](https://img.shields.io/badge/Status-Production-green)
 ![Topic](https://img.shields.io/badge/Topic-Containers-blue)
- 
+
 > [!IMPORTANT]
 > **Related Docs:** [CI/CD Integration](./uv-ci-cd-integration.md) | [Workspaces](./uv-workspaces.md)
 
@@ -296,9 +296,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - uses: docker/setup-buildx-action@v3
-      
+
       - uses: docker/build-push-action@v5
         with:
           context: .

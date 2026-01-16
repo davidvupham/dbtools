@@ -1,7 +1,6 @@
 """Tests for exception classes."""
 
 import pytest
-
 from gds_notification.exceptions import (
     GdsNotificationError,
     NotificationConfigError,

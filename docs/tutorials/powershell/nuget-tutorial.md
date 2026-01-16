@@ -85,18 +85,18 @@ The manifest is the most critical file. It's a PowerShell hashtable that describ
     CompanyName = 'Your Company'        # Organization
     Copyright = '(c) 2024 Your Name'    # Legal copyright
     Description = 'What this module does in one sentence'  # REQUIRED for publishing!
-    
+
     # COMPATIBILITY
     # ─────────────
     PowerShellVersion = '5.1'           # Minimum PowerShell version needed
-    
+
     # DEPENDENCIES
     # ────────────
     RequiredModules = @(
         # Other modules this depends on
         @{ ModuleName = 'PSFramework'; ModuleVersion = '1.7.0' }
     )
-    
+
     # EXPORTS - What functions users can call
     # ───────
     FunctionsToExport = @(
@@ -107,7 +107,7 @@ The manifest is the most critical file. It's a PowerShell hashtable that describ
     CmdletsToExport = @()      # Usually empty for script modules
     VariablesToExport = @()    # Usually empty (don't export variables)
     AliasesToExport = @()      # Usually empty
-    
+
     # METADATA FOR POWERSHELL GALLERY
     # ────────────────────────────────
     PrivateData = @{
@@ -190,17 +190,17 @@ function Add-Numbers {
     <#
     .SYNOPSIS
         Adds two numbers together.
-    
+
     .DESCRIPTION
         A simple function that demonstrates module creation.
         Takes two numbers and returns their sum.
-    
+
     .PARAMETER Number1
         The first number to add.
-    
+
     .PARAMETER Number2
         The second number to add.
-    
+
     .EXAMPLE
         Add-Numbers -Number1 5 -Number2 3
         # Returns: 8
@@ -209,11 +209,11 @@ function Add-Numbers {
     param(
         [Parameter(Mandatory)]
         [double]$Number1,
-        
+
         [Parameter(Mandatory)]
         [double]$Number2
     )
-    
+
     return $Number1 + $Number2
 }
 '@
@@ -568,8 +568,8 @@ Publish-Module -Path $ModulePath -Repository $tempRepoName
 Unregister-PSRepository -Name $tempRepoName
 
 # Step 5: Display results
-$package = Get-ChildItem "$OutputPath\$ModuleName.*.nupkg" | 
-    Sort-Object LastWriteTime -Descending | 
+$package = Get-ChildItem "$OutputPath\$ModuleName.*.nupkg" |
+    Sort-Object LastWriteTime -Descending |
     Select-Object -First 1
 
 Write-Host "`n✅ Package created successfully!" -ForegroundColor Green

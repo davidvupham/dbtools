@@ -100,12 +100,12 @@ from typing import Any, Optional
 class MyNewComponent(ABC):
     """
     Brief one-line description.
-    
+
     Longer description explaining:
     - What this class does
     - When to use it
     - What subclasses must implement
-    
+
     Example:
         class MyImpl(MyNewComponent):
             def my_method(self):
@@ -126,16 +126,16 @@ class MyNewComponent(ABC):
     def required_method(self, param: str) -> int:
         """
         Description of what this method should do.
-        
+
         Args:
             param: What this parameter means
-            
+
         Returns:
             What this method returns
-            
+
         Raises:
             ValueError: When this error occurs
-            
+
         Example:
             >>> obj.required_method("test")
             42
@@ -156,7 +156,7 @@ class MyNewComponent(ABC):
     def helper_method(self, data: dict[str, Any]) -> str:
         """
         Helper method that subclasses can use.
-        
+
         This is NOT abstract - it has a default implementation.
         Subclasses can override it if needed.
         """
@@ -190,38 +190,38 @@ from typing import Any, Optional
 class SQLiteConnection(DatabaseConnection):
     """
     SQLite database connection implementation.
-    
+
     This provides a concrete implementation of DatabaseConnection
     for SQLite databases.
-    
+
     Attributes:
         database_path: Path to SQLite database file
         _connection: Internal SQLite connection object
-        
+
     Example:
         >>> db = SQLiteConnection('mydb.sqlite')
         >>> db.connect()
         >>> results = db.execute_query('SELECT * FROM users')
         >>> db.disconnect()
     """
-    
+
     def __init__(self, database_path: str):
         """
         Initialize SQLite connection.
-        
+
         Args:
             database_path: Path to SQLite database file
         """
         self.database_path = database_path
         self._connection: Optional[sqlite3.Connection] = None
-    
+
     def connect(self) -> sqlite3.Connection:
         """
         Establish connection to SQLite database.
-        
+
         Returns:
             SQLite connection object
-            
+
         Raises:
             DatabaseConnectionError: If connection fails
         """
@@ -231,49 +231,49 @@ class SQLiteConnection(DatabaseConnection):
             return self._connection
         except sqlite3.Error as e:
             raise DatabaseConnectionError(f"Failed to connect: {e}")
-    
+
     def disconnect(self) -> None:
         """Close SQLite connection."""
         if self._connection:
             self._connection.close()
             self._connection = None
-    
+
     def execute_query(
-        self, 
-        query: str, 
+        self,
+        query: str,
         params: Optional[tuple[Any, ...]] = None
     ) -> list[Any]:
         """
         Execute SQL query against SQLite database.
-        
+
         Args:
             query: SQL query string
             params: Optional query parameters
-            
+
         Returns:
             List of result rows as dictionaries
-            
+
         Raises:
             QueryError: If query execution fails
             DatabaseConnectionError: If not connected
         """
         if not self.is_connected():
             raise DatabaseConnectionError("Not connected to database")
-        
+
         try:
             cursor = self._connection.cursor()
             cursor.execute(query, params or ())
-            
+
             # Convert rows to dictionaries
             columns = [desc[0] for desc in cursor.description] if cursor.description else []
             return [dict(zip(columns, row)) for row in cursor.fetchall()]
         except sqlite3.Error as e:
             raise QueryError(f"Query failed: {e}")
-    
+
     def is_connected(self) -> bool:
         """Check if connected to database."""
         return self._connection is not None
-    
+
     def get_connection_info(self) -> dict[str, Any]:
         """Get connection metadata."""
         return {
@@ -312,21 +312,21 @@ from gds_database import MyNewComponent
 
 class TestMyNewComponent(unittest.TestCase):
     """Tests for MyNewComponent class."""
-    
+
     def setUp(self):
         """Run before each test method."""
         self.component = ConcreteImplementation()
-    
+
     def tearDown(self):
         """Run after each test method."""
         # Clean up resources if needed
         pass
-    
+
     def test_something_works(self):
         """Test that something works correctly."""
         result = self.component.do_something()
         self.assertEqual(result, expected_value)
-    
+
     def test_error_handling(self):
         """Test that errors are handled properly."""
         with self.assertRaises(ValueError):
@@ -366,12 +366,12 @@ def test_abstract_method_bodies_via_super(self):
         def connect(self):
             super().connect()  # Cover the abstract method's pass statement
             return "connected"
-        
+
         def disconnect(self):
             super().disconnect()  # Cover abstract method
-        
+
         # ... implement other methods ...
-    
+
     impl = TestImpl()
     impl.connect()
     impl.disconnect()
@@ -383,10 +383,10 @@ def test_abstract_method_bodies_via_super(self):
 def test_query_error_raised(self):
     """Test that QueryError is raised on query failure."""
     db = BrokenConnection()
-    
+
     with self.assertRaises(QueryError) as context:
         db.execute_query("INVALID SQL")
-    
+
     # Check error message
     self.assertIn("Query failed", str(context.exception))
 ```
@@ -399,14 +399,14 @@ import unittest
 
 class TestAsyncComponent(unittest.TestCase):
     """Tests for async components."""
-    
+
     def test_async_operation(self):
         """Test async operation."""
         async def run_test():
             component = AsyncComponent()
             result = await component.async_method()
             self.assertEqual(result, expected)
-        
+
         asyncio.run(run_test())
 ```
 
@@ -443,27 +443,27 @@ We use **Google-style docstrings**:
 def function_name(param1: int, param2: str) -> bool:
     """
     Brief one-line description.
-    
+
     Longer description that explains:
     - What the function does
     - Important behavior
     - Side effects
-    
+
     Args:
         param1: Description of param1
         param2: Description of param2
-        
+
     Returns:
         Description of return value
-        
+
     Raises:
         ValueError: When this error occurs
         TypeError: When this error occurs
-        
+
     Example:
         >>> function_name(42, "hello")
         True
-        
+
     Note:
         Any important notes or warnings
     """
@@ -476,21 +476,21 @@ def function_name(param1: int, param2: str) -> bool:
 class ClassName:
     """
     Brief description of the class.
-    
+
     Longer description explaining:
     - What the class represents
     - When to use it
     - How it fits into the larger system
-    
+
     Attributes:
         attr1: Description of attr1
         attr2: Description of attr2
-        
+
     Example:
         >>> obj = ClassName()
         >>> obj.method()
         'result'
-        
+
     Note:
         Important information about usage
     """
@@ -777,7 +777,7 @@ class MyResource(ResourceManager):
         """Called when entering 'with' block."""
         self.initialize()
         return self
-    
+
     def __exit__(
         self,
         exc_type: Optional[type[BaseException]],
@@ -795,22 +795,22 @@ class MyResource(ResourceManager):
 class Connection:
     def __init__(self):
         self._connected = False
-    
+
     @property
     def connected(self) -> bool:
         """Read-only property."""
         return self._connected
-    
+
     @property
     def status(self) -> str:
         """Computed property."""
         return "connected" if self._connected else "disconnected"
-    
+
     @property
     def timeout(self) -> int:
         """Property with getter and setter."""
         return self._timeout
-    
+
     @timeout.setter
     def timeout(self, value: int) -> None:
         if value < 0:
@@ -837,7 +837,7 @@ class Result:
     message: str
     data: Optional[dict] = None
     timestamp: datetime = field(default_factory=datetime.now)
-    
+
     def is_success(self) -> bool:
         return self.success
 
@@ -852,12 +852,12 @@ print(result)  # Auto-generated __repr__
 class DatabasePool:
     """Only one pool instance should exist."""
     _instance: Optional['DatabasePool'] = None
-    
+
     def __new__(cls):
         if cls._instance is None:
             cls._instance = super().__new__(cls)
         return cls._instance
-    
+
     def __init__(self):
         if not hasattr(self, 'initialized'):
             self.connections = []
@@ -874,7 +874,7 @@ print(pool1 is pool2)  # True - same instance!
 ```python
 class ConnectionFactory:
     """Create connections based on configuration."""
-    
+
     @staticmethod
     def create(db_type: str, **kwargs) -> DatabaseConnection:
         if db_type == "postgres":
@@ -1015,16 +1015,16 @@ from typing import Any
 
 class AsyncDatabaseConnection(ABC):
     """Async database operations."""
-    
+
     @abstractmethod
     async def connect(self) -> Any:
         """Async connection."""
         pass
-    
+
     @abstractmethod
     async def execute_query(
-        self, 
-        query: str, 
+        self,
+        query: str,
         params: Optional[tuple[Any, ...]] = None
     ) -> list[Any]:
         """Async query execution."""
@@ -1036,7 +1036,7 @@ class AsyncPostgres(AsyncDatabaseConnection):
         import asyncpg
         self.conn = await asyncpg.connect(...)
         return self.conn
-    
+
     async def execute_query(self, query, params=None):
         return await self.conn.fetch(query, *(params or ()))
 
@@ -1069,11 +1069,11 @@ import cProfile
 def profile_code():
     profiler = cProfile.Profile()
     profiler.enable()
-    
+
     # Code to profile
     for i in range(1000):
         expensive_operation(str(i % 10))
-    
+
     profiler.disable()
     profiler.print_stats(sort='cumulative')
 
@@ -1102,7 +1102,7 @@ logging.basicConfig(
 class MonitoredConnection(DatabaseConnection):
     def __init__(self):
         self.logger = logging.getLogger(__name__)
-    
+
     def execute_query(self, query, params=None):
         self.logger.info(f"Executing query: {query}")
         try:
@@ -1123,11 +1123,11 @@ def test_with_mock():
     # Create mock
     mock_conn = Mock(spec=DatabaseConnection)
     mock_conn.execute_query.return_value = [{"id": 1}]
-    
+
     # Use mock
     result = mock_conn.execute_query("SELECT * FROM users")
     assert result == [{"id": 1}]
-    
+
     # Verify call
     mock_conn.execute_query.assert_called_once_with("SELECT * FROM users")
 
@@ -1135,10 +1135,10 @@ def test_with_patch():
     # Patch external dependency
     with patch('sqlite3.connect') as mock_connect:
         mock_connect.return_value = MagicMock()
-        
+
         db = SQLiteConnection('test.db')
         db.connect()
-        
+
         # Verify connect was called
         mock_connect.assert_called_once_with('test.db')
 ```

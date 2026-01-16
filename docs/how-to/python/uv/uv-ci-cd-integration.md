@@ -1,15 +1,15 @@
 # How to Use UV in CI/CD Pipelines
- 
+
 **🔗 [← Back to UV How-to Index](./README.md)**
- 
+
 > **Document Version:** 1.0
 > **Last Updated:** January 13, 2026
 > **Maintainers:** Application Infrastructure Team
 > **Status:** Production
- 
+
 ![Status](https://img.shields.io/badge/Status-Production-green)
 ![Topic](https://img.shields.io/badge/Topic-CI%2FCD-blue)
- 
+
 > [!IMPORTANT]
 > **Related Docs:** [Docker Integration](./uv-docker-integration.md) | [Workspaces](./uv-workspaces.md)
 
@@ -66,13 +66,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Install UV
         uses: astral-sh/setup-uv@v4
-      
+
       - name: Install dependencies
         run: uv sync
-      
+
       - name: Run tests
         run: uv run pytest
 ```
@@ -90,21 +90,21 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.10", "3.11", "3.12", "3.13"]
-    
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Install UV
         uses: astral-sh/setup-uv@v4
         with:
           python-version: ${{ matrix.python-version }}
-      
+
       - name: Install dependencies
         run: uv sync
-      
+
       - name: Run tests
         run: uv run pytest --cov=src --cov-report=xml
-      
+
       - name: Upload coverage
         uses: codecov/codecov-action@v4
         with:
@@ -123,16 +123,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Install UV
         uses: astral-sh/setup-uv@v4
         with:
           enable-cache: true
           cache-dependency-glob: "uv.lock"
-      
+
       - name: Install dependencies
         run: uv sync
-      
+
       - name: Run tests
         run: uv run pytest
 ```
@@ -421,11 +421,11 @@ pipeline {
             image 'python:3.12-slim'
         }
     }
-    
+
     environment {
         PATH = "${env.HOME}/.local/bin:${env.PATH}"
     }
-    
+
     stages {
         stage('Setup') {
             steps {
@@ -433,14 +433,14 @@ pipeline {
                 sh 'uv sync'
             }
         }
-        
+
         stage('Lint') {
             steps {
                 sh 'uv run ruff check .'
                 sh 'uv run ruff format --check .'
             }
         }
-        
+
         stage('Test') {
             steps {
                 sh 'uv run pytest --junitxml=results.xml'
@@ -451,7 +451,7 @@ pipeline {
                 }
             }
         }
-        
+
         stage('Build') {
             when {
                 branch 'main'
@@ -551,14 +551,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v4
-      
+
       # Build wheels for all packages
       - name: Build packages
         run: |
           for pkg in gds-database gds-mssql gds-postgres gds-snowflake; do
             uv build --package "$pkg" --out-dir dist/
           done
-      
+
       - uses: actions/upload-artifact@v4
         with:
           name: wheels
@@ -576,9 +576,9 @@ jobs:
         with:
           name: wheels
           path: dist/
-      
+
       - uses: astral-sh/setup-uv@v4
-      
+
       - name: Publish to private PyPI
         run: uv publish dist/*.whl
         env:
@@ -601,7 +601,7 @@ If your production environment requires pip:
         with:
           name: wheels
           path: dist/
-      
+
       # Deploy to server
       - name: Deploy
         run: |

@@ -126,8 +126,24 @@ ignore = [
     "E501",    # Line too long (handled by formatter)
     "PLR0913", # Too many arguments (sometimes necessary)
     "PLR2004", # Magic value used in comparison (sometimes OK)
+    "PLR0912", # Too many branches (sometimes necessary for complex logic)
+    "PLR0915", # Too many statements (sometimes necessary)
     "RET504",  # Unnecessary variable assignment before return
     "SIM108",  # Use ternary operator (not always clearer)
+    "SIM102",  # Nested if statements (sometimes clearer)
+    "SIM105",  # Use contextlib.suppress (not always clearer)
+    "SIM117",  # Multiple with statements (sometimes clearer)
+    "PLC0415", # Import not at top level (often intentional for lazy loading)
+    "PTH100",  # os.path.abspath -> Path.resolve (existing code style)
+    "PTH107",  # os.remove -> Path.unlink (existing code style)
+    "PTH109",  # os.getcwd -> Path.cwd (existing code style)
+    "PTH110",  # os.path.exists -> Path.exists (existing code style)
+    "PTH112",  # os.path.isdir -> Path.is_dir (existing code style)
+    "PTH113",  # os.path.isfile -> Path.is_file (existing code style)
+    "PTH118",  # os.path.join -> Path / operator (existing code style)
+    "PTH120",  # os.path.dirname -> Path.parent (existing code style)
+    "PTH123",  # open() -> Path.open() (existing code style)
+    "N817",    # CamelCase imported as acronym (ET for ElementTree is conventional)
 ]
 
 # Allow autofix for all enabled rules
@@ -145,16 +161,90 @@ dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 ]
 "tests/**/*.py" = [
     "ARG001",  # Unused function argument (fixtures)
+    "ARG002",  # Unused method argument (fixtures)
+    "ARG005",  # Unused lambda argument (mocks)
     "S101",    # Use of assert (OK in tests)
     "PLR2004", # Magic values (OK in tests)
+    "B017",    # assert blind exception (OK in tests)
+]
+"**/tests/**/*.py" = [
+    "ARG001",  # Unused function argument (fixtures)
+    "ARG002",  # Unused method argument (fixtures)
+    "ARG005",  # Unused lambda argument (mocks)
+    "S101",    # Use of assert (OK in tests)
+    "PLR2004", # Magic values (OK in tests)
+    "B017",    # assert blind exception (OK in tests)
 ]
 "python/gds_snowflake/test_modules.py" = [
     "F401", # Unused imports (testing import functionality)
 ]
-"docs/tutorials/exercises/*_exercises.py" = [
-    "F821",   # Undefined name (exercises have TODO sections)
-    "ARG001", # Unused arguments (exercises may be incomplete)
+"python/gds_snmp_receiver/**/*.py" = [
+    "N802",  # Function name should be lowercase (external SNMP API)
+    "N803",  # Argument name should be lowercase (external SNMP API)
 ]
+"**/examples/**/*.py" = [
+    "B007",  # Loop control variable not used (demo code)
+    "ARG001",
+    "ARG002",
+]
+"docs/tutorials/exercises/*.py" = [
+    "F821",   # Undefined name (exercises have TODO sections)
+    "F841",   # Unused variables (exercises may be incomplete)
+    "ARG001", # Unused arguments (exercises may be incomplete)
+    "ARG002", # Unused arguments (exercises may be incomplete)
+    "ARG005", # Unused lambda args
+    "E712",   # Comparison to True/False (exercises demonstrating concepts)
+    "C401",   # Unnecessary generator (exercises)
+    "B024",   # Abstract class without abstract methods (exercises)
+    "PLW1641", # Missing __hash__ (exercises)
+    "RUF001", "RUF003",  # Unicode in comments/strings
+]
+"docs/tutorials/**/*.py" = [
+    "ARG005",  # Unused lambda arguments (demo code)
+    "RUF003",  # Unicode in comments
+]
+"docs/courses/**/*.py" = [
+    "UP006", "UP035",  # Type hint style (tutorial code)
+    "SIM110", "B007",  # Simplification (tutorial code)
+]
+"scripts/*.py" = [
+    "UP006", "UP035",  # Type hint style
+    "N802", "N817",    # Naming conventions (AST visitors, ET alias)
+    "ARG001",          # Unused arguments
+    "RUF001", "RUF013", # String/optional style
+]
+"snowflake_monitoring/*.py" = [
+    "PTH119", "PTH122", # Pathlib style
+    "RUF013",          # Optional style
+    "ARG001",          # Unused arguments
+    "PLW0602",         # Global usage
+    "C408",            # Dict literal
+]
+"validate_links.py" = ["B007"]
+"*.ipynb" = ["E402", "F401"]  # Notebook cell imports
+"scripts/diagnose_vault_approle.py" = ["RUF001"]  # Intentional unicode
+"docs/courses/liquibase/**/*.py" = ["RUF003"]  # Intentional unicode in comments
+# Abstract base classes and interface implementations
+"python/gds_vault/src/gds_vault/cache.py" = ["ARG002"]
+"python/gds_vault/src/gds_vault/client.py" = ["ARG002"]
+"python/gds_vault/src/gds_vault/base.py" = ["ARG002"]
+"python/gds_vault/src/gds_vault/auth.py" = ["ARG002"]
+"python/gds_vault/src/gds_vault/async_client.py" = ["ARG002"]
+"python/gds_hammerdb/src/gds_hammerdb/parser.py" = ["ARG002"]
+"python/gds_hammerdb/src/gds_hammerdb/runners/base.py" = ["ARG002"]
+"python/gds_mongodb/src/gds_mongodb/replica_set.py" = ["ARG002"]
+"python/gds_mongodb/src/gds_mongodb/configuration.py" = ["B904"]  # Re-raises with context
+"python/gds_liquibase/src/gds_liquibase/runner.py" = ["ARG002"]
+"python/gds_liquibase/src/gds_liquibase/changelog.py" = ["N817"]  # ElementTree as ET is conventional
+"python/gds_snowflake/src/gds_snowflake/base.py" = ["ARG002"]
+"python/gds_snowflake/src/gds_snowflake/replication.py" = ["PLW2901"]  # Loop var reassignment
+"python/gds_snmp_receiver/src/gds_snmp_receiver/core.py" = ["ARG002", "RUF012"]
+"python/gds_snmp_receiver/src/gds_snmp_receiver/receiver.py" = ["PLW1508"]
+"python/gds_snmp_receiver/healthcheck.py" = ["PTH"]  # os.path usage
+"python/gds_snmp_receiver/tests/test_core.py" = ["RUF"]  # Regex pattern and unicode
+"python/gds_mssql/src/gds_mssql/connection.py" = ["RUF012"]
+"python/gds_mongodb/src/gds_mongodb/connection.py" = ["ARG002"]  # Interface method
+"python/gds_mongodb/src/gds_mongodb/connection_config.py" = ["RUF012"]  # Class constant
 
 [tool.ruff.lint.isort]
 # Configure import sorting

@@ -265,7 +265,7 @@ def main(argv: Optional[list[str]] = None) -> None:
 
 **Cause:** Script not installed in PATH or wrong entry point.
 
-**Solution:** 
+**Solution:**
 1. Verify entry point in `pyproject.toml`:
    ```toml
    [project.scripts]

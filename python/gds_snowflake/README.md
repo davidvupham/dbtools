@@ -132,8 +132,8 @@ with SnowflakeConnection(account='myaccount', user='myuser') as conn:
 
 # Or with explicit Vault parameters
 with SnowflakeConnection(
-    account='myaccount', 
-    user='myuser', 
+    account='myaccount',
+    user='myuser',
     vault_secret_path='data/snowflake',
     vault_mount_point='secret'
 ) as conn:
@@ -149,8 +149,8 @@ from gds_snowflake import SnowflakeConnection, SnowflakeReplication
 
 # Connect to Snowflake
 conn = SnowflakeConnection(
-    account='myaccount', 
-    user='myuser', 
+    account='myaccount',
+    user='myuser',
     vault_secret_path='data/snowflake',
     vault_mount_point='secret'
 )
@@ -167,11 +167,11 @@ for group in failover_groups:
     print(f"Type: {group.type}")
     print(f"Primary: {group.primary_account}")
     print(f"Secondaries: {group.get_secondary_accounts()}")
-    
+
     # Check for replication failures
     if repl.check_replication_failure(group):
         print(f"⚠️ Replication failure detected for {group.name}")
-    
+
     # Check for latency issues
     latency_minutes = repl.check_replication_latency(group)
     if latency_minutes and latency_minutes > 0:
@@ -186,8 +186,8 @@ conn.close()
 from gds_snowflake import SnowflakeConnection, SnowflakeReplication
 
 conn = SnowflakeConnection(
-    account='myaccount', 
-    user='myuser', 
+    account='myaccount',
+    user='myuser',
     vault_secret_path='data/snowflake',
     vault_mount_point='secret'
 )
@@ -202,16 +202,16 @@ for group in groups:
     print(f"  Is Primary: {group.is_primary()}")
     print(f"  Primary Account: {group.primary_account}")
     print(f"  Replication Schedule: {group.replication_schedule}")
-    
+
     # Parse cron schedule
     interval = repl.parse_cron_schedule(group.replication_schedule)
     if interval:
         print(f"  Replication Interval: {interval} minutes")
-    
+
     # Get secondary accounts
     secondaries = group.get_secondary_accounts()
     print(f"  Secondary Accounts: {', '.join(secondaries)}")
-    
+
     # Get a secondary account for querying
     secondary = group.get_secondary_account()
     if secondary:
@@ -224,8 +224,8 @@ for group in groups:
 from gds_snowflake import SnowflakeConnection
 
 conn = SnowflakeConnection(
-    account='primary_account', 
-    user='myuser', 
+    account='primary_account',
+    user='myuser',
     vault_secret_path='data/snowflake',
     vault_mount_point='secret'
 )
@@ -250,8 +250,8 @@ from gds_snowflake import SnowflakeConnection, SnowflakeDatabase
 
 # Connect to Snowflake
 conn = SnowflakeConnection(
-    account='myaccount', 
-    user='myuser', 
+    account='myaccount',
+    user='myuser',
     vault_secret_path='data/snowflake',
     vault_mount_point='secret'
 )
@@ -345,28 +345,28 @@ conn.close()
 from gds_snowflake import SnowflakeConnection, SnowflakeDatabase
 
 with SnowflakeConnection(
-    account='myaccount', 
-    user='myuser', 
+    account='myaccount',
+    user='myuser',
     vault_secret_path='data/snowflake',
     vault_mount_point='secret'
 ) as conn:
     metadata = SnowflakeDatabase(conn)
-    
+
     # Get stages
     stages = metadata.get_stages(database_name='MYDB', schema_name='PUBLIC')
-    
+
     # Get file formats
     file_formats = metadata.get_file_formats(database_name='MYDB', schema_name='PUBLIC')
-    
+
     # Get pipes (Snowpipe)
     pipes = metadata.get_pipes(database_name='MYDB', schema_name='PUBLIC')
-    
+
     # Get tasks
     tasks = metadata.get_tasks(database_name='MYDB', schema_name='PUBLIC')
-    
+
     # Get streams
     streams = metadata.get_streams(database_name='MYDB', schema_name='PUBLIC')
-    
+
     # Get functions and procedures
     functions = metadata.get_functions(database_name='MYDB', schema_name='PUBLIC')
     procedures = metadata.get_procedures(database_name='MYDB', schema_name='PUBLIC')

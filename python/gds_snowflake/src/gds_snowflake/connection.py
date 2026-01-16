@@ -122,10 +122,7 @@ class SnowflakeConnection(DatabaseConnection, ConfigurableComponent, ResourceMan
     def validate_config(self) -> bool:
         """Validate the current configuration."""
         required_fields = ["account"]
-        for field in required_fields:
-            if not hasattr(self, field) or getattr(self, field) is None:
-                return False
-        return True
+        return all(not (not hasattr(self, field) or getattr(self, field) is None) for field in required_fields)
 
     def initialize(self) -> None:
         """Initialize resources."""

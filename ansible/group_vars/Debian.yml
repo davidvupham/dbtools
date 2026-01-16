@@ -37,4 +37,3 @@ docker_packages:
 # Docker GPG key URL
 docker_gpg_url: "https://download.docker.com/linux/ubuntu/gpg"
 docker_repo_url: "https://download.docker.com/linux/ubuntu"
-
