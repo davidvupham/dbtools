@@ -1,0 +1,178 @@
+---
+# Prepare playbook for WSL2-local scenario
+#
+# This playbook prepares the Windows host for testing:
+#   1. Identifies SQL Server service and its account
+#   2. Records baseline user rights
+#   3. Creates a test service if SQL Server is not available
+#
+# Unlike other scenarios, this uses REAL SQL Server services when available,
+# making it a true integration test of the role's primary use case.
+
+- name: Prepare Windows host for WSL2-local testing
+  hosts: windows
+  gather_facts: true
+  vars:
+    # Prefer real SQL Server, fall back to test service
+    preferred_services:
+      - MSSQLSERVER           # Default instance
+      - "MSSQL$SQLEXPRESS"    # SQL Express
+      - "MSSQL$DEVELOPER"     # Developer edition named instance
+      - SQLServerAgent        # SQL Agent
+    test_service_account: "MoleculeTestSvc"
+    test_service_account_password: "M0lecule!Test#2026"
+    test_service_name: "MoleculeTestService"
+
+  tasks:
+    - name: Display test configuration
+      ansible.builtin.debug:
+        msg: |
+          === WSL2-Local Test Preparation ===
+          Target Host: {{ inventory_hostname }}
+          Looking for SQL Server services...
+
+    # Find the first available SQL Server service
+    - name: Check for SQL Server services
+      ansible.windows.win_service_info:
+        name: "{{ item }}"
+      register: sql_check
+      loop: "{{ preferred_services }}"
+      ignore_errors: true
+
+    - name: Identify available SQL Server service
+      ansible.builtin.set_fact:
+        found_sql_service: "{{ item.item }}"
+        found_sql_account: "{{ item.services[0].username }}"
+      when:
+        - item.services is defined
+        - item.services | length > 0
+        - found_sql_service is not defined
+      loop: "{{ sql_check.results }}"
+      loop_control:
+        label: "{{ item.item }}"
+
+    - name: Display found SQL Server service
+      ansible.builtin.debug:
+        msg: |
+          Found SQL Server service: {{ found_sql_service | default('NONE') }}
+          Service Account: {{ found_sql_account | default('N/A') }}
+      when: found_sql_service is defined
+
+    # If no SQL Server found, create a test service
+    - name: Create test service if SQL Server not found
+      when: found_sql_service is not defined
+      block:
+        - name: Create local test service account
+          ansible.windows.win_user:
+            name: "{{ test_service_account }}"
+            password: "{{ test_service_account_password }}"
+            state: present
+            password_never_expires: true
+            user_cannot_change_password: true
+            groups:
+              - Users
+            description: "Molecule test service account - safe to delete"
+
+        - name: Check if test service exists
+          ansible.windows.win_service_info:
+            name: "{{ test_service_name }}"
+          register: test_service_check
+
+        - name: Create test Windows service
+          ansible.windows.win_shell: |
+            sc.exe create "{{ test_service_name }}" `
+              binPath= "cmd.exe /c ping -n 3600 localhost > nul" `
+              DisplayName= "Molecule Test Service" `
+              start= demand `
+              obj= ".\{{ test_service_account }}" `
+              password= "{{ test_service_account_password }}"
+          when: test_service_check.services | length == 0
+
+        - name: Set test service as target
+          ansible.builtin.set_fact:
+            found_sql_service: "{{ test_service_name }}"
+            found_sql_account: ".\\{{ test_service_account }}"
+            using_test_service: true
+
+        - name: Display test service info
+          ansible.builtin.debug:
+            msg: "Created test service '{{ test_service_name }}' with account '{{ test_service_account }}'"
+
+    # Record the target service for other playbooks
+    - name: Store target service information
+      ansible.builtin.set_stats:
+        data:
+          target_service_name: "{{ found_sql_service }}"
+          target_service_account: "{{ found_sql_account }}"
+          using_test_service: "{{ using_test_service | default(false) }}"
+
+    # Check if service account is a built-in (will affect test approach)
+    - name: Check if service account is built-in
+      ansible.builtin.set_fact:
+        is_builtin_account: "{{ found_sql_account in ['LocalSystem', 'NT AUTHORITY\\LocalService', 'NT AUTHORITY\\NetworkService', 'NT AUTHORITY\\SYSTEM', 'NT Service\\MSSQLSERVER'] }}"
+
+    - name: Display account type
+      ansible.builtin.debug:
+        msg: |
+          Service Account Type: {{ 'BUILT-IN (will test with bypass)' if is_builtin_account else 'USER ACCOUNT (standard test)' }}
+
+    # Export baseline user rights
+    - name: Export current security policy baseline
+      ansible.windows.win_shell: |
+        $tempFile = "$env:TEMP\molecule_secpol_baseline.cfg"
+        secedit /export /cfg $tempFile /quiet
+        Get-Content $tempFile | Select-String -Pattern "SeServiceLogonRight|SeManageVolumePrivilege|SeLockMemoryPrivilege"
+      register: baseline_rights
+
+    - name: Display baseline user rights
+      ansible.builtin.debug:
+        msg: |
+          === Baseline User Rights ===
+          {{ baseline_rights.stdout }}
+
+    # Get the SID for the service account (for verification later)
+    - name: Get service account SID
+      ansible.windows.win_shell: |
+        $account = "{{ found_sql_account }}"
+        try {
+          # Handle different account formats
+          if ($account -match '^NT ') {
+            # Built-in accounts like "NT AUTHORITY\SYSTEM"
+            $ntAccount = New-Object System.Security.Principal.NTAccount($account)
+          } elseif ($account -match '^\.\\') {
+            # Local accounts like ".\username"
+            $localUser = $account -replace '^\.\\', ''
+            $ntAccount = New-Object System.Security.Principal.NTAccount($env:COMPUTERNAME, $localUser)
+          } else {
+            # Domain or other accounts
+            $ntAccount = New-Object System.Security.Principal.NTAccount($account)
+          }
+          $sid = $ntAccount.Translate([System.Security.Principal.SecurityIdentifier])
+          $sid.Value
+        } catch {
+          "SID_LOOKUP_FAILED: $_"
+        }
+      register: service_account_sid
+
+    - name: Display service account SID
+      ansible.builtin.debug:
+        msg: "Service Account SID: {{ service_account_sid.stdout | trim }}"
+
+    - name: Store SID for verification
+      ansible.builtin.set_stats:
+        data:
+          target_account_sid: "{{ service_account_sid.stdout | trim }}"
+
+    - name: Display preparation summary
+      ansible.builtin.debug:
+        msg: |
+          ======================================
+          WSL2-LOCAL PREPARATION COMPLETE
+          ======================================
+          Target Service: {{ found_sql_service }}
+          Service Account: {{ found_sql_account }}
+          Account SID: {{ service_account_sid.stdout | trim }}
+          Account Type: {{ 'Built-in' if is_builtin_account else 'User' }}
+          Using Test Service: {{ using_test_service | default(false) }}
+
+          Ready for converge phase.

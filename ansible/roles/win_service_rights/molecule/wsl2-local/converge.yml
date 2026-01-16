@@ -1,0 +1,86 @@
+---
+# Converge playbook for WSL2-local scenario
+#
+# This playbook applies the win_service_rights role to the SQL Server
+# service account (or test service if SQL Server not found).
+#
+# It dynamically handles both:
+#   - Real SQL Server with domain/local service accounts
+#   - Built-in accounts (using fail_on_builtin_account: false)
+#   - Test service fallback
+
+- name: Gather target service information
+  hosts: windows
+  gather_facts: false
+  tasks:
+    - name: Get service information from prepare phase
+      ansible.windows.win_service_info:
+        name: "{{ ansible_stats.data.target_service_name | default('MSSQLSERVER') }}"
+      register: target_service
+      ignore_errors: true
+
+    - name: Set service facts
+      ansible.builtin.set_fact:
+        converge_service_name: "{{ ansible_stats.data.target_service_name | default('MSSQLSERVER') }}"
+        converge_service_account: "{{ ansible_stats.data.target_service_account | default('') }}"
+        converge_using_test: "{{ ansible_stats.data.using_test_service | default(false) }}"
+
+    - name: Check if using built-in account
+      ansible.builtin.set_fact:
+        converge_is_builtin: >-
+          {{ converge_service_account in ['LocalSystem', 'NT AUTHORITY\\LocalService',
+             'NT AUTHORITY\\NetworkService', 'NT AUTHORITY\\SYSTEM',
+             'NT Service\\MSSQLSERVER', 'NT Service\\SQLSERVERAGENT'] or
+             converge_service_account.startswith('NT Service\\') }}
+
+
+- name: Converge - Apply win_service_rights role
+  hosts: windows
+  gather_facts: false
+
+  tasks:
+    - name: Display converge configuration
+      ansible.builtin.debug:
+        msg: |
+          === Converge Configuration ===
+          Target Service: {{ converge_service_name }}
+          Service Account: {{ converge_service_account }}
+          Is Built-in Account: {{ converge_is_builtin }}
+          Using Test Service: {{ converge_using_test }}
+
+    # Test Case 1: Standard rights assignment (works for both user and built-in with bypass)
+    - name: Apply user rights to service account
+      ansible.builtin.include_role:
+        name: win_service_rights
+      vars:
+        win_service_rights_assignments:
+          - service_name: "{{ converge_service_name }}"
+            state: present
+            fail_on_builtin_account: "{{ not converge_is_builtin }}"
+            rights:
+              - SeServiceLogonRight
+              - SeManageVolumePrivilege
+
+    # Test Case 2: Additional right with explicit account override
+    - name: Apply additional right with account override
+      ansible.builtin.include_role:
+        name: win_service_rights
+      vars:
+        win_service_rights_assignments:
+          - service_name: "{{ converge_service_name }}"
+            state: present
+            service_account: "{{ converge_service_account }}"
+            fail_on_builtin_account: false
+            rights:
+              - SeLockMemoryPrivilege
+
+    - name: Display converge completion
+      ansible.builtin.debug:
+        msg: |
+          ======================================
+          CONVERGE COMPLETE
+          ======================================
+          Applied rights to: {{ converge_service_account }}
+          - SeServiceLogonRight
+          - SeManageVolumePrivilege
+          - SeLockMemoryPrivilege

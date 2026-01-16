@@ -19,11 +19,14 @@ The role supports multiple services per run via `win_service_rights_assignments`
 ## Table of contents
 
 - [Scope](#scope)
+- [Test environments](#test-environments)
 - [Role input](#role-input)
 - [Test environment requirements](#test-environment-requirements)
 - [Pre-test setup](#pre-test-setup)
 - [How to run the tests](#how-to-run-the-tests)
-- [Test cases](#test-cases)
+- [Test cases - Standalone (Environment A)](#test-cases---standalone-environment-a)
+- [Test cases - Domain (Environment B)](#test-cases---domain-environment-b)
+- [Automated testing with Molecule](#automated-testing-with-molecule)
 - [Verification (Windows host)](#verification-windows-host)
 - [Cleanup](#cleanup)
 - [Known limitations](#known-limitations)
@@ -38,11 +41,47 @@ In-scope validation:
 - Grant (`state: present`) and revoke (`state: absent`)
 - Error handling (missing service, built-in service accounts)
 - Idempotency (running twice should be stable)
+- **Standalone Windows hosts** (local accounts, no domain)
+- **Domain-joined Windows hosts** (domain accounts, with domain controller)
 
 Out of scope:
 
 - Functional testing of SQL Server / SQL Sentry / Ignite beyond verifying the rights were applied
 - Hardening or policy decisions about *which* rights are "correct" for your organization
+
+[↑ Back to Table of Contents](#table-of-contents)
+
+## Test environments
+
+The role must be tested in **two distinct environments** to ensure it works with both local and domain accounts.
+
+### Environment A: Standalone Windows (no domain)
+
+| Component | Description |
+|-----------|-------------|
+| Windows Host | Windows Server 2016+ or Windows 11, **not** domain-joined |
+| Authentication | NTLM with local administrator account |
+| Service Account | Local user (e.g., `.\sqlsvc` or `HOSTNAME\sqlsvc`) |
+| Use Case | Development, isolated test environments |
+
+### Environment B: Domain-joined Windows (with domain controller)
+
+| Component | Description |
+|-----------|-------------|
+| Domain Controller | Windows Server with Active Directory |
+| Windows Host | Windows Server 2016+, joined to the domain |
+| Authentication | Kerberos with domain administrator account |
+| Service Account | Domain user (e.g., `DOMAIN\sqlsvc`) |
+| Use Case | Production, enterprise environments |
+
+### Why both environments matter
+
+| Scenario | Local Account | Domain Account |
+|----------|---------------|----------------|
+| Account format | `.\username` or `HOSTNAME\username` | `DOMAIN\username` |
+| SID lookup | Local SAM database | Active Directory |
+| Authentication | NTLM | Kerberos (preferred) |
+| Service account detection | `win_service_info` returns local format | `win_service_info` returns domain format |
 
 [↑ Back to Table of Contents](#table-of-contents)
 
@@ -123,7 +162,9 @@ Preferred method: create small, explicit test playbooks (easier than long `-e` o
 
 All example commands below assume you are in the `ansible/` directory.
 
-## Test cases
+## Test cases - Standalone (Environment A)
+
+These test cases run against a **standalone Windows host** (not domain-joined) using local accounts.
 
 ### TC1: Default configuration (multi-service)
 
@@ -383,6 +424,219 @@ ansible-playbook -i inventory/test test_builtin_account_bypass.yml
 
 [↑ Back to Table of Contents](#table-of-contents)
 
+## Test cases - Domain (Environment B)
+
+These test cases run against a **domain-joined Windows host** using domain accounts and Kerberos authentication.
+
+### Pre-requisites for domain testing
+
+1. Domain controller accessible from Ansible control node
+2. Domain-joined Windows Server with WinRM configured
+3. Kerberos configured on control node (`/etc/krb5.conf`)
+4. Valid Kerberos ticket (`kinit admin@DOMAIN.COM`)
+5. Domain service account for SQL Server (e.g., `DOMAIN\sqlsvc`)
+
+### TC11: Domain account detection
+
+**Objective:** Validate the role correctly detects and uses domain service accounts.
+
+**Steps:** Create `test_domain_account.yml`:
+
+```yaml
+---
+- name: Test: domain account detection
+  hosts: domain_windows
+  gather_facts: false
+  roles:
+    - role: win_service_rights
+      vars:
+        win_service_rights_assignments:
+          - service_name: MSSQLSERVER
+            state: present
+            rights:
+              - SeServiceLogonRight
+              - SeManageVolumePrivilege
+```
+
+Run:
+
+```bash
+kinit admin@CORP.EXAMPLE.COM
+ansible-playbook -i inventory/test test_domain_account.yml
+```
+
+**Expected results:**
+
+- Role detects domain account format (e.g., `CORP\sqlsvc`)
+- Rights are applied to the domain account
+- SID lookup resolves via Active Directory
+
+### TC12: Explicit domain account override
+
+**Objective:** Validate `service_account` override works with domain account format.
+
+**Steps:** Create `test_domain_override.yml`:
+
+```yaml
+---
+- name: Test: explicit domain account override
+  hosts: domain_windows
+  gather_facts: false
+  roles:
+    - role: win_service_rights
+      vars:
+        win_service_rights_assignments:
+          - service_name: MSSQLSERVER
+            state: present
+            service_account: "CORP\\sqlsvc"
+            rights:
+              - SeServiceLogonRight
+              - SeLockMemoryPrivilege
+```
+
+Run:
+
+```bash
+ansible-playbook -i inventory/test test_domain_override.yml
+```
+
+**Expected results:**
+
+- Role uses provided domain account without service lookup
+- Rights are applied to the specified domain account
+
+### TC13: Domain service with multiple rights
+
+**Objective:** Validate all three SQL Server rights apply correctly to domain accounts.
+
+**Steps:** Create `test_domain_full_rights.yml`:
+
+```yaml
+---
+- name: Test: full SQL Server rights on domain
+  hosts: domain_windows
+  gather_facts: false
+  roles:
+    - role: win_service_rights
+      vars:
+        win_service_rights_assignments:
+          - service_name: MSSQLSERVER
+            state: present
+            rights:
+              - SeServiceLogonRight
+              - SeManageVolumePrivilege
+              - SeLockMemoryPrivilege
+```
+
+Run:
+
+```bash
+ansible-playbook -i inventory/test test_domain_full_rights.yml
+```
+
+**Expected results:**
+
+- All three rights applied successfully
+- Verify with `secedit` shows domain SID in all three policies
+
+### TC14: Domain rights removal
+
+**Objective:** Validate rights can be removed from domain accounts.
+
+**Steps:** Create `test_domain_remove.yml`:
+
+```yaml
+---
+- name: Test: remove rights from domain account
+  hosts: domain_windows
+  gather_facts: false
+  roles:
+    - role: win_service_rights
+      vars:
+        win_service_rights_assignments:
+          - service_name: MSSQLSERVER
+            state: absent
+            rights:
+              - SeManageVolumePrivilege
+              - SeLockMemoryPrivilege
+```
+
+Run:
+
+```bash
+ansible-playbook -i inventory/test test_domain_remove.yml
+```
+
+**Expected results:**
+
+- Rights are removed from domain account
+- `SeServiceLogonRight` remains (not in removal list)
+
+### TC15: Domain idempotency
+
+**Objective:** Validate idempotency with domain accounts.
+
+**Steps:** Run TC13 playbook twice:
+
+```bash
+ansible-playbook -i inventory/test test_domain_full_rights.yml
+ansible-playbook -i inventory/test test_domain_full_rights.yml
+```
+
+**Expected results:**
+
+- First run: `changed=true` (rights applied)
+- Second run: `changed=false` (no changes needed)
+
+[↑ Back to Table of Contents](#table-of-contents)
+
+## Automated testing with Molecule
+
+Manual testing is suitable for ad-hoc validation, but **Molecule provides automated, repeatable tests**.
+
+### Available Molecule scenarios
+
+| Scenario | Environment | Description |
+|----------|-------------|-------------|
+| `wsl2-local` | Standalone | Tests from WSL2 against Windows 11 host with real SQL Server |
+| `standalone` | Standalone | Tests against remote standalone Windows Server |
+| `domain` | Domain | Tests against domain-joined Windows with AD |
+
+### Running automated tests
+
+```bash
+cd ansible/roles/win_service_rights
+
+# WSL2 to Windows 11 (local development)
+export MOLECULE_WIN_USER="YourUser"
+export MOLECULE_WIN_PASSWORD="YourPassword"
+molecule test -s wsl2-local
+
+# Standalone Windows Server
+export MOLECULE_WIN_HOST="192.168.1.100"
+molecule test -s standalone
+
+# Domain environment
+kinit admin@CORP.EXAMPLE.COM
+export MOLECULE_WIN_HOST="srv01.corp.example.com"
+export MOLECULE_WIN_DOMAIN="CORP.EXAMPLE.COM"
+export MOLECULE_DC_HOST="dc01.corp.example.com"
+molecule test -s domain
+```
+
+### What Molecule tests verify
+
+- ✅ User rights are actually applied (via `secedit`)
+- ✅ Error handling for non-existent services
+- ✅ Built-in account safety check works
+- ✅ Idempotency (converge runs twice)
+- ✅ Cleanup removes test artifacts
+- ✅ Both local and domain account formats
+
+See [molecule/README.md](roles/win_service_rights/molecule/README.md) for detailed documentation.
+
+[↑ Back to Table of Contents](#table-of-contents)
+
 ## Verification (Windows host)
 
 ### Verify with secedit
@@ -428,6 +682,8 @@ win_service_rights_assignments:
 
 ## Test results template
 
+### Environment A: Standalone Windows (manual tests)
+
 | Test Case | Date | Tester | Result | Notes |
 | --------- | ---- | ------ | ------ | ----- |
 | TC1: Default configuration | | | PASS/FAIL | |
@@ -440,5 +696,23 @@ win_service_rights_assignments:
 | TC8: Target specific service | | | PASS/FAIL | |
 | TC9: Force revoke via target_state | | | PASS/FAIL | |
 | TC10: Bypass built-in account check | | | PASS/FAIL | |
+
+### Environment B: Domain-joined Windows (manual tests)
+
+| Test Case | Date | Tester | Result | Notes |
+| --------- | ---- | ------ | ------ | ----- |
+| TC11: Domain account detection | | | PASS/FAIL | |
+| TC12: Explicit domain account override | | | PASS/FAIL | |
+| TC13: Domain service with multiple rights | | | PASS/FAIL | |
+| TC14: Domain rights removal | | | PASS/FAIL | |
+| TC15: Domain idempotency | | | PASS/FAIL | |
+
+### Automated tests (Molecule)
+
+| Scenario | Date | Result | Notes |
+| -------- | ---- | ------ | ----- |
+| `wsl2-local` (standalone) | | PASS/FAIL | |
+| `standalone` (remote) | | PASS/FAIL | |
+| `domain` (with DC) | | PASS/FAIL | |
 
 [↑ Back to Table of Contents](#table-of-contents)

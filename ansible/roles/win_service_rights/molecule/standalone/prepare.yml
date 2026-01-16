@@ -1,0 +1,97 @@
+---
+# Prepare the standalone Windows host for testing
+#
+# This playbook:
+#   1. Verifies connectivity to the Windows host
+#   2. Creates a local test service account (for testing user rights assignment)
+#   3. Creates a test Windows service that runs under the test account
+#   4. Collects baseline information about current user rights
+
+- name: Prepare standalone Windows host for testing
+  hosts: windows
+  gather_facts: true
+  vars:
+    test_service_account: "MoleculeTestSvc"
+    test_service_account_password: "M0lecule!Test#2026"
+    test_service_name: "MoleculeTestService"
+
+  tasks:
+    - name: Display target host information
+      ansible.builtin.debug:
+        msg: |
+          Target: {{ inventory_hostname }}
+          OS: {{ ansible_os_name | default('Unknown') }}
+          Domain: {{ ansible_windows_domain | default('WORKGROUP') }}
+          Hostname: {{ ansible_hostname | default('Unknown') }}
+
+    - name: Verify WinRM connectivity
+      ansible.windows.win_ping:
+
+    - name: Create local test service account
+      ansible.windows.win_user:
+        name: "{{ test_service_account }}"
+        password: "{{ test_service_account_password }}"
+        state: present
+        password_never_expires: true
+        user_cannot_change_password: true
+        groups:
+          - Users
+        description: "Molecule test service account - safe to delete"
+      register: test_account_result
+
+    - name: Display test account creation result
+      ansible.builtin.debug:
+        var: test_account_result
+        verbosity: 1
+
+    # Create a simple test service using sc.exe
+    # We use a harmless executable (cmd.exe /c "ping -t localhost") as a placeholder
+    - name: Check if test service exists
+      ansible.windows.win_service_info:
+        name: "{{ test_service_name }}"
+      register: test_service_check
+
+    - name: Create test Windows service
+      ansible.windows.win_shell: |
+        # Create a simple service that does nothing harmful
+        sc.exe create "{{ test_service_name }}" `
+          binPath= "cmd.exe /c ping -n 3600 localhost > nul" `
+          DisplayName= "Molecule Test Service" `
+          start= demand `
+          obj= ".\{{ test_service_account }}" `
+          password= "{{ test_service_account_password }}"
+      when: test_service_check.services | length == 0
+      register: service_create_result
+
+    - name: Display service creation result
+      ansible.builtin.debug:
+        var: service_create_result
+        verbosity: 1
+      when: service_create_result is defined
+
+    - name: Verify test service was created
+      ansible.windows.win_service_info:
+        name: "{{ test_service_name }}"
+      register: test_service_info
+
+    - name: Assert test service exists and uses test account
+      ansible.builtin.assert:
+        that:
+          - test_service_info.services | length == 1
+          - test_service_info.services[0].username == ('.\\' ~ test_service_account) or
+            test_service_info.services[0].username == (ansible_hostname ~ '\\' ~ test_service_account)
+        fail_msg: "Test service not properly configured with test account"
+        success_msg: "Test service '{{ test_service_name }}' created with account '{{ test_service_info.services[0].username }}'"
+
+    - name: Export current security policy baseline
+      ansible.windows.win_shell: |
+        $tempFile = "$env:TEMP\molecule_secpol_baseline.cfg"
+        secedit /export /cfg $tempFile /quiet
+        Get-Content $tempFile | Select-String -Pattern "SeServiceLogonRight|SeManageVolumePrivilege|SeLockMemoryPrivilege"
+      register: baseline_rights
+
+    - name: Display baseline user rights
+      ansible.builtin.debug:
+        msg: |
+          Baseline User Rights:
+          {{ baseline_rights.stdout }}

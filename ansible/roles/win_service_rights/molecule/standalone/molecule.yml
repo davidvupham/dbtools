@@ -1,0 +1,80 @@
+---
+# Molecule scenario: Standalone Windows Server (non-domain-joined)
+#
+# This scenario tests the win_service_rights role against a standalone Windows server
+# using local authentication (NTLM or Basic over HTTPS).
+#
+# Prerequisites:
+#   1. Windows Server 2016+ with WinRM configured over HTTPS (port 5986)
+#   2. Local administrator account for Ansible
+#   3. At least one testable service (e.g., W32Time runs on all Windows)
+#
+# Environment variables required:
+#   MOLECULE_WIN_HOST      - Hostname or IP of Windows test server
+#   MOLECULE_WIN_USER      - Local administrator username (e.g., "Administrator" or ".\admin")
+#   MOLECULE_WIN_PASSWORD  - Password for the administrator account
+#
+# Usage:
+#   export MOLECULE_WIN_HOST="192.168.1.100"
+#   export MOLECULE_WIN_USER="Administrator"
+#   export MOLECULE_WIN_PASSWORD="YourSecurePassword"
+#   molecule test -s standalone
+#
+# For CI/CD, set these as secrets in your pipeline configuration.
+
+dependency:
+  name: galaxy
+  options:
+    requirements-file: ../requirements.yml
+
+driver:
+  name: delegated
+  options:
+    managed: false
+
+platforms:
+  - name: win-standalone-01
+    groups:
+      - windows
+      - standalone
+
+provisioner:
+  name: ansible
+  env:
+    ANSIBLE_ROLES_PATH: "../../.."
+    ANSIBLE_HOST_KEY_CHECKING: "False"
+  config_options:
+    defaults:
+      callbacks_enabled: profile_tasks
+      stdout_callback: yaml
+  inventory:
+    hosts:
+      windows:
+        hosts:
+          win-standalone-01:
+            ansible_host: ${MOLECULE_WIN_HOST}
+    group_vars:
+      windows:
+        ansible_connection: winrm
+        ansible_port: 5986
+        ansible_winrm_scheme: https
+        ansible_winrm_transport: ntlm
+        ansible_winrm_server_cert_validation: ignore
+        ansible_user: ${MOLECULE_WIN_USER}
+        ansible_password: ${MOLECULE_WIN_PASSWORD}
+
+verifier:
+  name: ansible
+
+scenario:
+  name: standalone
+  test_sequence:
+    - dependency
+    - syntax
+    - create
+    - prepare
+    - converge
+    - idempotence
+    - verify
+    - cleanup
+    - destroy

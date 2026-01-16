@@ -1,0 +1,109 @@
+---
+# Molecule scenario: WSL2 to Windows 11 Host (Local Development)
+#
+# This scenario tests the win_service_rights role from RHEL/WSL2 against
+# the Windows 11 host machine where SQL Server is installed.
+#
+# Architecture:
+#   ┌─────────────────────────────────────────────────────────┐
+#   │                    Windows 11 Host                       │
+#   │  ┌─────────────────┐    ┌─────────────────────────────┐ │
+#   │  │    WSL2 (RHEL)  │    │    Windows Services         │ │
+#   │  │  ┌───────────┐  │    │  - MSSQLSERVER              │ │
+#   │  │  │  Ansible  │──┼────│  - SQLServerAgent           │ │
+#   │  │  │  Molecule │  │    │  - SQL Server Browser       │ │
+#   │  │  └───────────┘  │    │  - etc.                     │ │
+#   │  └─────────────────┘    └─────────────────────────────┘ │
+#   │         │                         ▲                      │
+#   │         └─────── WinRM (5986) ────┘                      │
+#   └─────────────────────────────────────────────────────────┘
+#
+# Prerequisites:
+#   1. Windows 11 with WSL2 and RHEL installed
+#   2. SQL Server installed on Windows 11 host
+#   3. WinRM configured over HTTPS on Windows host
+#   4. Network connectivity from WSL2 to Windows host
+#
+# Windows Host IP from WSL2:
+#   - Option 1: Use $(hostname).local or the computer name
+#   - Option 2: Use the IP from: cat /etc/resolv.conf | grep nameserver
+#   - Option 3: Use: ip route show default | awk '{print $3}'
+#
+# Environment variables:
+#   MOLECULE_WIN_HOST      - Windows host IP/hostname (default: auto-detect)
+#   MOLECULE_WIN_USER      - Windows admin username
+#   MOLECULE_WIN_PASSWORD  - Windows admin password
+#
+# Usage:
+#   # Auto-detect Windows host IP (uses /etc/resolv.conf nameserver)
+#   export MOLECULE_WIN_USER="YourWindowsUser"
+#   export MOLECULE_WIN_PASSWORD="YourPassword"
+#   molecule test -s wsl2-local
+#
+#   # Or specify host explicitly
+#   export MOLECULE_WIN_HOST="192.168.x.x"
+#   molecule test -s wsl2-local
+
+dependency:
+  name: galaxy
+  options:
+    requirements-file: ../requirements.yml
+
+driver:
+  name: delegated
+  options:
+    managed: false
+
+platforms:
+  - name: windows-host
+    groups:
+      - windows
+      - sql_servers
+
+provisioner:
+  name: ansible
+  env:
+    ANSIBLE_ROLES_PATH: "../../.."
+    ANSIBLE_HOST_KEY_CHECKING: "False"
+  config_options:
+    defaults:
+      callbacks_enabled: profile_tasks
+      stdout_callback: yaml
+      timeout: 60
+    ssh_connection:
+      pipelining: false
+  inventory:
+    hosts:
+      windows:
+        hosts:
+          windows-host:
+            # Auto-detect Windows host from WSL2 if not set
+            ansible_host: ${MOLECULE_WIN_HOST:-}
+    group_vars:
+      windows:
+        ansible_connection: winrm
+        ansible_port: 5986
+        ansible_winrm_scheme: https
+        ansible_winrm_transport: ntlm
+        ansible_winrm_server_cert_validation: ignore
+        ansible_user: ${MOLECULE_WIN_USER}
+        ansible_password: ${MOLECULE_WIN_PASSWORD}
+        # Increase timeouts for WSL2 network
+        ansible_winrm_operation_timeout_sec: 60
+        ansible_winrm_read_timeout_sec: 70
+
+verifier:
+  name: ansible
+
+scenario:
+  name: wsl2-local
+  test_sequence:
+    - dependency
+    - syntax
+    - create
+    - prepare
+    - converge
+    - idempotence
+    - verify
+    - cleanup
+    - destroy

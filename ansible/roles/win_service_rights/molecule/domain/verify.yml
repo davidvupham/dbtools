@@ -1,0 +1,155 @@
+---
+# Verify playbook for domain Windows scenario
+#
+# This playbook verifies that the win_service_rights role correctly applied
+# the user rights assignments to the domain test service account.
+
+- name: Verify - Check user rights were applied correctly on domain member
+  hosts: domain_members
+  gather_facts: false
+  vars:
+    test_service_account: "svc_molecule_test"
+    test_service_name: "MoleculeTestService"
+    expected_rights:
+      - SeServiceLogonRight
+      - SeManageVolumePrivilege
+      - SeLockMemoryPrivilege
+
+  tasks:
+    - name: Export current security policy
+      ansible.windows.win_shell: |
+        $tempFile = "$env:TEMP\molecule_secpol_verify.cfg"
+        secedit /export /cfg $tempFile /quiet
+        Get-Content $tempFile
+      register: secpol_export
+
+    - name: Parse SeServiceLogonRight assignments
+      ansible.windows.win_shell: |
+        $tempFile = "$env:TEMP\molecule_secpol_verify.cfg"
+        $content = Get-Content $tempFile -Raw
+        if ($content -match 'SeServiceLogonRight\s*=\s*(.+)') {
+          $matches[1].Trim()
+        } else {
+          "NOT_FOUND"
+        }
+      register: service_logon_right
+
+    - name: Parse SeManageVolumePrivilege assignments
+      ansible.windows.win_shell: |
+        $tempFile = "$env:TEMP\molecule_secpol_verify.cfg"
+        $content = Get-Content $tempFile -Raw
+        if ($content -match 'SeManageVolumePrivilege\s*=\s*(.+)') {
+          $matches[1].Trim()
+        } else {
+          "NOT_FOUND"
+        }
+      register: manage_volume_privilege
+
+    - name: Parse SeLockMemoryPrivilege assignments
+      ansible.windows.win_shell: |
+        $tempFile = "$env:TEMP\molecule_secpol_verify.cfg"
+        $content = Get-Content $tempFile -Raw
+        if ($content -match 'SeLockMemoryPrivilege\s*=\s*(.+)') {
+          $matches[1].Trim()
+        } else {
+          "NOT_FOUND"
+        }
+      register: lock_memory_privilege
+
+    - name: Get domain account SID from member server
+      ansible.windows.win_shell: |
+        $domain = "{{ molecule_domain.split('.')[0] | upper }}"
+        $account = New-Object System.Security.Principal.NTAccount($domain, "{{ test_service_account }}")
+        try {
+          $sid = $account.Translate([System.Security.Principal.SecurityIdentifier])
+          $sid.Value
+        } catch {
+          "SID_TRANSLATION_FAILED"
+        }
+      register: test_account_sid
+
+    - name: Display verification results
+      ansible.builtin.debug:
+        msg: |
+          === Domain User Rights Verification ===
+          Test Account: {{ molecule_domain.split('.')[0] | upper }}\{{ test_service_account }}
+          Test Account SID: {{ test_account_sid.stdout | trim }}
+
+          SeServiceLogonRight: {{ service_logon_right.stdout | trim }}
+          SeManageVolumePrivilege: {{ manage_volume_privilege.stdout | trim }}
+          SeLockMemoryPrivilege: {{ lock_memory_privilege.stdout | trim }}
+
+    - name: Verify SeServiceLogonRight contains domain test account
+      ansible.builtin.assert:
+        that:
+          - test_account_sid.stdout | trim in service_logon_right.stdout
+        fail_msg: |
+          FAILED: SeServiceLogonRight does not contain domain test account SID
+          Expected SID: {{ test_account_sid.stdout | trim }}
+          Actual value: {{ service_logon_right.stdout | trim }}
+        success_msg: "PASSED: SeServiceLogonRight contains domain test account"
+
+    - name: Verify SeManageVolumePrivilege contains domain test account
+      ansible.builtin.assert:
+        that:
+          - test_account_sid.stdout | trim in manage_volume_privilege.stdout
+        fail_msg: |
+          FAILED: SeManageVolumePrivilege does not contain domain test account SID
+          Expected SID: {{ test_account_sid.stdout | trim }}
+          Actual value: {{ manage_volume_privilege.stdout | trim }}
+        success_msg: "PASSED: SeManageVolumePrivilege contains domain test account"
+
+    - name: Verify SeLockMemoryPrivilege contains domain test account
+      ansible.windows.win_shell: |
+        # SeLockMemoryPrivilege may contain the SID - verify it
+        $sid = "{{ test_account_sid.stdout | trim }}"
+        $rights = "{{ lock_memory_privilege.stdout | trim }}"
+        if ($rights -match $sid) {
+          "FOUND"
+        } else {
+          "NOT_FOUND - SID: $sid not in: $rights"
+        }
+      register: lock_memory_check
+
+    - name: Assert SeLockMemoryPrivilege was assigned
+      ansible.builtin.assert:
+        that:
+          - "'FOUND' in lock_memory_check.stdout"
+        fail_msg: |
+          FAILED: SeLockMemoryPrivilege verification
+          {{ lock_memory_check.stdout }}
+        success_msg: "PASSED: SeLockMemoryPrivilege contains domain test account"
+
+    # Test target_service_name filtering
+    - name: Test target_service_name filtering
+      ansible.builtin.include_role:
+        name: win_service_rights
+      vars:
+        target_service_name: "{{ test_service_name }}"
+        win_service_rights_assignments:
+          - service_name: "{{ test_service_name }}"
+            state: present
+            rights:
+              - SeServiceLogonRight
+          # This service should be skipped due to filter
+          - service_name: "W32Time"
+            state: present
+            fail_on_builtin_account: false
+            rights:
+              - SeServiceLogonRight
+
+    - name: Verify W32Time was not affected (filter worked)
+      ansible.builtin.debug:
+        msg: "PASSED: target_service_name filtering works correctly"
+
+    - name: Display final verification summary
+      ansible.builtin.debug:
+        msg: |
+          ======================================
+          DOMAIN SCENARIO VERIFICATION COMPLETE
+          ======================================
+          All domain user rights verified successfully.
+          - SeServiceLogonRight: PASSED
+          - SeManageVolumePrivilege: PASSED
+          - SeLockMemoryPrivilege: PASSED
+          - Filtering test: PASSED

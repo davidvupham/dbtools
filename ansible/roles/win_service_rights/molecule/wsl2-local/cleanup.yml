@@ -1,0 +1,139 @@
+---
+# Cleanup playbook for WSL2-local scenario
+#
+# This playbook cleans up test artifacts:
+#   - If using test service: removes service and account
+#   - If using real SQL Server: optionally reverts rights (configurable)
+#
+# NOTE: By default, we do NOT remove rights from real SQL Server accounts
+# as that could impact the running database. Set MOLECULE_CLEANUP_REAL=true
+# to remove rights from real services.
+
+- name: Cleanup WSL2-local test artifacts
+  hosts: windows
+  gather_facts: false
+  vars:
+    cleanup_real_services: "{{ lookup('env', 'MOLECULE_CLEANUP_REAL') | default('false') | bool }}"
+    test_service_account: "MoleculeTestSvc"
+    test_service_name: "MoleculeTestService"
+
+  tasks:
+    - name: Get test configuration
+      ansible.builtin.set_fact:
+        cleanup_service_name: "{{ ansible_stats.data.target_service_name | default('') }}"
+        cleanup_using_test: "{{ ansible_stats.data.using_test_service | default(false) }}"
+
+    - name: Display cleanup configuration
+      ansible.builtin.debug:
+        msg: |
+          === Cleanup Configuration ===
+          Service: {{ cleanup_service_name }}
+          Was Test Service: {{ cleanup_using_test }}
+          Cleanup Real Services: {{ cleanup_real_services }}
+
+    # Clean up test service if we created one
+    - name: Clean up test service
+      when: cleanup_using_test | bool
+      block:
+        - name: Remove rights from test account
+          ansible.builtin.include_role:
+            name: win_service_rights
+          vars:
+            win_service_rights_assignments:
+              - service_name: "{{ test_service_name }}"
+                state: absent
+                service_account: ".\\{{ test_service_account }}"
+                rights:
+                  - SeServiceLogonRight
+                  - SeManageVolumePrivilege
+                  - SeLockMemoryPrivilege
+          ignore_errors: true
+
+        - name: Stop test service
+          ansible.windows.win_service:
+            name: "{{ test_service_name }}"
+            state: stopped
+          ignore_errors: true
+
+        - name: Delete test service
+          ansible.windows.win_shell: |
+            sc.exe delete "{{ test_service_name }}"
+          ignore_errors: true
+
+        - name: Delete test account
+          ansible.windows.win_user:
+            name: "{{ test_service_account }}"
+            state: absent
+          ignore_errors: true
+
+        - name: Test service cleanup complete
+          ansible.builtin.debug:
+            msg: "Test service and account removed"
+
+    # Optionally clean up real SQL Server rights
+    - name: Clean up real SQL Server rights (if enabled)
+      when:
+        - not cleanup_using_test | bool
+        - cleanup_real_services | bool
+      block:
+        - name: Remove added rights from SQL Server account
+          ansible.builtin.include_role:
+            name: win_service_rights
+          vars:
+            win_service_rights_assignments:
+              - service_name: "{{ cleanup_service_name }}"
+                state: absent
+                fail_on_builtin_account: false
+                rights:
+                  # Only remove the rights we added that are NOT typically needed
+                  # SeServiceLogonRight is usually already present
+                  - SeManageVolumePrivilege
+                  - SeLockMemoryPrivilege
+          ignore_errors: true
+
+        - name: Real service rights cleanup complete
+          ansible.builtin.debug:
+            msg: |
+              Removed SeManageVolumePrivilege and SeLockMemoryPrivilege from {{ cleanup_service_name }}.
+              SeServiceLogonRight was left in place as it's typically required.
+
+    - name: Skip real service cleanup (default)
+      when:
+        - not cleanup_using_test | bool
+        - not cleanup_real_services | bool
+      ansible.builtin.debug:
+        msg: |
+          Skipping cleanup of real SQL Server rights.
+          The following rights were added and remain:
+            - SeServiceLogonRight
+            - SeManageVolumePrivilege
+            - SeLockMemoryPrivilege
+
+          To remove these rights, run:
+            MOLECULE_CLEANUP_REAL=true molecule cleanup -s wsl2-local
+
+    # Clean up temp files
+    - name: Remove temporary files
+      ansible.windows.win_file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - "{{ ansible_env.TEMP }}\\molecule_secpol_baseline.cfg"
+        - "{{ ansible_env.TEMP }}\\molecule_secpol_verify.cfg"
+      ignore_errors: true
+
+    - name: Display cleanup summary
+      ansible.builtin.debug:
+        msg: |
+          ======================================
+          WSL2-LOCAL CLEANUP COMPLETE
+          ======================================
+          {% if cleanup_using_test %}
+          - Test service removed
+          - Test account removed
+          {% elif cleanup_real_services %}
+          - SQL Server rights reverted
+          {% else %}
+          - SQL Server rights preserved (set MOLECULE_CLEANUP_REAL=true to remove)
+          {% endif %}
+          - Temporary files removed

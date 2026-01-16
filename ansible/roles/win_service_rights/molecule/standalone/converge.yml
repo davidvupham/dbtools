@@ -1,0 +1,30 @@
+---
+# Converge playbook for standalone Windows scenario
+#
+# This playbook applies the win_service_rights role to grant user rights
+# to the test service account created in prepare.yml
+
+- name: Converge - Apply win_service_rights role
+  hosts: windows
+  gather_facts: false
+  vars:
+    test_service_name: "MoleculeTestService"
+
+  roles:
+    - role: win_service_rights
+      vars:
+        win_service_rights_assignments:
+          # Test 1: Grant rights to our test service
+          - service_name: "{{ test_service_name }}"
+            state: present
+            rights:
+              - SeServiceLogonRight
+              - SeManageVolumePrivilege
+
+          # Test 2: Grant rights using explicit service_account override
+          # This tests the override path without service lookup
+          - service_name: "{{ test_service_name }}"
+            state: present
+            service_account: ".\\MoleculeTestSvc"
+            rights:
+              - SeLockMemoryPrivilege

@@ -1,0 +1,7 @@
+---
+# Ansible collections required for testing win_service_rights role
+collections:
+  - name: ansible.windows
+    version: ">=2.0.0"
+  - name: community.windows
+    version: ">=2.0.0"

@@ -1,0 +1,78 @@
+---
+# Cleanup playbook for standalone Windows scenario
+#
+# This playbook removes test artifacts created during the test run:
+#   1. Removes user rights from test account
+#   2. Deletes the test Windows service
+#   3. Deletes the test service account
+
+- name: Cleanup - Remove test artifacts from standalone Windows host
+  hosts: windows
+  gather_facts: false
+  vars:
+    test_service_account: "MoleculeTestSvc"
+    test_service_name: "MoleculeTestService"
+
+  tasks:
+    - name: Remove user rights from test account
+      ansible.builtin.include_role:
+        name: win_service_rights
+      vars:
+        win_service_rights_assignments:
+          - service_name: "{{ test_service_name }}"
+            state: absent
+            service_account: ".\\{{ test_service_account }}"
+            rights:
+              - SeServiceLogonRight
+              - SeManageVolumePrivilege
+              - SeLockMemoryPrivilege
+      ignore_errors: true
+
+    - name: Stop test service if running
+      ansible.windows.win_service:
+        name: "{{ test_service_name }}"
+        state: stopped
+      ignore_errors: true
+
+    - name: Delete test Windows service
+      ansible.windows.win_shell: |
+        sc.exe delete "{{ test_service_name }}"
+      ignore_errors: true
+      register: service_delete_result
+
+    - name: Display service deletion result
+      ansible.builtin.debug:
+        var: service_delete_result
+        verbosity: 1
+
+    - name: Delete test service account
+      ansible.windows.win_user:
+        name: "{{ test_service_account }}"
+        state: absent
+      ignore_errors: true
+      register: account_delete_result
+
+    - name: Display account deletion result
+      ansible.builtin.debug:
+        var: account_delete_result
+        verbosity: 1
+
+    - name: Clean up temporary files
+      ansible.windows.win_file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - "{{ ansible_env.TEMP }}\\molecule_secpol_baseline.cfg"
+        - "{{ ansible_env.TEMP }}\\molecule_secpol_verify.cfg"
+      ignore_errors: true
+
+    - name: Display cleanup summary
+      ansible.builtin.debug:
+        msg: |
+          ======================================
+          STANDALONE SCENARIO CLEANUP COMPLETE
+          ======================================
+          - Test service '{{ test_service_name }}' removed
+          - Test account '{{ test_service_account }}' removed
+          - User rights revoked
+          - Temporary files cleaned up

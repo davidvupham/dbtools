@@ -1,0 +1,31 @@
+---
+# Converge playbook for domain Windows scenario
+#
+# This playbook applies the win_service_rights role to grant user rights
+# to the domain test service account created in prepare.yml
+
+- name: Converge - Apply win_service_rights role to domain member
+  hosts: domain_members
+  gather_facts: false
+  vars:
+    test_service_name: "MoleculeTestService"
+    test_service_account: "svc_molecule_test"
+
+  roles:
+    - role: win_service_rights
+      vars:
+        win_service_rights_assignments:
+          # Test 1: Grant rights via service auto-detection (domain account)
+          - service_name: "{{ test_service_name }}"
+            state: present
+            rights:
+              - SeServiceLogonRight
+              - SeManageVolumePrivilege
+
+          # Test 2: Grant additional right using explicit domain account override
+          # Format: DOMAIN\username
+          - service_name: "{{ test_service_name }}"
+            state: present
+            service_account: "{{ molecule_domain.split('.')[0] | upper }}\\{{ test_service_account }}"
+            rights:
+              - SeLockMemoryPrivilege

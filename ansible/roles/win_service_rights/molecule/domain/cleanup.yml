@@ -1,0 +1,91 @@
+---
+# Cleanup playbook for domain Windows scenario
+#
+# This playbook removes test artifacts created during the test run:
+#   1. Removes user rights from domain test account on member server
+#   2. Deletes the test Windows service from member server
+#   3. Deletes the domain test service account from Active Directory
+
+- name: Cleanup member server - Remove service and rights
+  hosts: domain_members
+  gather_facts: false
+  vars:
+    test_service_account: "svc_molecule_test"
+    test_service_name: "MoleculeTestService"
+
+  tasks:
+    - name: Remove user rights from domain test account
+      ansible.builtin.include_role:
+        name: win_service_rights
+      vars:
+        win_service_rights_assignments:
+          - service_name: "{{ test_service_name }}"
+            state: absent
+            service_account: "{{ molecule_domain.split('.')[0] | upper }}\\{{ test_service_account }}"
+            rights:
+              - SeServiceLogonRight
+              - SeManageVolumePrivilege
+              - SeLockMemoryPrivilege
+      ignore_errors: true
+
+    - name: Stop test service if running
+      ansible.windows.win_service:
+        name: "{{ test_service_name }}"
+        state: stopped
+      ignore_errors: true
+
+    - name: Delete test Windows service
+      ansible.windows.win_shell: |
+        sc.exe delete "{{ test_service_name }}"
+      ignore_errors: true
+      register: service_delete_result
+
+    - name: Display service deletion result
+      ansible.builtin.debug:
+        var: service_delete_result
+        verbosity: 1
+
+    - name: Clean up temporary files
+      ansible.windows.win_file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - "{{ ansible_env.TEMP }}\\molecule_secpol_baseline.cfg"
+        - "{{ ansible_env.TEMP }}\\molecule_secpol_verify.cfg"
+      ignore_errors: true
+
+
+- name: Cleanup domain controller - Remove test account
+  hosts: domain_controllers
+  gather_facts: false
+  vars:
+    test_service_account: "svc_molecule_test"
+
+  tasks:
+    - name: Delete domain test service account
+      ansible.windows.win_shell: |
+        Import-Module ActiveDirectory
+        $account = Get-ADUser -Filter "SamAccountName -eq '{{ test_service_account }}'" -ErrorAction SilentlyContinue
+        if ($account) {
+          Remove-ADUser -Identity $account -Confirm:$false
+          "DELETED"
+        } else {
+          "NOT_FOUND"
+        }
+      register: account_delete_result
+      ignore_errors: true
+
+    - name: Display account deletion result
+      ansible.builtin.debug:
+        msg: "Domain account cleanup: {{ account_delete_result.stdout | trim }}"
+
+    - name: Display cleanup summary
+      ansible.builtin.debug:
+        msg: |
+          ======================================
+          DOMAIN SCENARIO CLEANUP COMPLETE
+          ======================================
+          - Test service 'MoleculeTestService' removed from member server
+          - Domain account '{{ test_service_account }}' removed from Active Directory
+          - User rights revoked
+          - Temporary files cleaned up

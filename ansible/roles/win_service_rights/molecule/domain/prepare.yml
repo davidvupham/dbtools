@@ -1,0 +1,174 @@
+---
+# Prepare the domain environment for testing
+#
+# This playbook:
+#   1. Verifies connectivity to domain controller and member server
+#   2. Creates a domain test service account (Managed Service Account or regular user)
+#   3. Creates a test Windows service on the member server using the domain account
+#   4. Collects baseline information about current user rights
+
+- name: Prepare domain controller - Create test service account
+  hosts: domain_controllers
+  gather_facts: true
+  vars:
+    test_service_account: "svc_molecule_test"
+    test_service_account_password: "M0lecule!Domain#2026"
+    test_ou_path: "OU=Service Accounts,DC={{ molecule_domain.split('.')[0] | lower }},DC={{ molecule_domain.split('.')[1] | lower }}"
+
+  tasks:
+    - name: Display domain controller information
+      ansible.builtin.debug:
+        msg: |
+          Domain Controller: {{ inventory_hostname }}
+          Domain: {{ molecule_domain }}
+          OS: {{ ansible_os_name | default('Unknown') }}
+
+    - name: Verify WinRM connectivity to DC
+      ansible.windows.win_ping:
+
+    - name: Check if test service account exists
+      ansible.windows.win_shell: |
+        Import-Module ActiveDirectory
+        $account = Get-ADUser -Filter "SamAccountName -eq '{{ test_service_account }}'" -ErrorAction SilentlyContinue
+        if ($account) { "EXISTS" } else { "NOT_EXISTS" }
+      register: account_check
+
+    - name: Create domain test service account
+      ansible.windows.win_shell: |
+        Import-Module ActiveDirectory
+
+        # Create service account in default Users container if OU doesn't exist
+        $password = ConvertTo-SecureString "{{ test_service_account_password }}" -AsPlainText -Force
+
+        try {
+          New-ADUser -Name "{{ test_service_account }}" `
+            -SamAccountName "{{ test_service_account }}" `
+            -UserPrincipalName "{{ test_service_account }}@{{ molecule_domain }}" `
+            -AccountPassword $password `
+            -Enabled $true `
+            -PasswordNeverExpires $true `
+            -CannotChangePassword $true `
+            -Description "Molecule test service account - safe to delete" `
+            -ErrorAction Stop
+          "CREATED"
+        } catch {
+          # Try creating in Users container if default OU fails
+          New-ADUser -Name "{{ test_service_account }}" `
+            -SamAccountName "{{ test_service_account }}" `
+            -UserPrincipalName "{{ test_service_account }}@{{ molecule_domain }}" `
+            -AccountPassword $password `
+            -Enabled $true `
+            -PasswordNeverExpires $true `
+            -CannotChangePassword $true `
+            -Description "Molecule test service account - safe to delete" `
+            -Path "CN=Users,DC={{ molecule_domain.split('.')[0] }},DC={{ molecule_domain.split('.')[1] }}"
+          "CREATED_IN_USERS"
+        }
+      when: account_check.stdout | trim == "NOT_EXISTS"
+      register: account_create_result
+
+    - name: Display account creation result
+      ansible.builtin.debug:
+        var: account_create_result
+      when: account_create_result is defined and account_create_result.changed
+
+    - name: Get test account details
+      ansible.windows.win_shell: |
+        Import-Module ActiveDirectory
+        $account = Get-ADUser -Identity "{{ test_service_account }}" -Properties SID, DistinguishedName
+        @{
+          SamAccountName = $account.SamAccountName
+          SID = $account.SID.Value
+          DistinguishedName = $account.DistinguishedName
+          Enabled = $account.Enabled
+        } | ConvertTo-Json
+      register: account_details
+
+    - name: Display test account details
+      ansible.builtin.debug:
+        msg: "{{ account_details.stdout | from_json }}"
+
+    - name: Store account SID for later verification
+      ansible.builtin.set_fact:
+        test_account_sid: "{{ (account_details.stdout | from_json).SID }}"
+        test_account_dn: "{{ (account_details.stdout | from_json).DistinguishedName }}"
+      delegate_to: localhost
+      delegate_facts: true
+
+
+- name: Prepare domain member server - Create test service
+  hosts: domain_members
+  gather_facts: true
+  vars:
+    test_service_account: "svc_molecule_test"
+    test_service_account_password: "M0lecule!Domain#2026"
+    test_service_name: "MoleculeTestService"
+
+  tasks:
+    - name: Display member server information
+      ansible.builtin.debug:
+        msg: |
+          Member Server: {{ inventory_hostname }}
+          Domain: {{ molecule_domain }}
+          OS: {{ ansible_os_name | default('Unknown') }}
+          Hostname: {{ ansible_hostname | default('Unknown') }}
+
+    - name: Verify WinRM connectivity to member server
+      ansible.windows.win_ping:
+
+    - name: Check if test service exists
+      ansible.windows.win_service_info:
+        name: "{{ test_service_name }}"
+      register: test_service_check
+
+    - name: Create test Windows service with domain account
+      ansible.windows.win_shell: |
+        # Create a simple service that does nothing harmful
+        $domain = "{{ molecule_domain.split('.')[0] | upper }}"
+        sc.exe create "{{ test_service_name }}" `
+          binPath= "cmd.exe /c ping -n 3600 localhost > nul" `
+          DisplayName= "Molecule Domain Test Service" `
+          start= demand `
+          obj= "$domain\{{ test_service_account }}" `
+          password= "{{ test_service_account_password }}"
+      when: test_service_check.services | length == 0
+      register: service_create_result
+
+    - name: Display service creation result
+      ansible.builtin.debug:
+        var: service_create_result
+      when: service_create_result is defined and service_create_result.changed
+
+    - name: Verify test service configuration
+      ansible.windows.win_service_info:
+        name: "{{ test_service_name }}"
+      register: test_service_info
+
+    - name: Display test service details
+      ansible.builtin.debug:
+        msg: |
+          Service Name: {{ test_service_info.services[0].name }}
+          Display Name: {{ test_service_info.services[0].display_name }}
+          Service Account: {{ test_service_info.services[0].username }}
+          State: {{ test_service_info.services[0].state }}
+
+    - name: Assert test service uses domain account
+      ansible.builtin.assert:
+        that:
+          - test_service_info.services | length == 1
+          - "'svc_molecule_test' in test_service_info.services[0].username | lower"
+        fail_msg: "Test service not properly configured with domain account"
+        success_msg: "Test service '{{ test_service_name }}' configured with domain account"
+
+    - name: Export current security policy baseline
+      ansible.windows.win_shell: |
+        $tempFile = "$env:TEMP\molecule_secpol_baseline.cfg"
+        secedit /export /cfg $tempFile /quiet
+        Get-Content $tempFile | Select-String -Pattern "SeServiceLogonRight|SeManageVolumePrivilege|SeLockMemoryPrivilege"
+      register: baseline_rights
+
+    - name: Display baseline user rights
+      ansible.builtin.debug:
+        msg: |
+          Baseline User Rights on {{ inventory_hostname }}:
+          {{ baseline_rights.stdout }}

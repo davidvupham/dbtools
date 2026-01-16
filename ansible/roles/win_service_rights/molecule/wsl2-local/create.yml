@@ -1,0 +1,117 @@
+---
+# Create playbook for WSL2-local scenario
+#
+# This playbook handles the unique WSL2-to-Windows connectivity setup:
+#   1. Auto-detects Windows host IP if not provided
+#   2. Verifies WinRM connectivity
+#   3. Validates SQL Server is installed
+
+- name: Setup WSL2 to Windows host connectivity
+  hosts: localhost
+  gather_facts: true
+  vars:
+    win_host_from_env: "{{ lookup('env', 'MOLECULE_WIN_HOST') }}"
+
+  tasks:
+    - name: Display WSL2 environment information
+      ansible.builtin.debug:
+        msg: |
+          === WSL2 Local Test Environment ===
+          Control Node: {{ ansible_hostname }}
+          OS: {{ ansible_distribution }} {{ ansible_distribution_version }}
+          WSL2 Detection: {{ 'Yes' if 'microsoft' in ansible_kernel | lower else 'No' }}
+
+    - name: Auto-detect Windows host IP from WSL2
+      when: win_host_from_env == ''
+      block:
+        - name: Get Windows host IP from /etc/resolv.conf (WSL2 method)
+          ansible.builtin.shell: |
+            grep -m 1 nameserver /etc/resolv.conf | awk '{print $2}'
+          register: wsl2_host_ip
+          changed_when: false
+
+        - name: Set Windows host IP fact
+          ansible.builtin.set_fact:
+            detected_win_host: "{{ wsl2_host_ip.stdout | trim }}"
+
+        - name: Display detected Windows host
+          ansible.builtin.debug:
+            msg: "Auto-detected Windows host IP: {{ detected_win_host }}"
+
+        - name: Export detected host for Molecule
+          ansible.builtin.lineinfile:
+            path: "{{ lookup('env', 'MOLECULE_EPHEMERAL_DIRECTORY') }}/win_host.env"
+            line: "MOLECULE_WIN_HOST={{ detected_win_host }}"
+            create: true
+            mode: '0644'
+
+    - name: Use provided Windows host
+      when: win_host_from_env != ''
+      ansible.builtin.debug:
+        msg: "Using provided Windows host: {{ win_host_from_env }}"
+
+
+- name: Verify Windows host connectivity
+  hosts: windows
+  gather_facts: false
+  vars:
+    # Fallback to auto-detected host if env var was empty
+    ansible_host: "{{ lookup('env', 'MOLECULE_WIN_HOST') or hostvars['localhost']['detected_win_host'] | default('') }}"
+
+  tasks:
+    - name: Test WinRM connectivity to Windows host
+      ansible.windows.win_ping:
+      register: ping_result
+
+    - name: Display connectivity result
+      ansible.builtin.debug:
+        msg: "WinRM connectivity to Windows host: SUCCESS"
+
+    - name: Gather Windows facts
+      ansible.windows.setup:
+        gather_subset:
+          - min
+      register: win_facts
+
+    - name: Display Windows host information
+      ansible.builtin.debug:
+        msg: |
+          === Windows Host Information ===
+          Hostname: {{ win_facts.ansible_facts.ansible_hostname }}
+          OS: {{ win_facts.ansible_facts.ansible_os_name }}
+          Version: {{ win_facts.ansible_facts.ansible_os_version }}
+          Domain: {{ win_facts.ansible_facts.ansible_windows_domain | default('WORKGROUP') }}
+
+    - name: Check if SQL Server is installed
+      ansible.windows.win_service_info:
+        name: MSSQLSERVER
+      register: sql_service
+      ignore_errors: true
+
+    - name: Display SQL Server status
+      ansible.builtin.debug:
+        msg: |
+          SQL Server Status:
+          {% if sql_service.services | length > 0 %}
+          - Service Name: {{ sql_service.services[0].name }}
+          - Display Name: {{ sql_service.services[0].display_name }}
+          - State: {{ sql_service.services[0].state }}
+          - Start Mode: {{ sql_service.services[0].start_mode }}
+          - Account: {{ sql_service.services[0].username }}
+          {% else %}
+          - MSSQLSERVER service not found (may use named instance)
+          {% endif %}
+
+    - name: List all SQL Server related services
+      ansible.windows.win_shell: |
+        Get-Service | Where-Object { $_.Name -like '*SQL*' -or $_.DisplayName -like '*SQL*' } |
+        Select-Object Name, DisplayName, Status, StartType |
+        ConvertTo-Json
+      register: sql_services
+
+    - name: Display available SQL Server services
+      ansible.builtin.debug:
+        msg: |
+          Available SQL Server Services:
+          {{ sql_services.stdout | from_json | to_nice_yaml }}
+      when: sql_services.stdout | length > 2

@@ -1,0 +1,54 @@
+---
+# Default Molecule configuration for win_service_rights role
+# This scenario is a template - use 'standalone' or 'domain' scenarios for actual testing
+#
+# Usage:
+#   molecule test -s standalone    # Test against standalone Windows
+#   molecule test -s domain        # Test against domain-joined Windows
+
+dependency:
+  name: galaxy
+  options:
+    requirements-file: requirements.yml
+
+driver:
+  name: delegated
+  options:
+    managed: false
+    ansible_connection_options:
+      ansible_connection: winrm
+      ansible_port: 5986
+      ansible_winrm_scheme: https
+      ansible_winrm_transport: kerberos
+      ansible_winrm_server_cert_validation: ignore
+
+platforms:
+  - name: win-test-01
+    groups:
+      - windows
+
+provisioner:
+  name: ansible
+  env:
+    ANSIBLE_ROLES_PATH: "../../.."
+  inventory:
+    group_vars:
+      windows:
+        ansible_connection: winrm
+        ansible_port: 5986
+        ansible_winrm_scheme: https
+        ansible_winrm_server_cert_validation: ignore
+
+verifier:
+  name: ansible
+
+scenario:
+  name: default
+  test_sequence:
+    - dependency
+    - lint
+    - syntax
+    - converge
+    - idempotence
+    - verify
+    - cleanup

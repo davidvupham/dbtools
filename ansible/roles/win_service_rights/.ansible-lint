@@ -1,0 +1,37 @@
+# Ansible-lint configuration for win_service_rights role
+---
+profile: production
+
+# Paths to exclude from linting
+exclude_paths:
+  - .cache/
+  - .git/
+
+# Enable specific rules
+enable_list:
+  - fqcn-builtins
+  - no-changed-when
+  - no-handler
+
+# Skip specific rules if needed
+skip_list:
+  # Allow shell commands for Windows-specific operations not covered by modules
+  - command-instead-of-shell
+
+# Warn on these rules instead of failing
+warn_list:
+  - experimental
+  - yaml[line-length]
+
+# Use default rules plus any custom rules
+use_default_rules: true
+
+# Offline mode (don't download schemas)
+offline: false
+
+# Kinds configuration for Windows-specific file detection
+kinds:
+  - tasks: "**/tasks/*.yml"
+  - vars: "**/defaults/*.yml"
+  - meta: "**/meta/*.yml"
+  - molecule: "**/molecule/*/*.yml"

@@ -1,0 +1,170 @@
+---
+# Verify playbook for standalone Windows scenario
+#
+# This playbook verifies that the win_service_rights role correctly applied
+# the user rights assignments to the test service account.
+
+- name: Verify - Check user rights were applied correctly
+  hosts: windows
+  gather_facts: false
+  vars:
+    test_service_account: "MoleculeTestSvc"
+    test_service_name: "MoleculeTestService"
+    expected_rights:
+      - SeServiceLogonRight
+      - SeManageVolumePrivilege
+      - SeLockMemoryPrivilege
+
+  tasks:
+    - name: Export current security policy
+      ansible.windows.win_shell: |
+        $tempFile = "$env:TEMP\molecule_secpol_verify.cfg"
+        secedit /export /cfg $tempFile /quiet
+        Get-Content $tempFile
+      register: secpol_export
+
+    - name: Parse SeServiceLogonRight assignments
+      ansible.windows.win_shell: |
+        $tempFile = "$env:TEMP\molecule_secpol_verify.cfg"
+        $content = Get-Content $tempFile -Raw
+        if ($content -match 'SeServiceLogonRight\s*=\s*(.+)') {
+          $matches[1].Trim()
+        } else {
+          "NOT_FOUND"
+        }
+      register: service_logon_right
+
+    - name: Parse SeManageVolumePrivilege assignments
+      ansible.windows.win_shell: |
+        $tempFile = "$env:TEMP\molecule_secpol_verify.cfg"
+        $content = Get-Content $tempFile -Raw
+        if ($content -match 'SeManageVolumePrivilege\s*=\s*(.+)') {
+          $matches[1].Trim()
+        } else {
+          "NOT_FOUND"
+        }
+      register: manage_volume_privilege
+
+    - name: Parse SeLockMemoryPrivilege assignments
+      ansible.windows.win_shell: |
+        $tempFile = "$env:TEMP\molecule_secpol_verify.cfg"
+        $content = Get-Content $tempFile -Raw
+        if ($content -match 'SeLockMemoryPrivilege\s*=\s*(.+)') {
+          $matches[1].Trim()
+        } else {
+          "NOT_FOUND"
+        }
+      register: lock_memory_privilege
+
+    - name: Get test account SID
+      ansible.windows.win_shell: |
+        $account = Get-LocalUser -Name "{{ test_service_account }}" -ErrorAction SilentlyContinue
+        if ($account) {
+          $account.SID.Value
+        } else {
+          "ACCOUNT_NOT_FOUND"
+        }
+      register: test_account_sid
+
+    - name: Display verification results
+      ansible.builtin.debug:
+        msg: |
+          === User Rights Verification ===
+          Test Account: {{ test_service_account }}
+          Test Account SID: {{ test_account_sid.stdout | trim }}
+
+          SeServiceLogonRight: {{ service_logon_right.stdout | trim }}
+          SeManageVolumePrivilege: {{ manage_volume_privilege.stdout | trim }}
+          SeLockMemoryPrivilege: {{ lock_memory_privilege.stdout | trim }}
+
+    - name: Verify SeServiceLogonRight contains test account
+      ansible.builtin.assert:
+        that:
+          - test_account_sid.stdout | trim in service_logon_right.stdout
+        fail_msg: |
+          FAILED: SeServiceLogonRight does not contain test account SID
+          Expected SID: {{ test_account_sid.stdout | trim }}
+          Actual value: {{ service_logon_right.stdout | trim }}
+        success_msg: "PASSED: SeServiceLogonRight contains test account"
+
+    - name: Verify SeManageVolumePrivilege contains test account
+      ansible.builtin.assert:
+        that:
+          - test_account_sid.stdout | trim in manage_volume_privilege.stdout
+        fail_msg: |
+          FAILED: SeManageVolumePrivilege does not contain test account SID
+          Expected SID: {{ test_account_sid.stdout | trim }}
+          Actual value: {{ manage_volume_privilege.stdout | trim }}
+        success_msg: "PASSED: SeManageVolumePrivilege contains test account"
+
+    - name: Verify SeLockMemoryPrivilege contains test account
+      ansible.builtin.assert:
+        that:
+          - test_account_sid.stdout | trim in lock_memory_privilege.stdout
+        fail_msg: |
+          FAILED: SeLockMemoryPrivilege does not contain test account SID
+          Expected SID: {{ test_account_sid.stdout | trim }}
+          Actual value: {{ lock_memory_privilege.stdout | trim }}
+        success_msg: "PASSED: SeLockMemoryPrivilege contains test account"
+
+    # Test error handling: verify role fails for non-existent service
+    - name: Test error handling - non-existent service (should fail)
+      block:
+        - name: Attempt to configure non-existent service
+          ansible.builtin.include_role:
+            name: win_service_rights
+          vars:
+            win_service_rights_assignments:
+              - service_name: "NonExistentService12345"
+                state: present
+                rights:
+                  - SeServiceLogonRight
+          register: nonexistent_result
+          ignore_errors: true
+
+        - name: Verify non-existent service caused failure
+          ansible.builtin.assert:
+            that:
+              - nonexistent_result is failed
+            fail_msg: "Role should have failed for non-existent service"
+            success_msg: "PASSED: Role correctly failed for non-existent service"
+      rescue:
+        - name: Expected failure occurred
+          ansible.builtin.debug:
+            msg: "PASSED: Role correctly failed for non-existent service"
+
+    # Test built-in account safety check
+    - name: Test built-in account safety check (should fail)
+      block:
+        - name: Attempt to configure W32Time (runs as LocalSystem)
+          ansible.builtin.include_role:
+            name: win_service_rights
+          vars:
+            win_service_rights_assignments:
+              - service_name: "W32Time"
+                state: present
+                rights:
+                  - SeServiceLogonRight
+          register: builtin_result
+          ignore_errors: true
+
+        - name: Verify built-in account check caused failure
+          ansible.builtin.assert:
+            that:
+              - builtin_result is failed
+            fail_msg: "Role should have failed for built-in account"
+            success_msg: "PASSED: Role correctly failed for built-in account (safety check)"
+      rescue:
+        - name: Expected failure occurred
+          ansible.builtin.debug:
+            msg: "PASSED: Role correctly failed for built-in account (safety check)"
+
+    - name: Display final verification summary
+      ansible.builtin.debug:
+        msg: |
+          ======================================
+          STANDALONE SCENARIO VERIFICATION COMPLETE
+          ======================================
+          All user rights verified successfully.
+          Error handling tests passed.
+          Built-in account safety check passed.

@@ -1,0 +1,104 @@
+---
+# Molecule scenario: Domain-joined Windows Server with Active Directory
+#
+# This scenario tests the win_service_rights role against domain-joined Windows servers
+# using Kerberos authentication with domain service accounts.
+#
+# Prerequisites:
+#   1. Active Directory domain controller accessible from Ansible control node
+#   2. Domain-joined Windows Server 2016+ with WinRM configured over HTTPS (port 5986)
+#   3. Domain administrator account (or delegated permissions for user rights)
+#   4. Kerberos configured on Ansible control node (/etc/krb5.conf)
+#   5. Valid Kerberos ticket (kinit user@DOMAIN.COM)
+#
+# Environment variables required:
+#   MOLECULE_WIN_HOST       - FQDN of domain-joined Windows test server (e.g., "srv01.corp.example.com")
+#   MOLECULE_WIN_DOMAIN     - Active Directory domain name (e.g., "CORP.EXAMPLE.COM")
+#   MOLECULE_WIN_USER       - Domain admin username (e.g., "admin@CORP.EXAMPLE.COM")
+#   MOLECULE_WIN_PASSWORD   - Domain admin password (for kinit, not used directly)
+#   MOLECULE_DC_HOST        - Domain controller hostname (for creating test objects)
+#
+# Usage:
+#   # First obtain a Kerberos ticket
+#   kinit admin@CORP.EXAMPLE.COM
+#
+#   # Set environment variables
+#   export MOLECULE_WIN_HOST="srv01.corp.example.com"
+#   export MOLECULE_WIN_DOMAIN="CORP.EXAMPLE.COM"
+#   export MOLECULE_WIN_USER="admin@CORP.EXAMPLE.COM"
+#   export MOLECULE_DC_HOST="dc01.corp.example.com"
+#
+#   # Run the test
+#   molecule test -s domain
+#
+# For CI/CD, configure Kerberos keytab for non-interactive authentication.
+
+dependency:
+  name: galaxy
+  options:
+    requirements-file: ../requirements.yml
+
+driver:
+  name: delegated
+  options:
+    managed: false
+
+platforms:
+  - name: win-domain-01
+    groups:
+      - windows
+      - domain_members
+  - name: dc-01
+    groups:
+      - windows
+      - domain_controllers
+
+provisioner:
+  name: ansible
+  env:
+    ANSIBLE_ROLES_PATH: "../../.."
+    ANSIBLE_HOST_KEY_CHECKING: "False"
+  config_options:
+    defaults:
+      callbacks_enabled: profile_tasks
+      stdout_callback: yaml
+  inventory:
+    hosts:
+      domain_members:
+        hosts:
+          win-domain-01:
+            ansible_host: ${MOLECULE_WIN_HOST}
+      domain_controllers:
+        hosts:
+          dc-01:
+            ansible_host: ${MOLECULE_DC_HOST}
+      windows:
+        children:
+          domain_members: {}
+          domain_controllers: {}
+    group_vars:
+      windows:
+        ansible_connection: winrm
+        ansible_port: 5986
+        ansible_winrm_scheme: https
+        ansible_winrm_transport: kerberos
+        ansible_winrm_server_cert_validation: ignore
+        ansible_user: ${MOLECULE_WIN_USER}
+        # Password not needed when using Kerberos with kinit
+        molecule_domain: ${MOLECULE_WIN_DOMAIN}
+
+verifier:
+  name: ansible
+
+scenario:
+  name: domain
+  test_sequence:
+    - dependency
+    - syntax
+    - create
+    - prepare
+    - converge
+    - idempotence
+    - verify
+    - cleanup
+    - destroy
