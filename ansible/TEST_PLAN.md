@@ -1,13 +1,33 @@
-# Test Plan: Windows Service Account Rights Role
+# Test plan: Windows service account rights role
 
-This document describes how to validate the `windows_service_account_rights` Ansible role.
+**🔗 [← Back to Ansible Index](./README.md)**
 
-The role’s purpose is simple:
+> **Document Version:** 1.1
+> **Last Updated:** January 16, 2026
+> **Maintainers:** Application Infrastructure Team
+> **Status:** Production
+
+This document describes how to validate the `win_service_rights` Ansible role.
+
+The role's purpose is simple:
 
 1. For each configured Windows service, determine which account the service runs under.
 2. For that account, add/remove Windows User Rights Assignments.
 
-The role supports multiple services per run via `windows_service_account_rights_assignments`.
+The role supports multiple services per run via `win_service_rights_assignments`.
+
+## Table of contents
+
+- [Scope](#scope)
+- [Role input](#role-input)
+- [Test environment requirements](#test-environment-requirements)
+- [Pre-test setup](#pre-test-setup)
+- [How to run the tests](#how-to-run-the-tests)
+- [Test cases](#test-cases)
+- [Verification (Windows host)](#verification-windows-host)
+- [Cleanup](#cleanup)
+- [Known limitations](#known-limitations)
+- [Test results template](#test-results-template)
 
 ## Scope
 
@@ -22,14 +42,16 @@ In-scope validation:
 Out of scope:
 
 - Functional testing of SQL Server / SQL Sentry / Ignite beyond verifying the rights were applied
-- Hardening or policy decisions about *which* rights are “correct” for your organization
+- Hardening or policy decisions about *which* rights are "correct" for your organization
 
-## Role Input (what you are testing)
+[↑ Back to Table of Contents](#table-of-contents)
+
+## Role input
 
 The role reads a list of assignments:
 
 ```yaml
-windows_service_account_rights_assignments:
+win_service_rights_assignments:
   - service_name: MSSQLSERVER
     state: present        # present=grant, absent=revoke
     rights:
@@ -40,28 +62,32 @@ windows_service_account_rights_assignments:
 
 Per assignment:
 
-- `service_name` (required): Windows service name (what `services.msc` shows in “Service name”)
+- `service_name` (required): Windows service name (what `services.msc` shows in "Service name")
 - `state` (optional): `present` or `absent` (defaults to `present`)
 - `rights` (required): list of one or more user rights (e.g., `SeServiceLogonRight`)
 - `service_account` (optional): override account to manage rights for (skips service lookup)
 - `fail_on_builtin_account` (optional): defaults `true` and fails for LocalSystem/LocalService/NetworkService
 
-## Test Environment Requirements
+[↑ Back to Table of Contents](#table-of-contents)
 
-### Control Node (Linux)
+## Test environment requirements
+
+### Control node (Linux)
 
 - Ansible 2.10+
 - `ansible.windows` collection installed
 - Network access to Windows hosts over WinRM
 
-### Target Windows Hosts
+### Target Windows hosts
 
 - Windows Server 2016/2019/2022
 - WinRM configured and reachable
 - Administrative access available (rights assignment requires admin privileges)
 - At least one of these services installed (or replace with services available in your environment): `MSSQLSERVER`, `SQLSentryServer`, `IgnitePl`
 
-## Pre-Test Setup
+[↑ Back to Table of Contents](#table-of-contents)
+
+## Pre-test setup
 
 ### 1) Install dependencies
 
@@ -89,13 +115,15 @@ Ensure `inventory/test/group_vars/windows.yml` has correct WinRM connection sett
 ansible -i inventory/test windows -m win_ping
 ```
 
+[↑ Back to Table of Contents](#table-of-contents)
+
 ## How to run the tests
 
 Preferred method: create small, explicit test playbooks (easier than long `-e` overrides).
 
 All example commands below assume you are in the `ansible/` directory.
 
-## Test Cases
+## Test cases
 
 ### TC1: Default configuration (multi-service)
 
@@ -104,7 +132,7 @@ All example commands below assume you are in the `ansible/` directory.
 **Steps:**
 
 ```bash
-ansible-playbook -i inventory/test windows_service_account_rights.yml -e "target_hosts=windows"
+ansible-playbook -i inventory/test playbooks/configure_win_service_rights.yml -e "target_hosts=windows"
 ```
 
 **Expected results:**
@@ -124,9 +152,9 @@ ansible-playbook -i inventory/test windows_service_account_rights.yml -e "target
   hosts: windows
   gather_facts: false
   roles:
-    - role: windows_service_account_rights
+    - role: win_service_rights
       vars:
-        windows_service_account_rights_assignments:
+        win_service_rights_assignments:
           - service_name: MSSQLSERVER
             state: present
             rights:
@@ -156,9 +184,9 @@ ansible-playbook -i inventory/test test_single_service_present.yml
   hosts: windows
   gather_facts: false
   roles:
-    - role: windows_service_account_rights
+    - role: win_service_rights
       vars:
-        windows_service_account_rights_assignments:
+        win_service_rights_assignments:
           - service_name: MSSQLSERVER
             state: absent
             rights:
@@ -189,9 +217,9 @@ ansible-playbook -i inventory/test test_single_service_absent.yml
   hosts: windows
   gather_facts: false
   roles:
-    - role: windows_service_account_rights
+    - role: win_service_rights
       vars:
-        windows_service_account_rights_assignments:
+        win_service_rights_assignments:
           - service_name: NONEXISTENT_SERVICE
             state: present
             rights:
@@ -220,9 +248,9 @@ ansible-playbook -i inventory/test test_service_not_found.yml
   hosts: windows
   gather_facts: false
   roles:
-    - role: windows_service_account_rights
+    - role: win_service_rights
       vars:
-        windows_service_account_rights_assignments:
+        win_service_rights_assignments:
           - service_name: W32Time
             state: present
             rights:
@@ -251,9 +279,9 @@ ansible-playbook -i inventory/test test_builtin_account_fails.yml
   hosts: windows
   gather_facts: false
   roles:
-    - role: windows_service_account_rights
+    - role: win_service_rights
       vars:
-        windows_service_account_rights_assignments:
+        win_service_rights_assignments:
           - service_name: MSSQLSERVER
             state: present
             service_account: "DOMAIN\\sqlsvc"
@@ -295,7 +323,7 @@ ansible-playbook -i inventory/test test_single_service_present.yml
 **Steps:**
 
 ```bash
-ansible-playbook -i inventory/test configure_win_service_rights.yml \
+ansible-playbook -i inventory/test playbooks/configure_win_service_rights.yml \
   -e "target_hosts=windows target_service_name=SQLSentryServer"
 ```
 
@@ -311,7 +339,7 @@ ansible-playbook -i inventory/test configure_win_service_rights.yml \
 **Steps:**
 
 ```bash
-ansible-playbook -i inventory/test configure_win_service_rights.yml \
+ansible-playbook -i inventory/test playbooks/configure_win_service_rights.yml \
   -e "target_hosts=windows target_service_name=SQLSentryServer target_state=absent"
 ```
 
@@ -320,9 +348,44 @@ ansible-playbook -i inventory/test configure_win_service_rights.yml \
 - Rights for `SQLSentryServer` are revoked (state forced to absent)
 - Output shows removal (or `ok` if already absent) for that specific service
 
+### TC10: Bypass built-in account safety check
+
+**Objective:** Validate that `fail_on_builtin_account: false` allows managing rights for built-in accounts.
+
+**Steps:** Create `test_builtin_account_bypass.yml`:
+
+```yaml
+---
+- name: Test: bypass builtin account safety check
+  hosts: windows
+  gather_facts: false
+  roles:
+    - role: win_service_rights
+      vars:
+        win_service_rights_assignments:
+          - service_name: W32Time
+            state: present
+            fail_on_builtin_account: false
+            rights:
+              - SeServiceLogonRight
+```
+
+Run:
+
+```bash
+ansible-playbook -i inventory/test test_builtin_account_bypass.yml
+```
+
+**Expected results:**
+
+- Role completes successfully (does not fail on built-in account)
+- Rights are applied to the built-in account
+
+[↑ Back to Table of Contents](#table-of-contents)
+
 ## Verification (Windows host)
 
-### Verify with `secedit`
+### Verify with secedit
 
 ```powershell
 # Run as Administrator
@@ -336,6 +399,8 @@ Get-Content C:\temp\secpol.cfg | Select-String -Pattern "SeServiceLogonRight|SeM
 2. Local Policies → User Rights Assignment
 3. Confirm the service account is listed under the specified policies
 
+[↑ Back to Table of Contents](#table-of-contents)
+
 ## Cleanup
 
 Preferred cleanup is to run the role with `state: absent` for only the rights you added.
@@ -343,7 +408,7 @@ Preferred cleanup is to run the role with `state: absent` for only the rights yo
 Example:
 
 ```yaml
-windows_service_account_rights_assignments:
+win_service_rights_assignments:
   - service_name: MSSQLSERVER
     state: absent
     rights:
@@ -351,13 +416,17 @@ windows_service_account_rights_assignments:
       - SeLockMemoryPrivilege
 ```
 
-## Known Limitations
+[↑ Back to Table of Contents](#table-of-contents)
+
+## Known limitations
 
 1. Changes are immediate but some applications may need a service restart to observe them
 2. Role requires administrative privileges on target hosts
 3. Role does not validate other permissions the application might require (beyond user rights assignment)
 
-## Test Results Template
+[↑ Back to Table of Contents](#table-of-contents)
+
+## Test results template
 
 | Test Case | Date | Tester | Result | Notes |
 | --------- | ---- | ------ | ------ | ----- |
@@ -368,3 +437,8 @@ windows_service_account_rights_assignments:
 | TC5: Built-in account fails | | | PASS/FAIL | |
 | TC6: Override service account | | | PASS/FAIL | |
 | TC7: Idempotency | | | PASS/FAIL | |
+| TC8: Target specific service | | | PASS/FAIL | |
+| TC9: Force revoke via target_state | | | PASS/FAIL | |
+| TC10: Bypass built-in account check | | | PASS/FAIL | |
+
+[↑ Back to Table of Contents](#table-of-contents)

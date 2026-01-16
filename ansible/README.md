@@ -1,18 +1,39 @@
-# Ansible Playbooks
+# Ansible playbooks
+
+**🔗 [← Back to Repository Root](../README.md)**
+
+> **Document Version:** 1.1
+> **Last Updated:** January 16, 2026
+> **Maintainers:** Application Infrastructure Team
+> **Status:** Production
 
 This directory contains Ansible playbooks and roles for:
 
 - **Windows Management** - Configure Windows servers (service accounts, user rights)
 - **Linux Development Environment** - Set up WSL or RHEL development environments
 
-## Directory Structure
+## Table of contents
+
+- [Directory structure](#directory-structure)
+- [Linux development environment setup](#linux-development-environment-setup)
+- [Deploy SSH key playbook](#deploy-ssh-key-playbook)
+- [Windows management](#windows-management)
+- [Quick start](#quick-start)
+- [Available roles](#available-roles)
+- [Common use cases](#common-use-cases)
+- [Troubleshooting](#troubleshooting)
+- [Security considerations](#security-considerations)
+- [Additional resources](#additional-resources)
+
+## Directory structure
 
 ```bash
 ansible/
 ├── ansible.cfg
 ├── deploy_ssh_key.yml               # Deploy SSH key to Linux hosts
 ├── linux_dev_environment.yml        # Linux dev environment playbook
-├── windows_service_account_rights.yml
+├── playbooks/
+│   └── configure_win_service_rights.yml  # Windows service rights playbook
 ├── group_vars/                       # OS-specific variables
 │   ├── all.yml                       # Common variables
 │   ├── Debian.yml                    # Ubuntu/WSL packages
@@ -31,16 +52,18 @@ ansible/
     ├── dotfiles/                     # Shell/git configuration
     ├── ssh_keys/                     # SSH key generation
     ├── vscode/                       # VS Code extensions
-    └── windows_service_account_rights/
+    └── win_service_rights/           # Windows service account rights
 ```
+
+[↑ Back to Table of Contents](#table-of-contents)
 
 ---
 
-## Linux Development Environment Setup
+## Linux development environment setup
 
 This playbook configures a development environment on WSL (Ubuntu) or RHEL servers.
 
-### What Gets Installed
+### What gets installed
 
 | Role | Description |
 |------|-------------|
@@ -51,7 +74,7 @@ This playbook configures a development environment on WSL (Ubuntu) or RHEL serve
 | `ssh_keys` | Generate SSH key pair for GitHub |
 | `vscode` | VS Code extensions and settings |
 
-### Bootstrap Instructions
+### Bootstrap instructions
 
 #### WSL (Ubuntu)
 
@@ -93,9 +116,11 @@ cd ~/dev/dbtools
 git remote set-url origin git@github.com:your-org/dbtools.git
 ```
 
-### Advanced Usage
+[↑ Back to Table of Contents](#table-of-contents)
 
-#### With Git Configuration
+### Advanced usage
+
+#### With Git configuration
 
 ```bash
 ansible-playbook linux_dev_environment.yml -i inventory/localhost.yml --ask-become-pass \
@@ -103,7 +128,7 @@ ansible-playbook linux_dev_environment.yml -i inventory/localhost.yml --ask-beco
   -e "git_user_email='your.email@example.com'"
 ```
 
-#### Run Specific Roles Only
+#### Run specific roles only
 
 ```bash
 # Only install Docker
@@ -113,7 +138,7 @@ ansible-playbook linux_dev_environment.yml -i inventory/localhost.yml --ask-beco
 ansible-playbook linux_dev_environment.yml -i inventory/localhost.yml --ask-become-pass --tags dotfiles,ssh
 ```
 
-### Required Ansible Collections
+### Required Ansible collections
 
 The playbook uses these collections (install before running if not already present):
 
@@ -121,7 +146,7 @@ The playbook uses these collections (install before running if not already prese
 ansible-galaxy collection install community.general community.crypto ansible.posix
 ```
 
-### After Running the Playbook
+### After running the playbook
 
 1. **Log out and log back in** (or run `newgrp docker`) for Docker group membership to take effect
 2. **Add SSH key to GitHub**: The playbook displays your public key - add it at https://github.com/settings/keys
@@ -130,11 +155,13 @@ ansible-galaxy collection install community.general community.crypto ansible.pos
 
 ---
 
-## Deploy SSH Key Playbook
+## Deploy SSH key playbook
 
 Use `deploy_ssh_key.yml` to deploy an SSH public key (e.g., from Windows) to Linux hosts.
 
-### Use Cases
+[↑ Back to Table of Contents](#table-of-contents)
+
+### Use cases
 
 - Deploy your Windows SSH key to WSL for seamless SSH access
 - Deploy your Windows SSH key to RHEL servers for VS Code Remote SSH
@@ -165,13 +192,15 @@ ansible-playbook deploy_ssh_key.yml -i inventory/localhost.yml \
 
 ---
 
-## Windows Management
+## Windows management
 
 The following sections cover Windows server management.
 
+[↑ Back to Table of Contents](#table-of-contents)
+
 ## Prerequisites
 
-### 1. Install Ansible and Required Collections
+### 1. Install Ansible and required collections
 
 ```bash
 # Install Ansible and pywinrm
@@ -181,7 +210,7 @@ pip install ansible pywinrm
 ansible-galaxy collection install ansible.windows
 ```
 
-### 2. Configure Windows Hosts
+### 2. Configure Windows hosts
 
 Ensure your Windows hosts have WinRM configured. You can use the `Enable-GDSWindowsRemoting` function from the `GDS.WindowsOS` module, or the `ConfigureRemotingForAnsible.ps1` script from the Ansible documentation:
 
@@ -205,7 +234,7 @@ Enable-GDSWindowsRemoting -ForceNewSSLCert
 Enable-GDSWindowsRemoting -ForceNewSSLCert -EnableBasicAuth -EnableLocalAccountTokenFilter
 ```
 
-### 3. Security Best Practices
+### 3. Security best practices
 
 The `Enable-GDSWindowsRemoting` function is designed with **Secure Defaults**:
 
@@ -213,7 +242,7 @@ The `Enable-GDSWindowsRemoting` function is designed with **Secure Defaults**:
 2. **Basic Auth Disabled**: Basic Authentication is disabled by default to prevent credential theft. Use Kerberos (Domain) or Certificate authentication.
 3. **Local Admin Restricted**: Remote access for local administrator accounts (via `LocalAccountTokenFilterPolicy`) is disabled by default. This reduces the attack surface for Pass-the-Hash attacks.
 
-### 4. Understanding Certificate Thumbprints
+### 4. Understanding certificate thumbprints
 
 A **Certificate Thumbprint** is a unique hexadecimal string that identifies a specific certificate. `Enable-GDSWindowsRemoting` requires this to bind the correct SSL certificate to the WinRM listener.
 
@@ -230,7 +259,7 @@ A **Certificate Thumbprint** is a unique hexadecimal string that identifies a sp
 
 > **Note:** For production environments, it is best practice to use a certificate issued by a trusted Internal Certificate Authority (CA) rather than a self-signed certificate.
 
-### 5. Managing WinRM Configuration with Ansible
+### 5. Managing WinRM configuration with Ansible
 
 Once you have initial connectivity, you can use Ansible to maintain the WinRM configuration using the `GDS.WindowsOS` module.
 
@@ -255,11 +284,11 @@ Once you have initial connectivity, you can use Ansible to maintain the WinRM co
       changed_when: "'PS Remoting has been successfully configured' in winrm_config.verbose_stream"
 ```
 
-### 6. Configure Kerberos Authentication (Recommended)
+### 6. Configure Kerberos authentication (recommended)
 
 To securely connect to Windows hosts using WinRM over HTTPS with a domain account, you must configure Kerberos on your Ansible control node.
 
-#### Workflow Diagram
+#### Workflow diagram
 
 ```mermaid
 sequenceDiagram
@@ -287,7 +316,7 @@ sequenceDiagram
     Win-->>Ans: WinRM Response (Encrypted)
 ```
 
-#### Configuration Steps
+#### Configuration steps
 
 1. **Install Kerberos Packages**:
 
@@ -321,9 +350,9 @@ sequenceDiagram
     ansible_winrm_server_cert_validation: validate
     ```
 
-## Quick Start
+## Quick start
 
-### 1. Update Inventory
+### 1. Update inventory
 
 The inventory is organized by environment directory. Each environment is completely isolated:
 
@@ -350,26 +379,26 @@ linux
 
 Connection settings are in each environment's `group_vars/all.yml`.
 
-### 2. Run the Playbook
+### 2. Run the playbook
 
 ```bash
 # Test connectivity (Windows hosts)
 ansible -i inventory/production windows -m win_ping
 
 # Run against production Windows hosts
-ansible-playbook windows_service_account_rights.yml -i inventory/production -e "target_hosts=windows"
+ansible-playbook playbooks/configure_win_service_rights.yml -i inventory/production -e "target_hosts=windows"
 
 # Run against staging Windows hosts
-ansible-playbook windows_service_account_rights.yml -i inventory/staging -e "target_hosts=windows"
+ansible-playbook playbooks/configure_win_service_rights.yml -i inventory/staging -e "target_hosts=windows"
 
 # Run against development Windows hosts
-ansible-playbook windows_service_account_rights.yml -i inventory/development -e "target_hosts=windows"
+ansible-playbook playbooks/configure_win_service_rights.yml -i inventory/development -e "target_hosts=windows"
 
 # Run against test Windows hosts
-ansible-playbook windows_service_account_rights.yml -i inventory/test -e "target_hosts=windows"
+ansible-playbook playbooks/configure_win_service_rights.yml -i inventory/test -e "target_hosts=windows"
 ```
 
-### 3. Verify Results
+### 3. Verify results
 
 On the Windows server, check the Local Security Policy:
 
@@ -380,9 +409,9 @@ On the Windows server, check the Local Security Policy:
    * Perform volume maintenance tasks
    * Lock pages in memory
 
-## Available Roles
+## Available roles
 
-### windows_service_account_rights
+### win_service_rights
 
 Retrieves the service account for a Windows service and grants it specific user rights assignments.
 
@@ -393,37 +422,48 @@ Retrieves the service account for a Windows service and grants it specific user 
 * Configurable for any Windows service
 * Includes validation and error handling
 
-See [roles/windows_service_account_rights/README.md](roles/windows_service_account_rights/README.md) for detailed documentation.
+See [roles/win_service_rights/README.md](roles/win_service_rights/README.md) for detailed documentation.
 
-## Common Use Cases
+[↑ Back to Table of Contents](#table-of-contents)
 
-### SQL Server Default Instance (Production)
+## Common use cases
 
-```bash
-ansible-playbook windows_service_account_rights.yml -i inventory/production -e "target_hosts=windows"
-```
-
-### SQL Server Named Instance (Staging)
+### SQL Server default instance (production)
 
 ```bash
-ansible-playbook windows_service_account_rights.yml -i inventory/staging -e "target_hosts=windows" -e "service_name=MSSQL\$INSTANCENAME"
+ansible-playbook playbooks/configure_win_service_rights.yml -i inventory/production -e "target_hosts=windows"
 ```
 
-### Remove User Rights (Production)
+### SQL Server named instance (staging)
 
 ```bash
-ansible-playbook windows_service_account_rights.yml -i inventory/production -e "target_hosts=windows" -e "user_rights_action=remove"
+ansible-playbook playbooks/configure_win_service_rights.yml -i inventory/staging \
+  -e "target_hosts=windows" \
+  -e "target_service_name=MSSQL\$INSTANCENAME"
 ```
 
-### Grant Specific Rights Only (Development)
+### Remove user rights (production)
 
 ```bash
-ansible-playbook windows_service_account_rights.yml -i inventory/development -e "target_hosts=windows" -e '{"user_rights_to_grant": ["SeManageVolumePrivilege", "SeLockMemoryPrivilege"]}'
+ansible-playbook playbooks/configure_win_service_rights.yml -i inventory/production \
+  -e "target_hosts=windows" \
+  -e "target_service_name=MSSQLSERVER" \
+  -e "target_state=absent"
 ```
+
+### Target specific service only (development)
+
+```bash
+ansible-playbook playbooks/configure_win_service_rights.yml -i inventory/development \
+  -e "target_hosts=windows" \
+  -e "target_service_name=SQLSentryServer"
+```
+
+[↑ Back to Table of Contents](#table-of-contents)
 
 ## Troubleshooting
 
-### Connection Issues
+### Connection issues
 
 ```bash
 # Test WinRM connectivity
@@ -433,11 +473,11 @@ ansible windows -m win_ping -vvv
 klist
 ```
 
-### Permission Issues
+### Permission issues
 
 Ensure your Ansible user has administrative privileges on the target Windows hosts.
 
-### Service Not Found
+### Service not found
 
 Verify the service name:
 
@@ -446,7 +486,9 @@ Verify the service name:
 ansible windows -m ansible.windows.win_service_info
 ```
 
-## Security Considerations
+[↑ Back to Table of Contents](#table-of-contents)
+
+## Security considerations
 
 * Use Kerberos authentication for domain environments
 * Store passwords in Ansible Vault, not plain text
@@ -454,9 +496,11 @@ ansible windows -m ansible.windows.win_service_info
 * Enable certificate validation in production environments
 * Follow the principle of least privilege for service accounts
 
-## Additional Resources
+## Additional resources
 
 * [Ansible Windows Documentation](https://docs.ansible.com/ansible/latest/os_guide/windows.html)
 * [SQL Server User Rights Requirements](https://learn.microsoft.com/en-us/sql/database-engine/configure-windows/configure-windows-service-accounts-and-permissions)
 * [Windows User Rights Assignment](https://learn.microsoft.com/en-us/windows/security/threat-protection/security-policy-settings/user-rights-assignment)
 * [Ansible Lint](https://ansible.readthedocs.io/projects/lint/)
+
+[↑ Back to Table of Contents](#table-of-contents)
