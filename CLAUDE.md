@@ -73,3 +73,20 @@ Key standards documents:
 - `docs/development/coding-standards/python-coding-standards.md`
 - `docs/development/coding-standards/powershell-coding-standards.md`
 - `docs/best-practices/documentation-standards.md`
+
+## Liquibase Tutorial Testing
+
+When modifying the Liquibase tutorial in `docs/courses/liquibase/`, ensure the corresponding test scripts are updated:
+
+| Tutorial | Test Script |
+|----------|-------------|
+| `learning-paths/series-part1-baseline.md` | `scripts/test_part1_baseline.sh` |
+
+After making changes to a tutorial or its scripts, run the test to verify everything works:
+
+```bash
+cd docs/courses/liquibase/scripts
+./test_part1_baseline.sh
+```
+
+The test script executes the same scripts as the tutorial - it should not contain duplicate validation logic.
