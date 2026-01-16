@@ -27,7 +27,7 @@ NC='\033[0m'
 # Check if a port is available
 is_port_available() {
     local port=$1
-    
+
     # Check if container runtime is using this port
     if command -v podman &>/dev/null; then
         if podman ps --format '{{.Ports}}' 2>/dev/null | grep -q "0.0.0.0:${port}->"; then
@@ -39,7 +39,7 @@ is_port_available() {
             return 1
         fi
     fi
-    
+
     # Check using ss (most common on Linux)
     if command -v ss &>/dev/null; then
         if ss -tuln 2>/dev/null | grep -q ":${port} "; then
@@ -56,7 +56,7 @@ is_port_available() {
             return 1
         fi
     fi
-    
+
     return 0
 }
 
@@ -69,11 +69,11 @@ find_available_ports() {
     local max_attempts=100
     local port=$start_port
     local found_ports=()
-    
+
     for ((attempt=0; attempt<max_attempts; attempt++)); do
         found_ports=()
         local all_available=true
-        
+
         # Check if 'count' consecutive ports are available
         for ((i=0; i<count; i++)); do
             local check_port=$((port + i))
@@ -86,13 +86,13 @@ find_available_ports() {
                 break
             fi
         done
-        
+
         if [[ "$all_available" == "true" ]]; then
             echo "${found_ports[*]}"
             return 0
         fi
     done
-    
+
     echo "ERROR: Could not find $count consecutive available ports after $max_attempts attempts" >&2
     return 1
 }
@@ -215,7 +215,7 @@ else
             local var_name=$(echo "${container}" | tr '[:lower:]' '[:upper:]')_PORT
             ports_content+="${var_name}=${port}"$'\n'
         done
-        
+
         if echo "$ports_content" > "$ports_file" 2>/dev/null; then
             echo -e "${GREEN}✓ Saved port assignments to $ports_file${NC}"
         elif sudo bash -c "cat > '$ports_file' && chown $USER:$USER '$ports_file'" <<< "$ports_content" 2>/dev/null; then
@@ -256,10 +256,10 @@ if [[ "$USE_PODMAN_RUN" == "true" ]]; then
     mkdir -p "$LIQUIBASE_TUTORIAL_DATA_DIR/mssql_dev" \
              "$LIQUIBASE_TUTORIAL_DATA_DIR/mssql_stg" \
              "$LIQUIBASE_TUTORIAL_DATA_DIR/mssql_prd"
-    
+
     # Remove existing containers if they exist
     $CR_CMD rm -f mssql_dev mssql_stg mssql_prd 2>/dev/null || true
-    
+
     # Start dev container
     echo "Starting mssql_dev on port $MSSQL_DEV_PORT..."
     $CR_CMD run -d --name mssql_dev \
@@ -271,7 +271,7 @@ if [[ "$USE_PODMAN_RUN" == "true" ]]; then
         -e MSSQL_PID=Developer \
         -v "$LIQUIBASE_TUTORIAL_DATA_DIR/mssql_dev:/var/opt/mssql:Z,U" \
         "$MSSQL_IMAGE" 2>&1
-    
+
     # Start staging container
     echo "Starting mssql_stg on port $MSSQL_STG_PORT..."
     $CR_CMD run -d --name mssql_stg \
@@ -283,7 +283,7 @@ if [[ "$USE_PODMAN_RUN" == "true" ]]; then
         -e MSSQL_PID=Developer \
         -v "$LIQUIBASE_TUTORIAL_DATA_DIR/mssql_stg:/var/opt/mssql:Z,U" \
         "$MSSQL_IMAGE" 2>&1
-    
+
     # Start production container
     echo "Starting mssql_prd on port $MSSQL_PRD_PORT..."
     $CR_CMD run -d --name mssql_prd \
@@ -295,11 +295,11 @@ if [[ "$USE_PODMAN_RUN" == "true" ]]; then
         -e MSSQL_PID=Developer \
         -v "$LIQUIBASE_TUTORIAL_DATA_DIR/mssql_prd:/var/opt/mssql:Z,U" \
         "$MSSQL_IMAGE" 2>&1
-    
+
     # Save port assignments for other scripts to discover
     write_ports_file "mssql" "mssql_dev:$MSSQL_DEV_PORT" "mssql_stg:$MSSQL_STG_PORT" "mssql_prd:$MSSQL_PRD_PORT"
 else
-    # Use compose for other platforms
+    # Use compose for other platforms (Ubuntu/Debian with Docker)
     # Detect container compose tool
     if command -v podman-compose &>/dev/null; then
         COMPOSE_CMD="podman-compose"
@@ -313,11 +313,26 @@ else
         echo -e "${RED}ERROR: No container compose tool found${NC}"
         exit 1
     fi
-    
+
+    # For Docker, set up data directory permissions before starting containers
+    # SQL Server runs as mssql user (UID 10001) inside the container and needs write access
+    # Docker ignores the :U volume flag (Podman-specific), so we must set permissions manually
+    if [[ "$CR_CMD" == "docker" ]]; then
+        echo "Setting up data directories for Docker..."
+        for env in dev stg prd; do
+            dir="$LIQUIBASE_TUTORIAL_DATA_DIR/mssql_${env}"
+            mkdir -p "$dir"
+            # Set permissions to allow mssql user (UID 10001) to write
+            # chmod 777 is used because Docker doesn't map UIDs like Podman does
+            chmod 777 "$dir"
+        done
+        echo -e "${GREEN}✓ Data directories created with write permissions${NC}"
+    fi
+
     echo "Using: $COMPOSE_CMD"
     cd "$DOCKER_DIR"
     $COMPOSE_CMD up -d mssql_dev mssql_stg mssql_prd 2>&1
-    
+
     # Save port assignments for other scripts to discover
     write_ports_file "mssql" "mssql_dev:$MSSQL_DEV_PORT" "mssql_stg:$MSSQL_STG_PORT" "mssql_prd:$MSSQL_PRD_PORT"
 fi
