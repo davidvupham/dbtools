@@ -66,7 +66,6 @@ RUN set -eux; \
 # ------------------------------------------------------------------------------
 # SNOWSQL_DEST: Where the snowsql binary is installed
 # SNOWSQL_CONFIG_PATH: Where snowsql looks for config files (can be overridden)
-# Users can mount their config: -v ~/.snowsql:/home/snowsql/.snowsql:ro
 #
 ENV SNOWSQL_DEST=/opt/snowsql \
     PATH="/opt/snowsql:${PATH}"
@@ -105,28 +104,69 @@ CMD ["--version"]
 #   docker build -t snowsql:latest .
 #   podman build -t snowsql:latest --format docker .
 #
-# RUN:
-#   docker run --rm snowsql:latest --version
-#
-# PERSISTENT FILES:
+# CONFIGURATION:
 #   SnowSQL stores config/credentials in ~/.snowsql/ which includes:
 #   - config: Connection settings and credentials
 #   - history: Command history
 #   - logs/: Log files
 #
-#   Mount your config directory for persistent settings:
-#   docker run --rm -it -v ~/.snowsql:/home/snowsql/.snowsql snowsql:latest
+#   Mount your host's ~/.snowsql directory for persistent settings.
+#   The mount requires read-write access so SnowSQL can:
+#   - Read your connection configurations and credentials
+#   - Write command history
+#   - Write log files
 #
-# EXAMPLES:
+# DOCKER EXAMPLES:
+#   # Verify installation
+#   docker run --rm snowsql:latest --version
+#
+#   # Connect using a named connection from your config
+#   docker run --rm -it \
+#     -v ~/.snowsql:/home/snowsql/.snowsql \
+#     snowsql:latest -c myconnection
+#
 #   # Interactive connection (will prompt for credentials)
-#   docker run --rm -it snowsql:latest -a <account> -u <user>
+#   docker run --rm -it \
+#     -v ~/.snowsql:/home/snowsql/.snowsql \
+#     snowsql:latest -a <account> -u <user>
 #
-#   # With mounted config file (recommended for persistent credentials)
-#   docker run --rm -it -v ~/.snowsql:/home/snowsql/.snowsql:ro snowsql:latest -c myconnection
-#
-#   # Run SQL file
-#   docker run --rm -v ./scripts:/data snowsql:latest -a <account> -u <user> -f /data/script.sql
+#   # Run SQL file with mounted scripts directory
+#   docker run --rm \
+#     -v ~/.snowsql:/home/snowsql/.snowsql \
+#     -v ./scripts:/data \
+#     snowsql:latest -c myconnection -f /data/script.sql
 #
 #   # Pass credentials via environment (less secure, useful for CI)
-#   docker run --rm -e SNOWSQL_ACCOUNT=myaccount -e SNOWSQL_USER=myuser -e SNOWSQL_PWD=mypass snowsql:latest
+#   docker run --rm \
+#     -e SNOWSQL_ACCOUNT=myaccount \
+#     -e SNOWSQL_USER=myuser \
+#     -e SNOWSQL_PWD=mypass \
+#     snowsql:latest
+#
+# PODMAN EXAMPLES:
+#   # Verify installation
+#   podman run --rm snowsql:latest --version
+#
+#   # Connect using a named connection from your config
+#   podman run --rm -it \
+#     -v ~/.snowsql:/home/snowsql/.snowsql \
+#     snowsql:latest -c myconnection
+#
+#   # Interactive connection (will prompt for credentials)
+#   podman run --rm -it \
+#     -v ~/.snowsql:/home/snowsql/.snowsql \
+#     snowsql:latest -a <account> -u <user>
+#
+#   # Run SQL file with mounted scripts directory
+#   podman run --rm \
+#     -v ~/.snowsql:/home/snowsql/.snowsql \
+#     -v ./scripts:/data \
+#     snowsql:latest -c myconnection -f /data/script.sql
+#
+#   # Pass credentials via environment (less secure, useful for CI)
+#   podman run --rm \
+#     -e SNOWSQL_ACCOUNT=myaccount \
+#     -e SNOWSQL_USER=myuser \
+#     -e SNOWSQL_PWD=mypass \
+#     snowsql:latest
 # ==============================================================================
