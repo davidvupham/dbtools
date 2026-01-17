@@ -247,3 +247,51 @@ sudo rm -rf /data/rabbitmq/* /logs/rabbitmq/*
 ```
 
 Happy messaging!
+
+## Podman alternative
+
+Replace `docker` with `podman` for all commands on RHEL/CentOS systems:
+
+```bash
+# Build
+podman build -t gds-rabbitmq:latest .
+
+# Or build with compose
+podman-compose build rabbitmq1
+
+# Start
+podman-compose up -d
+
+# Start with wait for health
+podman-compose up -d --wait
+
+# Stop
+podman-compose down
+
+# Restart
+podman-compose restart rabbitmq1
+
+# View logs
+podman logs -f rabbitmq1
+
+# Execute commands
+podman exec -it rabbitmq1 rabbitmqctl status
+podman exec -it rabbitmq1 rabbitmqadmin --username="$RABBITMQ_DEFAULT_USER" --password="$RABBITMQ_DEFAULT_PASS" list queues
+
+# Check health
+podman inspect --format='{{.State.Health.Status}}' rabbitmq1
+```
+
+On RHEL/Fedora with SELinux, add `:Z` to volume mounts for proper labeling:
+
+```bash
+podman run -d \
+  --name rabbitmq1 \
+  -e RABBITMQ_DEFAULT_USER="$RABBITMQ_DEFAULT_USER" \
+  -e RABBITMQ_DEFAULT_PASS="$RABBITMQ_DEFAULT_PASS" \
+  -p 5672:5672 \
+  -p 15672:15672 \
+  -v /data/rabbitmq:/var/lib/rabbitmq:Z \
+  -v /logs/rabbitmq:/var/log/rabbitmq:Z \
+  gds-rabbitmq:latest
+```

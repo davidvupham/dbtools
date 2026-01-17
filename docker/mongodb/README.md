@@ -377,3 +377,45 @@ docker-compose start
 - [MongoDB Replica Set Documentation](https://www.mongodb.com/docs/manual/replication/)
 - [MongoDB Configuration File Options](https://www.mongodb.com/docs/manual/reference/configuration-options/)
 - [Deploy a Replica Set](https://www.mongodb.com/docs/manual/tutorial/deploy-replica-set/)
+
+## Podman alternative
+
+Replace `docker` with `podman` for all commands on RHEL/CentOS systems:
+
+```bash
+# Build
+podman-compose build
+
+# Start all instances
+podman-compose up -d
+
+# Stop all instances
+podman-compose down
+
+# Individual instance control
+podman-compose up -d mongodb1
+podman-compose stop mongodb1
+podman-compose restart mongodb1
+
+# View logs
+podman logs mongodb1
+podman-compose logs -f
+
+# Execute commands
+podman exec -it mongodb1 mongosh
+
+# Manual build
+podman build -t gds-mongodb:latest .
+
+# Check status
+podman ps | grep mongodb
+```
+
+On RHEL/Fedora with SELinux, add `:Z` to volume mounts for proper labeling:
+
+```bash
+podman run -d \
+  -v /data/mongodb/mongodb1/data:/data/mongodb/mongodb1/data:Z \
+  -v /logs/mongodb/mongodb1:/logs/mongodb/mongodb1:Z \
+  gds-mongodb:latest
+```

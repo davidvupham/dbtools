@@ -14,6 +14,12 @@ Build the execution environment:
 docker build -t awx-ee:latest .
 ```
 
+## Podman alternative
+
+```bash
+podman build -t awx-ee:latest .
+```
+
 ## Related
 
 - [AWX Setup](../awx/README.md) - Main AWX configuration

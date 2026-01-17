@@ -66,3 +66,26 @@ Override these in your shell or a `.env` file before starting:
 | `AWX_POSTGRES_PASSWORD` | `awxpass` | PostgreSQL database password |
 
 For production deployments, always set `AWX_ADMIN_PASSWORD` and `AWX_SECRET_KEY` to secure values.
+
+## Podman alternative
+
+Replace `docker` with `podman` for all commands:
+
+```bash
+# Build
+podman build -t dbtools/awx:24.6.1 .
+
+# Create network
+podman network create devcontainer-network
+
+# Start the stack
+podman-compose -f docker-compose.ansible-awx.yml up -d
+
+# Check logs
+podman logs -f awx-controller
+
+# Stop the stack
+podman-compose -f docker-compose.ansible-awx.yml down
+```
+
+On RHEL/Fedora with SELinux, add `:Z` to volume mounts for proper labeling.

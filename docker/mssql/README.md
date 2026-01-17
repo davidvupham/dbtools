@@ -601,3 +601,46 @@ docker events --filter container=mssql1 --since 1h
 4. **SSL/TLS**: The `-C` flag bypasses certificate validation. For production, use proper certificates
 
 5. **SA Account**: Create dedicated login accounts instead of using SA for applications
+
+## Podman alternative
+
+Replace `docker` with `podman` for all commands on RHEL/CentOS systems:
+
+```bash
+# Build
+podman build -t gds-mssql:latest .
+
+# Start with compose
+podman-compose up -d
+
+# Stop
+podman-compose down
+
+# View logs
+podman logs mssql1
+podman logs -f mssql1
+
+# Execute commands
+podman exec -it mssql1 bash
+podman exec -it mssql1 bash -lc '/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U SA -P "$MSSQL_SA_PASSWORD"'
+
+# Check status
+podman ps --filter name=mssql1
+
+# Inspect container
+podman inspect mssql1
+
+# Manual run
+podman run -d \
+  --name mssql1 \
+  -e ACCEPT_EULA=Y \
+  -e MSSQL_PID=Developer \
+  -e MSSQL_SA_PASSWORD="${MSSQL_SA_PASSWORD}" \
+  -p 1433:1433 \
+  -v /data/mssql:/data/mssql:Z \
+  -v /logs/mssql:/logs/mssql:Z \
+  -v /data/mssql/mssql1:/var/opt/mssql:Z \
+  gds-mssql:latest
+```
+
+On RHEL/Fedora with SELinux, add `:Z` to volume mounts for proper labeling.

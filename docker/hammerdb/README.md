@@ -55,3 +55,29 @@ docker run --network=devcontainer-network gds-hammerdb ...
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `HAMMERDB_CLI_PATH` | `/opt/hammerdb/hammerdbcli` | Path to HammerDB CLI |
+
+## Podman alternative
+
+Replace `docker` with `podman` for all commands:
+
+```bash
+# Build
+podman build -t gds-hammerdb -f docker/hammerdb/Dockerfile .
+
+# Interactive shell
+podman run -it --rm gds-hammerdb /bin/bash
+
+# Run a Tcl script (note :Z for SELinux)
+podman run -it --rm -v $(pwd)/scripts:/benchmarks:Z gds-hammerdb auto /benchmarks/my_script.tcl
+
+# Create network
+podman network create devcontainer-network
+
+# Run via Compose
+podman-compose up -d
+
+# Run standalone with network
+podman run --network=devcontainer-network gds-hammerdb ...
+```
+
+On RHEL/Fedora with SELinux, add `:Z` to volume mounts for proper labeling.

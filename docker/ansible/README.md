@@ -24,3 +24,23 @@ docker build \
 
 See `docker/docker-compose.ansible-awx.yml` for a ready-to-run service that mounts the repository into
 `/workspace` and reuses the shared `devcontainer-network` bridge.
+
+## Podman alternative
+
+Replace `docker` with `podman` for all commands:
+
+```bash
+# Build
+podman build -t dbtools/ansible:latest .
+
+# Build with custom versions
+podman build \
+  --build-arg ANSIBLE_VERSION=10.4.0 \
+  --build-arg ANSIBLE_LINT_VERSION=24.9.0 \
+  -t dbtools/ansible:latest .
+
+# Run via Compose
+podman-compose -f docker/docker-compose.ansible-awx.yml up -d
+```
+
+On RHEL/Fedora with SELinux, add `:Z` to volume mounts for proper labeling.

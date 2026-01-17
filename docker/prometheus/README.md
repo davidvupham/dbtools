@@ -254,3 +254,30 @@ services:
     ports:
       - "9091:9090"  # Change host port
 ```
+
+## Podman alternative
+
+Replace `docker` with `podman` for all commands on RHEL/CentOS systems:
+
+```bash
+# Create network
+podman network create devcontainer-network
+
+# Start services
+podman-compose up -d
+
+# With override file for dev container
+podman-compose -f docker-compose.yml -f docker-compose.devcontainer.yml up -d
+
+# Check status
+podman-compose ps
+
+# View logs
+podman logs prometheus
+podman logs grafana
+
+# Stop services
+podman-compose down
+```
+
+On RHEL/Fedora with SELinux, add `:Z` to volume mounts for proper labeling.

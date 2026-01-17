@@ -2,6 +2,25 @@
 
 This directory contains Docker Compose configurations for local development services.
 
+## Podman compatibility
+
+All services support both Docker and Podman. On RHEL/CentOS systems where Podman is the default container runtime, use these command equivalents:
+
+| Docker command | Podman equivalent |
+|----------------|-------------------|
+| `docker compose` | `podman-compose` or `podman compose` |
+| `docker build` | `podman build` |
+| `docker run` | `podman run` |
+| `docker exec` | `podman exec` |
+| `docker logs` | `podman logs` |
+| `docker ps` | `podman ps` |
+| `docker images` | `podman images` |
+| `docker inspect` | `podman inspect` |
+
+**SELinux volume labels**: On RHEL/Fedora with SELinux enabled, add `:Z` to volume mounts for private unshared labels or `:z` for shared labels.
+
+See [Podman cheatsheet](../docs/reference/podman/cheatsheet.md) for more details.
+
 ## Services overview
 
 | Service | Description | Port(s) |
@@ -24,23 +43,37 @@ This directory contains Docker Compose configurations for local development serv
 ### Start all common services
 
 ```bash
+# Docker
 docker compose -f docker/docker-compose.yml up -d
+
+# Podman
+podman-compose -f docker/docker-compose.yml up -d
 ```
 
 ### Start a specific service
 
 ```bash
-# Example: Start PostgreSQL
+# Docker - Start PostgreSQL
 docker compose -f docker/postgresql/docker-compose.yml up -d
 
-# Example: Start Vault
+# Podman - Start PostgreSQL
+podman-compose -f docker/postgresql/docker-compose.yml up -d
+
+# Docker - Start Vault
 docker compose -f docker/hvault/docker-compose.yml up -d
+
+# Podman - Start Vault
+podman-compose -f docker/hvault/docker-compose.yml up -d
 ```
 
 ### Start AWX stack
 
 ```bash
+# Docker
 docker compose -f docker/docker-compose.ansible-awx.yml up -d
+
+# Podman
+podman-compose -f docker/docker-compose.ansible-awx.yml up -d
 ```
 
 ## Service directory structure

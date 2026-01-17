@@ -744,3 +744,35 @@ These recommendations distill guidance from the official [HashiCorp Vault Produc
 ---
 
 By following this tutorial, you should now understand the purpose of HashiCorp Vault, how to install and configure it, how to manage secrets and policies, and how to extend Vault to advanced operational and integration scenarios. Continue experimenting with real workloads, iterate on policies, and automate Vault configuration to embed it deeply into your security posture.
+
+---
+
+## Podman alternative
+
+Replace `docker` with `podman` for all commands on RHEL/CentOS systems:
+
+```bash
+# Dev mode
+podman-compose -f docker-compose.dev.yml up -d
+
+# Production mode
+podman-compose up -d
+
+# Check logs
+podman logs -f vault
+
+# Execute commands
+podman exec -it vault vault status
+
+# Using podman run
+podman run --cap-add=IPC_LOCK -e 'VAULT_DEV_ROOT_TOKEN_ID=root' hashicorp/vault server -dev
+```
+
+On RHEL/Fedora with SELinux, add `:Z` to volume mounts for proper labeling:
+
+```bash
+podman run --cap-add=IPC_LOCK \
+  -v /data/vault/vault1:/vault/data:Z \
+  -v /logs/vault/vault1:/vault/logs:Z \
+  hashicorp/vault server -config=/vault/config/vault.hcl
+```

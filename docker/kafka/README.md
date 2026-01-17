@@ -876,3 +876,41 @@ For issues specific to this setup:
 4. Ensure Docker has sufficient resources (4GB+ RAM)
 
 For Kafka-specific questions, consult the official Apache Kafka documentation.
+
+## Podman alternative
+
+Replace `docker` with `podman` for all commands on RHEL/CentOS systems:
+
+```bash
+# Build images
+podman-compose build
+
+# Start services
+podman-compose up -d
+
+# Check status
+podman-compose ps
+
+# View logs
+podman-compose logs -f kafka
+podman-compose logs -f zookeeper
+
+# Execute Kafka commands
+podman-compose exec kafka kafka-topics --list --bootstrap-server localhost:9092
+
+# Create network
+podman network create kafka-network
+
+# Stop services
+podman-compose down
+```
+
+On RHEL/Fedora with SELinux, add `:Z` to volume mounts for proper labeling:
+
+```bash
+podman run -d \
+  -v /data/kafka/logs:/data/kafka/logs:Z \
+  -v /logs/kafka:/logs/kafka:Z \
+  --network kafka-network \
+  gds-kafka:latest
+```

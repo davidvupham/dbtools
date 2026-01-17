@@ -236,3 +236,48 @@ docker exec -it psql2 bash
 ls -lh /data/postgresql/psql1/
 ls -lh /data/postgresql/psql2/
 ```
+
+## Podman alternative
+
+Replace `docker` with `podman` for all commands on RHEL/CentOS systems:
+
+```bash
+# Build and start both instances
+podman-compose up -d
+
+# Start individual instance
+podman-compose up -d psql1
+
+# Stop instances
+podman-compose stop
+podman-compose stop psql1
+
+# Remove instances
+podman-compose down
+
+# View logs
+podman logs psql1
+podman-compose logs psql1
+
+# Execute commands
+podman exec -it psql1 psql -U postgres
+podman exec -it psql1 bash
+
+# Check status
+podman ps --filter name=psql
+
+# Rebuild
+podman-compose up -d --build psql1
+```
+
+On RHEL/Fedora with SELinux, add `:Z` to volume mounts for proper labeling:
+
+```bash
+podman run -d \
+  --name psql1 \
+  -e POSTGRES_PASSWORD="${POSTGRES_PASSWORD}" \
+  -p 5432:5432 \
+  -v /data/postgresql/psql1:/var/lib/postgresql/data:Z \
+  -v /logs/postgresql:/var/log/postgresql:Z \
+  gds-postgresql:latest
+```
