@@ -2,64 +2,109 @@
 
 This directory contains various utility scripts for development, testing, database management, and infrastructure troubleshooting within the **dbtools** project.
 
-## 📂 Content Overview
+## Directory structure
 
-| Script | Category | Description |
-|--------|----------|-------------|
-| [`lint.sh`](./lint.sh) | Dev / Quality | Wrapper for `ruff` to lint (check), format, and fix code issues. |
-| [`generate_synthetic_metrics.py`](./generate_synthetic_metrics.py) | Monitoring | Generates fake metric data (CPU, error rates) for testing monitoring pipelines. |
-| [`diagnose_vault_approle.py`](./diagnose_vault_approle.py) | Vault | Diagnostic tool for troubleshooting Vault AppRole authentication (403/404 errors). |
-| [`fix-liquibase-baseline.py`](./fix-liquibase-baseline.py) | Database / Liquibase | Fixes and enhances Liquibase XML baseline files for SQL Server. |
-| [`prompt_mssql_password.sh`](./prompt_mssql_password.sh) | Database | Securely prompts for and sets the `MSSQL_SA_PASSWORD` env var. |
-| [`verify_sqlserver.sh`](./verify_sqlserver.sh) | Database | Verifies SQL Server connectivity via `sqlcmd` and `pyodbc`. |
-| [`verify_pyodbc.sh`](./verify_pyodbc.sh) | Database | specific verification for Python ODBC driver installation and configuration. |
-| [`add_test_docstrings.py`](./add_test_docstrings.py) | Dev / Docs | Bulk-adds minimal docstrings to `pytest` test functions. |
-| [`validate_oop_docs.py`](./validate_oop_docs.py) | Docs | Validates Python code blocks in markdown tutorials by executing them. |
-| [`set_prompt.sh`](./set_prompt.sh) | Shell Config | Sets up a colorful, informative bash prompt with OS detection (ubuntu/redhat/linux). |
+| Directory | Purpose |
+|-----------|---------|
+| [`build/`](./build/) | Build and packaging scripts |
+| [`development/`](./development/) | Development environment and tooling scripts |
+| [`operations/`](./operations/) | Operational and database management scripts |
+| [`validation/`](./validation/) | Verification and validation scripts |
+
+## Content overview
+
+### Build scripts (`build/`)
+
+| Script | Description |
+|--------|-------------|
+| [`build_container_image.sh`](./build/build_container_image.sh) | Builds container images for the project |
+| [`lint.sh`](./build/lint.sh) | Wrapper for `ruff` to lint (check), format, and fix code issues |
+
+### Development scripts (`development/`)
+
+| Script | Description |
+|--------|-------------|
+| [`add_test_docstrings.py`](./development/add_test_docstrings.py) | Bulk-adds minimal docstrings to `pytest` test functions |
+| [`set_prompt.sh`](./development/set_prompt.sh) | Sets up a colorful, informative bash prompt with OS detection |
+| [`devcontainer/`](./development/devcontainer/) | Dev container helper scripts |
+
+### Operations scripts (`operations/`)
+
+| Script | Description |
+|--------|-------------|
+| [`fix-liquibase-baseline.py`](./operations/fix-liquibase-baseline.py) | Fixes and enhances Liquibase XML baseline files for SQL Server |
+| [`diagnose_vault_approle.py`](./operations/diagnose_vault_approle.py) | Diagnostic tool for troubleshooting Vault AppRole authentication |
+| [`prompt_mssql_password.sh`](./operations/prompt_mssql_password.sh) | Securely prompts for and sets the `MSSQL_SA_PASSWORD` env var |
+| [`generate_synthetic_metrics.py`](./operations/generate_synthetic_metrics.py) | Generates fake metric data for testing monitoring pipelines |
+| [`compare_directories.sh`](./operations/compare_directories.sh) | Compares directory contents |
+| [`new-weekly-status.ps1`](./operations/new-weekly-status.ps1) | Creates weekly status reports |
+| [`Merge-ToPfx.ps1`](./operations/Merge-ToPfx.ps1) | Merges certificate files to PFX format |
+| [`Sign-GDSModule.ps1`](./operations/Sign-GDSModule.ps1) | Signs PowerShell modules |
+
+### Validation scripts (`validation/`)
+
+| Script | Description |
+|--------|-------------|
+| [`validate_links.py`](./validation/validate_links.py) | Validates links in documentation |
+| [`validate_oop_docs.py`](./validation/validate_oop_docs.py) | Validates Python code blocks in markdown tutorials |
+| [`verify_devcontainer.sh`](./validation/verify_devcontainer.sh) | Verifies dev container configuration |
+| [`verify_sqlserver.sh`](./validation/verify_sqlserver.sh) | Verifies SQL Server connectivity |
+| [`verify_pyodbc.sh`](./validation/verify_pyodbc.sh) | Verifies Python ODBC driver installation |
 
 ---
 
-## 🛠️ Usage Details
+## Usage details
 
-### Development & Quality Assurance
+### Build scripts
 
 #### `lint.sh`
 
 A convenient wrapper around `ruff`.
 
 ```bash
-./scripts/lint.sh           # Check for errors
-./scripts/lint.sh --fix     # Auto-fix errors
-./scripts/lint.sh --format  # Format code
-./scripts/lint.sh --watch   # Watch mode for continuous checking
+./scripts/build/lint.sh           # Check for errors
+./scripts/build/lint.sh --fix     # Auto-fix errors
+./scripts/build/lint.sh --format  # Format code
+./scripts/build/lint.sh --watch   # Watch mode for continuous checking
 ```
+
+### Development scripts
 
 #### `add_test_docstrings.py`
 
 Automatically adds one-line docstrings to test functions (starting with `test_`) in `gds_*/tests` directories. Useful for enforcing linting rules about missing docstrings.
 
 ```bash
-python scripts/add_test_docstrings.py
+python scripts/development/add_test_docstrings.py
 ```
 
-#### `validate_oop_docs.py`
+#### `set_prompt.sh`
 
-Ensures that code examples in the OOP tutorial markdown files are valid and runnable.
+Configures a colorful, informative bash prompt that displays:
+- OS type (ubuntu/redhat/linux) at the beginning
+- Current date
+- Username and hostname
+- Current working directory
 
 ```bash
-python scripts/validate_oop_docs.py
+# Source it to apply to current shell
+. scripts/development/set_prompt.sh
+
+# Or add to your ~/.bashrc to make it permanent
+echo '. ~/src/dbtools/scripts/development/set_prompt.sh' >> ~/.bashrc
+source ~/.bashrc
 ```
 
-### Database Utilities
+### Operations scripts
 
 #### `fix-liquibase-baseline.py`
 
 Corrects common issues in generated Liquibase baseline files, such as missing schema attributes, and can extract stored procedures from a live DB.
 
-* **Documentation**: [See detailed README](./README-fix-liquibase-baseline.md)
+* **Documentation**: [See detailed README](./operations/README-fix-liquibase-baseline.md)
 
 ```bash
-python scripts/fix-liquibase-baseline.py --baseline-file path/to/baseline.xml --schema app
+python scripts/operations/fix-liquibase-baseline.py --baseline-file path/to/baseline.xml --schema app
 ```
 
 #### `prompt_mssql_password.sh`
@@ -68,30 +113,7 @@ Sets the critical `MSSQL_SA_PASSWORD` environment variable required for many oth
 
 ```bash
 # Source it to apply variables to current shell
-. scripts/prompt_mssql_password.sh
-```
-
-#### `verify_sqlserver.sh` / `verify_pyodbc.sh`
-
-Run these to verify your environment is correctly set up to talk to SQL Server.
-
-```bash
-./scripts/verify_sqlserver.sh
-```
-
-### Infrastructure & Monitoring
-
-#### `generate_synthetic_metrics.py`
-
-Generates stream of synthetic events. Useful for testing Kafka consumers or other metric ingestion pipelines.
-
-```bash
-# Print to stdout
-python scripts/generate_synthetic_metrics.py --metric-name cpu_usage --rate 2
-
-# Write to Kafka
-python scripts/generate_synthetic_metrics.py --metric-name request_errors \
-  --kafka-bootstrap localhost:9092 --kafka-topic metrics
+. scripts/operations/prompt_mssql_password.sh
 ```
 
 #### `diagnose_vault_approle.py`
@@ -102,26 +124,36 @@ If your application can't authenticate with Vault, run this tool. It checks env 
 export VAULT_ADDR=...
 export VAULT_ROLE_ID=...
 export VAULT_SECRET_ID=...
-python scripts/diagnose_vault_approle.py
+python scripts/operations/diagnose_vault_approle.py
 ```
 
-### Shell Configuration
+#### `generate_synthetic_metrics.py`
 
-#### `set_prompt.sh`
-
-Configures a colorful, informative bash prompt that displays:
-- OS type (ubuntu/redhat/linux) at the beginning
-- Current date
-- Username and hostname
-- Current working directory
-
-The prompt uses best-practice color coding for readability and visual hierarchy. OS detection runs once at shell startup for efficiency.
+Generates stream of synthetic events. Useful for testing Kafka consumers or other metric ingestion pipelines.
 
 ```bash
-# Source it to apply to current shell
-. scripts/set_prompt.sh
+# Print to stdout
+python scripts/operations/generate_synthetic_metrics.py --metric-name cpu_usage --rate 2
 
-# Or add to your ~/.bashrc to make it permanent
-echo '. ~/src/dbtools/scripts/set_prompt.sh' >> ~/.bashrc
-source ~/.bashrc
+# Write to Kafka
+python scripts/operations/generate_synthetic_metrics.py --metric-name request_errors \
+  --kafka-bootstrap localhost:9092 --kafka-topic metrics
+```
+
+### Validation scripts
+
+#### `validate_oop_docs.py`
+
+Ensures that code examples in the OOP tutorial markdown files are valid and runnable.
+
+```bash
+python scripts/validation/validate_oop_docs.py
+```
+
+#### `verify_sqlserver.sh` / `verify_pyodbc.sh`
+
+Run these to verify your environment is correctly set up to talk to SQL Server.
+
+```bash
+./scripts/validation/verify_sqlserver.sh
 ```

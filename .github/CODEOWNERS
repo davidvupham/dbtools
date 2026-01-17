@@ -1,6 +1,84 @@
-# CODEOWNERS for documentation governance
-# Require reviews from owners on project docs changes
+# CODEOWNERS - Code ownership for review requirements
+# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
 
+# Default owner for everything
+* @davidvupham
+
+# =============================================================================
+# Python Packages
+# =============================================================================
+
+# Core database abstraction
+/python/gds_database/ @davidvupham
+
+# Database implementations
+/python/gds_postgres/ @davidvupham
+/python/gds_mssql/ @davidvupham
+/python/gds_mongodb/ @davidvupham
+/python/gds_snowflake/ @davidvupham
+
+# Security and secrets
+/python/gds_vault/ @davidvupham
+/python/gds_certs/ @davidvupham
+
+# Observability and messaging
+/python/gds_metrics/ @davidvupham
+/python/gds_kafka/ @davidvupham
+/python/gds_snmp_receiver/ @davidvupham
+/python/gds_notification/ @davidvupham
+
+# Database change management
+/python/gds_liquibase/ @davidvupham
+
+# Performance testing
+/python/gds_benchmark/ @davidvupham
+/python/gds_hammerdb/ @davidvupham
+
+# =============================================================================
+# PowerShell Modules
+# =============================================================================
+
+/PowerShell/ @davidvupham
+
+# =============================================================================
+# Infrastructure
+# =============================================================================
+
+# Ansible automation
+/ansible/ @davidvupham
+
+# Docker configurations
+/docker/ @davidvupham
+
+# Dev container
+/.devcontainer/ @davidvupham
+
+# =============================================================================
+# CI/CD and GitHub Configuration
+# =============================================================================
+
+/.github/workflows/ @davidvupham
+/.github/CODEOWNERS @davidvupham
+
+# =============================================================================
+# Documentation
+# =============================================================================
+
+/docs/ @davidvupham
 /docs/projects/** @davidvupham
 /docs/best-practices/** @davidvupham
 /docs/templates/** @davidvupham
+
+# =============================================================================
+# Configuration Files
+# =============================================================================
+
+# Python configuration
+/pyproject.toml @davidvupham
+/pyrightconfig.json @davidvupham
+
+# Pre-commit and linting
+/.pre-commit-config.yaml @davidvupham
+
+# Makefile
+/Makefile @davidvupham

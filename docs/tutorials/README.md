@@ -5,63 +5,69 @@ Welcome to the dbtools tutorials library. These guides are designed to help you 
 > [!IMPORTANT]
 > **Corporate Registry Requirement**: All Docker images must be pulled via the corporate JFrog registry. Before starting any Docker-based tutorial, please configure your client: [Configure Corporate Docker Registry](../how-to/configure-corporate-docker-registry.md).
 
-## ⭐ Featured Courses
+## Featured courses
 
 - **[Python & Snowflake Course](courses/python-snowflake-monitoring.md)**
   A comprehensive, project-based course taking you from Python basics to building a production-grade Snowflake monitoring application.
 
-## 📚 Tutorials by Topic
+## Tutorials by domain
 
-### Languages & Scripting
+### Languages & scripting (`languages/`)
 
-- **[Python](python/README.md)**: Fundamentals, modern tooling (uv), and app development.
-- **[PowerShell](powershell/README.md)**: Automation, scripting, and Windows management.
-- **[PowerShell DSC v3](powershell-dsc-v3/README.md)**: Desired State Configuration with PowerShell.
-- **[Shell Scripting](shell-scripting/01-basics.md)**: Linux command line and bash scripts.
-- **[OOP](oop/README.md)**: Object-Oriented Programming concepts and patterns.
+- **[Python](languages/python/README.md)**: Fundamentals, modern tooling (uv), and app development.
+- **[PowerShell](languages/powershell/README.md)**: Automation, scripting, and Windows management.
+- **[PowerShell DSC v3](languages/powershell-dsc-v3/README.md)**: Desired State Configuration with PowerShell.
+- **[Shell Scripting](languages/shell-scripting/01-basics.md)**: Linux command line and bash scripts.
+- **[OOP](languages/oop/README.md)**: Object-Oriented Programming concepts and patterns.
 
-### Infrastructure & Cloud
+### Infrastructure (`infrastructure/`)
 
-- **[AWS](aws/README.md)**: Cloud infrastructure and services.
-- **[Terraform](terraform/README.md)**: Infrastructure as Code (IaC).
-- **[Docker](docker/README.md)**: Containerization basics and patterns.
-- **[Podman](podman/getting-started.md)**: Rootless container management.
-- **[Kubernetes](kubernetes/README.md)**: Container orchestration.
-- **[Ansible](ansible/README.md)**: Configuration management.
-- **[Vault](gds-vault/README.md)**: Secrets management with HashiCorp Vault.
+- **[Docker](infrastructure/docker/README.md)**: Containerization basics and patterns.
+- **[Podman](infrastructure/podman/getting-started.md)**: Rootless container management.
+- **[Kubernetes](infrastructure/kubernetes/README.md)**: Container orchestration.
+- **[Ansible](infrastructure/ansible/README.md)**: Configuration management.
+- **[Terraform](infrastructure/terraform/README.md)**: Infrastructure as Code (IaC).
 
-### DevOps & CI/CD
+### Cloud (`cloud/`)
 
-- **[GitHub Actions](github-actions/README.md)**: CI/CD workflows and automation.
-- **[ArgoCD](argocd/01-gitops.md)**: GitOps continuous delivery.
-- **[Git](git/README.md)**: Version control basics and flows.
+- **[AWS](cloud/aws/README.md)**: Cloud infrastructure and services.
+- **[ArgoCD](cloud/argocd/01-gitops.md)**: GitOps continuous delivery.
 
-### Databases & Data
+### DevOps (`devops/`)
 
-- **[Kafka](kafka/README.md)**: Event streaming and messaging.
-- **[RabbitMQ](rabbitmq/README.md)**: Message broker basics.
-- **[PostgreSQL HA](postgres-high-availability/README.md)**: High availability setups.
-- **[HammerDB](hammerdb/README.md)**: Database benchmarking.
-- **[Snowflake](gds-snowflake/README.md)**: Cloud data warehousing.
+- **[GitHub Actions](devops/github-actions/README.md)**: CI/CD workflows and automation.
+- **[Git](devops/git/README.md)**: Version control basics and flows.
+- **[DevOps Project Ideas](devops/devops-projects/01-ideas.md)**: Project ideas for building your portfolio.
 
-### System Design & Basics
+### Databases & data (`databases/`)
 
-- **[System Design](system-design/README.md)**: Architecture patterns and scalability.
-- **[Networking](networking/README.md)**: Network fundamentals.
-- **[Linux](linux/README.md)**: Operating system basics.
-- **[Certs](certs/README.md)**: SSL/TLS certificates.
-- **[SSH Agent](ssh-agent/README.md)**: Secure authentication management.
+- **[Kafka](databases/kafka/README.md)**: Event streaming and messaging.
+- **[RabbitMQ](databases/rabbitmq/README.md)**: Message broker basics.
+- **[PostgreSQL HA](databases/postgres-high-availability/README.md)**: High availability setups.
+- **[Snowflake](databases/gds-snowflake/README.md)**: Cloud data warehousing.
+
+### Systems (`systems/`)
+
+- **[System Design](systems/system-design/README.md)**: Architecture patterns and scalability.
+- **[Networking](systems/networking/README.md)**: Network fundamentals.
+- **[Linux](systems/linux/README.md)**: Operating system basics.
+- **[Certs](systems/certs/README.md)**: SSL/TLS certificates.
+- **[SSH Agent](systems/ssh-agent/README.md)**: Secure authentication management.
+
+### Tools (`tools/`)
+
+- **[Vault](tools/gds-vault/README.md)**: Secrets management with HashiCorp Vault.
+- **[HammerDB](tools/hammerdb/README.md)**: Database benchmarking.
 
 ---
 
-## 🎯 Practice & Projects
+## Practice & projects
 
 - **[Exercises](exercises/README.md)**: Hands-on Python exercises with solutions.
-- **[DevOps Project Ideas](devops-projects/01-ideas.md)**: Project ideas for building your portfolio.
 
 ---
 
-## 🏗️ Project Management
+## Project management
 
 For project management standards and best practices, see:
 

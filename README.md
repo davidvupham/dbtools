@@ -102,6 +102,17 @@ See `PowerShell/README.md` for module usage, build instructions, and CI pipeline
 4. Execute `PowerShell/Install-GDSModulesFromJFrog.ps1` to install modules from Artifactory repositories
 5. Run Pester tests and `Invoke-ScriptAnalyzer` as described in the module documentation
 
+### VS Code workspace files
+
+Two workspace configurations are available:
+
+| File | Purpose |
+|------|---------|
+| `dbtools-minimal.code-workspace` | Minimal workspace for quick local editing |
+| `dbtools-devcontainer.code-workspace` | Full-featured workspace with settings, tasks, debug configs, and extension recommendations. Optimized for dev container use. |
+
+**Recommendation**: Use `dbtools-devcontainer.code-workspace` for the best development experience, especially when working inside the dev container.
+
 ### Dev container workflow (VS Code)
 
 1. Install the VS Code Dev Containers extension and ensure Docker is available locally

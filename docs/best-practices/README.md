@@ -9,6 +9,7 @@ This directory contains organizational standards and best practices documentatio
 | [PowerShell Best Practices](powershell/) | Standards for writing effective PowerShell scripts |
 | [Technical Project Management](technical-project-management.md) | Template and framework for managing technical projects |
 | [Documentation Standards](documentation-standards.md) | Official style guide, Diátaxis structure, and formatting rules |
+| [Monorepo Structure Review](monorepo-structure-review-2026-01-17.md) | Analysis of repository structure with recommendations |
 
 ### Quick Links
 
