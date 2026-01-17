@@ -1,6 +1,6 @@
 # Containers Course
 
-> **Master Docker and Podman from Zero to Certification**
+> **Master Docker, Podman, and OpenShift from Zero to Certification**
 
 A comprehensive, beginner-to-advanced course on container technology. No prior container knowledge required.
 
@@ -68,6 +68,16 @@ Week 2: security/ + CIS Benchmark review
 Week 3: emerging/supply-chain-security.md + emerging/distroless-images.md
 ```
 
+### Path E: OpenShift Focus (3 weeks)
+
+For teams adopting Red Hat OpenShift.
+
+```
+Week 1: kubernetes-essentials/ + openshift/01-04 (Introduction, Concepts, CLI, S2I)
+Week 2: openshift/05-07 (Security, Networking, Operators)
+Week 3: openshift/08 + Quiz + Practice with OpenShift Local
+```
+
 ---
 
 ## Course Modules
@@ -85,7 +95,8 @@ Week 3: emerging/supply-chain-security.md + emerging/distroless-images.md
 | [part1-beginner/](learning-paths/part1-beginner/) | Beginner | First containers, Dockerfiles, basic volumes | 9 + quiz |
 | [part2-intermediate/](learning-paths/part2-intermediate/) | Intermediate | Networking, storage, Compose, pods | 10 + quiz |
 | [part3-advanced/](learning-paths/part3-advanced/) | Advanced | Rootless, Swarm, CI/CD, enterprise | 14 + quiz |
-| [kubernetes-essentials/](learning-paths/kubernetes-essentials/) | Advanced | K8s for DCA exam | 6 + quiz |
+| [kubernetes-essentials/](kubernetes-essentials/) | Advanced | K8s for DCA exam | 6 + quiz |
+| [openshift/](openshift/) | Intermediate-Advanced | Red Hat OpenShift platform | 8 + quiz |
 
 ### Deep Dive Modules
 
@@ -142,7 +153,7 @@ Week 3: emerging/supply-chain-security.md + emerging/distroless-images.md
 
 ## Assessment
 
-### Quizzes (205 total questions)
+### Quizzes (230 total questions)
 
 | Quiz | Questions | DCA Domain |
 |------|-----------|------------|
@@ -150,6 +161,7 @@ Week 3: emerging/supply-chain-security.md + emerging/distroless-images.md
 | Part 2 | 30 | Images, Networking, Storage |
 | Part 3 | 35 | Orchestration, Security |
 | Kubernetes | 20 | Orchestration |
+| OpenShift | 25 | Orchestration, Security |
 | Storage | 15 | Storage |
 | Networking | 20 | Networking |
 | Rootless | 15 | Security |
@@ -181,6 +193,8 @@ Week 3: emerging/supply-chain-security.md + emerging/distroless-images.md
 - [Docker Deep Dive](https://www.amazon.com/Docker-Deep-Dive-Nigel-Poulton/dp/1916585256) (Nigel Poulton, 2025)
 - [Docker Official Documentation](https://docs.docker.com/)
 - [Podman Documentation](https://docs.podman.io/)
+- [OpenShift Documentation](https://docs.openshift.com/)
+- [OpenShift Developer Sandbox](https://developers.redhat.com/developer-sandbox) (Free 30-day access)
 - [NIST SP 800-190](https://csrc.nist.gov/publications/detail/sp/800-190/final) (Container Security Guide)
 
 ---
@@ -201,6 +215,9 @@ A: Yes. Rootless containers are more secure and increasingly common in enterpris
 
 **Q: What about Kubernetes?**
 A: The DCA exam includes Kubernetes basics. Our kubernetes-essentials/ module covers exactly what you need.
+
+**Q: Should I learn OpenShift?**
+A: If your organization uses Red Hat products or you want enterprise Kubernetes, yes! OpenShift builds on Kubernetes with additional developer and security features. See the openshift/ module.
 
 ---
 
