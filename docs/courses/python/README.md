@@ -19,6 +19,7 @@
 * **[03 Control Flow](./module_1_foundations/03_control_flow.md)**
 * **[04 Functions](./module_1_foundations/04_functions.md)**
 * **[05 Data Structures](./module_1_foundations/05_data_structures.md)**
+* **[05a File Handling](./module_1_foundations/05a_file_handling.md)**
 * **[06 Error Handling](./module_1_foundations/06_error_handling.md)**
 * **[07 Type Hints](./module_1_foundations/07_type_hints.md)**
 
@@ -29,12 +30,14 @@
 *Focus: Writing robust, reusable, and clean code.*
 
 * **[08 OOP Foundations](./module_2_intermediate/08_oop_foundations.md)**
-* **[09 Modern Structs (Dataclasses/Enums)](./module_2_intermediate/09_modern_structs.md)**
+* **[09 Modern Structs (Dataclasses/Enums/attrs)](./module_2_intermediate/09_modern_structs.md)**
 * **[10 Functional Basics](./module_2_intermediate/10_functional_basics.md)**
 * **[11 Decorators](./module_2_intermediate/11_decorators.md)**
 * **[12 Context Managers](./module_2_intermediate/12_context_managers.md)**
 * **[13 Modules & Packages](./module_2_intermediate/13_modules_packages.md)**
+* **[13a Dependencies Management](./module_2_intermediate/13a_dependencies.md)**
 * **[14 Logging](./module_2_intermediate/14_logging.md)**
+* **[14a Utility Libraries](./module_2_intermediate/14a_utility_libraries.md)** - tenacity, diskcache, watchdog, schedule, msgspec, pluggy
 
 🛠️ **[Project 2: Library Management System](./module_2_intermediate/project_2_library.md)**
 
@@ -78,3 +81,13 @@
 ## Module 5: Capstone Project
 
 🏆 **[Project 7: Production-Grade Snowflake Monitoring System](./module_5_project/project_7_capstone.md)**
+
+---
+
+## Supplementary: Design Patterns
+
+Design patterns are covered in the dedicated OOP tutorials (language-agnostic concepts with Python implementations):
+
+* **[OOP Guide](../../tutorials/languages/oop/oop_guide.md)** - Factory, Singleton, Observer, Decorator, Composite patterns
+* **[Pattern Picker](../../tutorials/languages/oop/appendix_oop_pattern_picker.md)** - Problem-to-pattern decision guide
+* **[Intermediate Exercises](../../tutorials/languages/oop/oop_intermediate_exercises.md)** - 10 practical pattern exercises

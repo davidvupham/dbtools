@@ -137,3 +137,103 @@ if __name__ == "__main__":
 | **I/O** | Network Request | `concurrent.futures.ThreadPoolExecutor` | Easiest to implement. |
 | **I/O** | 10k+ Connections | `asyncio` | Lowest memory overhead. |
 | **CPU** | Math/Image Processing | `concurrent.futures.ProcessPoolExecutor` | Bypasses the GIL, uses multiple cores. |
+
+---
+
+## 3. anyio - Async Compatibility Layer
+
+[anyio](https://anyio.readthedocs.io/) provides a unified async API that works with both `asyncio` and `trio`. Write your async code once, run it on any backend.
+
+### Installation
+
+```bash
+uv add anyio
+```
+
+### Basic Usage
+
+```python
+import anyio
+
+async def worker():
+    print("Starting work...")
+    await anyio.sleep(1)
+    print("Done!")
+
+anyio.run(worker)
+```
+
+### Why anyio?
+
+1. **Backend agnostic** - Code works with asyncio and trio without changes
+2. **Structured concurrency** - Task groups ensure proper cleanup
+3. **Better cancellation** - Predictable, reliable task cancellation
+4. **Unified API** - One interface for timers, locks, events, channels
+
+### Task Groups (Structured Concurrency)
+
+Task groups ensure all child tasks complete (or are cancelled) before the parent continues:
+
+```python
+import anyio
+
+async def fetch(url: str) -> str:
+    await anyio.sleep(1)  # Simulate network request
+    return f"Data from {url}"
+
+async def main():
+    async with anyio.create_task_group() as tg:
+        tg.start_soon(fetch, "https://api1.example.com")
+        tg.start_soon(fetch, "https://api2.example.com")
+        tg.start_soon(fetch, "https://api3.example.com")
+    # All tasks guaranteed complete here
+    print("All fetches done!")
+
+anyio.run(main)
+```
+
+### Timeouts
+
+```python
+import anyio
+
+async def slow_operation():
+    await anyio.sleep(10)
+
+async def main():
+    with anyio.move_on_after(2):  # Cancel after 2 seconds
+        await slow_operation()
+        print("This won't print")
+    print("Continued after timeout")
+
+anyio.run(main)
+```
+
+### Cancellation Scopes
+
+```python
+import anyio
+
+async def main():
+    with anyio.CancelScope() as scope:
+        await anyio.sleep(1)
+        scope.cancel()  # Cancel everything in this scope
+        await anyio.sleep(10)  # Never executes
+    print("Scope cancelled cleanly")
+
+anyio.run(main)
+```
+
+### When to Use anyio vs asyncio
+
+| Scenario | Use asyncio | Use anyio |
+|----------|------------|-----------|
+| Simple scripts | Yes | Either |
+| Libraries (reusable code) | No | Yes |
+| Need trio compatibility | No | Yes |
+| Structured concurrency | Limited | Built-in |
+| Complex cancellation | Manual | Automatic |
+
+**Use asyncio** for simple applications or when minimizing dependencies.
+
+**Use anyio** for libraries, complex workflows, or when you need structured concurrency guarantees

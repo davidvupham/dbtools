@@ -182,3 +182,99 @@ Enums are ideal for:
 2. **Comparing with `.value` everywhere** - Use `Status.ACTIVE`, not `"active"`
 3. **Overusing Enums** - They model closed sets, not dynamic data
 4. **Storing raw strings in database** - Store Enum values, but convert early and strictly
+
+## attrs - Advanced Data Classes
+
+While dataclasses are built into Python, [attrs](https://www.attrs.org/) offers more features for complex data modeling: validators, converters, and slots by default.
+
+### Installation
+
+```bash
+uv add attrs
+```
+
+### Basic Usage
+
+```python
+import attr
+
+@attr.define
+class JobConfig:
+    retries: int = attr.field(default=3)
+    timeout: float = attr.field(default=5.0)
+    critical: bool = False
+
+config = JobConfig()
+print(config)  # JobConfig(retries=3, timeout=5.0, critical=False)
+```
+
+### Validation
+
+attrs provides built-in validators that run at instantiation:
+
+```python
+import attr
+from attr import validators
+
+@attr.define
+class Server:
+    host: str = attr.field(validator=validators.instance_of(str))
+    port: int = attr.field(validator=[
+        validators.instance_of(int),
+        validators.ge(1),
+        validators.le(65535)
+    ])
+
+Server("localhost", 8080)  # Works
+Server("localhost", 70000)  # Raises ValueError
+```
+
+### Converters
+
+Automatically convert input values:
+
+```python
+@attr.define
+class Config:
+    timeout: float = attr.field(converter=float)
+    tags: list = attr.field(converter=list, factory=list)
+
+config = Config(timeout="30", tags=("web", "api"))
+print(config.timeout)  # 30.0 (converted from string)
+print(config.tags)     # ['web', 'api'] (converted from tuple)
+```
+
+### Factory Defaults (Mutable Defaults Done Right)
+
+```python
+@attr.define
+class Request:
+    headers: dict = attr.field(factory=dict)  # New dict per instance
+    tags: list = attr.field(factory=list)     # New list per instance
+```
+
+### Frozen (Immutable) Classes
+
+```python
+@attr.frozen
+class Point:
+    x: float
+    y: float
+
+p = Point(1.0, 2.0)
+p.x = 3.0  # Raises FrozenInstanceError
+```
+
+### When to Use attrs vs dataclasses
+
+| Feature | dataclasses | attrs |
+|---------|-------------|-------|
+| Built-in | Yes | No (external) |
+| Validators | Manual | Built-in |
+| Converters | Manual | Built-in |
+| Slots by default | No (3.10+) | Yes |
+| Performance | Good | Better |
+
+**Use dataclasses** for simple data containers in standard library-only projects.
+
+**Use attrs** when you need validation, converters, or maximum performance
