@@ -6,6 +6,7 @@ This directory contains organizational standards and best practices documentatio
 
 | Document | Purpose |
 |----------|---------|
+| [Python Best Practices](python/) | Standards for Python projects, packages, and dependencies |
 | [PowerShell Best Practices](powershell/) | Standards for writing effective PowerShell scripts |
 | [Technical Project Management](technical-project-management.md) | Template and framework for managing technical projects |
 | [Documentation Standards](documentation-standards.md) | Official style guide, Diátaxis structure, and formatting rules |
