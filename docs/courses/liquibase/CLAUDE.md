@@ -2,6 +2,20 @@
 
 This file contains Claude Code instructions specific to the Liquibase tutorial course.
 
+## Modifying Tutorials
+
+When modifying tutorial content in `learning-paths/series-part*.md`, ensure the corresponding test scripts are updated to match.
+
+After making changes to a tutorial or its scripts, run the test to verify everything works:
+
+```bash
+cd docs/courses/liquibase/scripts
+./test_part1_baseline.sh    # Test Part 1 only
+./test_part2_manual.sh      # Test Part 2 (runs Part 1 first, or use --skip-part1)
+```
+
+The test script executes the same scripts as the tutorial - it should not contain duplicate validation logic.
+
 ## Tutorial Validation (All Parts)
 
 When validating any part of the Liquibase tutorial (`learning-paths/series-part*.md`):
