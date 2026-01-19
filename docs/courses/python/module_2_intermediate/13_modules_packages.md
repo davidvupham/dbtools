@@ -99,6 +99,7 @@ project-name/
 ├── src/
 │   └── project_name/
 │       ├── __init__.py
+│       ├── __main__.py
 │       ├── main.py
 │       ├── config.py
 │       ├── core/
@@ -109,12 +110,14 @@ project-name/
 │   └── test_services.py
 ├── pyproject.toml
 ├── README.md
+├── CHANGELOG.md
 └── .gitignore
 ```
 
 Why this works:
 
 - `src/` prevents accidental imports from the root
+- `__main__.py` enables `python -m project_name` execution
 - Tests are isolated from source code
 - Configuration is explicit
 - Imports are predictable
@@ -190,6 +193,67 @@ Think of `main.py` like a conductor:
 - It tells others when to play
 
 If logic lives in `main.py`, you'll regret it during testing and maintenance.
+
+---
+
+## Make Packages Executable with `__main__.py`
+
+Add a `__main__.py` file to make your package runnable with `python -m`:
+
+```
+src/my_package/
+    __init__.py
+    __main__.py    # Enables: python -m my_package
+    cli.py
+```
+
+### Example `__main__.py`
+
+```python
+# __main__.py
+from .cli import main
+
+if __name__ == "__main__":
+    main()
+```
+
+Now users can run your package directly:
+
+```bash
+python -m my_package --help
+```
+
+This is cleaner than asking users to find and run a specific script. It also works consistently whether the package is installed or run from source.
+
+---
+
+## Relative vs Absolute Imports
+
+**Within the same package**, use relative imports:
+
+```python
+# users/services.py
+from .models import User           # Same package
+from .repository import UserRepo   # Same package
+from ..core import exceptions      # Parent package
+```
+
+**Between different packages**, use absolute imports:
+
+```python
+# users/services.py
+from payments.gateway import process_payment  # Different package
+```
+
+### Why This Matters
+
+| Import Type | Use Case | Example |
+|-------------|----------|---------|
+| Relative (`.`) | Same package | `from .models import User` |
+| Relative (`..`) | Parent package | `from ..core import BaseError` |
+| Absolute | External packages | `from payments import Gateway` |
+
+Relative imports make packages **self-contained** and easier to rename or move. If you use absolute imports everywhere within a package, renaming the package means updating every import.
 
 ---
 
@@ -269,6 +333,46 @@ def process(item: "SomeClass") -> None:
 ```
 
 **Rule**: If two modules depend on each other, your boundaries are wrong.
+
+---
+
+## Namespace Packages (Advanced)
+
+Python 3.3+ supports **namespace packages**—packages without an `__init__.py` file. These allow a single logical package to be split across multiple directories or distributions.
+
+### When to Use Namespace Packages
+
+- **Plugin systems**: Multiple packages contribute to the same namespace
+- **Large organizations**: Different teams own different sub-packages
+- **Distributed packages**: Parts of a package installed separately
+
+### Example Structure
+
+```
+# Installed from package-a
+site-packages/
+    mycompany/
+        tools/
+            parser.py
+
+# Installed from package-b
+site-packages/
+    mycompany/
+        tools/
+            formatter.py
+```
+
+Both contribute to `mycompany.tools` without conflict.
+
+### When NOT to Use Namespace Packages
+
+For most projects, **use regular packages with `__init__.py`**. Namespace packages add complexity and have limitations:
+
+- No package-level initialization code
+- Slower imports (Python must search multiple paths)
+- Harder to reason about package contents
+
+**Rule**: If you're not building a plugin system or organizational namespace, use regular packages.
 
 ---
 
@@ -352,15 +456,16 @@ If the answer is "no" to any of these—simplify.
 
 ## Best Practices Summary
 
-1. **Absolute imports**: `from my_package.core import utils`
-2. **Avoid `import *`**: It pollutes the namespace
-3. **Group by domain**: Not by function type
-4. **Separate concerns**: Business logic vs infrastructure
-5. **Boring entry points**: `main.py` orchestrates, doesn't think
-6. **Intentional `__init__.py`**: Define your public API
-7. **No circular imports**: Use `core/` layer and dependency inversion
-8. **Mirror tests to source**: Same structure, different directory
-9. **Document structure**: Help future developers navigate
+1. **Use relative imports within packages**: `from .core import utils`
+2. **Use absolute imports between packages**: `from other_package import module`
+3. **Avoid `import *`**: It pollutes the namespace
+4. **Group by domain**: Not by function type
+5. **Separate concerns**: Business logic vs infrastructure
+6. **Boring entry points**: `main.py` orchestrates, doesn't think
+7. **Intentional `__init__.py`**: Define your public API
+8. **No circular imports**: Use `core/` layer and dependency inversion
+9. **Mirror tests to source**: Same structure, different directory
+10. **Document structure**: Help future developers navigate
 
 ---
 
