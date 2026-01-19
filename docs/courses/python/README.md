@@ -38,6 +38,7 @@
 * **[12 Context Managers](./module_2_intermediate/12_context_managers.md)**
 * **[13 Modules & Packages](./module_2_intermediate/13_modules_packages.md)**
 * **[13a Dependencies Management](./module_2_intermediate/13a_dependencies.md)**
+* **[13b Configuration Management](./module_2_intermediate/13b_configuration.md)**
 * **[14 Logging](./module_2_intermediate/14_logging.md)**
 * **[14a Utility Libraries](./module_2_intermediate/14a_utility_libraries.md)** - tenacity, diskcache, watchdog, schedule, msgspec, pluggy
 
