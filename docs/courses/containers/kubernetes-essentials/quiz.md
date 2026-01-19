@@ -1,6 +1,14 @@
 # Kubernetes essentials quiz
 
-> Test your Kubernetes knowledge before diving deeper.
+> **Module:** Kubernetes Essentials | **Type:** Interactive Assessment | **Questions:** 20
+
+Test your Kubernetes knowledge before diving deeper. Select your answer for each question, then click to reveal the correct answer and explanation.
+
+**Instructions:**
+1. Read each question and choose your answer (A, B, C, or D)
+2. Click "Show Answer" to reveal the correct answer and explanation
+3. Keep track of your correct answers
+4. Calculate your percentage at the end
 
 ---
 
@@ -10,12 +18,21 @@
 
 What is the smallest deployable unit in Kubernetes?
 
-- [ ] Container
-- [x] Pod
-- [ ] Deployment
-- [ ] Service
+- A) Container
+- B) Pod
+- C) Deployment
+- D) Service
+
+<details>
+<summary>Show Answer</summary>
+
+**Correct Answer: B**
+
+Pod
 
 **Explanation:** A Pod is the smallest deployable unit. It can contain one or more containers that share storage and network.
+
+</details>
 
 ---
 
@@ -23,12 +40,21 @@ What is the smallest deployable unit in Kubernetes?
 
 Which component is responsible for scheduling pods to nodes?
 
-- [ ] kubelet
-- [ ] API Server
-- [x] Scheduler
-- [ ] Controller Manager
+- A) kubelet
+- B) API Server
+- C) Scheduler
+- D) Controller Manager
+
+<details>
+<summary>Show Answer</summary>
+
+**Correct Answer: C**
+
+Scheduler
 
 **Explanation:** The Scheduler watches for newly created pods and assigns them to nodes based on resource requirements and constraints.
+
+</details>
 
 ---
 
@@ -36,12 +62,21 @@ Which component is responsible for scheduling pods to nodes?
 
 What is the purpose of a Deployment?
 
-- [ ] To expose pods to external traffic
-- [x] To manage a replicated set of pods with rolling updates
-- [ ] To store persistent data
-- [ ] To configure networking
+- A) To expose pods to external traffic
+- B) To manage a replicated set of pods with rolling updates
+- C) To store persistent data
+- D) To configure networking
+
+<details>
+<summary>Show Answer</summary>
+
+**Correct Answer: B**
+
+To manage a replicated set of pods with rolling updates.
 
 **Explanation:** Deployments manage ReplicaSets, providing declarative updates, rolling updates, and rollback capabilities.
+
+</details>
 
 ---
 
@@ -51,12 +86,21 @@ What is the purpose of a Deployment?
 
 Which Service type provides external access via a cloud provider's load balancer?
 
-- [ ] ClusterIP
-- [ ] NodePort
-- [x] LoadBalancer
-- [ ] ExternalName
+- A) ClusterIP
+- B) NodePort
+- C) LoadBalancer
+- D) ExternalName
+
+<details>
+<summary>Show Answer</summary>
+
+**Correct Answer: C**
+
+LoadBalancer
 
 **Explanation:** LoadBalancer type provisions a cloud provider's load balancer, providing external access with a single IP address.
+
+</details>
 
 ---
 
@@ -64,12 +108,21 @@ Which Service type provides external access via a cloud provider's load balancer
 
 What is the DNS name format for a Service named "api" in the "production" namespace?
 
-- [ ] api-production.cluster
-- [x] api.production.svc.cluster.local
-- [ ] production-api.svc.local
-- [ ] api.production
+- A) api-production.cluster
+- B) api.production.svc.cluster.local
+- C) production-api.svc.local
+- D) api.production
+
+<details>
+<summary>Show Answer</summary>
+
+**Correct Answer: B**
+
+api.production.svc.cluster.local
 
 **Explanation:** The full DNS name format is `<service>.<namespace>.svc.cluster.local`.
+
+</details>
 
 ---
 
@@ -77,12 +130,21 @@ What is the DNS name format for a Service named "api" in the "production" namesp
 
 What does a NetworkPolicy with empty podSelector match?
 
-- [x] All pods in the namespace
-- [ ] No pods
-- [ ] Only pods without labels
-- [ ] Pods in all namespaces
+- A) All pods in the namespace
+- B) No pods
+- C) Only pods without labels
+- D) Pods in all namespaces
+
+<details>
+<summary>Show Answer</summary>
+
+**Correct Answer: A**
+
+All pods in the namespace.
 
 **Explanation:** An empty podSelector `{}` matches all pods in the namespace where the NetworkPolicy is defined.
+
+</details>
 
 ---
 
@@ -92,12 +154,21 @@ What does a NetworkPolicy with empty podSelector match?
 
 What is the relationship between PV and PVC?
 
-- [ ] PVC creates PV
-- [x] PVC requests storage, PV provides it
-- [ ] PV requests storage, PVC provides it
-- [ ] They are the same thing
+- A) PVC creates PV
+- B) PVC requests storage, PV provides it
+- C) PV requests storage, PVC provides it
+- D) They are the same thing
+
+<details>
+<summary>Show Answer</summary>
+
+**Correct Answer: B**
+
+PVC requests storage, PV provides it.
 
 **Explanation:** PersistentVolumeClaim (PVC) is a request for storage. PersistentVolume (PV) is the actual storage resource that satisfies the claim.
+
+</details>
 
 ---
 
@@ -105,12 +176,21 @@ What is the relationship between PV and PVC?
 
 Which access mode allows multiple nodes to mount a volume for reading?
 
-- [ ] ReadWriteOnce
-- [x] ReadOnlyMany
-- [ ] ReadWriteMany
-- [ ] SingleNodeRead
+- A) ReadWriteOnce
+- B) ReadOnlyMany
+- C) ReadWriteMany
+- D) SingleNodeRead
+
+<details>
+<summary>Show Answer</summary>
+
+**Correct Answer: B**
+
+ReadOnlyMany
 
 **Explanation:** ReadOnlyMany (ROX) allows the volume to be mounted read-only by many nodes.
+
+</details>
 
 ---
 
@@ -118,12 +198,21 @@ Which access mode allows multiple nodes to mount a volume for reading?
 
 What Kubernetes resource should you use for a database that needs stable network identity?
 
-- [ ] Deployment
-- [x] StatefulSet
-- [ ] DaemonSet
-- [ ] ReplicaSet
+- A) Deployment
+- B) StatefulSet
+- C) DaemonSet
+- D) ReplicaSet
+
+<details>
+<summary>Show Answer</summary>
+
+**Correct Answer: B**
+
+StatefulSet
 
 **Explanation:** StatefulSet provides stable network identities, ordered deployment, and persistent storage - all essential for databases.
+
+</details>
 
 ---
 
@@ -133,12 +222,21 @@ What Kubernetes resource should you use for a database that needs stable network
 
 What is the main difference between ConfigMap and Secret?
 
-- [ ] ConfigMaps can hold more data
-- [ ] Secrets are stored in etcd, ConfigMaps are not
-- [x] Secrets are base64 encoded and intended for sensitive data
-- [ ] ConfigMaps can only store strings
+- A) ConfigMaps can hold more data
+- B) Secrets are stored in etcd, ConfigMaps are not
+- C) Secrets are base64 encoded and intended for sensitive data
+- D) ConfigMaps can only store strings
+
+<details>
+<summary>Show Answer</summary>
+
+**Correct Answer: C**
+
+Secrets are base64 encoded and intended for sensitive data.
 
 **Explanation:** Secrets are designed for sensitive data and are base64 encoded. While not encrypted by default, they can be encrypted at rest.
+
+</details>
 
 ---
 
@@ -146,12 +244,21 @@ What is the main difference between ConfigMap and Secret?
 
 How do you inject a ConfigMap value as an environment variable?
 
-- [ ] `env.configMapRef`
-- [x] `valueFrom.configMapKeyRef`
-- [ ] `envFrom.configMap`
-- [ ] `config.envVar`
+- A) `env.configMapRef`
+- B) `valueFrom.configMapKeyRef`
+- C) `envFrom.configMap`
+- D) `config.envVar`
+
+<details>
+<summary>Show Answer</summary>
+
+**Correct Answer: B**
+
+`valueFrom.configMapKeyRef`
 
 **Explanation:** Use `valueFrom.configMapKeyRef` to inject a specific key from a ConfigMap as an environment variable.
+
+</details>
 
 ---
 
@@ -161,12 +268,21 @@ How do you inject a ConfigMap value as an environment variable?
 
 What is required for Ingress resources to work?
 
-- [ ] A LoadBalancer service
-- [x] An Ingress Controller
-- [ ] NodePort services
-- [ ] External DNS
+- A) A LoadBalancer service
+- B) An Ingress Controller
+- C) NodePort services
+- D) External DNS
+
+<details>
+<summary>Show Answer</summary>
+
+**Correct Answer: B**
+
+An Ingress Controller
 
 **Explanation:** Ingress resources are just configurations. An Ingress Controller (like nginx-ingress or Traefik) is needed to implement the rules.
+
+</details>
 
 ---
 
@@ -174,12 +290,21 @@ What is required for Ingress resources to work?
 
 What does the `pathType: Prefix` mean in an Ingress rule?
 
-- [ ] The path must match exactly
-- [x] The path and any subpaths are matched
-- [ ] The path is treated as a regex
-- [ ] The path is case-insensitive
+- A) The path must match exactly
+- B) The path and any subpaths are matched
+- C) The path is treated as a regex
+- D) The path is case-insensitive
+
+<details>
+<summary>Show Answer</summary>
+
+**Correct Answer: B**
+
+The path and any subpaths are matched.
 
 **Explanation:** `Prefix` means `/api` matches `/api`, `/api/`, `/api/users`, etc.
+
+</details>
 
 ---
 
@@ -189,12 +314,21 @@ What does the `pathType: Prefix` mean in an Ingress rule?
 
 What is a Helm Release?
 
-- [ ] A version of Helm
-- [ ] A chart template
-- [x] An installed instance of a chart
-- [ ] A repository index
+- A) A version of Helm
+- B) A chart template
+- C) An installed instance of a chart
+- D) A repository index
+
+<details>
+<summary>Show Answer</summary>
+
+**Correct Answer: C**
+
+An installed instance of a chart.
 
 **Explanation:** A Release is a running instance of a chart with a specific configuration.
+
+</details>
 
 ---
 
@@ -202,12 +336,21 @@ What is a Helm Release?
 
 Which file contains default values for a Helm chart?
 
-- [ ] Chart.yaml
-- [x] values.yaml
-- [ ] templates/defaults.yaml
-- [ ] config.yaml
+- A) Chart.yaml
+- B) values.yaml
+- C) templates/defaults.yaml
+- D) config.yaml
+
+<details>
+<summary>Show Answer</summary>
+
+**Correct Answer: B**
+
+values.yaml
 
 **Explanation:** `values.yaml` contains the default configuration values that can be overridden during installation.
+
+</details>
 
 ---
 
@@ -217,12 +360,21 @@ Which file contains default values for a Helm chart?
 
 What does `kubectl rollout undo deployment/api` do?
 
-- [ ] Deletes the deployment
-- [ ] Stops all pods
-- [x] Reverts to the previous deployment revision
-- [ ] Scales down to zero replicas
+- A) Deletes the deployment
+- B) Stops all pods
+- C) Reverts to the previous deployment revision
+- D) Scales down to zero replicas
+
+<details>
+<summary>Show Answer</summary>
+
+**Correct Answer: C**
+
+Reverts to the previous deployment revision.
 
 **Explanation:** `rollout undo` reverts a deployment to its previous revision, useful for quick rollbacks.
+
+</details>
 
 ---
 
@@ -230,12 +382,21 @@ What does `kubectl rollout undo deployment/api` do?
 
 Which probe determines if a container should receive traffic?
 
-- [ ] livenessProbe
-- [x] readinessProbe
-- [ ] startupProbe
-- [ ] healthProbe
+- A) livenessProbe
+- B) readinessProbe
+- C) startupProbe
+- D) healthProbe
+
+<details>
+<summary>Show Answer</summary>
+
+**Correct Answer: B**
+
+readinessProbe
 
 **Explanation:** readinessProbe determines if a container is ready to receive traffic. Failing it removes the pod from service endpoints.
+
+</details>
 
 ---
 
@@ -243,12 +404,21 @@ Which probe determines if a container should receive traffic?
 
 What is the purpose of a PodDisruptionBudget?
 
-- [ ] To limit pod resources
-- [ ] To schedule pod evictions
-- [x] To ensure minimum availability during disruptions
-- [ ] To distribute pods across nodes
+- A) To limit pod resources
+- B) To schedule pod evictions
+- C) To ensure minimum availability during disruptions
+- D) To distribute pods across nodes
+
+<details>
+<summary>Show Answer</summary>
+
+**Correct Answer: C**
+
+To ensure minimum availability during disruptions.
 
 **Explanation:** PodDisruptionBudget ensures that a minimum number of pods remain available during voluntary disruptions like upgrades.
+
+</details>
 
 ---
 
@@ -258,12 +428,21 @@ What is the purpose of a PodDisruptionBudget?
 
 Where is cluster state stored in Kubernetes?
 
-- [ ] API Server
-- [x] etcd
-- [ ] Controller Manager
-- [ ] Each node's kubelet
+- A) API Server
+- B) etcd
+- C) Controller Manager
+- D) Each node's kubelet
+
+<details>
+<summary>Show Answer</summary>
+
+**Correct Answer: B**
+
+etcd
 
 **Explanation:** etcd is the distributed key-value store that stores all cluster state and configuration.
+
+</details>
 
 ---
 
@@ -271,23 +450,56 @@ Where is cluster state stored in Kubernetes?
 
 Which component runs on every node and manages containers?
 
-- [x] kubelet
-- [ ] Scheduler
-- [ ] API Server
-- [ ] Controller Manager
+- A) kubelet
+- B) Scheduler
+- C) API Server
+- D) Controller Manager
+
+<details>
+<summary>Show Answer</summary>
+
+**Correct Answer: A**
+
+kubelet
 
 **Explanation:** kubelet is the agent that runs on every node, responsible for running containers in pods.
 
+</details>
+
 ---
 
-## Scoring
+## Score tracker
 
-| Score | Rating |
-|-------|--------|
-| 18-20 | Expert - Ready for advanced Kubernetes |
-| 14-17 | Proficient - Good foundation |
-| 10-13 | Developing - Review specific areas |
-| Below 10 | Needs review - Revisit Kubernetes basics |
+Use this section to calculate your final score.
+
+### Tally your results
+
+| Section | Questions | Your Correct Answers |
+|---------|-----------|---------------------|
+| Core Concepts | 1-3 | ___ / 3 |
+| Services and Networking | 4-6 | ___ / 3 |
+| Storage | 7-9 | ___ / 3 |
+| Configuration | 10-11 | ___ / 2 |
+| Ingress | 12-13 | ___ / 2 |
+| Helm | 14-15 | ___ / 2 |
+| Operations | 16-18 | ___ / 3 |
+| Architecture | 19-20 | ___ / 2 |
+| **Total** | | ___ / 20 |
+
+### Calculate your percentage
+
+**Your Score: ___ / 20 = ____%**
+
+(Divide your correct answers by 20 and multiply by 100)
+
+### How did you do?
+
+| Score | Percentage | Level | Recommendation |
+|-------|------------|-------|----------------|
+| 18-20 | 90-100% | Expert | Ready for advanced Kubernetes |
+| 14-17 | 70-89% | Proficient | Good foundation |
+| 10-13 | 50-69% | Developing | Review specific areas |
+| Below 10 | Below 50% | Needs Review | Revisit Kubernetes basics |
 
 ---
 
@@ -295,9 +507,9 @@ Which component runs on every node and manages containers?
 
 Based on your score:
 
-- **High score:** Explore advanced topics like Operators, Service Mesh
-- **Medium score:** Practice with real deployments
-- **Lower score:** Review the Kubernetes Essentials materials
+- **High score**: Explore advanced topics like Operators, Service Mesh
+- **Medium score**: Practice with real deployments
+- **Lower score**: Review the Kubernetes Essentials materials
 
 Continue learning:
 - [CKA/CKAD Certification](https://kubernetes.io/docs/home/)

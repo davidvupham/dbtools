@@ -1,6 +1,14 @@
-# Part 2 intermediate quiz
+# Part 2: Intermediate quiz
 
-> Test your Docker Compose and intermediate container knowledge.
+> **Module:** Part 2 - Intermediate | **Type:** Interactive Assessment | **Questions:** 22
+
+Test your Docker Compose and intermediate container knowledge. Select your answer for each question, then click to reveal the correct answer and explanation.
+
+**Instructions:**
+1. Read each question and choose your answer (A, B, C, or D)
+2. Click "Show Answer" to reveal the correct answer and explanation
+3. Keep track of your correct answers
+4. Calculate your percentage at the end
 
 ---
 
@@ -10,12 +18,21 @@
 
 What is the default filename Docker Compose looks for?
 
-- [ ] docker-compose.yml
-- [x] compose.yaml
-- [ ] docker.yaml
-- [ ] container.yaml
+- A) docker-compose.yml
+- B) compose.yaml
+- C) docker.yaml
+- D) container.yaml
+
+<details>
+<summary>Show Answer</summary>
+
+**Correct Answer: B**
+
+compose.yaml
 
 **Explanation:** Modern Docker Compose uses `compose.yaml` as the default. The older `docker-compose.yml` is still supported for backward compatibility.
+
+</details>
 
 ---
 
@@ -23,12 +40,21 @@ What is the default filename Docker Compose looks for?
 
 Which command shows the merged configuration from multiple compose files?
 
-- [ ] docker compose show
-- [ ] docker compose merge
-- [x] docker compose config
-- [ ] docker compose inspect
+- A) docker compose show
+- B) docker compose merge
+- C) docker compose config
+- D) docker compose inspect
+
+<details>
+<summary>Show Answer</summary>
+
+**Correct Answer: C**
+
+docker compose config
 
 **Explanation:** `docker compose config` displays the final merged configuration after processing all compose files and variable substitution.
+
+</details>
 
 ---
 
@@ -36,12 +62,21 @@ Which command shows the merged configuration from multiple compose files?
 
 What does `docker compose up -d --build` do?
 
-- [ ] Downloads images and starts containers
-- [ ] Builds images only, doesn't start
-- [x] Rebuilds images and starts containers in detached mode
-- [ ] Removes and recreates all containers
+- A) Downloads images and starts containers
+- B) Builds images only, doesn't start
+- C) Rebuilds images and starts containers in detached mode
+- D) Removes and recreates all containers
+
+<details>
+<summary>Show Answer</summary>
+
+**Correct Answer: C**
+
+Rebuilds images and starts containers in detached mode.
 
 **Explanation:** The `-d` flag runs in detached mode, and `--build` forces a rebuild of images before starting containers.
+
+</details>
 
 ---
 
@@ -51,12 +86,21 @@ What does `docker compose up -d --build` do?
 
 What is the correct way to wait for a database to be healthy before starting an API?
 
-- [ ] `depends_on: [db]`
-- [x] `depends_on: { db: { condition: service_healthy } }`
-- [ ] `wait_for: db`
-- [ ] `requires: db:healthy`
+- A) `depends_on: [db]`
+- B) `depends_on: { db: { condition: service_healthy } }`
+- C) `wait_for: db`
+- D) `requires: db:healthy`
+
+<details>
+<summary>Show Answer</summary>
+
+**Correct Answer: B**
+
+`depends_on: { db: { condition: service_healthy } }`
 
 **Explanation:** The `condition: service_healthy` ensures the dependent service waits for the health check to pass, not just for the container to start.
+
+</details>
 
 ---
 
@@ -64,12 +108,21 @@ What is the correct way to wait for a database to be healthy before starting an 
 
 Which dependency condition waits for a container to exit successfully?
 
-- [ ] service_started
-- [ ] service_healthy
-- [x] service_completed_successfully
-- [ ] service_exited_zero
+- A) service_started
+- B) service_healthy
+- C) service_completed_successfully
+- D) service_exited_zero
+
+<details>
+<summary>Show Answer</summary>
+
+**Correct Answer: C**
+
+service_completed_successfully
 
 **Explanation:** `service_completed_successfully` is used for init containers or migration tasks that should complete before other services start.
+
+</details>
 
 ---
 
@@ -79,12 +132,21 @@ Which dependency condition waits for a container to exit successfully?
 
 What does `internal: true` do on a network?
 
-- [ ] Makes the network only accessible to services in the same compose file
-- [x] Prevents containers on this network from accessing the internet
-- [ ] Restricts the network to internal Docker communication
-- [ ] Enables internal load balancing
+- A) Makes the network only accessible to services in the same compose file
+- B) Prevents containers on this network from accessing the internet
+- C) Restricts the network to internal Docker communication
+- D) Enables internal load balancing
+
+<details>
+<summary>Show Answer</summary>
+
+**Correct Answer: B**
+
+Prevents containers on this network from accessing the internet.
 
 **Explanation:** Setting `internal: true` on a network prevents containers connected to it from accessing external networks (including the internet), useful for isolating backend services.
+
+</details>
 
 ---
 
@@ -92,12 +154,21 @@ What does `internal: true` do on a network?
 
 How do containers in the same Compose network communicate?
 
-- [ ] By IP address only
-- [ ] By container ID
-- [x] By service name
-- [ ] They cannot communicate directly
+- A) By IP address only
+- B) By container ID
+- C) By service name
+- D) They cannot communicate directly
+
+<details>
+<summary>Show Answer</summary>
+
+**Correct Answer: C**
+
+By service name.
 
 **Explanation:** Docker Compose sets up DNS resolution so containers can reach each other using their service names as hostnames.
+
+</details>
 
 ---
 
@@ -107,29 +178,48 @@ How do containers in the same Compose network communicate?
 
 What's the difference between a named volume and a bind mount?
 
-- [ ] Named volumes are faster
-- [x] Named volumes are managed by Docker; bind mounts map to host paths
-- [ ] Bind mounts persist data; named volumes don't
-- [ ] There is no difference
+- A) Named volumes are faster
+- B) Named volumes are managed by Docker; bind mounts map to host paths
+- C) Bind mounts persist data; named volumes don't
+- D) There is no difference
+
+<details>
+<summary>Show Answer</summary>
+
+**Correct Answer: B**
+
+Named volumes are managed by Docker; bind mounts map to host paths.
 
 **Explanation:** Named volumes are managed by Docker in its storage area, while bind mounts directly map a host directory into the container.
+
+</details>
 
 ---
 
 ### Question 9
 
 What does this volume configuration do?
+
 ```yaml
 volumes:
   - ./src:/app/src:ro
 ```
 
-- [ ] Creates a read-only named volume
-- [x] Mounts ./src to /app/src as read-only
-- [ ] Copies ./src to /app/src
-- [ ] Creates a symlink from ./src to /app/src
+- A) Creates a read-only named volume
+- B) Mounts ./src to /app/src as read-only
+- C) Copies ./src to /app/src
+- D) Creates a symlink from ./src to /app/src
+
+<details>
+<summary>Show Answer</summary>
+
+**Correct Answer: B**
+
+Mounts ./src to /app/src as read-only.
 
 **Explanation:** This is a bind mount that maps the local `./src` directory to `/app/src` in the container. The `:ro` suffix makes it read-only.
+
+</details>
 
 ---
 
@@ -139,12 +229,21 @@ volumes:
 
 What does the `target` option do in a build configuration?
 
-- [ ] Specifies the build output directory
-- [x] Selects which stage to build in a multi-stage Dockerfile
-- [ ] Sets the target platform (linux/amd64)
-- [ ] Specifies the target image name
+- A) Specifies the build output directory
+- B) Selects which stage to build in a multi-stage Dockerfile
+- C) Sets the target platform (linux/amd64)
+- D) Specifies the target image name
+
+<details>
+<summary>Show Answer</summary>
+
+**Correct Answer: B**
+
+Selects which stage to build in a multi-stage Dockerfile.
 
 **Explanation:** In a multi-stage Dockerfile, `target` allows you to build a specific stage (e.g., `development` or `production`) rather than the final stage.
+
+</details>
 
 ---
 
@@ -152,12 +251,21 @@ What does the `target` option do in a build configuration?
 
 Which build argument syntax provides a default value if the variable is unset?
 
-- [ ] `${VAR?default}`
-- [x] `${VAR:-default}`
-- [ ] `${VAR:default}`
-- [ ] `${VAR||default}`
+- A) `${VAR?default}`
+- B) `${VAR:-default}`
+- C) `${VAR:default}`
+- D) `${VAR||default}`
+
+<details>
+<summary>Show Answer</summary>
+
+**Correct Answer: B**
+
+`${VAR:-default}`
 
 **Explanation:** The `${VAR:-default}` syntax provides a default value if VAR is unset or empty. `${VAR-default}` provides a default only if unset.
+
+</details>
 
 ---
 
@@ -167,12 +275,21 @@ Which build argument syntax provides a default value if the variable is unset?
 
 Where are secrets mounted inside containers by default?
 
-- [ ] /etc/secrets/
-- [ ] /secrets/
-- [x] /run/secrets/
-- [ ] /app/secrets/
+- A) /etc/secrets/
+- B) /secrets/
+- C) /run/secrets/
+- D) /app/secrets/
+
+<details>
+<summary>Show Answer</summary>
+
+**Correct Answer: C**
+
+/run/secrets/
 
 **Explanation:** Docker mounts secrets at `/run/secrets/<secret_name>` inside containers.
+
+</details>
 
 ---
 
@@ -180,12 +297,21 @@ Where are secrets mounted inside containers by default?
 
 What's the recommended way to pass a database password to a container?
 
-- [ ] Hardcode in compose.yaml
-- [ ] Use environment variable directly
-- [x] Use a secret file with `_FILE` environment variable convention
-- [ ] Pass as a build argument
+- A) Hardcode in compose.yaml
+- B) Use environment variable directly
+- C) Use a secret file with `_FILE` environment variable convention
+- D) Pass as a build argument
+
+<details>
+<summary>Show Answer</summary>
+
+**Correct Answer: C**
+
+Use a secret file with `_FILE` environment variable convention.
 
 **Explanation:** Using secrets with the `_FILE` suffix convention (e.g., `POSTGRES_PASSWORD_FILE=/run/secrets/db_password`) is the recommended approach as it avoids exposing secrets in environment variables.
+
+</details>
 
 ---
 
@@ -195,12 +321,21 @@ What's the recommended way to pass a database password to a container?
 
 What does `start_period` in a health check configuration do?
 
-- [ ] Sets how long to wait before running the first check
-- [x] Provides a grace period during which failures don't count toward retries
-- [ ] Sets the maximum time the container can take to start
-- [ ] Delays the start of dependent services
+- A) Sets how long to wait before running the first check
+- B) Provides a grace period during which failures don't count toward retries
+- C) Sets the maximum time the container can take to start
+- D) Delays the start of dependent services
+
+<details>
+<summary>Show Answer</summary>
+
+**Correct Answer: B**
+
+Provides a grace period during which failures don't count toward retries.
 
 **Explanation:** During the `start_period`, health check failures are not counted toward the retry limit, allowing slow-starting applications time to initialize.
+
+</details>
 
 ---
 
@@ -208,12 +343,21 @@ What does `start_period` in a health check configuration do?
 
 Which health check state indicates the container has passed its health check?
 
-- [ ] running
-- [ ] ready
-- [x] healthy
-- [ ] started
+- A) running
+- B) ready
+- C) healthy
+- D) started
+
+<details>
+<summary>Show Answer</summary>
+
+**Correct Answer: C**
+
+healthy
 
 **Explanation:** The three health states are: `starting` (during start_period), `healthy` (checks passing), and `unhealthy` (checks failing after retries exhausted).
+
+</details>
 
 ---
 
@@ -223,12 +367,21 @@ Which health check state indicates the container has passed its health check?
 
 What happens when a container exceeds its memory limit?
 
-- [ ] It is paused
-- [ ] It receives a warning
-- [x] It is killed (OOM)
-- [ ] Memory is swapped to disk
+- A) It is paused
+- B) It receives a warning
+- C) It is killed (OOM)
+- D) Memory is swapped to disk
+
+<details>
+<summary>Show Answer</summary>
+
+**Correct Answer: C**
+
+It is killed (OOM).
 
 **Explanation:** When a container exceeds its memory limit, the kernel's OOM (Out of Memory) killer terminates the container. This can be observed with `docker inspect` showing `OOMKilled: true`.
+
+</details>
 
 ---
 
@@ -236,12 +389,21 @@ What happens when a container exceeds its memory limit?
 
 What's the purpose of resource reservations?
 
-- [ ] To limit maximum resource usage
-- [x] To guarantee minimum resources for scheduling
-- [ ] To reserve resources for future use
-- [ ] To prevent OOM kills
+- A) To limit maximum resource usage
+- B) To guarantee minimum resources for scheduling
+- C) To reserve resources for future use
+- D) To prevent OOM kills
+
+<details>
+<summary>Show Answer</summary>
+
+**Correct Answer: B**
+
+To guarantee minimum resources for scheduling.
 
 **Explanation:** Reservations guarantee that the specified resources are available for the container. They're used for scheduling decisions but don't limit actual usage like limits do.
+
+</details>
 
 ---
 
@@ -251,12 +413,21 @@ What's the purpose of resource reservations?
 
 Which practice most reduces Docker image size?
 
-- [ ] Using more RUN commands
-- [ ] Adding more COPY instructions
-- [x] Using multi-stage builds with minimal production base
-- [ ] Using the latest tag
+- A) Using more RUN commands
+- B) Adding more COPY instructions
+- C) Using multi-stage builds with minimal production base
+- D) Using the latest tag
+
+<details>
+<summary>Show Answer</summary>
+
+**Correct Answer: C**
+
+Using multi-stage builds with minimal production base.
 
 **Explanation:** Multi-stage builds allow you to use a full build environment but copy only the necessary artifacts to a minimal production image.
+
+</details>
 
 ---
 
@@ -264,12 +435,21 @@ Which practice most reduces Docker image size?
 
 Why should you order Dockerfile instructions from least to most frequently changed?
 
-- [ ] It makes the file easier to read
-- [x] It maximizes build cache utilization
-- [ ] It reduces the number of layers
-- [ ] It's required by Docker
+- A) It makes the file easier to read
+- B) It maximizes build cache utilization
+- C) It reduces the number of layers
+- D) It's required by Docker
+
+<details>
+<summary>Show Answer</summary>
+
+**Correct Answer: B**
+
+It maximizes build cache utilization.
 
 **Explanation:** Docker caches layers, and a changed layer invalidates all subsequent layers. Putting rarely-changed instructions (like installing dependencies) before frequently-changed ones (like copying source code) maximizes cache hits.
+
+</details>
 
 ---
 
@@ -279,12 +459,21 @@ Why should you order Dockerfile instructions from least to most frequently chang
 
 Which is NOT a security best practice for production containers?
 
-- [ ] Running as non-root user
-- [ ] Using read-only filesystem
-- [x] Using privileged mode for easier debugging
-- [ ] Dropping all capabilities and adding only needed ones
+- A) Running as non-root user
+- B) Using read-only filesystem
+- C) Using privileged mode for easier debugging
+- D) Dropping all capabilities and adding only needed ones
+
+<details>
+<summary>Show Answer</summary>
+
+**Correct Answer: C**
+
+Using privileged mode for easier debugging.
 
 **Explanation:** Privileged mode should never be used in production as it gives the container full access to the host system, defeating container isolation.
+
+</details>
 
 ---
 
@@ -292,12 +481,21 @@ Which is NOT a security best practice for production containers?
 
 What restart policy should be used for most production services?
 
-- [ ] always
-- [x] unless-stopped
-- [ ] on-failure
-- [ ] no
+- A) always
+- B) unless-stopped
+- C) on-failure
+- D) no
+
+<details>
+<summary>Show Answer</summary>
+
+**Correct Answer: B**
+
+unless-stopped
 
 **Explanation:** `unless-stopped` restarts containers automatically after failures or reboots but respects manual stops, making it ideal for most production services.
+
+</details>
 
 ---
 
@@ -305,28 +503,64 @@ What restart policy should be used for most production services?
 
 What does the `stop_grace_period` setting control?
 
-- [ ] How long to wait before starting a container
-- [x] Time between SIGTERM and SIGKILL when stopping
-- [ ] Maximum container runtime
-- [ ] Health check timeout
+- A) How long to wait before starting a container
+- B) Time between SIGTERM and SIGKILL when stopping
+- C) Maximum container runtime
+- D) Health check timeout
+
+<details>
+<summary>Show Answer</summary>
+
+**Correct Answer: B**
+
+Time between SIGTERM and SIGKILL when stopping.
 
 **Explanation:** `stop_grace_period` sets how long Docker waits after sending SIGTERM before sending SIGKILL, allowing applications time for graceful shutdown.
 
----
-
-## Scoring
-
-| Score | Rating |
-|-------|--------|
-| 20-22 | Expert - Ready for advanced topics |
-| 16-19 | Proficient - Solid intermediate knowledge |
-| 12-15 | Developing - Review weak areas |
-| Below 12 | Needs review - Revisit Part 2 materials |
+</details>
 
 ---
 
-## What's next
+## Score tracker
 
-If you scored well, proceed to Part 3: Advanced Container Concepts.
+Use this section to calculate your final score.
 
-Continue to: [../part3-advanced/](../part3-advanced/)
+### Tally your results
+
+| Section | Questions | Your Correct Answers |
+|---------|-----------|---------------------|
+| Docker Compose Basics | 1-3 | ___ / 3 |
+| Service Dependencies | 4-5 | ___ / 2 |
+| Networking | 6-7 | ___ / 2 |
+| Volumes | 8-9 | ___ / 2 |
+| Building Images | 10-11 | ___ / 2 |
+| Secrets and Configuration | 12-13 | ___ / 2 |
+| Health Checks | 14-15 | ___ / 2 |
+| Resource Management | 16-17 | ___ / 2 |
+| Image Optimization | 18-19 | ___ / 2 |
+| Production Considerations | 20-22 | ___ / 3 |
+| **Total** | | ___ / 22 |
+
+### Calculate your percentage
+
+**Your Score: ___ / 22 = ____%**
+
+(Divide your correct answers by 22 and multiply by 100)
+
+### How did you do?
+
+| Score | Percentage | Level | Recommendation |
+|-------|------------|-------|----------------|
+| 20-22 | 90-100% | Expert | Ready for advanced topics |
+| 16-19 | 73-89% | Proficient | Solid intermediate knowledge |
+| 12-15 | 55-72% | Developing | Review weak areas |
+| Below 12 | Below 55% | Needs Review | Revisit Part 2 materials |
+
+---
+
+## Next steps
+
+Based on your score:
+
+- **Score 80%+**: Continue to [Part 3: Advanced](../part3-advanced/)
+- **Score below 80%**: Review the Part 2 materials before proceeding
