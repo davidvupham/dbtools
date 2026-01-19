@@ -4,7 +4,8 @@ This directory contains resources for learning System Design, organized into the
 
 ## Phase 1: Scaling the Foundation
 *The core building blocks associated with handling load.*
-- **[Database Patterns](concepts/data_patterns.md)**: Sharding, CAP Theorem, NoSQL vs SQL.
+- **[SQL vs NoSQL](concepts/sql_vs_nosql.md)**: ACID vs BASE, when to choose each, NoSQL types, polyglot persistence.
+- **[Database Patterns](concepts/data_patterns.md)**: Sharding, CAP Theorem, CQRS, Event Sourcing.
 - **[Caching](concepts/data_patterns.md#caching)**: Read-Through, Write-Behind, Eviction Policies.
 - **[Load Balancers](concepts/scalability_reliability.md#1-load-balancers-l7-vs-l4)**: L4 vs L7, Horizontal Scaling.
 
