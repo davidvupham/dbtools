@@ -74,28 +74,6 @@ Key standards documents:
 - `docs/development/coding-standards/powershell-coding-standards.md`
 - `docs/best-practices/documentation-standards.md`
 
-## Python Project Requirements
-
-When creating or modifying Python packages, follow these guidelines:
-
-**Required reading before creating a new Python package:**
-- `docs/best-practices/python/README.md` - Checklist and decision framework
-- `docs/best-practices/python/project-setup.md` - Directory structure and templates
-- `docs/reference/python-package-structure.md` - src-layout specification
-
-**Required reading before adding dependencies:**
-- `docs/best-practices/python/dependency-management.md` - UV, pyproject.toml, PEP 735
-
-**Required reading before writing tests:**
-- `docs/best-practices/python/testing-and-ci.md` - Pytest patterns and coverage
-
-**Key requirements for new packages:**
-1. Use src-layout: `python/gds_<name>/src/gds_<name>/`
-2. Include `py.typed` marker for type hints
-3. Define public API explicitly in `__init__.py` with `__all__`
-4. Add `[tool.uv.sources]` for workspace dependencies
-5. Minimum 70% test coverage
-
 ## Liquibase Tutorial Testing
 
 When modifying the Liquibase tutorial in `docs/courses/liquibase/`, ensure the corresponding test scripts are updated:
