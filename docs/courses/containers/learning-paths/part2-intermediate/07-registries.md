@@ -427,4 +427,10 @@ fi
 
 Learn about multi-stage builds and image optimization.
 
-Continue to: [08-image-optimization.md](08-image-optimization.md)
+---
+
+## Navigation
+
+| Previous | Up | Next |
+|----------|-----|------|
+| [Secrets and Config](06-secrets-config.md) | [Part 2 Overview](../../course_overview.md#part-2-intermediate) | [Image Optimization](08-image-optimization.md) |

@@ -377,4 +377,10 @@ podman run nginx
 
 Return to the main course content.
 
-Continue to: [../README.md](../README.md)
+---
+
+## Navigation
+
+| Previous | Up | Next |
+|----------|-----|------|
+| [Detailed Comparison](02-detailed-comparison.md) | [Course Overview](../course_overview.md) | [DCA Overview](../certification/01-dca-overview.md) |

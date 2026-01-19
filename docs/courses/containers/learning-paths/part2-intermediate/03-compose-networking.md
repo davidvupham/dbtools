@@ -479,4 +479,10 @@ docker compose exec api ip route
 
 Learn about volumes and persistent storage in Compose.
 
-Continue to: [04-compose-volumes.md](04-compose-volumes.md)
+---
+
+## Navigation
+
+| Previous | Up | Next |
+|----------|-----|------|
+| [Compose Services](02-compose-services.md) | [Part 2 Overview](../../course_overview.md#part-2-intermediate) | [Compose Volumes](04-compose-volumes.md) |

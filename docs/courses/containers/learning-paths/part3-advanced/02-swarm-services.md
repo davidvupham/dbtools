@@ -432,4 +432,10 @@ docker node ps <node-name>
 
 Learn about Docker stacks for declarative deployments.
 
-Continue to: [03-docker-stacks.md](03-docker-stacks.md)
+---
+
+## Navigation
+
+| Previous | Up | Next |
+|----------|-----|------|
+| [Docker Swarm Introduction](01-docker-swarm-introduction.md) | [Part 3 Overview](../../course_overview.md#part-3-advanced) | [Docker Stacks](03-docker-stacks.md) |

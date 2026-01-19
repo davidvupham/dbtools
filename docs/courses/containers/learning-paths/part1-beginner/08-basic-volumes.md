@@ -522,3 +522,11 @@ Continue to: [09-basic-networking.md](09-basic-networking.md)
    - [ ] `docker volume delete --all`
    - [x] `docker volume prune`
    - [ ] `docker volume rm *`
+
+---
+
+## Navigation
+
+| Previous | Up | Next |
+|----------|-----|------|
+| [Image Management](07-image-management.md) | [Part 1 Overview](../../course_overview.md#part-1-beginner) | [Basic Networking](09-basic-networking.md) |

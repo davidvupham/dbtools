@@ -611,4 +611,10 @@ environments:
 
 Learn about monitoring and observability in production.
 
-Continue to: [09-monitoring-observability.md](09-monitoring-observability.md)
+---
+
+## Navigation
+
+| Previous | Up | Next |
+|----------|-----|------|
+| [Storage Deep Dive](07-storage-deep-dive.md) | [Part 3 Overview](../../course_overview.md#part-3-advanced) | [Monitoring and Observability](09-monitoring-observability.md) |

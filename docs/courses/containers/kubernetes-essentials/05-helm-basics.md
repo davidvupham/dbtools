@@ -448,4 +448,10 @@ spec:
 
 Learn about practical Kubernetes deployments.
 
-Continue to: [06-practical-kubernetes.md](06-practical-kubernetes.md)
+---
+
+## Navigation
+
+| Previous | Up | Next |
+|----------|-----|------|
+| [Kubernetes Networking](04-kubernetes-networking.md) | [Course Overview](../course_overview.md) | [Practical Kubernetes](06-practical-kubernetes.md) |

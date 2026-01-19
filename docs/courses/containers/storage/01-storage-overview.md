@@ -420,3 +420,11 @@ Continue to: [02-custom-storage-locations.md](02-custom-storage-locations.md)
    - [x] Only copying files when they are modified
    - [ ] Writing files to multiple locations
    - [ ] A backup mechanism
+
+---
+
+## Navigation
+
+| Previous | Up | Next |
+|----------|-----|------|
+| - | [Course Overview](../course_overview.md) | [Custom Storage Locations](02-custom-storage-locations.md) |

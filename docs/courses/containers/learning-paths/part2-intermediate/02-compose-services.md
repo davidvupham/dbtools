@@ -446,4 +446,10 @@ volumes:
 
 Learn about networking in Docker Compose.
 
-Continue to: [03-compose-networking.md](03-compose-networking.md)
+---
+
+## Navigation
+
+| Previous | Up | Next |
+|----------|-----|------|
+| [Docker Compose Basics](01-docker-compose-basics.md) | [Part 2 Overview](../../course_overview.md#part-2-intermediate) | [Compose Networking](03-compose-networking.md) |

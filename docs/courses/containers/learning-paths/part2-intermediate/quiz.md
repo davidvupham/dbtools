@@ -562,5 +562,13 @@ Use this section to calculate your final score.
 
 Based on your score:
 
-- **Score 80%+**: Continue to [Part 3: Advanced](../part3-advanced/)
+- **Score 80%+**: Continue to [Part 3: Advanced](../part3-advanced/01-docker-swarm-introduction.md)
 - **Score below 80%**: Review the Part 2 materials before proceeding
+
+---
+
+## Navigation
+
+| Previous | Up | Next |
+|----------|-----|------|
+| [Production Considerations](13-production-considerations.md) | [Part 2 Overview](../../course_overview.md#part-2-intermediate) | [Part 3: Docker Swarm Introduction](../part3-advanced/01-docker-swarm-introduction.md) |

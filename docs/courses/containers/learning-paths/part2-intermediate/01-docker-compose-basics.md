@@ -554,8 +554,6 @@ podman compose down
 
 Learn about advanced Compose features including profiles, extensions, and production configurations.
 
-Continue to: [02-compose-advanced.md](02-compose-advanced.md)
-
 ---
 
 ## Quick Quiz
@@ -583,3 +581,11 @@ Continue to: [02-compose-advanced.md](02-compose-advanced.md)
    - [x] `docker compose logs web`
    - [ ] `docker compose show logs web`
    - [ ] `docker compose web logs`
+
+---
+
+## Navigation
+
+| Previous | Up | Next |
+|----------|-----|------|
+| [Part 1 Quiz](../part1-beginner/quiz.md) | [Part 2 Overview](../../course_overview.md#part-2-intermediate) | [Compose Services](02-compose-services.md) |

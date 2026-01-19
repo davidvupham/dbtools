@@ -573,4 +573,10 @@ oc debug <pod>              # Debug mode
 
 Learn about Source-to-Image (S2I) builds in detail.
 
-Continue to: [04-source-to-image.md](04-source-to-image.md)
+---
+
+## Navigation
+
+| Previous | Up | Next |
+|----------|-----|------|
+| [OpenShift Concepts](02-openshift-concepts.md) | [Course Overview](../course_overview.md) | [Source-to-Image](04-source-to-image.md) |

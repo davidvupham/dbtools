@@ -526,4 +526,10 @@ volumes:
 
 Complete the intermediate exercises and quiz.
 
-Continue to: [exercises/](exercises/)
+---
+
+## Navigation
+
+| Previous | Up | Next |
+|----------|-----|------|
+| [Development Workflows](12-development-workflows.md) | [Part 2 Overview](../../course_overview.md#part-2-intermediate) | [Part 2 Quiz](quiz.md) |

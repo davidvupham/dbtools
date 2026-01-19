@@ -415,4 +415,10 @@ oc get route my-nginx
 
 Learn about OpenShift-specific concepts like Routes, BuildConfigs, and ImageStreams.
 
-Continue to: [02-openshift-concepts.md](02-openshift-concepts.md)
+---
+
+## Navigation
+
+| Previous | Up | Next |
+|----------|-----|------|
+| [Kubernetes Quiz](../kubernetes-essentials/quiz.md) | [Course Overview](../course_overview.md) | [OpenShift Concepts](02-openshift-concepts.md) |

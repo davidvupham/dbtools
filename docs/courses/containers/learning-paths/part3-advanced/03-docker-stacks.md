@@ -552,4 +552,10 @@ watch docker stack ps myapp
 
 Learn about advanced orchestration patterns.
 
-Continue to: [04-orchestration-patterns.md](04-orchestration-patterns.md)
+---
+
+## Navigation
+
+| Previous | Up | Next |
+|----------|-----|------|
+| [Swarm Services](02-swarm-services.md) | [Part 3 Overview](../../course_overview.md#part-3-advanced) | [Orchestration Patterns](04-orchestration-patterns.md) |

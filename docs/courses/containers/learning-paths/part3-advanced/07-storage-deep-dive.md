@@ -522,4 +522,10 @@ configs:
 
 Learn about CI/CD pipelines for containers.
 
-Continue to: [08-cicd-pipelines.md](08-cicd-pipelines.md)
+---
+
+## Navigation
+
+| Previous | Up | Next |
+|----------|-----|------|
+| [Advanced Networking](06-advanced-networking.md) | [Part 3 Overview](../../course_overview.md#part-3-advanced) | [CI/CD Pipelines](08-cicd-pipelines.md) |

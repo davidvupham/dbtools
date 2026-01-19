@@ -455,4 +455,10 @@ volumes:
 
 Learn about building custom images in Compose.
 
-Continue to: [05-building-images.md](05-building-images.md)
+---
+
+## Navigation
+
+| Previous | Up | Next |
+|----------|-----|------|
+| [Compose Networking](03-compose-networking.md) | [Part 2 Overview](../../course_overview.md#part-2-intermediate) | [Building Images](05-building-images.md) |

@@ -471,4 +471,10 @@ services:
 
 Learn about container resource management.
 
-Continue to: [11-resource-management.md](11-resource-management.md)
+---
+
+## Navigation
+
+| Previous | Up | Next |
+|----------|-----|------|
+| [Health Checks](09-health-checks.md) | [Part 2 Overview](../../course_overview.md#part-2-intermediate) | [Resource Management](11-resource-management.md) |

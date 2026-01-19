@@ -493,3 +493,11 @@ Continue to: [04-container-commands.md](04-container-commands.md)
    - [ ] `docker command`
    - [x] `docker exec`
    - [ ] `docker do`
+
+---
+
+## Navigation
+
+| Previous | Up | Next |
+|----------|-----|------|
+| [Installation](02-installation.md) | [Part 1 Overview](../../course_overview.md#part-1-beginner) | [Container Commands](04-container-commands.md) |

@@ -380,3 +380,11 @@ Continue to: [02-network-types.md](02-network-types.md)
    - [x] DNAT
    - [ ] PAT
    - [ ] Static NAT
+
+---
+
+## Navigation
+
+| Previous | Up | Next |
+|----------|-----|------|
+| [Volume Operations](../storage/03-volume-operations.md) | [Course Overview](../course_overview.md) | [Rootless Introduction](../rootless/01-rootless-introduction.md) |

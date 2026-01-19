@@ -514,3 +514,11 @@ Based on your score:
 Continue learning:
 - [CKA/CKAD Certification](https://kubernetes.io/docs/home/)
 - [Kubernetes Documentation](https://kubernetes.io/docs/)
+
+---
+
+## Navigation
+
+| Previous | Up | Next |
+|----------|-----|------|
+| [Practical Kubernetes](06-practical-kubernetes.md) | [Course Overview](../course_overview.md) | [OpenShift: Introduction](../openshift/01-openshift-introduction.md) |

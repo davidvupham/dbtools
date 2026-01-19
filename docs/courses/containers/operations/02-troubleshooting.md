@@ -443,4 +443,10 @@ docker version
 
 Learn about backup and disaster recovery strategies.
 
-Continue to: [03-backup-recovery.md](03-backup-recovery.md)
+---
+
+## Navigation
+
+| Previous | Up | Next |
+|----------|-----|------|
+| [Monitoring and Logging](01-monitoring-logging.md) | [Course Overview](../course_overview.md) | [Docker vs Podman](../comparison/01-docker-vs-podman.md) |

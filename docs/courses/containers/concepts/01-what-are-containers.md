@@ -317,7 +317,13 @@ In the next section, we'll explore **how containers work** at a technical level,
 - Control groups (resource limits)
 - Union filesystems (layered storage)
 
-Continue to: [02-how-containers-work.md](02-how-containers-work.md)
+---
+
+## Navigation
+
+| Previous | Up | Next |
+|----------|-----|------|
+| - | [Course Overview](../course_overview.md) | [How Containers Work](02-how-containers-work.md) |
 
 ---
 

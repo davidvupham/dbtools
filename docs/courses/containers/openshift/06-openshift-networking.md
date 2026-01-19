@@ -632,4 +632,10 @@ oc adm must-gather --image=registry.redhat.io/openshift4/ose-must-gather
 
 Learn about Operators and the OperatorHub.
 
-Continue to: [07-operators.md](07-operators.md)
+---
+
+## Navigation
+
+| Previous | Up | Next |
+|----------|-----|------|
+| [OpenShift Security](05-openshift-security.md) | [Course Overview](../course_overview.md) | [Operators](07-operators.md) |

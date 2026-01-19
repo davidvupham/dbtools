@@ -497,4 +497,10 @@ kubectl get events | grep -i oom
 
 Review Kubernetes concepts with the quiz.
 
-Continue to: [quiz.md](quiz.md)
+---
+
+## Navigation
+
+| Previous | Up | Next |
+|----------|-----|------|
+| [Helm Basics](05-helm-basics.md) | [Course Overview](../course_overview.md) | [Kubernetes Quiz](quiz.md) |

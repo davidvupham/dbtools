@@ -657,4 +657,10 @@ volumes:
 
 Complete the advanced exercises and quiz.
 
-Continue to: [exercises/](exercises/)
+---
+
+## Navigation
+
+| Previous | Up | Next |
+|----------|-----|------|
+| [CI/CD Pipelines](08-cicd-pipelines.md) | [Part 3 Overview](../../course_overview.md#part-3-advanced) | [Part 3 Quiz](quiz.md) |

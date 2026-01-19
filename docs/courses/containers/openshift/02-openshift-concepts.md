@@ -650,4 +650,10 @@ Access via **Web Console > Help > Quick Starts**
 
 Learn how to use the `oc` CLI effectively.
 
-Continue to: [03-oc-cli.md](03-oc-cli.md)
+---
+
+## Navigation
+
+| Previous | Up | Next |
+|----------|-----|------|
+| [OpenShift Introduction](01-openshift-introduction.md) | [Course Overview](../course_overview.md) | [OC CLI](03-oc-cli.md) |

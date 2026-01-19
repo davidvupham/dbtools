@@ -525,4 +525,10 @@ oc get crd <name> -o yaml
 
 Compare OpenShift with vanilla Kubernetes.
 
-Continue to: [08-openshift-vs-kubernetes.md](08-openshift-vs-kubernetes.md)
+---
+
+## Navigation
+
+| Previous | Up | Next |
+|----------|-----|------|
+| [OpenShift Networking](06-openshift-networking.md) | [Course Overview](../course_overview.md) | [OpenShift vs Kubernetes](08-openshift-vs-kubernetes.md) |

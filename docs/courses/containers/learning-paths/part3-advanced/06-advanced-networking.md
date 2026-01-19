@@ -492,4 +492,10 @@ configs:
 
 Learn about storage drivers and advanced volume management.
 
-Continue to: [07-storage-deep-dive.md](07-storage-deep-dive.md)
+---
+
+## Navigation
+
+| Previous | Up | Next |
+|----------|-----|------|
+| [Security Deep Dive](05-security-deep-dive.md) | [Part 3 Overview](../../course_overview.md#part-3-advanced) | [Storage Deep Dive](07-storage-deep-dive.md) |

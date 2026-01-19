@@ -562,3 +562,11 @@ Continue to: [05-understanding-images.md](05-understanding-images.md)
    - [ ] `attach` is faster
    - [x] `attach` connects to PID 1, `exec` creates a new process
    - [ ] `exec` only works on running containers
+
+---
+
+## Navigation
+
+| Previous | Up | Next |
+|----------|-----|------|
+| [First Container](03-first-container.md) | [Part 1 Overview](../../course_overview.md#part-1-beginner) | [Understanding Images](05-understanding-images.md) |

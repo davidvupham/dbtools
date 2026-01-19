@@ -509,3 +509,11 @@ Continue to: [06-building-images.md](06-building-images.md)
    - [ ] An error occurs
    - [x] The file is copied to the container's writable layer
    - [ ] The container restarts
+
+---
+
+## Navigation
+
+| Previous | Up | Next |
+|----------|-----|------|
+| [Container Commands](04-container-commands.md) | [Part 1 Overview](../../course_overview.md#part-1-beginner) | [Building Images](06-building-images.md) |

@@ -675,4 +675,10 @@ spec:
 
 Learn about OpenShift networking in detail.
 
-Continue to: [06-openshift-networking.md](06-openshift-networking.md)
+---
+
+## Navigation
+
+| Previous | Up | Next |
+|----------|-----|------|
+| [Source-to-Image](04-source-to-image.md) | [Course Overview](../course_overview.md) | [OpenShift Networking](06-openshift-networking.md) |

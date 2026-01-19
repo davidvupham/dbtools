@@ -271,3 +271,11 @@ Remember:
 - Eliminate wrong answers
 - Flag and return to difficult questions
 - Don't change answers unless certain
+
+---
+
+## Navigation
+
+| Previous | Up | Next |
+|----------|-----|------|
+| [Exam Preparation](02-exam-preparation.md) | [Course Overview](../course_overview.md) | [Course Overview](../README.md) |

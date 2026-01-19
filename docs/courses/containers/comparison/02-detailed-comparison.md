@@ -343,4 +343,10 @@ systemctl --user enable --now container-mycontainer
 
 Learn how to transition between Docker and Podman.
 
-Continue to: [03-migration-guide.md](03-migration-guide.md)
+---
+
+## Navigation
+
+| Previous | Up | Next |
+|----------|-----|------|
+| [Docker vs Podman](01-docker-vs-podman.md) | [Course Overview](../course_overview.md) | [Migration Guide](03-migration-guide.md) |

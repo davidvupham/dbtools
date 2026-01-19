@@ -502,3 +502,11 @@ Continue to: [02-swarm-services.md](02-swarm-services.md)
    - [ ] nginx
    - [x] Ingress routing mesh
    - [ ] DNS round-robin
+
+---
+
+## Navigation
+
+| Previous | Up | Next |
+|----------|-----|------|
+| [Part 2 Quiz](../part2-intermediate/quiz.md) | [Part 3 Overview](../../course_overview.md#part-3-advanced) | [Swarm Services](02-swarm-services.md) |

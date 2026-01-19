@@ -474,3 +474,11 @@ Continue to: [05-rootless-architecture.md](05-rootless-architecture.md)
    - [ ] containerd
    - [x] CRI-O
    - [ ] Docker
+
+---
+
+## Navigation
+
+| Previous | Up | Next |
+|----------|-----|------|
+| [OCI Standards](03-oci-standards.md) | [Course Overview](../course_overview.md) | [Rootless Architecture](05-rootless-architecture.md) |

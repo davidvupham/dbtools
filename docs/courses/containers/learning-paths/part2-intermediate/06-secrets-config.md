@@ -415,4 +415,10 @@ class Config:
 
 Learn about container registries and image distribution.
 
-Continue to: [07-registries.md](07-registries.md)
+---
+
+## Navigation
+
+| Previous | Up | Next |
+|----------|-----|------|
+| [Building Images](05-building-images.md) | [Part 2 Overview](../../course_overview.md#part-2-intermediate) | [Registries](07-registries.md) |

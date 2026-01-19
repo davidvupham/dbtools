@@ -333,3 +333,11 @@ Continue to: [02-user-namespaces.md](02-user-namespaces.md)
    - [ ] Windows Subsystem for Linux
    - [x] User namespaces and subordinate UIDs
    - [ ] A Kubernetes cluster
+
+---
+
+## Navigation
+
+| Previous | Up | Next |
+|----------|-----|------|
+| [Networking Fundamentals](../networking/01-networking-fundamentals.md) | [Course Overview](../course_overview.md) | [Security Overview](../security/01-security-overview.md) |

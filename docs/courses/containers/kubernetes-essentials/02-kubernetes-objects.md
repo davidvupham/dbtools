@@ -558,4 +558,10 @@ spec:
 
 Learn about storage in Kubernetes.
 
-Continue to: [03-kubernetes-storage.md](03-kubernetes-storage.md)
+---
+
+## Navigation
+
+| Previous | Up | Next |
+|----------|-----|------|
+| [Kubernetes Introduction](01-kubernetes-introduction.md) | [Course Overview](../course_overview.md) | [Kubernetes Storage](03-kubernetes-storage.md) |

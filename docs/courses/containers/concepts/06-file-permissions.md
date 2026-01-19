@@ -391,3 +391,11 @@ Continue to: [07-docker-vs-podman.md](07-docker-vs-podman.md)
    - [ ] It provides better security
    - [x] It's typically the first non-system user on Linux
    - [ ] It's the only UID containers can use
+
+---
+
+## Navigation
+
+| Previous | Up | Next |
+|----------|-----|------|
+| [Rootless Architecture](05-rootless-architecture.md) | [Course Overview](../course_overview.md) | [Docker vs Podman](07-docker-vs-podman.md) |

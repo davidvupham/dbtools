@@ -435,3 +435,11 @@ Continue to: [02-troubleshooting.md](02-troubleshooting.md)
    - [ ] Container has no health check
    - [x] Health check is failing
    - [ ] Container needs restart
+
+---
+
+## Navigation
+
+| Previous | Up | Next |
+|----------|-----|------|
+| [Security Overview](../security/01-security-overview.md) | [Course Overview](../course_overview.md) | [Troubleshooting](02-troubleshooting.md) |

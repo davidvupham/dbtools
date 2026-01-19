@@ -715,3 +715,11 @@ Use this section to calculate your final score.
 
 - **Score 80%+**: Continue to [Part 2: Intermediate](../part2-intermediate/01-docker-compose-basics.md)
 - **Score below 80%**: Review the [Part 1 Exercises](exercises/beginner-exercises.md) and re-read relevant sections
+
+---
+
+## Navigation
+
+| Previous | Up | Next |
+|----------|-----|------|
+| [Basic Networking](09-basic-networking.md) | [Part 1 Overview](../../course_overview.md#part-1-beginner) | [Part 2: Docker Compose Basics](../part2-intermediate/01-docker-compose-basics.md) |

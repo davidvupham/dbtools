@@ -519,3 +519,11 @@ Or practice with: [Exercises](exercises/beginner-exercises.md)
    - [x] host
    - [ ] none
    - [ ] overlay
+
+---
+
+## Navigation
+
+| Previous | Up | Next |
+|----------|-----|------|
+| [Basic Volumes](08-basic-volumes.md) | [Part 1 Overview](../../course_overview.md#part-1-beginner) | [Part 1 Quiz](quiz.md) |

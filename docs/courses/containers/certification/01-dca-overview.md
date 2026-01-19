@@ -335,8 +335,14 @@ Which network type allows containers on different Docker hosts to communicate?
 
 ---
 
-## What's Next
+## What's next
 
-Review the study guide organized by exam domain.
+Review the study guide and exam preparation.
 
-Continue to: [02-dca-study-guide.md](02-dca-study-guide.md)
+---
+
+## Navigation
+
+| Previous | Up | Next |
+|----------|-----|------|
+| [Migration Guide](../comparison/03-migration-guide.md) | [Course Overview](../course_overview.md) | [Exam Preparation](02-exam-preparation.md) |

@@ -549,3 +549,11 @@ Continue to: [03-first-container.md](03-first-container.md)
    - [ ] `docker test`
    - [x] `docker run hello-world`
    - [ ] `docker verify`
+
+---
+
+## Navigation
+
+| Previous | Up | Next |
+|----------|-----|------|
+| [Introduction](01-introduction.md) | [Part 1 Overview](../../course_overview.md#part-1-beginner) | [First Container](03-first-container.md) |

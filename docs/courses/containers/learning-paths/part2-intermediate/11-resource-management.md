@@ -375,4 +375,10 @@ docker update --memory 512m --cpus 1 mycontainer
 
 Learn about development workflows with containers.
 
-Continue to: [12-development-workflows.md](12-development-workflows.md)
+---
+
+## Navigation
+
+| Previous | Up | Next |
+|----------|-----|------|
+| [Logging and Debugging](10-logging-debugging.md) | [Part 2 Overview](../../course_overview.md#part-2-intermediate) | [Development Workflows](12-development-workflows.md) |

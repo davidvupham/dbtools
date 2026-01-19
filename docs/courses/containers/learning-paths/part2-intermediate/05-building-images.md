@@ -473,4 +473,10 @@ CMD ["node", "dist/index.js"]
 
 Learn about managing secrets and configuration.
 
-Continue to: [06-secrets-config.md](06-secrets-config.md)
+---
+
+## Navigation
+
+| Previous | Up | Next |
+|----------|-----|------|
+| [Compose Volumes](04-compose-volumes.md) | [Part 2 Overview](../../course_overview.md#part-2-intermediate) | [Secrets and Config](06-secrets-config.md) |

@@ -394,3 +394,11 @@ Continue to: [02-installation.md](02-installation.md)
    - [x] Install locally and run every example
    - [ ] Watch videos only
    - [ ] Skip to advanced topics
+
+---
+
+## Navigation
+
+| Previous | Up | Next |
+|----------|-----|------|
+| [Docker vs Podman](../../concepts/07-docker-vs-podman.md) | [Part 1 Overview](../../course_overview.md#part-1-beginner) | [Installation](02-installation.md) |

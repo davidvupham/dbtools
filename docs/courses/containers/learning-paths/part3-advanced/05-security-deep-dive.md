@@ -510,4 +510,10 @@ echo "Security check passed"
 
 Learn about advanced networking patterns.
 
-Continue to: [06-advanced-networking.md](06-advanced-networking.md)
+---
+
+## Navigation
+
+| Previous | Up | Next |
+|----------|-----|------|
+| [Orchestration Patterns](04-orchestration-patterns.md) | [Part 3 Overview](../../course_overview.md#part-3-advanced) | [Advanced Networking](06-advanced-networking.md) |

@@ -478,4 +478,10 @@ CMD ["node", "dist/index.js"]
 
 Learn about health checks and container orchestration readiness.
 
-Continue to: [09-health-checks.md](09-health-checks.md)
+---
+
+## Navigation
+
+| Previous | Up | Next |
+|----------|-----|------|
+| [Registries](07-registries.md) | [Part 2 Overview](../../course_overview.md#part-2-intermediate) | [Health Checks](09-health-checks.md) |

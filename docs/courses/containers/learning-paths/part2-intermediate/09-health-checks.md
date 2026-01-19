@@ -445,4 +445,10 @@ volumes:
 
 Learn about logging and debugging containers.
 
-Continue to: [10-logging-debugging.md](10-logging-debugging.md)
+---
+
+## Navigation
+
+| Previous | Up | Next |
+|----------|-----|------|
+| [Image Optimization](08-image-optimization.md) | [Part 2 Overview](../../course_overview.md#part-2-intermediate) | [Logging and Debugging](10-logging-debugging.md) |

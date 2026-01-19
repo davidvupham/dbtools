@@ -632,4 +632,10 @@ Based on your score:
 - **Medium score**: Practice with OpenShift Local or a sandbox environment
 - **Lower score**: Review the OpenShift module materials
 
-Return to: [Course Overview](../README.md)
+---
+
+## Navigation
+
+| Previous | Up | Next |
+|----------|-----|------|
+| [OpenShift vs Kubernetes](08-openshift-vs-kubernetes.md) | [Course Overview](../course_overview.md) | [Course Overview](../README.md) |

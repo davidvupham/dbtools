@@ -542,4 +542,10 @@ spec:
 
 Learn about Helm for package management.
 
-Continue to: [05-helm-basics.md](05-helm-basics.md)
+---
+
+## Navigation
+
+| Previous | Up | Next |
+|----------|-----|------|
+| [Kubernetes Storage](03-kubernetes-storage.md) | [Course Overview](../course_overview.md) | [Helm Basics](05-helm-basics.md) |

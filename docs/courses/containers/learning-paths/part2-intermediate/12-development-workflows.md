@@ -512,4 +512,10 @@ volumes:
 
 Learn about production deployment considerations.
 
-Continue to: [13-production-considerations.md](13-production-considerations.md)
+---
+
+## Navigation
+
+| Previous | Up | Next |
+|----------|-----|------|
+| [Resource Management](11-resource-management.md) | [Part 2 Overview](../../course_overview.md#part-2-intermediate) | [Production Considerations](13-production-considerations.md) |

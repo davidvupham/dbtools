@@ -376,4 +376,10 @@ docker-compose up                 kubectl apply -f manifests/
 
 Learn about Kubernetes core objects in detail.
 
-Continue to: [02-kubernetes-objects.md](02-kubernetes-objects.md)
+---
+
+## Navigation
+
+| Previous | Up | Next |
+|----------|-----|------|
+| [Part 3 Quiz](../learning-paths/part3-advanced/quiz.md) | [Course Overview](../course_overview.md) | [Kubernetes Objects](02-kubernetes-objects.md) |

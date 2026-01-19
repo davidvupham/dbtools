@@ -427,4 +427,10 @@ spec:
 
 Learn about Kubernetes networking and Ingress.
 
-Continue to: [04-kubernetes-networking.md](04-kubernetes-networking.md)
+---
+
+## Navigation
+
+| Previous | Up | Next |
+|----------|-----|------|
+| [Kubernetes Objects](02-kubernetes-objects.md) | [Course Overview](../course_overview.md) | [Kubernetes Networking](04-kubernetes-networking.md) |

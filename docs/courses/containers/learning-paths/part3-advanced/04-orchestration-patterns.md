@@ -509,4 +509,10 @@ services:
 
 Learn about container security in depth.
 
-Continue to: [05-security-deep-dive.md](05-security-deep-dive.md)
+---
+
+## Navigation
+
+| Previous | Up | Next |
+|----------|-----|------|
+| [Docker Stacks](03-docker-stacks.md) | [Part 3 Overview](../../course_overview.md#part-3-advanced) | [Security Deep Dive](05-security-deep-dive.md) |

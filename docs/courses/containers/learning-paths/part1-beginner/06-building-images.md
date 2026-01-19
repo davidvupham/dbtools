@@ -625,3 +625,11 @@ Continue to: [07-image-management.md](07-image-management.md)
    - [ ] Ignores failing commands
    - [x] Excludes files from the build context
    - [ ] Ignores container logs
+
+---
+
+## Navigation
+
+| Previous | Up | Next |
+|----------|-----|------|
+| [Understanding Images](05-understanding-images.md) | [Part 1 Overview](../../course_overview.md#part-1-beginner) | [Image Management](07-image-management.md) |

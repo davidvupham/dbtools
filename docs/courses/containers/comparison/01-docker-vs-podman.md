@@ -296,4 +296,10 @@ jobs:
 
 Explore detailed feature comparisons.
 
-Continue to: [02-detailed-comparison.md](02-detailed-comparison.md)
+---
+
+## Navigation
+
+| Previous | Up | Next |
+|----------|-----|------|
+| [Troubleshooting](../operations/02-troubleshooting.md) | [Course Overview](../course_overview.md) | [Detailed Comparison](02-detailed-comparison.md) |

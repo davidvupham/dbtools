@@ -523,3 +523,11 @@ Continue to: [08-basic-volumes.md](08-basic-volumes.md)
    - [ ] `nginx:1.25`
    - [x] `nginx@sha256:abc123...`
    - [ ] `nginx:stable`
+
+---
+
+## Navigation
+
+| Previous | Up | Next |
+|----------|-----|------|
+| [Building Images](06-building-images.md) | [Part 1 Overview](../../course_overview.md#part-1-beginner) | [Basic Volumes](08-basic-volumes.md) |

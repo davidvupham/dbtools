@@ -494,3 +494,11 @@ Continue to: [04-storage-drivers.md](04-storage-drivers.md)
    - [x] `docker volume ls -f dangling=true`
    - [ ] `docker volume ls --orphan`
    - [ ] `docker volume inspect --no-container`
+
+---
+
+## Navigation
+
+| Previous | Up | Next |
+|----------|-----|------|
+| [Custom Storage Locations](02-custom-storage-locations.md) | [Course Overview](../course_overview.md) | [Networking Fundamentals](../networking/01-networking-fundamentals.md) |

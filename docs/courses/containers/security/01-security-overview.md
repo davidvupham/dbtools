@@ -335,3 +335,11 @@ Continue to: [02-image-security.md](02-image-security.md)
    - [ ] Disables all networking
    - [x] Removes all Linux capabilities
    - [ ] Stops all running processes
+
+---
+
+## Navigation
+
+| Previous | Up | Next |
+|----------|-----|------|
+| [Rootless Introduction](../rootless/01-rootless-introduction.md) | [Course Overview](../course_overview.md) | [Monitoring and Logging](../operations/01-monitoring-logging.md) |

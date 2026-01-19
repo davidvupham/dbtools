@@ -407,4 +407,10 @@ oc apply -k overlays/openshift/
 
 Test your OpenShift knowledge with the quiz.
 
-Continue to: [quiz.md](quiz.md)
+---
+
+## Navigation
+
+| Previous | Up | Next |
+|----------|-----|------|
+| [Operators](07-operators.md) | [Course Overview](../course_overview.md) | [OpenShift Quiz](quiz.md) |

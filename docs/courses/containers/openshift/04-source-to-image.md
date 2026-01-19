@@ -573,4 +573,10 @@ oc start-build my-app --env=DEBUG=true --follow
 
 Learn about OpenShift security features including Security Context Constraints.
 
-Continue to: [05-openshift-security.md](05-openshift-security.md)
+---
+
+## Navigation
+
+| Previous | Up | Next |
+|----------|-----|------|
+| [OC CLI](03-oc-cli.md) | [Course Overview](../course_overview.md) | [OpenShift Security](05-openshift-security.md) |

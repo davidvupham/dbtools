@@ -416,3 +416,11 @@ Continue to: [06-file-permissions.md](06-file-permissions.md)
    - [ ] To disable user namespaces
    - [x] To map your host UID to the same UID inside the container
    - [ ] To use a specific username
+
+---
+
+## Navigation
+
+| Previous | Up | Next |
+|----------|-----|------|
+| [Container Runtimes](04-container-runtimes.md) | [Course Overview](../course_overview.md) | [File Permissions](06-file-permissions.md) |

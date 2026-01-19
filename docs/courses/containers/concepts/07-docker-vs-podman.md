@@ -452,3 +452,11 @@ Continue to the learning path: [../learning-paths/part1-beginner/01-introduction
    - [ ] Podman
    - [ ] Either works
    - [ ] Neither supports Swarm
+
+---
+
+## Navigation
+
+| Previous | Up | Next |
+|----------|-----|------|
+| [File Permissions](06-file-permissions.md) | [Course Overview](../course_overview.md) | [Part 1: Introduction](../learning-paths/part1-beginner/01-introduction.md) |

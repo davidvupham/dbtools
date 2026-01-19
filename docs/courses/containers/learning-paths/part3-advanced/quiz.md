@@ -555,4 +555,10 @@ Congratulations on completing the advanced section! Consider:
 2. **Kubernetes** - Explore container orchestration at scale
 3. **Real projects** - Apply these concepts to production systems
 
-Continue to: [Kubernetes Essentials](../../kubernetes-essentials/)
+---
+
+## Navigation
+
+| Previous | Up | Next |
+|----------|-----|------|
+| [Monitoring and Observability](09-monitoring-observability.md) | [Part 3 Overview](../../course_overview.md#part-3-advanced) | [Kubernetes: Introduction](../../kubernetes-essentials/01-kubernetes-introduction.md) |

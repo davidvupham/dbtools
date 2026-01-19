@@ -499,3 +499,11 @@ Continue to: [03-volume-operations.md](03-volume-operations.md)
    - [ ] mv
    - [x] rsync with -a flag
    - [ ] tar
+
+---
+
+## Navigation
+
+| Previous | Up | Next |
+|----------|-----|------|
+| [Storage Overview](01-storage-overview.md) | [Course Overview](../course_overview.md) | [Volume Operations](03-volume-operations.md) |

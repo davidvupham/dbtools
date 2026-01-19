@@ -355,4 +355,10 @@ Focus on these flags:
 
 Review the exam topic checklist.
 
-Continue to: [03-exam-checklist.md](03-exam-checklist.md)
+---
+
+## Navigation
+
+| Previous | Up | Next |
+|----------|-----|------|
+| [DCA Overview](01-dca-overview.md) | [Course Overview](../course_overview.md) | [Exam Checklist](03-exam-checklist.md) |
