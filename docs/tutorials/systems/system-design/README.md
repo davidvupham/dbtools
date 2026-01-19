@@ -6,7 +6,8 @@ This directory contains resources for learning System Design, organized into the
 *The core building blocks associated with handling load.*
 - **[SQL vs NoSQL](concepts/sql_vs_nosql.md)**: ACID vs BASE, when to choose each, NoSQL types, polyglot persistence.
 - **[Database Patterns](concepts/data_patterns.md)**: Sharding, CAP Theorem, CQRS, Event Sourcing.
-- **[Caching](concepts/data_patterns.md#caching)**: Read-Through, Write-Behind, Eviction Policies.
+- **[Caching Strategies](concepts/caching-strategies.md)**: Cache-first design, key patterns, cold starts, cache stampede prevention.
+- **[Caching Basics](concepts/data_patterns.md#4-redis-caching)**: Read-Through, Write-Behind, eviction policies.
 - **[Load Balancers](concepts/scalability_reliability.md#1-load-balancers-l7-vs-l4)**: L4 vs L7, Horizontal Scaling.
 
 ## Phase 2: Architecting Your System

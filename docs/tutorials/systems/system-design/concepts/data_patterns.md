@@ -77,6 +77,8 @@ How do eventual consistent systems actually converge?
 
 **The Concept:** Storing data in RAM for sub-millisecond access.
 
+> **For advanced caching patterns** (cache-first architecture, key design strategies, cold start solutions, cache stampede prevention), see **[Caching Strategies](caching-strategies.md)**.
+
 ### The Tradeoff
 
 - **Problem Solved:** Latency. Protects the database from read spikes.
