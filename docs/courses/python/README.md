@@ -23,6 +23,8 @@
 * **[06 Error Handling](./module_1_foundations/06_error_handling.md)**
 * **[07 Type Hints](./module_1_foundations/07_type_hints.md)**
 
+📝 **[Exercises](./module_1_foundations/exercises/)** | 📋 **[Quiz](./module_1_foundations/quiz_module_1.md)**
+
 🛠️ **[Project 1: CLI Financial Calculator](./module_1_foundations/project_1_calculator.md)**
 
 ## Module 2: Intermediate Engineering
@@ -39,6 +41,8 @@
 * **[14 Logging](./module_2_intermediate/14_logging.md)**
 * **[14a Utility Libraries](./module_2_intermediate/14a_utility_libraries.md)** - tenacity, diskcache, watchdog, schedule, msgspec, pluggy
 
+📝 **[Exercises](./module_2_intermediate/exercises/)** | 📋 **[Quiz](./module_2_intermediate/quiz_module_2.md)**
+
 🛠️ **[Project 2: Library Management System](./module_2_intermediate/project_2_library.md)**
 
 ## Module 3: Advanced Concepts
@@ -50,6 +54,8 @@
 * **[17 Metaprogramming](./module_3_advanced/17_metaprogramming.md)**
 * **[18 Performance](./module_3_advanced/18_performance.md)**
 * **[19 Testing](./module_3_advanced/19_testing.md)**
+
+📝 **[Exercises](./module_3_advanced/exercises/)** | 📋 **[Quiz](./module_3_advanced/quiz_module_3.md)**
 
 🛠️ **[Project 3: High-concurrency Web Scraper](./module_3_advanced/project_3_scraper.md)**
 
@@ -77,6 +83,11 @@
 * **[Prefect](./module_4_applied/automation/prefect/README.md)**
 * **[Faker](./module_4_applied/automation/faker/README.md)**
 🛠️ **[Project 6: Process Bot](./module_4_applied/automation/project_6_bot.md)**
+
+### Track D: DevOps
+
+* **[Docker](./module_4_applied/devops/docker/README.md)** - Containerize Python applications
+* **[SQL Basics](./module_4_applied/devops/sql_basics/README.md)** - Database fundamentals for Python developers
 
 ## Module 5: Capstone Project
 
