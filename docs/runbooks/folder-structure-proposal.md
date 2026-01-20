@@ -68,21 +68,21 @@ docs/runbooks/
 
 | Category | Platform/Technology | Runbook Count |
 |----------|---------------------|---------------|
+| alerts | linux | 1 |
 | alerts | mssql | 4 |
 | alerts | ssas | 1 |
-| alerts | linux | 1 |
 | alerts | windows | 1 |
 | gmsa | dpa | 1 |
 | gmsa | sql-entry | 1 |
-| podman | - | 1 |
 | other | Enable_WinRM_HTTPS | 1 |
+| podman | - | 1 |
 | **Total** | | **11** |
 
 ### Problem statement
 
 As we expand runbook coverage to include maintenance, backup, failover, and other operational procedures across multiple database platforms, we need a consistent folder structure that:
 
-1. Scales across platforms (SQL Server, SSAS, SSIS, PostgreSQL, MongoDB, Snowflake)
+1. Scales across platforms (Kafka, MongoDB, PostgreSQL, Snowflake, SQL Server, SSAS, SSIS)
 2. Supports multiple task types (alerts, maintenance, backup, failover, patching)
 3. Enables efficient navigation during incident response
 4. Aligns with team organization and operational workflows
@@ -108,52 +108,61 @@ docs/runbooks/
 ├── README.md
 ├── alerts/
 │   ├── README.md
+│   ├── kafka/
+│   │   └── ...
+│   ├── mongodb/
+│   │   └── ...
 │   ├── mssql/
 │   │   ├── README.md
-│   │   ├── alert-cpu-utilization.md
-│   │   └── alert-blocking-detected.md
-│   ├── ssas/
-│   │   ├── README.md
-│   │   └── alert-offline.md
+│   │   ├── alert-blocking-detected.md
+│   │   └── alert-cpu-utilization.md
 │   ├── postgresql/
 │   │   └── ...
-│   └── mongodb/
-│       └── ...
-├── maintenance/
-│   ├── README.md
-│   ├── mssql/
-│   │   ├── README.md
-│   │   ├── index-rebuild.md
-│   │   ├── statistics-update.md
-│   │   └── integrity-check.md
-│   ├── ssas/
-│   │   ├── README.md
-│   │   └── cube-processing.md
-│   ├── postgresql/
-│   │   ├── README.md
-│   │   ├── vacuum-analyze.md
-│   │   └── reindex.md
-│   └── mongodb/
+│   └── ssas/
 │       ├── README.md
-│       └── compact-collections.md
+│       └── alert-offline.md
 ├── backup/
 │   ├── README.md
+│   ├── kafka/
+│   ├── mongodb/
 │   ├── mssql/
-│   ├── postgresql/
-│   └── mongodb/
+│   └── postgresql/
 ├── failover/
 │   ├── README.md
+│   ├── kafka/
+│   ├── mongodb/
 │   ├── mssql/
-│   ├── postgresql/
-│   └── mongodb/
-├── patching/
-│   ├── README.md
-│   ├── mssql/
-│   ├── postgresql/
-│   └── mongodb/
+│   └── postgresql/
 ├── gmsa/                      # Existing: workflow-based
 │   ├── dpa/
 │   └── sql-entry/
+├── kafka/                     # Existing: technology-specific
+├── maintenance/
+│   ├── README.md
+│   ├── kafka/
+│   │   ├── README.md
+│   │   └── topic-management.md
+│   ├── mongodb/
+│   │   ├── README.md
+│   │   └── compact-collections.md
+│   ├── mssql/
+│   │   ├── README.md
+│   │   ├── index-rebuild.md
+│   │   ├── integrity-check.md
+│   │   └── statistics-update.md
+│   ├── postgresql/
+│   │   ├── README.md
+│   │   ├── reindex.md
+│   │   └── vacuum-analyze.md
+│   └── ssas/
+│       ├── README.md
+│       └── cube-processing.md
+├── patching/
+│   ├── README.md
+│   ├── kafka/
+│   ├── mongodb/
+│   ├── mssql/
+│   └── postgresql/
 └── podman/                    # Existing: technology-specific
 ```
 
@@ -183,43 +192,49 @@ Organize by database platform, then by task type.
 ```text
 docs/runbooks/
 ├── README.md
+├── gmsa/                      # Existing: workflow-based
+│   ├── dpa/
+│   └── sql-entry/
+├── kafka/
+│   ├── README.md
+│   ├── alerts/
+│   ├── backup/
+│   ├── failover/
+│   └── maintenance/
+├── mongodb/
+│   ├── README.md
+│   ├── alerts/
+│   ├── backup/
+│   └── maintenance/
 ├── mssql/
 │   ├── README.md
 │   ├── alerts/
 │   │   ├── README.md
-│   │   ├── alert-cpu-utilization.md
-│   │   └── alert-blocking-detected.md
-│   ├── maintenance/
-│   │   ├── README.md
-│   │   ├── index-rebuild.md
-│   │   └── statistics-update.md
+│   │   ├── alert-blocking-detected.md
+│   │   └── alert-cpu-utilization.md
 │   ├── backup/
 │   │   └── ...
-│   └── failover/
-│       └── ...
-├── ssas/
-│   ├── README.md
-│   ├── alerts/
+│   ├── failover/
+│   │   └── ...
 │   └── maintenance/
+│       ├── README.md
+│       ├── index-rebuild.md
+│       └── statistics-update.md
+├── podman/                    # Existing: technology-specific
 ├── postgresql/
 │   ├── README.md
 │   ├── alerts/
-│   ├── maintenance/
 │   ├── backup/
-│   └── failover/
-├── mongodb/
-│   ├── README.md
-│   ├── alerts/
-│   ├── maintenance/
-│   └── backup/
+│   ├── failover/
+│   └── maintenance/
 ├── snowflake/
 │   ├── README.md
 │   ├── alerts/
 │   └── maintenance/
-├── gmsa/                      # Existing: workflow-based
-│   ├── dpa/
-│   └── sql-entry/
-└── podman/                    # Existing: technology-specific
+└── ssas/
+    ├── README.md
+    ├── alerts/
+    └── maintenance/
 ```
 
 #### Advantages
@@ -346,10 +361,11 @@ To support engineers who think "I need all PostgreSQL runbooks," add platform in
 ```text
 docs/runbooks/
 ├── platforms/
-│   ├── mssql.md          # Index linking to all MSSQL runbooks across task types
-│   ├── ssas.md
+│   ├── kafka.md          # Index linking to all Kafka runbooks across task types
+│   ├── mongodb.md
+│   ├── mssql.md
 │   ├── postgresql.md
-│   └── mongodb.md
+│   └── ssas.md
 ```
 
 Example `platforms/postgresql.md`:
@@ -384,7 +400,7 @@ The existing structure already follows task-type-first for alerts. New directori
 
 ```bash
 # Create new task-type directories
-mkdir -p docs/runbooks/{maintenance,backup,failover,patching}/{mssql,ssas,postgresql,mongodb,snowflake}
+mkdir -p docs/runbooks/{backup,failover,maintenance,patching}/{kafka,mongodb,mssql,postgresql,snowflake,ssas}
 
 # Create platform index directory
 mkdir -p docs/runbooks/platforms
