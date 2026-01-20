@@ -1,6 +1,7 @@
 """Shared fixtures for gds_hammerdb tests."""
 
 import pytest
+
 from gds_hammerdb.constants import BM_TPCC, DB_POSTGRES
 from gds_hammerdb.models import (
     HammerDBConfig,

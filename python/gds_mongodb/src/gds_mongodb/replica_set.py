@@ -10,13 +10,14 @@ import logging
 import time
 from typing import TYPE_CHECKING, Any, Optional, Union
 
+from pymongo import MongoClient
+from pymongo.errors import OperationFailure, ServerSelectionTimeoutError
+
 from gds_database import (
     ConfigurationError,
     DatabaseConnectionError,
     QueryError,
 )
-from pymongo import MongoClient
-from pymongo.errors import OperationFailure, ServerSelectionTimeoutError
 
 from .connection import MongoDBConnection
 

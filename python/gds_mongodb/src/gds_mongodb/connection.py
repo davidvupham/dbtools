@@ -9,6 +9,13 @@ import logging
 from typing import Any, Optional
 from urllib.parse import quote_plus
 
+from pymongo import MongoClient
+from pymongo.errors import (
+    ConnectionFailure,
+    OperationFailure,
+    ServerSelectionTimeoutError,
+)
+
 from gds_database import (
     ConfigurableComponent,
     ConfigurationError,
@@ -16,12 +23,6 @@ from gds_database import (
     DatabaseConnectionError,
     QueryError,
     ResourceManager,
-)
-from pymongo import MongoClient
-from pymongo.errors import (
-    ConnectionFailure,
-    OperationFailure,
-    ServerSelectionTimeoutError,
 )
 
 from .connection_config import MongoDBConnectionConfig

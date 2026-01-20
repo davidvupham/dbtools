@@ -1,7 +1,6 @@
 from typing import Any
 
 from gds_benchmark.models import BenchmarkResult
-
 from gds_hammerdb.constants import BM_TPCC, BM_TPCH
 from gds_hammerdb.models import HammerDBConfig, PostgresConnectionConfig
 from gds_hammerdb.runners.base import HammerDBRunner

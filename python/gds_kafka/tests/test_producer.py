@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import pytest
+
 from gds_kafka import KafkaConnectionError, KafkaProducerClient
 
 

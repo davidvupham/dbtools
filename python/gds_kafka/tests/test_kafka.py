@@ -1,6 +1,7 @@
 from unittest.mock import patch
 
 import pytest
+
 from gds_kafka import KafkaLoggingHandler, KafkaMetrics, KafkaProducerClient
 
 
