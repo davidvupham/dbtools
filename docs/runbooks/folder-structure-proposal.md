@@ -35,16 +35,48 @@ The `docs/runbooks/` directory currently uses a hybrid approach:
 
 ```text
 docs/runbooks/
-├── alerts/                    # Task-type first
+├── README.md
+├── Enable_WinRM_HTTPS.md
+├── alerts/                                    # Task-type first organization
+│   ├── README.md
+│   ├── linux/
+│   │   ├── README.md
+│   │   └── alert-cpu-load.md
 │   ├── mssql/
+│   │   ├── README.md
+│   │   ├── alert-cpu-utilization.md
+│   │   ├── notification-backup-job-running.md
+│   │   ├── notification-maintenance-window.md
+│   │   └── report-daily-backup.md
 │   ├── ssas/
-│   ├── postgresql/
-│   └── linux/
-├── gmsa/                      # Technology/workflow based
+│   │   ├── README.md
+│   │   └── alert-offline.md
+│   └── windows/
+│       ├── README.md
+│       └── alert-cpu-load.md
+├── gmsa/                                      # Technology/workflow based
+│   ├── README.md
 │   ├── dpa/
+│   │   └── migrate-dpa-service-to-gmsa.md
 │   └── sql-entry/
-└── podman/                    # Technology specific
+│       └── migrate-solarwinds-sql-entry-to-gmsa.md
+└── podman/                                    # Technology specific
+    └── maintenance.md
 ```
+
+**Current inventory:**
+
+| Category | Platform/Technology | Runbook Count |
+|----------|---------------------|---------------|
+| alerts | mssql | 4 |
+| alerts | ssas | 1 |
+| alerts | linux | 1 |
+| alerts | windows | 1 |
+| gmsa | dpa | 1 |
+| gmsa | sql-entry | 1 |
+| podman | - | 1 |
+| other | Enable_WinRM_HTTPS | 1 |
+| **Total** | | **11** |
 
 ### Problem statement
 
