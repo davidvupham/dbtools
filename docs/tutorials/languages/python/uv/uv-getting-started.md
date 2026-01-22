@@ -18,22 +18,24 @@ A step-by-step tutorial to get you up and running with `uv`, the modern Python p
 > [!TIP]
 > This tutorial is designed for beginners. If you're already familiar with Python development and want a comprehensive reference, see [UV Comprehensive Guide](./uv-tutorial.md).
 
-## Table of Contents
+## Table of contents
 
-- [What You'll Learn](#what-youll-learn)
+- [What you'll learn](#what-youll-learn)
 - [Prerequisites](#prerequisites)
-- [Part 1: Understanding the Basics](#part-1-understanding-the-basics)
+- [Part 1: Understanding the basics](#part-1-understanding-the-basics)
 - [Part 2: Installing UV](#part-2-installing-uv)
-- [Part 3: Your First Project](#part-3-your-first-project)
-- [Part 4: Adding Dependencies](#part-4-adding-dependencies)
-- [Part 5: Running Your Code](#part-5-running-your-code)
-- [Part 6: Sharing Your Project](#part-6-sharing-your-project)
+- [Part 3: Your first project](#part-3-your-first-project)
+- [Part 4: Adding dependencies](#part-4-adding-dependencies)
+- [Part 5: Running your code](#part-5-running-your-code)
+- [Part 6: Sharing your project](#part-6-sharing-your-project)
 - [Exercises](#exercises)
-- [Next Steps](#next-steps)
+- [Next steps](#next-steps)
 
 ---
 
-## What You'll Learn
+## What you'll learn
+
+[↑ Back to table of contents](#table-of-contents)
 
 By the end of this tutorial, you will be able to:
 
@@ -49,6 +51,8 @@ By the end of this tutorial, you will be able to:
 
 ## Prerequisites
 
+[↑ Back to table of contents](#table-of-contents)
+
 Before starting, you should have:
 
 - Basic familiarity with the command line (terminal)
@@ -60,11 +64,13 @@ Before starting, you should have:
 
 ---
 
-## Part 1: Understanding the Basics
+## Part 1: Understanding the basics
+
+[↑ Back to table of contents](#table-of-contents)
 
 Before we dive in, let's understand three key concepts that UV handles for you.
 
-### What is a Dependency?
+### What is a dependency?
 
 A **dependency** is code written by someone else that your project needs to work. Instead of writing everything from scratch, you "depend" on libraries.
 
@@ -77,7 +83,7 @@ response = requests.get("https://api.example.com/data")
 
 Without the `requests` library installed, this code fails with `ModuleNotFoundError`.
 
-### What is a Virtual Environment?
+### What is a virtual environment?
 
 Imagine you have two projects:
 
@@ -93,7 +99,7 @@ Project B's box: pandas 2.0, requests 2.31
 
 With UV, each project automatically gets its own box (a `.venv` folder).
 
-### What is a Lock File?
+### What is a lock file?
 
 When you add a dependency like `requests`, it might need other libraries to work (called *transitive dependencies*). UV figures out all the exact versions that work together and saves them in a **lock file** (`uv.lock`).
 
@@ -106,6 +112,8 @@ This ensures:
 ---
 
 ## Part 2: Installing UV
+
+[↑ Back to table of contents](#table-of-contents)
 
 ### Step 2.1: Install UV
 
@@ -123,11 +131,11 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
 ```
 
-### Step 2.2: Restart Your Terminal
+### Step 2.2: Restart your terminal
 
 Close and reopen your terminal (or run `source ~/.bashrc` / `source ~/.zshrc`).
 
-### Step 2.3: Verify Installation
+### Step 2.3: Verify installation
 
 ```bash
 uv --version
@@ -139,7 +147,7 @@ You should see output like:
 uv 0.5.10 (2a3b1234 2024-12-15)
 ```
 
-### Step 2.4: Enable Shell Completion (Optional but Recommended)
+### Step 2.4: Enable shell completion (optional but recommended)
 
 This gives you tab-completion for UV commands:
 
@@ -159,16 +167,18 @@ source ~/.zshrc
 
 ---
 
-## Part 3: Your First Project
+## Part 3: Your first project
 
-### Step 3.1: Create a Project Directory
+[↑ Back to table of contents](#table-of-contents)
+
+### Step 3.1: Create a project directory
 
 ```bash
 mkdir my-first-uv-project
 cd my-first-uv-project
 ```
 
-### Step 3.2: Initialize the Project
+### Step 3.2: Initialize the project
 
 ```bash
 uv init
@@ -185,7 +195,7 @@ my-first-uv-project/
 └── README.md           # Project documentation
 ```
 
-### Step 3.3: Explore the Files
+### Step 3.3: Explore the files
 
 **`pyproject.toml`** - This is your project's configuration file:
 
@@ -209,7 +219,7 @@ if __name__ == "__main__":
     main()
 ```
 
-### Step 3.4: Run the Sample Script
+### Step 3.4: Run the sample script
 
 ```bash
 uv run main.py
@@ -232,9 +242,11 @@ Hello from my-first-uv-project!
 
 ---
 
-## Part 4: Adding Dependencies
+## Part 4: Adding dependencies
 
-### Step 4.1: Add Your First Dependency
+[↑ Back to table of contents](#table-of-contents)
+
+### Step 4.1: Add your first dependency
 
 Let's add the `requests` library to make HTTP calls:
 
@@ -255,7 +267,7 @@ Installed 5 packages in 78ms
  + urllib3==2.2.3
 ```
 
-### Step 4.2: Understand What Happened
+### Step 4.2: Understand what happened
 
 UV did several things:
 
@@ -272,7 +284,7 @@ dependencies = [
 ]
 ```
 
-### Step 4.3: Use the Dependency in Your Code
+### Step 4.3: Use the dependency in your code
 
 Edit `main.py`:
 
@@ -301,7 +313,7 @@ Status: 200
 Your IP: 203.0.113.42
 ```
 
-### Step 4.4: Add Development Dependencies
+### Step 4.4: Add development dependencies
 
 Development dependencies are tools you need while coding (testing, linting) but not in production:
 
@@ -313,9 +325,11 @@ These go in a separate section and won't be installed when someone uses your lib
 
 ---
 
-## Part 5: Running Your Code
+## Part 5: Running your code
 
-### The `uv run` Command
+[↑ Back to table of contents](#table-of-contents)
+
+### The `uv run` command
 
 Always use `uv run` to execute Python code. It ensures the correct environment is used:
 
@@ -333,7 +347,7 @@ uv run python -m pytest
 uv run pytest
 ```
 
-### Why Not Just `python main.py`?
+### Why not just `python main.py`?
 
 If you run `python` directly, you might use:
 
@@ -345,9 +359,11 @@ If you run `python` directly, you might use:
 
 ---
 
-## Part 6: Sharing Your Project
+## Part 6: Sharing your project
 
-### What to Commit to Git
+[↑ Back to table of contents](#table-of-contents)
+
+### What to commit to Git
 
 | File/Folder | Commit? | Reason |
 |-------------|---------|--------|
@@ -358,7 +374,7 @@ If you run `python` directly, you might use:
 
 Your `.gitignore` already excludes `.venv/`.
 
-### When Someone Clones Your Project
+### When someone clones your project
 
 They just need to run:
 
@@ -378,7 +394,9 @@ This single command:
 
 ## Exercises
 
-### Exercise 1: Create a Weather App
+[↑ Back to table of contents](#table-of-contents)
+
+### Exercise 1: Create a weather app
 
 1. Create a new project called `weather-app`
 2. Add the `httpx` library (an alternative to requests)
@@ -413,7 +431,7 @@ Run: `uv run main.py`
 
 </details>
 
-### Exercise 2: Add Testing
+### Exercise 2: Add testing
 
 1. Add `pytest` as a development dependency
 2. Create a `test_main.py` file with a simple test
