@@ -2,8 +2,8 @@
 
 **🔗 [← Back to UV Reference Index](./README.md)**
 
-> **Document Version:** 1.0
-> **Last Updated:** January 13, 2026
+> **Document Version:** 1.1
+> **Last Updated:** January 22, 2026
 > **Maintainers:** Application Infrastructure Team
 > **Status:** Production
 
@@ -178,8 +178,11 @@ uv python install                 # Install project's Python version
 uv python install 3.12            # Install specific version
 uv python install 3.12.1          # Install exact patch version
 uv python install 3.10 3.11 3.12  # Install multiple versions
-uv python install 3.13t           # Install free-threaded build
-uv python install --preview       # Install preview/beta versions
+uv python install 3.13t           # Install free-threaded build (append 't')
+uv python install 3.14t           # Install free-threaded Python 3.14
+uv python install --preview 3.15  # Install preview/beta versions
+uv python install 3.14 --default  # Install and create global symlinks
+uv python install 3.14 --compile-bytecode  # Compile .pyc for faster startup
 ```
 
 #### `uv python list`
@@ -198,7 +201,8 @@ Pin the Python version for the project.
 
 ```bash
 uv python pin 3.12                # Pin to version (creates .python-version)
-uv python pin --global 3.12       # Set global default
+uv python pin 3.14t               # Pin to free-threaded version
+uv python pin --global 3.12       # Set global default (~/.python-version)
 ```
 
 #### `uv python find`
@@ -208,6 +212,16 @@ Find a Python interpreter.
 ```bash
 uv python find                    # Find default Python
 uv python find 3.12               # Find specific version
+```
+
+#### `uv python upgrade`
+
+Upgrade Python to latest patch version (preview feature).
+
+```bash
+uv python upgrade 3.14            # Upgrade 3.14.x to latest patch
+uv python upgrade 3.14 --preview  # Enable preview mode if required
+uv python upgrade 3.14 --compile-bytecode  # Compile .pyc after upgrade
 ```
 
 #### `uv python uninstall`
