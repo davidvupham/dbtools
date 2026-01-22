@@ -1,9 +1,9 @@
 # Getting Started with UV: A Beginner's Guide
 
-**🔗 [← Back to UV Documentation Index](../../../explanation/python/uv/README.md)**
+**[<- Back to UV Documentation Index](../../../../explanation/python/uv/README.md)**
 
-> **Document Version:** 1.0
-> **Last Updated:** January 13, 2026
+> **Document Version:** 1.1
+> **Last Updated:** January 22, 2026
 > **Maintainers:** Application Infrastructure Team
 > **Status:** Production
 
@@ -11,7 +11,7 @@
 ![Topic](https://img.shields.io/badge/Topic-Tutorial-blue)
 
 > [!IMPORTANT]
-> **Related Docs:** [Architecture](../../../explanation/python/uv/uv-architecture.md) | [Comprehensive Tutorial](./uv-tutorial.md) | [How-to Guides](../../../how-to/python/uv/) | [Reference](../../../reference/python/uv/uv-reference.md)
+> **Related Docs:** [Architecture](../../../../explanation/python/uv/uv-architecture.md) | [Comprehensive Tutorial](./uv-tutorial.md) | [How-to Guides](../../../../how-to/python/uv/) | [Reference](../../../../reference/python/uv/uv-reference.md)
 
 A step-by-step tutorial to get you up and running with `uv`, the modern Python package manager.
 
@@ -28,6 +28,7 @@ A step-by-step tutorial to get you up and running with `uv`, the modern Python p
 - [Part 4: Adding dependencies](#part-4-adding-dependencies)
 - [Part 5: Running your code](#part-5-running-your-code)
 - [Part 6: Sharing your project](#part-6-sharing-your-project)
+- [Part 7: Running scripts without a project (PEP 723)](#part-7-running-scripts-without-a-project-pep-723)
 - [Exercises](#exercises)
 - [Next steps](#next-steps)
 
@@ -144,7 +145,7 @@ uv --version
 You should see output like:
 
 ```
-uv 0.5.10 (2a3b1234 2024-12-15)
+uv 0.7.2 (abcd1234 2026-01-15)
 ```
 
 ### Step 2.4: Enable shell completion (optional but recommended)
@@ -392,6 +393,68 @@ This single command:
 
 ---
 
+## Part 7: Running scripts without a project (PEP 723)
+
+[↑ Back to table of contents](#table-of-contents)
+
+Sometimes you want to run a single Python script without setting up a full project. UV supports **inline script metadata** (PEP 723), which lets you declare dependencies directly in the script file.
+
+### Step 7.1: Create an inline script
+
+Create a file called `weather.py`:
+
+```python
+# /// script
+# requires-python = ">=3.11"
+# dependencies = [
+#     "httpx",
+# ]
+# ///
+
+import httpx
+
+def main():
+    response = httpx.get("https://wttr.in/London?format=j1")
+    data = response.json()
+    temp = data["current_condition"][0]["temp_C"]
+    print(f"Current temperature in London: {temp}°C")
+
+if __name__ == "__main__":
+    main()
+```
+
+### Step 7.2: Run the script
+
+```bash
+uv run weather.py
+```
+
+UV automatically:
+
+1. Reads the `# /// script` metadata block
+2. Creates a temporary isolated environment
+3. Installs the declared dependencies (`httpx`)
+4. Runs your script
+
+> [!TIP]
+> This is perfect for:
+> - Quick utility scripts
+> - Sharing single-file scripts with others
+> - Scripts that don't need a full project structure
+
+### Step 7.3: Add dependencies to existing scripts
+
+You can also use `uv add --script` to add dependencies to a script:
+
+```bash
+# Add a dependency to a script
+uv add --script weather.py rich
+
+# The script's metadata block is automatically updated
+```
+
+---
+
 ## Exercises
 
 [↑ Back to table of contents](#table-of-contents)
@@ -479,11 +542,13 @@ Congratulations! You now know the basics of UV. Here's where to go next:
 | Goal | Resource |
 |------|----------|
 | Deep dive into UV concepts | [UV Comprehensive Guide](./uv-tutorial.md) |
-| Understand "Why UV?" | [UV Adoption Rationale](../../../explanation/python/uv/README.md) |
-| Migrate from pip/poetry | [Migration Guide](../../../how-to/python/uv/uv-migrate-from-pip.md) |
-| Use UV with Docker | [Docker Integration](../../../how-to/python/uv/uv-docker-integration.md) |
-| Set up CI/CD pipelines | [CI/CD Guide](../../../how-to/python/uv/uv-ci-cd-integration.md) |
-| Command reference | [UV Reference](../../../reference/python/uv/uv-reference.md) |
+| Understand "Why UV?" | [UV Adoption Rationale](../../../../explanation/python/uv/README.md) |
+| Migrate from pip/poetry | [Migration Guide](../../../../how-to/python/uv/uv-migrate-from-pip.md) |
+| Use UV with Docker | [Docker Integration](../../../../how-to/python/uv/uv-docker-integration.md) |
+| Set up CI/CD pipelines | [CI/CD Guide](../../../../how-to/python/uv/uv-ci-cd-integration.md) |
+| Use with Jupyter | [Jupyter Integration](../../../../how-to/python/uv/uv-jupyter-integration.md) |
+| Build and publish packages | [Build & Publish](../../../../how-to/python/uv/uv-build-publish.md) |
+| Command reference | [UV Reference](../../../../reference/python/uv/uv-reference.md) |
 | Official documentation | [UV Docs (Astral)](https://docs.astral.sh/uv/) |
 
 ---

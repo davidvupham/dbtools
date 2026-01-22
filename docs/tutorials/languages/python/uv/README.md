@@ -42,6 +42,8 @@ Select the path that matches your current goal:
   * [CI/CD Integration](../../../../how-to/python/uv/uv-ci-cd-integration.md)
   * [Manage Python Versions](../../../../how-to/python/uv/uv-python-management.md)
   * [Run Tools (uvx)](../../../../how-to/python/uv/uv-tool-management.md)
+  * [Build & Publish](../../../../how-to/python/uv/uv-build-publish.md)
+  * [Jupyter Integration](../../../../how-to/python/uv/uv-jupyter-integration.md)
   * [Full Index](../../../../how-to/python/uv/README.md)
 * **Reference** (Technical)
   * [Command Reference](../../../../reference/python/uv/uv-reference.md)

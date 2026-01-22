@@ -1,9 +1,9 @@
 # Python `uv` Tutorial
 
-**🔗 [← Back to UV Documentation Index](../../../explanation/python/uv/README.md)**
+**[<- Back to UV Documentation Index](../../../../explanation/python/uv/README.md)**
 
-> **Document Version:** 1.0
-> **Last Updated:** January 13, 2026
+> **Document Version:** 1.1
+> **Last Updated:** January 22, 2026
 > **Maintainers:** Application Infrastructure Team
 > **Status:** Production
 
@@ -11,7 +11,7 @@
 ![Topic](https://img.shields.io/badge/Topic-Deep_Dive-blue)
 
 > [!IMPORTANT]
-> **Related Docs:** [Architecture](../../../explanation/python/uv/uv-architecture.md) | [Getting Started](./uv-getting-started.md) | [How-to Guides](../../../how-to/python/uv/) | [Reference](../../../reference/python/uv/uv-reference.md)
+> **Related Docs:** [Architecture](../../../../explanation/python/uv/uv-architecture.md) | [Getting Started](./uv-getting-started.md) | [How-to Guides](../../../../how-to/python/uv/) | [Reference](../../../../reference/python/uv/uv-reference.md)
 
 A comprehensive guide to managing Python projects and dependencies with `uv`.
 
@@ -81,6 +81,9 @@ When you add a package, `uv` acts as a solver. It looks at all your requirements
 [↑ Back to table of contents](#table-of-contents)
 
 `uv` achieves 10-100x speedups by using Rust and a global cache. For a deep dive into how it works (PubGrub, lockfiles, etc.), see the **[UV Architecture](../../../../explanation/python/uv/uv-architecture.md)** guide.
+
+> [!TIP]
+> **New Feature:** UV now supports inline script dependencies (PEP 723). See the [Getting Started guide](./uv-getting-started.md#part-7-running-scripts-without-a-project-pep-723) for details.
 
 ## 4. Installation
 
@@ -289,7 +292,7 @@ CMD ["fastapi", "run", "app/main.py"]
 
 [↑ Back to table of contents](#table-of-contents)
 
-For a detailed breakdown of how `uv` compares to `pip`, `poetry`, and `pipenv`, including a "Migration ROI" matrix, see **[UV Adoption Rationale](../../../../explanation/python/uv/README.md#2-migration-roi-what-do-you-gain)**.
+For a detailed breakdown of how `uv` compares to `pip`, `poetry`, and `pipenv`, including a "Migration ROI" matrix, see **[UV Adoption Rationale](../../../../explanation/python/uv/README.md)**.
 
 ## 9. Common tasks (how-to)
 
@@ -300,7 +303,9 @@ For a detailed breakdown of how `uv` compares to `pip`, `poetry`, and `pipenv`, 
 * **[Manage Python Versions](../../../../how-to/python/uv/uv-python-management.md)**: Install specific versions (e.g., 3.12), pin projects, and list available versions.
 * **[Interactive Python (Ad-hoc)](../../../../how-to/python/uv/uv-interactive-python.md)**: Run scripts and REPLs without a project.
 * **[Run Tools (uvx)](../../../../how-to/python/uv/uv-tool-management.md)**: Run CLIs like `ruff`, `black`, or `pytest` in isolated environments (replaces `pipx`).
-* **[Dependency Management](../../../../how-to/python/uv/uv-dependency-management.md)**: Sync dependencies and work with legacy `requirements.txt`.
+* **[Dependency Management](../../../../how-to/python/uv/uv-dependency-management.md)**: Sync dependencies, private indexes, and cache management.
+* **[Build & Publish](../../../../how-to/python/uv/uv-build-publish.md)**: Build wheels and publish to PyPI or private indexes.
+* **[Jupyter Integration](../../../../how-to/python/uv/uv-jupyter-integration.md)**: Use UV with Jupyter notebooks.
 
 ## 10. Best practices
 

@@ -32,7 +32,9 @@ Task-oriented guides for common UV workflows and integrations.
 | [Interactive Python (Ad-hoc)](./uv-interactive-python.md) | Run scripts and REPLs without a project (PEP 723) |
 | [Manage Python Versions](./uv-python-management.md) | Install, pin, and list Python versions |
 | [Manage Tools (uvx)](./uv-tool-management.md) | Run CLIs like Ruff/Black (pipx alternative) |
-| [Dependency Management](./uv-dependency-management.md) | Sync dependencies and legacy requirements.txt |
+| [Dependency Management](./uv-dependency-management.md) | Sync dependencies, private indexes, and cache management |
+| [Build & Publish Packages](./uv-build-publish.md) | Build wheels and publish to PyPI or private indexes |
+| [Jupyter Integration](./uv-jupyter-integration.md) | Use UV with Jupyter notebooks and data science workflows |
 
 ## Related Documentation
 

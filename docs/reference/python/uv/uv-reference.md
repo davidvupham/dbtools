@@ -152,7 +152,21 @@ uv add -r requirements.txt        # Add from requirements file
 uv add --editable ./path          # Add local package as editable
 uv add --package <pkg> <dep>      # Add to specific package (workspaces)
 uv add git+https://github.com/... # Add from git
-uv add --script script.py <pkg>   # Add to inline script metadata
+uv add --script script.py <pkg>   # Add to PEP 723 inline script metadata
+```
+
+#### Inline Script Dependencies (PEP 723)
+
+Add dependencies to scripts with inline metadata:
+
+```bash
+# Add dependency to a script file
+uv add --script myscript.py requests
+
+# The script's metadata block is automatically created/updated:
+# # /// script
+# # dependencies = ["requests"]
+# # ///
 ```
 
 #### `uv remove`
