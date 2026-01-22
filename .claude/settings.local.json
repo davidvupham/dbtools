@@ -27,7 +27,15 @@
       "WebFetch(domain:docs.ansible.com)",
       "Bash(git stash:*)",
       "Bash(python -m pytest:*)",
-      "Bash(uv run pytest:*)"
+      "Bash(uv run pytest:*)",
+      "Bash(wc:*)",
+      "WebFetch(domain:realpython.com)",
+      "WebFetch(domain:www.datacamp.com)",
+      "WebFetch(domain:www.saaspegasus.com)",
+      "WebFetch(domain:docs.astral.sh)",
+      "WebFetch(domain:www.redhat.com)",
+      "WebFetch(domain:gist.github.com)",
+      "Bash(find:*)"
     ]
   }
 }
