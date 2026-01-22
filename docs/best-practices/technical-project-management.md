@@ -40,6 +40,7 @@ Documents should be created in the recommended order. Each phase builds upon the
 | 8 | **Build** | Implementation Guide | Step-by-step build instructions | [Template](#implementation-guide-template) |
 | 9 | **Operations** | Platform Procedures | Platform-specific operational steps | [Template](#platform-procedures-template) |
 | 10 | **Operations** | Runbook | Incident response, troubleshooting | [Template](#runbook-template) |
+| 11 | **Closure** | Project Closure Report | Lessons learned, handover, archival | [Template](#project-closure-template) |
 
 > [!TIP]
 > **Key Insight:** Write the Test Plan *before* implementation to define acceptance criteria. This ensures the team knows what "done" looks like before coding begins.
@@ -90,7 +91,12 @@ graph TD
         P["Production Rollout"]
     end
 
-    A --> B --> C --> D --> E --> F --> G --> H --> I --> J --> K --> L --> M --> N --> O --> P
+    subgraph Phase9["9. Closure"]
+        Q["Lessons Learned"]
+        R["Handover & Archive"]
+    end
+
+    A --> B --> C --> D --> E --> F --> G --> H --> I --> J --> K --> L --> M --> N --> O --> P --> Q --> R
 ```
 
 > [!IMPORTANT]
@@ -129,6 +135,37 @@ Use consistent status indicators across all project phases:
 | 6. Testing | QA Lead, Security Team | Test results sign-off |
 | 7. Operations Prep | Operations Lead, DBA Team | Runbook walkthrough |
 | 8. Go-Live | Project Sponsor, Change Advisory Board | Go/No-Go meeting |
+| 9. Closure | Project Sponsor, Stakeholders | Closure meeting + sign-off |
+
+### RACI Matrix Guidelines
+
+Use RACI (Responsible, Accountable, Consulted, Informed) to clarify roles for each deliverable:
+
+| Role | Definition | Guidelines |
+|------|------------|------------|
+| **R** - Responsible | Does the work to complete the task | Can have multiple Rs, but avoid overloading |
+| **A** - Accountable | Ultimate decision-maker; signs off on work | **Exactly ONE per task** (golden rule) |
+| **C** - Consulted | Provides input; two-way communication | Limit to avoid conflicting opinions |
+| **I** - Informed | Kept updated; one-way communication | Include stakeholders who need visibility |
+
+**Best Practices:**
+- Each task must have exactly **one Accountable** party
+- Avoid assigning too many Responsible roles to prevent confusion
+- Review RACI assignments during weekly check-ins
+- Keep the matrix accessible so team members can reference it
+- Update when roles or scope change
+
+**Example RACI for Documentation:**
+
+| Document | Dev Lead | Tech Writer | Security | Product Owner |
+|----------|----------|-------------|----------|---------------|
+| Functional Spec | C | R | C | A |
+| Technical Architecture | A | I | C | I |
+| Test Plan | R | I | C | A |
+| Runbook | R | R | C | A |
+
+> [!TIP]
+> See the [RACI Matrix template](../templates/raci-matrix.md) for a full project RACI example.
 
 ---
 
@@ -333,6 +370,50 @@ Use this checklist to ensure project quality:
 - [ ] **Decision Log** - Architecture Decision Records (ADRs)
 - [ ] **Security Review** - Threat model and security sign-off
 
+### ✅ Definition of Done (per Phase)
+
+Use this checklist to verify phase completion before moving forward:
+
+**For Documentation Phases (1-4, 7):**
+- [ ] Document drafted and reviewed by peers
+- [ ] All sections complete (no TBD placeholders)
+- [ ] Stakeholder feedback incorporated
+- [ ] Formal approval obtained per Approval Matrix
+- [ ] Version history updated
+
+**For Build Phase (5):**
+- [ ] All acceptance criteria from user stories met
+- [ ] Code reviewed and approved via PR
+- [ ] Unit tests passing with adequate coverage
+- [ ] No critical or high-severity defects open
+- [ ] Implementation guide updated with actual steps
+
+**For Testing Phase (6):**
+- [ ] All test cases executed
+- [ ] Exit criteria met (per Test Plan)
+- [ ] Defects triaged and critical issues resolved
+- [ ] Test summary report completed
+- [ ] Security review sign-off obtained
+
+**For Operations Phase (7):**
+- [ ] Runbook reviewed by Operations team
+- [ ] Procedures validated through dry-run
+- [ ] Monitoring and alerting configured
+- [ ] On-call team trained
+
+**For Go-Live Phase (8):**
+- [ ] CAB approval obtained
+- [ ] Rollback plan tested
+- [ ] Pilot completed successfully
+- [ ] Production deployment verified
+- [ ] Post-deployment monitoring active
+
+**For Closure Phase (9):**
+- [ ] Lessons learned documented
+- [ ] Knowledge transfer completed
+- [ ] Documentation archived
+- [ ] Project formally closed with sign-off
+
 ---
 
 ## Directory Structure Template
@@ -369,6 +450,10 @@ docs/projects/<project-name>/
 
 ```markdown
 # Project Plan: [Project Name]
+
+| Version | Date | Author | Changes |
+|---------|------|--------|---------|
+| 1.0 | YYYY-MM-DD | [Name] | Initial draft |
 
 ## 1. Executive Summary
 
@@ -459,6 +544,10 @@ docs/projects/<project-name>/
 ```markdown
 # Decision Log: [Project Name]
 
+| Version | Date | Author | Changes |
+|---------|------|--------|---------|
+| 1.0 | YYYY-MM-DD | [Name] | Initial decision log |
+
 This document records key architectural and design decisions using the Architecture Decision Record (ADR) format.
 
 ---
@@ -528,6 +617,10 @@ Copy this template for new decisions:
 ```markdown
 # Functional Specification: [Feature/Project Name]
 
+| Version | Date | Author | Changes |
+|---------|------|--------|---------|
+| 1.0 | YYYY-MM-DD | [Name] | Initial draft |
+
 ## 1. Overview
 
 [Brief description of what this feature/project does]
@@ -541,6 +634,22 @@ Copy this template for new decisions:
 ### 2.2 Out of Scope
 - [Item 1]
 - [Item 2]
+
+### 2.3 Requirement ID Conventions
+
+Use consistent ID prefixes for traceability across documents:
+
+| Prefix | Type | Example |
+|--------|------|---------|
+| US-XXX | User Story | US-001: Automated Password Rotation |
+| NFR-XXX | Non-Functional Requirement | NFR-001: Response time < 200ms |
+| SEC-XXX | Security Requirement | SEC-001: Encrypt data at rest |
+| CON-XXX | Constraint | CON-001: Must use existing AD infrastructure |
+| DEP-XXX | Dependency | DEP-001: Vault cluster availability |
+| TC-XXX | Test Case | TC-001: Verify password rotation |
+
+> [!TIP]
+> Maintain a requirements traceability matrix linking US → Design → TC → Defects.
 
 ## 3. User Stories
 
@@ -598,6 +707,10 @@ Copy this template for new decisions:
 
 ```markdown
 # Technical Architecture: [Project Name]
+
+| Version | Date | Author | Changes |
+|---------|------|--------|---------|
+| 1.0 | YYYY-MM-DD | [Name] | Initial architecture |
 
 ## 1. Overview
 
@@ -672,6 +785,10 @@ sequenceDiagram
 ```markdown
 # Test Plan: [Project Name]
 
+| Version | Date | Author | Changes |
+|---------|------|--------|---------|
+| 1.0 | YYYY-MM-DD | [Name] | Initial test plan |
+
 ## 1. Overview
 
 [Purpose of this test plan]
@@ -724,7 +841,40 @@ sequenceDiagram
 - [ ] No high-severity defects open
 - [ ] [Additional criteria]
 
-## 7. Defect Management
+## 7. Suspension and Resumption Criteria
+
+### Suspension Criteria
+Testing will be suspended if:
+- [ ] Critical defect blocks further testing
+- [ ] Test environment becomes unavailable
+- [ ] [Additional suspension criteria]
+
+### Resumption Requirements
+Testing may resume when:
+- [ ] Blocking defect is resolved and verified
+- [ ] Environment is restored and validated
+- [ ] [Additional resumption criteria]
+
+## 8. Test Deliverables
+
+| Deliverable | Description | Owner |
+|-------------|-------------|-------|
+| Test Plan | This document | [Owner] |
+| Test Cases | Detailed test case specifications | [Owner] |
+| Test Data | Sample data for test execution | [Owner] |
+| Test Results | Execution logs and evidence | [Owner] |
+| Defect Reports | Documented issues found | [Owner] |
+| Test Summary Report | Final summary and recommendations | [Owner] |
+
+## 9. Test Risks and Contingencies
+
+| Risk | Probability | Impact | Mitigation |
+|------|-------------|--------|------------|
+| [Test environment unavailable] | Medium | High | [Identify backup environment] |
+| [Insufficient test data] | Low | Medium | [Prepare synthetic data in advance] |
+| [Resource constraints] | Medium | Medium | [Cross-train team members] |
+
+## 10. Defect Management
 
 | Severity | Definition | Resolution SLA |
 |----------|------------|----------------|
@@ -740,6 +890,10 @@ sequenceDiagram
 
 ```markdown
 # Runbook: [System/Project Name]
+
+| Version | Date | Author | Changes |
+|---------|------|--------|---------|
+| 1.0 | YYYY-MM-DD | [Name] | Initial runbook |
 
 ## 1. System Overview
 
@@ -809,6 +963,149 @@ sequenceDiagram
 | Alert | Threshold | Action |
 |-------|-----------|--------|
 | [Alert name] | [Threshold] | [Action to take] |
+
+## 7. Automation Integration
+
+### Automated Procedures
+
+| Procedure | Automation Tool | Trigger | Human Approval Required |
+|-----------|-----------------|---------|-------------------------|
+| [Service restart] | Ansible/AWX | Alert threshold | No |
+| [Log collection] | Rundeck | On-demand | No |
+| [Failover initiation] | AWX | Critical alert | **Yes** |
+| [Resource scaling] | Terraform | Capacity alert | Yes |
+
+### Automation Tools
+
+- **Ansible/AWX:** Configuration management and remediation playbooks
+- **Rundeck:** Self-service operations and scheduled jobs
+- **Terraform:** Infrastructure provisioning and scaling
+- **PowerShell DSC:** Windows configuration enforcement
+
+### Human-in-the-Loop Gates
+
+> [!CAUTION]
+> The following actions **require human approval** before execution:
+
+- [ ] Production database changes
+- [ ] Failover to disaster recovery site
+- [ ] Security incident response escalation
+- [ ] Data deletion or purge operations
+- [ ] Infrastructure decommissioning
+
+### Runbook Maintenance
+
+- **Review cadence:** Quarterly or after each incident
+- **Test frequency:** Conduct drills at least once per quarter
+- **Version control:** Store runbooks in Git; track all changes
+- **Ownership:** Assign a primary owner responsible for updates
+```
+
+---
+
+### Project Closure Template {#project-closure-template}
+
+```markdown
+# Project Closure Report: [Project Name]
+
+| Version | Date | Author | Changes |
+|---------|------|--------|---------|
+| 1.0 | YYYY-MM-DD | [Name] | Initial closure report |
+
+## 1. Executive Summary
+
+[Brief summary of project outcomes, whether objectives were met, and key achievements]
+
+## 2. Project Objectives Review
+
+| Objective | Target | Actual | Status |
+|-----------|--------|--------|--------|
+| [Objective 1] | [Target metric] | [Actual result] | ✅ Met / ⚠️ Partial / ❌ Not Met |
+| [Objective 2] | [Target metric] | [Actual result] | ✅ Met / ⚠️ Partial / ❌ Not Met |
+
+## 3. Deliverables Checklist
+
+| Deliverable | Status | Location/Reference |
+|-------------|--------|-------------------|
+| Functional Specification | ✅ Complete | [Link] |
+| Technical Architecture | ✅ Complete | [Link] |
+| Implementation Code | ✅ Complete | [Repository link] |
+| Test Plan & Results | ✅ Complete | [Link] |
+| Runbook | ✅ Complete | [Link] |
+| User Documentation | ✅ Complete | [Link] |
+
+## 4. Lessons Learned
+
+### 4.1 What Went Well
+
+- [Success 1: Description and why it worked]
+- [Success 2: Description and why it worked]
+
+### 4.2 What Could Be Improved
+
+- [Challenge 1: Description and recommendation for future projects]
+- [Challenge 2: Description and recommendation for future projects]
+
+### 4.3 Recommendations for Future Projects
+
+| Area | Recommendation | Priority |
+|------|----------------|----------|
+| [Process] | [Specific recommendation] | High/Medium/Low |
+| [Technical] | [Specific recommendation] | High/Medium/Low |
+| [Communication] | [Specific recommendation] | High/Medium/Low |
+
+## 5. Knowledge Transfer
+
+### 5.1 Training Completed
+
+| Training Topic | Audience | Date | Materials |
+|----------------|----------|------|-----------|
+| [Topic 1] | [Team/Role] | [Date] | [Link to materials] |
+
+### 5.2 Documentation Handover
+
+| Document | Owner | Handover To | Date |
+|----------|-------|-------------|------|
+| Runbook | [Name] | Operations Team | [Date] |
+| Code Repository | [Name] | Development Team | [Date] |
+
+## 6. Outstanding Items
+
+| Item | Owner | Target Date | Notes |
+|------|-------|-------------|-------|
+| [Item 1] | [Name] | [Date] | [Notes] |
+
+> [!NOTE]
+> If there are outstanding items, ensure they are tracked in Jira/GitHub Issues with clear ownership.
+
+## 7. Resource Release
+
+- [ ] Project team members released to other work
+- [ ] Temporary infrastructure decommissioned
+- [ ] Project budget closed
+- [ ] Vendor contracts concluded or transitioned
+
+## 8. Archival
+
+- [ ] All project documentation archived to [location]
+- [ ] Decision log finalized
+- [ ] Project repository marked as maintained/archived
+- [ ] Access permissions updated for long-term maintenance
+
+## 9. Sign-Off
+
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| Project Sponsor | [Name] | | |
+| Technical Lead | [Name] | | |
+| Operations Lead | [Name] | | |
+| Product Owner | [Name] | | |
+
+---
+
+**Project Closure Date:** YYYY-MM-DD
+
+**Next Review Date (if applicable):** YYYY-MM-DD (for post-implementation review)
 ```
 
 ---
