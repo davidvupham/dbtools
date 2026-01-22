@@ -19,3 +19,7 @@ A unified CLI tool for Database Reliability Engineering (DBRE) to troubleshootin
 - [Functional Specification](specs/functional-spec.md) - Requirements and User Stories.
 - [Command Reference](specs/command-reference.md) - **Full Inventory of CLI Commands**.
 - [Technical Architecture](architecture/technical-architecture.md) - Authentication flows and design.
+
+### Related Projects
+
+- [dbtool-ai](../dbtool-ai/README.md) - AI/LLM Companion Service.
