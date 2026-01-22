@@ -1,0 +1,31 @@
+---
+# Handlers for vault_secrets role
+
+- name: Renew vault token
+  community.hashi_vault.vault_token_create:
+    url: "{{ vault_addr }}"
+    token: "{{ vault_token }}"
+    namespace: "{{ vault_namespace | default(omit, true) }}"
+    validate_certs: "{{ vault_validate_certs }}"
+    ttl: "{{ vault_token_renew_increment }}"
+    renewable: true
+  register: vault_renewed_token
+  no_log: true
+  listen: renew_vault_token
+
+- name: Update vault token fact
+  ansible.builtin.set_fact:
+    vault_token: "{{ vault_renewed_token.login.auth.client_token }}"
+  when: vault_renewed_token is succeeded
+  no_log: true
+  listen: renew_vault_token
+
+- name: Revoke vault token
+  community.hashi_vault.vault_token_revoke:
+    url: "{{ vault_addr }}"
+    token: "{{ vault_token }}"
+    namespace: "{{ vault_namespace | default(omit, true) }}"
+    validate_certs: "{{ vault_validate_certs }}"
+  ignore_errors: true
+  no_log: true
+  listen: revoke_vault_token

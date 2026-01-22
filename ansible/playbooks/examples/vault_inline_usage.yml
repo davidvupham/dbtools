@@ -1,0 +1,134 @@
+---
+# Example: Multiple ways to use vault_secrets in playbooks
+# This demonstrates different integration patterns
+
+# =============================================================================
+# Pattern 1: Pre-play - Fetch secrets before main play
+# =============================================================================
+- name: "[Vault] Fetch secrets before main tasks"
+  hosts: localhost
+  gather_facts: false
+  vars:
+    vault_auth_method: approle
+    vault_secrets_to_fetch:
+      - path: "database/postgres"
+        fact_name: "postgres_creds"
+      - path: "api/external-service"
+        key: "api_key"
+        fact_name: "external_api_key"
+
+  roles:
+    - vault_secrets
+
+  post_tasks:
+    - name: Share secrets with target hosts
+      ansible.builtin.set_fact:
+        db_credentials: "{{ postgres_creds }}"
+        api_key: "{{ external_api_key }}"
+      delegate_to: "{{ item }}"
+      delegate_facts: true
+      loop: "{{ groups['app_servers'] | default([]) }}"
+      no_log: true
+
+
+- name: Configure application servers
+  hosts: app_servers
+  become: true
+
+  tasks:
+    - name: Configure database connection
+      ansible.builtin.template:
+        src: database.conf.j2
+        dest: /etc/myapp/database.conf
+        mode: "0600"
+      vars:
+        db_host: "{{ db_credentials.host }}"
+        db_user: "{{ db_credentials.username }}"
+        db_pass: "{{ db_credentials.password }}"
+      no_log: true
+
+
+# =============================================================================
+# Pattern 2: Include role within tasks
+# =============================================================================
+- name: Inline vault retrieval within tasks
+  hosts: localhost
+  gather_facts: false
+
+  tasks:
+    - name: Authenticate and fetch database credentials
+      ansible.builtin.include_role:
+        name: vault_secrets
+      vars:
+        vault_auth_method: approle
+        vault_secrets_to_fetch:
+          - path: "database/production"
+            fact_name: "prod_db_creds"
+
+    - name: Use the retrieved credentials
+      ansible.builtin.debug:
+        msg: "Database host: {{ prod_db_creds.host | default('not set') }}"
+
+
+# =============================================================================
+# Pattern 3: Direct lookup (no role needed, but requires token)
+# =============================================================================
+- name: Direct Vault lookup example
+  hosts: localhost
+  gather_facts: false
+  vars:
+    # You must have VAULT_TOKEN set or provide token directly
+    vault_addr: "{{ lookup('env', 'VAULT_ADDR') }}"
+    vault_token: "{{ lookup('env', 'VAULT_TOKEN') }}"
+
+  tasks:
+    - name: Fetch secret using lookup plugin
+      ansible.builtin.set_fact:
+        direct_secret: >-
+          {{ lookup('community.hashi_vault.vault_kv2_get',
+               'myapp/config',
+               url=vault_addr,
+               token=vault_token,
+               engine_mount_point='kv-v2'
+             ).secret.data }}
+      no_log: true
+
+    - name: Display secret keys
+      ansible.builtin.debug:
+        msg: "Secret contains keys: {{ direct_secret.keys() | list }}"
+
+
+# =============================================================================
+# Pattern 4: Using include_tasks for single secret
+# =============================================================================
+- name: Single secret retrieval pattern
+  hosts: localhost
+  gather_facts: false
+
+  tasks:
+    # First authenticate
+    - name: Authenticate to Vault
+      ansible.builtin.include_role:
+        name: vault_secrets
+        tasks_from: authenticate.yml
+      vars:
+        vault_auth_method: approle
+
+    # Then fetch individual secrets as needed
+    - name: Fetch specific secret
+      ansible.builtin.include_role:
+        name: vault_secrets
+        tasks_from: lookup_secret.yml
+      vars:
+        vault_secret_path: "myapp/api-keys"
+        vault_secret_key: "stripe_key"
+        vault_secret_fact_name: "stripe_api_key"
+
+    - name: Fetch another secret
+      ansible.builtin.include_role:
+        name: vault_secrets
+        tasks_from: lookup_secret.yml
+      vars:
+        vault_secret_path: "myapp/api-keys"
+        vault_secret_key: "sendgrid_key"
+        vault_secret_fact_name: "sendgrid_api_key"

@@ -1,0 +1,110 @@
+---
+# Authenticate to HashiCorp Vault using the configured method
+
+- name: Authenticate using AppRole
+  community.hashi_vault.vault_login:
+    url: "{{ vault_addr }}"
+    auth_method: approle
+    mount_point: "{{ vault_auth_mount_point }}"
+    role_id: "{{ vault_approle_role_id }}"
+    secret_id: "{{ vault_approle_secret_id }}"
+    namespace: "{{ vault_namespace | default(omit, true) }}"
+    validate_certs: "{{ vault_validate_certs }}"
+    ca_cert: "{{ vault_ca_cert | default(omit, true) }}"
+    timeout: "{{ vault_timeout }}"
+  register: vault_login_result
+  when: vault_auth_method == 'approle'
+  no_log: true
+  retries: "{{ vault_retries }}"
+  delay: "{{ vault_retry_delay }}"
+  until: vault_login_result is succeeded
+
+- name: Authenticate using JWT
+  community.hashi_vault.vault_login:
+    url: "{{ vault_addr }}"
+    auth_method: jwt
+    mount_point: "{{ vault_auth_mount_point }}"
+    jwt: "{{ vault_jwt }}"
+    role_id: "{{ vault_jwt_role }}"
+    namespace: "{{ vault_namespace | default(omit, true) }}"
+    validate_certs: "{{ vault_validate_certs }}"
+    ca_cert: "{{ vault_ca_cert | default(omit, true) }}"
+    timeout: "{{ vault_timeout }}"
+  register: vault_login_result
+  when: vault_auth_method == 'jwt'
+  no_log: true
+  retries: "{{ vault_retries }}"
+  delay: "{{ vault_retry_delay }}"
+  until: vault_login_result is succeeded
+
+- name: Authenticate using Kubernetes
+  community.hashi_vault.vault_login:
+    url: "{{ vault_addr }}"
+    auth_method: kubernetes
+    mount_point: "{{ vault_auth_mount_point }}"
+    role_id: "{{ vault_kubernetes_role }}"
+    jwt: "{{ lookup('file', vault_kubernetes_token_path) }}"
+    namespace: "{{ vault_namespace | default(omit, true) }}"
+    validate_certs: "{{ vault_validate_certs }}"
+    ca_cert: "{{ vault_ca_cert | default(omit, true) }}"
+    timeout: "{{ vault_timeout }}"
+  register: vault_login_result
+  when: vault_auth_method == 'kubernetes'
+  no_log: true
+  retries: "{{ vault_retries }}"
+  delay: "{{ vault_retry_delay }}"
+  until: vault_login_result is succeeded
+
+- name: Authenticate using LDAP
+  community.hashi_vault.vault_login:
+    url: "{{ vault_addr }}"
+    auth_method: ldap
+    mount_point: "{{ vault_auth_mount_point }}"
+    username: "{{ vault_username }}"
+    password: "{{ vault_password }}"
+    namespace: "{{ vault_namespace | default(omit, true) }}"
+    validate_certs: "{{ vault_validate_certs }}"
+    ca_cert: "{{ vault_ca_cert | default(omit, true) }}"
+    timeout: "{{ vault_timeout }}"
+  register: vault_login_result
+  when: vault_auth_method == 'ldap'
+  no_log: true
+  retries: "{{ vault_retries }}"
+  delay: "{{ vault_retry_delay }}"
+  until: vault_login_result is succeeded
+
+- name: Authenticate using Userpass
+  community.hashi_vault.vault_login:
+    url: "{{ vault_addr }}"
+    auth_method: userpass
+    mount_point: "{{ vault_auth_mount_point }}"
+    username: "{{ vault_username }}"
+    password: "{{ vault_password }}"
+    namespace: "{{ vault_namespace | default(omit, true) }}"
+    validate_certs: "{{ vault_validate_certs }}"
+    ca_cert: "{{ vault_ca_cert | default(omit, true) }}"
+    timeout: "{{ vault_timeout }}"
+  register: vault_login_result
+  when: vault_auth_method == 'userpass'
+  no_log: true
+  retries: "{{ vault_retries }}"
+  delay: "{{ vault_retry_delay }}"
+  until: vault_login_result is succeeded
+
+- name: Store authentication token
+  ansible.builtin.set_fact:
+    vault_token: "{{ vault_login_result.login.auth.client_token }}"
+    vault_token_accessor: "{{ vault_login_result.login.auth.accessor }}"
+    vault_token_policies: "{{ vault_login_result.login.auth.policies }}"
+    vault_token_lease_duration: "{{ vault_login_result.login.auth.lease_duration }}"
+  when: vault_login_result is defined and vault_login_result.login is defined
+  no_log: true
+
+- name: Display authentication status
+  ansible.builtin.debug:
+    msg: |
+      Vault authentication successful
+      - Auth method: {{ vault_auth_method }}
+      - Policies: {{ vault_token_policies | default(['unknown']) | join(', ') }}
+      - Token TTL: {{ vault_token_lease_duration | default('N/A') }} seconds
+  when: vault_login_result is succeeded

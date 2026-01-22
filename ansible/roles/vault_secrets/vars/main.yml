@@ -1,0 +1,36 @@
+---
+# Internal variables for vault_secrets role
+# These should not typically be overridden
+
+# Supported authentication methods
+vault_supported_auth_methods:
+  - approle
+  - token
+  - jwt
+  - kubernetes
+  - ldap
+  - userpass
+
+# Authentication method descriptions (for documentation/validation)
+vault_auth_method_descriptions:
+  approle: "Machine-to-machine authentication using RoleID and SecretID"
+  token: "Direct token authentication (for development/testing)"
+  jwt: "JWT/OIDC authentication (for CI/CD pipelines)"
+  kubernetes: "Kubernetes service account authentication"
+  ldap: "LDAP directory authentication"
+  userpass: "Username/password authentication"
+
+# Default paths for common secret types
+vault_default_paths:
+  database: "database/creds"
+  ssh: "ssh/sign"
+  pki: "pki/issue"
+  aws: "aws/creds"
+  azure: "azure/creds"
+
+# HTTP status codes for error handling
+vault_error_codes:
+  permission_denied: 403
+  not_found: 404
+  bad_request: 400
+  internal_error: 500

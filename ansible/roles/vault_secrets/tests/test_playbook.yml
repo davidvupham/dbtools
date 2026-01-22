@@ -1,0 +1,149 @@
+---
+# Test playbook for vault_secrets role
+# Run with: ansible-playbook tests/test_playbook.yml --check
+#
+# This playbook validates role structure and variable definitions
+# without connecting to a real Vault server.
+
+- name: Test vault_secrets role structure and variables
+  hosts: localhost
+  gather_facts: false
+
+  vars:
+    # Override with test values
+    vault_addr: "https://vault.test.local:8200"
+    vault_auth_method: "token"
+    vault_token: "test-token-for-validation"
+    vault_validate_certs: false
+    vault_secrets_to_fetch: []
+
+  tasks:
+    - name: Test - Verify defaults can be loaded
+      ansible.builtin.include_vars:
+        file: ../defaults/main.yml
+        name: role_defaults
+      register: defaults_result
+
+    - name: Test - Assert defaults loaded successfully
+      ansible.builtin.assert:
+        that:
+          - defaults_result is succeeded
+          - role_defaults.vault_auth_method == 'approle'
+          - role_defaults.vault_validate_certs == true
+          - role_defaults.vault_kv_version == 2
+          - role_defaults.vault_retries == 3
+        success_msg: "Default variables loaded and validated"
+
+    - name: Test - Verify vars can be loaded
+      ansible.builtin.include_vars:
+        file: ../vars/main.yml
+        name: role_vars
+      register: vars_result
+
+    - name: Test - Assert supported auth methods defined
+      ansible.builtin.assert:
+        that:
+          - vars_result is succeeded
+          - "'approle' in role_vars.vault_supported_auth_methods"
+          - "'token' in role_vars.vault_supported_auth_methods"
+          - "'jwt' in role_vars.vault_supported_auth_methods"
+          - "'kubernetes' in role_vars.vault_supported_auth_methods"
+          - "'ldap' in role_vars.vault_supported_auth_methods"
+          - "'userpass' in role_vars.vault_supported_auth_methods"
+        success_msg: "All authentication methods are supported"
+
+    - name: Test - Verify auth method descriptions exist
+      ansible.builtin.assert:
+        that:
+          - role_vars.vault_auth_method_descriptions.approle is defined
+          - role_vars.vault_auth_method_descriptions.token is defined
+          - role_vars.vault_auth_method_descriptions.jwt is defined
+        success_msg: "Auth method descriptions are defined"
+
+
+- name: Test vault_secrets role validation tasks
+  hosts: localhost
+  gather_facts: false
+
+  vars:
+    vault_addr: "https://vault.test.local:8200"
+    vault_auth_method: "token"
+    vault_token: "test-token"
+    vault_validate_certs: false
+
+  tasks:
+    - name: Test - Include validation tasks
+      ansible.builtin.include_tasks:
+        file: ../tasks/validate_auth.yml
+      register: validation_result
+
+    - name: Test - Assert validation passed
+      ansible.builtin.assert:
+        that:
+          - validation_result is succeeded
+        success_msg: "Token authentication validation passed"
+
+
+- name: Test vault_secrets validation fails without credentials
+  hosts: localhost
+  gather_facts: false
+
+  vars:
+    vault_addr: "https://vault.test.local:8200"
+    vault_auth_method: "approle"
+    vault_approle_role_id: ""
+    vault_approle_secret_id: ""
+
+  tasks:
+    - name: Test - Include validation (expect failure)
+      ansible.builtin.include_tasks:
+        file: ../tasks/validate_auth.yml
+      register: validation_result
+      ignore_errors: true
+
+    - name: Test - Assert validation failed for missing credentials
+      ansible.builtin.assert:
+        that:
+          - validation_result is failed
+        success_msg: "Correctly failed validation for missing AppRole credentials"
+
+
+- name: Test vault_secrets_to_fetch structure
+  hosts: localhost
+  gather_facts: false
+
+  vars:
+    vault_secrets_to_fetch:
+      - path: "test/secret"
+        key: "password"
+        fact_name: "test_password"
+      - path: "test/config"
+        fact_name: "test_config"
+
+  tasks:
+    - name: Test - Validate secrets list structure
+      ansible.builtin.assert:
+        that:
+          - vault_secrets_to_fetch | length == 2
+          - vault_secrets_to_fetch[0].path == "test/secret"
+          - vault_secrets_to_fetch[0].fact_name == "test_password"
+          - vault_secrets_to_fetch[1].key is not defined
+        success_msg: "Secrets list structure is valid"
+
+
+- name: Summary
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Display test summary
+      ansible.builtin.debug:
+        msg: |
+          ============================================
+          vault_secrets Role Tests Completed
+          ============================================
+          All structural and validation tests passed.
+
+          To test with a real Vault server:
+          1. Set VAULT_ADDR, VAULT_ROLE_ID, VAULT_SECRET_ID
+          2. Run: ansible-playbook examples/vault_approle_example.yml
+          ============================================

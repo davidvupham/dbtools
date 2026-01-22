@@ -1,0 +1,60 @@
+---
+# Validate authentication credentials based on auth method
+
+- name: Validate AppRole credentials
+  ansible.builtin.assert:
+    that:
+      - vault_approle_role_id is defined and vault_approle_role_id | length > 0
+      - vault_approle_secret_id is defined and vault_approle_secret_id | length > 0
+    fail_msg: |
+      AppRole authentication requires both role_id and secret_id.
+      Set VAULT_ROLE_ID and VAULT_SECRET_ID environment variables,
+      or define vault_approle_role_id and vault_approle_secret_id.
+    success_msg: "AppRole credentials validated"
+  when: vault_auth_method == 'approle'
+  no_log: true
+
+- name: Validate token authentication
+  ansible.builtin.assert:
+    that:
+      - vault_token is defined and vault_token | length > 0
+    fail_msg: |
+      Token authentication requires a valid token.
+      Set VAULT_TOKEN environment variable or define vault_token.
+    success_msg: "Token credentials validated"
+  when: vault_auth_method == 'token'
+  no_log: true
+
+- name: Validate JWT credentials
+  ansible.builtin.assert:
+    that:
+      - vault_jwt is defined and vault_jwt | length > 0
+      - vault_jwt_role is defined and vault_jwt_role | length > 0
+    fail_msg: |
+      JWT authentication requires both jwt and role.
+      Set VAULT_JWT environment variable and define vault_jwt_role.
+    success_msg: "JWT credentials validated"
+  when: vault_auth_method == 'jwt'
+  no_log: true
+
+- name: Validate Kubernetes credentials
+  ansible.builtin.assert:
+    that:
+      - vault_kubernetes_role is defined and vault_kubernetes_role | length > 0
+    fail_msg: |
+      Kubernetes authentication requires a role.
+      Define vault_kubernetes_role.
+    success_msg: "Kubernetes credentials validated"
+  when: vault_auth_method == 'kubernetes'
+
+- name: Validate LDAP/Userpass credentials
+  ansible.builtin.assert:
+    that:
+      - vault_username is defined and vault_username | length > 0
+      - vault_password is defined and vault_password | length > 0
+    fail_msg: |
+      LDAP/Userpass authentication requires username and password.
+      Set VAULT_USERNAME and VAULT_PASSWORD environment variables.
+    success_msg: "LDAP/Userpass credentials validated"
+  when: vault_auth_method in ['ldap', 'userpass']
+  no_log: true

@@ -1,0 +1,34 @@
+---
+# vault_secrets role - Main tasks
+# Retrieves secrets from HashiCorp Vault using best practice authentication
+
+- name: Validate required variables
+  ansible.builtin.assert:
+    that:
+      - vault_addr is defined and vault_addr | length > 0
+      - vault_auth_method in ['approle', 'token', 'jwt', 'kubernetes', 'ldap', 'userpass']
+    fail_msg: "Required Vault configuration is missing or invalid"
+    success_msg: "Vault configuration validated"
+  tags:
+    - vault
+    - validate
+
+- name: Validate authentication credentials
+  ansible.builtin.include_tasks: validate_auth.yml
+  tags:
+    - vault
+    - validate
+
+- name: Authenticate to Vault
+  ansible.builtin.include_tasks: authenticate.yml
+  when: vault_auth_method != 'token' or vault_token | length == 0
+  tags:
+    - vault
+    - auth
+
+- name: Retrieve secrets from Vault
+  ansible.builtin.include_tasks: get_secrets.yml
+  when: vault_secrets_to_fetch | length > 0
+  tags:
+    - vault
+    - secrets

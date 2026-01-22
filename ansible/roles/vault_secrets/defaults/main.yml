@@ -1,0 +1,102 @@
+---
+# vault_secrets role - Default variables
+# These can be overridden in group_vars, host_vars, or playbook vars
+
+# =============================================================================
+# Vault Connection Settings
+# =============================================================================
+
+# Vault server URL (can also be set via VAULT_ADDR environment variable)
+vault_addr: "{{ lookup('env', 'VAULT_ADDR') | default('https://vault.example.com:8200', true) }}"
+
+# Vault namespace (for Enterprise/HCP Vault)
+vault_namespace: "{{ lookup('env', 'VAULT_NAMESPACE') | default('', true) }}"
+
+# SSL/TLS settings
+vault_validate_certs: true
+vault_ca_cert: ""  # Path to CA certificate bundle
+
+# Connection timeout in seconds
+vault_timeout: 30
+
+# =============================================================================
+# Authentication Settings
+# =============================================================================
+
+# Authentication method: approle, token, jwt, kubernetes, ldap, userpass
+# Best Practice: Use 'approle' for automation, 'jwt' for CI/CD pipelines
+vault_auth_method: "approle"
+
+# Mount point for the auth method (e.g., approle, jwt, kubernetes)
+vault_auth_mount_point: "{{ vault_auth_method }}"
+
+# -----------------------------------------------------------------------------
+# AppRole Authentication (Recommended for automation)
+# -----------------------------------------------------------------------------
+# RoleID is not secret and can be embedded in config
+vault_approle_role_id: "{{ lookup('env', 'VAULT_ROLE_ID') | default('', true) }}"
+
+# SecretID MUST be kept secret - use Ansible Vault or environment variable
+vault_approle_secret_id: "{{ lookup('env', 'VAULT_SECRET_ID') | default('', true) }}"
+
+# -----------------------------------------------------------------------------
+# Token Authentication (for development/testing)
+# -----------------------------------------------------------------------------
+vault_token: "{{ lookup('env', 'VAULT_TOKEN') | default('', true) }}"
+
+# -----------------------------------------------------------------------------
+# JWT/OIDC Authentication (for CI/CD pipelines)
+# -----------------------------------------------------------------------------
+vault_jwt: "{{ lookup('env', 'VAULT_JWT') | default('', true) }}"
+vault_jwt_role: ""
+
+# -----------------------------------------------------------------------------
+# Kubernetes Authentication
+# -----------------------------------------------------------------------------
+vault_kubernetes_role: ""
+vault_kubernetes_token_path: "/var/run/secrets/kubernetes.io/serviceaccount/token"
+
+# -----------------------------------------------------------------------------
+# LDAP/Userpass Authentication
+# -----------------------------------------------------------------------------
+vault_username: "{{ lookup('env', 'VAULT_USERNAME') | default('', true) }}"
+vault_password: "{{ lookup('env', 'VAULT_PASSWORD') | default('', true) }}"
+
+# =============================================================================
+# Secret Engine Settings
+# =============================================================================
+
+# Default secrets engine mount point
+vault_secrets_engine: "kv-v2"
+
+# KV secrets engine version (1 or 2)
+vault_kv_version: 2
+
+# =============================================================================
+# Caching and Performance
+# =============================================================================
+
+# Cache secrets during playbook run (reduces Vault API calls)
+vault_cache_secrets: true
+
+# Token renewal settings (only applicable when using long-running playbooks)
+vault_token_renew: true
+vault_token_renew_increment: 3600  # seconds
+
+# Retry settings for transient failures
+vault_retries: 3
+vault_retry_delay: 1  # seconds
+
+# =============================================================================
+# Secret Retrieval Configuration
+# =============================================================================
+
+# List of secrets to retrieve (populated by playbooks)
+# Format:
+#   - path: "secret/data/myapp/config"
+#     key: "database_password"
+#     fact_name: "db_password"
+vault_secrets_to_fetch: []
+
+# Default behavior when secret is not found: 'fail' or 'skip'
+vault_missing_secret_behavior: "fail"

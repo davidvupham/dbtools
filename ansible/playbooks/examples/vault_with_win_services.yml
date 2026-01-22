@@ -1,0 +1,69 @@
+---
+# Example: Integrating vault_secrets with Windows service configuration
+# This shows how to retrieve service account credentials from Vault
+# and use them in a Windows playbook
+#
+# Prerequisites:
+#   1. Install collection: ansible-galaxy collection install community.hashi_vault
+#   2. Set environment variables:
+#      - VAULT_ADDR: Your Vault server URL
+#      - VAULT_ROLE_ID: AppRole Role ID
+#      - VAULT_SECRET_ID: AppRole Secret ID
+#   3. Store service credentials in Vault at:
+#      kv-v2/data/windows/service-accounts/MSSQLSERVER
+#
+# Usage:
+#   ansible-playbook playbooks/examples/vault_with_win_services.yml \
+#     -e "target_hosts=sql_servers"
+
+- name: Retrieve service account credentials from Vault
+  hosts: localhost
+  gather_facts: false
+  vars:
+    vault_auth_method: approle
+    vault_secrets_engine: kv-v2
+
+    # Define secrets to fetch - these become ansible facts
+    vault_secrets_to_fetch:
+      - path: "windows/service-accounts/MSSQLSERVER"
+        fact_name: "mssql_service_creds"
+      - path: "windows/service-accounts/SQLSentry"
+        fact_name: "sqlsentry_service_creds"
+
+  roles:
+    - vault_secrets
+
+  tasks:
+    - name: Set credentials as host facts for Windows hosts
+      ansible.builtin.set_fact:
+        mssql_service_account: "{{ mssql_service_creds }}"
+        sqlsentry_service_account: "{{ sqlsentry_service_creds }}"
+      delegate_to: "{{ item }}"
+      delegate_facts: true
+      loop: "{{ groups[target_hosts | default('all')] }}"
+      no_log: true
+
+
+- name: Configure Windows Service Account User Rights
+  hosts: "{{ target_hosts | default('sql_servers') }}"
+  gather_facts: false
+
+  vars:
+    # Use credentials retrieved from Vault
+    win_service_rights_assignments:
+      - service_name: MSSQLSERVER
+        service_account: "{{ mssql_service_account.username | default(omit) }}"
+        state: present
+        rights:
+          - SeServiceLogonRight
+          - SeManageVolumePrivilege
+          - SeLockMemoryPrivilege
+
+      - service_name: SQLSentryServer
+        service_account: "{{ sqlsentry_service_account.username | default(omit) }}"
+        state: present
+        rights:
+          - SeServiceLogonRight
+
+  roles:
+    - win_service_rights

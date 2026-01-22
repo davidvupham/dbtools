@@ -1,0 +1,44 @@
+---
+# vault_secrets role metadata
+
+galaxy_info:
+  role_name: vault_secrets
+  author: Application Infrastructure Team
+  description: |
+    Retrieve secrets from HashiCorp Vault with support for multiple
+    authentication methods including AppRole, JWT, Kubernetes, and LDAP.
+  license: MIT
+  min_ansible_version: "2.14"
+
+  platforms:
+    - name: EL
+      versions:
+        - "8"
+        - "9"
+    - name: Debian
+      versions:
+        - bullseye
+        - bookworm
+    - name: Ubuntu
+      versions:
+        - focal
+        - jammy
+        - noble
+    - name: Windows
+      versions:
+        - "2019"
+        - "2022"
+
+  galaxy_tags:
+    - vault
+    - secrets
+    - hashicorp
+    - security
+    - authentication
+
+# Collection dependencies
+collections:
+  - name: community.hashi_vault
+    version: ">=6.0.0"
+
+dependencies: []

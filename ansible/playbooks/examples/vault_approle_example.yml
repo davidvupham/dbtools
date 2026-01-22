@@ -1,0 +1,50 @@
+---
+# Example: Retrieve secrets using AppRole authentication
+# This is the recommended method for automation and CI/CD
+#
+# Prerequisites:
+#   1. Install collection: ansible-galaxy collection install community.hashi_vault
+#   2. Set environment variables:
+#      - VAULT_ADDR: Your Vault server URL
+#      - VAULT_ROLE_ID: AppRole Role ID
+#      - VAULT_SECRET_ID: AppRole Secret ID
+#
+# Usage:
+#   ansible-playbook playbooks/examples/vault_approle_example.yml -i inventory/development
+
+- name: Retrieve secrets from Vault using AppRole
+  hosts: localhost
+  gather_facts: false
+  vars:
+    # Authentication settings
+    vault_auth_method: approle
+    vault_secrets_engine: kv-v2
+
+    # Secrets to retrieve
+    vault_secrets_to_fetch:
+      - path: "myapp/database"
+        key: "password"
+        fact_name: "db_password"
+      - path: "myapp/api"
+        key: "api_key"
+        fact_name: "api_key"
+      - path: "myapp/config"
+        fact_name: "app_config"  # Retrieves all keys as a dict
+
+  roles:
+    - vault_secrets
+
+  tasks:
+    - name: Display retrieved secret keys (not values)
+      ansible.builtin.debug:
+        msg: |
+          Retrieved secrets:
+          - db_password: {{ 'set' if db_password is defined else 'not set' }}
+          - api_key: {{ 'set' if api_key is defined else 'not set' }}
+          - app_config keys: {{ app_config.keys() | list if app_config is defined else 'not set' }}
+
+    - name: Use secret in a task (example)
+      ansible.builtin.debug:
+        msg: "Database password length: {{ db_password | length }}"
+      when: db_password is defined
+      no_log: true

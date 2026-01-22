@@ -1,0 +1,8 @@
+---
+# Ansible Galaxy requirements for vault_secrets role
+# Install with: ansible-galaxy install -r requirements.yml
+
+collections:
+  - name: community.hashi_vault
+    version: ">=6.0.0"
+    source: https://galaxy.ansible.com
