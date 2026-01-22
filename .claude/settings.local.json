@@ -22,7 +22,12 @@
       "Bash(export LIQUIBASE_TUTORIAL_DATA_DIR=/data/dpham/liquibase_tutorial)",
       "Bash(__NEW_LINE_642efb567c12c43e__ source \"$LIQUIBASE_TUTORIAL_DIR/scripts/setup_tutorial.sh\")",
       "Bash(tree:*)",
-      "Bash(done)"
+      "Bash(done)",
+      "WebSearch",
+      "WebFetch(domain:docs.ansible.com)",
+      "Bash(git stash:*)",
+      "Bash(python -m pytest:*)",
+      "Bash(uv run pytest:*)"
     ]
   }
 }
