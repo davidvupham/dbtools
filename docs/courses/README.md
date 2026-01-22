@@ -11,6 +11,7 @@ While both are learning-oriented:
 
 ## Available Courses
 
+- **[GitHub Project Management Course](github-proj-mgmt/README.md)**: A complete guide to project management using GitHub Issues, Projects, and automation—from basic issue tracking to enterprise-scale workflows with GraphQL API and GitHub Actions.
 - **[HashiCorp Vault Course](vault/README.md)**: Master secrets management from fundamentals to production operations, covering authentication, dynamic secrets, and infrastructure integration.
 - **[Liquibase DevOps Course](liquibase/README.md)**: A comprehensive series on database CI/CD, taking you from manual updates to fully automated pipelines with GitHub Actions.
 - **[Markdown Mastery Course](markdown/README.md)**: From beginner to advanced Markdown, covering core syntax, GitHub Flavored Markdown, Mermaid diagrams, math equations, Pandoc conversion, and documentation frameworks.
