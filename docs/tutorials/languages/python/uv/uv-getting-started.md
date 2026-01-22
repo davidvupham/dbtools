@@ -462,7 +462,7 @@ uv run pytest
 
 </details>
 
-### Exercise 3: Explore the Lock File
+### Exercise 3: Explore the lock file
 
 1. Open `uv.lock` in your editor
 2. Find how many packages are listed
@@ -470,7 +470,9 @@ uv run pytest
 
 ---
 
-## Next Steps
+## Next steps
+
+[↑ Back to table of contents](#table-of-contents)
 
 Congratulations! You now know the basics of UV. Here's where to go next:
 
@@ -486,7 +488,9 @@ Congratulations! You now know the basics of UV. Here's where to go next:
 
 ---
 
-## Quick Reference
+## Quick reference
+
+[↑ Back to table of contents](#table-of-contents)
 
 | Command | Description |
 |---------|-------------|
