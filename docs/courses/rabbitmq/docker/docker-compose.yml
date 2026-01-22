@@ -1,0 +1,79 @@
+# RabbitMQ Docker Compose Configuration
+# For use with the RabbitMQ Course
+#
+# Usage:
+#   docker-compose up -d        # Start RabbitMQ
+#   docker-compose logs -f      # View logs
+#   docker-compose down         # Stop
+#   docker-compose down -v      # Stop and remove data
+
+version: '3.8'
+
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq_course
+    hostname: rabbitmq
+    ports:
+      - "5672:5672"    # AMQP protocol
+      - "15672:15672"  # Management UI
+    environment:
+      # Default credentials (change in production!)
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+      # Optional: Enable plugins
+      # RABBITMQ_PLUGINS: "rabbitmq_management,rabbitmq_shovel,rabbitmq_shovel_management"
+    volumes:
+      # Persist data between restarts
+      - rabbitmq_data:/var/lib/rabbitmq
+      # Custom configuration (optional)
+      # - ./rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
+      # - ./definitions.json:/etc/rabbitmq/definitions.json:ro
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_running"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+    networks:
+      - rabbitmq_network
+
+  # Optional: Prometheus for metrics
+  # prometheus:
+  #   image: prom/prometheus:latest
+  #   container_name: prometheus
+  #   ports:
+  #     - "9090:9090"
+  #   volumes:
+  #     - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+  #   depends_on:
+  #     - rabbitmq
+  #   networks:
+  #     - rabbitmq_network
+
+  # Optional: Grafana for dashboards
+  # grafana:
+  #   image: grafana/grafana:latest
+  #   container_name: grafana
+  #   ports:
+  #     - "3000:3000"
+  #   environment:
+  #     GF_SECURITY_ADMIN_PASSWORD: admin
+  #   volumes:
+  #     - grafana_data:/var/lib/grafana
+  #   depends_on:
+  #     - prometheus
+  #   networks:
+  #     - rabbitmq_network
+
+volumes:
+  rabbitmq_data:
+    name: rabbitmq_course_data
+  # grafana_data:
+  #   name: grafana_data
+
+networks:
+  rabbitmq_network:
+    name: rabbitmq_course_network
+    driver: bridge
