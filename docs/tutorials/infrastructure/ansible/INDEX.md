@@ -18,22 +18,22 @@ Welcome! This comprehensive Ansible tutorial covers everything from absolute beg
 
 | Chapter | Title | Topics | Status |
 |---------|-------|--------|--------|
-| 6 | Conditionals and Loops | When statements, loop types | 📝 Framework |
+| 6 | [Conditionals and Loops](06-conditionals-loops.md) | When statements, loop types, filters | ✅ Complete |
 | 7 | Handlers and Tasks | Event-driven automation | 📝 Framework |
-| 8 | Templates | Jinja2, dynamic configs | 📝 Framework |
+| 8 | [Templates](08-templates.md) | Jinja2, dynamic configs, filters | ✅ Complete |
 
 ### Part 3: Organization (Chapters 9-10)
 
 | Chapter | Title | Topics | Status |
 |---------|-------|--------|--------|
 | 9 | [Roles](09-roles.md) | Reusable automation, Galaxy, dependencies | ✅ Complete |
-| 10 | Ansible Vault | Secrets management, encryption | 📝 Framework |
+| 10 | [Ansible Vault](10-vault.md) | Secrets management, encryption | ✅ Complete |
 
 ### Part 4: Advanced Topics (Chapters 11-12)
 
 | Chapter | Title | Topics | Status |
 |---------|-------|--------|--------|
-| 11 | Error Handling | Blocks, rescue, retries | 📝 Framework |
+| 11 | [Error Handling](11-error-handling.md) | Blocks, rescue, retries, failed_when | ✅ Complete |
 | 12 | Collections and Galaxy | Ecosystem, sharing | 📝 Framework |
 
 ### Part 5: Production Ready (Chapters 13-14)
@@ -124,6 +124,37 @@ Welcome! This comprehensive Ansible tutorial covers everything from absolute beg
   - Intermediate challenges
   - Advanced scenarios
   - Project-based learning
+
+## 🎯 Certification Preparation
+
+Preparing for **Red Hat Certified Engineer (RHCE) EX294** or **EX374**? Use these resources:
+
+### Study Guide
+
+- **[Certification Prep Guide](CERTIFICATION_PREP.md)** - Complete exam preparation
+  - EX294 exam objectives mapping
+  - Study plans by experience level
+  - Exam day tips
+  - Self-assessment checklist
+
+### Assessments
+
+- **[Assessments Overview](assessments/README.md)** - All quizzes and practice tests
+
+| Assessment | Purpose | Time | Passing |
+|------------|---------|------|---------|
+| [Chapter Quizzes](assessments/quizzes/) | Knowledge check per chapter | 10 min | 80% |
+| [Practice Test 1](assessments/practice-test-1.md) | Beginner/Intermediate | 90 min | 70% |
+| [Practice Test 2](assessments/practice-test-2.md) | Advanced, exam-like | 3 hrs | 70% |
+| [Mock Exam](assessments/mock-exam-1.md) | Full EX294 simulation | 4 hrs | 70% |
+
+### Certification Path
+
+```text
+1. Complete Chapters 1-5 → Take Practice Test 1
+2. Complete Chapters 6-13 → Take Practice Test 2
+3. Score 85%+ on Mock Exam → Ready for certification
+```
 
 ## 🎓 Recommended Learning Sequences
 
@@ -339,6 +370,7 @@ Advanced (Be Familiar)
 ✅ **Best practices** - Learn the right way from the start
 ✅ **Complete reference** - Quick reference guide included
 ✅ **Self-contained** - Everything you need in one place
+✅ **Certification ready** - Practice tests and mock exams included
 
 ## 🚀 Start Your Journey
 
@@ -348,10 +380,12 @@ Need guidance? Check the **[Learning Guide](LEARNING_GUIDE.md)** first.
 
 Want quick answers? Use the **[Quick Reference](QUICK_REFERENCE.md)**.
 
+Preparing for certification? See the **[Certification Prep Guide](CERTIFICATION_PREP.md)**.
+
 ---
 
-**Last Updated**: 2024
-**Version**: 1.0
-**Status**: Core content complete, additional chapters in development
+**Last Updated**: 2025
+**Version**: 2.0
+**Status**: 11 complete chapters, certification assessments, EX294 exam prep
 
-**Happy Learning!** 🎓✨
+**Happy Learning!**
