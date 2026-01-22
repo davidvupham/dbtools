@@ -15,20 +15,20 @@
 
 A comprehensive guide to managing Python projects and dependencies with `uv`.
 
-## Table of Contents
+## Table of contents
 
 * [1. Introduction: Why `uv`?](#1-introduction-why-uv)
-* [2. Core Concepts for Beginners](#2-core-concepts-for-beginners)
-* [3. Architecture & Speed](#3-architecture--speed)
+* [2. Core concepts for beginners](#2-core-concepts-for-beginners)
+* [3. Architecture & speed](#3-architecture--speed)
 * [4. Installation](#4-installation)
-* [5. Quick Start: Your First Project](#5-quick-start-your-first-project)
-* [6. Guide: Setting up `uv` for Existing Projects](#6-guide-setting-up-uv-for-existing-projects)
-* [7. Workflows: Team & Production](#7-workflows-team--production)
+* [5. Quick start: Your first project](#5-quick-start-your-first-project)
+* [6. Guide: Setting up `uv` for existing projects](#6-guide-setting-up-uv-for-existing-projects)
+* [7. Workflows: Team & production](#7-workflows-team--production)
 * [8. Comparisons](#8-comparisons)
-* [9. Common Tasks (How-To)](#9-common-tasks-how-to)
-* [10. Best Practices](#10-best-practices)
-* [11. Reference Cheatsheet](#11-reference-cheatsheet)
-* [Further Reading](#further-reading)
+* [9. Common tasks (how-to)](#9-common-tasks-how-to)
+* [10. Best practices](#10-best-practices)
+* [11. Reference cheatsheet](#11-reference-cheatsheet)
+* [Further reading](#further-reading)
 
 ## 1. Introduction: Why `uv`?
 
@@ -49,34 +49,36 @@ A comprehensive guide to managing Python projects and dependencies with `uv`.
 * **Backing**: They are a venture-backed company (investors include Accel) dedicated to high-performance open-source developer tools.
 * **Philosophy**: They believe Python tooling should be instant, reliable, and unified. `uv` is the next step in that vision, following `Ruff`.
 
-## 2. Core Concepts for Beginners
+## 2. Core concepts for beginners
 
 Before diving in, it's helpful to understand three key concepts that `uv` handles for you.
 
-### 1. Dependencies (Packages)
+### 1. Dependencies (packages)
 
 Dependencies are external libraries (code written by others) that your project needs to function. For example, `requests` is a library for making HTTP calls. Instead of rewriting this code, you "depend" on it.
 
 * **Direct Dependency**: A library you explicitly ask for (e.g., `uv add requests`).
 * **Transitive Dependency**: A library that *your* dependency needs (e.g., `requests` might need `urllib3`). `uv` manages these automatically.
 
-### 2. Virtual Environments (The "Box")
+### 2. Virtual environments (the "box")
 
 A Virtual Environment is an isolated "box" for your project.
 
 * **The Problem**: If Project A needs `requests` version 1.0 and Project B needs `requests` version 2.0, installing them globally causes a conflict.
 * **The Solution**: `uv` creates a separate box (`.venv` folder) for every project. Project A gets its own box with v1.0, and Project B gets its own box with v2.0. Neither interferes with the other.
 
-### 3. Resolution (The "Puzzle Solver")
+### 3. Resolution (the "puzzle solver")
 
 When you add a package, `uv` acts as a solver. It looks at all your requirements and finds the exact set of versions for every package that will work together without crashing. It saves this "solved puzzle" into a `uv.lock` file so that your project works exactly the same way on every computer.
 
-### 4. Isolation (Python vs. Modules)
+### 4. Isolation (Python vs. modules)
 
 * **Modules are Local**: Every project has its own `.venv` folder containing its dependencies. If Project A has `pandas` v2.0, it is physically sitting inside Project A's folder.
 * **Python is Managed**: `uv` manages Python versions globally on your machine to save disk space. If 10 projects need Python 3.12, `uv` downloads it once to a central cache and "links" it to each project. However, to your project, it *feels* like a completely private installation.
 
-## 3. Architecture & Speed
+## 3. Architecture & speed
+
+[↑ Back to table of contents](#table-of-contents)
 
 `uv` achieves 10-100x speedups by using Rust and a global cache. For a deep dive into how it works (PubGrub, lockfiles, etc.), see the **[UV Architecture](../../../../explanation/python/uv/uv-architecture.md)** guide.
 
@@ -122,11 +124,11 @@ Verify installation:
 uv --version
 ```
 
-## 5. Quick Start: Your First Project
+## 5. Quick start: Your first project
 
 The modern workflow with `uv` revolves around creating a project and letting `uv` manage the environment for you.
 
-### Step 1: Initialize a Project
+### Step 1: Initialize a project
 
 Create a new directory and initialize it:
 
@@ -143,7 +145,7 @@ This creates:
 * `.python-version` (files specifying the python version)
 * `main.py` (sample script)
 
-### Step 2: Add Dependencies
+### Step 2: Add dependencies
 
 Add a library, for example, `requests`:
 
@@ -158,7 +160,7 @@ This automatically:
 3. Updates `pyproject.toml`.
 4. Updates `uv.lock`.
 
-### Step 3: Run Scripts
+### Step 3: Run scripts
 
 Run your script using the managed environment:
 
@@ -172,7 +174,9 @@ Or run arbitrary commands:
 uv run python -c "import requests; print(requests.__version__)"
 ```
 
-## 6. Guide: Setting up `uv` for Existing Projects
+## 6. Guide: Setting up `uv` for existing projects
+
+[↑ Back to table of contents](#table-of-contents)
 
 If you have existing projects (e.g., inside `~/src`), here is how to switch them to `uv`.
 
@@ -210,9 +214,11 @@ If you have existing projects (e.g., inside `~/src`), here is how to switch them
     uv run python main.py
     ```
 
-## 7. Workflows: Team & Production
+## 7. Workflows: Team & production
 
-### Developer Workflow (The "Team" Flow)
+[↑ Back to table of contents](#table-of-contents)
+
+### Developer workflow (the "team" flow)
 
 When a new developer joins your team or clones the repo, they don't need to manually create virtual environments or guess pip commands.
 
@@ -235,7 +241,7 @@ When a new developer joins your team or clones the repo, they don't need to manu
     * Installs the exact versions specified in the lockfile.
     * Installs your project in "editable" mode so changes happen instantly.
 
-### Version Control (Git)
+### Version control (Git)
 
 Knowing what to commit is crucial for team consistency.
 

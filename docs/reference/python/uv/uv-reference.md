@@ -550,7 +550,7 @@ Or with patch version:
 ## Related Documentation
 
 - [UV Getting Started](../../../tutorials/python/uv/uv-getting-started.md)
-- [UV Comprehensive Guide](../../../tutorials/python/uv/uv_tutorial.md)
+- [UV Comprehensive Guide](../../../tutorials/python/uv/uv-tutorial.md)
 - [UV Adoption Rationale](../../../explanation/python/uv/README.md)
 - [UV Architecture Deep Dive](../../../explanation/python/uv/uv-architecture.md)
 - [Official UV Documentation](https://docs.astral.sh/uv/)

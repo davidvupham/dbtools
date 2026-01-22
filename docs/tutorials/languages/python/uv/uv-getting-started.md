@@ -11,12 +11,12 @@
 ![Topic](https://img.shields.io/badge/Topic-Tutorial-blue)
 
 > [!IMPORTANT]
-> **Related Docs:** [Architecture](../../../explanation/python/uv/uv-architecture.md) | [Comprehensive Tutorial](./uv_tutorial.md) | [How-to Guides](../../../how-to/python/uv/) | [Reference](../../../reference/python/uv/uv-reference.md)
+> **Related Docs:** [Architecture](../../../explanation/python/uv/uv-architecture.md) | [Comprehensive Tutorial](./uv-tutorial.md) | [How-to Guides](../../../how-to/python/uv/) | [Reference](../../../reference/python/uv/uv-reference.md)
 
 A step-by-step tutorial to get you up and running with `uv`, the modern Python package manager.
 
 > [!TIP]
-> This tutorial is designed for beginners. If you're already familiar with Python development and want a comprehensive reference, see [UV Comprehensive Guide](./uv_tutorial.md).
+> This tutorial is designed for beginners. If you're already familiar with Python development and want a comprehensive reference, see [UV Comprehensive Guide](./uv-tutorial.md).
 
 ## Table of Contents
 
@@ -458,7 +458,7 @@ Congratulations! You now know the basics of UV. Here's where to go next:
 
 | Goal | Resource |
 |------|----------|
-| Deep dive into UV concepts | [UV Comprehensive Guide](./uv_tutorial.md) |
+| Deep dive into UV concepts | [UV Comprehensive Guide](./uv-tutorial.md) |
 | Understand "Why UV?" | [UV Adoption Rationale](../../../explanation/python/uv/README.md) |
 | Migrate from pip/poetry | [Migration Guide](../../../how-to/python/uv/uv-migrate-from-pip.md) |
 | Use UV with Docker | [Docker Integration](../../../how-to/python/uv/uv-docker-integration.md) |

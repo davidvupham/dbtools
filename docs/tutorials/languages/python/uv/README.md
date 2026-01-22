@@ -18,7 +18,7 @@ Select the path that matches your current goal:
 >
 > *"I need to know how to use `uv` for my day-to-day work, workflows, and team standards."*
 
-* **Start Here**: **[UV Comprehensive Guide](./uv_tutorial.md)**
+* **Start Here**: **[UV Comprehensive Guide](./uv-tutorial.md)**
 * **Time**: ~60 minutes
 * **Outcome**: Deep understanding of dependencies, locking, workspaces, and best practices.
 
@@ -35,7 +35,7 @@ Select the path that matches your current goal:
 
 * **Tutorials** (Learning)
   * [Getting Started](./uv-getting-started.md)
-  * [Comprehensive Guide](./uv_tutorial.md)
+  * [Comprehensive Guide](./uv-tutorial.md)
 * **How-To Guides** (Task-based)
   * [Migration Guide](../../../../how-to/python/uv/uv-migrate-from-pip.md)
   * [Docker Integration](../../../../how-to/python/uv/uv-docker-integration.md)

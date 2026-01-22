@@ -13,7 +13,7 @@ This directory contains the Python basics for this project.
 * **UV Package Manager** — [uv/](./uv/README.md)
   * > **Start Here**: Select your path in the **[UV Learning Hub](./uv/README.md)**.
   * 🟢 **Beginner**: [Getting Started](./uv/uv-getting-started.md)
-  * 🔵 **Comprehensive**: [Tutorial](./uv/uv_tutorial.md)
+  * 🔵 **Comprehensive**: [Tutorial](./uv/uv-tutorial.md)
   * 🟣 **Decision Maker**: [Adoption Rationale](../../../explanation/python/uv/README.md)
 
 * Part 2: Advanced Concepts — [01_PYTHON_BASICS_PART2.md](./01_PYTHON_BASICS_PART2.md)
