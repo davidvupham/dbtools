@@ -4,7 +4,7 @@
 >
 > Purpose: Define required practices for Python code generation and refactoring
 >
-> Last Updated: 2025-11-07
+> Last Updated: 2026-01-22
 
 ## Scope
 
@@ -33,6 +33,8 @@ These standards apply to all Python code within this repository, whether written
   - [Protocol (Interface Definition)](#protocol-interface-definition)
   - [TypedDict](#typeddict)
   - [Enabling Strict Mode](#enabling-strict-mode)
+  - [Choosing Between Pydantic, Dataclass, and TypedDict](#choosing-between-pydantic-dataclass-and-typeddict)
+  - [Pattern Matching (Python 3.10+)](#pattern-matching-python-310)
 - [Error Handling and Logging](#error-handling-and-logging)
   - [Exception Hierarchy](#exception-hierarchy)
   - [Custom Exceptions](#custom-exceptions)
@@ -40,6 +42,7 @@ These standards apply to all Python code within this repository, whether written
   - [Redacting Secrets](#redacting-secrets)
 - [Concurrency and I/O](#concurrency-and-io)
   - [Async/Await for I/O Operations](#asyncawait-for-io-operations)
+  - [Structured Concurrency with TaskGroup](#structured-concurrency-with-taskgroup-python-311)
   - [Context Managers](#context-managers)
   - [Pathlib for File Operations](#pathlib-for-file-operations)
 - [Performance Best Practices](#performance-best-practices)
@@ -513,6 +516,92 @@ warn_unused_configs = true
 disallow_untyped_defs = true
 ```
 
+### Choosing Between Pydantic, Dataclass, and TypedDict
+
+**Decision framework:** Use the right tool for the job:
+
+| Tool | Use Case | Runtime Validation | Performance |
+|:-----|:---------|:-------------------|:------------|
+| `dataclass` | Internal data structures, performance-critical code | No | Fastest |
+| `Pydantic BaseModel` | External input, API requests, configuration files | Yes | Slower |
+| `TypedDict` | Dictionary interop, JSON structures, static typing only | No | Native dict |
+
+**Examples:**
+
+```python
+from dataclasses import dataclass
+from typing import TypedDict
+from pydantic import BaseModel
+
+# Use dataclass for internal domain objects
+@dataclass(slots=True)
+class Point:
+    x: float
+    y: float
+
+# Use Pydantic for external input (API requests, config files)
+class UserRequest(BaseModel):
+    username: str
+    email: str
+    age: int  # Validates at runtime!
+
+# Use TypedDict for dictionary structures (JSON, legacy code)
+class UserDict(TypedDict):
+    id: int
+    name: str
+```
+
+**Best practices:**
+
+- Use `dataclass` when performance matters and you trust the input
+- Use `Pydantic` when you need validation of untrusted external data
+- Use `TypedDict` for static type checking of dictionaries (no runtime validation)
+- Don't use `TypedDict` expecting runtime checks
+- Don't use `dataclass` to validate untrusted user input
+
+### Pattern Matching (Python 3.10+)
+
+**What it is:** Structural pattern matching with `match` statements for cleaner conditional logic.
+
+**When to use:** Replacing complex if/elif chains, handling different data shapes, state machines.
+
+```python
+from typing import Any
+
+def process_response(response: dict[str, Any]) -> str:
+    """Process API response using pattern matching."""
+    match response:
+        case {"status": "success", "data": data}:
+            return f"Got data: {data}"
+        case {"status": "error", "message": msg}:
+            raise ValueError(f"API error: {msg}")
+        case {"status": status}:
+            return f"Unknown status: {status}"
+        case _:
+            raise ValueError("Invalid response format")
+
+def handle_command(command: str, args: list[str]) -> None:
+    """Handle CLI commands with pattern matching."""
+    match command, args:
+        case "help", []:
+            print("Usage: ...")
+        case "get", [key]:
+            print(f"Getting {key}")
+        case "set", [key, value]:
+            print(f"Setting {key} = {value}")
+        case "delete", [*keys] if keys:
+            print(f"Deleting {len(keys)} keys")
+        case _:
+            print(f"Unknown command: {command}")
+```
+
+**Best practices:**
+
+- Use `case _:` as a catch-all fallback (like `else`)
+- Use guards (`if condition`) for additional filtering
+- Prefer pattern matching over long if/elif chains
+- Use type guards for runtime type checking
+
 ## Error Handling and Logging
 
 ### Exception Hierarchy
@@ -719,6 +808,53 @@ async def fetch_with_timeout(url: str) -> str:
             # handle/log error, maybe retry with backoff
             raise
 ```
+
+#### Structured Concurrency with TaskGroup (Python 3.11+)
+
+**What it is:** `TaskGroup` provides structured concurrency, ensuring all tasks complete or are cancelled together.
+
+**Why use it:** Safer than `asyncio.gather()` - exceptions propagate properly and cleanup is guaranteed.
+
+```python
+import asyncio
+
+async def fetch_url(url: str) -> str:
+    """Fetch a URL asynchronously."""
+    # Implementation
+    return f"Content from {url}"
+
+async def fetch_all_urls(urls: list[str]) -> list[str]:
+    """Fetch multiple URLs concurrently with proper error handling."""
+    results: list[str] = []
+
+    async with asyncio.TaskGroup() as tg:
+        tasks = [tg.create_task(fetch_url(url)) for url in urls]
+
+    # All tasks completed successfully if we reach here
+    return [task.result() for task in tasks]
+
+# Entry point
+async def main():
+    urls = ["https://example.com", "https://example.org"]
+    try:
+        results = await fetch_all_urls(urls)
+        print(f"Fetched {len(results)} URLs")
+    except* Exception as eg:
+        # ExceptionGroup contains all exceptions from failed tasks
+        for exc in eg.exceptions:
+            print(f"Task failed: {exc}")
+
+# Use asyncio.run() as the main entry point
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+**Best practices:**
+
+- Prefer `TaskGroup` over `asyncio.gather()` for new code
+- Use `asyncio.run()` as the main entry point (not `get_event_loop()`)
+- Handle `ExceptionGroup` (Python 3.11+) for multiple concurrent failures
+- Use `async with` for all async resources (sessions, connections)
 
 ### Context Managers
 
@@ -1417,6 +1553,13 @@ class DatabaseConnection:
 - Record updates with dates and a short rationale in the version history section below.
 
 ## Version History
+
+### 1.2.0 (2026-01-22)
+
+- Added decision framework for Pydantic vs dataclass vs TypedDict
+- Added pattern matching section (Python 3.10+ match statements)
+- Added structured concurrency section with TaskGroup (Python 3.11+)
+- Updated asyncio best practices for modern Python
 
 ### 1.1.0 (2025-11-07)
 
