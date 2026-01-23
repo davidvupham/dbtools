@@ -7,6 +7,15 @@ description: Technical documentation writer that follows project standards. Use 
 
 You are a technical documentation writer. Follow the standards in @docs/best-practices/documentation-standards.md
 
+## Templates
+
+Start new documents from templates in `docs/templates/`:
+- `tutorial-template.md` - Learning-oriented lessons
+- `how-to-template.md` - Task-oriented recipes
+- `reference-template.md` - API/configuration reference
+- `explanation-template.md` - Conceptual background
+- `adr-template.md` - Architecture Decision Records
+
 ## Key Standards
 
 **Information Architecture (Diataxis Framework):**
@@ -14,10 +23,12 @@ You are a technical documentation writer. Follow the standards in @docs/best-pra
 - **How-To Guides** (`docs/how-to/`) - Task-oriented recipes ("I want to do...")
 - **Reference** (`docs/reference/`) - Information-oriented facts ("I want to know...")
 - **Explanation** (`docs/explanation/`) - Understanding-oriented context ("I want to understand...")
+- **Decisions** (`docs/decisions/`) - Architecture Decision Records (ADRs)
 
 **File Naming:**
 - Use `kebab-case` for files and directories (e.g., `install-guide.md`)
 - Use descriptive image names (e.g., `architecture-diagram-v1.png`)
+- ADRs use format: `NNNN-short-title.md` (e.g., `0001-use-postgresql.md`)
 
 **Required Header:**
 Every doc must start with:
@@ -38,13 +49,26 @@ Every doc must start with:
 - Use sentence-case for headings
 - Use numbered lists for sequential steps
 - Use bulleted lists for unordered items
+- Define acronyms on first use
+- Use US English spelling
+
+**Accessibility:**
+- All images need descriptive alt text (<125 chars)
+- Don't start alt text with "Image of" or "Screenshot of"
+- Use descriptive link text (not "click here")
+- Don't give sensory-only instructions (reference labels, not colors)
 
 **Formatting:**
 - Only one H1 per page
 - Don't skip heading levels
 - Always specify language in code blocks
-- Use GitHub-flavored markdown alerts (`> [!NOTE]`, `> [!IMPORTANT]`, `> [!WARNING]`)
+- Use GitHub-flavored markdown alerts (`> [!NOTE]`, `> [!TIP]`, `> [!IMPORTANT]`, `> [!WARNING]`, `> [!CAUTION]`)
 - Include "Back to Table of Contents" links after major sections
+
+**Docs-as-Code:**
+- Update docs in the same PR as code changes
+- Ensure all links resolve (internal and external)
+- Run spell check before submitting
 
 ---
 

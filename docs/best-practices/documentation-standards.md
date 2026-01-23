@@ -2,8 +2,8 @@
 
 **🔗 [← Back to Documentation Index](../README.md)**
 
-> **Document Version:** 1.0
-> **Last Updated:** January 13, 2026
+> **Document Version:** 2.0
+> **Last Updated:** January 22, 2026
 > **Maintainers:** Application Infrastructure Team
 > **Status:** Production
 
@@ -20,14 +20,21 @@
 - [File Standards](#file-standards)
   - [Naming Conventions](#naming-conventions)
   - [Standard Header](#standard-header)
+  - [Templates](#templates)
 - [Writing Style](#writing-style)
   - [Voice and Tone](#voice-and-tone)
   - [Grammar and Mechanics](#grammar-and-mechanics)
+  - [Internationalization](#internationalization)
+- [Accessibility](#accessibility)
 - [Formatting Guidelines](#formatting-guidelines)
   - [Headings](#headings)
   - [Code Blocks](#code-blocks)
   - [Admonitions (Alerts)](#admonitions-alerts)
   - [Navigation](#navigation)
+- [Docs-as-Code Practices](#docs-as-code-practices)
+- [Documentation Freshness](#documentation-freshness)
+- [API Documentation](#api-documentation)
+- [AI-Readiness](#ai-readiness)
 - [Review Checklist](#review-checklist)
 
 ## Information Architecture
@@ -49,6 +56,9 @@ Keep the document near the code it describes where possible, but mapped to the c
 
 * **Top Level**: Always use the 4 Diátaxis folders.
 * **Sub-directories**: Organize by *Topic* or *Product* (e.g., `docs/how-to/podman/`, `docs/reference/liquibase/`).
+* **Architecture Decision Records**: Store ADRs in `docs/decisions/` with format `NNNN-title.md`.
+* **Templates**: Reusable templates live in `docs/templates/`.
+* **Archive**: Obsolete docs move to `docs/_archive/` (not deleted).
 * **Images**: Store images relative to the document in an `assets/` or `images/` subfolder, or a central `docs/assets/` if shared.
 
 [↑ Back to Table of Contents](#table-of-contents)
@@ -85,6 +95,18 @@ Every documentation file **MUST** start with the following H1 and metadata block
 > **Related Docs:** [Link 1](./link1.md) | [Link 2](./link2.md)
 ```
 
+### Templates
+
+Use the templates in `docs/templates/` to start new documents:
+
+| Template | Use Case |
+|:---|:---|
+| `tutorial-template.md` | Learning-oriented lessons |
+| `how-to-template.md` | Task-oriented recipes |
+| `reference-template.md` | API or configuration reference |
+| `explanation-template.md` | Conceptual background |
+| `adr-template.md` | Architecture Decision Records |
+
 [↑ Back to Table of Contents](#table-of-contents)
 
 ## Writing Style
@@ -111,6 +133,53 @@ Every documentation file **MUST** start with the following H1 and metadata block
   * Use **Numbered Lists (1., 2.)** for sequential steps.
   * Use **Bulleted Lists (-)** for unordered items.
 * **Date Format**: Use `Month Day, Year` (e.g., January 13, 2026) to avoid international confusion.
+
+### Internationalization
+
+* **Language**: Use US English spelling (e.g., "color" not "colour").
+* **Avoid Idioms**: Don't use culturally-specific phrases or colloquialisms.
+* **Code Dates**: Use ISO 8601 format in code examples: `2026-01-22`.
+* **Units**: Prefer metric with imperial in parentheses where relevant.
+* **Define Acronyms**: Spell out on first use: "Application Programming Interface (API)".
+
+[↑ Back to Table of Contents](#table-of-contents)
+
+## Accessibility
+
+Ensure documentation is accessible to all users, including those using assistive technologies.
+
+### Alt text for images
+
+* **Required**: All meaningful images must have descriptive alt text.
+* **Length**: Keep alt text under 125 characters (screen readers may truncate longer text).
+* **Don't Start With**: "Image of", "Picture of", "Screenshot of" — the format is implied.
+* **Decorative Images**: Use empty alt for purely decorative images: `![](decorative.png)`
+
+Examples:
+* ✅ `![Database connection flow showing client, pooler, and server](./assets/db-flow.png)`
+* ✅ `![Architecture diagram: requests flow from load balancer to API pods to database](./assets/arch.png)`
+* ❌ `![Image of diagram](./assets/diagram.png)`
+* ❌ `![screenshot](./assets/screen1.png)`
+
+### Charts and diagrams
+
+For complex visuals, include:
+* **Chart type** (line graph, bar chart, flowchart)
+* **Data being displayed**
+* **Key insight or trend**
+
+Example: `![Bar chart comparing response times: PostgreSQL (45ms) outperforms MySQL (62ms) and SQLite (89ms)](./assets/db-benchmark.png)`
+
+### General accessibility
+
+* **Plain Language**: Use short sentences and simple words. Define technical terms on first use.
+* **No Sensory-Only Instructions**: Reference labels, not colors or positions.
+  * ✅ "Click **Submit** to save your changes."
+  * ❌ "Click the blue button on the right."
+* **Heading Hierarchy**: Screen readers use headings for navigation — don't skip levels.
+* **Link Text**: Use descriptive link text, not "click here".
+  * ✅ `See the [installation guide](./install.md) for setup instructions.`
+  * ❌ `For setup instructions, [click here](./install.md).`
 
 [↑ Back to Table of Contents](#table-of-contents)
 
@@ -141,12 +210,26 @@ Use GitHub-flavored markdown alerts for emphasis:
 > [!NOTE]
 > Useful information that users should know, even when skimming.
 
+> [!TIP]
+> Helpful advice for doing things better or more easily.
+
 > [!IMPORTANT]
-> Key information users need to success.
+> Key information users need to succeed.
 
 > [!WARNING]
 > Urgent info that needs immediate user attention to avoid problems.
+
+> [!CAUTION]
+> Advises about risks or negative outcomes of certain actions.
 ```
+
+| Alert | Use When |
+|:---|:---|
+| NOTE | Supplementary information that adds context |
+| TIP | Optional suggestions to improve workflow |
+| IMPORTANT | Critical information for success |
+| WARNING | Potential for data loss, security issues, or breaking changes |
+| CAUTION | Irreversible actions or significant consequences |
 
 ### Navigation
 
@@ -156,16 +239,169 @@ Use GitHub-flavored markdown alerts for emphasis:
 
 [↑ Back to Table of Contents](#table-of-contents)
 
+## Docs-as-Code Practices
+
+Treat documentation with the same rigor as code. This approach is used by Google, Microsoft, Spotify, and other industry leaders.
+
+### Core principles
+
+* **Same PR**: Update documentation in the same pull request as code changes. This keeps docs synchronized and provides context for reviewers.
+* **Version Control**: All documentation lives in Git alongside the code it describes.
+* **Review Process**: Documentation changes require review just like code changes.
+
+### CI/CD integration
+
+* **Link Checking**: Automated validation of internal and external links.
+* **Spell Checking**: Run spell check in CI (configure project dictionary for technical terms).
+* **Linting**: Use markdownlint or similar to enforce formatting consistency.
+* **Build Validation**: Ensure docs build successfully before merge.
+
+### Workflow
+
+```text
+1. Create branch for feature/fix
+2. Write/update code
+3. Write/update documentation in same branch
+4. Submit PR with both code and docs
+5. CI validates docs (links, spelling, linting)
+6. Reviewer approves both code and docs
+7. Merge deploys docs automatically
+```
+
+[↑ Back to Table of Contents](#table-of-contents)
+
+## Documentation Freshness
+
+Stale documentation is worse than no documentation — it erodes trust and causes errors.
+
+### Review cadence
+
+| Doc Type | Review Frequency | Trigger |
+|:---|:---|:---|
+| **How-To Guides** | Quarterly | Related feature changes |
+| **Tutorials** | Semi-annually | Major version releases |
+| **Reference** | On code change | Every PR touching referenced code |
+| **Explanation** | Annually | Architecture changes |
+| **Quick Reference** | Quarterly | Command/API changes |
+
+### Ownership
+
+* **CODEOWNERS**: Add documentation paths to `CODEOWNERS` file for automatic review assignment.
+* **Role-Based**: Assign ownership by role, not individual (e.g., "Product Team" not "Jane Doe").
+* **Folder Owners**: Each `docs/` subdirectory should have a designated team.
+
+### Staleness detection
+
+* **Automated Alerts**: Flag docs not updated in >6 months for review.
+* **Last Updated Field**: The `Last Updated` header field enables tracking.
+* **Deprecation Flow**: Mark outdated docs with `Status: Deprecated` before archiving.
+
+### Archival process
+
+1. Mark document as `Status: Deprecated` with notice pointing to replacement.
+2. Keep deprecated doc visible for 1 release cycle (or 3 months).
+3. Move to `docs/_archive/` with original path preserved in filename.
+4. Update any incoming links to point to replacement or archive notice.
+
+[↑ Back to Table of Contents](#table-of-contents)
+
+## API Documentation
+
+Standards for documenting REST APIs, particularly for FastAPI services.
+
+### OpenAPI specification
+
+* **Required**: All REST APIs must have an `openapi.yaml` or auto-generated spec in the service root.
+* **Design-First**: Consider writing the OpenAPI spec before implementation for complex APIs.
+* **Validation**: Use tools like Spectral to lint OpenAPI specs in CI.
+
+### Required documentation elements
+
+| Element | Requirement |
+|:---|:---|
+| **Endpoint Description** | Every endpoint must have a clear description of its purpose |
+| **Parameters** | All path, query, and body parameters documented with types |
+| **Request Examples** | At least one example request per endpoint |
+| **Response Examples** | Examples for success and common error responses |
+| **Error Responses** | All possible error codes with descriptions |
+| **Authentication** | How to authenticate (headers, tokens, etc.) |
+
+### Interactive documentation
+
+* **FastAPI**: Use built-in `/docs` (Swagger UI) and `/redoc` endpoints.
+* **Code Snippets**: Provide examples in Python, cURL, and other relevant languages.
+* **Try It**: Enable interactive testing where security permits.
+
+### API changelog
+
+Maintain `CHANGELOG.md` for each API service with:
+* Version number and release date
+* Breaking changes (clearly marked)
+* New endpoints and features
+* Deprecated endpoints with migration path
+* Bug fixes affecting API behavior
+
+[↑ Back to Table of Contents](#table-of-contents)
+
+## AI-Readiness
+
+Optimize documentation for AI-assisted discovery and retrieval systems.
+
+### Structured content
+
+* **Self-Contained Sections**: Each major section should be understandable without reading the entire document.
+* **Consistent Terminology**: Use the same term for the same concept throughout all docs.
+* **Explicit Context**: State prerequisites and assumptions at the start of each document.
+
+### Metadata
+
+* **Frontmatter**: Include relevant keywords and categories in document headers.
+* **Semantic Headings**: Use descriptive headings that convey content (not clever titles).
+  * ✅ `## Configure database connection pooling`
+  * ❌ `## Getting connected`
+
+### Modularity
+
+* **Single Responsibility**: Each document should cover one topic thoroughly.
+* **Cross-References**: Link to related documents rather than duplicating content.
+* **Canonical Sources**: Maintain single sources of truth; reference them elsewhere.
+
+[↑ Back to Table of Contents](#table-of-contents)
+
 ## Review Checklist
 
 Before merging a documentation PR, verify:
+
+### Structure and organization
 
 - [ ] **Architecture**: Does it live in the right Diátaxis folder?
 - [ ] **Descriptive Title**: Is the H1 clear and actionable?
 - [ ] **Metadata**: Are Version, Date, Maintainer, and Status present?
 - [ ] **Navigation**: Are "Back to Index" and TOC links working?
+
+### Content quality
+
 - [ ] **Formatting**: Are code blocks language-tagged? Are headers sentence-case?
 - [ ] **Spelling/Grammar**: Run a spellchecker. Text should be active voice, present tense.
-- [ ] **Assets**: Are images functional and accessible (alt text)?
+- [ ] **Code Examples**: Do code examples run successfully? Are they self-contained?
+- [ ] **Accuracy**: Does the documentation match current behavior?
+
+### Accessibility
+
+- [ ] **Alt Text**: Do all meaningful images have descriptive alt text (<125 chars)?
+- [ ] **Link Text**: Are links descriptive (not "click here")?
+- [ ] **Plain Language**: Are acronyms defined? Is jargon minimized?
+
+### Technical validation
+
+- [ ] **Link Check**: Do all internal and external links resolve?
+- [ ] **Build Success**: Does the documentation build without errors?
+- [ ] **API Sync**: For API docs, does the spec match the implementation?
+
+### Maintenance
+
+- [ ] **Ownership**: Is there a clear owner for this documentation?
+- [ ] **Related Docs**: Are cross-references to related docs included?
+- [ ] **Changelog**: For significant changes, is the changelog updated?
 
 [↑ Back to Table of Contents](#table-of-contents)
