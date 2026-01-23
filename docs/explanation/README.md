@@ -16,5 +16,6 @@ Explanation documentation provides background, context, and understanding. It ex
 - [**Database Platform OO Design**](design-records/database-platform-oo-design.md)
 
 ### Technical Concepts
+- [**Data Engineering Design Patterns**](data-engineering-design-patterns.md) - 8 foundational patterns for modern data stacks.
 - [**Secrets Management Comparison**](secrets-management-comparison.md) - Vault vs. Infiscal analysis.
 - [**Workflow Engine Comparison**](workflow-engine-comparison.md) - Orchestration tools analysis.
