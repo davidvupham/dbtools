@@ -28,26 +28,26 @@
 
 ### Core: Troubleshooting & alerts
 
-**US-101: Auto-Triage Alerts**
+**US-101: Auto-triage alerts**
 > As a DBRE Engineer,
 > I want to run `dbtool troubleshoot --alert-id <ID>` or `dbtool troubleshoot --target <hostname>`,
 > So that I can immediately see top blocking queries, resource usage, and replication lag without manually running SQL.
 
-**US-102: Analyze Long-Running Queries**
+**US-102: Analyze long-running queries**
 > As a DBRE Engineer receiving a "Long Running Query" alert,
 > I want the tool to output a table showing `User`, `Duration`, `Wait Type` (CPU vs Lock), and the `SQL Text`.
 > Scope: Postgres (`pg_stat_activity`), MSSQL (`sys.dm_exec_requests`), Mongo (`currentOp`), Snowflake (`QUERY_HISTORY`).
 
-**US-103: Analyze Blocking Chains**
+**US-103: Analyze blocking chains**
 > As a DBRE Engineer receiving a "Blocking Detected" alert,
 > I want the tool to visualize the "Head Blocker" (the root cause session) and all stuck children.
 > **Critical**: Distinguish between "Active Blocker" (running SQL) and "Sleeping Blocker" (transaction left open).
 
-**US-104: Investigate Anonymous Logins (Security)**
+**US-104: Investigate anonymous logins (security)**
 > As a DBRE Engineer receiving a "SQL Server Anonymous Login" alert,
 > I want the tool to query the Audit Logs or Ring Buffer (`sys.dm_os_ring_buffers`) to find the source IP and application name of the `NT AUTHORITY\ANONYMOUS LOGON` attempt to determine if it's a Kerberos/SPN configuration issue.
 
-**US-105: Analyze Disabled AD Logins**
+**US-105: Analyze disabled AD logins**
 > As a DBRE Engineer receiving a "Login Failed (Account Disabled)" alert,
 > I want the tool to check the status of the Active Directory account associated with the login attempt.
 > **Scope**: Query AD (via LDAP) to check `userAccountControl` flags for "Disabled" or "Locked Out" status.

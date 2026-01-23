@@ -32,8 +32,6 @@ The tool acts as a **Vault Client**. It does not persist long-lived credentials.
 
 ### Linux (Kerberos / keytab)
 
-[↑ Back to Table of Contents](#table-of-contents)
-
 1. **Pre-requisite**: User has valid Kerberos ticket (`klist` shows ticket).
 2. `dbtool` starts.
 3. Detects Linux OS.
