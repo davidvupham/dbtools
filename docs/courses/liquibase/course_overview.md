@@ -38,6 +38,7 @@ By completing this course, you will be able to:
 ## Prerequisites
 
 - Docker or Podman installed
+- Docker configured to pull images from JFrog (see [Configure JFrog Docker Authentication](../../how-to/configure-jfrog-docker-authentication.md))
 - Basic SQL knowledge
 - Command line familiarity
 - Git basics (for Part 3)

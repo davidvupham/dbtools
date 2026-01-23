@@ -96,6 +96,11 @@ Before starting this tutorial, you should have:
   - Podman version 3.0+ (RedHat/CentOS)
   - Verify with: `docker --version` or `podman --version`
 
+- ✅ **Docker configured to pull images from JFrog**
+  - The tutorial uses container images from the corporate JFrog registry
+  - Follow [Configure JFrog Docker Authentication](../../../how-to/configure-jfrog-docker-authentication.md) to set up access
+  - Verify with: `docker pull <your-company>.jfrog.io/docker-virtual/alpine:latest`
+
 - ✅ **Bash shell** (Linux, macOS, or WSL2 on Windows)
   - Tutorial uses bash-specific syntax
   - Windows users: Use WSL2 or Git Bash
