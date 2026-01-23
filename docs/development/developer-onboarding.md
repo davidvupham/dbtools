@@ -442,11 +442,11 @@ See the Docker installation instructions in:
 - WSL2: [docs/how-to/setup-wsl2.md](../how-to/setup-wsl2.md) (Step 4 - Manual Setup)
 - RHEL: Follow Docker's official RHEL installation guide
 
-### 4.6) Corporate Docker registry (if applicable)
+### 4.6) Configure Docker for JFrog registry
 
-If your network requires pulling images through a corporate registry, follow:
+Configure Docker to authenticate with the corporate JFrog registry to pull container images:
 
-- [docs/how-to/configure-corporate-docker-registry.md](../how-to/configure-corporate-docker-registry.md)
+- [Configure JFrog Docker Authentication](../how-to/configure-jfrog-docker-authentication.md)
 
 ### 4.7) Set up UV Python environment (if not using dev container)
 
@@ -493,6 +493,7 @@ Reference docs:
 
 1. **VS Code** installed with the **Dev Containers** extension
 2. **Docker** available (Docker Desktop on Windows, or Docker Engine on RHEL)
+3. **Docker configured for JFrog** - the dev container image is pulled from the corporate registry (see [Configure JFrog Docker Authentication](../how-to/configure-jfrog-docker-authentication.md))
 
 ### Steps
 
