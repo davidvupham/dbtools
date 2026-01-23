@@ -1,14 +1,38 @@
-# Technical Architecture: dbtool-cli
+# Technical architecture: dbtool-cli
+
+**[← Back to Project Index](../README.md)**
+
+> **Document Version:** 1.0
+> **Last Updated:** January 22, 2026
+> **Maintainers:** DBRE Team
+> **Status:** Draft
+
+![Status](https://img.shields.io/badge/Status-Draft-yellow)
+![Type](https://img.shields.io/badge/Type-Architecture-blue)
+
+## Table of contents
+
+- [Overview](#1-overview)
+- [Authentication flow](#2-authentication-flow-critical-path)
+- [Component design](#3-component-design)
+- [Technology stack](#4-technology-stack)
+- [Cross-platform strategy](#5-cross-platform-strategy)
+- [Configuration schema](#6-configuration-schema)
+- [Error handling](#7-error-handling)
 
 ## 1. Overview
 
-`dbtool` is a Python-based CLI application built on the **Typer** framework. It acts as an operational bridge and **Wrapper** ("The One Tool to Rule Them All"), strictly separating the User from the complexity of underlying tools (Vault, Ansible, Airflow, Liquibase, Database Drivers).
+`dbtool` is a Python-based CLI application built on the **Typer** framework. The tool acts as an operational bridge and **Wrapper** ("The One Tool to Rule Them All"), strictly separating the user from the complexity of underlying tools (Vault, Ansible, Airflow, Liquibase, Database Drivers).
 
-## 2. Authentication Flow (Critical Path)
+[↑ Back to Table of Contents](#table-of-contents)
+
+## 2. Authentication flow (critical path)
 
 The tool acts as a **Vault Client**. It does not persist long-lived credentials.
 
 ### Linux (Kerberos / keytab)
+
+[↑ Back to Table of Contents](#table-of-contents)
 
 1. **Pre-requisite**: User has valid Kerberos ticket (`klist` shows ticket).
 2. `dbtool` starts.
@@ -25,7 +49,14 @@ The tool acts as a **Vault Client**. It does not persist long-lived credentials.
 4. Vault returns `client_token`.
 5. Token is cached in secure memory (or OS Keyring) for session duration.
 
-## 3. Component Design
+[↑ Back to Table of Contents](#table-of-contents)
+
+## 3. Component design
+
+<!-- Component diagram: User connects to dbtool CLI, which authenticates via Vault Handler
+using Kerberos (Linux) or AD/LDAP (Windows). The CLI uses a Provider Factory to route
+requests to database-specific providers (Postgres, MSSQL) that leverage gds_* packages
+for actual database connectivity. -->
 
 ```mermaid
 graph TD
@@ -58,7 +89,9 @@ graph TD
     MS --> MSSQLDB[(SQL Server)]
 ```
 
-## 4. Technology Stack
+[↑ Back to Table of Contents](#table-of-contents)
+
+## 4. Technology stack
 
 - **Language**: Python 3.12+
 - **CLI Framework**: `Typer` (Modern, typed, intuitive).
@@ -71,7 +104,9 @@ graph TD
   - Mongo: `pymongo`.
   - Snowflake: `snowflake-connector-python`.
 
-## 5. Cross-Platform Strategy
+[↑ Back to Table of Contents](#table-of-contents)
+
+## 5. Cross-platform strategy
 
 | Component | Windows Strategy | Linux Strategy |
 |-----------|------------------|----------------|
@@ -80,7 +115,9 @@ graph TD
 | **Drivers** | ODBC Driver Manager often present | UnixODBC may be required |
 | **Config** | `%APPDATA%\dbtool\config.toml` | `~/.config/dbtool/config.toml` |
 
-## 6. Configuration Schema
+[↑ Back to Table of Contents](#table-of-contents)
+
+## 6. Configuration schema
 
 The tool manages defaults via a TOML file.
 
@@ -106,3 +143,33 @@ The troubleshooting module uses a **Strategy Pattern**.
     - *Auth*: Test Vault credential validity.
     - *Queries*: Run `SELECT * FROM pg_stat_activity WHERE state = 'active'`.
 5. **Report**: Render `Rich` table with findings.
+
+[↑ Back to Table of Contents](#table-of-contents)
+
+## 7. Error handling
+
+The CLI uses consistent error codes and messages across all commands.
+
+### Exit codes
+
+| Code | Meaning | Example |
+|------|---------|---------|
+| `0` | Success | Command completed successfully |
+| `1` | General error | Unspecified failure |
+| `2` | Authentication error | Vault token expired, Kerberos ticket invalid |
+| `3` | Connection error | Database unreachable, network timeout |
+| `4` | Permission denied | Insufficient Vault policy permissions |
+| `5` | Invalid input | Malformed target name, missing required argument |
+| `6` | Resource not found | Target database not in inventory |
+
+### Common error messages
+
+| Error | Cause | Resolution |
+|-------|-------|------------|
+| `VAULT_AUTH_FAILED` | Kerberos ticket expired or AD credentials invalid | Run `kinit` (Linux) or `dbtool login` (Windows) |
+| `TARGET_NOT_FOUND` | Target name not in inventory | Check spelling, run `dbtool inventory list` |
+| `CONNECTION_TIMEOUT` | Database host unreachable | Verify network connectivity, check firewall rules |
+| `PERMISSION_DENIED` | Vault policy restricts access | Contact security team for policy update |
+| `DRIVER_NOT_FOUND` | Required database driver not installed | Install missing driver (see Technology Stack) |
+
+[↑ Back to Table of Contents](#table-of-contents)
