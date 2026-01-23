@@ -11,3 +11,4 @@ How-to guides are goal-oriented directions to help you solve a specific problem.
   - [Rotate AD Passwords](vault/rotate-ad-passwords.md) - Procedure for rotating Active Directory passwords using HashiCorp Vault.
 - [**Import Certificate to Windows**](import-certificate-to-windows.md) - How to request, obtain, and import certificates into the Windows Certificate Store.
 - [**Configure Service Dependencies**](configure-service-dependencies.md) - How to ensure your scripts run before Windows services start.
+- [**Configure JFrog Docker Authentication**](configure-jfrog-docker-authentication.md) - Generate an API token in JFrog and configure Docker to pull images from the corporate registry.
