@@ -10,7 +10,7 @@
     RequiredModules = @(
         @{ ModuleName = 'GDS.Logging'; ModuleVersion = '1.0.0' }
     )
-    FunctionsToExport = @('Export-ADObjectsToDatabase')
+    FunctionsToExport = @('Export-ADObjectsToDatabase', 'Get-GdsUserGroupMembership', 'Remove-GdsUserGroupMembership')
     CmdletsToExport = @()
     VariablesToExport = @()
     AliasesToExport = @()
