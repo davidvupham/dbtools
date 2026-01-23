@@ -35,7 +35,9 @@
       "WebFetch(domain:docs.astral.sh)",
       "WebFetch(domain:www.redhat.com)",
       "WebFetch(domain:gist.github.com)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(pwsh:*)",
+      "Skill(technical-writer)"
     ]
   }
 }
