@@ -77,11 +77,17 @@ The **local-ai-hub** project implements a local Large Language Model (LLM) infra
 | [Implementation Guide](./implementation-guide.md) | Step-by-step setup and deployment |
 | [MCP Integration](./mcp-integration.md) | MCP servers, Claude Code alternatives, tooling |
 
+### Operations
+
+| Document | Description |
+|:---------|:------------|
+| [Operations Guide](./operations-guide.md) | Runbook, monitoring, troubleshooting, DR, incident response |
+
 ## Quick start
 
 ### Prerequisites
 
-- Ubuntu 22.04 LTS (or compatible)
+- Linux (RHEL 8+, Ubuntu 22.04+, or compatible)
 - NVIDIA GPU with 12GB+ VRAM (or CPU-only mode)
 - Python 3.11+
 - Docker/Podman (optional)

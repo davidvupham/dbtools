@@ -23,6 +23,7 @@
 - [Quantization and optimization](#quantization-and-optimization)
 - [Performance benchmarks](#performance-benchmarks)
 - [Procurement recommendations](#procurement-recommendations)
+- [Hardware configurations for 70B models](#hardware-configurations-for-70b-models)
 - [Cost analysis](#cost-analysis)
 
 ## Overview
@@ -343,6 +344,178 @@ Use cloud GPU instances for:
 
 > [!WARNING]
 > Cloud instances may conflict with data privacy requirements. Ensure compliance before using cloud resources.
+
+[↑ Back to Table of Contents](#table-of-contents)
+
+## Hardware configurations for 70B models
+
+This section provides specific, purchasable hardware configurations for running Llama 3.1 70B and similar 70B parameter models.
+
+### VRAM requirements for 70B models
+
+| Quantization | VRAM Needed | Quality | Use Case |
+|:-------------|:------------|:--------|:---------|
+| FP16 (full) | ~140 GB | Best | Research only (impractical) |
+| Q8 | ~70-80 GB | Very good | Production with A100 80GB |
+| **Q4 (recommended)** | **~40 GB** | Good | Production with 48GB+ VRAM |
+| Q2 | ~21 GB | Lower | Fits single RTX 4090, quality tradeoff |
+
+### Option A: Dual RTX 4090 workstation (Best value)
+
+**Configuration for ~$8,000-12,000 total:**
+
+| Component | Specification | Est. Price | Where to Buy |
+|:----------|:--------------|:-----------|:-------------|
+| **GPU (x2)** | NVIDIA RTX 4090 24GB | $1,800-2,000 each | [Newegg](https://www.newegg.com/msi-rtx-4090-gaming-x-trio-24g-geforce-rtx-4090-24gb-graphics-card-triple-fans/p/N82E16814137761), [Amazon](https://www.amazon.com/MSI-GeForce-Graphics-384-bit-DisplayPort/dp/B09YCLG5PB), Micro Center |
+| **Motherboard** | ASUS WRX80, ASRock TRX50 (dual x16 PCIe) | $400-800 | Newegg, Amazon |
+| **CPU** | AMD Threadripper PRO 5955WX or Intel Xeon W | $1,000-2,500 | Newegg, Amazon |
+| **RAM** | 128GB DDR5 ECC (for VRAM spillover) | $400-600 | Crucial, Kingston |
+| **PSU** | 1600W 80+ Platinum (two 4090s = ~900W) | $300-400 | Corsair, EVGA |
+| **Storage** | 2TB NVMe PCIe 4.0 | $150-200 | Samsung, WD |
+| **Case** | Full tower with dual GPU support | $200-300 | Fractal, Corsair |
+| **Cooling** | High airflow, consider AIO for CPU | $150-250 | Noctua, Corsair |
+
+**Combined VRAM:** 48 GB (split across 2 GPUs)
+**Performance:** ~20 tokens/second with Llama 3.1 70B Q4
+**Power draw:** ~900W under load
+
+```text
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  DUAL RTX 4090 BUILD NOTES                                                  │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  CRITICAL REQUIREMENTS:                                                     │
+│  • Motherboard MUST have two physical x16 PCIe slots with proper spacing   │
+│  • Both slots should run at x8 or x16 (check CPU lane count)              │
+│  • 1600W+ PSU required (two 16-pin connectors or adapters)                │
+│  • Excellent case airflow (4090s run hot)                                  │
+│                                                                             │
+│  RECOMMENDED MOTHERBOARDS:                                                  │
+│  • AMD: ASUS Pro WS WRX80E-SAGE SE WIFI                                    │
+│  • AMD: ASRock TRX50 WS                                                    │
+│  • Intel: ASUS Pro WS W790E-SAGE SE                                        │
+│                                                                             │
+│  MULTI-GPU SOFTWARE:                                                        │
+│  • Ollama handles multi-GPU automatically                                  │
+│  • Models split across GPUs via tensor parallelism                         │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Option B: Single RTX 6000 Ada 48GB (Simplest setup)
+
+**Configuration for ~$10,000-14,000 total:**
+
+| Component | Specification | Est. Price | Where to Buy |
+|:----------|:--------------|:-----------|:-------------|
+| **GPU** | NVIDIA RTX 6000 Ada 48GB | $6,800-7,300 | [NVIDIA Marketplace](https://marketplace.nvidia.com/en-us/enterprise/laptops-workstations/nvidia-rtx-6000-ada-generation/), [Newegg](https://www.newegg.com/nvidia-900-5g133-2250-000-rtx-6000-ada-48gb-graphics-card/p/N82E16814132103) |
+| **Workstation** | Dell Precision 7875, HP Z8 G5, or custom | $3,000-6,000 | Dell, HP, custom |
+
+**VRAM:** 48 GB (single card)
+**Performance:** ~18-22 tokens/second with Llama 3.1 70B Q4
+**Power draw:** ~300W under load
+
+**Advantages:**
+- Single card = simpler setup, no multi-GPU complexity
+- Professional GPU with ECC memory
+- Better driver support for workstation use
+- Lower power consumption than dual 4090
+
+### Option C: NVIDIA A100 80GB server (Enterprise)
+
+**Configuration for ~$20,000-40,000 total:**
+
+| Component | Specification | Est. Price | Where to Buy |
+|:----------|:--------------|:-----------|:-------------|
+| **GPU** | NVIDIA A100 80GB PCIe | $9,000-15,000 | [Server Supply](https://www.serversupply.com/GPU/HBM2E/80GB/NVIDIA/A100_413940.htm), Dell, HPE |
+| **Server** | Dell PowerEdge R750xa, Supermicro 4U | $8,000-20,000 | [Dell](https://www.dell.com/en-us/shop/storage-servers-and-networking-for-business/sf/poweredge-ai-servers), [Supermicro](https://www.supermicro.com/en/products/gpu) |
+
+**VRAM:** 80 GB
+**Performance:** ~25-35 tokens/second with Llama 3.1 70B Q8
+**Power draw:** ~400W under load
+
+**Advantages:**
+- Larger VRAM allows Q8 quantization (better quality)
+- Can run multiple 7B models simultaneously
+- Datacenter reliability and support
+- Better for multi-user production deployment
+
+**Server vendors:**
+- [Dell PowerEdge GPU Servers](https://www.dell.com/en-us/shop/storage-servers-and-networking-for-business/sf/poweredge-ai-servers)
+- [Supermicro GPU Systems](https://www.supermicro.com/en/products/gpu)
+- [HPE ProLiant](https://www.hpe.com/us/en/compute/hpc/hpc-servers.html)
+
+### Option D: Pre-built AI workstation (Turnkey)
+
+**For organizations preferring turnkey solutions:**
+
+| Vendor | Product | GPU Options | Est. Price | Link |
+|:-------|:--------|:------------|:-----------|:-----|
+| **BIZON** | ZX9000 | 2-7x RTX 4090, water-cooled | $15,000-50,000 | [bizon-tech.com](https://bizon-tech.com/bizon-zx9000.html) |
+| **Lambda Labs** | Vector | 2-4x RTX 4090 or A100 | $20,000-80,000 | lambdalabs.com |
+| **Puget Systems** | AI workstation | RTX 4090, A6000, or H100 | $10,000-100,000 | pugetsystems.com |
+
+**Advantages:**
+- Pre-configured, tested, and warrantied
+- Professional support included
+- Optimized cooling and power delivery
+- Water-cooled options for dense GPU configurations
+
+### Hardware comparison summary
+
+| Option | VRAM | 70B Q4 | 70B Q8 | Est. Cost | Best For |
+|:-------|:-----|:-------|:-------|:----------|:---------|
+| **Dual RTX 4090** | 48 GB | Yes | No | $8,000-12,000 | Budget production |
+| **RTX 6000 Ada** | 48 GB | Yes | No | $10,000-14,000 | Simple setup |
+| **A100 80GB** | 80 GB | Yes | Yes | $20,000-40,000 | Enterprise, multi-user |
+| **Pre-built** | Varies | Yes | Depends | $15,000-100,000 | Turnkey, supported |
+
+### Recommendation by deployment scale
+
+```text
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    70B MODEL HARDWARE RECOMMENDATIONS                        │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  DEVELOPMENT / PILOT (1-5 users)                                            │
+│  ────────────────────────────────                                            │
+│  • Hardware: Single RTX 6000 Ada 48GB OR Dual RTX 4090                     │
+│  • Budget: $10,000-15,000                                                   │
+│  • Model: Llama 3.1 70B Q4                                                 │
+│  • Performance: 15-20 tokens/sec                                           │
+│                                                                             │
+│  TEAM PRODUCTION (5-20 users)                                               │
+│  ────────────────────────────                                                │
+│  • Hardware: A100 80GB in server OR Dual RTX 4090 + request queuing        │
+│  • Budget: $20,000-40,000                                                   │
+│  • Model: Llama 3.1 70B Q4 or Q8                                           │
+│  • Consider: Load balancing, request queuing                               │
+│                                                                             │
+│  ENTERPRISE (20+ concurrent users)                                          │
+│  ──────────────────────────────────                                          │
+│  • Hardware: Multiple A100 80GB or H100 servers                            │
+│  • Budget: $50,000-200,000+                                                 │
+│  • Vendor: Dell PowerEdge, HPE, Supermicro with support contract          │
+│  • Consider: HA deployment, load balancing, dedicated ops team            │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Cloud rental alternative
+
+For variable workloads or before committing to hardware purchase:
+
+| Provider | GPU | Hourly Rate | Monthly (24/7) | Link |
+|:---------|:----|:------------|:---------------|:-----|
+| [Hyperstack](https://www.hyperstack.cloud/a100) | A100 80GB | $1.35/hr | ~$1,000 | hyperstack.cloud |
+| [RunPod](https://runpod.io) | A100 80GB | $1.99/hr | ~$1,450 | runpod.io |
+| [Vast.ai](https://vast.ai) | RTX 4090 | $0.40-0.60/hr | ~$350 | vast.ai |
+| [Lambda Cloud](https://lambdalabs.com/cloud) | A100 80GB | $1.29/hr | ~$940 | lambdalabs.com |
+
+**Break-even analysis:** Hardware purchase becomes cost-effective after approximately 3,500-5,000 hours of use (~5-7 months running 24/7).
+
+> [!NOTE]
+> Cloud rentals may conflict with financial services data privacy requirements. Verify compliance before using cloud GPU instances with any sensitive data.
 
 [↑ Back to Table of Contents](#table-of-contents)
 

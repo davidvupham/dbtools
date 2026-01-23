@@ -20,11 +20,14 @@
 - [Parameters vs tokens: Understanding the difference](#parameters-vs-tokens-understanding-the-difference)
 - [Model size recommendations](#model-size-recommendations)
   - [405B model hardware requirements](#405b-model-hardware-requirements)
+  - [Understanding AI quality expectations](#understanding-ai-quality-expectations)
 - [Available open-source models](#available-open-source-models)
   - [Security and compliance considerations](#security-and-compliance-considerations-for-model-selection)
+- [Financial services compliance (US)](#financial-services-compliance-us)
 - [Local LLM vs cloud LLM comparison](#local-llm-vs-cloud-llm-comparison)
 - [Do models need special training?](#do-models-need-special-training)
 - [Adding proprietary documentation to local LLMs](#adding-proprietary-documentation-to-local-llms)
+- [Handling large codebases](#handling-large-codebases)
 - [Recommendations for infrastructure teams](#recommendations-for-infrastructure-teams)
 - [The inference layer explained](#the-inference-layer-explained)
 - [Can Claude Code use local LLMs?](#can-claude-code-use-local-llms)
@@ -32,6 +35,7 @@
 - [Why we need a FastAPI server](#why-we-need-a-fastapi-server)
 - [Architecture deep dive](#architecture-deep-dive)
 - [Core concepts reference](#core-concepts-reference)
+  - [Transformer architecture explained](#transformer-architecture-explained)
 - [Hardware terminology](#hardware-terminology)
 - [Glossary quick reference](#glossary-quick-reference)
 
@@ -398,6 +402,110 @@ For organizations considering the largest open-source model (Llama 3.1 405B), he
 > [!WARNING]
 > **Practical Advice:** For most local-ai-hub use cases, 405B is overkill. A well-prompted 70B model achieves 85-90% of the quality at 1/5th the hardware cost. Consider 405B only if you have existing datacenter infrastructure or specific requirements for maximum accuracy.
 
+### Understanding AI quality expectations
+
+A common question: "Shouldn't we aim for 100% quality? 90% seems unacceptable for coding."
+
+**The reality: No LLM achieves 100% quality—not even the most expensive commercial models.**
+
+#### Current state of AI coding accuracy
+
+| Model | Approximate Accuracy | Cost |
+|:------|:--------------------|:-----|
+| Claude Opus 4.5 (commercial) | ~85-92% on coding benchmarks | $15-75/M tokens |
+| GPT-4o (commercial) | ~83-90% | $5-15/M tokens |
+| Llama 3.1 405B (local) | ~80-88% | Hardware only |
+| Llama 3.1 70B (local) | ~75-85% | Hardware only |
+| Llama 3.1 8B (local) | ~65-75% | Hardware only |
+
+> [!IMPORTANT]
+> When we say "70B achieves 90% of 405B quality," we mean 70B performs at 90% of what 405B can do—but 405B itself is only ~85% accurate. **No model reaches 100%.**
+
+#### Why 100% is fundamentally impossible
+
+| Reason | Explanation |
+|:-------|:------------|
+| **Probabilistic nature** | LLMs predict likely tokens, not guaranteed correct ones |
+| **Training data limits** | Models haven't seen your specific codebase, patterns, or requirements |
+| **Ambiguous requirements** | Even humans interpret specifications differently |
+| **Novel problems** | AI struggles with truly new patterns not in training data |
+| **Context limitations** | Models can miss important details in large codebases |
+
+#### The right mental model for AI-assisted coding
+
+```text
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    ACHIEVING HIGH QUALITY WITH AI                            │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  AI OUTPUT IS A FIRST DRAFT, NOT A FINAL PRODUCT                            │
+│                                                                              │
+│  ┌─────────────┐    ┌─────────────┐    ┌─────────────┐    ┌─────────────┐  │
+│  │ AI Generates│ →  │   Linting   │ →  │    Tests    │ →  │ Code Review │  │
+│  │    Code     │    │  (Ruff/mypy)│    │  (pytest)   │    │   (Human)   │  │
+│  │   ~80%      │    │   +5%       │    │   +10%      │    │   +5%       │  │
+│  └─────────────┘    └─────────────┘    └─────────────┘    └─────────────┘  │
+│                                                                              │
+│  Result: ~100% quality through PROCESS, not model size                      │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+#### Common misconceptions vs reality
+
+| Wrong Approach | Right Approach |
+|:---------------|:---------------|
+| "AI should write perfect code" | "AI writes good first drafts faster" |
+| "Bigger model = fewer bugs" | "Process catches bugs: lint → test → review" |
+| "100% accuracy required from AI" | "AI accelerates; humans validate" |
+| "Spend more for better quality" | "Invest in testing infrastructure instead" |
+
+#### Cost-effective quality strategy
+
+For local-ai-hub and similar projects:
+
+```text
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    RECOMMENDED QUALITY APPROACH                              │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  1. USE SMALLER MODELS FOR GENERATION (7-14B)                               │
+│     • Fast iteration, low cost                                               │
+│     • Good enough for first drafts                                           │
+│                                                                              │
+│  2. AUTOMATE QUALITY CHECKS                                                  │
+│     • Linting (Ruff, pylint)                                                │
+│     • Type checking (mypy, pyright)                                         │
+│     • Unit tests (pytest)                                                    │
+│     • Security scanning (bandit, semgrep)                                   │
+│                                                                              │
+│  3. HUMAN REVIEW FOR PRODUCTION CODE                                        │
+│     • AI suggestions are reviewed, not blindly accepted                     │
+│     • Complex logic gets extra scrutiny                                      │
+│                                                                              │
+│  4. USE LARGER MODELS (70B) SELECTIVELY                                     │
+│     • Complex architectural decisions                                        │
+│     • Nuanced refactoring                                                    │
+│     • When smaller model output is clearly insufficient                     │
+│                                                                              │
+│  RESULT: High quality at reasonable cost                                     │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+#### Comparison: Model investment vs process investment
+
+| Investment | Cost | Quality Impact |
+|:-----------|:-----|:---------------|
+| Upgrade 8B → 70B | 5-10x hardware | +10-15% accuracy |
+| Upgrade 70B → 405B | 5x hardware | +3-5% accuracy |
+| Add linting + type checking | ~0 (tooling is free) | +5-10% (catches syntax/type errors) |
+| Add unit tests | Developer time | +10-20% (catches logic errors) |
+| Add code review | Developer time | +5-10% (catches design issues) |
+
+> [!TIP]
+> **Bottom line:** Spending 5x more on 405B vs 70B won't get you from 90% to 100%. It might get you from 85% to 88%. The path to production-quality code is **AI + automated testing + human review**, not a bigger model.
+
 ### Why 8B is the sweet spot
 
 ```text
@@ -576,6 +684,46 @@ When choosing models, some organizations have concerns about the origin of open-
 
 3. **Regulatory Compliance**: Some industries (defense, government, finance) may have policies restricting foreign technology.
 
+#### Risk assessment for foreign-developed models
+
+| Concern | Risk Level | Mitigation |
+|:--------|:-----------|:-----------|
+| **Data exfiltration** | None | Model runs offline; no network calls |
+| **Hidden backdoors** | Very Low | Open weights are auditable; security researchers actively inspect |
+| **Training data bias** | Low-Medium | Possible cultural/political bias in outputs; testable |
+| **Supply chain risk** | Low | Download from Ollama/HuggingFace; verify checksums |
+| **Regulatory compliance** | Varies | Some industries prohibit foreign software |
+
+#### Why open-source local models are safer than cloud APIs
+
+```text
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    CLOSED vs OPEN SOURCE TRUST MODEL                         │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  CLOUD APIs (OpenAI, Anthropic, Google)                                     │
+│  ───────────────────────────────────────                                     │
+│  • Your data IS sent to their servers (including prompts and context)       │
+│  • You CANNOT inspect what happens to your data                             │
+│  • Trust is based on reputation, contracts, and compliance certifications   │
+│  • Data may be used for training (check terms of service)                   │
+│  • Subject to foreign jurisdiction regardless of your location              │
+│                                                                              │
+│  OPEN SOURCE LOCAL (Qwen, Llama, Mistral via Ollama)                        │
+│  ───────────────────────────────────────────────────                         │
+│  • Your data NEVER leaves your server                                        │
+│  • Model weights and code are fully auditable                               │
+│  • Security researchers actively analyze for issues                         │
+│  • Community would expose any malicious behavior                            │
+│  • No network connectivity required after download                          │
+│  • You control the entire execution environment                             │
+│                                                                              │
+│  CONCLUSION: Local open-source models (even foreign-developed) provide      │
+│  BETTER data privacy than US-based cloud APIs for sensitive workloads       │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
 **Important clarifications:**
 
 ```text
@@ -610,6 +758,20 @@ When choosing models, some organizations have concerns about the origin of open-
 │                                                                              │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
+
+#### Quality benchmarks: Qwen vs US-developed alternatives
+
+Qwen consistently ranks among the top open-source models on standard benchmarks:
+
+| Benchmark | Qwen 2.5 7B | Llama 3.1 8B | Mistral 7B | Notes |
+|:----------|:------------|:-------------|:-----------|:------|
+| **HumanEval (coding)** | 75.2% | 72.6% | 68.4% | Qwen leads |
+| **MMLU (knowledge)** | 74.2% | 73.0% | 70.6% | Comparable |
+| **Tool calling** | Excellent | Good | Good | Qwen optimized for MCP |
+| **Instruction following** | Excellent | Very Good | Good | Qwen slightly better |
+
+> [!NOTE]
+> These benchmarks show Qwen's technical quality is equal or superior to US-developed alternatives. The choice between them should be based on organizational policy, not quality concerns.
 
 #### Model recommendations by security posture
 
@@ -656,6 +818,224 @@ ollama pull deepseek-coder:6.7b  # DeepSeek for code
 ollama pull codellama:13b        # Meta's code model
 ollama pull starcoder2:7b        # BigCode StarCoder
 ```
+
+[↑ Back to Table of Contents](#table-of-contents)
+
+## Financial services compliance (US)
+
+This section provides guidance for deploying local LLMs in US financial institutions, which are subject to specific regulatory requirements around model risk management and third-party oversight.
+
+### Regulatory framework
+
+| Regulation | Authority | Scope | Reference |
+|:-----------|:----------|:------|:----------|
+| **SR 11-7** | Fed/OCC/FDIC | Model Risk Management - applies to ALL models including AI/LLMs | [Federal Reserve SR 11-7](https://www.federalreserve.gov/supervisionreg/srletters/sr1107.htm) |
+| **TPRM Guidance (2023)** | Fed/OCC/FDIC | Third-party risk management for vendors including AI providers | [OCC Bulletin 2023-17](https://www.occ.gov/news-issuances/bulletins/2023/bulletin-2023-17.html) |
+| **OCC Bulletin 2002-16** | OCC | Specific requirements for foreign-based service providers | [OCC Bulletin 2002-16](https://www.occ.gov/news-issuances/bulletins/2002/bulletin-2002-16.html) |
+| **Outbound Investment Rules (2025)** | Treasury | Restricts US investment in Chinese AI companies | [Holland & Knight Analysis](https://www.hklaw.com/en/insights/publications/2025/01/outbound-investment-screening-rule-goes-into-effect) |
+| **NIST AI RMF** | NIST | AI risk management framework (voluntary but widely adopted) | [NIST AI RMF](https://www.nist.gov/itl/ai-risk-management-framework) |
+
+### SR 11-7: The core requirement
+
+SR 11-7 is the cornerstone regulation for model governance in US banking. It applies to **any model used for business decisions**, including LLMs and AI systems.
+
+```text
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    SR 11-7 REQUIREMENTS FOR AI/LLM                           │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  1. MODEL DEVELOPMENT & DOCUMENTATION                                        │
+│     • Document model purpose, design, and limitations                        │
+│     • Justify model selection and methodology                                │
+│     • Maintain development records                                           │
+│                                                                              │
+│  2. MODEL VALIDATION (Independent)                                           │
+│     • Evaluate conceptual soundness                                          │
+│     • Verify accuracy and performance                                        │
+│     • Test for bias and fairness                                             │
+│     • Assess limitations and assumptions                                     │
+│                                                                              │
+│  3. ONGOING MONITORING                                                       │
+│     • Track model performance over time                                      │
+│     • Detect drift and degradation                                           │
+│     • Document outcomes analysis                                             │
+│                                                                              │
+│  4. GOVERNANCE & CONTROLS                                                    │
+│     • Board and senior management oversight                                  │
+│     • Model inventory and risk tiering                                       │
+│     • Change management procedures                                           │
+│     • Audit trails and documentation                                         │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+> [!IMPORTANT]
+> SR 11-7 applies regardless of model size or origin. Even a 7B parameter model used for internal tooling should be registered in the model inventory if it influences business decisions.
+
+### Local deployment vs cloud APIs: Compliance implications
+
+Regulators treat locally-deployed open-source models differently from cloud services:
+
+```text
+┌─────────────────────────────────────────────────────────────────────────────┐
+│              LOCAL OPEN-SOURCE vs CLOUD API: REGULATORY VIEW                 │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  CLOUD API (Any provider, domestic or foreign)                              │
+│  ─────────────────────────────────────────────                               │
+│  ✗ Data leaves your control → TPRM requirements apply                       │
+│  ✗ Subject to OCC Bulletin 2002-16 if foreign provider                      │
+│  ✗ Must ensure OCC/Fed can examine operations                               │
+│  ✗ Foreign data privacy laws may conflict with US requirements              │
+│  ✗ Higher third-party risk management burden                                │
+│  ✗ Ongoing vendor relationship requires continuous oversight                │
+│                                                                              │
+│  LOCAL OPEN-SOURCE (Qwen, Llama, Mistral via Ollama)                        │
+│  ────────────────────────────────────────────────────                        │
+│  ✓ Data never leaves your infrastructure                                    │
+│  ✓ Full auditability of model weights and code                              │
+│  ✓ No ongoing third-party relationship (one-time download)                  │
+│  ✓ You control the entire execution environment                             │
+│  ✓ Simpler TPRM story (software acquisition, not service)                   │
+│  ✓ OCC examination access is not impeded                                    │
+│                                                                              │
+│  KEY INSIGHT: Downloading open-source weights is more like acquiring        │
+│  a software library than engaging a foreign service provider                │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Model origin considerations for financial institutions
+
+There is **no blanket prohibition** on using Chinese-developed open-source software in US financial institutions. However, regulatory optics and institutional risk appetite vary:
+
+| Risk Posture | Qwen (Chinese) | Llama (US) | Recommendation |
+|:-------------|:---------------|:-----------|:---------------|
+| **Conservative (large bank, OCC-regulated)** | Avoid unless legal/compliance approves | Preferred | Use Llama; document rationale |
+| **Moderate (regional bank)** | Likely acceptable for local deployment | Preferred | Either; document risk assessment |
+| **Community bank** | Acceptable for local deployment | Acceptable | Either; proportionate controls |
+| **Credit union (NCUA-regulated)** | Acceptable for local deployment | Acceptable | Either; proportionate controls |
+
+### Use case risk classification
+
+| Use Case | Risk Tier | SR 11-7 Requirements | Model Origin Sensitivity |
+|:---------|:----------|:---------------------|:-------------------------|
+| **Credit decisions** | High | Full validation, fair lending analysis, ongoing monitoring | High - prefer US-origin |
+| **BSA/AML screening** | High | Full validation, regulatory reporting, explainability | High - prefer US-origin |
+| **Fraud detection** | High | Full validation, explainability, performance monitoring | High - prefer US-origin |
+| **Customer-facing chatbot** | Medium-High | Validation, guardrails, monitoring, human escalation | Moderate |
+| **Internal code assistance** | Low-Medium | Basic validation, usage policies, human review | Lower |
+| **Documentation drafting** | Low | Basic controls, human review before publication | Minimal |
+| **Log analysis (internal ops)** | Low | Basic validation, no customer data | Minimal |
+
+### Model risk management checklist for LLMs
+
+```text
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    LLM MODEL RISK MANAGEMENT CHECKLIST                       │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  PRE-DEPLOYMENT                                                              │
+│  □ Document use case and business justification                             │
+│  □ Classify model risk tier (high/medium/low based on impact)              │
+│  □ Evaluate model origin, license, and ownership structure                  │
+│  □ Verify model/vendor not subject to OFAC sanctions                       │
+│  □ Perform initial validation (accuracy, bias, limitations)                │
+│  □ Document known limitations and compensating controls                     │
+│  □ Obtain required approvals (model governance committee)                   │
+│  □ Register in enterprise model inventory                                   │
+│                                                                              │
+│  DEPLOYMENT                                                                  │
+│  □ Implement in controlled environment                                      │
+│  □ Ensure no PII or customer data in prompts (unless authorized)           │
+│  □ Add input/output guardrails and content filters                         │
+│  □ Enable comprehensive logging and audit trails                           │
+│  □ Implement human-in-the-loop for material decisions                      │
+│  □ Document security controls and access management                        │
+│                                                                              │
+│  ONGOING                                                                     │
+│  □ Monitor performance metrics continuously                                 │
+│  □ Track and investigate anomalies and incidents                           │
+│  □ Conduct periodic revalidation (at least annually)                       │
+│  □ Document all changes, updates, and version changes                      │
+│  □ Report to model risk committee per governance schedule                  │
+│  □ Maintain examination-ready documentation                                 │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Documentation requirements
+
+Per SR 11-7, maintain documentation for examiner review:
+
+| Document | Contents | Retention |
+|:---------|:---------|:----------|
+| **Model inventory entry** | Model name, version, use case, risk tier, owner | Current + history |
+| **Selection rationale** | Why this model vs alternatives, origin considerations | Permanent |
+| **Validation report** | Methodology, test results, identified limitations | Per validation cycle |
+| **Ongoing monitoring** | Performance metrics, drift analysis, incidents | Rolling 3-5 years |
+| **Change log** | All modifications, version updates, retraining | Permanent |
+| **Governance records** | Committee approvals, risk acceptances | Permanent |
+
+### Recommended configuration for financial services
+
+```text
+┌─────────────────────────────────────────────────────────────────────────────┐
+│          RECOMMENDED APPROACH FOR FINANCIAL INSTITUTION DEPLOYMENT           │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  MODEL SELECTION                                                             │
+│  ─────────────────                                                           │
+│  • Primary: Llama 3.1/3.3 (US-developed, Meta, widely adopted)              │
+│  • Alternative: Mistral (EU-developed, GDPR-aligned)                        │
+│  • Qwen: Only with explicit legal/compliance approval                       │
+│  • Document selection rationale for all models                              │
+│                                                                              │
+│  USE CASE BOUNDARIES                                                         │
+│  ────────────────────                                                        │
+│  ✓ APPROVED: Internal tooling, documentation, log analysis, code assist    │
+│  ⚠ CAUTION: Customer communications (requires additional controls)          │
+│  ✗ AVOID: Credit decisions, BSA/AML without full MRM program               │
+│                                                                              │
+│  TECHNICAL CONTROLS                                                          │
+│  ──────────────────                                                          │
+│  • Air-gapped or network-restricted deployment                              │
+│  • No PII or customer data in prompts without data governance approval      │
+│  • Human review required for all external-facing outputs                    │
+│  • Comprehensive audit logging enabled                                       │
+│  • Input/output content filtering                                           │
+│                                                                              │
+│  GOVERNANCE                                                                  │
+│  ──────────                                                                  │
+│  • Register in model inventory before deployment                            │
+│  • Assign accountable model owner                                           │
+│  • Complete risk assessment documentation                                   │
+│  • Report to model risk committee                                           │
+│  • Annual revalidation minimum                                              │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Examination readiness
+
+Financial institution examiners may ask about AI/LLM usage during safety and soundness examinations. Be prepared to demonstrate:
+
+1. **Inventory**: Complete list of AI/LLM models in use
+2. **Risk assessment**: Documentation of how risks were identified and mitigated
+3. **Validation**: Evidence of testing before deployment
+4. **Monitoring**: Ongoing performance tracking and incident response
+5. **Governance**: Board/committee oversight and approval records
+6. **Controls**: Technical and operational safeguards in place
+
+### Resources
+
+- [Federal Reserve SR 11-7: Model Risk Management](https://www.federalreserve.gov/supervisionreg/srletters/sr1107.htm)
+- [SR 11-7 Attachment: Detailed Guidance](https://www.federalreserve.gov/supervisionreg/srletters/sr1107a1.pdf)
+- [OCC Bulletin 2023-17: Third-Party Risk Management](https://www.occ.gov/news-issuances/bulletins/2023/bulletin-2023-17.html)
+- [OCC Bulletin 2002-16: Foreign-Based Service Providers](https://www.occ.gov/news-issuances/bulletins/2002/bulletin-2002-16.html)
+- [FINOS AI Governance Framework](https://air-governance-framework.finos.org/)
+- [GAO Report: AI in Financial Services](https://www.gao.gov/assets/gao-25-107197.pdf)
+- [CFA Institute: LLMs in Financial Industry](https://rpc.cfainstitute.org/research/the-automation-ahead-content-series/practical-guide-for-llms-in-the-financial-industry)
 
 [↑ Back to Table of Contents](#table-of-contents)
 
@@ -1019,6 +1399,215 @@ Hardware needed for fine-tuning 8B model:
 
 > [!NOTE]
 > **Privacy:** Both RAG and fine-tuning keep your proprietary data 100% local when using Ollama. No data is sent externally. This is a key advantage over cloud-based solutions where your documents would be processed on vendor servers.
+
+[↑ Back to Table of Contents](#table-of-contents)
+
+## Handling large codebases
+
+A common question: "How large a codebase can local LLMs analyze?" The answer depends on your approach.
+
+### Context window limits
+
+The **context window** determines how much text an LLM can process in a single request:
+
+| Model Context | ~Characters | ~Lines of Code | Practical Use |
+|:--------------|:------------|:---------------|:--------------|
+| 8K tokens | 32,000 | 400-800 | Single file analysis |
+| 32K tokens | 128,000 | 1,600-3,200 | Small module or package |
+| 128K tokens | 512,000 | 6,400-12,800 | Medium project |
+| 200K tokens | 800,000 | 10,000-20,000 | Large module (Qwen 2.5) |
+
+> [!NOTE]
+> Token-to-code conversion: Code is less token-efficient than prose. Expect ~1 token per 3-4 characters for code (vs ~4 characters for English text) due to symbols, indentation, and technical terms.
+
+### Do I need a vector database?
+
+**Short answer:** Only for large codebases or when you need semantic search.
+
+```text
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    DO I NEED A VECTOR DATABASE?                              │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  YOUR CODEBASE SIZE              RECOMMENDATION                             │
+│  ═══════════════════════         ══════════════════════════════════════     │
+│                                                                              │
+│  < 5,000 lines                   NO - Pass relevant files directly          │
+│  (fits in context)               Simple file reading is sufficient          │
+│                                                                              │
+│  5,000 - 50,000 lines            MAYBE - Depends on query patterns          │
+│  (medium project)                If queries span many files: YES            │
+│                                  If queries target specific files: NO       │
+│                                                                              │
+│  > 50,000 lines                  YES - Vector search essential              │
+│  (large codebase)                Too large to fit relevant context          │
+│                                  Need semantic similarity search            │
+│                                                                              │
+│  Monorepo / Enterprise           YES + Consider code graph tools            │
+│  (100K+ lines)                   Add: code navigation, symbol indexing      │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Approaches by codebase size
+
+#### Small codebases (< 5,000 lines): Direct context
+
+No vector database needed. Just read the relevant files:
+
+```python
+# Simple approach for small codebases
+def analyze_code(file_paths: list[str], question: str) -> str:
+    # Read all relevant files
+    context = ""
+    for path in file_paths:
+        with open(path) as f:
+            context += f"### {path}\n```\n{f.read()}\n```\n\n"
+
+    # Send directly to LLM
+    prompt = f"Given this codebase:\n{context}\n\nQuestion: {question}"
+    return ollama.generate(model="qwen2.5-coder:7b", prompt=prompt)
+```
+
+**Tools that use this approach:**
+- Cline, Continue, Aider (for small projects)
+- They read files on-demand based on the task
+
+#### Medium codebases (5K-50K lines): Selective loading
+
+Use file patterns and targeted reading:
+
+```python
+# Read specific modules based on the question
+def smart_context_loading(question: str, codebase_path: str) -> str:
+    # Use grep/ripgrep to find relevant files
+    relevant_files = search_files_for_keywords(question, codebase_path)
+
+    # Load only top N most relevant files
+    context = load_files(relevant_files[:10])
+
+    return generate_with_context(context, question)
+```
+
+**Tools that use this approach:**
+- MCP file servers (read specific paths)
+- Language server integration (find definitions, references)
+- Simple keyword search (grep-based retrieval)
+
+#### Large codebases (50K+ lines): Vector RAG
+
+Semantic search becomes essential:
+
+```text
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    VECTOR RAG FOR CODE                                       │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  1. INDEXING PHASE (one-time setup)                                         │
+│                                                                              │
+│     Your Codebase          Chunking              Vector Database            │
+│     ────────────           ────────              ───────────────            │
+│     src/                   Split by:             Store embeddings:          │
+│     ├── auth/         →    • Functions      →    auth/login.py:login()     │
+│     ├── api/               • Classes             api/routes.py:UserAPI     │
+│     └── models/            • Files               models/user.py:User       │
+│                            • Semantic blocks                                │
+│                                                                              │
+│  2. QUERY PHASE (each request)                                              │
+│                                                                              │
+│     User Question     Embedding      Vector Search     Top K Chunks         │
+│     ─────────────     ─────────      ─────────────     ────────────         │
+│     "How does    →    [0.12,    →    Similarity   →    1. auth/login.py    │
+│      auth work?"       -0.45,        search            2. models/user.py   │
+│                        0.78...]                        3. api/auth.py      │
+│                                                                              │
+│  3. GENERATION                                                               │
+│                                                                              │
+│     Retrieved Chunks + Question → LLM → Answer with code references         │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+**Recommended stack for code RAG:**
+
+| Component | Recommendation | Why |
+|:----------|:---------------|:----|
+| **Vector DB** | ChromaDB (dev), Qdrant (prod) | Simple setup, good performance |
+| **Embedding** | `nomic-embed-text` or `codebert` | Code-aware embeddings |
+| **Chunking** | By function/class (AST-based) | Preserves semantic units |
+| **Chunk size** | 512-1024 tokens | Balance context vs precision |
+
+**Code chunking strategies:**
+
+```python
+# AST-based chunking (recommended for code)
+import ast
+
+def chunk_python_file(file_path: str) -> list[dict]:
+    """Split Python file into function/class chunks."""
+    with open(file_path) as f:
+        source = f.read()
+
+    tree = ast.parse(source)
+    chunks = []
+
+    for node in ast.walk(tree):
+        if isinstance(node, (ast.FunctionDef, ast.ClassDef)):
+            chunk = {
+                "file": file_path,
+                "name": node.name,
+                "type": "function" if isinstance(node, ast.FunctionDef) else "class",
+                "content": ast.get_source_segment(source, node),
+                "line_start": node.lineno,
+            }
+            chunks.append(chunk)
+
+    return chunks
+```
+
+### Unlimited codebase analysis
+
+With proper architecture, you can analyze **any size codebase**:
+
+| Technique | Description | When to Use |
+|:----------|:------------|:------------|
+| **Hierarchical summaries** | Summarize modules → query summaries → drill down | Understanding architecture |
+| **Multi-turn conversation** | Analyze piece by piece, build understanding | Deep investigation |
+| **Hybrid search** | Combine vector + keyword + symbol search | Complex queries |
+| **Code graph** | Build dependency/call graphs, traverse relationships | Impact analysis |
+
+### local-ai-hub implementation
+
+For the coding domain agents in local-ai-hub:
+
+```text
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    RECOMMENDED IMPLEMENTATION                                │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  PHASE 1: Start simple (no vector DB)                                       │
+│  ─────────────────────────────────────                                       │
+│  • MCP file server for reading specific files                               │
+│  • Grep-based search for finding relevant code                              │
+│  • Works well for targeted questions about specific files                   │
+│                                                                              │
+│  PHASE 2: Add vector search when needed                                     │
+│  ──────────────────────────────────────                                      │
+│  • Trigger: Users ask broad questions across large codebases                │
+│  • Add ChromaDB + nomic-embed-text                                          │
+│  • Index repositories on first use                                          │
+│                                                                              │
+│  PHASE 3: Advanced features (if required)                                   │
+│  ────────────────────────────────────────                                    │
+│  • Language server integration (go-to-definition, find-references)          │
+│  • AST-based chunking for better code understanding                         │
+│  • Dependency graph for impact analysis                                     │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+> [!TIP]
+> **Start without a vector database.** Many coding tasks (review this file, explain this function, fix this bug) work fine with direct file reading. Add vector search only when users consistently need to query across large, unfamiliar codebases.
 
 [↑ Back to Table of Contents](#table-of-contents)
 
@@ -1772,6 +2361,151 @@ Reduces model size by using lower precision numbers.
 | Q8 | 7 GB | Very Good | Faster |
 | Q4 | 4 GB | Good | Fastest |
 
+### Transformer architecture explained
+
+The **Transformer** is the neural network architecture that powers all modern LLMs (Llama, Qwen, GPT, Mistral, etc.). Introduced in the 2017 paper "Attention Is All You Need" by Google researchers, it revolutionized natural language processing.
+
+#### Why transformers replaced older architectures
+
+Before transformers, language models used **Recurrent Neural Networks (RNNs)** that processed text sequentially—one word at a time. This had major limitations:
+
+```text
+Traditional RNN approach:
+─────────────────────────
+"The database crashed because the server ran out of memory"
+   │
+   ▼
+Process "The" → then "database" → then "crashed" → ... (sequential)
+   │
+   Problem: By the time we reach "memory", the model has
+            partially "forgotten" earlier context like "database"
+```
+
+Transformers solve this with **parallel processing** and **self-attention**:
+
+```text
+Transformer approach:
+─────────────────────
+"The database crashed because the server ran out of memory"
+   │
+   ▼
+Process ALL tokens simultaneously
+   │
+   ▼
+Self-attention asks: "Which words matter most for understanding each word?"
+   │
+   ├── "crashed" attends strongly to → "database", "server", "memory"
+   ├── "memory" attends strongly to → "ran out", "server"
+   └── Context relationships preserved regardless of distance
+```
+
+#### Key components
+
+| Component | Purpose | Analogy |
+|:----------|:--------|:--------|
+| **Embedding layer** | Converts words to numerical vectors | Dictionary that maps words to coordinates in meaning-space |
+| **Self-attention** | Determines which tokens relate to each other | Highlighting important words while reading |
+| **Multi-head attention** | Multiple attention patterns in parallel | Reading a sentence for grammar, meaning, and tone simultaneously |
+| **Feed-forward layers** | Process attended information | Thinking about what you've read |
+| **Layer normalization** | Stabilizes training | Keeping values in a manageable range |
+
+#### Self-attention visualized
+
+When processing "The server crashed because it ran out of memory", self-attention calculates relationships:
+
+```text
+                    Attention weights (simplified)
+                    ───────────────────────────────
+                    The  server crashed because it  ran  out  of memory
+               ┌─────────────────────────────────────────────────────────┐
+    The        │ 0.1   0.3    0.1     0.1    0.1  0.1  0.1  0.0   0.1   │
+    server     │ 0.2   0.2    0.3     0.1    0.1  0.0  0.0  0.0   0.1   │
+    crashed    │ 0.1   0.4    0.1     0.1    0.0  0.1  0.1  0.0   0.1   │ ← "crashed" pays
+    because    │ 0.1   0.2    0.3     0.1    0.1  0.1  0.1  0.0   0.0   │    attention to "server"
+    it         │ 0.1   0.5    0.2     0.0    0.0  0.0  0.1  0.0   0.1   │ ← "it" strongly
+    ran        │ 0.0   0.2    0.1     0.0    0.2  0.1  0.2  0.1   0.1   │    refers to "server"
+    out        │ 0.0   0.1    0.1     0.0    0.1  0.3  0.1  0.1   0.2   │
+    of         │ 0.0   0.1    0.0     0.0    0.0  0.2  0.3  0.1   0.3   │
+    memory     │ 0.0   0.3    0.2     0.0    0.1  0.2  0.2  0.0   0.0   │
+               └─────────────────────────────────────────────────────────┘
+```
+
+#### Why transformers matter for local AI
+
+| Aspect | Impact on local-ai-hub |
+|:-------|:-----------------------|
+| **GPU parallelization** | Transformers leverage GPU cores efficiently—why NVIDIA GPUs dramatically speed up inference |
+| **Context window scaling** | Attention computation grows with context length squared (O(n²)), explaining why 128K context needs much more VRAM than 8K |
+| **Parameter count** | More layers and attention heads = more parameters = better reasoning but more VRAM needed |
+| **Quantization compatibility** | Transformer weights quantize well (Q4, Q8), enabling large models on consumer hardware |
+
+#### Transformer architecture diagram
+
+```text
+┌─────────────────────────────────────────────────────────────────────────┐
+│                        TRANSFORMER ARCHITECTURE                          │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                          │
+│  Input: "Analyze this error log"                                        │
+│         │                                                                │
+│         ▼                                                                │
+│  ┌─────────────────────────────────────────────────────────────────┐    │
+│  │                    TOKENIZATION                                  │    │
+│  │  "Analyze" → 123,  "this" → 456,  "error" → 789,  "log" → 012  │    │
+│  └─────────────────────────────────────────────────────────────────┘    │
+│         │                                                                │
+│         ▼                                                                │
+│  ┌─────────────────────────────────────────────────────────────────┐    │
+│  │                    EMBEDDING LAYER                               │    │
+│  │  Token IDs → Dense vectors (e.g., 4096 dimensions)              │    │
+│  │  [123] → [0.12, -0.45, 0.78, ...]                               │    │
+│  └─────────────────────────────────────────────────────────────────┘    │
+│         │                                                                │
+│         ▼                                                                │
+│  ┌─────────────────────────────────────────────────────────────────┐    │
+│  │              TRANSFORMER BLOCKS (× 32 for 7B model)             │    │
+│  │  ┌─────────────────────────────────────────────────────────┐    │    │
+│  │  │  Multi-Head Self-Attention                              │    │    │
+│  │  │  • Query, Key, Value projections                        │    │    │
+│  │  │  • Attention scores computed                            │    │    │
+│  │  │  • Context-aware representations                        │    │    │
+│  │  └─────────────────────────────────────────────────────────┘    │    │
+│  │                          │                                       │    │
+│  │                          ▼                                       │    │
+│  │  ┌─────────────────────────────────────────────────────────┐    │    │
+│  │  │  Feed-Forward Network                                   │    │    │
+│  │  │  • Expand dimensions (4096 → 16384)                     │    │    │
+│  │  │  • Non-linear activation (SiLU/GELU)                    │    │    │
+│  │  │  • Contract back (16384 → 4096)                         │    │    │
+│  │  └─────────────────────────────────────────────────────────┘    │    │
+│  │                          │                                       │    │
+│  │              (Repeat for each transformer block)                 │    │
+│  └─────────────────────────────────────────────────────────────────┘    │
+│         │                                                                │
+│         ▼                                                                │
+│  ┌─────────────────────────────────────────────────────────────────┐    │
+│  │                    OUTPUT LAYER                                  │    │
+│  │  Final hidden state → Vocabulary probabilities                  │    │
+│  │  "The" (35%), "This" (20%), "Error" (15%), ...                  │    │
+│  └─────────────────────────────────────────────────────────────────┘    │
+│         │                                                                │
+│         ▼                                                                │
+│  Output: Next token prediction → "The"                                  │
+│                                                                          │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+#### Model size and transformer depth
+
+| Model | Parameters | Layers | Attention Heads | Hidden Size |
+|:------|:-----------|:-------|:----------------|:------------|
+| Llama 3.1 8B | 8 billion | 32 | 32 | 4096 |
+| Qwen 2.5 14B | 14 billion | 40 | 40 | 5120 |
+| Llama 3.1 70B | 70 billion | 80 | 64 | 8192 |
+
+> [!NOTE]
+> More layers and attention heads increase the model's ability to understand complex relationships, but also increase VRAM requirements and inference time.
+
 [↑ Back to Table of Contents](#table-of-contents)
 
 ## Hardware terminology
@@ -1819,6 +2553,7 @@ GPU memory where models are loaded. LLMs must fit in VRAM for GPU acceleration.
 | **RAG** | Retrieval-Augmented Generation—adding documents as context |
 | **Temperature** | Controls randomness in model output (0=deterministic) |
 | **Token** | Unit of text (~4 characters) |
+| **Transformer** | Neural network architecture using self-attention, powers all modern LLMs |
 | **Tool Calling** | LLM ability to request function execution |
 | **Vector Database** | Database optimized for similarity search (ChromaDB, Qdrant) |
 | **vLLM** | High-performance inference engine |
