@@ -1,8 +1,8 @@
-# dbtool-ai: Project definition and scope
+# local-ai-hub: Project definition and scope
 
-**[← Back to dbtool-ai Index](./README.md)**
+**[← Back to local-ai-hub Index](./README.md)**
 
-> **Document Version:** 1.0
+> **Document Version:** 2.0
 > **Last Updated:** January 22, 2026
 > **Maintainers:** Application Infrastructure Team
 > **Status:** Draft
@@ -27,9 +27,13 @@
 
 ## Executive summary
 
-The **dbtool-ai** project implements a local Large Language Model (LLM) infrastructure for AI-powered database operations assistance. This initiative addresses the critical requirement of maintaining data privacy and security by eliminating dependencies on third-party LLM services, ensuring that sensitive database information, queries, and logs never leave the corporate network.
+The **local-ai-hub** project implements a local Large Language Model (LLM) infrastructure for AI-powered assistance across three domains: database operations, documentation management, and code development. This initiative addresses the critical requirement of maintaining data privacy and security by eliminating dependencies on third-party LLM services, ensuring that sensitive data never leaves the corporate network.
 
-The solution leverages open-source LLM models (Llama, Mistral, Qwen) running on-premise via inference engines like Ollama or vLLM, integrated with AI agent frameworks (CrewAI, LangGraph) to provide intelligent database troubleshooting, log analysis, and query optimization.
+The solution leverages open-source LLM models (Llama, Mistral, Qwen) running on-premise via inference engines like Ollama or vLLM, integrated with AI agent frameworks (CrewAI, LangGraph) to provide intelligent assistance for:
+
+1. **Documentation**: Converting Confluence pages to Markdown, validating against documentation standards, and generating technical documentation
+2. **Coding**: Code review, refactoring suggestions, test generation, and documentation
+3. **Database**: Log analysis, query explanation, configuration tuning, and troubleshooting
 
 [↑ Back to Table of Contents](#table-of-contents)
 

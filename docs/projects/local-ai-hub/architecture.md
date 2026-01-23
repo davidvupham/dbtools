@@ -1,8 +1,8 @@
-# dbtool-ai: Architecture and design
+# local-ai-hub: Architecture and design
 
-**[← Back to dbtool-ai Index](./README.md)**
+**[← Back to local-ai-hub Index](./README.md)**
 
-> **Document Version:** 1.0
+> **Document Version:** 2.0
 > **Last Updated:** January 22, 2026
 > **Maintainers:** Application Infrastructure Team
 > **Status:** Draft
@@ -27,7 +27,7 @@
 
 ## Architecture overview
 
-The dbtool-ai system follows a **sidecar service pattern**, operating as an independent AI inference service that the dbtool-cli and other tools can invoke via REST API. This separation ensures:
+The local-ai-hub system follows a **sidecar service pattern**, operating as an independent AI inference service that CLI tools, IDE extensions, and other applications can invoke via REST API or MCP. This separation ensures:
 
 - Heavy ML dependencies remain isolated from lightweight CLI tools
 - Independent scaling and lifecycle management

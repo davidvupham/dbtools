@@ -1,6 +1,6 @@
-# dbtool-ai: Hardware requirements guide
+# local-ai-hub: Hardware requirements guide
 
-**[← Back to dbtool-ai Index](./README.md)**
+**[← Back to local-ai-hub Index](./README.md)**
 
 > **Document Version:** 1.0
 > **Last Updated:** January 22, 2026

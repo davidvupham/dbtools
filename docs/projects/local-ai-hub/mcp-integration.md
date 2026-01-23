@@ -1,6 +1,6 @@
-# dbtool-ai: MCP and tools integration guide
+# local-ai-hub: MCP and tools integration guide
 
-**[← Back to dbtool-ai Index](./README.md)**
+**[← Back to local-ai-hub Index](./README.md)**
 
 > **Document Version:** 1.0
 > **Last Updated:** January 22, 2026

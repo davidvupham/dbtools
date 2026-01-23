@@ -1,6 +1,6 @@
-# dbtool-ai: LLM model selection guide
+# local-ai-hub: LLM model selection guide
 
-**[← Back to dbtool-ai Index](./README.md)**
+**[← Back to local-ai-hub Index](./README.md)**
 
 > **Document Version:** 1.0
 > **Last Updated:** January 22, 2026

@@ -1,8 +1,8 @@
-# dbtool-ai: Implementation guide
+# local-ai-hub: Implementation guide
 
-**[← Back to dbtool-ai Index](./README.md)**
+**[← Back to local-ai-hub Index](./README.md)**
 
-> **Document Version:** 1.0
+> **Document Version:** 2.0
 > **Last Updated:** January 22, 2026
 > **Maintainers:** Application Infrastructure Team
 > **Status:** Draft
