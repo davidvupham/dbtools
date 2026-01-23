@@ -70,6 +70,37 @@ Every doc must start with:
 - Ensure all links resolve (internal and external)
 - Run spell check before submitting
 
+**Documentation Freshness:**
+
+| Doc Type | Review Frequency |
+|:---|:---|
+| How-To Guides | Quarterly |
+| Tutorials | Semi-annually |
+| Reference | On code change |
+| Explanation | Annually |
+
+- Assign ownership by role in CODEOWNERS
+- Mark stale docs as `Status: Deprecated` before archiving
+- Archive obsolete docs to `docs/_archive/`
+
+**API Documentation (for REST APIs):**
+- All APIs must have OpenAPI spec (`openapi.yaml`) or use FastAPI auto-generation
+- Document all endpoints with descriptions, parameters, and examples
+- Include error responses and authentication details
+- Maintain `CHANGELOG.md` with version history
+- Use `/docs` (Swagger UI) for interactive documentation
+
+**Review Checklist:**
+Before submitting documentation:
+- [ ] Lives in correct Diátaxis folder
+- [ ] Has required header (version, date, maintainer, status)
+- [ ] Navigation links work (back to index, TOC)
+- [ ] Code blocks have language specified
+- [ ] Images have descriptive alt text
+- [ ] Links are descriptive (not "click here")
+- [ ] Spelling and grammar checked
+- [ ] Code examples are runnable
+
 ---
 
 ## Course Development Guidelines
