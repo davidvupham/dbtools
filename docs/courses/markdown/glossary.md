@@ -11,7 +11,21 @@
 ![Topic](https://img.shields.io/badge/Topic-Markdown-blue)
 
 > [!IMPORTANT]
-> **Related Docs:** [Quick Reference](./quick_reference.md) | [Course Overview](./course_overview.md)
+> **Related Docs:** [Quick Reference](./quick-reference.md) | [Course Overview](./course-overview.md)
+
+## Table of contents
+
+- [Core concepts](#core-concepts)
+- [Markdown flavors](#markdown-flavors)
+- [Syntax elements](#syntax-elements)
+- [Extended syntax](#extended-syntax)
+- [Advanced features](#advanced-features)
+- [Tools and software](#tools-and-software)
+- [Formatting terminology](#formatting-terminology)
+- [File types](#file-types)
+- [Related standards](#related-standards)
+
+---
 
 ## Core concepts
 
@@ -23,7 +37,7 @@
 | **Rendering** | The process of converting Markdown syntax into formatted output (usually HTML) |
 | **Parser** | Software that reads Markdown and converts it to another format |
 
-[↑ Back to Top](#markdown-glossary)
+[↑ Back to Table of Contents](#table-of-contents)
 
 ## Markdown flavors
 
@@ -35,7 +49,7 @@
 | **R Markdown** | Markdown variant for R programming that can execute code and generate reports |
 | **MDX** | Markdown with JSX support, allowing React components in Markdown documents |
 
-[↑ Back to Top](#markdown-glossary)
+[↑ Back to Table of Contents](#table-of-contents)
 
 ## Syntax elements
 
@@ -53,7 +67,7 @@
 | **Table** | Grid of data with rows and columns using pipe (`|`) syntax |
 | **Horizontal rule** | A dividing line created with `---`, `***`, or `___` |
 
-[↑ Back to Top](#markdown-glossary)
+[↑ Back to Table of Contents](#table-of-contents)
 
 ## Extended syntax
 
@@ -67,7 +81,7 @@
 | **Emoji shortcode** | Text codes like `:smile:` that render as emoji |
 | **Autolink** | Automatic URL linking with `<https://url>` syntax |
 
-[↑ Back to Top](#markdown-glossary)
+[↑ Back to Table of Contents](#table-of-contents)
 
 ## Advanced features
 
@@ -80,7 +94,7 @@
 | **Front matter** | YAML metadata block at the beginning of a document (common in static site generators) |
 | **Table of contents (TOC)** | Auto-generated list of headings with anchor links |
 
-[↑ Back to Top](#markdown-glossary)
+[↑ Back to Table of Contents](#table-of-contents)
 
 ## Tools and software
 
@@ -92,7 +106,7 @@
 | **WYSIWYG** | "What You See Is What You Get" - editors showing formatted output while typing |
 | **Live preview** | Real-time rendering of Markdown as you type |
 
-[↑ Back to Top](#markdown-glossary)
+[↑ Back to Table of Contents](#table-of-contents)
 
 ## Formatting terminology
 
@@ -107,7 +121,7 @@
 | **Alt text** | Alternative text for images, displayed if image fails to load |
 | **Anchor** | Named location in a document for linking (auto-generated from headings) |
 
-[↑ Back to Top](#markdown-glossary)
+[↑ Back to Table of Contents](#table-of-contents)
 
 ## File types
 
@@ -119,7 +133,7 @@
 | `.Rmd` | R Markdown file |
 | `.qmd` | Quarto Markdown file |
 
-[↑ Back to Top](#markdown-glossary)
+[↑ Back to Table of Contents](#table-of-contents)
 
 ## Related standards
 
@@ -131,4 +145,4 @@
 | **JSON** | Data format sometimes used for Markdown configuration |
 | **XML** | Markup language; some Markdown extensions use XML-like syntax |
 
-[↑ Back to Top](#markdown-glossary)
+[↑ Back to Table of Contents](#table-of-contents)

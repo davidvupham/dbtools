@@ -11,7 +11,7 @@
 ![Topic](https://img.shields.io/badge/Topic-Markdown-blue)
 
 > [!IMPORTANT]
-> **Related Docs:** [Course Overview](./course_overview.md) | [Quick Reference](./quick_reference.md) | [Glossary](./glossary.md)
+> **Related Docs:** [Course Overview](./course-overview.md) | [Quick Reference](./quick-reference.md) | [Glossary](./glossary.md)
 
 ## Introduction
 
@@ -32,8 +32,8 @@ The `docs/courses/markdown/` directory is organized as follows:
 ```text
 docs/courses/markdown/
 ├── README.md                  <-- You are here (Navigation Hub)
-├── course_overview.md         <-- Learning objectives, prerequisites
-├── quick_reference.md         <-- Common syntax cheat sheet
+├── course-overview.md         <-- Learning objectives, prerequisites
+├── quick-reference.md         <-- Common syntax cheat sheet
 ├── glossary.md                <-- Terminology definitions
 └── learning-paths/            <-- All Tutorial Content
     ├── series-part1-basics.md       (Beginner: Core Syntax)
@@ -43,8 +43,8 @@ docs/courses/markdown/
 
 ## Quick resources
 
-- **[Course Overview](./course_overview.md)** - Learning objectives, prerequisites
-- **[Quick Reference](./quick_reference.md)** - Common syntax cheat sheet
+- **[Course Overview](./course-overview.md)** - Learning objectives, prerequisites
+- **[Quick Reference](./quick-reference.md)** - Common syntax cheat sheet
 - **[Glossary](./glossary.md)** - Terminology definitions
 
 ## Learning paths
@@ -73,7 +73,7 @@ Choose the path that fits your experience level.
 
 *Best for: Users who know the basics and need a reference.*
 
-- **[Quick Reference](./quick_reference.md)** - All syntax in one page
+- **[Quick Reference](./quick-reference.md)** - All syntax in one page
 - **[Glossary](./glossary.md)** - Terminology lookup
 
 ---

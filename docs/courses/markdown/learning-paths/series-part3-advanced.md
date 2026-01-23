@@ -11,7 +11,7 @@
 ![Level](https://img.shields.io/badge/Level-Advanced-red)
 
 > [!IMPORTANT]
-> **Related Docs:** [Part 2: Intermediate](./series-part2-intermediate.md) | [Quick Reference](../quick_reference.md) | [Glossary](../glossary.md)
+> **Related Docs:** [Part 2: Intermediate](./series-part2-intermediate.md) | [Quick Reference](../quick-reference.md) | [Glossary](../glossary.md)
 
 ## Table of contents
 

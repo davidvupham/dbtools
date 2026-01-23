@@ -11,7 +11,24 @@
 ![Topic](https://img.shields.io/badge/Topic-Markdown-blue)
 
 > [!IMPORTANT]
-> **Related Docs:** [Quick Reference](./quick_reference.md) | [Glossary](./glossary.md)
+> **Related Docs:** [Quick Reference](./quick-reference.md) | [Glossary](./glossary.md)
+
+## Table of contents
+
+- [Course description](#course-description)
+- [Learning objectives](#learning-objectives)
+- [Target audience](#target-audience)
+- [Prerequisites](#prerequisites)
+- [Course structure](#course-structure)
+- [What you'll build](#what-youll-build)
+- [Technology stack](#technology-stack)
+- [Markdown flavors covered](#markdown-flavors-covered)
+- [How to practice](#how-to-practice)
+- [Editor recommendations](#editor-recommendations)
+- [VS Code extensions](#vs-code-extensions)
+- [Support resources](#support-resources)
+
+---
 
 ## Course description
 
@@ -113,6 +130,4 @@ For the best experience with VS Code, install these extensions:
 - **GitHub Docs**: [docs.github.com/markdown](https://docs.github.com/en/get-started/writing-on-github)
 - **Mermaid Docs**: [mermaid.js.org](https://mermaid.js.org/)
 
----
-
-[↑ Back to Top](#markdown-course-overview)
+[↑ Back to Table of Contents](#table-of-contents)

@@ -11,7 +11,7 @@
 ![Level](https://img.shields.io/badge/Level-Beginner-yellow)
 
 > [!IMPORTANT]
-> **Related Docs:** [Quick Reference](../quick_reference.md) | [Part 2: Intermediate](./series-part2-intermediate.md)
+> **Related Docs:** [Quick Reference](../quick-reference.md) | [Part 2: Intermediate](./series-part2-intermediate.md)
 
 ## Table of contents
 

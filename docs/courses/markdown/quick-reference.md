@@ -17,18 +17,22 @@
 
 - [Headings](#headings)
 - [Text formatting](#text-formatting)
+- [Extended text formatting](#extended-text-formatting)
 - [Links](#links)
 - [Images](#images)
+- [Video embedding](#video-embedding)
 - [Lists](#lists)
 - [Code](#code)
 - [Blockquotes](#blockquotes)
 - [Tables](#tables)
 - [Task lists](#task-lists)
 - [Alerts/Admonitions](#alertsadmonitions)
+- [Badges](#badges)
 - [Horizontal rules](#horizontal-rules)
 - [Escaping characters](#escaping-characters)
 - [Emoji](#emoji)
 - [Footnotes](#footnotes)
+- [Custom heading IDs](#custom-heading-ids)
 
 ---
 
@@ -61,6 +65,31 @@
 | `` `code` `` | `code` | `` `variable` `` |
 | `<sub>subscript</sub>` | H<sub>2</sub>O | `H<sub>2</sub>O` |
 | `<sup>superscript</sup>` | x<sup>2</sup> | `x<sup>2</sup>` |
+
+[↑ Back to Table of Contents](#table-of-contents)
+
+---
+
+## Extended text formatting
+
+### Highlight (limited support)
+
+```markdown
+==highlighted text==           <!-- Obsidian, Typora -->
+<mark>highlighted text</mark>  <!-- HTML fallback -->
+```
+
+### Underline (use sparingly)
+
+```markdown
+<u>underlined text</u>
+```
+
+### Small text
+
+```markdown
+<small>smaller text</small>
+```
 
 [↑ Back to Table of Contents](#table-of-contents)
 
@@ -124,6 +153,26 @@
 ```markdown
 [![Alt text](image.png)](https://example.com)
 ```
+
+[↑ Back to Table of Contents](#table-of-contents)
+
+---
+
+## Video embedding
+
+### YouTube (clickable thumbnail)
+
+```markdown
+[![Video Title](https://img.youtube.com/vi/VIDEO_ID/maxresdefault.jpg)](https://www.youtube.com/watch?v=VIDEO_ID)
+```
+
+### Thumbnail quality options
+
+| Quality | URL |
+|---------|-----|
+| Max | `https://img.youtube.com/vi/VIDEO_ID/maxresdefault.jpg` |
+| High | `https://img.youtube.com/vi/VIDEO_ID/hqdefault.jpg` |
+| Default | `https://img.youtube.com/vi/VIDEO_ID/default.jpg` |
 
 [↑ Back to Table of Contents](#table-of-contents)
 
@@ -318,6 +367,36 @@ GitHub Flavored Markdown supports these alert types:
 
 ---
 
+## Badges
+
+### Basic syntax
+
+```markdown
+![Badge](https://img.shields.io/badge/LABEL-MESSAGE-COLOR)
+```
+
+### Examples
+
+```markdown
+![Build](https://img.shields.io/badge/build-passing-brightgreen)
+![Version](https://img.shields.io/badge/version-1.0.0-blue)
+![License](https://img.shields.io/badge/license-MIT-green)
+```
+
+### Clickable badge
+
+```markdown
+[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+```
+
+### Colors
+
+`brightgreen`, `green`, `yellow`, `orange`, `red`, `blue`, `lightgrey`
+
+[↑ Back to Table of Contents](#table-of-contents)
+
+---
+
 ## Horizontal rules
 
 Any of these creates a horizontal line:
@@ -441,5 +520,26 @@ $$
 ```
 
 See [Part 3: Advanced](./learning-paths/series-part3-advanced.md) for full math documentation.
+
+[↑ Back to Table of Contents](#table-of-contents)
+
+---
+
+## Custom heading IDs
+
+### Syntax (GitLab, Pandoc, MkDocs, Docusaurus)
+
+```markdown
+## My Heading {#custom-id}
+```
+
+### Linking to custom IDs
+
+```markdown
+[Link to section](#custom-id)
+```
+
+> [!NOTE]
+> GitHub does not support custom heading IDs. Use auto-generated anchors instead.
 
 [↑ Back to Table of Contents](#table-of-contents)

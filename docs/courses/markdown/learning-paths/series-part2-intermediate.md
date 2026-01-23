@@ -11,7 +11,7 @@
 ![Level](https://img.shields.io/badge/Level-Intermediate-orange)
 
 > [!IMPORTANT]
-> **Related Docs:** [Part 1: Basics](./series-part1-basics.md) | [Part 3: Advanced](./series-part3-advanced.md) | [Quick Reference](../quick_reference.md)
+> **Related Docs:** [Part 1: Basics](./series-part1-basics.md) | [Part 3: Advanced](./series-part3-advanced.md) | [Quick Reference](../quick-reference.md)
 
 ## Table of contents
 
@@ -20,13 +20,18 @@
 - [Task lists](#task-lists)
 - [Alerts and admonitions](#alerts-and-admonitions)
 - [Footnotes](#footnotes)
+- [Custom heading IDs](#custom-heading-ids)
 - [Definition lists](#definition-lists)
+- [Extended text formatting](#extended-text-formatting)
 - [Emoji](#emoji)
+- [Video embedding](#video-embedding)
+- [Badges](#badges)
 - [Escaping characters](#escaping-characters)
 - [Reference-style links and images](#reference-style-links-and-images)
 - [Extended code blocks](#extended-code-blocks)
 - [HTML in Markdown](#html-in-markdown)
 - [GitHub Flavored Markdown](#github-flavored-markdown)
+- [Platform compatibility](#platform-compatibility)
 - [Putting it together: Technical specification](#putting-it-together-technical-specification)
 - [Practice exercises](#practice-exercises)
 - [Summary](#summary)
@@ -380,6 +385,48 @@ First reference[^note] and second reference[^note].
 
 ---
 
+## Custom heading IDs
+
+Custom heading IDs let you create specific anchors for linking, overriding the auto-generated IDs.
+
+### Syntax
+
+```markdown
+## My Heading {#custom-id}
+
+### Another Section {#my-anchor}
+```
+
+### Linking to custom IDs
+
+```markdown
+See the [custom section](#custom-id) for details.
+```
+
+### Why use custom IDs?
+
+1. **Shorter links** - `#api` instead of `#application-programming-interface`
+2. **Stable links** - IDs won't change if you edit the heading text
+3. **Cross-document linking** - Easier to remember and type
+4. **Localization** - Same ID works across translated documents
+
+### Platform support
+
+| Platform | Syntax | Support |
+|----------|--------|---------|
+| GitHub | `{#id}` | :x: Not supported |
+| GitLab | `{#id}` | :white_check_mark: Supported |
+| Pandoc | `{#id}` | :white_check_mark: Supported |
+| MkDocs | `{#id}` | :white_check_mark: With attr_list extension |
+| Docusaurus | `{#id}` | :white_check_mark: Supported |
+
+> [!NOTE]
+> On GitHub, use the auto-generated anchor (lowercase, hyphens for spaces) since custom IDs aren't supported.
+
+[↑ Back to Table of Contents](#table-of-contents)
+
+---
+
 ## Definition lists
 
 Definition lists display terms with their definitions. Support varies by platform.
@@ -421,6 +468,76 @@ For broader compatibility:
 |------|------------|
 | API | Application Programming Interface |
 | REST | Representational State Transfer |
+```
+
+[↑ Back to Table of Contents](#table-of-contents)
+
+---
+
+## Extended text formatting
+
+Beyond bold and italic, Markdown supports additional text formatting options.
+
+### Highlight text
+
+Mark text as highlighted using double equals signs:
+
+```markdown
+This is ==highlighted text== in your document.
+```
+
+**Platform support:**
+- :white_check_mark: Obsidian, Typora, Mark Text
+- :x: GitHub, GitLab (use `<mark>` HTML instead)
+
+**HTML alternative** (works everywhere):
+
+```markdown
+This is <mark>highlighted text</mark> in your document.
+```
+
+### Subscript and superscript
+
+#### Native syntax (limited support)
+
+```markdown
+H~2~O (subscript)
+X^2^ (superscript)
+```
+
+#### HTML syntax (broader support)
+
+```markdown
+H<sub>2</sub>O (subscript - water)
+x<sup>2</sup> (superscript - squared)
+E = mc<sup>2</sup>
+```
+
+**Result:** H<sub>2</sub>O and x<sup>2</sup>
+
+### Underline
+
+Markdown intentionally doesn't support underline (to avoid confusion with links). Use HTML if needed:
+
+```markdown
+<u>Underlined text</u>
+```
+
+> [!WARNING]
+> Underlines can be confused with hyperlinks. Use sparingly in documentation.
+
+### Small text
+
+```markdown
+<small>This text is smaller</small>
+```
+
+### Combining formats
+
+```markdown
+***~~bold italic strikethrough~~***
+**<mark>bold highlighted</mark>**
+<sup>**bold superscript**</sup>
 ```
 
 [↑ Back to Table of Contents](#table-of-contents)
@@ -473,6 +590,138 @@ Launch 🚀 | Success ✅ | Warning ⚠️
 
 > [!NOTE]
 > Emoji shortcode support varies by platform. GitHub, GitLab, and Slack support them. Standard Markdown renderers may not.
+
+[↑ Back to Table of Contents](#table-of-contents)
+
+---
+
+## Video embedding
+
+Markdown doesn't natively support video embedding, but you can use workarounds.
+
+### YouTube videos (image link method)
+
+Create a clickable thumbnail that opens the video:
+
+```markdown
+[![Video Title](https://img.youtube.com/vi/VIDEO_ID/maxresdefault.jpg)](https://www.youtube.com/watch?v=VIDEO_ID)
+```
+
+**Example:**
+
+```markdown
+[![Git Tutorial](https://img.youtube.com/vi/HVsySz-h9r4/maxresdefault.jpg)](https://www.youtube.com/watch?v=HVsySz-h9r4)
+```
+
+### YouTube thumbnail URLs
+
+| Quality | URL Pattern |
+|---------|------------|
+| Max resolution | `https://img.youtube.com/vi/VIDEO_ID/maxresdefault.jpg` |
+| High quality | `https://img.youtube.com/vi/VIDEO_ID/hqdefault.jpg` |
+| Medium quality | `https://img.youtube.com/vi/VIDEO_ID/mqdefault.jpg` |
+| Default | `https://img.youtube.com/vi/VIDEO_ID/default.jpg` |
+
+### HTML embed (where supported)
+
+```markdown
+<iframe width="560" height="315" src="https://www.youtube.com/embed/VIDEO_ID" frameborder="0" allowfullscreen></iframe>
+```
+
+> [!WARNING]
+> HTML iframes are often stripped from Markdown for security. The image-link method works more reliably.
+
+### GIF animations
+
+For short demonstrations, use GIFs:
+
+```markdown
+![Demo animation](./images/demo.gif)
+```
+
+[↑ Back to Table of Contents](#table-of-contents)
+
+---
+
+## Badges
+
+Badges (or shields) display status information in README files.
+
+### Shields.io syntax
+
+```markdown
+![Badge](https://img.shields.io/badge/LABEL-MESSAGE-COLOR)
+```
+
+### Examples
+
+```markdown
+![Build Status](https://img.shields.io/badge/build-passing-brightgreen)
+![Version](https://img.shields.io/badge/version-1.0.0-blue)
+![License](https://img.shields.io/badge/license-MIT-green)
+![Python](https://img.shields.io/badge/python-3.9+-blue)
+```
+
+**Result:**
+
+![Build Status](https://img.shields.io/badge/build-passing-brightgreen)
+![Version](https://img.shields.io/badge/version-1.0.0-blue)
+![License](https://img.shields.io/badge/license-MIT-green)
+![Python](https://img.shields.io/badge/python-3.9+-blue)
+
+### Available colors
+
+| Color | Name |
+|-------|------|
+| ![](https://img.shields.io/badge/-brightgreen-brightgreen) | `brightgreen` |
+| ![](https://img.shields.io/badge/-green-green) | `green` |
+| ![](https://img.shields.io/badge/-yellow-yellow) | `yellow` |
+| ![](https://img.shields.io/badge/-orange-orange) | `orange` |
+| ![](https://img.shields.io/badge/-red-red) | `red` |
+| ![](https://img.shields.io/badge/-blue-blue) | `blue` |
+| ![](https://img.shields.io/badge/-lightgrey-lightgrey) | `lightgrey` |
+
+### Dynamic badges
+
+Link to CI/CD services for live status:
+
+```markdown
+<!-- GitHub Actions -->
+![CI](https://github.com/USERNAME/REPO/workflows/CI/badge.svg)
+
+<!-- npm version -->
+![npm](https://img.shields.io/npm/v/PACKAGE)
+
+<!-- PyPI version -->
+![PyPI](https://img.shields.io/pypi/v/PACKAGE)
+```
+
+### Badge with link
+
+Make badges clickable:
+
+```markdown
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+```
+
+### Common badge patterns for READMEs
+
+```markdown
+<!-- Project status -->
+![Status](https://img.shields.io/badge/Status-Active-success)
+![Maintenance](https://img.shields.io/badge/Maintained-yes-green)
+
+<!-- Technology stack -->
+![Python](https://img.shields.io/badge/Python-3.9+-blue?logo=python&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?logo=typescript&logoColor=white)
+
+<!-- Social -->
+![GitHub stars](https://img.shields.io/github/stars/USERNAME/REPO)
+![GitHub forks](https://img.shields.io/github/forks/USERNAME/REPO)
+```
+
+> [!TIP]
+> Visit [shields.io](https://shields.io/) to generate custom badges with logos and styles.
 
 [↑ Back to Table of Contents](#table-of-contents)
 
@@ -852,6 +1101,72 @@ Press <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>P</kbd>
 
 ---
 
+## Platform compatibility
+
+Not all Markdown features work everywhere. Use this matrix to check compatibility.
+
+### Basic syntax compatibility
+
+| Feature | GitHub | GitLab | Obsidian | VS Code | Pandoc |
+|---------|:------:|:------:|:--------:|:-------:|:------:|
+| Headings (`#`) | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+| Bold/Italic | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+| Links | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+| Images | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+| Lists | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+| Code blocks | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+| Blockquotes | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+
+### Extended syntax compatibility
+
+| Feature | GitHub | GitLab | Obsidian | VS Code | Pandoc |
+|---------|:------:|:------:|:--------:|:-------:|:------:|
+| Tables | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+| Task lists | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+| Strikethrough | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+| Footnotes | :white_check_mark: | :white_check_mark: | :white_check_mark: | Extension | :white_check_mark: |
+| Alerts (`[!NOTE]`) | :white_check_mark: | :white_check_mark: | Plugin | Plugin | :x: |
+| Emoji shortcodes | :white_check_mark: | :white_check_mark: | :white_check_mark: | Extension | :x: |
+| Highlight (`==`) | :x: | :x: | :white_check_mark: | Extension | :x: |
+| Custom heading IDs | :x: | :white_check_mark: | :white_check_mark: | Extension | :white_check_mark: |
+| Subscript (`~x~`) | :x: | :x: | :white_check_mark: | Extension | :white_check_mark: |
+| Superscript (`^x^`) | :x: | :x: | :white_check_mark: | Extension | :white_check_mark: |
+
+### Advanced features compatibility
+
+| Feature | GitHub | GitLab | Obsidian | MkDocs | Docusaurus |
+|---------|:------:|:------:|:--------:|:------:|:----------:|
+| Mermaid diagrams | :white_check_mark: | :white_check_mark: | Plugin | Plugin | Plugin |
+| Math (LaTeX) | :white_check_mark: | :white_check_mark: | :white_check_mark: | Plugin | :white_check_mark: |
+| Front matter | Partial | Partial | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+| Wiki links (`[[]]`) | :x: | :x: | :white_check_mark: | :x: | :x: |
+| HTML embed | Restricted | Restricted | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+
+### Platform-specific features
+
+| Platform | Unique Features |
+|----------|----------------|
+| **GitHub** | Autolink references (`#123`, `@user`), color chips (`` `#ff0000` ``), file previews |
+| **GitLab** | Inline diffs, PlantUML, video embeds, custom heading IDs |
+| **Obsidian** | Wiki links, callouts, comments, dataview queries, canvas |
+| **Notion** | Databases, toggles, synced blocks, AI assist |
+| **Confluence** | Macros, status labels, Jira integration |
+
+### Best practices for cross-platform
+
+1. **Stick to CommonMark** for maximum compatibility
+2. **Use HTML fallbacks** for features like subscript/superscript
+3. **Test on target platforms** before publishing
+4. **Document requirements** if using platform-specific features
+5. **Provide alternatives** when using advanced features
+
+> [!TIP]
+> When in doubt, GitHub Flavored Markdown (GFM) is the safest choice for broad compatibility.
+
+[↑ Back to Table of Contents](#table-of-contents)
+
+---
+
 ## Putting it together: Technical specification
 
 Here's a complete technical specification using intermediate features:
@@ -992,7 +1307,12 @@ In Part 2, you learned:
 | Task lists | `- [x]` and `- [ ]` |
 | Alerts | `> [!TYPE]` |
 | Footnotes | `[^1]` and `[^1]:` |
+| Custom heading IDs | `## Heading {#id}` |
+| Highlight | `==text==` or `<mark>` |
+| Subscript/Superscript | `<sub>` / `<sup>` |
 | Emoji | `:shortcode:` |
+| Video links | `[![](thumbnail)](url)` |
+| Badges | `![](https://img.shields.io/badge/...)` |
 | Escaping | `\*` |
 | Reference links | `[text][ref]` |
 | Diff code | ` ```diff ` |
@@ -1000,10 +1320,11 @@ In Part 2, you learned:
 
 ### Key principles
 
-1. **Know your platform** - not all features work everywhere
+1. **Know your platform** - use the compatibility matrix to check support
 2. **Tables for data** - use them for structured information
 3. **Alerts for emphasis** - don't overuse them
 4. **Reference style for complex docs** - keeps text readable
+5. **Test cross-platform** - features vary between GitHub, GitLab, Obsidian, etc.
 
 [↑ Back to Table of Contents](#table-of-contents)
 
