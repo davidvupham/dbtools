@@ -9,6 +9,12 @@
 * SQLModel (Database)
 * Type-safe API definitions
 
+## Prerequisites
+
+Before starting this project, review:
+
+* **[REST API Concepts](./api-concepts/README.md)** - Idempotency, pagination, error handling, caching, and other essential API patterns
+
 ## Requirements
 
 * **Models**: `TodoItem` (id, title, completed).
@@ -19,4 +25,8 @@
   * `DELETE /todos/{id}`: Delete item.
 * **Data Store**: Use SQLite for simplicity.
 
-[See Litestar Guide](../backend/litestar/README.md)
+## Resources
+
+* [Litestar Guide](./litestar/README.md)
+* [SQLModel Guide](./sqlmodel/README.md)
+* [REST API Concepts](./api-concepts/README.md)
