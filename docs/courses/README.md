@@ -11,6 +11,7 @@ While both are learning-oriented:
 
 ## Available Courses
 
+- **[AI Engineering Course](ai/README.md)**: From AI fundamentals to production systems—covering LLMs, prompt engineering, Model Context Protocol (MCP), agentic AI, RAG, and local deployment with Ollama.
 - **[GitHub Project Management Course](github-proj-mgmt/README.md)**: A complete guide to project management using GitHub Issues, Projects, and automation—from basic issue tracking to enterprise-scale workflows with GraphQL API and GitHub Actions.
 - **[HashiCorp Vault Course](vault/README.md)**: Master secrets management from fundamentals to production operations, covering authentication, dynamic secrets, and infrastructure integration.
 - **[Liquibase DevOps Course](liquibase/README.md)**: A comprehensive series on database CI/CD, taking you from manual updates to fully automated pipelines with GitHub Actions.
