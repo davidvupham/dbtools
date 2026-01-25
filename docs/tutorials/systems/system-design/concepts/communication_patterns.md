@@ -46,25 +46,125 @@ How services talk to each other defines your system's complexity.
 
 ---
 
-## 3. gRPC vs REST
+## 3. REST vs GraphQL vs gRPC
 
-**The Concept:**
+**The Decision:** How should clients fetch data from your services?
 
-- **REST:** JSON over HTTP/1.1. Human readable.
-- **gRPC:** Binary (Protobuf) over HTTP/2. Strictly typed contracts.
+### REST (Representational State Transfer)
 
-### The Tradeoff
+- **Format:** JSON over HTTP/1.1
+- **Paradigm:** Resource-based endpoints (`/users/123`, `/orders`)
+- **Strengths:**
+  - Universal: Every browser, curl, and language speaks JSON/HTTP
+  - Cacheable: HTTP caching works out of the box (CDNs, browsers)
+  - Debuggable: You can read the payload on the wire
+  - Mature: Extensive tooling, OpenAPI specs, well-understood patterns
 
-- **gRPC Wins:**
-  - **Performance:** Smaller payloads, strictly typed, faster parsing.
-  - **Internal Traffic:** Great for Service-to-Service chatter where you control both sides.
-- **REST Wins:**
-  - **Ubiquity:** Every browser, curl, and language speaks JSON/HTTP.
-  - **Debugging:** You can read the payload on the wire.
+### GraphQL
 
-### 🛑 When NOT to use gRPC
+- **Format:** JSON over HTTP (typically POST to single endpoint)
+- **Paradigm:** Query language—client specifies exactly what data it needs
+- **Strengths:**
+  - **No over-fetching:** Client requests only the fields it needs
+  - **No under-fetching:** Get related data in one request (no waterfall)
+  - **Typed schema:** Self-documenting, client code generation
+  - **Flexibility:** Multiple clients (web, mobile) with different data needs
 
-- **Public APIs:** Browsers do not support gRPC natively (requires gRPC-Web proxy). Force external users to update their SDKs? Hard sell. Use REST/GraphQL for public facing APIs.
+**Example:**
+
+```graphql
+# One request gets user + their orders + order items
+query {
+  user(id: "123") {
+    name
+    email
+    orders(limit: 5) {
+      id
+      total
+      items { productName, quantity }
+    }
+  }
+}
+```
+
+### gRPC (Google Remote Procedure Call)
+
+- **Format:** Binary (Protobuf) over HTTP/2
+- **Paradigm:** Strictly typed RPC contracts
+- **Strengths:**
+  - **Performance:** Smaller payloads, faster parsing than JSON
+  - **Streaming:** Bi-directional streaming built-in
+  - **Code generation:** Strong typing in multiple languages
+  - **Internal traffic:** Great for Service-to-Service communication
+
+### The Tradeoff Matrix
+
+| Factor | REST | GraphQL | gRPC |
+|--------|------|---------|------|
+| **Learning curve** | Low | Medium | Medium-High |
+| **Browser support** | Native | Native | Requires proxy |
+| **Caching** | Built-in (HTTP) | Complex | Manual |
+| **Debugging** | Easy (readable) | Medium | Hard (binary) |
+| **Payload size** | Medium | Optimized | Smallest |
+| **Schema evolution** | Versioned URLs | Single evolving schema | Proto versioning |
+| **Real-time** | Polling/SSE | Subscriptions | Streaming |
+
+### When to Use Each
+
+**Choose REST when:**
+- Building public APIs for external developers
+- Simple CRUD operations
+- You want HTTP caching (CDN, browser cache)
+- Team is new to API development
+
+**Choose GraphQL when:**
+- Multiple clients with different data needs (web vs mobile)
+- Complex, nested data structures
+- Frontend team needs flexibility without backend changes
+- Avoiding over-fetching is critical (mobile bandwidth)
+
+**Choose gRPC when:**
+- Internal service-to-service communication
+- Performance is critical (high-throughput microservices)
+- You need streaming (real-time data feeds)
+- You control both client and server
+
+### Hybrid Approaches
+
+Most large systems use multiple protocols:
+
+```text
+┌─────────────┐     REST/GraphQL     ┌─────────────┐
+│   Browser   │ ◄──────────────────► │ API Gateway │
+│   Mobile    │                      └──────┬──────┘
+└─────────────┘                             │
+                                            │ gRPC
+                    ┌───────────────────────┼───────────────────────┐
+                    │                       │                       │
+              ┌─────▼─────┐           ┌─────▼─────┐           ┌─────▼─────┐
+              │ Service A │◄─────────►│ Service B │◄─────────►│ Service C │
+              └───────────┘   gRPC    └───────────┘   gRPC    └───────────┘
+```
+
+**Common pattern:** REST or GraphQL for public APIs, gRPC for internal service mesh.
+
+### 🛑 Common Pitfalls
+
+**REST:**
+- Under-fetching: Client calls 5 endpoints for one screen
+- Rigid versioning: `/v1/`, `/v2/` proliferation
+- N+1 problem: Fetching list then each item's details
+
+**GraphQL:**
+- N+1 query problem: Naive resolvers hit DB per item (use DataLoader)
+- Complexity attacks: Malicious deeply-nested queries (implement depth limits)
+- Caching difficulty: POST requests don't cache (use persisted queries)
+- Security: Disable introspection in production
+
+**gRPC:**
+- Browser incompatibility: Requires gRPC-Web proxy
+- Debugging difficulty: Binary payloads need special tooling
+- Schema migration: Breaking proto changes affect all clients
 
 ---
 
