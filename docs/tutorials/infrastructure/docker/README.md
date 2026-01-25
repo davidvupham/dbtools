@@ -1,6 +1,6 @@
 # Mastering Docker (Multi‑Chapter Tutorial)
 
-A comprehensive, beginner-to-advanced tutorial that takes you from Docker fundamentals to production-ready deployments. This series is structured like a book with 21 chapters covering everything from basic concepts to enterprise registry management with JFrog Artifactory.
+A comprehensive, beginner-to-advanced tutorial that takes you from Docker fundamentals to production-ready deployments. This series is structured like a book with 22 chapters covering everything from basic concepts to self-hosted applications and enterprise registry management.
 
 **New to Docker?** Start with our [**Quickstart Guide**](./quickstart.md) (15 minutes) to get hands-on immediately!
 
@@ -45,6 +45,7 @@ All content is original and tailored to practical, runnable examples in this rep
   - Chapter 19: Ecosystem Tools (distributing CLI tools, registries, scanners, rootless)
   - Chapter 20: Beyond the Basics (performance, content trust, SBOM, next steps)
   - Chapter 21: JFrog Artifactory as Docker Registry (enterprise registry setup, advanced features)
+  - Chapter 22: Self-Hosted Applications (Nextcloud, Jellyfin, Vaultwarden, Pi-hole, homelab)
 
 ---
 
@@ -75,6 +76,7 @@ All content is original and tailored to practical, runnable examples in this rep
 - [Chapter 20: Beyond the Basics](./chapter20_beyond_the_basics.md) — BuildKit cache export/import and mounts, advanced multi‑stage patterns, reproducible builds, provenance/attestations, and signing (cosign/OCI artifacts). See also Buildx example:
   - Examples (Buildx multi‑arch demo): `docs/tutorials/docker/examples/buildx/`
 - [Chapter 21: JFrog Artifactory as Docker Registry](./chapter21_jfrog_artifactory.md) — Enterprise Docker registry with JFrog Artifactory: setup, repository types (local/remote/virtual), authentication, vulnerability scanning with Xray, CI/CD integration, and best practices.
+- [Chapter 22: Self-Hosted Applications](./chapter22_self_hosted_apps.md) — Build your own homelab with Docker: Nextcloud (cloud storage), Jellyfin (media server), Vaultwarden (passwords), Pi-hole (ad blocking), Portainer (management), Paperless-ngx (documents), security best practices, and backup strategies.
 
 ---
 
@@ -100,6 +102,7 @@ All content is original and tailored to practical, runnable examples in this rep
 - **Building Images?** → Chapters 4-6
 - **Multi-container Apps?** → Chapters 11-12
 - **Production/CI/CD?** → Chapters 15-17
+- **Self-Hosted Homelab?** → Chapter 22 (Nextcloud, Jellyfin, Vaultwarden)
 - **Enterprise Registry?** → Chapter 21 (JFrog Artifactory)
 
 ### Recommended Schedule
@@ -107,7 +110,7 @@ All content is original and tailored to practical, runnable examples in this rep
 - **Week 1**: Quickstart + Chapters 1-6 (Foundations and building images)
 - **Week 2**: Chapters 7-10 (Containers, networking, data persistence)
 - **Week 3**: Chapters 11-14 (Compose and orchestration)
-- **Week 4**: Chapters 15-21 (Production, security, enterprise)
+- **Week 4**: Chapters 15-22 (Production, security, self-hosted, enterprise)
 
 ### Examples and Practice
 
@@ -140,5 +143,6 @@ All content is original and tailored to practical, runnable examples in this rep
 - Chapter 18: Troubleshooting & Debugging → `chapter18_troubleshooting.md`
 - Chapter 19: Ecosystem Tools → `chapter19_ecosystem_tools.md`
 - [Chapter 20: Beyond the Basics](chapter20_beyond_the_basics.md)
-- [Best Practices Guide](best-practices.md) [NEW!]
-- [JFrog Artifactory Registry](chapter21_jfrog_artifactory.md)
+- [Chapter 21: JFrog Artifactory Registry](chapter21_jfrog_artifactory.md)
+- [Chapter 22: Self-Hosted Applications](chapter22_self_hosted_apps.md)
+- [Best Practices Guide](best-practices.md)

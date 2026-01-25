@@ -966,4 +966,6 @@ You've learned:
 
 **Previous Chapter**: [Chapter 20: Beyond the Basics](./chapter20_beyond_the_basics.md)
 
+**Next Chapter**: [Chapter 22: Self-Hosted Applications](./chapter22_self_hosted_apps.md)
+
 **Back to**: [Tutorial Index](./README.md)
