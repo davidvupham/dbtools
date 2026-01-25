@@ -27,6 +27,7 @@ By the end of this chapter, you will be able to:
 - [Role prompting](#role-prompting)
 - [Combining techniques](#combining-techniques)
 - [Choosing the right technique](#choosing-the-right-technique)
+- [Claude-specific considerations](#claude-specific-considerations)
 - [Summary](#summary)
 - [Next steps](#next-steps)
 
@@ -332,6 +333,63 @@ Q: Is the task simple and common?
 | Domain-specific tasks | Role + few-shot |
 | Creative generation | Role with persona traits |
 | Complex multi-step | Role + chain-of-thought (next chapter) |
+
+[↑ Back to Table of Contents](#table-of-contents)
+
+## Claude-specific considerations
+
+When working with Claude 4.x models (Sonnet 4.5, Haiku 4.5, Opus 4.5), keep these differences in mind:
+
+### Claude 4.x follows instructions literally
+
+Previous Claude models would infer your intent and expand on vague requests. Claude 4.x takes instructions literally and does exactly what you ask for.
+
+**Implication:** Be explicit about what you want. If you want Claude to "go above and beyond," say so.
+
+```text
+# Less effective with Claude 4.x
+Create a monitoring dashboard.
+
+# More effective
+Create a monitoring dashboard. Include as many relevant metrics and
+visualizations as possible. Go beyond the basics to create a fully-featured
+implementation.
+```
+
+### Provide context for better results
+
+Explaining *why* you want something helps Claude understand your goals:
+
+```text
+# Less effective
+NEVER use ellipses
+
+# More effective
+Your response will be read aloud by a text-to-speech engine, so never use
+ellipses since the text-to-speech engine won't know how to pronounce them.
+```
+
+### Permission to express uncertainty
+
+Claude performs better when explicitly allowed to acknowledge uncertainty:
+
+```text
+If you don't have enough information to answer accurately, say
+"I don't have sufficient information about that" rather than guessing.
+```
+
+### Thinking word sensitivity
+
+When Extended Thinking is disabled, Claude Opus 4.5 is sensitive to the word "think" and its variants. Consider alternatives:
+
+| Instead of | Use |
+|:-----------|:----|
+| "Think about" | "Consider" |
+| "I think we should" | "I believe we should" |
+| "Think through" | "Evaluate" |
+
+> [!TIP]
+> For comprehensive Claude 4.x guidance, see the [Claude Prompting Best Practices](../../../reference/claude-prompting-best-practices.md) reference.
 
 [↑ Back to Table of Contents](#table-of-contents)
 

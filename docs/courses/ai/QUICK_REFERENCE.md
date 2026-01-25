@@ -83,6 +83,36 @@ If you don't know the answer or the information isn't in the provided
 context, say "I don't have information about that" rather than guessing.
 ```
 
+### Claude 4.x specific guidance
+
+| Behavior | Previous Claude | Claude 4.x |
+|:---------|:----------------|:-----------|
+| **Instructions** | Inferred intent | Takes literally |
+| **Verbosity** | More detailed | More concise |
+| **Tool usage** | Automatic | Needs explicit direction |
+| **Code exploration** | Proactive | More conservative |
+
+**Key tips for Claude 4.x:**
+
+```text
+# Be explicit about going beyond basics
+Create a dashboard. Include as many relevant features as possible.
+Go beyond the basics to create a fully-featured implementation.
+
+# Provide context for better results
+Your response will be read by a text-to-speech engine, so avoid ellipses.
+
+# For action-oriented behavior
+<default_to_action>
+By default, implement changes rather than only suggesting them.
+</default_to_action>
+
+# For conservative behavior
+<do_not_act_before_instructions>
+Do not change files unless clearly instructed to make changes.
+</do_not_act_before_instructions>
+```
+
 ---
 
 ## Model Context Protocol (MCP)
@@ -334,8 +364,10 @@ except Exception as e:
 
 ## Additional resources
 
+- [Claude Prompting Best Practices](../../reference/claude-prompting-best-practices.md) - Claude 4.x specific guidance
 - [MCP Documentation](https://modelcontextprotocol.io/)
 - [Anthropic MCP Course](https://anthropic.skilljar.com/introduction-to-model-context-protocol)
+- [Claude Platform Docs](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/overview)
 - [Prompt Engineering Guide](https://www.promptingguide.ai/)
 - [Ollama Documentation](https://ollama.com/docs)
 - [local-ai-hub Project](../../projects/local-ai-hub/README.md)
