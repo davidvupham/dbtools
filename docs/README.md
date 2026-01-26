@@ -1,9 +1,9 @@
-# Project Documentation Index
+# Project Documentation
 
 **🔗 [← Back to Workspace Root](../README.md)**
 
-> **Document Version:** 1.0
-> **Last Updated:** January 13, 2026
+> **Document Version:** 1.1
+> **Last Updated:** January 26, 2026
 > **Maintainers:** Application Infrastructure Team
 > **Status:** Production
 
@@ -20,12 +20,14 @@ This directory contains all project documentation organized by category.
 - [Documentation Organization](#documentation-organization)
   - [**Browse by Topic**](#browse-by-topic)
   - [tutorials/ - Learning-Oriented Guides](#tutorials---learning-oriented-guides)
-  - [projects/ - Project Documentation](#projects---project-documentation)
   - [how-to/ - How-to Guides](#how-to---how-to-guides)
   - [explanation/ - Understanding-Oriented Documentation](#explanation---understanding-oriented-documentation)
+  - [reference/ - Technical Reference](#reference---technical-reference)
+  - [projects/ - Project Documentation](#projects---project-documentation)
+  - [decisions/ - Architecture Decisions](#decisions---architecture-decisions)
+  - [design/ - Design Docs](#design---design-docs)
   - [runbooks/ - Operational Runbooks](#runbooks---operational-runbooks)
   - [best-practices/ - Standards & Best Practices](#best-practices---standards--best-practices)
-  - [reference/ - Technical Reference](#reference---technical-reference)
   - [development/ - Development Documentation](#development---development-documentation)
 
 - [Component Documentation](#component-documentation)
@@ -47,7 +49,7 @@ Find documentation across all categories (Tutorials, How-to, Reference) for spec
 | **Terraform** | [Tutorials](tutorials/terraform/README.md) | |
 | **Ansible** | [Tutorials](tutorials/ansible/README.md) | |
 | **Liquibase** | [📍 **Start Here**](explanation/liquibase/README.md) | [Concepts](explanation/liquibase/liquibase-concepts.md) • [How-to](how-to/liquibase/liquibase-operations-guide.md) • [Ref](reference/liquibase/liquibase-reference.md) |
-| **GDS Vault** | [Tutorials](tutorials/gds-vault/README.md) | [How-to](how-to/vault/README.md) |
+| **Vault** | [📍 **Start Here**](explanation/vault/README.md) [Tutorials](tutorials/gds-vault/README.md) | [How-to](how-to/vault/README.md) |
 | **Kafka** | [Tutorials](tutorials/kafka/README.md) | |
 | **Observability** | [Course](courses/observability/README.md) | |
 | **System Design** | [Tutorials](tutorials/system-design/README.md) | |
@@ -75,6 +77,8 @@ Other categories in this repository include:
 
 - **[Courses](courses/python/README.md)**: Extended curriculums that combine multiple tutorials and projects.
 - **[Projects](projects/README.md)**: Real-world implementation documentation.
+- **[Decisions](decisions/README.md)**: Architecture Decision Records (ADRs).
+- **[Design](design/)**: High-Level Design (HLD) documents.
 - **[Runbooks](runbooks/README.md)**: Operational procedures.
 
 ### [courses/](courses/python/README.md) - Curriculums
@@ -95,13 +99,6 @@ Step-by-step tutorials for learning various technologies:
   - [**UV Package Manager**](tutorials/python/uv/README.md) - **Start Here for UV**
 - [**Kafka**](tutorials/kafka/README.md)
 
-### [projects/](projects/README.md) - Project Documentation
-
-Documentation for large-scale projects:
-
-- [**Active Directory Password Rotation**](projects/ad-password-rotation/README.md)
-- [**Database Patching & Upgrade**](projects/db-patching-upgrade/README.md)
-
 ### [how-to/](how-to/README.md) - How-to Guides
 
 Task-oriented guides for solving specific problems:
@@ -119,6 +116,30 @@ Background, context, and architecture:
 - [**Design Records**](explanation/design-records/README.md)
 - [**Podman Overview**](explanation/podman/README.md)
 - [**Secrets Management Comparison**](explanation/secrets-management-comparison.md)
+
+### [reference/](reference/README.md) - Technical Reference
+
+Technical specifications and reference material:
+
+- [**Linux**](reference/linux/) - Linux tool references.
+
+### [projects/](projects/README.md) - Project Documentation
+
+Documentation for large-scale projects:
+
+- [**Active Directory Password Rotation**](projects/ad-password-rotation/README.md)
+- [**Database Patching & Upgrade**](projects/db-patching-upgrade/README.md)
+
+### [decisions/](decisions/README.md) - Architecture Decisions
+
+Architecture Decision Records (ADRs) and significant technical choices.
+
+### [design/](design/) - Design Docs
+
+High Level Design (HLD) specifications and technical specs.
+
+- **Database Restore Workflow**
+- **Github Actions Spec**
 
 ### [runbooks/](runbooks/README.md) - Operational Runbooks
 
@@ -142,12 +163,6 @@ Standard templates for project documentation:
 - [**Project Charter**](templates/project-charter.md)
 - [**Decision Log**](templates/decision-log.md)
 - [**Status Reports**](templates/status-report.md)
-
-### [reference/](reference/README.md) - Technical Reference
-
-Technical specifications and reference material:
-
-- [**Linux**](reference/linux/) - Linux tool references.
 
 ### [development/](development/README.md) - Development Documentation
 
@@ -174,3 +189,4 @@ For component-specific documentation, see:
 ## Quick Links
 
 - [Workspace Overview](../README.md)
+

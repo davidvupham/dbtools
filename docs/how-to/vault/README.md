@@ -10,12 +10,12 @@ This directory contains task-oriented how-to guides for HashiCorp Vault and the 
 
 | Guide | Purpose |
 |:---|:---|
-| [Operations Guide](./vault-operations-guide.md) | Day-to-day usage of gds_vault in applications |
+| [Developing with gds_vault](./developing-with-gds-vault.md) | Day-to-day usage of gds_vault in applications |
 | [Rotate AD Passwords](./rotate-ad-passwords.md) | Configure Vault to manage Active Directory passwords |
 
-## Operations Guide
+## Developing with gds_vault
 
-**[vault-operations-guide.md](./vault-operations-guide.md)**
+**[developing-with-gds-vault.md](./developing-with-gds-vault.md)**
 
 Comprehensive guide for using Vault in your applications:
 
@@ -50,7 +50,7 @@ Configure HashiCorp Vault's Active Directory Secrets Engine to:
 
 ### Reference (Lookup)
 
-- [Vault Reference](../../reference/vault/vault-reference.md) - API reference, troubleshooting, glossary
+- [Vault Reference Index](../../reference/vault/README.md) - API reference, troubleshooting, glossary
 
 ### Tutorials (Learning)
 

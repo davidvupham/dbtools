@@ -24,17 +24,18 @@ This directory contains comprehensive documentation for HashiCorp Vault secrets 
    - High availability patterns
    - Our deployment standards
 
-3. **[Vault Operations Guide](../../how-to/vault/vault-operations-guide.md)**
+3. **[Developing with gds_vault](../../how-to/vault/developing-with-gds-vault.md)**
    - Authentication patterns
    - Retrieving secrets
    - Caching strategies
    - Best practices for applications
 
-4. **[Vault Reference](../../reference/vault/vault-reference.md)**
-   - gds_vault API reference
+4. **[Vault Reference](../../reference/vault/README.md)**
+   - **[gds_vault API](../../reference/vault/gds-vault-api.md)**
+   - **[Vault CLI](../../reference/vault/vault-cli.md)**
+   - **[Troubleshooting](../../reference/vault/troubleshooting.md)**
    - Environment variables
    - Configuration options
-   - Troubleshooting
    - Glossary
 
 ## Document Map
@@ -43,8 +44,8 @@ This directory contains comprehensive documentation for HashiCorp Vault secrets 
 
 | Role | Read These First |
 |:---|:---|
-| **New Vault User** | Concepts → Architecture → Operations |
-| **Developer Using gds_vault** | Concepts → Operations → Reference |
+| **New Vault User** | Concepts → Architecture → Developing |
+| **Developer Using gds_vault** | Concepts → Developing → Reference API |
 | **DevOps/Platform Engineer** | Concepts → Architecture → Production Hardening |
 | **Security Engineer** | Concepts → Architecture → Audit & Monitoring |
 | **Troubleshooting Issues** | Reference (Troubleshooting section) |
@@ -55,10 +56,10 @@ This directory contains comprehensive documentation for HashiCorp Vault secrets 
 |:---|:---|:---|
 | I want to understand what Vault does | Concepts | [What is Vault?](./vault-concepts.md#what-is-hashicorp-vault) |
 | I want to understand core concepts | Concepts | [Core Concepts](./vault-concepts.md#core-concepts) |
-| I need to retrieve secrets in Python | Operations | [Using gds_vault](../../how-to/vault/vault-operations-guide.md#using-gds_vault) |
-| I need to authenticate my application | Operations | [Authentication Patterns](../../how-to/vault/vault-operations-guide.md#authentication-patterns) |
+| I need to retrieve secrets in Python | Developing | [Using gds_vault](../../how-to/vault/developing-with-gds-vault.md#using-gds_vault) |
+| I need to authenticate my application | Developing | [Authentication Patterns](../../how-to/vault/developing-with-gds-vault.md#authentication-patterns) |
 | I need to rotate AD passwords | How-To | [Rotate AD Passwords](../../how-to/vault/rotate-ad-passwords.md) |
-| I'm seeing an error | Reference | [Troubleshooting](../../reference/vault/vault-reference.md#troubleshooting) |
+| I'm seeing an error | Reference | [Troubleshooting](../../reference/vault/troubleshooting.md) |
 | I need to harden production Vault | Architecture | [Production Hardening](./vault-architecture.md#production-hardening) |
 
 ## Full Document List
@@ -106,9 +107,9 @@ This directory contains comprehensive documentation for HashiCorp Vault secrets 
 
 ---
 
-### 3. **Operations Guide** (Day-to-Day Work)
+### 3. **Developing with gds_vault** (Client Usage)
 
-[how-to/vault/vault-operations-guide.md](../../how-to/vault/vault-operations-guide.md)
+[how-to/vault/developing-with-gds-vault.md](../../how-to/vault/developing-with-gds-vault.md)
 
 **What it covers:**
 - Using gds_vault Python package
@@ -130,7 +131,7 @@ This directory contains comprehensive documentation for HashiCorp Vault secrets 
 
 ### 4. **Reference Guide** (Lookup When Needed)
 
-[reference/vault/vault-reference.md](../../reference/vault/vault-reference.md)
+[reference/vault/README.md](../../reference/vault/README.md)
 
 **What it covers:**
 - gds_vault API reference
@@ -160,7 +161,7 @@ CONCEPTS GUIDE (Foundation)
     │        │
     │        └─→ Production Hardening & Audit Logging
     │
-    └─→ OPERATIONS GUIDE (Application Usage)
+    └─→ DEVELOPING GUIDE (Application Usage)
              │
              └─→ REFERENCE GUIDE (Lookup & Troubleshooting)
 ```
@@ -190,7 +191,7 @@ See [docs/tutorials/gds-vault/](../../tutorials/gds-vault/README.md) for hands-o
 1. This README to find the right document
 2. The relevant document's table of contents
 3. Use Ctrl+F to search within the document
-4. Check the [Reference Guide - Troubleshooting](../../reference/vault/vault-reference.md#troubleshooting)
+4. Check the [Troubleshooting Guide](../../reference/vault/troubleshooting.md)
 
 **If you still need help:**
 - Check the [Official HashiCorp Vault Documentation](https://developer.hashicorp.com/vault/docs)
@@ -200,7 +201,7 @@ See [docs/tutorials/gds-vault/](../../tutorials/gds-vault/README.md) for hands-o
 
 - **Concepts Guide:** Updated when fundamental Vault changes
 - **Architecture Guide:** Updated when deployment standards change
-- **Operations Guide:** Updated with new patterns and best practices
+- **Developing with gds_vault:** Updated with new patterns and best practices
 - **Reference Guide:** Updated with each gds_vault release
 
 Last update: January 15, 2026

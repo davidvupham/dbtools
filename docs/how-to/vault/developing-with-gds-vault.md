@@ -11,7 +11,7 @@
 ![Document Status](https://img.shields.io/badge/Status-Production-green)
 
 > [!IMPORTANT]
-> **Related Docs:** [Concepts](../../explanation/vault/vault-concepts.md) | [Architecture](../../explanation/vault/vault-architecture.md) | [Reference](../../reference/vault/vault-reference.md)
+> **Related Docs:** [Concepts](../../explanation/vault/vault-concepts.md) | [Architecture](../../explanation/vault/vault-architecture.md) | [Reference](../../reference/vault/README.md)
 
 ## Table of Contents
 
@@ -801,6 +801,6 @@ with VaultClient() as client:
 
 - **[Vault Concepts Guide](../../explanation/vault/vault-concepts.md)** - Core concepts and fundamentals
 - **[Vault Architecture Guide](../../explanation/vault/vault-architecture.md)** - Deployment and security
-- **[Vault Reference](../../reference/vault/vault-reference.md)** - API reference and troubleshooting
+- **[Vault Reference Index](../../reference/vault/README.md)** - API reference, troubleshooting, glossary
 - **[Rotate AD Passwords](./rotate-ad-passwords.md)** - AD password rotation how-to
 - **[gds_vault Developer's Guide](../../../python/gds_vault/docs/DEVELOPERS_GUIDE.md)** - Complete package documentation

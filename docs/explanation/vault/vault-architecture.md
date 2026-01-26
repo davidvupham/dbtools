@@ -11,7 +11,7 @@
 ![Document Status](https://img.shields.io/badge/Status-Production-green)
 
 > [!IMPORTANT]
-> **Related Docs:** [Concepts](./vault-concepts.md) | [Operations](../../how-to/vault/vault-operations-guide.md) | [Reference](../../reference/vault/vault-reference.md)
+> **Related Docs:** [Concepts](./vault-concepts.md) | [Developing](../../how-to/vault/developing-with-gds-vault.md) | [Reference](../../reference/vault/README.md)
 
 ## Table of Contents
 
@@ -657,15 +657,15 @@ from gds_vault.cache import RotationAwareCache
 client = VaultClient(cache=RotationAwareCache(buffer_minutes=10))
 ```
 
-See [Vault Operations Guide](../../how-to/vault/vault-operations-guide.md) for detailed usage.
+See [Developing with gds_vault](../../how-to/vault/developing-with-gds-vault.md) for detailed usage.
 
 [↑ Back to Table of Contents](#table-of-contents)
 
 ## Related Documentation
 
 - **[Vault Concepts Guide](./vault-concepts.md)** - Core concepts and fundamentals
-- **[Vault Operations Guide](../../how-to/vault/vault-operations-guide.md)** - Using Vault in applications
-- **[Vault Reference](../../reference/vault/vault-reference.md)** - API reference and troubleshooting
+- **[Developing with gds_vault](../../how-to/vault/developing-with-gds-vault.md)** - Using Vault in applications
+- **[Vault Reference Index](../../reference/vault/README.md)** - API reference and troubleshooting
 
 ## Sources and Further Reading
 

@@ -11,7 +11,7 @@
 ![Document Status](https://img.shields.io/badge/Status-Production-green)
 
 > [!IMPORTANT]
-> **Related Docs:** [Architecture](./vault-architecture.md) | [Operations](../../how-to/vault/vault-operations-guide.md) | [Reference](../../reference/vault/vault-reference.md) | [gds_vault Guide](../../../python/gds_vault/docs/DEVELOPERS_GUIDE.md)
+> **Related Docs:** [Architecture](./vault-architecture.md) | [Developing](../../how-to/vault/developing-with-gds-vault.md) | [Reference](../../reference/vault/README.md) | [gds_vault Guide](../../../python/gds_vault/docs/DEVELOPERS_GUIDE.md)
 
 ## Table of Contents
 
@@ -568,7 +568,7 @@ vault token create -policy=myapp-policy -period=24h
 | **TTL-based** | Balance between freshness and performance |
 | **Rotation-aware** | Secrets have known rotation schedules |
 
-See [Operations Guide - Caching](../../how-to/vault/vault-operations-guide.md#caching-strategies) for implementation details.
+See [Developing with gds_vault - Caching](../../how-to/vault/developing-with-gds-vault.md#caching-strategies) for implementation details.
 
 [↑ Back to Table of Contents](#table-of-contents)
 
@@ -606,8 +606,8 @@ See [Operations Guide - Caching](../../how-to/vault/vault-operations-guide.md#ca
 Now that you understand the core concepts, proceed to:
 
 1. **[Vault Architecture Guide](./vault-architecture.md)** - Learn about deployment and security
-2. **[Vault Operations Guide](../../how-to/vault/vault-operations-guide.md)** - Hands-on usage with gds_vault
-3. **[Vault Reference](../../reference/vault/vault-reference.md)** - API reference and troubleshooting
+2. **[Developing with gds_vault](../../how-to/vault/developing-with-gds-vault.md)** - Hands-on usage with gds_vault
+3. **[Vault Reference Index](../../reference/vault/README.md)** - API reference and troubleshooting
 
 **Quick Start with gds_vault:**
 
@@ -625,8 +625,8 @@ with VaultClient() as client:
 ## Related Documentation
 
 - **[Vault Architecture Guide](./vault-architecture.md)** - Deployment, security, and production hardening
-- **[Vault Operations Guide](../../how-to/vault/vault-operations-guide.md)** - Using gds_vault in applications
-- **[Vault Reference](../../reference/vault/vault-reference.md)** - API reference, troubleshooting, glossary
+- **[Developing with gds_vault](../../how-to/vault/developing-with-gds-vault.md)** - Using gds_vault in applications
+- **[Vault Reference Index](../../reference/vault/README.md)** - API reference, troubleshooting, glossary
 
 ## Sources and Further Reading
 
