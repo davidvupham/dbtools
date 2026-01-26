@@ -15,6 +15,15 @@
 
 This directory contains runbooks for operational procedures that support the database tooling ecosystem. Each runbook is version-controlled, reviewed, and intended to be executable by on-call engineers, infrastructure administrators, and database reliability engineers.
 
+## Runbook categories
+
+| Category | Description | Path |
+|:---|:---|:---|
+| **SQL Server** | SQL Server troubleshooting, HA/DR, and maintenance | [mssql/](./mssql/README.md) |
+| **Alerts** | Alert response procedures by platform | [alerts/](./alerts/README.md) |
+| **gMSA** | Group Managed Service Account migrations | [gmsa/](./gmsa/README.md) |
+| **Podman** | Container runtime maintenance | [podman/](./podman/maintenance.md) |
+
 ## Usage Guidelines
 
 ### Audience
