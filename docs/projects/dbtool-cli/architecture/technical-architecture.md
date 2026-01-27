@@ -61,9 +61,11 @@ for actual database connectivity. -->
 ```mermaid
 graph TD
     User[Engineer / DBRE] --> CLI[dbtool CLI (Typer)]
+    CLI --> VaultCmd[Vault Wrapper]
 
     subgraph "Authentication Layer"
         CLI --> VaultHelper[Vault Handler]
+        VaultCmd --> VaultHelper
         VaultHelper -->|Kerberos/AD| Vault[HashiCorp Vault]
         Vault -->|Lease Credentials| VaultHelper
     end
@@ -140,6 +142,11 @@ vault_namespace = "db-ops"
 [profile.prod]
 vault_url = "https://vault.example.com"
 vault_namespace = "db-ops-prod"
+
+[vault.aliases]
+# Format: alias = "full/path/to/secret"
+logins = "secret/data/teams/gds/common/logins"
+certs  = "secret/data/teams/gds/common/certs"
 ```
 
 The troubleshooting module uses a **Strategy Pattern**.

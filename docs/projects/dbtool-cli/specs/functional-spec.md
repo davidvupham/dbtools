@@ -14,6 +14,8 @@
 
 - [Overview](#1-overview)
 - [User stories](#2-user-stories)
+    - [Vault Wrapper](#vault-wrapper-new)
+- [Interfaces & commands](#3-interfaces--commands)
 - [Interfaces & commands](#3-interfaces--commands)
 - [Non-functional requirements](#4-non-functional-requirements-nfrs)
 - [Security & access control](#5-security--access-control)
@@ -97,6 +99,28 @@
 > I want to run `dbtool connect --target <db>`,
 > So that I am dropped into a native shell (`psql`, `sqlcmd`) with temporary credentials already injected.
 
+### Vault Wrapper (New)
+
+**US-401: List secrets via Alias**
+> As a Developer,
+> I want to run `dbtool vault list logins`,
+> So that I can explore keys without typing `secret/data/teams/gds/common/logins`.
+
+**US-402: Read secret values**
+> As a Developer,
+> I want to run `dbtool vault get logins svc_account_password`,
+> So that I can get just the password string for my local `.env` file, without parsing JSON.
+
+**US-403: Write secrets safely**
+> As a Developer,
+> I want to run `dbtool vault put logins new_service_user=s3cr3t`,
+> So that I can update credentials without worrying about namespace flags.
+
+**US-404: Delete secrets safely**
+> As a Developer,
+> I want to run `dbtool vault delete logins`,
+> So that I can remove old secrets, but ONLY after explicitly confirming a "Are you sure?" prompt.
+
 [↑ Back to Table of Contents](#table-of-contents)
 
 ## 3. Interfaces & commands
@@ -125,6 +149,12 @@ dbtool tf plan <project> <target>             # Wrapper for terraform plan (e.g.
 dbtool tf apply <project> <target>            # Wrapper for terraform apply
 dbtool lb update <project> <target>           # Wrapper for liquibase update (Docker)
 dbtool lb rollback <project> <target>         # Wrapper for liquibase rollback
+
+# Vault Wrapper
+dbtool vault list [path|alias]                # List keys
+dbtool vault get <path|alias> [key]           # Read value
+dbtool vault put <path|alias> <k=v>           # Write value
+dbtool vault delete <path|alias>              # Delete (Interactive)
 ```
 
 [↑ Back to Table of Contents](#table-of-contents)

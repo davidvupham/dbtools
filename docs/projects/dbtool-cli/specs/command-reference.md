@@ -30,6 +30,7 @@ This document lists all approved commands, subcommands, and arguments for the `d
 - [Liquibase](#6-liquibase-lb)
 - [Configuration](#7-configuration-config)
 - [System](#8-system-sys)
+- [Vault](#9-vault-wrapper-vault)
 
 ## 1. Triage & health (`check`)
 
@@ -118,5 +119,22 @@ This document lists all approved commands, subcommands, and arguments for the `d
 |---------|-----------|-------------|-------|
 | `upgrade` | - | Self-updates the CLI to the latest version | - |
 | `version` | - | Prints version info | - |
+
+[↑ Back to Table of Contents](#table-of-contents)
+
+## 9. Vault Wrapper (`vault`)
+
+A safe, simplified wrapper around the native Vault CLI.
+
+**Common Arguments**:
+- `--hard`: Perform permanent deletion (if backend supports it).
+- `--force`: Skip interactive confirmation prompts.
+
+| Command | Arguments | Description | Alias |
+|---------|-----------|-------------|-------|
+| `vault list` | `[path]` | List keys at path or alias (Default: base_path) | `vt ls` |
+| `vault get` | `<path> [key]` | Read secret (JSON default, or raw string if key provided) | `vt get` |
+| `vault put` | `<path> <k=v>...` | Write data to secret | `vt put` |
+| `vault delete` | `<path>` | **Interactive** deletion of secret | `vt rm` |
 
 [↑ Back to Table of Contents](#table-of-contents)
