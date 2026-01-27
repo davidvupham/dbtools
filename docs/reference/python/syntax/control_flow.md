@@ -44,7 +44,7 @@ while count < 5:
 
 *Added in Python 3.10*
 
-The `match` statement is similar to `switch` in other languages but more powerful (structural pattern matching).
+The `match` statement provides structural pattern matching - more powerful than a simple `switch`.
 
 ```python
 def http_error(status):
@@ -53,23 +53,11 @@ def http_error(status):
             return "Bad request"
         case 404:
             return "Not found"
-        case 418:
-            return "I'm a teapot"
         case _:
-            return "Something's wrong with the internet"
-
-# Deconstruct patterns
-point = (0, 10)
-match point:
-    case (0, 0):
-        print("Origin")
-    case (0, y):
-        print(f"Y-axis at {y}")
-    case (x, 0):
-        print(f"X-axis at {x}")
-    case (x, y):
-        print(f"Point at {x}, {y}")
+            return "Unknown error"
 ```
+
+See **[Pattern Matching Reference](./pattern-matching.md)** for guards, destructuring, mapping patterns, and best practices.
 
 ## Exception Handling (`try` / `except`)
 

@@ -4,7 +4,8 @@ This section provides encyclopedic lookups for Python syntax, standard library, 
 
 ## Core Language Syntax
 
-* **[Control Flow](./syntax/control_flow.md)**: `if`, `for`, `while`, `match`, `try/except`
+* **[Control Flow](./syntax/control_flow.md)**: `if`, `for`, `while`, `try/except`
+* **[Pattern Matching](./syntax/pattern-matching.md)**: `match`/`case` structural pattern matching (Python 3.10+)
 * **[Data Model](./syntax/datamodel.md)**: Objects, types, magic methods (`__init__`, `__str__`)
 * **Functions**: `def`, lambda, args/kwargs, decorators
 * **Classes**: Class definitions, inheritance, MRO, protocols
