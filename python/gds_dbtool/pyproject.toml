@@ -1,7 +1,7 @@
 [project]
 name = "gds-dbtool"
 version = "0.1.0"
-description = "Database reliability engineering CLI tool"
+description = "Unified Database CLI tool"
 readme = "README.md"
 authors = [{ name = "GDS Team" }]
 requires-python = ">=3.12"

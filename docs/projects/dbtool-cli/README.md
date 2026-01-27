@@ -10,7 +10,7 @@
 ![Status](https://img.shields.io/badge/Status-Draft-yellow)
 ![Phase](https://img.shields.io/badge/Phase-Initiation-blue)
 
-A unified CLI tool for Database Reliability Engineering (DBRE) that troubleshoots database alerts and performs operational tasks across a heterogeneous environment (Snowflake, SQL Server, MongoDB, PostgreSQL).
+A unified CLI tool for database operations that troubleshoots database alerts and performs operational tasks across a heterogeneous environment (Snowflake, SQL Server, MongoDB, PostgreSQL).
 
 ## Table of contents
 

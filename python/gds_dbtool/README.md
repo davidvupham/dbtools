@@ -1,6 +1,6 @@
 # gds-dbtool
 
-Unified CLI tool for Database Reliability Engineering (DBRE).
+Unified Database CLI tool.
 
 ## Overview
 

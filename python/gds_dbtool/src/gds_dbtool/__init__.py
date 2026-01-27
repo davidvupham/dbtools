@@ -1,4 +1,4 @@
-"""GDS DBTool - Database Reliability Engineering CLI."""
+"""DBTool - Unified Database CLI."""
 
 __version__ = "0.1.0"
 

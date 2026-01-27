@@ -69,7 +69,7 @@ def version_callback(value: bool) -> None:
 
 app = typer.Typer(
     name="dbtool",
-    help="Database Reliability Engineering CLI tool.",
+    help="Unified Database CLI tool.",
     no_args_is_help=True,
     add_completion=True,
     context_settings={"help_option_names": ["-h", "--help"]},
@@ -130,7 +130,7 @@ def main(
         ),
     ] = False,
 ) -> None:
-    """dbtool - The operational Swiss Army Knife for DBREs.
+    """dbtool - The operational Swiss Army Knife for database operations.
 
     A unified CLI tool for database troubleshooting, maintenance, and operations
     across Snowflake, SQL Server, MongoDB, and PostgreSQL.

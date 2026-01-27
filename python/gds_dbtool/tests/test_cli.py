@@ -19,13 +19,13 @@ class TestGlobalOptions:
         """Test that --help displays help text."""
         result = runner.invoke(app, ["--help"])
         assert result.exit_code == 0
-        assert "Database Reliability Engineering CLI tool" in result.output
+        assert "Unified Database CLI tool" in result.output
 
     def test_help_short_flag(self):
         """Test that -h displays help text."""
         result = runner.invoke(app, ["-h"])
         assert result.exit_code == 0
-        assert "Database Reliability Engineering CLI tool" in result.output
+        assert "Unified Database CLI tool" in result.output
 
     def test_version_flag(self):
         """Test that --version displays version."""

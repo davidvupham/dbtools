@@ -21,7 +21,7 @@
 
 ## 1. Overview
 
-`dbtool` is a unified command-line tool for the Database Reliability Engineering (DBRE) team. It simplifies database troubleshooting, maintenance execution, and ad-hoc querying by abstracting authentication (Vault/Kerberos) and platform differences (Windows/Linux) across Snowflake, SQL Server, MongoDB, and PostgreSQL.
+`dbtool` is a unified command-line tool for database operations. It simplifies database troubleshooting, maintenance execution, and ad-hoc querying by abstracting authentication (Vault/Kerberos) and platform differences (Windows/Linux) across Snowflake, SQL Server, MongoDB, and PostgreSQL.
 
 [↑ Back to Table of Contents](#table-of-contents)
 
