@@ -17,6 +17,7 @@ from rich.logging import RichHandler
 from . import __version__
 from .config import GlobalConfig, load_config
 from .constants import ExitCode
+from .logging import setup_file_logging
 
 
 # Global state shared across commands
@@ -142,6 +143,7 @@ def main(
 
     # Setup logging
     _setup_logging(state.debug)
+    setup_file_logging(state.debug)
 
     # Load configuration
     state.config = load_config()
@@ -164,12 +166,12 @@ def main(
 
 
 # Import and register subcommand modules
-from .commands import alert, check, liquibase, maint, playbook, shell, sql, terraform, vault  # noqa: E402
+from .commands import alert, check, inventory, liquibase, maint, playbook, shell, sql, terraform, vault  # noqa: E402
 from .commands import config as config_cmd  # noqa: E402
 
 app.add_typer(vault.app, name="vault", help="Vault secret management.")
 app.add_typer(config_cmd.app, name="config", help="Configuration management.")
-app.add_typer(check.app, name="check", help="Health checks and diagnostics.")
+app.add_typer(check.app, name="health", help="Health checks and diagnostics.")
 app.add_typer(alert.app, name="alert", help="Alert triage and analysis.")
 app.add_typer(sql.app, name="sql", help="Execute SQL queries.")
 app.add_typer(shell.app, name="shell", help="Interactive database shells.")
@@ -177,13 +179,15 @@ app.add_typer(maint.app, name="maint", help="Maintenance operations.")
 app.add_typer(playbook.app, name="playbook", help="Ansible playbook execution.")
 app.add_typer(terraform.app, name="tf", help="Terraform operations.")
 app.add_typer(liquibase.app, name="lb", help="Liquibase migrations.")
+app.add_typer(inventory.app, name="inventory", help="Database target inventory.")
 
 # Register command aliases
 app.add_typer(vault.app, name="vt", help="Alias for vault.", hidden=True)
 app.add_typer(config_cmd.app, name="cfg", help="Alias for config.", hidden=True)
-app.add_typer(check.app, name="ck", help="Alias for check.", hidden=True)
+app.add_typer(check.app, name="ck", help="Alias for health.", hidden=True)
 app.add_typer(shell.app, name="sh", help="Alias for shell.", hidden=True)
 app.add_typer(playbook.app, name="pb", help="Alias for playbook.", hidden=True)
+app.add_typer(inventory.app, name="inv", help="Alias for inventory.", hidden=True)
 
 
 def cli() -> None:

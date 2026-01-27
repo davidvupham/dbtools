@@ -11,6 +11,7 @@ import typer
 from rich.table import Table
 
 from ..config import get_config_path, load_config
+from ..constants import ExitCode
 
 app = typer.Typer(no_args_is_help=True)
 
@@ -92,7 +93,7 @@ def get_config(
     else:
         console.print(f"[red]Unknown configuration key: {key}[/red]")
         console.print(f"Available keys: {', '.join(key_map.keys())}")
-        raise typer.Exit(code=1)
+        raise typer.Exit(code=ExitCode.INVALID_INPUT)
 
 
 @app.command(name="set")
@@ -171,7 +172,7 @@ def use(
     if profile not in config.profile:
         console.print(f"[red]Profile '{profile}' not found.[/red]")
         console.print(f"Available profiles: {', '.join(config.profile.keys())}")
-        raise typer.Exit(code=1)
+        raise typer.Exit(code=ExitCode.RESOURCE_NOT_FOUND)
 
     # Update the global state
     from ..main import state

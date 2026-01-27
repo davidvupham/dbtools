@@ -156,7 +156,7 @@ def output(
         str | None,
         typer.Argument(help="Specific output name to retrieve."),
     ] = None,
-    format: Annotated[
+    output_format: Annotated[
         str,
         typer.Option("--format", "-f", help="Output format (table, json)."),
     ] = "table",
@@ -183,7 +183,7 @@ def output(
         else:
             console.print(f"[red]Output '{name}' not found.[/red]")
             raise typer.Exit(code=ExitCode.RESOURCE_NOT_FOUND)
-    elif format == "json":
+    elif output_format == "json":
         console.print_json(data=outputs)
     else:
         from rich.table import Table

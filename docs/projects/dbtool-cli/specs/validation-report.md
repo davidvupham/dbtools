@@ -1,6 +1,6 @@
 # Validation report: dbtool-cli
 
-**[← Back to Project Index](../README.md)**
+**🔗 [← Back to Project Index](../README.md)**
 
 > **Document Version:** 2.1
 > **Last Updated:** January 26, 2026
@@ -22,8 +22,6 @@
   - [Command structure](#command-structure)
   - [Output and formatting](#output-and-formatting)
   - [Configuration management](#configuration-management)
-  - [Error handling](#error-handling)
-  - [Cross-platform compatibility](#cross-platform-compatibility)
 - [Comparison with major CLIs](#comparison-with-major-clis)
   - [AWS CLI patterns](#aws-cli-patterns)
   - [Azure CLI patterns](#azure-cli-patterns)
@@ -40,7 +38,7 @@ The `dbtool-cli` project is in the **Initiation/Design** phase. The documentatio
 
 | Category | Score | Notes |
 |:---|:---:|:---|
-| Documentation Standards | 92% | Structure is excellent; minor acronym key items missing (MTTR). |
+| Documentation Standards | 95% | Structure is excellent; all acronyms defined on first use. |
 | CLI Design | 95% | Enterprise features (dry-run, env vars) are well-designed. |
 | Best Practices Alignment | 90% | Aligned with AWS/Azure/gcloud patterns. |
 
@@ -70,7 +68,7 @@ Validation against `docs/best-practices/documentation-standards.md`.
 | Sentence-case headings | ✅ | Correctly implemented. |
 | Code blocks with language tags | ✅ | All code blocks properly tagged. |
 | Active voice, present tense | ✅ | Writing style is appropriate. |
-| Acronyms defined on first use | ⚠️ | `MTTR` used in specs but not defined. `DBRE` defined in README. |
+| Acronyms defined on first use | ✅ | `MTTR` defined in project-plan.md. `DBRE` defined in README. |
 | US English spelling | ✅ | Consistent. |
 
 ### Issues found
@@ -96,18 +94,13 @@ Comparison with [CLI Guidelines](https://clig.dev/) and major cloud CLIs.
 
 | Pattern | dbtool Design | Best Practice | Status |
 |:---|:---|:---|:---:|
-| Verb-noun consistency | Mixed | Consistent ordering (Noun-Verb preferred) | ⚠️ |
+| Verb-noun consistency | Noun-Verb | Consistent ordering (Noun-Verb preferred) | ✅ |
 | Short aliases | Yes (`ck`, `sh`, `lb`) | Standard short forms | ✅ |
 | Global flags | `--debug`, `--profile` | Standard set documented | ✅ |
 
 **Command structure analysis:**
 
-Most commands follow **Noun-Verb** (e.g., `dbtool vault list`, `dbtool playbook run`), aligning with AWS/Azure standards.
-Exceptions:
-- `dbtool check <target>` (Verb-Noun equivalent)
-- `dbtool sql <target>` (Ambiguous)
-
-This is acceptable but slightly inconsistent.
+All commands follow **Noun-Verb** (e.g., `dbtool vault list`, `dbtool playbook run`, `dbtool health check`, `dbtool sql exec`), aligning with AWS/Azure standards.
 
 ### Output and formatting
 
@@ -138,8 +131,8 @@ This is acceptable but slightly inconsistent.
 
 Reference: [AWS CLI Command Structure](https://docs.aws.amazon.com/cli/latest/userguide/cli-usage-commandstructure.html)
 
-AWS uses strict **Noun-Verb** (`aws s3 ls`).
-`dbtool` strictly follows Noun-Verb (`dbtool health check`, `dbtool alert triage`), matching AWS/Azure patterns perfectly.
+AWS uses strict **Noun-Verb** (`aws s3 cp`, `aws ec2 describe-instances`).
+`dbtool` follows the same Noun-Verb pattern (`dbtool health check`, `dbtool alert triage`), matching AWS/Azure conventions.
 
 ### Azure CLI patterns
 
@@ -151,7 +144,6 @@ Azure uses `az <group> <subgroup> <action>`.
 | Feature | Gap | Impact |
 |:---|:---|:---|
 | **Querying** | No JMESPath (`--query`) support | Low (JSON output allows external filtering via `jq`) |
-| **YAML Output** | No `--format yaml` | Low (JSON is sufficient for most automation) |
 | **Interactive Mode** | No `dbtool interactive` | Medium (Helpful for complex tools) |
 
 [↑ Back to Table of Contents](#table-of-contents)
@@ -171,7 +163,7 @@ Azure uses `az <group> <subgroup> <action>`.
 ## Recommendations
 
 1. **Implement Interactive Mode (Future)**: As the tool grows, an interactive shell (repl) would improve discoverability.
-3. **Maintain Noun-Verb Discipline**: For all *new* modules, enforce `dbtool <noun> <verb>` to align with AWS/Azure patterns.
+2. **Maintain Noun-Verb Discipline**: For all *new* modules, enforce `dbtool <noun> <verb>` to align with AWS/Azure patterns.
 
 [↑ Back to Table of Contents](#table-of-contents)
 

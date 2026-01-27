@@ -26,7 +26,7 @@ class TestConfigCommands:
     def test_config_get_unknown_key(self):
         """Test config get with unknown key."""
         result = runner.invoke(app, ["config", "get", "unknown_key"])
-        assert result.exit_code == 1
+        assert result.exit_code == 5  # ExitCode.INVALID_INPUT
         assert "Unknown" in result.output
 
     def test_config_profiles(self):
@@ -38,29 +38,29 @@ class TestConfigCommands:
     def test_config_use_invalid_profile(self):
         """Test config use with invalid profile."""
         result = runner.invoke(app, ["config", "use", "nonexistent"])
-        assert result.exit_code == 1
+        assert result.exit_code == 6  # ExitCode.RESOURCE_NOT_FOUND
         assert "not found" in result.output
 
 
-class TestCheckCommands:
-    """Tests for check command group."""
+class TestHealthCommands:
+    """Tests for health command group."""
 
-    def test_check_help(self):
-        """Test check --help output."""
-        result = runner.invoke(app, ["check", "--help"])
+    def test_health_help(self):
+        """Test health --help output."""
+        result = runner.invoke(app, ["health", "--help"])
         assert result.exit_code == 0
         # Verify subcommands are listed
         assert "check" in result.output or "ad" in result.output
 
-    def test_check_check_subcommand_help(self):
-        """Test check check --help output has --deep."""
-        result = runner.invoke(app, ["check", "check", "--help"])
+    def test_health_check_subcommand_help(self):
+        """Test health check --help output has --deep."""
+        result = runner.invoke(app, ["health", "check", "--help"])
         assert result.exit_code == 0
         assert "--deep" in result.output
 
-    def test_check_ad_subcommand_exists(self):
-        """Test that check ad subcommand exists."""
-        result = runner.invoke(app, ["check", "--help"])
+    def test_health_ad_subcommand_exists(self):
+        """Test that health ad subcommand exists."""
+        result = runner.invoke(app, ["health", "--help"])
         assert result.exit_code == 0
         assert "ad" in result.output
 
@@ -162,3 +162,31 @@ class TestLiquibaseCommands:
         assert result.exit_code == 0
         assert "--count" in result.output
         assert "--reason" in result.output
+
+
+class TestInventoryCommands:
+    """Tests for inventory command group."""
+
+    def test_inventory_help(self):
+        """Test inventory --help output."""
+        result = runner.invoke(app, ["inventory", "--help"])
+        assert result.exit_code == 0
+        assert "list" in result.output
+        assert "show" in result.output
+
+    def test_inventory_list(self):
+        """Test inventory list command."""
+        result = runner.invoke(app, ["inventory", "list"])
+        assert result.exit_code == 0
+        assert "Inventory" in result.output or "postgres" in result.output
+
+    def test_inventory_list_type_filter(self):
+        """Test inventory list with --type filter."""
+        result = runner.invoke(app, ["inventory", "list", "--type", "postgres"])
+        assert result.exit_code == 0
+
+    def test_inventory_show(self):
+        """Test inventory show command."""
+        result = runner.invoke(app, ["inventory", "show", "prod-postgres-01"])
+        assert result.exit_code == 0
+        assert "prod-postgres-01" in result.output

@@ -1,6 +1,6 @@
 # Troubleshooting guide: dbtool-cli
 
-**[← Back to Project Index](../README.md)**
+**🔗 [← Back to Project Index](../README.md)**
 
 > **Document Version:** 1.0
 > **Last Updated:** January 22, 2026
@@ -133,6 +133,11 @@ This guide helps you diagnose and resolve common issues when using `dbtool`.
 
 **Resolution**:
 
+> [!NOTE]
+> If you are using the self-contained binary distribution (PyInstaller/PEX), all drivers are bundled. This error indicates a packaging issue — contact the DBRE team for an updated build.
+
+If you are running from a source install, install the missing driver:
+
 | Database | Required Driver | Install Command |
 |----------|-----------------|-----------------|
 | PostgreSQL | psycopg | `pip install psycopg[binary]` |
@@ -181,7 +186,7 @@ This guide helps you diagnose and resolve common issues when using `dbtool`.
 If you cannot resolve your issue:
 
 1. **Check debug output**: Add `--debug` to your command for detailed logging.
-2. **Review logs**: Check `~/.local/share/dbtool/logs/` for detailed error information.
+2. **Review logs**: Check `~/.local/state/dbtool/logs/` for detailed error information.
 3. **Contact the team**: Reach out to the DBRE team with:
    - The exact command you ran
    - The full error message

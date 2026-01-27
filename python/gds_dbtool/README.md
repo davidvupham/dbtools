@@ -69,13 +69,15 @@ dbtool --profile prod vault list
 |---------|-------|-------------|
 | `vault` | `vt` | Vault secret management |
 | `config` | `cfg` | Configuration management |
-| `check` | `ck` | Health checks and diagnostics |
+| `health` | `ck` | Health checks and diagnostics |
+| `alert` | | Alert triage and analysis |
 | `sql` | | Execute SQL queries |
 | `shell` | `sh` | Interactive database shells |
 | `maint` | | Maintenance operations |
 | `playbook` | `pb` | Ansible playbook execution |
 | `tf` | | Terraform operations |
 | `lb` | | Liquibase migrations |
+| `inventory` | `inv` | Database target inventory |
 
 ## Vault Commands
 

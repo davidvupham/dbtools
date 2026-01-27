@@ -1,6 +1,6 @@
 # Project plan: dbtool-cli
 
-**[← Back to Project Index](../README.md)**
+**🔗 [← Back to Project Index](../README.md)**
 
 > **Document Version:** 1.0
 > **Last Updated:** January 22, 2026
@@ -39,7 +39,7 @@ The `dbtool-cli` project delivers the `dbtool` binary, a unified operational too
 
 ### In scope
 
-- Python-based CLI using `Typer` (or `Click`).
+- Python-based CLI using `Typer` (see [ADR-002](../management/decision-log.md#adr-002-python-typer--rich-framework)).
 - **Authentication**:
   - Vault integration with Active Directory backend.
   - Linux: Automatic Kerberos ticket usage (`requests-kerberos` / `gssapi`).

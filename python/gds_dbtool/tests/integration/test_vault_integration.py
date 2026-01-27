@@ -7,10 +7,10 @@
 # Demonstrate "Black Box Testing" of a CLI tool. We don't call internal functions;
 # instead, we invoke the CLI command just like a user would and check the output.
 
-from gds_dbtool.main import app
-from gds_dbtool.constants import ExitCode
-from typer.testing import CliRunner
 import pytest
+from gds_dbtool.constants import ExitCode
+from gds_dbtool.main import app
+from typer.testing import CliRunner
 
 # Initialize the test runner
 runner = CliRunner()
@@ -26,14 +26,14 @@ def mock_token_store(monkeypatch, tmp_path):
     # Create a temp file path
     test_token_file = tmp_path / ".dbtool_token"
     test_token_file.write_text("root") # Pre-seed with root token
-    
+
     # Patch the function in 'gds_dbtool.token_store' that returns the path
     monkeypatch.setattr("gds_dbtool.token_store.get_token_location", lambda: test_token_file)
-    
+
     # IMPORTANT: 'commands.vault' imports 'load_token' directly.
     # We must patch it where it is USED.
     monkeypatch.setattr("gds_dbtool.commands.vault.load_token", lambda: "root")
-    
+
     # Also patch the original source just in case other modules use it
     monkeypatch.setattr("gds_dbtool.token_store.load_token", lambda: "root")
 
@@ -43,7 +43,7 @@ def test_vault_lifecycle(vault_config):
     SCENARIO 1: Basic Lifecycle (Happy Path)
     Verifies that we can Perform CRUD (Create, Read, Update, Delete) operations.
     """
-    
+
     # 1. PUT (Create)
     # We write a secret to 'secret/data/test-lifecycle'
     # Note: In KV v2, the path is 'secret/data/...', but the CLI handles the 'data' part if configured.
@@ -79,14 +79,14 @@ def test_overwrite_protection(vault_config):
     SCENARIO 2: Overwrite Protection
     Verifies that the CLI prompts the user before overwriting existing data.
     """
-    
+
     # Setup: Create a secret first
     runner.invoke(app, ["vault", "put", "secret/data/overwrite-test", "safe=true", "--force"])
 
     # Attempt to overwrite WITHOUT --force
     # We pass input="n\n" to simulate typing 'n' (No) at the prompt
     result = runner.invoke(app, ["vault", "put", "secret/data/overwrite-test", "unsafe=true"], input="n\n")
-    
+
     # Expectation: The process aborted because we said No
     assert result.exit_code != 0
     assert "Overwrite/Update?" in result.output
@@ -103,7 +103,7 @@ def test_deletion_modes(vault_config):
     Verifies the difference between version deletion and metadata destruction.
     """
     path = "secret/data/delete-mode-test"
-    
+
     # Setup
     runner.invoke(app, ["vault", "put", path, "v=1", "--force"])
 
@@ -112,7 +112,7 @@ def test_deletion_modes(vault_config):
     assert result.exit_code == 0
     assert "Deleted" in result.output
     assert "recovered" in result.output
-    
+
     # Verify it's gone from GET
     result = runner.invoke(app, ["vault", "get", path])
     # Vault soft-delete behavior: the *latest version* is deleted, reading it might fail or return metadata stating deletion.
@@ -122,7 +122,7 @@ def test_deletion_modes(vault_config):
     # 2. Hard Delete (Destroy Metadata)
     # Re-create to have something to destroy
     runner.invoke(app, ["vault", "put", path, "v=2", "--force"])
-    
+
     result = runner.invoke(app, ["vault", "delete", path, "--hard", "--force"])
     assert result.exit_code == 0
     assert "Permanently destroyed" in result.output
@@ -133,7 +133,7 @@ def test_error_handling(vault_config):
     SCENARIO 4: Error Handling
     Verifies the tool behaves correctly when things go wrong.
     """
-    
+
     # 1. Non-existent path
     result = runner.invoke(app, ["vault", "get", "secret/data/non-existent-ghost"])
     assert result.exit_code == ExitCode.RESOURCE_NOT_FOUND
@@ -143,7 +143,7 @@ def test_error_handling(vault_config):
     # 'sys' is a system mount, usually read-only or restricted for KV operations
     result = runner.invoke(app, ["vault", "put", "sys/protected", "foo=bar", "--force"])
     # This might return Forbidden (403) or Invalid Path depending on Vault config
-    assert result.exit_code != 0 
+    assert result.exit_code != 0
 
 
 def test_output_formats(vault_config):

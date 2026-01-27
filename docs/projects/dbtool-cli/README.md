@@ -1,6 +1,6 @@
 # Project: dbtool-cli
 
-**[← Back to Projects Index](../README.md)**
+**🔗 [← Back to Projects Index](../README.md)**
 
 > **Document Version:** 1.0
 > **Last Updated:** January 22, 2026

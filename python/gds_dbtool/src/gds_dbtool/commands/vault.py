@@ -185,7 +185,7 @@ def list_secrets(
         str | None,
         typer.Argument(help="Path or alias to list (default: base_path)."),
     ] = None,
-    format: Annotated[
+    output_format: Annotated[
         str,
         typer.Option("--format", "-f", help="Output format (table, json)."),
     ] = "table",
@@ -204,7 +204,7 @@ def list_secrets(
             response = client.secrets.kv.v2.list_secrets(path=sub_path, mount_point=mount_point)
             keys = response.get("data", {}).get("keys", [])
 
-        if format == "json":
+        if output_format == "json":
             console.print_json(data=keys)
         elif _is_quiet():
             for key in keys:
@@ -231,7 +231,7 @@ def get_secret(
         str | None,
         typer.Argument(help="Specific key to retrieve (returns raw value)."),
     ] = None,
-    format: Annotated[
+    output_format: Annotated[
         str,
         typer.Option("--format", "-f", help="Output format (json, table)."),
     ] = "json",
@@ -250,7 +250,7 @@ def get_secret(
 
     try:
         with console.status("[bold green]Reading secret..."):
-            response = client.secrets.kv.v2.read_secret_version(path=sub_path, mount_point=mount_point)
+            response = client.secrets.kv.v2.read_secret_version(path=sub_path, mount_point=mount_point, raise_on_deleted_version=True)
             data = response.get("data", {}).get("data", {})
 
         if key:
@@ -260,7 +260,7 @@ def get_secret(
             else:
                 console.print(f"[red]Key '{key}' not found in secret.[/red]")
                 raise typer.Exit(code=ExitCode.RESOURCE_NOT_FOUND)
-        elif format == "table":
+        elif output_format == "table":
             table = Table(title=f"Secret: {full_path}")
             table.add_column("Key", style="cyan")
             table.add_column("Value", style="green")
@@ -324,7 +324,7 @@ def put(
         # Check if secret exists
         exists = False
         try:
-            client.secrets.kv.v2.read_secret_version(path=sub_path, mount_point=mount_point)
+            client.secrets.kv.v2.read_secret_version(path=sub_path, mount_point=mount_point, raise_on_deleted_version=True)
             exists = True
         except hvac.exceptions.InvalidPath:
             pass
@@ -419,10 +419,10 @@ def delete_secret(
 @app.command(name="ls", hidden=True)
 def ls(
     path: Annotated[str | None, typer.Argument()] = None,
-    format: Annotated[str, typer.Option("--format", "-f")] = "table",
+    output_format: Annotated[str, typer.Option("--format", "-f")] = "table",
 ) -> None:
     """Alias for 'list'."""
-    list_secrets(path=path, format=format)
+    list_secrets(path=path, output_format=output_format)
 
 
 @app.command(name="rm", hidden=True)

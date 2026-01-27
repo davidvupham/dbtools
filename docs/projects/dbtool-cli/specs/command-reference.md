@@ -1,6 +1,6 @@
 # Command reference: dbtool-cli
 
-**[← Back to Project Index](../README.md)**
+**🔗 [← Back to Project Index](../README.md)**
 
 > **Document Version:** 1.1
 > **Last Updated:** January 26, 2026
@@ -11,6 +11,21 @@
 ![Type](https://img.shields.io/badge/Type-Reference-blue)
 
 This document lists all approved commands, subcommands, and arguments for the `dbtool` CLI.
+
+## Table of contents
+
+- [Global arguments](#global-arguments)
+- [Environment variables](#environment-variables)
+- [Triage & health](#1-triage--health-check)
+- [Alerts](#2-alerts-alert)
+- [Query & SQL](#3-query--sql-sql)
+- [Access](#4-access-shell)
+- [Operations & maintenance](#5-operations--maintenance-maint)
+- [Liquibase](#6-liquibase-lb)
+- [Configuration](#7-configuration-config)
+- [System](#8-system-sys)
+- [Vault](#9-vault-wrapper-vault)
+- [Inventory](#10-inventory-inventory)
 
 ## Global arguments
 
@@ -40,19 +55,7 @@ Environment variables override configuration file values but are overridden by C
 > [!TIP]
 > Use environment variables in CI/CD pipelines and automation scripts to avoid hardcoding credentials or configuration.
 
-## Table of contents
-
-- [Global arguments](#global-arguments)
-- [Environment variables](#environment-variables)
-- [Triage & health](#1-triage--health-check)
-- [Alerts](#2-alerts-alert)
-- [Query & SQL](#3-query--sql-sql)
-- [Access](#4-access-shell)
-- [Operations & maintenance](#5-operations--maintenance-maint)
-- [Liquibase](#6-liquibase-lb)
-- [Configuration](#7-configuration-config)
-- [System](#8-system-sys)
-- [Vault](#9-vault-wrapper-vault)
+[↑ Back to Table of Contents](#table-of-contents)
 
 ## 1. Triage & health (`check`)
 
@@ -195,5 +198,14 @@ A safe, simplified wrapper around the native Vault CLI.
 > # Permanent deletion (use with extreme caution)
 > dbtool vault delete logins --hard
 > ```
+
+[↑ Back to Table of Contents](#table-of-contents)
+
+## 10. Inventory (`inventory`)
+
+| Command | Arguments | Description | Alias |
+|---------|-----------|-------------|-------|
+| `inventory list` | `[--type <type>]` | Lists all known database targets | `inv ls` |
+| `inventory show` | `<target>` | Shows details for a specific target | `inv show` |
 
 [↑ Back to Table of Contents](#table-of-contents)

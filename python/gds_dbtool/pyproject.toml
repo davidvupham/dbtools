@@ -13,6 +13,7 @@ dependencies = [
     "requests>=2.0.0",
     "keyring>=25.0.0",
     "pyyaml>=6.0.3",
+    "tomli-w>=1.0.0",
 ]
 
 [project.optional-dependencies]

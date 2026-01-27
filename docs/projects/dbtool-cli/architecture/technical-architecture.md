@@ -1,6 +1,6 @@
 # Technical architecture: dbtool-cli
 
-**[← Back to Project Index](../README.md)**
+**🔗 [← Back to Project Index](../README.md)**
 
 > **Document Version:** 1.1
 > **Last Updated:** January 26, 2026
@@ -18,10 +18,11 @@
 - [Technology stack](#4-technology-stack)
 - [Cross-platform strategy](#5-cross-platform-strategy)
 - [Configuration schema](#6-configuration-schema)
-- [Environment variables](#7-environment-variables)
-- [Progress indicators](#8-progress-indicators)
-- [Telemetry & debugging](#9-telemetry--debugging)
-- [Error handling](#10-error-handling)
+- [Troubleshooting strategy](#7-troubleshooting-strategy)
+- [Environment variables](#8-environment-variables)
+- [Progress indicators](#9-progress-indicators)
+- [Telemetry & debugging](#10-telemetry--debugging)
+- [Error handling](#11-error-handling)
 
 ## 1. Overview
 
@@ -56,8 +57,8 @@ The tool acts as a **Vault Client**. It does not persist long-lived credentials.
 
 <!-- Component diagram: User connects to dbtool CLI, which authenticates via Vault Handler
 using Kerberos (Linux) or AD/LDAP (Windows). The CLI uses a Provider Factory to route
-requests to database-specific providers (Postgres, MSSQL) that leverage gds_* packages
-for actual database connectivity. -->
+requests to database-specific providers (Postgres, MSSQL, MongoDB, Snowflake) that
+leverage gds_* packages for actual database connectivity. -->
 
 ```mermaid
 graph TD
@@ -75,21 +76,31 @@ graph TD
         CLI --> Factory[Provider Factory]
         Factory --> PG[Postgres Provider]
         Factory --> MS[MSSQL Provider]
+        Factory --> MG[MongoDB Provider]
+        Factory --> SF[Snowflake Provider]
 
         MS -.->|Import| GDS_MS[gds_mssql Package]
         PG -.->|Import| GDS_PG[gds_postgres Package]
+        MG -.->|Import| GDS_MG[gds_mongodb Package]
+        SF -.->|Import| GDS_SF[gds_snowflake Package]
 
         GDS_MS --> MSSQLDB
         GDS_PG --> PostgresDB
+        GDS_MG --> MongoDB
+        GDS_SF --> SnowflakeDB
     end
 
     subgraph "Infrastructure"
         VaultHelper -.-> PG
         VaultHelper -.-> MS
+        VaultHelper -.-> MG
+        VaultHelper -.-> SF
     end
 
     PG --> PostgresDB[(PostgreSQL)]
     MS --> MSSQLDB[(SQL Server)]
+    MG --> MongoDB[(MongoDB)]
+    SF --> SnowflakeDB[(Snowflake)]
 ```
 
 [↑ Back to Table of Contents](#table-of-contents)
@@ -150,6 +161,10 @@ logins = "secret/data/teams/gds/common/logins"
 certs  = "secret/data/teams/gds/common/certs"
 ```
 
+[↑ Back to Table of Contents](#table-of-contents)
+
+## 7. Troubleshooting strategy
+
 The troubleshooting module uses a **Strategy Pattern**.
 
 `dbtool troubleshoot --target prod-reporting-db`
@@ -165,7 +180,7 @@ The troubleshooting module uses a **Strategy Pattern**.
 
 [↑ Back to Table of Contents](#table-of-contents)
 
-## 7. Environment variables
+## 8. Environment variables
 
 Environment variables provide runtime configuration without modifying files. They follow the `DBTOOL_*` naming convention.
 
@@ -191,7 +206,7 @@ The tool resolves configuration in the following order (highest priority first):
 
 ### Usage in CI/CD
 
-```bash
+```yaml
 # GitLab CI example
 variables:
   DBTOOL_PROFILE: "prod"
@@ -215,7 +230,7 @@ deploy:
 
 [↑ Back to Table of Contents](#table-of-contents)
 
-## 8. Progress indicators
+## 9. Progress indicators
 
 Long-running operations display progress feedback using the Rich library. This provides user confidence that the tool is working and estimates completion time.
 
@@ -294,7 +309,7 @@ When `--quiet` or `-q` is specified:
 
 [↑ Back to Table of Contents](#table-of-contents)
 
-## 9. Telemetry & debugging
+## 10. Telemetry & debugging
 
 To support operational troubleshooting of the tool itself, `dbtool` implements a robust logging strategy.
 
@@ -304,7 +319,7 @@ To support operational troubleshooting of the tool itself, `dbtool` implements a
 
 [↑ Back to Table of Contents](#table-of-contents)
 
-## 10. Error handling
+## 11. Error handling
 
 The CLI uses consistent error codes and messages across all commands.
 

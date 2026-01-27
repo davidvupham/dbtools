@@ -1,6 +1,6 @@
 # Functional specification: dbtool-cli
 
-**[← Back to Project Index](../README.md)**
+**🔗 [← Back to Project Index](../README.md)**
 
 > **Document Version:** 1.1
 > **Last Updated:** January 26, 2026
@@ -14,7 +14,7 @@
 
 - [Overview](#1-overview)
 - [User stories](#2-user-stories)
-    - [Vault Wrapper](#vault-wrapper-new)
+    - [Vault wrapper](#vault-wrapper)
 - [Interfaces & commands](#3-interfaces--commands)
 - [Non-functional requirements](#4-non-functional-requirements-nfrs)
 - [Security & access control](#5-security--access-control)
@@ -82,23 +82,23 @@
 
 **US-201: Execute ad-hoc queries**
 > As a DBRE Engineer,
-> I want to run `dbtool query execute --target <db> --query "SELECT..." --format [table|json|csv]`,
+> I want to run `dbtool sql exec <db> "SELECT..." --format [table|json|csv]`,
 > So that I can choose between reading the output instantly (Table) or piping it to another tool/file (JSON/CSV).
 > **Default**: Human-readable Table.
 
 **US-202: Execute SQL scripts**
 > As a DBRE Engineer,
-> I want to run `dbtool query execute --target <db> --file <script.sql>`,
+> I want to run `dbtool sql exec <db> -f <script.sql>`,
 > So that I can safely run diagnostic or fix scripts across environments with automatic Vault authentication.
 
 ### Core: Access
 
 **US-301: Connect shell**
 > As a DBRE Engineer,
-> I want to run `dbtool connect --target <db>`,
+> I want to run `dbtool shell <db>`,
 > So that I am dropped into a native shell (`psql`, `sqlcmd`) with temporary credentials already injected.
 
-### Vault Wrapper (New)
+### Vault wrapper
 
 **US-401: List secrets via Alias**
 > As a Developer,
@@ -128,7 +128,7 @@
 # Check (General Health & Status) - Alias: ck
 dbtool health check <target>                  # Runs default checks (Was: check)
 dbtool health check ad <username> --status    # Returns: Active, Disabled, or Locked
-dbtool health ad <username> --verify-password # Prompts for password to test validity
+dbtool health check ad <username> --verify-password # Prompts for password to test validity
 
 # Alerts (Specific Investigations)
 dbtool alert triage <id>                      # Auto-detects alert type from ID

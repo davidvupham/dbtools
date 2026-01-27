@@ -47,7 +47,7 @@ def execute(
         Path | None,
         typer.Option("--file", "-f", help="SQL script file to execute."),
     ] = None,
-    format: Annotated[
+    output_format: Annotated[
         str,
         typer.Option("--format", help="Output format (table, json, csv, yaml)."),
     ] = "table",
@@ -103,11 +103,11 @@ def execute(
         ]
 
     # Format output
-    if format == "json":
+    if output_format == "json":
         data = [dict(zip(columns, row)) for row in rows]
         console.print_json(data=data)
 
-    elif format == "csv":
+    elif output_format == "csv":
         import csv
         import io
 
@@ -117,7 +117,7 @@ def execute(
         writer.writerows(rows)
         console.print(output.getvalue())
 
-    elif format == "yaml":
+    elif output_format == "yaml":
         import yaml
 
         data = [dict(zip(columns, row)) for row in rows]

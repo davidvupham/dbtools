@@ -1,6 +1,6 @@
 # Decision log: dbtool-cli
 
-**[← Back to Project Index](../README.md)**
+**🔗 [← Back to Project Index](../README.md)**
 
 > **Document Version:** 1.0
 > **Last Updated:** January 22, 2026
@@ -23,7 +23,7 @@ This document tracks architectural decisions for the `dbtool-cli` project using 
 ## ADR-000: Use decision log
 
 * **Status**: Accepted
-* **Context**: We need to track architectural decisions for the `dbtool-cli` project.
+* **Context**: The project needs a structured way to track architectural decisions.
 * **Decision**: Use `decision-log.md` in the `management/` folder.
 * **Consequences**: All major design choices must be recorded here.
 
@@ -43,7 +43,7 @@ This document tracks architectural decisions for the `dbtool-cli` project using 
 ## ADR-002: Python Typer + Rich framework
 
 * **Status**: Accepted
-* **Context**: We need a modern, type-safe, and visually appealing CLI for engineers.
+* **Context**: The project requires a modern, type-safe, and visually appealing CLI for engineers.
 * **Decision**: Use **Typer** for argument parsing and **Rich** for terminal output.
 * **Consequences**:
   * Clear, auto-generated help.

@@ -89,9 +89,9 @@ class TestSubcommands:
         result = runner.invoke(app, ["config", "--help"])
         assert result.exit_code == 0
 
-    def test_check_subcommand_exists(self):
-        """Test that check subcommand is registered."""
-        result = runner.invoke(app, ["check", "--help"])
+    def test_health_subcommand_exists(self):
+        """Test that health subcommand is registered."""
+        result = runner.invoke(app, ["health", "--help"])
         assert result.exit_code == 0
 
     def test_sql_subcommand_exists(self):
@@ -124,6 +124,11 @@ class TestSubcommands:
         result = runner.invoke(app, ["lb", "--help"])
         assert result.exit_code == 0
 
+    def test_inventory_subcommand_exists(self):
+        """Test that inventory subcommand is registered."""
+        result = runner.invoke(app, ["inventory", "--help"])
+        assert result.exit_code == 0
+
 
 class TestAliases:
     """Tests for command aliases."""
@@ -138,8 +143,8 @@ class TestAliases:
         result = runner.invoke(app, ["cfg", "--help"])
         assert result.exit_code == 0
 
-    def test_ck_alias_for_check(self):
-        """Test that ck is an alias for check."""
+    def test_ck_alias_for_health(self):
+        """Test that ck is an alias for health."""
         result = runner.invoke(app, ["ck", "--help"])
         assert result.exit_code == 0
 
@@ -151,4 +156,9 @@ class TestAliases:
     def test_pb_alias_for_playbook(self):
         """Test that pb is an alias for playbook."""
         result = runner.invoke(app, ["pb", "--help"])
+        assert result.exit_code == 0
+
+    def test_inv_alias_for_inventory(self):
+        """Test that inv is an alias for inventory."""
+        result = runner.invoke(app, ["inv", "--help"])
         assert result.exit_code == 0
