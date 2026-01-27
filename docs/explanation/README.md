@@ -15,6 +15,9 @@ Explanation documentation provides background, context, and understanding. It ex
 - [**Database Instance OO Design**](design-records/database-instance-oo-design.md)
 - [**Database Platform OO Design**](design-records/database-platform-oo-design.md)
 
+### Linux
+- [**Linux Core Concepts**](linux/linux-core-concepts.md) - The 7 foundational concepts that make Linux understandable.
+
 ### Technical Concepts
 - [**Data Engineering Design Patterns**](data-engineering-design-patterns.md) - 8 foundational patterns for modern data stacks.
 - [**Secrets Management Comparison**](secrets-management-comparison.md) - Vault vs. Infiscal analysis.
