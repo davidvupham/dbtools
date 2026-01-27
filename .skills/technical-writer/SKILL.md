@@ -63,6 +63,7 @@ Every doc must start with:
 - Don't skip heading levels
 - Always specify language in code blocks
 - Use GitHub-flavored markdown alerts (`> [!NOTE]`, `> [!TIP]`, `> [!IMPORTANT]`, `> [!WARNING]`, `> [!CAUTION]`)
+- Always include a **Table of Contents** at the top (after the metadata header)
 - Include "Back to Table of Contents" links after major sections
 
 **Docs-as-Code:**
