@@ -1,13 +1,12 @@
 """Tests for vault commands."""
+
 from __future__ import annotations
 
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
-import pytest
-from typer.testing import CliRunner
-
-from gds_dbtool.main import app
 from gds_dbtool.constants import ExitCode
+from gds_dbtool.main import app
+from typer.testing import CliRunner
 
 runner = CliRunner()
 

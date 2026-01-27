@@ -2,10 +2,9 @@
 
 Provides commands for opening interactive database shells with auto-injected credentials.
 """
+
 from __future__ import annotations
 
-import subprocess
-import sys
 from typing import Annotated
 
 import typer

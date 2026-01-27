@@ -2,14 +2,15 @@
 
 Provides commands for managing dbtool configuration files and profiles.
 """
+
 from __future__ import annotations
 
-from typing import Annotated, Optional
+from typing import Annotated
 
 import typer
 from rich.table import Table
 
-from ..config import load_config, get_config_path, GlobalConfig
+from ..config import get_config_path, load_config
 
 app = typer.Typer(no_args_is_help=True)
 
@@ -137,7 +138,7 @@ def profiles() -> None:
     config = load_config()
 
     if _is_quiet():
-        for name in config.profile.keys():
+        for name in config.profile:
             marker = "*" if name == config.current_profile else ""
             console.print(f"{marker}{name}")
         return
@@ -201,7 +202,7 @@ def init() -> None:
     config_path.parent.mkdir(parents=True, exist_ok=True)
 
     # Write default config
-    default_config = '''# dbtool configuration
+    default_config = """# dbtool configuration
 # See: docs/projects/dbtool-cli/architecture/technical-architecture.md
 
 [auth]
@@ -223,7 +224,7 @@ vault_namespace = "db-ops-prod"
 [vault.aliases]
 # logins = "secret/data/teams/gds/common/logins"
 # certs = "secret/data/teams/gds/common/certs"
-'''
+"""
 
     config_path.write_text(default_config)
 

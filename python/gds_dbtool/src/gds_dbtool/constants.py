@@ -2,6 +2,7 @@
 
 Exit codes follow the specification in technical-architecture.md.
 """
+
 from __future__ import annotations
 
 from enum import IntEnum

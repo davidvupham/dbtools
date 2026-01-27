@@ -2,9 +2,10 @@
 
 Provides commands for checking database health, connectivity, and AD account status.
 """
+
 from __future__ import annotations
 
-from typing import Annotated, Optional
+from typing import Annotated
 
 import typer
 from rich.table import Table
@@ -28,13 +29,18 @@ def _is_quiet() -> bool:
     return state.quiet
 
 
-@app.callback(invoke_without_command=True)
-def check(
-    ctx: typer.Context,
+@app.callback()
+def main() -> None:
+    """Health check commands."""
+    pass
+
+
+@app.command(name="check")
+def run_checks(
     target: Annotated[
-        Optional[str],
+        str,
         typer.Argument(help="Target database or host to check."),
-    ] = None,
+    ],
     deep: Annotated[
         bool,
         typer.Option("--deep", help="Run extended diagnostics (resource usage, logs)."),
@@ -42,15 +48,8 @@ def check(
 ) -> None:
     """Run health checks on a target.
 
-    Without a subcommand, runs default health checks (ping, auth, service status).
     Use --deep for extended diagnostics.
     """
-    if ctx.invoked_subcommand is not None:
-        return
-
-    if target is None:
-        raise typer.BadParameter("Target is required when not using a subcommand.")
-
     console = _get_console()
 
     with console.status(f"[bold green]Checking {target}..."):
@@ -118,7 +117,7 @@ def ad(
     if verify_password:
         from rich.prompt import Prompt
 
-        password = Prompt.ask("Password", password=True)
+        Prompt.ask("Password", password=True)
         with console.status("[bold green]Verifying password..."):
             # TODO: Implement actual password verification
             # This would attempt LDAP bind with provided credentials

@@ -1,20 +1,14 @@
 """Tests for secure token storage."""
+
 from __future__ import annotations
 
-import os
-from pathlib import Path
-from unittest.mock import patch, MagicMock
-
-import pytest
+from unittest.mock import patch
 
 from gds_dbtool.token_store import (
-    save_token,
-    load_token,
     delete_token,
     get_token_location,
-    TOKEN_FILE,
-    KEYRING_SERVICE,
-    KEYRING_USERNAME,
+    load_token,
+    save_token,
 )
 
 
@@ -42,7 +36,7 @@ class TestTokenFileStorage:
                 save_token("test-token")
 
                 # Check file permissions (600 = owner read/write only)
-                mode = os.stat(token_file).st_mode & 0o777
+                mode = token_file.stat().st_mode & 0o777
                 assert mode == 0o600
 
     def test_delete_token(self, tmp_path):
@@ -81,6 +75,7 @@ class TestKeyringStorage:
     def test_use_keyring_returns_bool(self):
         """Test that _use_keyring returns a boolean."""
         from gds_dbtool.token_store import _use_keyring
+
         result = _use_keyring()
         assert isinstance(result, bool)
 

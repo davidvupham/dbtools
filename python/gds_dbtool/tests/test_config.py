@@ -1,17 +1,15 @@
 """Tests for configuration management."""
+
 from __future__ import annotations
 
 import os
 from pathlib import Path
 from unittest.mock import patch
 
-import pytest
-
 from gds_dbtool.config import (
     GlobalConfig,
     ProfileConfig,
     VaultConfig,
-    AuthConfig,
     get_config_path,
     get_log_dir,
     load_config,

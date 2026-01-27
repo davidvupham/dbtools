@@ -2,10 +2,10 @@
 
 Provides a wrapper around ansible-playbook for standardized execution.
 """
+
 from __future__ import annotations
 
-import subprocess
-from typing import Annotated, Optional
+from typing import Annotated
 
 import typer
 from rich.table import Table
@@ -41,11 +41,11 @@ def run(
     name: Annotated[str, typer.Argument(help="Playbook name to execute.")],
     target: Annotated[str, typer.Argument(help="Target host or group.")],
     extra_vars: Annotated[
-        Optional[str],
+        str | None,
         typer.Option("--extra-vars", "-e", help="Extra variables (key=value format)."),
     ] = None,
     reason: Annotated[
-        Optional[str],
+        str | None,
         typer.Option("--reason", help="Audit reason or ticket ID."),
     ] = None,
 ) -> None:

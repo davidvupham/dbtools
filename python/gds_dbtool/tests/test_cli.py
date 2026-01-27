@@ -1,14 +1,13 @@
 """Tests for the main CLI application."""
+
 from __future__ import annotations
 
 import os
 from unittest.mock import patch
 
-import pytest
-from typer.testing import CliRunner
-
-from gds_dbtool.main import app
 from gds_dbtool import __version__
+from gds_dbtool.main import app
+from typer.testing import CliRunner
 
 runner = CliRunner()
 

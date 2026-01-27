@@ -2,9 +2,10 @@
 
 Provides commands for database maintenance tasks like vacuum, reindex, etc.
 """
+
 from __future__ import annotations
 
-from typing import Annotated, Optional
+from typing import Annotated
 
 import typer
 from rich.table import Table
@@ -43,7 +44,7 @@ def start(
     ],
     target: Annotated[str, typer.Argument(help="Target database.")],
     reason: Annotated[
-        Optional[str],
+        str | None,
         typer.Option("--reason", help="Audit reason or ticket ID."),
     ] = None,
 ) -> None:
@@ -123,12 +124,12 @@ def status(
 
 @app.command(name="list")
 def list_tasks(
-    target: Annotated[
-        Optional[str],
+    target: Annotated[  # noqa: ARG001
+        str | None,
         typer.Option("--target", "-t", help="Filter by target database."),
     ] = None,
-    status_filter: Annotated[
-        Optional[str],
+    status_filter: Annotated[  # noqa: ARG001
+        str | None,
         typer.Option("--status", "-s", help="Filter by status (running, completed, failed)."),
     ] = None,
 ) -> None:

@@ -1,7 +1,8 @@
 """Tests for constants and exit codes."""
+
 from __future__ import annotations
 
-from gds_dbtool.constants import ExitCode, ErrorMessage
+from gds_dbtool.constants import ErrorMessage, ExitCode
 
 
 class TestExitCodes:

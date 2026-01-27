@@ -3,10 +3,10 @@
 Uses the system keyring for secure credential storage when available,
 with fallback to file-based storage with restricted permissions.
 """
+
 from __future__ import annotations
 
 import logging
-import os
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
@@ -61,7 +61,7 @@ def save_token(token: str) -> None:
 
     # Fallback to file-based storage
     TOKEN_FILE.write_text(token)
-    os.chmod(TOKEN_FILE, 0o600)
+    TOKEN_FILE.chmod(0o600)
     logger.debug(f"Token saved to {TOKEN_FILE}")
 
 

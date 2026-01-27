@@ -3,13 +3,13 @@
 Handles loading of config.toml, profile management, and alias resolution.
 Configuration follows the schema defined in technical-architecture.md.
 """
+
 from __future__ import annotations
 
 import os
-import tomllib
 from pathlib import Path
-from typing import Any
 
+import tomllib
 from pydantic import BaseModel, Field
 
 
@@ -82,7 +82,7 @@ class GlobalConfig(BaseModel):
     class ActiveProfile:
         """Helper class for accessing active profile with vault config."""
 
-        def __init__(self, config: "GlobalConfig") -> None:
+        def __init__(self, config: GlobalConfig) -> None:
             self._config = config
 
         @property

@@ -3,9 +3,10 @@
 Provides a wrapper around Liquibase for database schema management.
 Runs Liquibase in a standardized Docker container.
 """
+
 from __future__ import annotations
 
-from typing import Annotated, Optional
+from typing import Annotated
 
 import typer
 from rich.prompt import Confirm
@@ -42,11 +43,11 @@ def update(
     project: Annotated[str, typer.Argument(help="Liquibase project name.")],
     env: Annotated[str, typer.Argument(help="Target environment (dev, staging, prod).")],
     count: Annotated[
-        Optional[int],
+        int | None,
         typer.Option("--count", "-c", help="Number of changesets to apply (default: all)."),
     ] = None,
     reason: Annotated[
-        Optional[str],
+        str | None,
         typer.Option("--reason", help="Audit reason or ticket ID."),
     ] = None,
     force: Annotated[
@@ -68,7 +69,7 @@ def update(
     dry_run = _is_dry_run()
 
     if not _is_quiet():
-        console.print(f"\n[bold]Liquibase Update[/bold]")
+        console.print("\n[bold]Liquibase Update[/bold]")
         console.print(f"Project: [cyan]{project}[/cyan]")
         console.print(f"Environment: [cyan]{env}[/cyan]")
         if count:
@@ -117,7 +118,7 @@ def rollback(
         typer.Option("--count", "-c", help="Number of changesets to rollback."),
     ] = 1,
     reason: Annotated[
-        Optional[str],
+        str | None,
         typer.Option("--reason", help="Audit reason or ticket ID."),
     ] = None,
     force: Annotated[
@@ -138,7 +139,7 @@ def rollback(
     dry_run = _is_dry_run()
 
     if not _is_quiet():
-        console.print(f"\n[bold]Liquibase Rollback[/bold]")
+        console.print("\n[bold]Liquibase Rollback[/bold]")
         console.print(f"Project: [cyan]{project}[/cyan]")
         console.print(f"Environment: [cyan]{env}[/cyan]")
         console.print(f"Changesets to rollback: {count}")
@@ -227,7 +228,7 @@ def status(
 
 @app.command()
 def validate(
-    project: Annotated[str, typer.Argument(help="Liquibase project name.")],
+    project: Annotated[str, typer.Argument(help="Liquibase project name.")],  # noqa: ARG001
 ) -> None:
     """Validate changelog files.
 

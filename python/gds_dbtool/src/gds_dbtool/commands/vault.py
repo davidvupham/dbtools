@@ -2,10 +2,10 @@
 
 Provides a safe, simplified wrapper around HashiCorp Vault for secret management.
 """
+
 from __future__ import annotations
 
-import sys
-from typing import Annotated, Optional
+from typing import Annotated
 
 import hvac
 import requests
@@ -13,9 +13,9 @@ import typer
 from rich.prompt import Confirm, Prompt
 from rich.table import Table
 
-from ..config import load_config, resolve_vault_path, GlobalConfig
+from ..config import GlobalConfig, load_config, resolve_vault_path
 from ..constants import ExitCode
-from ..token_store import save_token, load_token, delete_token, get_token_location
+from ..token_store import delete_token, get_token_location, load_token, save_token
 
 app = typer.Typer(no_args_is_help=True)
 
@@ -99,11 +99,11 @@ def login(
         typer.Option("--method", "-m", help="Authentication method (saml, ldap, userpass)."),
     ] = "ldap",
     mount_point: Annotated[
-        Optional[str],
+        str | None,
         typer.Option("--mount", help="Auth method mount point."),
     ] = None,
     role: Annotated[
-        Optional[str],
+        str | None,
         typer.Option("--role", "-r", help="Role name (for saml/approle)."),
     ] = None,
 ) -> None:
@@ -164,10 +164,10 @@ def login(
 
     except hvac.exceptions.InvalidRequest as e:
         console.print(f"[red]Authentication failed: {e}[/red]")
-        raise typer.Exit(code=ExitCode.AUTH_ERROR)
+        raise typer.Exit(code=ExitCode.AUTH_ERROR) from None
     except requests.exceptions.ConnectionError:
         console.print(f"[red]Connection failed: Unable to reach {vault_url}[/red]")
-        raise typer.Exit(code=ExitCode.CONNECTION_ERROR)
+        raise typer.Exit(code=ExitCode.CONNECTION_ERROR) from None
 
 
 @app.command()
@@ -182,7 +182,7 @@ def logout() -> None:
 @app.command(name="list")
 def list_secrets(
     path: Annotated[
-        Optional[str],
+        str | None,
         typer.Argument(help="Path or alias to list (default: base_path)."),
     ] = None,
     format: Annotated[
@@ -206,30 +206,29 @@ def list_secrets(
 
         if format == "json":
             console.print_json(data=keys)
+        elif _is_quiet():
+            for key in keys:
+                console.print(key)
         else:
-            if _is_quiet():
-                for key in keys:
-                    console.print(key)
-            else:
-                table = Table(title=f"Secrets in {display_path}")
-                table.add_column("Key", style="cyan")
-                for key in keys:
-                    table.add_row(key)
-                console.print(table)
+            table = Table(title=f"Secrets in {display_path}")
+            table.add_column("Key", style="cyan")
+            for key in keys:
+                table.add_row(key)
+            console.print(table)
 
     except hvac.exceptions.InvalidPath:
         console.print(f"[yellow]Path not found or empty: {display_path}[/yellow]")
-        raise typer.Exit(code=ExitCode.RESOURCE_NOT_FOUND)
+        raise typer.Exit(code=ExitCode.RESOURCE_NOT_FOUND) from None
     except hvac.exceptions.Forbidden:
         console.print(f"[red]Permission denied: {display_path}[/red]")
-        raise typer.Exit(code=ExitCode.PERMISSION_DENIED)
+        raise typer.Exit(code=ExitCode.PERMISSION_DENIED) from None
 
 
 @app.command(name="get")
 def get_secret(
     path: Annotated[str, typer.Argument(help="Path or alias to secret.")],
     key: Annotated[
-        Optional[str],
+        str | None,
         typer.Argument(help="Specific key to retrieve (returns raw value)."),
     ] = None,
     format: Annotated[
@@ -250,7 +249,7 @@ def get_secret(
     mount_point, sub_path = _parse_mount_and_path(full_path)
 
     try:
-        with console.status(f"[bold green]Reading secret..."):
+        with console.status("[bold green]Reading secret..."):
             response = client.secrets.kv.v2.read_secret_version(path=sub_path, mount_point=mount_point)
             data = response.get("data", {}).get("data", {})
 
@@ -261,23 +260,22 @@ def get_secret(
             else:
                 console.print(f"[red]Key '{key}' not found in secret.[/red]")
                 raise typer.Exit(code=ExitCode.RESOURCE_NOT_FOUND)
+        elif format == "table":
+            table = Table(title=f"Secret: {full_path}")
+            table.add_column("Key", style="cyan")
+            table.add_column("Value", style="green")
+            for k, v in data.items():
+                table.add_row(k, str(v))
+            console.print(table)
         else:
-            if format == "table":
-                table = Table(title=f"Secret: {full_path}")
-                table.add_column("Key", style="cyan")
-                table.add_column("Value", style="green")
-                for k, v in data.items():
-                    table.add_row(k, str(v))
-                console.print(table)
-            else:
-                console.print_json(data=data)
+            console.print_json(data=data)
 
     except hvac.exceptions.InvalidPath:
         console.print(f"[red]Secret not found: {full_path}[/red]")
-        raise typer.Exit(code=ExitCode.RESOURCE_NOT_FOUND)
+        raise typer.Exit(code=ExitCode.RESOURCE_NOT_FOUND) from None
     except hvac.exceptions.Forbidden:
         console.print(f"[red]Permission denied: {full_path}[/red]")
-        raise typer.Exit(code=ExitCode.PERMISSION_DENIED)
+        raise typer.Exit(code=ExitCode.PERMISSION_DENIED) from None
 
 
 @app.command()
@@ -313,7 +311,7 @@ def put(
     # Show what will be written
     if dry_run or not _is_quiet():
         console.print(f"\n[bold]{'[DRY RUN] ' if dry_run else ''}Writing to {full_path}:[/bold]")
-        for k, v in secret_data.items():
+        for k, _v in secret_data.items():
             console.print(f"  {k} = ****")
 
     if dry_run:
@@ -347,7 +345,7 @@ def put(
 
     except hvac.exceptions.Forbidden:
         console.print(f"[red]Permission denied: {full_path}[/red]")
-        raise typer.Exit(code=ExitCode.PERMISSION_DENIED)
+        raise typer.Exit(code=ExitCode.PERMISSION_DENIED) from None
 
 
 @app.command(name="delete")
@@ -387,7 +385,7 @@ def delete_secret(
 
     if not force:
         if hard:
-            console.print(f"\n[bold red]WARNING: This will PERMANENTLY DESTROY the secret![/bold red]")
+            console.print("\n[bold red]WARNING: This will PERMANENTLY DESTROY the secret![/bold red]")
             console.print(f"Path: {full_path}")
             console.print("This action cannot be undone.\n")
 
@@ -411,16 +409,16 @@ def delete_secret(
 
     except hvac.exceptions.InvalidPath:
         console.print(f"[red]Secret not found: {full_path}[/red]")
-        raise typer.Exit(code=ExitCode.RESOURCE_NOT_FOUND)
+        raise typer.Exit(code=ExitCode.RESOURCE_NOT_FOUND) from None
     except hvac.exceptions.Forbidden:
         console.print(f"[red]Permission denied: {full_path}[/red]")
-        raise typer.Exit(code=ExitCode.PERMISSION_DENIED)
+        raise typer.Exit(code=ExitCode.PERMISSION_DENIED) from None
 
 
 # Hidden aliases for commands
 @app.command(name="ls", hidden=True)
 def ls(
-    path: Annotated[Optional[str], typer.Argument()] = None,
+    path: Annotated[str | None, typer.Argument()] = None,
     format: Annotated[str, typer.Option("--format", "-f")] = "table",
 ) -> None:
     """Alias for 'list'."""

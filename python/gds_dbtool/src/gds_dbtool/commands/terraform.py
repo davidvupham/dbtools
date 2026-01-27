@@ -2,9 +2,10 @@
 
 Provides a wrapper around Terraform for infrastructure management.
 """
+
 from __future__ import annotations
 
-from typing import Annotated, Optional
+from typing import Annotated
 
 import typer
 from rich.prompt import Confirm
@@ -40,7 +41,7 @@ def plan(
     project: Annotated[str, typer.Argument(help="Terraform project name.")],
     env: Annotated[str, typer.Argument(help="Target environment (dev, staging, prod).")],
     var: Annotated[
-        Optional[list[str]],
+        list[str] | None,
         typer.Option("--var", "-v", help="Variable overrides (key=value)."),
     ] = None,
 ) -> None:
@@ -56,7 +57,7 @@ def plan(
     console = _get_console()
 
     if not _is_quiet():
-        console.print(f"\n[bold]Terraform Plan[/bold]")
+        console.print("\n[bold]Terraform Plan[/bold]")
         console.print(f"Project: [cyan]{project}[/cyan]")
         console.print(f"Environment: [cyan]{env}[/cyan]")
         if var:
@@ -91,7 +92,7 @@ def apply(
     project: Annotated[str, typer.Argument(help="Terraform project name.")],
     env: Annotated[str, typer.Argument(help="Target environment (dev, staging, prod).")],
     var: Annotated[
-        Optional[list[str]],
+        list[str] | None,
         typer.Option("--var", "-v", help="Variable overrides (key=value)."),
     ] = None,
     force: Annotated[
@@ -99,7 +100,7 @@ def apply(
         typer.Option("--force", "-f", help="Skip confirmation prompt."),
     ] = False,
     reason: Annotated[
-        Optional[str],
+        str | None,
         typer.Option("--reason", help="Audit reason or ticket ID."),
     ] = None,
 ) -> None:
@@ -115,7 +116,7 @@ def apply(
     dry_run = _is_dry_run()
 
     if not _is_quiet():
-        console.print(f"\n[bold]Terraform Apply[/bold]")
+        console.print("\n[bold]Terraform Apply[/bold]")
         console.print(f"Project: [cyan]{project}[/cyan]")
         console.print(f"Environment: [cyan]{env}[/cyan]")
         if var:
@@ -152,7 +153,7 @@ def output(
     project: Annotated[str, typer.Argument(help="Terraform project name.")],
     env: Annotated[str, typer.Argument(help="Target environment.")],
     name: Annotated[
-        Optional[str],
+        str | None,
         typer.Argument(help="Specific output name to retrieve."),
     ] = None,
     format: Annotated[
@@ -182,17 +183,16 @@ def output(
         else:
             console.print(f"[red]Output '{name}' not found.[/red]")
             raise typer.Exit(code=ExitCode.RESOURCE_NOT_FOUND)
+    elif format == "json":
+        console.print_json(data=outputs)
     else:
-        if format == "json":
-            console.print_json(data=outputs)
-        else:
-            from rich.table import Table
+        from rich.table import Table
 
-            table = Table(title=f"Terraform Outputs: {project}/{env}")
-            table.add_column("Name", style="cyan")
-            table.add_column("Value", style="green")
+        table = Table(title=f"Terraform Outputs: {project}/{env}")
+        table.add_column("Name", style="cyan")
+        table.add_column("Value", style="green")
 
-            for key, value in outputs.items():
-                table.add_row(key, str(value))
+        for key, value in outputs.items():
+            table.add_row(key, str(value))
 
-            console.print(table)
+        console.print(table)
