@@ -399,7 +399,7 @@ def delete_secret(
             if hard:
                 client.secrets.kv.v2.delete_metadata_and_all_versions(path=sub_path, mount_point=mount_point)
             else:
-                client.secrets.kv.v2.delete_latest_version(path=sub_path, mount_point=mount_point)
+                client.secrets.kv.v2.delete_latest_version_of_secret(path=sub_path, mount_point=mount_point)
 
         if not _is_quiet():
             if hard:

@@ -1,0 +1,43 @@
+# ==============================================================================
+# Docker Compose for Integration Testing
+# ==============================================================================
+# This configuration spins up the dependencies needed to test gds_dbtool.
+# It uses the local Dockerfile in this directory to ensure isolation.
+#
+# USAGE:
+#   docker compose up -d  (Start in background)
+#   docker compose down   (Stop and remove)
+
+services:
+  vault:
+    # Build the image from the Dockerfile in the current directory (.)
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    # Service name/hostname internal to the Docker network
+    container_name: gds_dbtool_test_vault
+
+    # Map port 8200 on host to 8200 in container
+    # Format: "HOST_PORT:CONTAINER_PORT"
+    ports:
+      - "8200:8200"
+
+    # Environment variables configure the Vault instance
+    environment:
+      # EDUCATIONAL NOTE:
+      # VAULT_DEV_ROOT_TOKEN_ID sets the initial root token for the dev server.
+      # Setting this to a known value ("root") allows our tests to authenticate
+      # immediately without needing to parse startup logs.
+      - VAULT_DEV_ROOT_TOKEN_ID=root
+
+      # VAULT_ADDR configures the CLI *inside* the container, if we were to attach to it.
+      - VAULT_ADDR=http://0.0.0.0:8200
+
+    # Healthcheck ensures the service is actually ready before tests start
+    # 'vault status' returns exit code 0 when ready (and unsealed in dev mode)
+    healthcheck:
+      test: ["CMD", "vault", "status"]
+      interval: 1s
+      timeout: 1s
+      retries: 30
