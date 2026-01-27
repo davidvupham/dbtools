@@ -180,7 +180,7 @@ This guide helps you diagnose and resolve common issues when using `dbtool`.
 
 If you cannot resolve your issue:
 
-1. **Check verbose output**: Add `--verbose` or `-v` to your command for detailed logging.
+1. **Check debug output**: Add `--debug` to your command for detailed logging.
 2. **Review logs**: Check `~/.local/share/dbtool/logs/` for detailed error information.
 3. **Contact the team**: Reach out to the DBRE team with:
    - The exact command you ran

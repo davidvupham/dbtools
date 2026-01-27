@@ -37,7 +37,7 @@ A unified CLI tool for Database Reliability Engineering (DBRE) that troubleshoot
 - [Technical Architecture](architecture/technical-architecture.md) - Authentication flows and design
 - [Decision Log](management/decision-log.md) - Architectural decisions
 - [Troubleshooting Guide](specs/troubleshooting.md) - Common issues and solutions
-- [Validation Report](specs/validation_report.md) - Best practice analysis
+- [Validation Report](specs/validation-report.md) - Best practice analysis
 
 [↑ Back to Table of Contents](#table-of-contents)
 

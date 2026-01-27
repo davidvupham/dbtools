@@ -2,8 +2,8 @@
 
 **[← Back to Project Index](../README.md)**
 
-> **Document Version:** 1.0
-> **Last Updated:** January 22, 2026
+> **Document Version:** 1.1
+> **Last Updated:** January 26, 2026
 > **Maintainers:** GDS Team
 > **Status:** Draft
 
@@ -16,13 +16,12 @@
 - [User stories](#2-user-stories)
     - [Vault Wrapper](#vault-wrapper-new)
 - [Interfaces & commands](#3-interfaces--commands)
-- [Interfaces & commands](#3-interfaces--commands)
 - [Non-functional requirements](#4-non-functional-requirements-nfrs)
 - [Security & access control](#5-security--access-control)
 
 ## 1. Overview
 
-`dbtool` is a unified command-line tool for the DBRE team. It simplifies database troubleshooting, maintenance execution, and ad-hoc querying by abstracting authentication (Vault/Kerberos) and platform differences (Windows/Linux) across Snowflake, SQL Server, MongoDB, and PostgreSQL.
+`dbtool` is a unified command-line tool for the Database Reliability Engineering (DBRE) team. It simplifies database troubleshooting, maintenance execution, and ad-hoc querying by abstracting authentication (Vault/Kerberos) and platform differences (Windows/Linux) across Snowflake, SQL Server, MongoDB, and PostgreSQL.
 
 [↑ Back to Table of Contents](#table-of-contents)
 
@@ -159,19 +158,45 @@ dbtool vault delete <path|alias>              # Delete (Interactive)
 
 [↑ Back to Table of Contents](#table-of-contents)
 
-## 4. Non-functional requirements
+## 4. Non-functional requirements (NFRs)
 
-- **NFR-01 (Security)**: Secrets MUST never be displayed in stdout/logs.
-- **NFR-02 (Platform)**: ALL commands must work identically on Windows (PowerShell) and Linux (Bash).
-- **NFR-03 (Audit)**: All `dbtool query` executions must accept a `--reason` flag or Ticket ID for audit logging.
-- **NFR-04 (Output)**: All generic commands MUST support `--format json` to enable automation (Airflow/Ansible integration).
+### Security
+
+- **NFR-01 (Secrets)**: Secrets MUST never be displayed in stdout/logs. Credentials are fetched from Vault at runtime and never persisted to disk.
+- **NFR-02 (Environment)**: Secrets MUST NOT be read from environment variables. Environment variables control tool behavior only, not authentication.
+
+### Compatibility
+
+- **NFR-03 (Platform)**: ALL commands must work identically on Windows (PowerShell) and Linux (Bash).
+- **NFR-04 (Color)**: The tool MUST respect `NO_COLOR` environment variable and `--no-color` flag for accessibility and piping.
+
+### Auditability
+
+- **NFR-05 (Audit)**: All `dbtool query` executions must accept a `--reason` flag or Ticket ID for audit logging.
+- **NFR-06 (Logging)**: All operations MUST be logged to a rotating log file for post-mortem analysis.
+
+### Output & automation
+
+- **NFR-07 (Output)**: All commands MUST support `--format json` to enable automation (Airflow/Ansible integration).
+- **NFR-08 (Quiet)**: All commands MUST support `--quiet` flag to suppress non-essential output for scripting.
+- **NFR-09 (Exit Codes)**: Commands MUST return standard exit codes (0=success, non-zero=failure) for CI/CD integration.
+
+### Safety
+
+- **NFR-10 (Dry-run)**: Destructive commands (`vault delete`, `vault put`, `tf apply`, `lb update`, `lb rollback`) MUST support `--dry-run` flag to preview changes without executing.
+- **NFR-11 (Confirmation)**: Destructive commands MUST prompt for confirmation unless `--force` is specified.
+
+### User experience
+
+- **NFR-12 (Progress)**: Operations exceeding 100ms MUST display progress feedback (spinner or progress bar).
+- **NFR-13 (Help)**: All commands MUST support `-h` and `--help` flags for inline documentation.
 
 [↑ Back to Table of Contents](#table-of-contents)
 
 ## 5. Security & access control
 
 - **Authentication**:
-  - **Windows**: LDAP/AD integration via Vault.
+  - **Windows**: LDAP/Active Directory (AD) integration via Vault.
   - **Linux**: Zero-touch Kerberos authentication (`requests-kerberos`).
 - **Authorization**:
   - The CLI forwards the authenticated identity to Vault.

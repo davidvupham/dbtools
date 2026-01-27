@@ -2,8 +2,8 @@
 
 **[← Back to Project Index](../README.md)**
 
-> **Document Version:** 1.0
-> **Last Updated:** January 22, 2026
+> **Document Version:** 1.1
+> **Last Updated:** January 26, 2026
 > **Maintainers:** GDS Team
 > **Status:** Draft
 
@@ -18,9 +18,10 @@
 - [Technology stack](#4-technology-stack)
 - [Cross-platform strategy](#5-cross-platform-strategy)
 - [Configuration schema](#6-configuration-schema)
-- [Configuration schema](#6-configuration-schema)
-- [Telemetry & debugging](#7-telemetry--debugging)
-- [Error handling](#8-error-handling)
+- [Environment variables](#7-environment-variables)
+- [Progress indicators](#8-progress-indicators)
+- [Telemetry & debugging](#9-telemetry--debugging)
+- [Error handling](#10-error-handling)
 
 ## 1. Overview
 
@@ -39,7 +40,7 @@ The tool acts as a **Vault Client**. It does not persist long-lived credentials.
 3. Detects Linux OS.
 4. Uses `requests-kerberos` to negotiate with Vault (Auth Method: `kerberos` or `ldap`).
 5. Vault returns `client_token`.
-6. `dbtool` uses `client_token` to fetch dynamic database credentials (TTL: 15m).
+6. `dbtool` uses `client_token` to fetch dynamic database credentials (Time to Live/TTL: 15 minutes).
 
 ### Windows (Active Directory)
 
@@ -164,9 +165,136 @@ The troubleshooting module uses a **Strategy Pattern**.
 
 [↑ Back to Table of Contents](#table-of-contents)
 
+## 7. Environment variables
+
+Environment variables provide runtime configuration without modifying files. They follow the `DBTOOL_*` naming convention.
+
+### Configuration precedence
+
+The tool resolves configuration in the following order (highest priority first):
+
+1. **CLI flags** (`--profile prod`)
+2. **Environment variables** (`DBTOOL_PROFILE=prod`)
+3. **Configuration file** (`~/.config/dbtool/config.toml`)
+4. **Built-in defaults**
+
+### Supported variables
+
+| Variable | Type | Description |
+|----------|------|-------------|
+| `DBTOOL_PROFILE` | String | Active configuration profile name |
+| `DBTOOL_VAULT_URL` | URL | Vault server URL |
+| `DBTOOL_VAULT_NAMESPACE` | String | Vault namespace |
+| `DBTOOL_DEBUG` | Boolean | Enable debug logging (`1`, `true`, `yes`) |
+| `DBTOOL_NO_COLOR` | Boolean | Disable colored output |
+| `NO_COLOR` | Any | Standard color disable (any value) |
+
+### Usage in CI/CD
+
+```bash
+# GitLab CI example
+variables:
+  DBTOOL_PROFILE: "prod"
+  DBTOOL_VAULT_URL: "https://vault.example.com"
+  DBTOOL_NO_COLOR: "1"
+
+deploy:
+  script:
+    - dbtool lb update myproject prod
+```
+
+### Security considerations
+
+> [!IMPORTANT]
+> **Never store secrets in environment variables.** Environment variables are:
+> - Visible in process listings (`ps aux`)
+> - Logged by many systems
+> - Inherited by child processes
+>
+> Use Vault for all credential management. Environment variables should only control tool behavior, not authentication.
+
 [↑ Back to Table of Contents](#table-of-contents)
 
-## 7. Telemetry & debugging
+## 8. Progress indicators
+
+Long-running operations display progress feedback using the Rich library. This provides user confidence that the tool is working and estimates completion time.
+
+### Progress thresholds
+
+| Duration | Indicator | Example |
+|----------|-----------|---------|
+| < 100ms | None | Simple queries, config reads |
+| 100ms - 2s | Spinner | Vault authentication, single DB query |
+| > 2s | Progress bar | Bulk operations, playbook runs, migrations |
+
+### Implementation patterns
+
+**Spinner for indeterminate operations:**
+
+```python
+from rich.console import Console
+from rich.spinner import Spinner
+
+console = Console()
+
+with console.status("[bold green]Authenticating with Vault...") as status:
+    token = vault_client.authenticate()
+    status.update("[bold green]Fetching credentials...")
+    creds = vault_client.get_credentials(target)
+```
+
+**Progress bar for determinate operations:**
+
+```python
+from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn
+
+with Progress(
+    SpinnerColumn(),
+    TextColumn("[progress.description]{task.description}"),
+    BarColumn(),
+    TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
+) as progress:
+    task = progress.add_task("Running migrations...", total=len(changesets))
+    for changeset in changesets:
+        apply_changeset(changeset)
+        progress.advance(task)
+```
+
+### Network operation feedback
+
+All network operations (Vault calls, database connections, API requests) display feedback within 100ms:
+
+```text
+$ dbtool check prod-db-01
+⠋ Connecting to Vault...
+⠙ Authenticating (Kerberos)...
+✓ Authenticated as dpham@CONTOSO.COM
+⠹ Connecting to prod-db-01 (PostgreSQL)...
+✓ Connected (latency: 23ms)
+⠸ Running health checks...
+✓ Health check complete
+
+Status: HEALTHY
+┌─────────────────┬──────────┐
+│ Check           │ Result   │
+├─────────────────┼──────────┤
+│ Connectivity    │ ✓ OK     │
+│ Authentication  │ ✓ OK     │
+│ Replication Lag │ 0.2s     │
+│ Active Queries  │ 12       │
+└─────────────────┴──────────┘
+```
+
+### Quiet mode behavior
+
+When `--quiet` or `-q` is specified:
+- Progress indicators are suppressed
+- Only final output (results or errors) is displayed
+- Exit codes indicate success/failure for scripting
+
+[↑ Back to Table of Contents](#table-of-contents)
+
+## 9. Telemetry & debugging
 
 To support operational troubleshooting of the tool itself, `dbtool` implements a robust logging strategy.
 
@@ -176,7 +304,7 @@ To support operational troubleshooting of the tool itself, `dbtool` implements a
 
 [↑ Back to Table of Contents](#table-of-contents)
 
-## 8. Error handling
+## 10. Error handling
 
 The CLI uses consistent error codes and messages across all commands.
 

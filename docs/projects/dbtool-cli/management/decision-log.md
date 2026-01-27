@@ -10,7 +10,7 @@
 ![Status](https://img.shields.io/badge/Status-Draft-yellow)
 ![Type](https://img.shields.io/badge/Type-Decisions-blue)
 
-This document tracks architectural decisions for the `dbtool-cli` project using Architecture Decision Records (ADRs).
+This document tracks architectural decisions for the `dbtool-cli` project using Architecture Decision Records (ADRs). ADRs capture significant design choices with their context and consequences.
 
 ## Table of contents
 

@@ -27,7 +27,7 @@ The `dbtool-cli` project delivers the `dbtool` binary, a unified operational too
 
 ## 2. Objectives
 
-- **Primary**: Reduce Mean Time To Resolution (MTTR) for database alerts by automating initial diagnostic steps.
+- **Primary**: Reduce Mean Time to Resolution (MTTR) for database alerts by automating initial diagnostic steps.
 - **Secondary**: Standardize authentication patterns (Vault + Kerberos/AD) across Windows and Linux.
 - **Success Metrics**:
   - Tool successfully authenticates on both Windows and Linux without manual secret entry.
