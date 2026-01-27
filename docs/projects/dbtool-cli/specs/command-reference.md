@@ -58,10 +58,10 @@ Environment variables override configuration file values but are overridden by C
 
 | Command | Arguments | Description | Alias |
 |---------|-----------|-------------|-------|
-| `check` | `<target>` | Runs default health checks (Ping, Auth, Service Status) | `ck` |
-| `check` | `<target> --deep` | Runs extended diagnostics (Resource usage, Logs) | `ck` |
-| `ck ad` | `<user> --status` | Checks if AD account is Disabled/Locked | - |
-| `ck ad` | `<user> --verify-password` | Validates password (safe auth test) | - |
+| `health check` | `<target>` | Runs default health checks (Ping, Auth, Service Status) | `ck` |
+| `health check` | `<target> --deep` | Runs extended diagnostics (Resource usage, Logs) | `ck` |
+| `health check` | `ad <user> --status` | Checks if AD account is Disabled/Locked | `ck ad` |
+| `health check` | `ad <user> --verify-password` | Validates password (safe auth test) | `ck ad` |
 
 [↑ Back to Table of Contents](#table-of-contents)
 
@@ -69,8 +69,8 @@ Environment variables override configuration file values but are overridden by C
 
 | Command | Arguments | Description | Alias |
 |---------|-----------|-------------|-------|
-| `alert` | `<id>` | Triages an alert by its ID (Auto-detects type) | - |
-| `alert` | `<target> --type <type>` | Manually triage specific alert type | - |
+| `alert triage` | `[id]` | Triages an alert by its ID (Auto-detects type) | - |
+| `alert triage` | `... --target <tgt> --type <type>` | Manually triage specific alert type | - |
 
 **Supported Alert Types**:
 
@@ -85,9 +85,9 @@ Environment variables override configuration file values but are overridden by C
 
 | Command | Arguments | Description | Alias |
 |---------|-----------|-------------|-------|
-| `sql` | `<target> "<query>"` | Execute ad-hoc SQL string | - |
-| `sql` | `<target> -f <file.sql>` | Execute SQL script file | - |
-| `sql` | `... --format <fmt>` | Output format: `table` (def), `json`, `csv` | - |
+| `sql` | `exec <target> "<query>"` | Execute ad-hoc SQL string | - |
+| `sql` | `exec <target> -f <file.sql>` | Execute SQL script file | - |
+| `sql` | `exec ... --format <fmt>` | Output format: `table` (def), `json`, `csv`, `yaml` | - |
 
 [↑ Back to Table of Contents](#table-of-contents)
 

@@ -126,17 +126,17 @@
 
 ```bash
 # Check (General Health & Status) - Alias: ck
-dbtool ck <target>                            # Runs default checks (Was: check)
-dbtool ck ad <username> --status              # Returns: Active, Disabled, or Locked
-dbtool ck ad <username> --verify-password     # Prompts for password to test validity (Safe test)
+dbtool health check <target>                  # Runs default checks (Was: check)
+dbtool health check ad <username> --status    # Returns: Active, Disabled, or Locked
+dbtool health ad <username> --verify-password # Prompts for password to test validity
 
 # Alerts (Specific Investigations)
-dbtool alert <id>                             # Auto-detects alert type from ID
-dbtool alert <target> --type blocking         # Specific check type
+dbtool alert triage <id>                      # Auto-detects alert type from ID
+dbtool alert triage --target <t> --type ...   # Specific check type
 
 # Query (Ad-Hoc)
-dbtool sql <target> "SELECT 1"                # Shorter alias for 'query execute'
-dbtool sql <target> -f script.sql             # -f flag for file
+dbtool sql exec <target> "SELECT 1"           # Noun-Verb standardized alias
+dbtool sql exec <target> -f script.sql        # -f flag for file
 dbtool shell <target>                         # Drops into psql/sqlcmd (was 'connect')
 
 # Ops (Maintenance & Infrastructure)

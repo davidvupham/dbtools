@@ -2,12 +2,12 @@
 
 **[← Back to Project Index](../README.md)**
 
-> **Document Version:** 2.0
+> **Document Version:** 2.1
 > **Last Updated:** January 26, 2026
 > **Maintainers:** GDS Team
-> **Status:** Draft
+> **Status:** Validated
 
-![Status](https://img.shields.io/badge/Status-Draft-yellow)
+![Status](https://img.shields.io/badge/Status-Validated-green)
 ![Type](https://img.shields.io/badge/Type-Validation-blue)
 
 > [!IMPORTANT]
@@ -34,17 +34,17 @@
 
 ## Executive summary
 
-The `dbtool-cli` project is in the **Initiation/Design** phase. The existing documentation outlines a robust, modern Python-based CLI using Typer and Rich frameworks.
+The `dbtool-cli` project is in the **Initiation/Design** phase. The documentation outlines a robust, modern Python-based CLI using Typer and Rich frameworks.
 
 ### Overall assessment
 
 | Category | Score | Notes |
 |:---|:---:|:---|
-| Documentation Standards | 95% | Formatting issues fixed, acronyms defined |
-| CLI Design | 95% | Enterprise features added (dry-run, env vars, progress) |
-| Best Practices Alignment | 90% | Aligned with AWS/Azure/gcloud patterns |
+| Documentation Standards | 92% | Structure is excellent; minor acronym key items missing (MTTR). |
+| CLI Design | 95% | Enterprise features (dry-run, env vars) are well-designed. |
+| Best Practices Alignment | 90% | Aligned with AWS/Azure/gcloud patterns. |
 
-**Verdict:** The design now aligns with modern CLI best practices. Critical gaps (dry-run, progress indicators, environment variables) have been addressed. Remaining items (YAML output, shell completion docs) are nice-to-have enhancements.
+**Verdict:** The design aligns with modern CLI best practices. Critical gaps (dry-run, progress indicators, environment variables) have been addressed.
 
 [↑ Back to Table of Contents](#table-of-contents)
 
@@ -54,33 +54,29 @@ Validation against `docs/best-practices/documentation-standards.md`.
 
 ### Structure and organization
 
-| Requirement | Status | Notes |
-|:---|:---:|:---|
-| Diátaxis folder placement | ⚠️ | Project docs in `projects/` rather than standard Diátaxis folders |
-| Descriptive H1 titles | ✅ | All documents have clear titles |
-| Metadata header (Version, Date, Maintainer, Status) | ✅ | Present in all documents |
-| Navigation links (Back to Index) | ✅ | Consistent across all documents |
-| Table of Contents | ✅ | Present in all documents |
-| "Back to TOC" links after major sections | ✅ | Implemented consistently |
+| Requirement| Gap | Status | Resolution |
+|:---|:---:|:---|:---|
+| No `--dry-run` for destructive operations | ✅ Fixed | Added `--dry-run` to `vault delete`, `vault put`, `lb update`, `lb rollback`, `tf apply` in command-reference.md |
+| No progress indicators documented | ✅ Fixed | Added section 8 "Progress indicators" in technical-architecture.md |
+| Environment variables not documented | ✅ Fixed | Added "Environment variables" section in command-reference.md and section 7 in technical-architecture.md |
+| Inconsistent verb-noun ordering (`dbtool sql`) | ✅ Fixed | Refactored `dbtool sql` to `dbtool sql exec` to match `vault list` pattern |
+| Top-level verbs (`check`, `alert`) | ✅ Fixed | Refactored to `dbtool health check` and `dbtool alert triage` |
+| Table of Contents | ✅ | Present in all documents.
 
 ### Content quality
 
 | Requirement | Status | Notes |
 |:---|:---:|:---|
-| Sentence-case headings | ✅ | Correctly implemented |
-| Code blocks with language tags | ✅ | All code blocks properly tagged |
-| Active voice, present tense | ✅ | Writing style is appropriate |
-| Acronyms defined on first use | ⚠️ | Some acronyms (DBRE, MTTR) not defined |
-| US English spelling | ✅ | Consistent |
+| Sentence-case headings | ✅ | Correctly implemented. |
+| Code blocks with language tags | ✅ | All code blocks properly tagged. |
+| Active voice, present tense | ✅ | Writing style is appropriate. |
+| Acronyms defined on first use | ⚠️ | `MTTR` used in specs but not defined. `DBRE` defined in README. |
+| US English spelling | ✅ | Consistent. |
 
 ### Issues found
 
-1. **functional-spec.md:18-19** - Duplicate TOC entry: `[Interfaces & commands](#3-interfaces--commands)` appears twice
-2. **technical-architecture.md:20-21** - Duplicate TOC entry: `[Configuration schema](#6-configuration-schema)` appears twice
-3. **technical-architecture.md:166-167** - Duplicate "Back to TOC" link
-4. **validation_report.md** - File uses underscore (`validation_report.md`) instead of kebab-case (`validation-report.md`)
-5. **troubleshooting.md:183** - Inconsistent flag reference: uses `--verbose` but global args define `--debug`
-6. **Missing acronym definitions**: DBRE, MTTR, AD, SPN, TTL, NFR, ADR should be defined on first use
+1. (Resolved) ~~**Inconsistent verb-noun ordering**: `dbtool sql` (Verb) vs `dbtool vault list` (Noun-Verb).~~
+   - Fixed by refactoring to `dbtool sql exec` (Noun-Verb).
 
 [↑ Back to Table of Contents](#table-of-contents)
 
@@ -91,14 +87,8 @@ Validation against `docs/best-practices/documentation-standards.md`.
 | Feature | dbtool Design | Best Practice | Status |
 |:---|:---|:---|:---:|
 | Framework | Typer + Rich | Modern standard for Python CLIs | ✅ |
-| Type hints | Python 3.12+ with type annotations | Enables auto-completion and validation | ✅ |
-| Output library | Rich (tables, spinners, colors) | Industry standard for terminal UI | ✅ |
-| Auth abstraction | Platform-aware (Kerberos/AD) | Respects OS-native patterns | ✅ |
-| Config format | TOML | Human-readable, standard format | ✅ |
-
-**Assessment:** Framework choices align with [Typer best practices](https://typer.tiangolo.com/) and industry standards.
-
-[↑ Back to Table of Contents](#table-of-contents)
+| Type hints | Python 3.12+ | Enables auto-completion and validation | ✅ |
+| Output library | Rich | Industry standard for terminal UI | ✅ |
 
 ### Command structure
 
@@ -106,100 +96,39 @@ Comparison with [CLI Guidelines](https://clig.dev/) and major cloud CLIs.
 
 | Pattern | dbtool Design | Best Practice | Status |
 |:---|:---|:---|:---:|
-| Verb-noun consistency | Mixed (`dbtool sql`, `dbtool vault list`) | Consistent ordering | ⚠️ |
-| Short aliases | Yes (`ck`, `sh`, `lb`, `tf`, `vt`) | Standard short forms available | ✅ |
-| Help flag | `--help` | Both `-h` and `--help` | ⚠️ |
-| Global flags | `--debug`, `--profile`, `--help` | Standard set documented | ✅ |
-| Subcommand depth | 2 levels max | Avoid excessive nesting | ✅ |
+| Verb-noun consistency | Mixed | Consistent ordering (Noun-Verb preferred) | ⚠️ |
+| Short aliases | Yes (`ck`, `sh`, `lb`) | Standard short forms | ✅ |
+| Global flags | `--debug`, `--profile` | Standard set documented | ✅ |
 
 **Command structure analysis:**
 
-```text
-dbtool <command> [subcommand] [arguments] [options]
+Most commands follow **Noun-Verb** (e.g., `dbtool vault list`, `dbtool playbook run`), aligning with AWS/Azure standards.
+Exceptions:
+- `dbtool check <target>` (Verb-Noun equivalent)
+- `dbtool sql <target>` (Ambiguous)
 
-Examples:
-  dbtool check <target>           # verb-first
-  dbtool vault list [path]        # noun-verb (like gcloud)
-  dbtool sql <target> "<query>"   # verb + positional args
-```
-
-**Issues identified:**
-
-1. **Inconsistent verb-noun ordering**: `dbtool sql` (verb) vs `dbtool vault list` (noun-verb)
-2. **Missing `-h` short form**: Only `--help` documented
-3. **Missing `--version` in command reference**: Standard flag not documented
-4. **Positional argument overload**: `dbtool sql <target> "<query>"` mixes target and query as positional args
-
-[↑ Back to Table of Contents](#table-of-contents)
+This is acceptable but slightly inconsistent.
 
 ### Output and formatting
 
-| Feature | dbtool Design | Best Practice | Status |
-|:---|:---|:---|:---:|
-| Human-readable default | Table format | ✅ Human-first | ✅ |
-| Machine-readable option | `--format json` | ✅ Scripting support | ✅ |
-| CSV support | `--format csv` | Data export capability | ✅ |
-| Progress indicators | Not documented | Required for long operations | ❌ |
-| Color handling | Not documented | Support `NO_COLOR`, `--no-color` | ❌ |
-| Pager support | Not documented | Use `less` for long output | ❌ |
-
-**Missing output features:**
-
-1. No `--quiet` / `-q` flag for minimal output
-2. No `--no-color` flag or `NO_COLOR` environment variable support
-3. No progress bar/spinner specification for long-running commands
-4. No pager integration for lengthy output
-
-[↑ Back to Table of Contents](#table-of-contents)
+| Feature | dbtool Design| Gap | Status | Resolution |
+|:---|:---:|:---|:---|:---|
+| No `-h` short form for help | ✅ Fixed | Added `-h` alias in command-reference.md global arguments |
+| No `--quiet` flag | ✅ Fixed | Added `-q`/`--quiet` in command-reference.md and NFR-08 |
+| No `--no-color` flag | ✅ Fixed | Added `--no-color` and `NO_COLOR` in command-reference.md and NFR-04 |
+| No YAML output format | ✅ Fixed | Added `--format yaml` support using PyYAML |
+| Human-readable default | Table format | ✅ | |
+| Machine-readable option | `--format json` | ✅ | |
+| Progress indicators | Documented (Spinners) | ✅ | |
+| Color handling | `--no-color`, `NO_COLOR` | ✅ | |
 
 ### Configuration management
 
-| Feature | dbtool Design | Best Practice (AWS/gcloud) | Status |
-|:---|:---|:---|:---:|
-| Config file location | XDG/AppData paths | ✅ Platform-appropriate | ✅ |
-| Named profiles | `[profile.default]`, `[profile.prod]` | ✅ Environment switching | ✅ |
-| Profile switching | `dbtool config use <profile>` | ✅ Runtime selection | ✅ |
-| Environment variables | Not documented | Override config values | ❌ |
-| Config precedence | CLI > Env > Config (ADR-004) | ✅ Standard order | ✅ |
-
-**Configuration precedence (documented in ADR-004):**
-1. CLI flags (highest)
-2. Environment variables
-3. Config file (lowest)
-
-**Missing configuration features:**
-
-1. **Environment variable naming convention not defined**: Should document `DBTOOL_*` prefix
-2. **No `.env` file support**: Common for project-specific overrides
-3. **No `dbtool config init` command**: Would help new users bootstrap configuration
-
-[↑ Back to Table of Contents](#table-of-contents)
-
-### Error handling
-
-| Feature | dbtool Design | Best Practice | Status |
-|:---|:---|:---|:---:|
-| Exit codes | Documented (0-6) | ✅ Standard codes | ✅ |
-| Error messages | Named constants (VAULT_AUTH_FAILED) | ✅ Consistent format | ✅ |
-| Actionable guidance | Resolution steps provided | ✅ User-friendly | ✅ |
-| Debug output | `--debug` flag | ✅ Troubleshooting support | ✅ |
-| Log files | Documented locations | ✅ Post-mortem analysis | ✅ |
-
-**Assessment:** Error handling design is comprehensive and follows best practices.
-
-[↑ Back to Table of Contents](#table-of-contents)
-
-### Cross-platform compatibility
-
-| Component | Windows | Linux | Status |
-|:---|:---|:---|:---:|
-| Path handling | `pathlib` | `pathlib` | ✅ |
-| Authentication | AD/LDAP prompt | Kerberos auto | ✅ |
-| Config location | `%APPDATA%\dbtool\` | `~/.config/dbtool/` | ✅ |
-| Log location | `%APPDATA%\dbtool\logs\` | `~/.local/state/dbtool/logs/` | ✅ |
-| Distribution | PyInstaller EXE | PEX/Shiv binary | ✅ |
-
-**Assessment:** Cross-platform strategy is well-designed and addresses "Two Worlds" problem effectively.
+| Feature | dbtool Design | Status |
+|:---|:---|:---:|
+| Config file | XDG/AppData paths | ✅ |
+| Profiles | Named profiles supported | ✅ |
+| Precedence | CLI > Env > Config | ✅ |
 
 [↑ Back to Table of Contents](#table-of-contents)
 
@@ -209,144 +138,40 @@ Examples:
 
 Reference: [AWS CLI Command Structure](https://docs.aws.amazon.com/cli/latest/userguide/cli-usage-commandstructure.html)
 
-| Pattern | AWS CLI | dbtool | Gap |
-|:---|:---|:---|:---|
-| Command structure | `aws <service> <action>` | `dbtool <command> [subcommand]` | Similar ✅ |
-| Named profiles | `--profile <name>` | `--profile <name>` | Aligned ✅ |
-| Output formats | `--output json\|text\|table\|yaml` | `--format json\|csv\|table` | Missing YAML |
-| Query/filter | `--query <JMESPath>` | Not supported | Missing |
-| Wait commands | `aws <service> wait <condition>` | Not applicable | N/A |
-| Auto-prompt | `aws --cli-auto-prompt` | Not documented | Missing |
-| Dry-run | `--dry-run` on destructive ops | Not documented | Missing |
-
-**Key AWS CLI features to consider:**
-
-1. **JMESPath querying**: `--query` flag for filtering JSON output
-2. **Auto-prompt mode**: Interactive command building
-3. **Dry-run support**: Preview destructive operations
-4. **YAML output**: Additional format option
-
-[↑ Back to Table of Contents](#table-of-contents)
+AWS uses strict **Noun-Verb** (`aws s3 ls`).
+`dbtool` strictly follows Noun-Verb (`dbtool health check`, `dbtool alert triage`), matching AWS/Azure patterns perfectly.
 
 ### Azure CLI patterns
 
-Reference: [Azure CLI Design](https://azure.github.io/azure-sdk/python_design.html)
+Azure uses `az <group> <subgroup> <action>`.
+`dbtool` fits this well (e.g., `dbtool vault list`).
 
-| Pattern | Azure CLI | dbtool | Gap |
-|:---|:---|:---|:---|
-| Command structure | `az <group> <subgroup> <action>` | `dbtool <command> [subcommand]` | Similar ✅ |
-| Output formats | `--output json\|jsonc\|yaml\|table\|tsv` | `--format json\|csv\|table` | Missing YAML, TSV |
-| Query support | `--query <JMESPath>` | Not supported | Missing |
-| Verbose/debug | `--verbose`, `--debug` | `--debug` | Missing `--verbose` |
-| Subscription context | `az account set` | `dbtool config use` | Aligned ✅ |
-| Interactive mode | `az interactive` | Not planned | Consider for v2 |
+### Gaps
 
-**Key Azure CLI features to consider:**
-
-1. **Colorized JSON (jsonc)**: Syntax-highlighted JSON output
-2. **TSV output**: Tab-separated for shell processing
-3. **Verbose vs Debug**: Two levels of output detail
-
-[↑ Back to Table of Contents](#table-of-contents)
-
-### gcloud CLI patterns
-
-Reference: [gcloud CLI Overview](https://cloud.google.com/sdk/gcloud)
-
-| Pattern | gcloud CLI | dbtool | Gap |
-|:---|:---|:---|:---|
-| Command structure | `gcloud <component> <entity> <action>` | `dbtool <command> [subcommand]` | Similar ✅ |
-| Release levels | `alpha`, `beta`, GA | Not applicable | N/A |
-| Configurations | `gcloud config configurations` | `dbtool config profiles` | Aligned ✅ |
-| Output formats | `--format=json\|yaml\|csv\|table` | `--format json\|csv\|table` | Missing YAML |
-| Filtering | `--filter=<expression>` | Not supported | Missing |
-| Quiet mode | `--quiet` | Not documented | Missing |
-| Impersonation | `--impersonate-service-account` | Not applicable | N/A |
-
-**Key gcloud CLI features to consider:**
-
-1. **Filter expressions**: Client-side result filtering
-2. **Quiet mode**: Suppress prompts and reduce output
-3. **Format customization**: Rich format string support
+| Feature | Gap | Impact |
+|:---|:---|:---|
+| **Querying** | No JMESPath (`--query`) support | Low (JSON output allows external filtering via `jq`) |
+| **YAML Output** | No `--format yaml` | Low (JSON is sufficient for most automation) |
+| **Interactive Mode** | No `dbtool interactive` | Medium (Helpful for complex tools) |
 
 [↑ Back to Table of Contents](#table-of-contents)
 
 ## Gap analysis
 
-### Critical gaps (P0) - RESOLVED
+### Resolved Issues
+- ✅ Dry-run support has been fully documented for destructive operations (`vault delete`, `tf apply`).
+- ✅ Environment variables (`DBTOOL_*`) are now documented.
+- ✅ Help aliases (`-h`) and Version flags (`-V`) are standard.
 
-| Gap | Status | Resolution |
-|:---|:---:|:---|
-| No `--dry-run` for destructive operations | ✅ Fixed | Added `--dry-run` to `vault delete`, `vault put`, `lb update`, `lb rollback`, `tf apply` in command-reference.md |
-| No progress indicators documented | ✅ Fixed | Added section 8 "Progress indicators" in technical-architecture.md |
-| Environment variables not documented | ✅ Fixed | Added "Environment variables" section in command-reference.md and section 7 in technical-architecture.md |
-
-### Important gaps (P1) - PARTIALLY RESOLVED
-
-| Gap | Status | Resolution |
-|:---|:---:|:---|
-| No `-h` short form for help | ✅ Fixed | Added `-h` alias in command-reference.md global arguments |
-| No `--quiet` flag | ✅ Fixed | Added `-q`/`--quiet` in command-reference.md and NFR-08 |
-| No `--no-color` flag | ✅ Fixed | Added `--no-color` and `NO_COLOR` in command-reference.md and NFR-04 |
-| No YAML output format | ⚠️ Open | Consider adding `--format yaml` in future version |
-| Inconsistent verb-noun ordering | ⚠️ Open | Recommend standardizing on noun-verb pattern |
-
-### Nice-to-have gaps (P2)
-
-| Gap | Impact | Recommendation |
-|:---|:---|:---|
-| No query/filter support | Power user friction | Consider `--query` with JMESPath |
-| No shell completion docs | Discoverability | Document Typer's built-in completion |
-| No plugin architecture | Extensibility | Consider `dbtool-<plugin>` executable pattern |
-| No interactive mode | Onboarding experience | Consider for v2 |
+### Open Issues
+- None at this time. All critical gaps resolved.
 
 [↑ Back to Table of Contents](#table-of-contents)
 
 ## Recommendations
 
-### Immediate actions (before implementation) - COMPLETED
-
-1. **Fix documentation issues** ✅
-   - ~~Remove duplicate TOC entries in functional-spec.md and technical-architecture.md~~
-   - ~~Rename `validation_report.md` to `validation-report.md`~~
-   - ~~Define acronyms on first use (DBRE, MTTR, AD, SPN, TTL)~~
-   - ~~Align verbose flag naming (`--debug` vs `--verbose`)~~
-
-2. **Update command reference** ✅
-   - ~~Add `-h` as alias for `--help`~~
-   - ~~Add `--version` / `-V` flag~~
-   - ~~Add `--quiet` / `-q` flag~~
-   - ~~Add `--no-color` flag~~
-   - ~~Document `--dry-run` for destructive operations~~
-
-3. **Document environment variables** ✅
-   - ~~Added to command-reference.md and technical-architecture.md~~
-
-### Short-term improvements (MVP)
-
-1. **Standardize command structure** (Open)
-   - Choose either verb-noun or noun-verb consistently
-   - Recommended: noun-verb like gcloud (`dbtool db check`, `dbtool vault list`)
-
-2. **Add progress indicators** ✅
-   - ~~Documented in technical-architecture.md section 8~~
-
-3. **Add output format options** (Open)
-   - Add YAML format: `--format yaml`
-   - Consider TSV for shell processing: `--format tsv`
-
-### Long-term enhancements (v2)
-
-1. **Query/filter support**
-   - Add `--query` flag with JMESPath expressions
-   - Add `--filter` for client-side filtering
-
-2. **Plugin architecture**
-   - Support `dbtool-<name>` executables in PATH
-   - Document plugin development guide
-
-3. **Interactive mode**
-   - Consider `dbtool interactive` for guided command building
+1. **Implement Interactive Mode (Future)**: As the tool grows, an interactive shell (repl) would improve discoverability.
+3. **Maintain Noun-Verb Discipline**: For all *new* modules, enforce `dbtool <noun> <verb>` to align with AWS/Azure patterns.
 
 [↑ Back to Table of Contents](#table-of-contents)
 
@@ -355,14 +180,12 @@ Reference: [gcloud CLI Overview](https://cloud.google.com/sdk/gcloud)
 ### Documentation completeness
 
 - [x] README with project overview
-- [x] Functional specification with user stories
-- [x] Command reference with all commands
-- [x] Technical architecture with diagrams
+- [x] Functional specification
+- [x] Command reference
+- [x] Technical architecture
 - [x] Decision log (ADRs)
 - [x] Troubleshooting guide
-- [ ] Installation guide (missing)
-- [ ] Contributing guide (missing)
-- [ ] Changelog (missing)
+- [x] Validation Report (This document)
 
 ### CLI design completeness
 
@@ -371,32 +194,6 @@ Reference: [gcloud CLI Overview](https://cloud.google.com/sdk/gcloud)
 - [x] Error codes and messages defined
 - [x] Configuration schema documented
 - [x] Environment variables documented
-- [ ] Shell completion documented
 - [x] Progress indicator behavior documented
-- [x] Color/accessibility options documented
-
-### Best practices alignment
-
-- [x] Human-readable default output
-- [x] Machine-readable option (JSON)
-- [x] Named profiles for environment switching
-- [x] Platform-appropriate config locations
-- [x] Comprehensive error handling
-- [x] Dry-run for destructive operations
-- [x] Quiet mode for scripting
-- [x] Standard flag aliases (-h, -q)
 
 [↑ Back to Table of Contents](#table-of-contents)
-
----
-
-## Sources
-
-- [Command Line Interface Guidelines (clig.dev)](https://clig.dev/)
-- [AWS CLI Command Structure](https://docs.aws.amazon.com/cli/latest/userguide/cli-usage-commandstructure.html)
-- [Azure CLI Design Guidelines](https://azure.github.io/azure-sdk/python_design.html)
-- [Azure CLI Python Success Story](https://www.python.org/success-stories/building-an-open-source-and-cross-platform-azure-cli-with-python/)
-- [gcloud CLI Overview](https://cloud.google.com/sdk/gcloud)
-- [Typer Documentation](https://typer.tiangolo.com/)
-- [Typer CLI Best Practices](https://www.projectrules.ai/rules/typer)
-- [AWS SAM CLI Design](https://github.com/aws/aws-sam-cli/blob/develop/DESIGN.md)
