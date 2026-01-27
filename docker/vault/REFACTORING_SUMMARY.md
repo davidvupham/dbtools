@@ -229,7 +229,7 @@ Refactored the HashiCorp Vault Docker setup based on [HashiCorp's Production Har
 ### Before
 
 ```
-hvault/
+vault/
 ├── config/
 │   └── vault.hcl
 ├── data/
@@ -240,7 +240,7 @@ hvault/
 ### After
 
 ```
-hvault/
+vault/
 ├── config/
 │   └── vault.hcl              # Enhanced with production config
 ├── policies/                   # NEW

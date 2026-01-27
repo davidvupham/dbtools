@@ -6,7 +6,7 @@ services:
   vault1:
     build:
       context: ../..
-      dockerfile: docker/hvault/Dockerfile
+      dockerfile: docker/vault/Dockerfile
       args:
         REGISTRY_PREFIX: ${REGISTRY_PREFIX:-docker.io/}
     image: gds-vault:latest
@@ -89,7 +89,7 @@ services:
   vault2:
     build:
       context: ../..
-      dockerfile: docker/hvault/Dockerfile
+      dockerfile: docker/vault/Dockerfile
       args:
         REGISTRY_PREFIX: ${REGISTRY_PREFIX:-docker.io/}
     image: gds-vault:latest

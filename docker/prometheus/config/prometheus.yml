@@ -59,13 +59,13 @@ scrape_configs:
           app: "gds_mongodb"
     scrape_interval: 10s
 
-  # HashiCorp Vault native metrics (from docker/hvault)
+  # HashiCorp Vault native metrics (from docker/vault)
   - job_name: "hashicorp_vault"
     metrics_path: /v1/sys/metrics
     params:
       format: ["prometheus"]
     static_configs:
-      - targets: ["hvault:8200"]
+      - targets: ["vault:8200"]
         labels:
           app: "hashicorp_vault"
     scrape_interval: 30s

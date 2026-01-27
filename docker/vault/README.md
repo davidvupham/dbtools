@@ -15,7 +15,7 @@ This directory contains a production-hardened HashiCorp Vault setup following [H
 ### Files and Structure
 
 ```
-hvault/
+vault/
 ├── config/
 │   └── vault.hcl              # Production Vault configuration
 ├── policies/

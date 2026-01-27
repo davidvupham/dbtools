@@ -6,7 +6,7 @@
 
 ```bash
 # Start Vault in development mode
-cd /workspaces/dbtools/docker/hvault
+cd /workspaces/dbtools/docker/vault
 docker-compose -f docker-compose.dev.yml up -d
 
 # Access Vault
@@ -29,7 +29,7 @@ sudo chown -R 100:1000 /data/vault
 sudo chown -R 100:1000 /logs/vault
 
 # 3. Start Vault servers
-cd /workspaces/dbtools/docker/hvault
+cd /workspaces/dbtools/docker/vault
 docker-compose up -d
 
 # 4. Initialize Vault (first time only)

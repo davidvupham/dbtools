@@ -29,7 +29,7 @@ See [Podman cheatsheet](../docs/reference/podman/cheatsheet.md) for more details
 | [awx/](./awx/) | AWX (Ansible Web UI) | 8080 |
 | [awx-ee/](./awx-ee/) | AWX Execution Environment | - |
 | [hammerdb/](./hammerdb/) | HammerDB performance testing | - |
-| [hvault/](./hvault/) | HashiCorp Vault | 8200 |
+| [vault/](./vault/) | HashiCorp Vault | 8200 |
 | [kafka/](./kafka/) | Apache Kafka message broker | 9092 |
 | [liquibase/](./liquibase/) | Liquibase database migrations | - |
 | [mongodb/](./mongodb/) | MongoDB database | 27017 |
@@ -60,10 +60,10 @@ docker compose -f docker/postgresql/docker-compose.yml up -d
 podman-compose -f docker/postgresql/docker-compose.yml up -d
 
 # Docker - Start Vault
-docker compose -f docker/hvault/docker-compose.yml up -d
+docker compose -f docker/vault/docker-compose.yml up -d
 
 # Podman - Start Vault
-podman-compose -f docker/hvault/docker-compose.yml up -d
+podman-compose -f docker/vault/docker-compose.yml up -d
 ```
 
 ### Start AWX stack
