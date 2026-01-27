@@ -11,29 +11,9 @@ import typer
 from rich.table import Table
 
 from ..constants import ExitCode
+from ._helpers import get_console, is_dry_run, is_quiet
 
 app = typer.Typer(no_args_is_help=True)
-
-
-def _get_console():
-    """Get console from app state."""
-    from ..main import state
-
-    return state.console
-
-
-def _is_quiet() -> bool:
-    """Check if quiet mode is enabled."""
-    from ..main import state
-
-    return state.quiet
-
-
-def _is_dry_run() -> bool:
-    """Check if dry-run mode is enabled."""
-    from ..main import state
-
-    return state.dry_run
 
 
 @app.command()
@@ -58,8 +38,8 @@ def start(
 
     Use --dry-run to preview the operation without executing.
     """
-    console = _get_console()
-    dry_run = _is_dry_run()
+    console = get_console()
+    dry_run = is_dry_run()
 
     valid_tasks = ["vacuum", "reindex", "analyze", "backup"]
     if task not in valid_tasks:
@@ -72,7 +52,7 @@ def start(
         console.print("[yellow]Dry run - no changes made.[/yellow]")
         return
 
-    if reason and not _is_quiet():
+    if reason and not is_quiet():
         console.print(f"[dim]Audit reason: {reason}[/dim]")
 
     with console.status(f"[bold green]Starting {task} on {target}..."):
@@ -83,7 +63,7 @@ def start(
         # 4. Return task ID for status tracking
         task_id = "maint-12345"  # Placeholder
 
-    if not _is_quiet():
+    if not is_quiet():
         console.print(f"[green]Started {task} on {target}[/green]")
         console.print(f"Task ID: [cyan]{task_id}[/cyan]")
         console.print(f"\nCheck status with: dbtool maint status {task_id}")
@@ -94,7 +74,7 @@ def status(
     task_id: Annotated[str, typer.Argument(help="Maintenance task ID to check.")],
 ) -> None:
     """Check status of a running maintenance task."""
-    console = _get_console()
+    console = get_console()
 
     with console.status(f"[bold green]Checking task {task_id}..."):
         # TODO: Implement actual status check
@@ -109,7 +89,7 @@ def status(
             "estimated_completion": "2024-01-26 11:00:00",
         }
 
-    if _is_quiet():
+    if is_quiet():
         console.print(status_info["status"])
     else:
         table = Table(title=f"Task Status: {task_id}")
@@ -134,7 +114,7 @@ def list_tasks(
     ] = None,
 ) -> None:
     """List maintenance tasks."""
-    console = _get_console()
+    console = get_console()
 
     with console.status("[bold green]Fetching task list..."):
         # TODO: Implement actual task listing
@@ -144,7 +124,7 @@ def list_tasks(
             {"id": "maint-12343", "type": "backup", "target": "staging-db", "status": "failed"},
         ]
 
-    if _is_quiet():
+    if is_quiet():
         for task in tasks:
             console.print(f"{task['id']}\t{task['status']}")
     else:

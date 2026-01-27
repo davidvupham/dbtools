@@ -13,29 +13,9 @@ from rich.prompt import Confirm
 from rich.table import Table
 
 from ..constants import ExitCode
+from ._helpers import get_console, is_dry_run, is_quiet
 
 app = typer.Typer(no_args_is_help=True)
-
-
-def _get_console():
-    """Get console from app state."""
-    from ..main import state
-
-    return state.console
-
-
-def _is_quiet() -> bool:
-    """Check if quiet mode is enabled."""
-    from ..main import state
-
-    return state.quiet
-
-
-def _is_dry_run() -> bool:
-    """Check if dry-run mode is enabled."""
-    from ..main import state
-
-    return state.dry_run
 
 
 @app.command()
@@ -65,10 +45,10 @@ def update(
         dbtool lb update myproject prod --count 1
         dbtool lb update myproject prod --dry-run
     """
-    console = _get_console()
-    dry_run = _is_dry_run()
+    console = get_console()
+    dry_run = is_dry_run()
 
-    if not _is_quiet():
+    if not is_quiet():
         console.print("\n[bold]Liquibase Update[/bold]")
         console.print(f"Project: [cyan]{project}[/cyan]")
         console.print(f"Environment: [cyan]{env}[/cyan]")
@@ -135,10 +115,10 @@ def rollback(
         dbtool lb rollback myproject dev --count 1
         dbtool lb rollback myproject prod --dry-run
     """
-    console = _get_console()
-    dry_run = _is_dry_run()
+    console = get_console()
+    dry_run = is_dry_run()
 
-    if not _is_quiet():
+    if not is_quiet():
         console.print("\n[bold]Liquibase Rollback[/bold]")
         console.print(f"Project: [cyan]{project}[/cyan]")
         console.print(f"Environment: [cyan]{env}[/cyan]")
@@ -180,7 +160,7 @@ def status(
     Examples:
         dbtool lb status myproject dev
     """
-    console = _get_console()
+    console = get_console()
 
     with console.status("[bold green]Checking changeset status..."):
         # TODO: Implement actual status check
@@ -192,7 +172,7 @@ def status(
             {"id": "001-create-users-table", "author": "alice", "description": "Create users table"},
         ]
 
-    if _is_quiet():
+    if is_quiet():
         console.print(f"pending: {len(pending)}")
         console.print(f"applied: {len(applied)}")
         return
@@ -237,7 +217,7 @@ def validate(
     Examples:
         dbtool lb validate myproject
     """
-    console = _get_console()
+    console = get_console()
 
     with console.status("[bold green]Validating changelog..."):
         # TODO: Implement actual validation
@@ -245,7 +225,7 @@ def validate(
         issues = []
 
     if valid:
-        if not _is_quiet():
+        if not is_quiet():
             console.print("[green]Changelog validation passed.[/green]")
     else:
         console.print("[red]Changelog validation failed:[/red]")

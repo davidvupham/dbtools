@@ -23,7 +23,7 @@ dev = [
 ]
 
 [project.scripts]
-dbtool = "gds_dbtool.main:app"
+dbtool = "gds_dbtool.main:cli"
 
 [build-system]
 requires = ["hatchling"]

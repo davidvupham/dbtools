@@ -21,7 +21,7 @@
 
 ## 1. Overview
 
-`dbtool` is a unified command-line tool for database operations. It simplifies database troubleshooting, maintenance execution, and ad-hoc querying by abstracting authentication (Vault/Kerberos) and platform differences (Windows/Linux) across Snowflake, SQL Server, MongoDB, and PostgreSQL.
+`dbtool` is a unified database CLI tool. It simplifies database troubleshooting, maintenance execution, and ad-hoc querying by abstracting authentication (Vault/Kerberos) and platform differences (Windows/Linux) across Snowflake, SQL Server, MongoDB, and PostgreSQL.
 
 [↑ Back to Table of Contents](#table-of-contents)
 
@@ -56,9 +56,9 @@
 
 **US-106: Direct AD account checks**
 > As a DBRE Engineer,
-> I want to run `dbtool ck ad <user> --status` or `dbtool ck ad <user> --verify-password`,
+> I want to run `dbtool health ad <user> --status` or `dbtool health ad <user> --verify-password`,
 > So that I can instantly validate if an account is Disabled/Locked or if a password is valid, independent of any database alert.
-> **Alias**: `ck` for `check`.
+> **Alias**: `ck` for `health`.
 
 **US-203: Execute Ansible playbooks**
 > As a DBRE Engineer,
@@ -126,9 +126,9 @@
 
 ```bash
 # Check (General Health & Status) - Alias: ck
-dbtool health check <target>                  # Runs default checks (Was: check)
-dbtool health check ad <username> --status    # Returns: Active, Disabled, or Locked
-dbtool health check ad <username> --verify-password # Prompts for password to test validity
+dbtool health check <target>                  # Runs default health checks
+dbtool health ad <username> --status          # Returns: Active, Disabled, or Locked
+dbtool health ad <username> --verify-password # Prompts for password to test validity
 
 # Alerts (Specific Investigations)
 dbtool alert triage <id>                      # Auto-detects alert type from ID

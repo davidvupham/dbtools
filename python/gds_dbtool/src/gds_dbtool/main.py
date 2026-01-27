@@ -24,6 +24,8 @@ from .logging import setup_file_logging
 class AppState:
     """Global application state."""
 
+    __slots__ = ("config", "console", "debug", "dry_run", "quiet")
+
     def __init__(self) -> None:
         self.config: GlobalConfig | None = None
         self.console: Console | None = None
@@ -130,9 +132,9 @@ def main(
         ),
     ] = False,
 ) -> None:
-    """dbtool - The operational Swiss Army Knife for database operations.
+    """Unified Database CLI tool.
 
-    A unified CLI tool for database troubleshooting, maintenance, and operations
+    Simplifies database troubleshooting, maintenance, and operations
     across Snowflake, SQL Server, MongoDB, and PostgreSQL.
     """
     # Initialize console

@@ -16,7 +16,7 @@ This document lists all approved commands, subcommands, and arguments for the `d
 
 - [Global arguments](#global-arguments)
 - [Environment variables](#environment-variables)
-- [Triage & health](#1-triage--health-check)
+- [Triage & health](#1-triage--health-health)
 - [Alerts](#2-alerts-alert)
 - [Query & SQL](#3-query--sql-sql)
 - [Access](#4-access-shell)
@@ -57,14 +57,14 @@ Environment variables override configuration file values but are overridden by C
 
 [↑ Back to Table of Contents](#table-of-contents)
 
-## 1. Triage & health (`check`)
+## 1. Triage & health (`health`)
 
 | Command | Arguments | Description | Alias |
 |---------|-----------|-------------|-------|
-| `health check` | `<target>` | Runs default health checks (Ping, Auth, Service Status) | `ck` |
-| `health check` | `<target> --deep` | Runs extended diagnostics (Resource usage, Logs) | `ck` |
-| `health check` | `ad <user> --status` | Checks if AD account is Disabled/Locked | `ck ad` |
-| `health check` | `ad <user> --verify-password` | Validates password (safe auth test) | `ck ad` |
+| `health check` | `<target>` | Runs default health checks (Ping, Auth, Service Status) | `ck check` |
+| `health check` | `<target> --deep` | Runs extended diagnostics (Resource usage, Logs) | `ck check` |
+| `health ad` | `<user> --status` | Checks if AD account is Disabled/Locked | `ck ad` |
+| `health ad` | `<user> --verify-password` | Validates password (safe auth test) | `ck ad` |
 
 [↑ Back to Table of Contents](#table-of-contents)
 
@@ -99,7 +99,6 @@ Environment variables override configuration file values but are overridden by C
 | Command | Arguments | Description | Alias |
 |---------|-----------|-------------|-------|
 | `shell` | `<target>` | Opens interactive native shell (psql/sqlcmd) | `sh` |
-| `login` | - | Authenticates user to Vault (Windows only) | - |
 
 [↑ Back to Table of Contents](#table-of-contents)
 
@@ -113,6 +112,7 @@ Environment variables override configuration file values but are overridden by C
 | `playbook list` | - | Lists available playbooks | `pb list` |
 | `tf plan` | `<proj> <env>` | Runs Terraform Plan (preview only) | - |
 | `tf apply` | `<proj> <env>` | Runs Terraform Apply (**supports `--dry-run`**) | - |
+| `tf output` | `<proj> <env>` | Shows Terraform outputs for a project/environment | - |
 
 > [!WARNING]
 > **Destructive operation**: `tf apply` modifies infrastructure. Use `--dry-run` to preview changes before applying.
@@ -183,6 +183,8 @@ A safe, simplified wrapper around the native Vault CLI.
 | `vault list` | `[path]` | List keys at path or alias (Default: base_path) | `vt ls` |
 | `vault get` | `<path> [key]` | Read secret (JSON default, or raw string if key provided) | `vt get` |
 | `vault put` | `<path> <k=v>...` | Write data to secret (**supports `--dry-run`**) | `vt put` |
+| `vault login` | `[--method <method>]` | Authenticates to Vault (LDAP default, SAML optional) | `vt login` |
+| `vault logout` | - | Revokes current Vault token and clears cached credentials | `vt logout` |
 | `vault delete` | `<path>` | **Interactive** deletion of secret (**supports `--dry-run`**) | `vt rm` |
 
 > [!CAUTION]

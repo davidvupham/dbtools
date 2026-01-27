@@ -10,15 +10,9 @@ from typing import Annotated
 import typer
 
 from ..constants import ExitCode
+from ._helpers import get_console
 
 app = typer.Typer(no_args_is_help=True)
-
-
-def _get_console():
-    """Get console from app state."""
-    from ..main import state
-
-    return state.console
 
 
 @app.command()
@@ -31,7 +25,7 @@ def triage(
         str | None,
         typer.Option("--target", help="Target host or database."),
     ] = None,
-    type: Annotated[  # noqa: ARG001
+    alert_type: Annotated[  # noqa: ARG001
         str | None,
         typer.Option("--type", help="Type of alert (blocking, long-query, etc)."),
     ] = None,
@@ -40,7 +34,7 @@ def triage(
 
     Analyzes the alert context and runs relevant diagnostics.
     """
-    console = _get_console()
+    console = get_console()
 
     if not alert_id and not target:
         console.print("[red]Provide either an ALERT_ID or --target.[/red]")

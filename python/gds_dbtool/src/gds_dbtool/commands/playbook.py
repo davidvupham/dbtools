@@ -11,29 +11,9 @@ import typer
 from rich.table import Table
 
 from ..constants import ExitCode
+from ._helpers import get_console, is_dry_run, is_quiet
 
 app = typer.Typer(no_args_is_help=True)
-
-
-def _get_console():
-    """Get console from app state."""
-    from ..main import state
-
-    return state.console
-
-
-def _is_quiet() -> bool:
-    """Check if quiet mode is enabled."""
-    from ..main import state
-
-    return state.quiet
-
-
-def _is_dry_run() -> bool:
-    """Check if dry-run mode is enabled."""
-    from ..main import state
-
-    return state.dry_run
 
 
 @app.command()
@@ -60,8 +40,8 @@ def run(
         dbtool playbook run os-patch mssql-01
         dbtool playbook run config-update db-cluster --extra-vars "version=1.2"
     """
-    console = _get_console()
-    dry_run = _is_dry_run()
+    console = get_console()
+    dry_run = is_dry_run()
 
     # Validate playbook exists
     available_playbooks = _get_available_playbooks()
@@ -72,7 +52,7 @@ def run(
 
     playbook_info = available_playbooks[name]
 
-    if not _is_quiet():
+    if not is_quiet():
         console.print(f"\n[bold]Playbook:[/bold] {name}")
         console.print(f"[bold]Target:[/bold] {target}")
         console.print(f"[bold]Description:[/bold] {playbook_info['description']}")
@@ -123,11 +103,11 @@ def run(
 @app.command(name="list")
 def list_playbooks() -> None:
     """List available approved playbooks."""
-    console = _get_console()
+    console = get_console()
 
     playbooks = _get_available_playbooks()
 
-    if _is_quiet():
+    if is_quiet():
         for name in playbooks:
             console.print(name)
         return

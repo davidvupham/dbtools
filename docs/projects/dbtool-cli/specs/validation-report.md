@@ -32,7 +32,7 @@
 
 ## Executive summary
 
-The `dbtool-cli` project is in the **Initiation/Design** phase. The documentation outlines a robust, modern Python-based CLI using Typer and Rich frameworks.
+The `dbtool-cli` project (Python package: `gds-dbtool`) provides a unified database CLI tool built with Typer and Rich frameworks. The CLI binary is `dbtool`.
 
 ### Overall assessment
 
@@ -58,7 +58,7 @@ Validation against `docs/best-practices/documentation-standards.md`.
 | No progress indicators documented | ✅ Fixed | Added section 8 "Progress indicators" in technical-architecture.md |
 | Environment variables not documented | ✅ Fixed | Added "Environment variables" section in command-reference.md and section 7 in technical-architecture.md |
 | Inconsistent verb-noun ordering (`dbtool sql`) | ✅ Fixed | Refactored `dbtool sql` to `dbtool sql exec` to match `vault list` pattern |
-| Top-level verbs (`check`, `alert`) | ✅ Fixed | Refactored to `dbtool health check` and `dbtool alert triage` |
+| Top-level verbs (`check`, `alert`) | ✅ Fixed | Refactored to `dbtool health check`, `dbtool health ad`, and `dbtool alert triage` |
 | Table of Contents | ✅ | Present in all documents.
 
 ### Content quality

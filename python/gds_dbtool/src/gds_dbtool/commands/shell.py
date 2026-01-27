@@ -10,22 +10,9 @@ from typing import Annotated
 import typer
 
 from ..constants import ExitCode
+from ._helpers import get_console, is_quiet
 
 app = typer.Typer(no_args_is_help=True)
-
-
-def _get_console():
-    """Get console from app state."""
-    from ..main import state
-
-    return state.console
-
-
-def _is_quiet() -> bool:
-    """Check if quiet mode is enabled."""
-    from ..main import state
-
-    return state.quiet
 
 
 @app.callback(invoke_without_command=True)
@@ -46,7 +33,7 @@ def shell(
     if ctx.invoked_subcommand is not None:
         return
 
-    console = _get_console()
+    console = get_console()
 
     with console.status(f"[bold green]Connecting to {target}..."):
         # TODO: Implement actual shell connection
@@ -58,7 +45,7 @@ def shell(
         # Placeholder - detect database type and build command
         db_type = "postgres"  # Would come from inventory lookup
 
-    if not _is_quiet():
+    if not is_quiet():
         console.print(f"[green]Connected to {target}[/green]")
         console.print("[dim]Type \\q or exit to disconnect.[/dim]\n")
 
@@ -91,7 +78,7 @@ def login() -> None:
     On Windows, prompts for AD credentials and stores Vault token.
     On Linux, uses Kerberos automatically.
     """
-    console = _get_console()
+    console = get_console()
 
     # Redirect to vault login
     console.print("[yellow]Use 'dbtool vault login' instead.[/yellow]")

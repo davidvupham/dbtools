@@ -10,26 +10,14 @@ from typing import Annotated
 import typer
 from rich.table import Table
 
+from ._helpers import get_console, is_quiet
+
 app = typer.Typer(no_args_is_help=True)
-
-
-def _get_console():
-    """Get console from app state."""
-    from ..main import state
-
-    return state.console
-
-
-def _is_quiet() -> bool:
-    """Check if quiet mode is enabled."""
-    from ..main import state
-
-    return state.quiet
 
 
 @app.command(name="list")
 def list_targets(
-    type: Annotated[
+    db_type: Annotated[
         str | None,
         typer.Option("--type", "-t", help="Filter by database type (postgres, mssql, mongo, snowflake)."),
     ] = None,
@@ -43,7 +31,7 @@ def list_targets(
         dbtool inventory list
         dbtool inventory list --type postgres
     """
-    console = _get_console()
+    console = get_console()
 
     with console.status("[bold green]Fetching inventory..."):
         # TODO: Implement actual inventory lookup from config/registry
@@ -54,10 +42,10 @@ def list_targets(
             {"name": "analytics-sf", "type": "snowflake", "host": "acme.snowflakecomputing.com", "port": "443"},
         ]
 
-    if type:
-        targets = [t for t in targets if t["type"] == type]
+    if db_type:
+        targets = [t for t in targets if t["type"] == db_type]
 
-    if _is_quiet():
+    if is_quiet():
         for t in targets:
             console.print(t["name"])
         return
@@ -85,7 +73,7 @@ def show(
     Examples:
         dbtool inventory show prod-postgres-01
     """
-    console = _get_console()
+    console = get_console()
 
     with console.status(f"[bold green]Looking up {target}..."):
         # TODO: Implement actual target lookup
@@ -99,7 +87,7 @@ def show(
             "vault_path": "secret/data/databases/prod-postgres-01",
         }
 
-    if _is_quiet():
+    if is_quiet():
         for k, v in target_info.items():
             console.print(f"{k}={v}")
         return

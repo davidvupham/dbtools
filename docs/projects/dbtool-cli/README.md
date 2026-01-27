@@ -10,7 +10,10 @@
 ![Status](https://img.shields.io/badge/Status-Draft-yellow)
 ![Phase](https://img.shields.io/badge/Phase-Initiation-blue)
 
-A unified CLI tool for database operations that troubleshoots database alerts and performs operational tasks across a heterogeneous environment (Snowflake, SQL Server, MongoDB, PostgreSQL).
+A unified database CLI tool that troubleshoots database alerts and performs operational tasks across a heterogeneous environment (Snowflake, SQL Server, MongoDB, PostgreSQL).
+
+> [!NOTE]
+> The Python package is named `gds-dbtool` (import as `gds_dbtool`), but the installed CLI binary is `dbtool`. Source code lives in `python/gds_dbtool/src/gds_dbtool/`.
 
 ## Table of contents
 

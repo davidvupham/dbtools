@@ -21,7 +21,7 @@
 
 ## 1. Executive summary
 
-The `dbtool-cli` project delivers the `dbtool` binary, a unified operational tool designed to streamline troubleshooting and maintenance tasks for the DBRE team.
+The `dbtool-cli` project delivers the `dbtool` binary (Python package: `gds-dbtool`), a unified database CLI tool designed to streamline troubleshooting and maintenance tasks for the GDS team.
 
 [↑ Back to Table of Contents](#table-of-contents)
 
@@ -63,7 +63,7 @@ The `dbtool-cli` project delivers the `dbtool` binary, a unified operational too
 
 **Effort**: 5 Days
 
-- [ ] Scaffold Python project structure (`src/dbtool`).
+- [ ] Scaffold Python project structure (`src/gds_dbtool`).
 - [ ] Implement `VaultAuth` class.
   - [ ] Linux Strategy: `hvac` + Kerberos support.
   - [ ] Windows Strategy: `hvac` + AD/LDAP Support.

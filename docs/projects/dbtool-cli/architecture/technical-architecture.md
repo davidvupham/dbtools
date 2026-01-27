@@ -26,7 +26,7 @@
 
 ## 1. Overview
 
-`dbtool` is a Python-based CLI application built on the **Typer** framework. The tool acts as an operational bridge and **Wrapper** ("The One Tool to Rule Them All"), strictly separating the user from the complexity of underlying tools (Vault, Ansible, Airflow, Liquibase, Database Drivers).
+`dbtool` is a unified database CLI tool built on the **Typer** framework. The tool acts as an operational bridge and **wrapper**, strictly separating the user from the complexity of underlying tools (Vault, Ansible, Airflow, Liquibase, Database Drivers).
 
 [↑ Back to Table of Contents](#table-of-contents)
 
@@ -280,7 +280,7 @@ with Progress(
 All network operations (Vault calls, database connections, API requests) display feedback within 100ms:
 
 ```text
-$ dbtool check prod-db-01
+$ dbtool health check prod-db-01
 ⠋ Connecting to Vault...
 ⠙ Authenticating (Kerberos)...
 ✓ Authenticated as dpham@CONTOSO.COM

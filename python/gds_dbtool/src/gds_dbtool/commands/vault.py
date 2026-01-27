@@ -16,29 +16,9 @@ from rich.table import Table
 from ..config import GlobalConfig, load_config, resolve_vault_path
 from ..constants import ExitCode
 from ..token_store import delete_token, get_token_location, load_token, save_token
+from ._helpers import get_console, is_dry_run, is_quiet
 
 app = typer.Typer(no_args_is_help=True)
-
-
-def _get_console():
-    """Get console from app state."""
-    from ..main import state
-
-    return state.console
-
-
-def _is_quiet() -> bool:
-    """Check if quiet mode is enabled."""
-    from ..main import state
-
-    return state.quiet
-
-
-def _is_dry_run() -> bool:
-    """Check if dry-run mode is enabled."""
-    from ..main import state
-
-    return state.dry_run
 
 
 def _get_vault_client(config: GlobalConfig) -> hvac.Client:
@@ -53,7 +33,7 @@ def _get_vault_client(config: GlobalConfig) -> hvac.Client:
     Raises:
         typer.Exit: If authentication fails.
     """
-    console = _get_console()
+    console = get_console()
     vault_url = config.active_profile.vault.url
     namespace = config.active_profile.vault.namespace
 
@@ -63,12 +43,12 @@ def _get_vault_client(config: GlobalConfig) -> hvac.Client:
     client = hvac.Client(url=vault_url, token=token, namespace=namespace)
 
     if token and not client.is_authenticated():
-        if not _is_quiet():
+        if not is_quiet():
             console.print("[yellow]Stored token is invalid or expired. Please run 'dbtool vault login'.[/yellow]")
         raise typer.Exit(code=ExitCode.AUTH_ERROR)
 
     if not token:
-        if not _is_quiet():
+        if not is_quiet():
             console.print("[yellow]No token found. Please run 'dbtool vault login'.[/yellow]")
         raise typer.Exit(code=ExitCode.AUTH_ERROR)
 
@@ -111,7 +91,7 @@ def login(
 
     Stores the resulting token securely in the system keyring.
     """
-    console = _get_console()
+    console = get_console()
     config = load_config()
     vault_url = config.active_profile.vault.url
     namespace = config.active_profile.vault.namespace
@@ -121,7 +101,7 @@ def login(
 
     client = hvac.Client(url=vault_url, namespace=namespace)
 
-    if not _is_quiet():
+    if not is_quiet():
         console.print(f"Authenticating to [bold]{vault_url}[/bold] using [cyan]{method}[/cyan]...")
 
     try:
@@ -156,7 +136,7 @@ def login(
 
         if client.is_authenticated():
             save_token(client.token)
-            if not _is_quiet():
+            if not is_quiet():
                 console.print(f"[green]Success![/green] Token saved to {get_token_location()}")
         else:
             console.print("[red]Authentication failed.[/red]")
@@ -173,9 +153,9 @@ def login(
 @app.command()
 def logout() -> None:
     """Clear stored Vault token."""
-    console = _get_console()
+    console = get_console()
     delete_token()
-    if not _is_quiet():
+    if not is_quiet():
         console.print("[green]Logged out. Token cleared.[/green]")
 
 
@@ -191,7 +171,7 @@ def list_secrets(
     ] = "table",
 ) -> None:
     """List secrets at a path."""
-    console = _get_console()
+    console = get_console()
     config = load_config()
     client = _get_vault_client(config)
 
@@ -206,7 +186,7 @@ def list_secrets(
 
         if output_format == "json":
             console.print_json(data=keys)
-        elif _is_quiet():
+        elif is_quiet():
             for key in keys:
                 console.print(key)
         else:
@@ -241,7 +221,7 @@ def get_secret(
     If a specific key is provided, outputs only that value (raw string).
     Otherwise, outputs all key-value pairs.
     """
-    console = _get_console()
+    console = get_console()
     config = load_config()
     client = _get_vault_client(config)
 
@@ -292,9 +272,9 @@ def put(
     Creates a new secret or updates an existing one.
     Use --dry-run to preview changes without executing.
     """
-    console = _get_console()
+    console = get_console()
     config = load_config()
-    dry_run = _is_dry_run()
+    dry_run = is_dry_run()
 
     full_path = resolve_vault_path(config, path)
     mount_point, sub_path = _parse_mount_and_path(full_path)
@@ -309,7 +289,7 @@ def put(
         secret_data[k] = v
 
     # Show what will be written
-    if dry_run or not _is_quiet():
+    if dry_run or not is_quiet():
         console.print(f"\n[bold]{'[DRY RUN] ' if dry_run else ''}Writing to {full_path}:[/bold]")
         for k, _v in secret_data.items():
             console.print(f"  {k} = ****")
@@ -340,7 +320,7 @@ def put(
                 mount_point=mount_point,
             )
 
-        if not _is_quiet():
+        if not is_quiet():
             console.print(f"[green]Successfully wrote to {full_path}[/green]")
 
     except hvac.exceptions.Forbidden:
@@ -366,9 +346,9 @@ def delete_secret(
     Use --hard to permanently destroy the secret and all versions.
     Use --dry-run to preview the operation without executing.
     """
-    console = _get_console()
+    console = get_console()
     config = load_config()
-    dry_run = _is_dry_run()
+    dry_run = is_dry_run()
 
     full_path = resolve_vault_path(config, path)
     mount_point, sub_path = _parse_mount_and_path(full_path)
@@ -401,7 +381,7 @@ def delete_secret(
             else:
                 client.secrets.kv.v2.delete_latest_version_of_secret(path=sub_path, mount_point=mount_point)
 
-        if not _is_quiet():
+        if not is_quiet():
             if hard:
                 console.print(f"[green]Permanently destroyed {full_path}[/green]")
             else:

@@ -11,22 +11,9 @@ import typer
 from rich.table import Table
 
 from ..constants import ExitCode
+from ._helpers import get_console, is_quiet
 
 app = typer.Typer(no_args_is_help=True)
-
-
-def _get_console():
-    """Get console from app state."""
-    from ..main import state
-
-    return state.console
-
-
-def _is_quiet() -> bool:
-    """Check if quiet mode is enabled."""
-    from ..main import state
-
-    return state.quiet
 
 
 @app.callback()
@@ -50,13 +37,13 @@ def run_checks(
 
     Use --deep for extended diagnostics.
     """
-    console = _get_console()
+    console = get_console()
 
     with console.status(f"[bold green]Checking {target}..."):
         # TODO: Implement actual health checks using provider factory
         pass
 
-    if not _is_quiet():
+    if not is_quiet():
         table = Table(title=f"Health Check: {target}")
         table.add_column("Check", style="cyan")
         table.add_column("Result", style="green")
@@ -95,7 +82,7 @@ def ad(
     Queries AD to determine account state (Active, Disabled, Locked)
     or verify password validity.
     """
-    console = _get_console()
+    console = get_console()
 
     if not status and not verify_password:
         console.print("[yellow]Specify --status or --verify-password[/yellow]")
@@ -109,7 +96,7 @@ def ad(
     if status:
         # Placeholder - would come from actual LDAP query
         account_status = "Active"  # Could be: Active, Disabled, Locked
-        if _is_quiet():
+        if is_quiet():
             console.print(account_status)
         else:
             console.print(f"Account [cyan]{username}[/cyan]: [green]{account_status}[/green]")
@@ -124,7 +111,7 @@ def ad(
             valid = True  # Placeholder
 
         if valid:
-            if not _is_quiet():
+            if not is_quiet():
                 console.print("[green]Password is valid.[/green]")
         else:
             console.print("[red]Password is invalid.[/red]")

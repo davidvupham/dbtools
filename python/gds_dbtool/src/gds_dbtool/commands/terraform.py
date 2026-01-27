@@ -11,29 +11,9 @@ import typer
 from rich.prompt import Confirm
 
 from ..constants import ExitCode
+from ._helpers import get_console, is_dry_run, is_quiet
 
 app = typer.Typer(no_args_is_help=True)
-
-
-def _get_console():
-    """Get console from app state."""
-    from ..main import state
-
-    return state.console
-
-
-def _is_quiet() -> bool:
-    """Check if quiet mode is enabled."""
-    from ..main import state
-
-    return state.quiet
-
-
-def _is_dry_run() -> bool:
-    """Check if dry-run mode is enabled."""
-    from ..main import state
-
-    return state.dry_run
 
 
 @app.command()
@@ -54,9 +34,9 @@ def plan(
         dbtool tf plan mssql-cluster dev
         dbtool tf plan rds-instance prod --var "instance_type=db.r5.large"
     """
-    console = _get_console()
+    console = get_console()
 
-    if not _is_quiet():
+    if not is_quiet():
         console.print("\n[bold]Terraform Plan[/bold]")
         console.print(f"Project: [cyan]{project}[/cyan]")
         console.print(f"Environment: [cyan]{env}[/cyan]")
@@ -112,10 +92,10 @@ def apply(
         dbtool tf apply mssql-cluster dev
         dbtool tf apply rds-instance prod --reason "TICKET-456"
     """
-    console = _get_console()
-    dry_run = _is_dry_run()
+    console = get_console()
+    dry_run = is_dry_run()
 
-    if not _is_quiet():
+    if not is_quiet():
         console.print("\n[bold]Terraform Apply[/bold]")
         console.print(f"Project: [cyan]{project}[/cyan]")
         console.print(f"Environment: [cyan]{env}[/cyan]")
@@ -167,7 +147,7 @@ def output(
         dbtool tf output mssql-cluster prod
         dbtool tf output rds-instance dev db_endpoint
     """
-    console = _get_console()
+    console = get_console()
 
     with console.status("[bold green]Fetching terraform outputs..."):
         # TODO: Implement actual terraform output retrieval

@@ -12,22 +12,9 @@ import typer
 from rich.table import Table
 
 from ..constants import ExitCode
+from ._helpers import get_console, is_quiet
 
 app = typer.Typer(no_args_is_help=True)
-
-
-def _get_console():
-    """Get console from app state."""
-    from ..main import state
-
-    return state.console
-
-
-def _is_quiet() -> bool:
-    """Check if quiet mode is enabled."""
-    from ..main import state
-
-    return state.quiet
 
 
 @app.callback()
@@ -66,7 +53,7 @@ def execute(
         dbtool sql exec prod-db -f script.sql --format json
         dbtool sql exec prod-db "SELECT * FROM users" --reason "TICKET-123"
     """
-    console = _get_console()
+    console = get_console()
 
     if not query and not file:
         console.print("[red]Provide either a query string or --file.[/red]")
@@ -84,7 +71,7 @@ def execute(
         query = file.read_text()
 
     # Log audit reason if provided
-    if reason and not _is_quiet():
+    if reason and not is_quiet():
         console.print(f"[dim]Audit reason: {reason}[/dim]")
 
     with console.status(f"[bold green]Executing query on {target}..."):
@@ -123,7 +110,7 @@ def execute(
         data = [dict(zip(columns, row)) for row in rows]
         console.print(yaml.dump(data, sort_keys=False))
 
-    elif _is_quiet():
+    elif is_quiet():
         for row in rows:
             console.print("\t".join(str(v) for v in row))
     else:
