@@ -4,7 +4,7 @@
 
 > **Document Version:** 1.0
 > **Last Updated:** January 22, 2026
-> **Maintainers:** DBRE Team
+> **Maintainers:** GDS Team
 > **Status:** Draft
 
 ![Status](https://img.shields.io/badge/Status-Draft-yellow)
@@ -37,6 +37,7 @@ A unified CLI tool for Database Reliability Engineering (DBRE) that troubleshoot
 - [Technical Architecture](architecture/technical-architecture.md) - Authentication flows and design
 - [Decision Log](management/decision-log.md) - Architectural decisions
 - [Troubleshooting Guide](specs/troubleshooting.md) - Common issues and solutions
+- [Validation Report](specs/validation_report.md) - Best practice analysis
 
 [↑ Back to Table of Contents](#table-of-contents)
 

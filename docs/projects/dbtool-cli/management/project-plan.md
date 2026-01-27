@@ -4,7 +4,7 @@
 
 > **Document Version:** 1.0
 > **Last Updated:** January 22, 2026
-> **Maintainers:** DBRE Team
+> **Maintainers:** GDS Team
 > **Status:** Draft
 
 ![Status](https://img.shields.io/badge/Status-Draft-yellow)

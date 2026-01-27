@@ -4,7 +4,7 @@
 
 > **Document Version:** 1.0
 > **Last Updated:** January 22, 2026
-> **Maintainers:** DBRE Team
+> **Maintainers:** GDS Team
 > **Status:** Draft
 
 ![Status](https://img.shields.io/badge/Status-Draft-yellow)
@@ -18,7 +18,9 @@
 - [Technology stack](#4-technology-stack)
 - [Cross-platform strategy](#5-cross-platform-strategy)
 - [Configuration schema](#6-configuration-schema)
-- [Error handling](#7-error-handling)
+- [Configuration schema](#6-configuration-schema)
+- [Telemetry & debugging](#7-telemetry--debugging)
+- [Error handling](#8-error-handling)
 
 ## 1. Overview
 
@@ -112,6 +114,9 @@ graph TD
 | **Auth** | LDAP / Userpass (Prompt) | Kerberos / GSSAPI (Auto) |
 | **Drivers** | ODBC Driver Manager often present | UnixODBC may be required |
 | **Config** | `%APPDATA%\dbtool\config.toml` | `~/.config/dbtool/config.toml` |
+| **Distribution** | Standalone EXE via PyInstaller | PEX/Shiv or PyInstaller binary |
+
+> **Note on Distribution**: To avoid Python dependency conflicts on user workstations, `dbtool` is distributed as a self-contained binary. This ensures that the tool runs identically regardless of the user's local Python environment.
 
 [↑ Back to Table of Contents](#table-of-contents)
 
@@ -127,6 +132,14 @@ vault_namespace = "db-ops"
 
 [defaults]
 output_format = "table"     # table, json, csv
+
+[profile.default]
+vault_url = "https://vault.example.com"
+vault_namespace = "db-ops"
+
+[profile.prod]
+vault_url = "https://vault.example.com"
+vault_namespace = "db-ops-prod"
 ```
 
 The troubleshooting module uses a **Strategy Pattern**.
@@ -144,7 +157,19 @@ The troubleshooting module uses a **Strategy Pattern**.
 
 [↑ Back to Table of Contents](#table-of-contents)
 
-## 7. Error handling
+[↑ Back to Table of Contents](#table-of-contents)
+
+## 7. Telemetry & debugging
+
+To support operational troubleshooting of the tool itself, `dbtool` implements a robust logging strategy.
+
+- **Standard Operation**: Output goes to `stdout`. Errors go to `stderr`.
+- **Debug Mode**: When run with `--debug`, verbose logs (HTTP requests, Vault interactions, SQL driver traces) are emitted to `stderr`.
+- **Log Files**: A rotating log file is maintained at `%APPDATA%\dbtool\logs\dbtool.log` (Windows) or `~/.local/state/dbtool/logs/dbtool.log` (Linux) for post-mortem analysis.
+
+[↑ Back to Table of Contents](#table-of-contents)
+
+## 8. Error handling
 
 The CLI uses consistent error codes and messages across all commands.
 

@@ -4,13 +4,21 @@
 
 > **Document Version:** 1.0
 > **Last Updated:** January 22, 2026
-> **Maintainers:** DBRE Team
+> **Maintainers:** GDS Team
 > **Status:** Draft
 
 ![Status](https://img.shields.io/badge/Status-Draft-yellow)
 ![Type](https://img.shields.io/badge/Type-Reference-blue)
 
 This document lists all approved commands, subcommands, and arguments for the `dbtool` CLI.
+
+## Global arguments
+
+| Argument | Description |
+|----------|-------------|
+| `--debug` | Enable verbose logging to `stderr`. |
+| `--profile <name>` | Use a specific configuration profile (overrides default). |
+| `--help` | Show help message and exit. |
 
 ## Table of contents
 
@@ -20,6 +28,8 @@ This document lists all approved commands, subcommands, and arguments for the `d
 - [Access](#4-access-shell)
 - [Operations & maintenance](#5-operations--maintenance-maint)
 - [Liquibase](#6-liquibase-lb)
+- [Configuration](#7-configuration-config)
+- [System](#8-system-sys)
 
 ## 1. Triage & health (`check`)
 
@@ -87,5 +97,26 @@ This document lists all approved commands, subcommands, and arguments for the `d
 | `lb update` | `<proj> <env>` | Runs Liquibase update (Docker) | - |
 | `lb rollback` | `<proj> <env>` | Runs Liquibase rollback | - |
 | `lb status` | `<proj> <env>` | Shows pending changesets | - |
+
+[↑ Back to Table of Contents](#table-of-contents)
+
+## 7. Configuration (`config`)
+
+| Command | Arguments | Description | Alias |
+|---------|-----------|-------------|-------|
+| `config list` | - | Lists all configuration values | `cfg list` |
+| `config get` | `<key>` | Gets specific value (e.g. `auth.vault_url`) | `cfg get` |
+| `config set` | `<key> <value>` | Sets a configuration value | `cfg set` |
+| `config profiles` | - | Lists available profiles | - |
+| `config use` | `<profile>` | Switches the default active profile | - |
+
+[↑ Back to Table of Contents](#table-of-contents)
+
+## 8. System (`sys`)
+
+| Command | Arguments | Description | Alias |
+|---------|-----------|-------------|-------|
+| `upgrade` | - | Self-updates the CLI to the latest version | - |
+| `version` | - | Prints version info | - |
 
 [↑ Back to Table of Contents](#table-of-contents)
