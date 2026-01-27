@@ -2,10 +2,11 @@
 
 Provides commands for executing ad-hoc SQL queries and scripts.
 """
+
 from __future__ import annotations
 
-from pathlib import Path
-from typing import Annotated, Optional
+from pathlib import Path  # noqa: TC003 - needed at runtime for Typer annotation evaluation
+from typing import Annotated
 
 import typer
 from rich.table import Table
@@ -29,24 +30,29 @@ def _is_quiet() -> bool:
     return state.quiet
 
 
-@app.callback(invoke_without_command=True)
-def sql(
-    ctx: typer.Context,
+@app.callback()
+def main() -> None:
+    """SQL query execution engine."""
+    pass
+
+
+@app.command(name="exec")
+def execute(
     target: Annotated[str, typer.Argument(help="Target database (name or connection string).")],
     query: Annotated[
-        Optional[str],
+        str | None,
         typer.Argument(help="SQL query to execute."),
     ] = None,
     file: Annotated[
-        Optional[Path],
+        Path | None,
         typer.Option("--file", "-f", help="SQL script file to execute."),
     ] = None,
     format: Annotated[
         str,
-        typer.Option("--format", help="Output format (table, json, csv)."),
+        typer.Option("--format", help="Output format (table, json, csv, yaml)."),
     ] = "table",
     reason: Annotated[
-        Optional[str],
+        str | None,
         typer.Option("--reason", help="Audit reason or ticket ID for this query."),
     ] = None,
 ) -> None:
@@ -56,13 +62,10 @@ def sql(
     Authentication is handled automatically via Vault.
 
     Examples:
-        dbtool sql prod-db "SELECT 1"
-        dbtool sql prod-db -f script.sql --format json
-        dbtool sql prod-db "SELECT * FROM users" --reason "TICKET-123"
+        dbtool sql exec prod-db "SELECT 1"
+        dbtool sql exec prod-db -f script.sql --format json
+        dbtool sql exec prod-db "SELECT * FROM users" --reason "TICKET-123"
     """
-    if ctx.invoked_subcommand is not None:
-        return
-
     console = _get_console()
 
     if not query and not file:
@@ -101,8 +104,6 @@ def sql(
 
     # Format output
     if format == "json":
-        import json
-
         data = [dict(zip(columns, row)) for row in rows]
         console.print_json(data=data)
 
@@ -116,14 +117,19 @@ def sql(
         writer.writerows(rows)
         console.print(output.getvalue())
 
-    else:  # table
-        if _is_quiet():
-            for row in rows:
-                console.print("\t".join(str(v) for v in row))
-        else:
-            table = Table(title=f"Query Results ({len(rows)} rows)")
-            for col in columns:
-                table.add_column(col, style="cyan")
-            for row in rows:
-                table.add_row(*[str(v) for v in row])
-            console.print(table)
+    elif format == "yaml":
+        import yaml
+
+        data = [dict(zip(columns, row)) for row in rows]
+        console.print(yaml.dump(data, sort_keys=False))
+
+    elif _is_quiet():
+        for row in rows:
+            console.print("\t".join(str(v) for v in row))
+    else:
+        table = Table(title=f"Query Results ({len(rows)} rows)")
+        for col in columns:
+            table.add_column(col, style="cyan")
+        for row in rows:
+            table.add_row(*[str(v) for v in row])
+        console.print(table)

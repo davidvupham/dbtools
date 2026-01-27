@@ -1,9 +1,9 @@
 """Tests for various command modules."""
+
 from __future__ import annotations
 
-from typer.testing import CliRunner
-
 from gds_dbtool.main import app
+from typer.testing import CliRunner
 
 runner = CliRunner()
 
@@ -49,6 +49,13 @@ class TestCheckCommands:
         """Test check --help output."""
         result = runner.invoke(app, ["check", "--help"])
         assert result.exit_code == 0
+        # Verify subcommands are listed
+        assert "check" in result.output or "ad" in result.output
+
+    def test_check_check_subcommand_help(self):
+        """Test check check --help output has --deep."""
+        result = runner.invoke(app, ["check", "check", "--help"])
+        assert result.exit_code == 0
         assert "--deep" in result.output
 
     def test_check_ad_subcommand_exists(self):
@@ -64,6 +71,12 @@ class TestSqlCommands:
     def test_sql_help(self):
         """Test sql --help output."""
         result = runner.invoke(app, ["sql", "--help"])
+        assert result.exit_code == 0
+        assert "exec" in result.output
+
+    def test_sql_exec_help(self):
+        """Test sql exec --help output."""
+        result = runner.invoke(app, ["sql", "exec", "--help"])
         assert result.exit_code == 0
         assert "--format" in result.output
         assert "--file" in result.output

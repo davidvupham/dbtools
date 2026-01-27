@@ -2,11 +2,12 @@
 
 Provides rotating file-based logging for post-mortem analysis.
 """
+
 from __future__ import annotations
 
 import logging
 from logging.handlers import RotatingFileHandler
-from pathlib import Path
+from pathlib import Path  # noqa: TC003 - needed at runtime for return type annotation
 
 from .config import get_log_dir
 
