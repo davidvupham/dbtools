@@ -23,7 +23,8 @@
 
 - [1. Install on RHEL/CentOS](#1-install-on-rhelcentos)
 - [2. Install on Ubuntu/Debian](#2-install-on-ubuntudebian)
-- [3. Verify Installation](#3-verify-installation)
+- [3. Install on Windows](#3-install-on-windows)
+- [4. Verify Installation](#4-verify-installation)
 - [Troubleshooting](#troubleshooting)
 
 ## Steps
@@ -76,7 +77,37 @@ sudo apt-get install vault-enterprise
 
 [Back to Table of Contents](#table-of-contents)
 
-## 3. Verify Installation
+[Back to Table of Contents](#table-of-contents)
+
+## 3. Install on Windows
+
+There are two primary methods for installing Vault on Windows.
+
+### Method A: Manual Download (Recommended for Enterprise)
+
+To ensure you have the specific **Vault Enterprise** binary (with the `+ent` build tag):
+
+1.  **Download:** Visit the [HashiCorp Releases](https://releases.hashicorp.com/vault/) page.
+2.  **Select Version:** Choose your desired version (e.g., `1.15.2+ent`).
+3.  **Download Zip:** Download the `vault_<version>+ent_windows_amd64.zip` file.
+4.  **Extract:** Unzip the `vault.exe` binary to a permanent location (e.g., `C:\HashiCorp\Vault\`).
+5.  **Update PATH:** Add that directory to your system's `Path` environment variable.
+
+### Method B: Chocolatey
+
+If you use Chocolatey, you can install the standard Vault CLI. 
+
+> [!NOTE]
+> The Chocolatey package typically installs the standard (OSS) binary. It is fully compatible with Enterprise servers for most client operations, but `vault --version` will not show the `+ent` suffix.
+
+```powershell
+# Open PowerShell as Administrator
+choco install vault -y
+```
+
+[Back to Table of Contents](#table-of-contents)
+
+## 4. Verify Installation
 
 Check that Vault is installed and available in your path.
 
