@@ -11,7 +11,7 @@ This directory contains task-oriented how-to guides for HashiCorp Vault and the 
 | Guide | Purpose |
 |:---|:---|
 | [Developing with gds_vault](./developing-with-gds-vault.md) | Day-to-day usage of gds_vault in applications |
-| [Getting Started with CLI](./getting-started-with-cli.md) | Beginner's guide: SAML login, read/write secrets |
+| [Install Vault CLI](./install-vault-cli.md) | Install Vault on RHEL/Ubuntu Linux |
 | [Rotate AD Passwords](./rotate-ad-passwords.md) | Configure Vault to manage Active Directory passwords |
 
 ## Developing with gds_vault

@@ -27,6 +27,7 @@ Welcome to the dbtools tutorials library. These guides are designed to help you 
 - **[Kubernetes](infrastructure/kubernetes/README.md)**: Container orchestration.
 - **[Ansible](infrastructure/ansible/README.md)**: Configuration management.
 - **[Terraform](infrastructure/terraform/README.md)**: Infrastructure as Code (IaC).
+- **[Vault](infrastructure/vault/README.md)**: Secrets management with HashiCorp Vault.
 
 ### Cloud (`cloud/`)
 

@@ -1,6 +1,6 @@
 # Getting Started with Vault CLI
 
-**[← Back to How-To Guides](./README.md)**
+**[← Back to Vault Tutorials](./README.md)**
 
 > **Document Version:** 1.0
 > **Last Updated:** January 26, 2026
@@ -17,7 +17,7 @@
 > **Goal:** Learn how to authenticate and perform basic secret operations using the Vault CLI.
 > **Prerequisites:** 
 > - A generic Vault instance that is operational and available.
-> - Vault CLI installed locally.
+> - Vault CLI installed locally (see [Installation Guide](../../../how-to/vault/install-vault-cli.md)).
 > - Your specific access details (Namespace, Role, Auth Method).
 
 ## Table of Contents
