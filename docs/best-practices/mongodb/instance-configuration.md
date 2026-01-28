@@ -4,7 +4,7 @@
 
 > **Document Version:** 1.0
 > **Last Updated:** January 27, 2026
-> **Maintainers:** Database Reliability Engineering
+> **Maintainers:** Global Data Services
 > **Status:** Draft
 
 **Table of Contents**

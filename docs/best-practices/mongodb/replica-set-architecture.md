@@ -25,6 +25,7 @@
 
 A replica set architecture is essential for **Business Continuity**, ensuring both High Availability (HA) and Disaster Recovery (DR).
 
+> [!NOTE]
 > **Terminology:** A **Replica Set** is a group of `mongod` processes maintaining the same data set. In MongoDB, a "Cluster" technically refers to a sharded architecture (which contains multiple replica sets), though the term is often used loosely to describe any production deployment. This guide focuses on the Replica Set unit.
 
 [Back to Table of Contents](#table-of-contents)
@@ -33,6 +34,7 @@ A replica set architecture is essential for **Business Continuity**, ensuring bo
 
 ### Distributed PSS (5-Node / 3-DC)
 
+> [!NOTE]
 > **Definition:** **PSS** (Primary-Secondary-Secondary) is the standard industry term for a replica set where **all members are data-bearing**, regardless of the total node count (3, 5, 7, etc.). It contrasts with **PSA** (Primary-Secondary-Arbiter), where voting-only members are used.
 
 **Restriction:** Enterprise Standard (Minimum for High Availability).
@@ -47,6 +49,7 @@ To achieve true enterprise resilience and survive a full data center failure whi
     *   **DC3 (Quorum Site):** 1 Node - `priority: 0`, `hidden: true`
         *   **Role:** Voting only. `priority: 0` prevents it from *ever* becoming Primary. `hidden: true` prevents clients from reading from it (avoiding high latency).
 
+> [!NOTE]
 > **Note on Priorities:** MongoDB Election Priorities are **scores**, not ranks. Higher numbers are preferred.
 > *   `2` beats `1`.
 > *   `0` means "Never".

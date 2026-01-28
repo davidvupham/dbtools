@@ -2,8 +2,10 @@
 
 **[← Back to Best Practices Index](../README.md)**
 
-> **Topic:** MongoDB Configuration and Operations
-> **Maintainers:** Database Reliability Engineering
+> **Document Version:** 1.0
+> **Last Updated:** January 27, 2026
+> **Maintainers:** Global Data Services
+> **Status:** Draft
 
 ## Guides
 
