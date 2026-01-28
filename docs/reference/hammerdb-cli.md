@@ -1,4 +1,14 @@
-# HammerDB CLI (Tcl) Reference
+# HammerDB CLI (Tcl) reference
+
+**🔗 [← Back to Reference Index](./README.md)**
+
+> **Document Version:** 1.0
+> **Last Updated:** January 27, 2026
+> **Maintainers:** Application Infrastructure Team
+> **Status:** Production
+
+![Status](https://img.shields.io/badge/Status-Production-green)
+![Topic](https://img.shields.io/badge/Topic-HammerDB-blue)
 
 This guide provides a comprehensive reference for the HammerDB Command Line Interface (CLI) using Tcl. It covers connection, configuration, and execution commands for PostgreSQL and Microsoft SQL Server.
 

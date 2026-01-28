@@ -1,4 +1,17 @@
-# Mastering GNU Screen: From Beginner to Advanced
+# Mastering GNU Screen: from beginner to advanced
+
+**🔗 [← Back to Linux Reference](../../README.md)**
+
+> **Document Version:** 1.0
+> **Last Updated:** January 27, 2026
+> **Maintainers:** Application Infrastructure Team
+> **Status:** Production
+
+![Status](https://img.shields.io/badge/Status-Production-green)
+![Topic](https://img.shields.io/badge/Topic-Screen-blue)
+
+> [!IMPORTANT]
+> **Related Docs:** [Screen Reference](./reference.md) | [Tmux Tutorial](../tmux/tutorial.md)
 
 ## Introduction
 **GNU Screen** is a classic and robust terminal multiplexer. While simpler than tmux, it is ubiquitous—often pre-installed on many server environments where tmux might not be. It allows you to:

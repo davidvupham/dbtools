@@ -11,7 +11,7 @@
 ![Topic](https://img.shields.io/badge/Topic-Cheatsheet-purple)
 
 > [!IMPORTANT]
-> **Related Docs:** [Architecture](../../explanation/podman/podman-architecture.md) | [Installation](../../how-to/podman/install-podman-rhel.md) | [Maintenance](../../runbooks/podman/maintenance.md) | [Troubleshooting](../../how-to/podman/troubleshooting.md) | [Tutorial](../../tutorials/podman/getting-started.md)
+> **Related Docs:** [Architecture](../../explanation/podman/podman-architecture.md) | [Installation](../../how-to/podman/install-podman-rhel.md) | [Maintenance](../../runbooks/podman/maintenance.md) | [Troubleshooting](../../how-to/podman/troubleshooting.md)
 
 ## Table of Contents
 

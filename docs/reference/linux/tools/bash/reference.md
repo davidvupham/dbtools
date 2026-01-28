@@ -39,7 +39,7 @@ cd -
 # Now you're back in ~/projects/myapp
 ```
 
-[↑ Back to Table of Contents](#table-of-contents)
+[↑ Back to table of contents](#table-of-contents)
 
 ## Command history
 
@@ -54,7 +54,7 @@ Press `Ctrl + R` and type to search command history. Press `Ctrl + R` again to c
 | `Enter` | Execute command |
 | `Ctrl + G` | Cancel search |
 
-[↑ Back to Table of Contents](#table-of-contents)
+[↑ Back to table of contents](#table-of-contents)
 
 ## Brace expansion
 
@@ -74,7 +74,7 @@ cp config.{yml,yml.bak}
 mkdir -p project/{src,tests}/{main,utils}
 ```
 
-[↑ Back to Table of Contents](#table-of-contents)
+[↑ Back to table of contents](#table-of-contents)
 
 ## Command re-execution
 
@@ -98,7 +98,7 @@ cd !$
 # Equivalent to: cd /some/long/path
 ```
 
-[↑ Back to Table of Contents](#table-of-contents)
+[↑ Back to table of contents](#table-of-contents)
 
 ## xargs
 
@@ -128,7 +128,7 @@ find . -name "*.txt" -print0 | xargs -0 rm
 find . -name "*.jpg" | xargs -P 4 -I {} convert {} {}.png
 ```
 
-[↑ Back to Table of Contents](#table-of-contents)
+[↑ Back to table of contents](#table-of-contents)
 
 ## Aliases
 
@@ -160,7 +160,7 @@ Reload after changes:
 source ~/.bashrc
 ```
 
-[↑ Back to Table of Contents](#table-of-contents)
+[↑ Back to table of contents](#table-of-contents)
 
 ## less
 
@@ -193,7 +193,7 @@ less -S file.txt    # Don't wrap long lines
 less +F file.txt    # Follow mode (like tail -f)
 ```
 
-[↑ Back to Table of Contents](#table-of-contents)
+[↑ Back to table of contents](#table-of-contents)
 
 ## Process substitution
 
@@ -217,7 +217,7 @@ diff <(sort file1.txt) <(sort file2.txt)
 paste <(cut -f1 file1.txt) <(cut -f2 file2.txt)
 ```
 
-[↑ Back to Table of Contents](#table-of-contents)
+[↑ Back to table of contents](#table-of-contents)
 
 ## tldr
 
@@ -245,7 +245,7 @@ tldr awk
 tldr curl
 ```
 
-[↑ Back to Table of Contents](#table-of-contents)
+[↑ Back to table of contents](#table-of-contents)
 
 ## Directory bookmarks with zoxide
 
@@ -286,4 +286,4 @@ zi project     # Interactive selection with fzf
 
 Zoxide learns from your navigation patterns and ranks directories by frequency and recency.
 
-[↑ Back to Table of Contents](#table-of-contents)
+[↑ Back to table of contents](#table-of-contents)

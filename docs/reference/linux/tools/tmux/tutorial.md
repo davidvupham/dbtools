@@ -1,4 +1,17 @@
-# Mastering Tmux: From Beginner to Advanced
+# Mastering Tmux: from beginner to advanced
+
+**🔗 [← Back to Linux Reference](../../README.md)**
+
+> **Document Version:** 1.0
+> **Last Updated:** January 27, 2026
+> **Maintainers:** Application Infrastructure Team
+> **Status:** Production
+
+![Status](https://img.shields.io/badge/Status-Production-green)
+![Topic](https://img.shields.io/badge/Topic-Tmux-blue)
+
+> [!IMPORTANT]
+> **Related Docs:** [Tmux Reference](./reference.md) | [Screen Tutorial](../screen/tutorial.md)
 
 ## Introduction
 **Tmux** (Terminal Multiplexer) is a productivity tool that allows you to manage multiple terminal sessions within a single window. It enables you to:

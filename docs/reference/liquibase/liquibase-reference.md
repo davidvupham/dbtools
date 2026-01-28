@@ -503,7 +503,7 @@ liquibase releaseLocks
 -   Check "Performance Tuning" section.
 -   Enable JSON logging to identify slow changesets.
 
-### Deployment Hanged
+### Deployment hung
 
 **Symptom:** Process stuck without output.
 **Fix:**

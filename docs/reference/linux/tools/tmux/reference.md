@@ -1,11 +1,24 @@
-# Tmux Reference Guide & Cheat Sheet
+# Tmux reference guide and cheat sheet
 
-## Key Definitions
+**🔗 [← Back to Linux Reference](../../README.md)**
+
+> **Document Version:** 1.0
+> **Last Updated:** January 27, 2026
+> **Maintainers:** Application Infrastructure Team
+> **Status:** Production
+
+![Status](https://img.shields.io/badge/Status-Production-green)
+![Topic](https://img.shields.io/badge/Topic-Tmux-blue)
+
+> [!IMPORTANT]
+> **Related Docs:** [Tmux Tutorial](./tutorial.md) | [Screen Reference](../screen/reference.md) | [Bash Reference](../bash/reference.md)
+
+## Key definitions
 | Term | Definition |
 | :--- | :--- |
 | **Prefix** | The key combination pressed *before* each tmux command. Default is `Ctrl + b`. **Usage**: Press `Ctrl + b`, release, then press the command key. |
 | **Session**| An independent workspace running on the tmux server. |
-| **Window** | A "tab" within a session. occupies the full session view. |
+| **Window** | A "tab" within a session. Occupies the full session view. |
 | **Pane** | A split section of a window. |
 
 ---

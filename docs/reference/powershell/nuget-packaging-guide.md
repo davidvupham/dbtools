@@ -1,4 +1,17 @@
-# NuGet Package Build Guide for GDS PowerShell Modules
+# NuGet package build guide for GDS PowerShell modules
+
+**🔗 [← Back to Reference Index](../README.md)**
+
+> **Document Version:** 1.0
+> **Last Updated:** January 27, 2026
+> **Maintainers:** Application Infrastructure Team
+> **Status:** Production
+
+![Status](https://img.shields.io/badge/Status-Production-green)
+![Topic](https://img.shields.io/badge/Topic-PowerShell-blue)
+
+> [!IMPORTANT]
+> **Related Docs:** [Build Summary](./package-build-summary.md)
 
 ## Overview
 

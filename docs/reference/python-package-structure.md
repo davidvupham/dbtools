@@ -1,4 +1,14 @@
-# Python Package Directory Structure
+# Python package directory structure
+
+**🔗 [← Back to Reference Index](./README.md)**
+
+> **Document Version:** 1.0
+> **Last Updated:** January 27, 2026
+> **Maintainers:** Application Infrastructure Team
+> **Status:** Production
+
+![Status](https://img.shields.io/badge/Status-Production-green)
+![Topic](https://img.shields.io/badge/Topic-Python-blue)
 
 This document describes the standard directory structure for Python packages used in this project.
 

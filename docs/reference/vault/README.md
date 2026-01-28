@@ -1,6 +1,14 @@
-# Vault Reference
+# Vault reference
 
-**[← Back to Vault Documentation Index](../../explanation/vault/README.md)**
+**🔗 [← Back to Vault Documentation Index](../../explanation/vault/README.md)**
+
+> **Document Version:** 1.0
+> **Last Updated:** January 27, 2026
+> **Maintainers:** Application Infrastructure Team
+> **Status:** Production
+
+![Status](https://img.shields.io/badge/Status-Production-green)
+![Topic](https://img.shields.io/badge/Topic-Vault-blue)
 
 This directory contains technical reference documentation for HashiCorp Vault concepts and the `gds_vault` Python client.
 

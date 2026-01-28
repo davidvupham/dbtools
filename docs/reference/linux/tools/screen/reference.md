@@ -1,6 +1,19 @@
-# GNU Screen Reference Guide & Cheat Sheet
+# GNU Screen reference guide and cheat sheet
 
-## Key Definitions
+**🔗 [← Back to Linux Reference](../../README.md)**
+
+> **Document Version:** 1.0
+> **Last Updated:** January 27, 2026
+> **Maintainers:** Application Infrastructure Team
+> **Status:** Production
+
+![Status](https://img.shields.io/badge/Status-Production-green)
+![Topic](https://img.shields.io/badge/Topic-Screen-blue)
+
+> [!IMPORTANT]
+> **Related Docs:** [Screen Tutorial](./tutorial.md) | [Tmux Reference](../tmux/reference.md) | [Bash Reference](../bash/reference.md)
+
+## Key definitions
 | Term | Definition |
 | :--- | :--- |
 | **Prefix (Command Key)** | The key combination pressed *before* each screen command. Default is `Ctrl + a`. **Usage**: Press `Ctrl + a`, release, then press the command key. |
