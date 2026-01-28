@@ -43,6 +43,21 @@ An architecture with 2 data nodes and 1 arbiter (no data).
 > [!WARNING]
 > Avoid PSA architectures for systems requiring strict `w:majority` guarantees.
 
+### Distributed PSS (5-Node / 3-DC)
+
+**Restriction:** High Availability / Disaster Recovery Standard.
+
+For systems requiring resilience against a full data center failure, a 5-node architecture spread across 3 data centers (2-2-1) is recommended.
+
+*   **Topology:**
+    *   **DC1:** 2 Nodes
+    *   **DC2:** 2 Nodes
+    *   **DC3:** 1 Node
+*   **Resilience:** Can sustain the loss of any single data center (losing 2 nodes leaves 3 voting members, ensuring a majority).
+*   **Write Concern:** Supports `w:majority` even with one DC offline.
+
+**Official Reference:** [Distributed Clusters](https://www.mongodb.com/docs/manual/core/replica-set-architecture-geographically-distributed/)
+
 **Official Reference:** [Replica Set Deployment Architectures](https://www.mongodb.com/docs/manual/core/replica-set-architectures/)
 
 ## Voting Members
