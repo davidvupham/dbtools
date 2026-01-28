@@ -1,6 +1,6 @@
 # How to test the mongodb_rhel Ansible role with Molecule
 
-**[← Back to How-To Index](../README.md)**
+**🔗 [← Back to How-To Index](../README.md)**
 
 > **Document Version:** 1.0
 > **Last Updated:** January 28, 2026
@@ -9,6 +9,9 @@
 
 ![Status](https://img.shields.io/badge/Status-Draft-yellow)
 ![Type](https://img.shields.io/badge/Type-How--To-green)
+
+> [!IMPORTANT]
+> **Related Docs:** [Role README](../../../ansible/roles/mongodb_rhel/README.md) | [RHEL Configuration Best Practices](../../best-practices/mongodb/rhel-configuration.md)
 
 > [!NOTE]
 > This guide shows you how to run Molecule tests for the `mongodb_rhel` Ansible role. The role configures RHEL for MongoDB using best-practice OS settings. If you are new to the role itself, read the [role README](../../../ansible/roles/mongodb_rhel/README.md) first.

@@ -1,10 +1,32 @@
 # mongodb_rhel — Ansible role
 
+**🔗 [← Back to Roles Index](../README.md)**
+
+> **Document Version:** 1.0
+> **Last Updated:** January 28, 2026
+> **Maintainers:** Global Data Services
+> **Status:** Draft
+
+![Status](https://img.shields.io/badge/Status-Draft-yellow)
+![Type](https://img.shields.io/badge/Type-Ansible_Role-blue)
+
+> [!IMPORTANT]
+> **Related Docs:** [RHEL Configuration Best Practices](../../../docs/best-practices/mongodb/rhel-configuration.md) | [Molecule Testing Guide](../../../docs/how-to/mongodb/molecule-testing.md) | [Shared Config File](../../../config/mongodb/rhel-best-practices.yml)
+
 Configures Red Hat Enterprise Linux (RHEL) 8 and 9 for MongoDB following
 production best practices. All recommended values are loaded from a shared
 YAML configuration file so that the Python validator
 (`gds_mongodb.rhel_validator`) and this Ansible role use the same source of
 truth.
+
+## Table of contents
+
+- [Quick start](#quick-start)
+- [What the role configures](#what-the-role-configures)
+- [Role variables](#role-variables)
+- [Testing with Molecule](#testing-with-molecule)
+  - [Container testing limitations](#container-testing-limitations)
+- [Dependencies](#dependencies)
 
 ## Quick start
 
@@ -22,6 +44,8 @@ ansible-playbook ansible/playbooks/mongodb_rhel_configure.yml \
   -e mongodb_version=8.0
 ```
 
+[↑ Back to Table of Contents](#table-of-contents)
+
 ## What the role configures
 
 | Category | Settings applied |
@@ -30,6 +54,8 @@ ansible-playbook ansible/playbooks/mongodb_rhel_configure.yml \
 | THP | Tuned profile for 7.x (`never`) or sysfs write for 8.0+ (`always`) |
 | Systemd limits | `LimitNOFILE` and `LimitNPROC` drop-in for the mongod service |
 | SELinux | Enforcing mode, `mongodb-selinux` package, custom path contexts |
+
+[↑ Back to Table of Contents](#table-of-contents)
 
 ## Role variables
 
@@ -41,6 +67,8 @@ ansible-playbook ansible/playbooks/mongodb_rhel_configure.yml \
 All best-practice values (sysctl, ulimits, THP, SELinux) are defined in the
 shared config file and loaded at runtime. Override individual settings in
 `group_vars` or `host_vars`.
+
+[↑ Back to Table of Contents](#table-of-contents)
 
 ## Testing with Molecule
 
@@ -74,7 +102,11 @@ following limitations apply when testing with the `default` (Docker) scenario:
 > validation, use a VM-based scenario (Vagrant or cloud instance) with a
 > real RHEL 9 image.
 
+[↑ Back to Table of Contents](#table-of-contents)
+
 ## Dependencies
 
 - `ansible.posix` collection (for `sysctl` and `selinux` modules)
 - `community.general` collection (for `sefcontext` module)
+
+[↑ Back to Table of Contents](#table-of-contents)
