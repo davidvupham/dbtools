@@ -23,18 +23,6 @@ A robust replica set architecture is essential for high availability (HA) and da
 
 ## Architecture Patterns
 
-### PSS (Primary-Secondary-Secondary)
-
-**Restriction:** Production Standard.
-
-This is the standard 3-node architecture containing data on all nodes.
-*   **Availability:** High. Can sustain 1 node failure.
-*   **Durability:** High. Supports `w:majority` with full data safety.
-
-### PSA (Primary-Secondary-Arbiter)
-
-*See Critical Risks section below.*
-
 ### Distributed PSS (5-Node / 3-DC)
 
 **Restriction:** Enterprise Standard (Minimum for High Availability).
@@ -50,7 +38,9 @@ To achieve true enterprise resilience and survive a full data center failure whi
     *   3 out of 5 is a majority, ensuring `w:majority` writes succeed and elections are instant.
     *   A 3-node PSS system across 3 DCs (1-1-1) becomes read-only if any DC fails (1 node lost leaves 2, but `w:majority` requires 2, leaving zero margin for error or maintenance).
 
-### PSA (Primary-Secondary-Arbiter)
+**Official Reference:** [Distributed Clusters](https://www.mongodb.com/docs/manual/core/replica-set-architecture-geographically-distributed/)
+
+
 
 **Restriction:** Development / Non-Critical Only. DO NOT USE IN PRODUCTION.
 
@@ -63,6 +53,16 @@ An architecture with 2 data nodes and 1 arbiter.
 
 > [!CAUTION]
 > Arbiters are strictly prohibited for production systems requiring `w:majority` guarantees. Use the 5-node PSS standard instead.
+
+### Comparison: Data-Bearing vs Arbiter
+
+| Feature | Data-Bearing Node (Recommended) | Arbiter (Not Recommended) |
+| :--- | :--- | :--- |
+| **Data Safety** | Holds full copy of data. Contributes to `w:majority` durability. | **Zero Data.** Does not contribute to data durability. |
+| **Write Availability** | High. Can acknowledge writes even if other nodes fail. | **Low.** Cannot acknowledge writes. If a data node fails, `w:majority` writes **stall**. |
+| **Operational Impact** | Low. Absorbs read traffic and handles failovers gracefully. | **High.** Forces cache pressure on remaining nodes during failover. |
+| **Disaster Recovery** | Can become Primary and serve data. | **Cannot become Primary.** Useless for recovery. |
+| **Use Case** | Production / Enterprise. | Test / Dev only. |
 
 **Official Reference:** [Replica Set Deployment Architectures](https://www.mongodb.com/docs/manual/core/replica-set-architectures/)
 
