@@ -1,8 +1,8 @@
-# Python Reference
+# Python reference
 
 This section provides encyclopedic lookups for Python syntax, standard library, and terminology.
 
-## Core Language Syntax
+## Core language syntax
 
 * **[Control Flow](./syntax/control_flow.md)**: `if`, `for`, `while`, `try/except`
 * **[Pattern Matching](./syntax/pattern-matching.md)**: `match`/`case` structural pattern matching (Python 3.10+)
@@ -10,14 +10,14 @@ This section provides encyclopedic lookups for Python syntax, standard library, 
 * **Functions**: `def`, lambda, args/kwargs, decorators
 * **Classes**: Class definitions, inheritance, MRO, protocols
 
-## Standard Library (Select Modules)
+## Standard library (select modules)
 
 * **Collections**: `list`, `dict`, `set`, `tuple`, `collections` module
 * **Text Processing**: `string`, `re` (Regex), `textwrap`
 * **Files & I/O**: `pathlib`, `io`, `json`, `csv`
 * **Concurrency**: `threading`, `multiprocessing`, `asyncio`
 
-## Tooling & Package Management
+## Tooling and package management
 
 * **[UV Reference](uv/uv-reference.md)**: CLI commands, configuration, and workspace management.
 

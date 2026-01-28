@@ -1,5 +1,20 @@
 # Python pattern matching reference
 
+**🔗 [← Back to Python Reference](../README.md)**
+
+> **Document Version:** 1.0
+> **Last Updated:** January 27, 2026
+> **Maintainers:** Application Infrastructure Team
+> **Status:** Production
+
+![Status](https://img.shields.io/badge/Status-Production-green)
+![Type](https://img.shields.io/badge/Type-Reference-purple)
+
+> [!IMPORTANT]
+> **Related Docs:** [Control Flow](./control_flow.md) | [Data Model](./datamodel.md) | [Glossary](../glossary.md)
+
+---
+
 *Added in Python 3.10 (PEP 634)*
 
 Python's `match`/`case` syntax provides structural pattern matching - it matches **structure**, not just values. Think of it as if-statements that explain themselves.

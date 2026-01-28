@@ -1,6 +1,21 @@
-# Python Control Flow Reference
+# Python control flow reference
 
-## Conditional Statements (`if`)
+**🔗 [← Back to Python Reference](../README.md)**
+
+> **Document Version:** 1.0
+> **Last Updated:** January 27, 2026
+> **Maintainers:** Application Infrastructure Team
+> **Status:** Production
+
+![Status](https://img.shields.io/badge/Status-Production-green)
+![Type](https://img.shields.io/badge/Type-Reference-purple)
+
+> [!IMPORTANT]
+> **Related Docs:** [Pattern Matching](./pattern-matching.md) | [Data Model](./datamodel.md) | [Glossary](../glossary.md)
+
+---
+
+## Conditional statements (`if`)
 
 ```python
 x = 10
@@ -14,7 +29,7 @@ else:
 
 ## Loops
 
-### `for` Loop
+### `for` loop
 
 Iterates over a sequence (list, tuple, string, range).
 
@@ -27,7 +42,7 @@ else:
     print("Loop finished normally (no break)")
 ```
 
-### `while` Loop
+### `while` loop
 
 Repeats as long as a condition is true.
 
@@ -40,7 +55,7 @@ while count < 5:
         break  # Exit loop
 ```
 
-## Pattern Matching (`match`)
+## Pattern matching (`match`)
 
 *Added in Python 3.10*
 
@@ -57,9 +72,9 @@ def http_error(status):
             return "Unknown error"
 ```
 
-See **[Pattern Matching Reference](./pattern-matching.md)** for guards, destructuring, mapping patterns, and best practices.
+See **[Pattern matching reference](./pattern-matching.md)** for guards, destructuring, mapping patterns, and best practices.
 
-## Exception Handling (`try` / `except`)
+## Exception handling (`try` / `except`)
 
 ```python
 try:
@@ -74,7 +89,7 @@ finally:
     print("Always runs (cleanup)")
 ```
 
-## Context Managers (`with`)
+## Context managers (`with`)
 
 Used for resource management (files, locks, connections).
 

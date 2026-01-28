@@ -1,4 +1,19 @@
-# Python Glossary
+# Python glossary
+
+**🔗 [← Back to Python Reference](./README.md)**
+
+> **Document Version:** 1.0
+> **Last Updated:** January 27, 2026
+> **Maintainers:** Application Infrastructure Team
+> **Status:** Production
+
+![Status](https://img.shields.io/badge/Status-Production-green)
+![Type](https://img.shields.io/badge/Type-Reference-purple)
+
+> [!IMPORTANT]
+> **Related Docs:** [Control Flow](./syntax/control_flow.md) | [Pattern Matching](./syntax/pattern-matching.md) | [Data Model](./syntax/datamodel.md)
+
+---
 
 Definitions of common Python terminology.
 
