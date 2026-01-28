@@ -1,0 +1,19 @@
+---
+# Configure systemd resource limits for the mongod service
+
+- name: Create systemd override directory for mongod
+  ansible.builtin.file:
+    path: /etc/systemd/system/mongod.service.d
+    state: directory
+    mode: "0755"
+  when: not mongodb_rhel_validate_only
+
+- name: Deploy mongod systemd limit overrides
+  ansible.builtin.template:
+    src: mongod-limits.conf.j2
+    dest: /etc/systemd/system/mongod.service.d/limits.conf
+    mode: "0644"
+  when: not mongodb_rhel_validate_only
+  notify:
+    - Reload systemd
+    - Restart mongod

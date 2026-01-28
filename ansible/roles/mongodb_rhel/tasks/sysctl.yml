@@ -1,0 +1,15 @@
+---
+# Apply sysctl kernel parameters from the shared configuration
+
+- name: Apply sysctl parameters
+  ansible.posix.sysctl:
+    name: "{{ item.key }}"
+    value: "{{ item.value.value }}"
+    sysctl_file: "{{ item.value.sysctl_file | default('/etc/sysctl.d/99-mongodb.conf') }}"
+    sysctl_set: true
+    state: present
+    reload: true
+  loop: "{{ mongodb_sysctl | dict2items }}"
+  loop_control:
+    label: "{{ item.key }}={{ item.value.value }}"
+  when: not mongodb_rhel_validate_only

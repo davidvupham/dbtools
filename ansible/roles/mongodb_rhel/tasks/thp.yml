@@ -1,0 +1,81 @@
+---
+# Configure Transparent Huge Pages based on MongoDB version
+#
+# MongoDB 8.0+: THP should be enabled (always)
+# MongoDB 7.0 and earlier: THP should be disabled (never) via tuned profile
+
+- name: Determine THP requirement
+  ansible.builtin.set_fact:
+    _mongodb_thp_desired: >-
+      {{ (mongodb_version is version(mongodb_thp.enable_from_version, '>='))
+         | ternary(mongodb_thp.value_from, mongodb_thp.value_before) }}
+
+- name: Check if THP sysfs is available
+  ansible.builtin.stat:
+    path: /sys/kernel/mm/transparent_hugepage/enabled
+  register: _thp_sysfs
+
+- name: Read current THP setting
+  ansible.builtin.slurp:
+    src: /sys/kernel/mm/transparent_hugepage/enabled
+  register: _thp_current
+  changed_when: false
+  when: _thp_sysfs.stat.exists | default(false)
+
+- name: Parse current THP value
+  ansible.builtin.set_fact:
+    _thp_active: >-
+      {{ (_thp_current.content | b64decode | regex_search('\[(\w+)\]', '\1') | first)
+         if (_thp_sysfs.stat.exists | default(false))
+         else 'unavailable' }}
+
+- name: Display THP status
+  ansible.builtin.debug:
+    msg: "THP: current={{ _thp_active }}, desired={{ _mongodb_thp_desired }}"
+
+# --- MongoDB 7.0 and earlier: disable THP via tuned ---
+
+- name: Ensure tuned is installed
+  ansible.builtin.dnf:
+    name: tuned
+    state: present
+  when:
+    - _mongodb_thp_desired == "never"
+    - not mongodb_rhel_validate_only
+
+- name: Create tuned profile directory for MongoDB
+  ansible.builtin.file:
+    path: /etc/tuned/mongodb
+    state: directory
+    mode: "0755"
+  when:
+    - _mongodb_thp_desired == "never"
+    - not mongodb_rhel_validate_only
+
+- name: Write tuned profile to disable THP
+  ansible.builtin.copy:
+    dest: /etc/tuned/mongodb/tuned.conf
+    mode: "0644"
+    content: |
+      # Managed by Ansible — mongodb_rhel role
+      [main]
+      include=throughput-performance
+
+      [vm]
+      transparent_hugepages=never
+  when:
+    - _mongodb_thp_desired == "never"
+    - not mongodb_rhel_validate_only
+  notify: Activate tuned profile
+
+# --- MongoDB 8.0+: ensure THP is enabled ---
+
+- name: Enable THP for MongoDB 8.0+
+  ansible.builtin.shell:
+    cmd: echo always > /sys/kernel/mm/transparent_hugepage/enabled
+  when:
+    - _mongodb_thp_desired == "always"
+    - _thp_active not in ["always", "unavailable"]
+    - _thp_sysfs.stat.exists | default(false)
+    - not mongodb_rhel_validate_only
+  changed_when: true

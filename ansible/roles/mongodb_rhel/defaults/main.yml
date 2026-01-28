@@ -1,0 +1,11 @@
+---
+# mongodb_rhel role - Default variables
+#
+# The shared best-practice values are loaded from the config file below.
+# Override individual settings in group_vars or host_vars as needed.
+
+# Path to the shared best-practices config (relative to repo root)
+mongodb_rhel_config_path: "{{ playbook_dir }}/../../config/mongodb/rhel-best-practices.yml"
+
+# Set to true to run in validate-only mode (no changes, report only)
+mongodb_rhel_validate_only: false

@@ -1,0 +1,8 @@
+# Managed by Ansible — mongodb_rhel role
+# Do not edit manually
+
+[Service]
+# File descriptors
+LimitNOFILE={{ mongodb_ulimits.nofile }}
+# Processes/Threads
+LimitNPROC={{ mongodb_ulimits.nproc }}

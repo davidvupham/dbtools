@@ -1,0 +1,65 @@
+---
+# Read-only validation of current system settings against best practices
+
+- name: Check sysctl values
+  ansible.builtin.command:
+    cmd: "sysctl -n {{ item.key }}"
+  register: _sysctl_checks
+  loop: "{{ mongodb_sysctl | dict2items }}"
+  loop_control:
+    label: "{{ item.key }}"
+  changed_when: false
+  failed_when: false
+
+- name: Report sysctl validation results
+  ansible.builtin.debug:
+    msg: >-
+      {{ item.item.key }}:
+      current={{ item.stdout | default('unreadable') }},
+      expected={{ item.item.value.comparison | default('eq') }} {{ item.item.value.value }},
+      status={{ 'PASS' if (
+        (item.item.value.comparison | default('eq') == 'eq' and item.stdout | int == item.item.value.value | int) or
+        (item.item.value.comparison | default('eq') == 'gte' and item.stdout | int >= item.item.value.value | int)
+      ) else 'FAIL' }}
+  loop: "{{ _sysctl_checks.results }}"
+  loop_control:
+    label: "{{ item.item.key }}"
+
+- name: Check THP setting
+  ansible.builtin.slurp:
+    src: /sys/kernel/mm/transparent_hugepage/enabled
+  register: _thp_validate
+  changed_when: false
+  failed_when: false
+
+- name: Report THP validation
+  ansible.builtin.debug:
+    msg: >-
+      THP: current={{ _thp_validate.content | b64decode | regex_search('\[(\w+)\]', '\1') | first | default('unknown') }},
+      expected={{ (mongodb_version is version(mongodb_thp.enable_from_version, '>='))
+                  | ternary(mongodb_thp.value_from, mongodb_thp.value_before) }}
+  when: _thp_validate is succeeded
+
+- name: Check mongod ulimits
+  ansible.builtin.shell:
+    cmd: |
+      set -o pipefail
+      cat /proc/$(pgrep -x mongod)/limits 2>/dev/null | grep -E "Max open files|Max processes"
+  register: _ulimit_check
+  changed_when: false
+  failed_when: false
+
+- name: Report ulimit validation
+  ansible.builtin.debug:
+    msg: "mongod limits: {{ _ulimit_check.stdout_lines | default(['mongod not running']) }}"
+
+- name: Check SELinux mode
+  ansible.builtin.command:
+    cmd: getenforce
+  register: _selinux_check
+  changed_when: false
+  failed_when: false
+
+- name: Report SELinux validation
+  ansible.builtin.debug:
+    msg: "SELinux: current={{ _selinux_check.stdout | default('unknown') }}, expected={{ mongodb_selinux.mode }}"

@@ -133,6 +133,12 @@ from .monitoring import (
     MonitoringResult,
 )
 from .replica_set import MongoDBReplicaSetManager
+from .rhel_validator import (
+    CheckResult,
+    CheckStatus,
+    RHELConfigValidator,
+    ValidationReport,
+)
 
 __version__ = "1.0.0"
 __all__ = [
@@ -140,6 +146,8 @@ __all__ = [
     "AlertManager",
     "AlertSeverity",
     "AlertType",
+    "CheckResult",
+    "CheckStatus",
     "MongoDBAuthenticationError",
     "MongoDBConfiguration",
     "MongoDBConfigurationError",
@@ -153,4 +161,6 @@ __all__ = [
     "MongoDBReplicaSetError",
     "MongoDBReplicaSetManager",
     "MonitoringResult",
+    "RHELConfigValidator",
+    "ValidationReport",
 ]

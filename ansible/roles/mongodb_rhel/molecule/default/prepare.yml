@@ -1,0 +1,62 @@
+---
+# Prepare the container for testing
+#
+# Docker containers lack several packages and directories that a real
+# RHEL installation provides. This playbook installs the prerequisites
+# so the role can run without errors.
+
+- name: Prepare container for mongodb_rhel role
+  hosts: all
+  become: true
+  gather_facts: true
+
+  tasks:
+    - name: Install prerequisite packages
+      ansible.builtin.dnf:
+        name:
+          - tuned
+          - procps-ng
+          - iproute
+          - systemd
+        state: present
+
+    - name: Create MongoDB data directory
+      ansible.builtin.file:
+        path: /var/lib/mongo
+        state: directory
+        mode: "0755"
+
+    - name: Create MongoDB log directory
+      ansible.builtin.file:
+        path: /var/log/mongodb
+        state: directory
+        mode: "0755"
+
+    - name: Create a mock mongod systemd unit
+      ansible.builtin.copy:
+        dest: /etc/systemd/system/mongod.service
+        mode: "0644"
+        content: |
+          # Mock mongod service for Molecule testing
+          [Unit]
+          Description=MongoDB Database Server (mock)
+
+          [Service]
+          Type=simple
+          ExecStart=/bin/sleep infinity
+
+          [Install]
+          WantedBy=multi-user.target
+
+    - name: Reload systemd after adding mock service
+      ansible.builtin.systemd:
+        daemon_reload: true
+
+    - name: Check if THP sysfs is available
+      ansible.builtin.stat:
+        path: /sys/kernel/mm/transparent_hugepage/enabled
+      register: _thp_path
+
+    - name: Display THP availability
+      ansible.builtin.debug:
+        msg: "THP sysfs available: {{ _thp_path.stat.exists | default(false) }}"

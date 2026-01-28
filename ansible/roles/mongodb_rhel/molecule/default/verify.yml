@@ -1,0 +1,199 @@
+---
+# Verify playbook — assert all settings were applied correctly
+#
+# Checks:
+#   1. Sysctl parameters match expected values
+#   2. Sysctl drop-in config files exist
+#   3. Systemd mongod limits override is in place
+#   4. Tuned profile for THP was created (MongoDB 7.0)
+#   5. SELinux (skipped in Docker)
+
+- name: Verify mongodb_rhel role applied correctly
+  hosts: all
+  become: true
+  gather_facts: false
+
+  vars:
+    # Expected sysctl values from rhel-best-practices.yml
+    expected_sysctl:
+      vm.swappiness: "1"
+      vm.dirty_ratio: "15"
+      vm.dirty_background_ratio: "5"
+      vm.max_map_count: "128000"
+      vm.zone_reclaim_mode: "0"
+      fs.file-max: "98000"
+      kernel.pid_max: "64000"
+      kernel.threads-max: "64000"
+      net.core.somaxconn: "65535"
+      net.ipv4.tcp_keepalive_time: "120"
+      net.ipv4.tcp_max_syn_backlog: "4096"
+
+    # Parameters that use >= comparison (actual may exceed expected)
+    gte_params:
+      - vm.max_map_count
+      - fs.file-max
+      - kernel.pid_max
+      - kernel.threads-max
+      - net.core.somaxconn
+      - net.ipv4.tcp_max_syn_backlog
+
+  tasks:
+    # -----------------------------------------------------------------
+    # 1. Verify sysctl parameters
+    # -----------------------------------------------------------------
+    - name: Read current sysctl values
+      ansible.builtin.command:
+        cmd: "sysctl -n {{ item.key }}"
+      loop: "{{ expected_sysctl | dict2items }}"
+      loop_control:
+        label: "{{ item.key }}"
+      register: _sysctl_values
+      changed_when: false
+
+    - name: Assert exact-match sysctl parameters
+      ansible.builtin.assert:
+        that:
+          - item.stdout | int == expected_sysctl[item.item.key] | int
+        fail_msg: >-
+          FAIL: {{ item.item.key }} = {{ item.stdout }}
+          (expected {{ expected_sysctl[item.item.key] }})
+        success_msg: >-
+          PASS: {{ item.item.key }} = {{ item.stdout }}
+      loop: "{{ _sysctl_values.results }}"
+      loop_control:
+        label: "{{ item.item.key }}"
+      when: item.item.key not in gte_params
+
+    - name: Assert gte sysctl parameters
+      ansible.builtin.assert:
+        that:
+          - item.stdout | int >= expected_sysctl[item.item.key] | int
+        fail_msg: >-
+          FAIL: {{ item.item.key }} = {{ item.stdout }}
+          (expected >= {{ expected_sysctl[item.item.key] }})
+        success_msg: >-
+          PASS: {{ item.item.key }} = {{ item.stdout }}
+          (>= {{ expected_sysctl[item.item.key] }})
+      loop: "{{ _sysctl_values.results }}"
+      loop_control:
+        label: "{{ item.item.key }}"
+      when: item.item.key in gte_params
+
+    # -----------------------------------------------------------------
+    # 2. Verify sysctl config files exist
+    # -----------------------------------------------------------------
+    - name: Check sysctl drop-in config files
+      ansible.builtin.stat:
+        path: "{{ item }}"
+      loop:
+        - /etc/sysctl.d/99-mongodb.conf
+        - /etc/sysctl.d/99-mongodb-net.conf
+      register: _sysctl_files
+
+    - name: Assert sysctl config files exist
+      ansible.builtin.assert:
+        that:
+          - item.stat.exists
+        fail_msg: "FAIL: {{ item.item }} does not exist"
+        success_msg: "PASS: {{ item.item }} exists"
+      loop: "{{ _sysctl_files.results }}"
+      loop_control:
+        label: "{{ item.item }}"
+
+    # -----------------------------------------------------------------
+    # 3. Verify systemd mongod limits override
+    # -----------------------------------------------------------------
+    - name: Check mongod systemd override directory
+      ansible.builtin.stat:
+        path: /etc/systemd/system/mongod.service.d/limits.conf
+      register: _limits_file
+
+    - name: Assert mongod limits file exists
+      ansible.builtin.assert:
+        that:
+          - _limits_file.stat.exists
+        fail_msg: "FAIL: mongod limits.conf not found"
+        success_msg: "PASS: mongod limits.conf exists"
+
+    - name: Read mongod limits file content
+      ansible.builtin.slurp:
+        src: /etc/systemd/system/mongod.service.d/limits.conf
+      register: _limits_content
+
+    - name: Assert LimitNOFILE is set
+      ansible.builtin.assert:
+        that:
+          - "'LimitNOFILE=64000' in (_limits_content.content | b64decode)"
+        fail_msg: "FAIL: LimitNOFILE=64000 not found in limits.conf"
+        success_msg: "PASS: LimitNOFILE=64000 configured"
+
+    - name: Assert LimitNPROC is set
+      ansible.builtin.assert:
+        that:
+          - "'LimitNPROC=64000' in (_limits_content.content | b64decode)"
+        fail_msg: "FAIL: LimitNPROC=64000 not found in limits.conf"
+        success_msg: "PASS: LimitNPROC=64000 configured"
+
+    # -----------------------------------------------------------------
+    # 4. Verify THP tuned profile (MongoDB 7.0)
+    # -----------------------------------------------------------------
+    - name: Check tuned profile for MongoDB
+      ansible.builtin.stat:
+        path: /etc/tuned/mongodb/tuned.conf
+      register: _tuned_profile
+
+    - name: Assert tuned profile exists
+      ansible.builtin.assert:
+        that:
+          - _tuned_profile.stat.exists
+        fail_msg: "FAIL: /etc/tuned/mongodb/tuned.conf not found"
+        success_msg: "PASS: tuned profile for MongoDB exists"
+
+    - name: Read tuned profile content
+      ansible.builtin.slurp:
+        src: /etc/tuned/mongodb/tuned.conf
+      register: _tuned_content
+      when: _tuned_profile.stat.exists
+
+    - name: Assert tuned profile disables THP
+      ansible.builtin.assert:
+        that:
+          - "'transparent_hugepages=never' in (_tuned_content.content | b64decode)"
+        fail_msg: "FAIL: tuned profile does not set transparent_hugepages=never"
+        success_msg: "PASS: tuned profile correctly disables THP"
+      when: _tuned_profile.stat.exists
+
+    # -----------------------------------------------------------------
+    # 5. SELinux (skipped in Docker)
+    # -----------------------------------------------------------------
+    - name: Check if SELinux is available
+      ansible.builtin.command:
+        cmd: getenforce
+      register: _selinux_verify
+      changed_when: false
+      failed_when: false
+
+    - name: Report SELinux status
+      ansible.builtin.debug:
+        msg: >-
+          SELinux verification {{ 'SKIPPED (not available in container)'
+          if _selinux_verify.rc != 0 or _selinux_verify.stdout == 'Disabled'
+          else 'mode: ' + _selinux_verify.stdout }}
+
+    # -----------------------------------------------------------------
+    # Summary
+    # -----------------------------------------------------------------
+    - name: Display verification summary
+      ansible.builtin.debug:
+        msg: |
+          ==========================================
+          mongodb_rhel VERIFICATION COMPLETE
+          ==========================================
+
+          Sysctl Parameters:     VERIFIED
+          Sysctl Config Files:   VERIFIED
+          Systemd Limits:        VERIFIED
+          THP Tuned Profile:     VERIFIED
+          SELinux:               {{ 'SKIPPED (container)' if _selinux_verify.rc != 0 or _selinux_verify.stdout == 'Disabled' else 'VERIFIED' }}
+
+          All applicable checks passed.

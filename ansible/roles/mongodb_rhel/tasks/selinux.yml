@@ -1,0 +1,51 @@
+---
+# Ensure SELinux is in enforcing mode and the MongoDB SELinux policy is installed
+
+- name: Check if SELinux is available on this system
+  ansible.builtin.command:
+    cmd: getenforce
+  register: _selinux_available
+  changed_when: false
+  failed_when: false
+
+- name: Ensure SELinux is in enforcing mode
+  ansible.posix.selinux:
+    policy: targeted
+    state: "{{ mongodb_selinux.mode }}"
+  when:
+    - not mongodb_rhel_validate_only
+    - _selinux_available.rc == 0
+    - _selinux_available.stdout != "Disabled"
+
+- name: Install MongoDB SELinux policy package
+  ansible.builtin.dnf:
+    name: "{{ mongodb_selinux.package }}"
+    state: present
+  when:
+    - not mongodb_rhel_validate_only
+    - _selinux_available.rc == 0
+  failed_when: false  # Package may not exist if MongoDB repo is not configured
+
+- name: Set SELinux context for custom data path
+  community.general.sefcontext:
+    target: "{{ mongodb_data_path }}(/.*)?"
+    setype: mongod_var_lib_t
+    state: present
+  when:
+    - mongodb_data_path != "/var/lib/mongo"
+    - not mongodb_rhel_validate_only
+    - _selinux_available.rc == 0
+    - _selinux_available.stdout != "Disabled"
+  notify: Restore SELinux contexts
+
+- name: Set SELinux context for custom log path
+  community.general.sefcontext:
+    target: "{{ mongodb_log_path }}(/.*)?"
+    setype: mongod_log_t
+    state: present
+  when:
+    - mongodb_log_path != "/var/log/mongodb"
+    - not mongodb_rhel_validate_only
+    - _selinux_available.rc == 0
+    - _selinux_available.stdout != "Disabled"
+  notify: Restore SELinux contexts

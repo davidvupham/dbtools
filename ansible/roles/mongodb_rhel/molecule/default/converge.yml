@@ -1,0 +1,29 @@
+---
+# Converge playbook — apply the mongodb_rhel role
+#
+# Uses the shared best-practices config from config/mongodb/rhel-best-practices.yml.
+# SELinux tasks are skipped in Docker containers.
+
+- name: Converge — apply mongodb_rhel role
+  hosts: all
+  become: true
+  gather_facts: true
+
+  vars:
+    # Point to the shared config relative to the molecule scenario directory
+    mongodb_rhel_config_path: "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') }}/../../../config/mongodb/rhel-best-practices.yml"
+
+  pre_tasks:
+    - name: Check if SELinux is available
+      ansible.builtin.command:
+        cmd: getenforce
+      register: _selinux_check
+      changed_when: false
+      failed_when: false
+
+    - name: Set SELinux availability fact
+      ansible.builtin.set_fact:
+        _selinux_available: "{{ _selinux_check.rc == 0 and _selinux_check.stdout != 'Disabled' }}"
+
+  roles:
+    - role: mongodb_rhel

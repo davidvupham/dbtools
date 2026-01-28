@@ -1,0 +1,157 @@
+---
+# MongoDB RHEL Best Practices — Single Source of Truth
+#
+# This file defines the recommended OS-level settings for running MongoDB
+# on Red Hat Enterprise Linux (RHEL) 8 and 9. It is consumed by:
+#   - Python validator:  gds_mongodb.rhel_validator.RHELConfigValidator.from_yaml()
+#   - Ansible role:      ansible/roles/mongodb_rhel/
+#
+# Reference: https://www.mongodb.com/docs/manual/administration/production-notes/
+
+# =============================================================================
+# General
+# =============================================================================
+
+mongodb_version: "7.0"
+mongodb_data_path: /var/lib/mongo
+mongodb_log_path: /var/log/mongodb
+
+# =============================================================================
+# Filesystem
+# =============================================================================
+
+mongodb_filesystem:
+  type: xfs
+  mount_options:
+    - noatime
+    - nodiratime
+
+# =============================================================================
+# Transparent Huge Pages (THP)
+# =============================================================================
+# MongoDB 8.0+ benefits from THP enabled; 7.0 and earlier requires THP disabled.
+# The Python validator and Ansible role select the correct value based on
+# mongodb_version automatically.
+
+mongodb_thp:
+  # Version threshold at which THP should be enabled
+  enable_from_version: "8.0"
+  # Value for MongoDB < 8.0
+  value_before: never
+  # Value for MongoDB >= 8.0
+  value_from: always
+
+# =============================================================================
+# Sysctl — Kernel and Memory Settings
+# =============================================================================
+# Each entry has:
+#   value:       the recommended setting
+#   comparison:  "eq" (exact match) or "gte" (greater-than-or-equal)
+#   description: human-readable explanation
+#   sysctl_file: the drop-in file where the setting should be persisted
+#   reference:   link to official MongoDB documentation
+
+mongodb_sysctl:
+  vm.swappiness:
+    value: 1
+    comparison: eq
+    description: "Kernel swap aggressiveness"
+    sysctl_file: /etc/sysctl.d/99-mongodb.conf
+    reference: "https://www.mongodb.com/docs/manual/administration/production-notes/"
+
+  vm.dirty_ratio:
+    value: 15
+    comparison: eq
+    description: "Maximum dirty page ratio before synchronous writeback"
+    sysctl_file: /etc/sysctl.d/99-mongodb.conf
+    reference: "https://www.mongodb.com/docs/manual/administration/production-notes/"
+
+  vm.dirty_background_ratio:
+    value: 5
+    comparison: eq
+    description: "Dirty page ratio before background writeback starts"
+    sysctl_file: /etc/sysctl.d/99-mongodb.conf
+    reference: "https://www.mongodb.com/docs/manual/administration/production-notes/"
+
+  vm.max_map_count:
+    value: 128000
+    comparison: gte
+    description: "Maximum memory map areas per process"
+    sysctl_file: /etc/sysctl.d/99-mongodb.conf
+    reference: "https://www.mongodb.com/docs/manual/administration/production-notes/"
+
+  vm.zone_reclaim_mode:
+    value: 0
+    comparison: eq
+    description: "NUMA zone reclaim mode (must be 0 for MongoDB)"
+    sysctl_file: /etc/sysctl.d/99-mongodb.conf
+    reference: "https://www.mongodb.com/docs/manual/administration/production-notes/#configuring-numa-on-linux"
+
+  fs.file-max:
+    value: 98000
+    comparison: gte
+    description: "System-wide maximum open file descriptors"
+    sysctl_file: /etc/sysctl.d/99-mongodb.conf
+    reference: "https://www.mongodb.com/docs/manual/reference/ulimit/"
+
+  kernel.pid_max:
+    value: 64000
+    comparison: gte
+    description: "Maximum PID value"
+    sysctl_file: /etc/sysctl.d/99-mongodb.conf
+    reference: "https://www.mongodb.com/docs/manual/reference/ulimit/"
+
+  kernel.threads-max:
+    value: 64000
+    comparison: gte
+    description: "System-wide maximum threads"
+    sysctl_file: /etc/sysctl.d/99-mongodb.conf
+    reference: "https://www.mongodb.com/docs/manual/reference/ulimit/"
+
+  net.core.somaxconn:
+    value: 65535
+    comparison: gte
+    description: "Maximum socket listen backlog"
+    sysctl_file: /etc/sysctl.d/99-mongodb-net.conf
+    reference: "https://www.mongodb.com/docs/manual/administration/production-notes/"
+
+  net.ipv4.tcp_keepalive_time:
+    value: 120
+    comparison: eq
+    description: "TCP keepalive interval in seconds"
+    sysctl_file: /etc/sysctl.d/99-mongodb-net.conf
+    reference: "https://www.mongodb.com/docs/manual/administration/production-notes/"
+
+  net.ipv4.tcp_max_syn_backlog:
+    value: 4096
+    comparison: gte
+    description: "Maximum TCP SYN backlog"
+    sysctl_file: /etc/sysctl.d/99-mongodb-net.conf
+    reference: "https://www.mongodb.com/docs/manual/administration/production-notes/"
+
+# =============================================================================
+# Systemd Resource Limits (ulimits for mongod)
+# =============================================================================
+
+mongodb_ulimits:
+  nofile: 64000
+  nproc: 64000
+
+# =============================================================================
+# Security — SELinux
+# =============================================================================
+
+mongodb_selinux:
+  mode: enforcing
+  package: mongodb-selinux
+  reference: "https://www.mongodb.com/docs/manual/tutorial/install-mongodb-enterprise-on-red-hat/"
+
+# =============================================================================
+# Network — Firewall
+# =============================================================================
+
+mongodb_firewall:
+  port: 27017
+  protocol: tcp
+  # Restrict to trusted subnets (override in host_vars/group_vars)
+  allowed_sources: []

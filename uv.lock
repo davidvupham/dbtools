@@ -1305,6 +1305,7 @@ source = { editable = "python/gds_mongodb" }
 dependencies = [
     { name = "gds-database" },
     { name = "pymongo" },
+    { name = "pyyaml" },
 ]
 
 [package.dev-dependencies]
@@ -1320,6 +1321,7 @@ dev = [
 requires-dist = [
     { name = "gds-database", editable = "python/gds_database" },
     { name = "pymongo", specifier = ">=4.0.0" },
+    { name = "pyyaml", specifier = ">=6.0" },
 ]
 
 [package.metadata.requires-dev]

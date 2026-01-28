@@ -1,0 +1,22 @@
+---
+# MongoDB RHEL Configuration Playbook
+#
+# Applies MongoDB best-practice OS settings to RHEL 8/9 hosts.
+#
+# Usage:
+#   # Apply settings:
+#   ansible-playbook ansible/playbooks/mongodb_rhel_configure.yml -i inventory/production/hosts.ini
+#
+#   # Validate only (dry-run, no changes):
+#   ansible-playbook ansible/playbooks/mongodb_rhel_configure.yml -i inventory/production/hosts.ini --check --diff
+#
+#   # Override MongoDB version:
+#   ansible-playbook ansible/playbooks/mongodb_rhel_configure.yml -e mongodb_version=8.0
+
+- name: Configure RHEL for MongoDB
+  hosts: all
+  become: true
+  gather_facts: true
+
+  roles:
+    - role: mongodb_rhel

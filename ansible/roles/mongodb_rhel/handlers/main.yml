@@ -1,0 +1,20 @@
+---
+- name: Reload systemd
+  ansible.builtin.systemd:
+    daemon_reload: true
+
+- name: Restart mongod
+  ansible.builtin.systemd:
+    name: mongod
+    state: restarted
+  when: ansible_facts.services['mongod.service'] is defined
+
+- name: Activate tuned profile
+  ansible.builtin.command:
+    cmd: tuned-adm profile mongodb
+  changed_when: true
+
+- name: Restore SELinux contexts
+  ansible.builtin.command:
+    cmd: restorecon -Rv {{ mongodb_data_path }}
+  changed_when: true

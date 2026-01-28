@@ -1,0 +1,47 @@
+---
+# mongodb_rhel role - Main tasks
+# Configures RHEL for MongoDB following production best practices
+
+- name: Load shared best-practices configuration
+  ansible.builtin.include_vars:
+    file: "{{ mongodb_rhel_config_path }}"
+  tags:
+    - always
+
+- name: Display MongoDB configuration summary
+  ansible.builtin.debug:
+    msg: >-
+      Configuring RHEL for MongoDB {{ mongodb_version }},
+      data_path={{ mongodb_data_path }},
+      validate_only={{ mongodb_rhel_validate_only }}
+  tags:
+    - always
+
+- name: Apply sysctl kernel parameters
+  ansible.builtin.include_tasks: sysctl.yml
+  tags:
+    - sysctl
+    - kernel
+
+- name: Configure Transparent Huge Pages
+  ansible.builtin.include_tasks: thp.yml
+  tags:
+    - thp
+    - kernel
+
+- name: Configure systemd resource limits for mongod
+  ansible.builtin.include_tasks: ulimits.yml
+  tags:
+    - ulimits
+    - systemd
+
+- name: Configure SELinux for MongoDB
+  ansible.builtin.include_tasks: selinux.yml
+  tags:
+    - selinux
+    - security
+
+- name: Run validation checks
+  ansible.builtin.include_tasks: validate.yml
+  tags:
+    - validate
