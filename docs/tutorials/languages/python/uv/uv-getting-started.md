@@ -1,6 +1,6 @@
 # Getting Started with UV: A Beginner's Guide
 
-**[<- Back to UV Documentation Index](../../../../explanation/python/uv/README.md)**
+**🔗 [← Back to UV Documentation Index](./README.md)**
 
 > **Document Version:** 1.1
 > **Last Updated:** January 22, 2026
@@ -543,7 +543,7 @@ Congratulations! You now know the basics of UV. Here's where to go next:
 |------|----------|
 | Deep dive into UV concepts | [UV Comprehensive Guide](./uv-tutorial.md) |
 | Understand "Why UV?" | [UV Adoption Rationale](../../../../explanation/python/uv/README.md) |
-| Migrate from pip/poetry | [Migration Guide](../../../../how-to/python/uv/uv-migrate-from-pip.md) |
+| Migrate from pip | [Migration Guide](../../../../how-to/python/uv/uv-migrate-from-pip.md) |
 | Use UV with Docker | [Docker Integration](../../../../how-to/python/uv/uv-docker-integration.md) |
 | Set up CI/CD pipelines | [CI/CD Guide](../../../../how-to/python/uv/uv-ci-cd-integration.md) |
 | Use with Jupyter | [Jupyter Integration](../../../../how-to/python/uv/uv-jupyter-integration.md) |

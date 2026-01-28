@@ -21,6 +21,10 @@ This section provides encyclopedic lookups for Python syntax, standard library, 
 
 * **[UV Reference](uv/uv-reference.md)**: CLI commands, configuration, and workspace management.
 
+## Libraries
+
+* **[Automation Libraries](./automation-libraries.md)**: Retry, scheduling, caching, HTTP, CLI, and workflow libraries for production automation.
+
 ## Terminology
 
 * **[Glossary](./glossary.md)**: Definitions of common Python terms (GIL, Closure, MRO, etc.)

@@ -60,7 +60,7 @@ This guide covers best practices for using UV in Docker containers for both deve
 FROM python:3.12-slim
 
 # Install uv
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+COPY --from=ghcr.io/astral-sh/uv:0.6 /uv /uvx /bin/
 
 WORKDIR /app
 
@@ -85,7 +85,7 @@ UV provides official Docker images at `ghcr.io/astral-sh/uv`:
 
 | Image | Use Case |
 |-------|----------|
-| `ghcr.io/astral-sh/uv:latest` | Just the UV binary (for COPY --from) |
+| `ghcr.io/astral-sh/uv:0.6` | Just the UV binary (for COPY --from) |
 | `ghcr.io/astral-sh/uv:python3.12` | UV + Python 3.12 |
 | `ghcr.io/astral-sh/uv:python3.12-bookworm` | UV + Python 3.12 on Debian Bookworm |
 | `ghcr.io/astral-sh/uv:python3.12-bookworm-slim` | Smaller image, Debian slim |
@@ -96,7 +96,7 @@ UV provides official Docker images at `ghcr.io/astral-sh/uv`:
 ```dockerfile
 # Option 1: Install UV into any Python image
 FROM python:3.12-slim
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+COPY --from=ghcr.io/astral-sh/uv:0.6 /uv /uvx /bin/
 
 # Option 2: Use UV's Python image directly
 FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim
@@ -273,7 +273,7 @@ For faster CI builds, use Docker's cache mounts:
 
 ```dockerfile
 FROM python:3.12-slim
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+COPY --from=ghcr.io/astral-sh/uv:0.6 /uv /uvx /bin/
 
 WORKDIR /app
 
@@ -541,7 +541,7 @@ USER appuser
 
 ## Related Guides
 
-- [UV Getting Started](../../../tutorials/python/uv/uv-getting-started.md)
+- [UV Getting Started](../../../tutorials/languages/python/uv/uv-getting-started.md)
 - [UV CI/CD Integration](./uv-ci-cd-integration.md)
 - [Docker Tutorial](../../../tutorials/docker/README.md)
 - [Official UV Documentation](https://docs.astral.sh/uv/)

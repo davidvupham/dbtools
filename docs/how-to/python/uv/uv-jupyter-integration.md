@@ -1,6 +1,6 @@
 # How to Use UV with Jupyter Notebooks
 
-**[<- Back to UV How-to Index](./README.md)**
+**🔗 [← Back to UV How-to Index](./README.md)**
 
 > **Document Version:** 1.0
 > **Last Updated:** January 22, 2026
@@ -11,7 +11,7 @@
 ![Topic](https://img.shields.io/badge/Topic-Jupyter-orange)
 
 > [!IMPORTANT]
-> **Related Docs:** [Getting Started](../../../tutorials/python/uv/uv-getting-started.md) | [Interactive Python](./uv-interactive-python.md)
+> **Related Docs:** [Getting Started](../../../tutorials/languages/python/uv/uv-getting-started.md) | [Interactive Python](./uv-interactive-python.md)
 
 This guide covers using UV with Jupyter notebooks for data science and interactive development workflows.
 
@@ -473,7 +473,7 @@ uv run jupyter labextension list
 
 ## Related Guides
 
-- [UV Getting Started](../../../tutorials/python/uv/uv-getting-started.md)
+- [UV Getting Started](../../../tutorials/languages/python/uv/uv-getting-started.md)
 - [UV Interactive Python](./uv-interactive-python.md)
 - [UV Docker Integration](./uv-docker-integration.md)
 - [Official UV Jupyter Guide](https://docs.astral.sh/uv/guides/integration/jupyter/)

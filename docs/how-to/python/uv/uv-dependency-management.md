@@ -1,6 +1,6 @@
 # How to Manage Dependencies with UV
 
-**[<- Back to UV How-to Index](./README.md)**
+**🔗 [← Back to UV How-to Index](./README.md)**
 
 > **Document Version:** 1.1
 > **Last Updated:** January 22, 2026
@@ -104,20 +104,21 @@ uv export --frozen -o requirements.txt
 
 ## Private Package Indexes
 
-### Configure Index URLs
+### Configure index URLs
 
-**In pyproject.toml:**
+**In pyproject.toml (recommended):**
 
 ```toml
-[tool.uv]
-# Primary index (replaces PyPI)
-index-url = "https://private.pypi.example.com/simple"
+# Default index (PyPI is used by default if not specified)
+[[tool.uv.index]]
+name = "pypi"
+url = "https://pypi.org/simple"
+default = true
 
-# Additional indexes (searched after primary)
-extra-index-url = [
-    "https://pypi.org/simple",
-    "https://another.index.example.com/simple",
-]
+# Additional private index
+[[tool.uv.index]]
+name = "company"
+url = "https://private.pypi.example.com/simple/"
 ```
 
 **Via environment variables:**
@@ -130,22 +131,22 @@ export UV_EXTRA_INDEX_URL="https://pypi.org/simple"
 **Via command line:**
 
 ```bash
-uv add --index-url https://private.pypi.example.com/simple my-package
+uv add --index https://private.pypi.example.com/simple my-package
 ```
 
 ### Authentication
 
 UV supports several authentication methods for private indexes:
 
-**1. Environment Variables (Recommended for CI)**
+**1. Environment variables (recommended for CI)**
 
 ```bash
-# Generic credentials
+# Credentials embedded in URL
 export UV_INDEX_URL="https://user:password@private.pypi.example.com/simple"
 
-# Or use separate variables for specific indexes
-export UV_HTTP_BASIC_PRIVATE_USERNAME="myuser"
-export UV_HTTP_BASIC_PRIVATE_PASSWORD="mypassword"
+# Or use named index credentials
+export UV_INDEX_COMPANY_USERNAME="myuser"
+export UV_INDEX_COMPANY_PASSWORD="mypassword"
 ```
 
 **2. .netrc File**
@@ -205,11 +206,15 @@ export UV_INDEX_URL="https://oauth2accesstoken:$(gcloud auth print-access-token)
 export UV_INDEX_URL="https://user:${AZURE_PAT}@pkgs.dev.azure.com/org/project/_packaging/feed/pypi/simple/"
 ```
 
-### Per-Package Index Configuration
+### Per-package index configuration
 
 Specify different indexes for specific packages:
 
 ```toml
+[[tool.uv.index]]
+name = "private"
+url = "https://private.pypi.example.com/simple"
+
 [tool.uv.sources]
 # Install from specific index
 my-private-package = { index = "private" }
@@ -219,9 +224,6 @@ my-git-package = { git = "https://github.com/org/repo.git", branch = "main" }
 
 # Install from URL
 my-url-package = { url = "https://example.com/package.whl" }
-
-[tool.uv.index]
-private = "https://private.pypi.example.com/simple"
 ```
 
 ---
@@ -259,7 +261,7 @@ uv cache prune
 # Set cache directory via environment variable
 export UV_CACHE_DIR="/path/to/custom/cache"
 
-# Or in pyproject.toml is not supported - use env var
+# Setting cache directory in pyproject.toml is not supported — use the env var.
 ```
 
 ### Offline Mode
@@ -359,7 +361,7 @@ dependencies = [
 
 ## Related Guides
 
-- [UV Getting Started](../../../tutorials/python/uv/uv-getting-started.md)
+- [UV Getting Started](../../../tutorials/languages/python/uv/uv-getting-started.md)
 - [UV Migration Guide](./uv-migrate-from-pip.md)
 - [UV Build & Publish](./uv-build-publish.md)
 - [UV Workspaces](./uv-workspaces.md)

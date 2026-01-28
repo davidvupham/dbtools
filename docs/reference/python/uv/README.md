@@ -11,7 +11,7 @@
 ![Topic](https://img.shields.io/badge/Topic-Reference-purple)
 
 > [!IMPORTANT]
-> **Related Docs:** [Command Reference](./uv-reference.md) | [How-to Guides](../../../how-to/python/uv/) | [Getting Started](../../../tutorials/python/uv/uv-getting-started.md)
+> **Related Docs:** [Command Reference](./uv-reference.md) | [How-to Guides](../../../how-to/python/uv/) | [Getting Started](../../../tutorials/languages/python/uv/uv-getting-started.md)
 
 Technical reference documentation for the UV Python package manager.
 
@@ -23,7 +23,7 @@ Technical reference documentation for the UV Python package manager.
 
 ## Related Documentation
 
-- **Tutorial**: [Getting Started with UV](../../../tutorials/python/uv/uv-getting-started.md)
+- **Tutorial**: [Getting Started with UV](../../../tutorials/languages/python/uv/uv-getting-started.md)
 - **How-To**: [UV How-To Guides](../../../how-to/python/uv/README.md)
 - **Explanation**: [UV Adoption Rationale](../../../explanation/python/uv/README.md)
 - **Technical**: [UV Architecture Deep Dive](../../../explanation/python/uv/uv-architecture.md)

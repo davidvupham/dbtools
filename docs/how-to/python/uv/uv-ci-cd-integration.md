@@ -68,7 +68,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install UV
-        uses: astral-sh/setup-uv@v4
+        uses: astral-sh/setup-uv@v7
 
       - name: Install dependencies
         run: uv sync
@@ -95,7 +95,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install UV
-        uses: astral-sh/setup-uv@v4
+        uses: astral-sh/setup-uv@v7
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -125,7 +125,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install UV
-        uses: astral-sh/setup-uv@v4
+        uses: astral-sh/setup-uv@v7
         with:
           enable-cache: true
           cache-dependency-glob: "uv.lock"
@@ -156,7 +156,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v4
+      - uses: astral-sh/setup-uv@v7
         with:
           enable-cache: true
       - run: uv sync
@@ -178,7 +178,7 @@ jobs:
         python-version: ["3.11", "3.12"]
     steps:
       - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v4
+      - uses: astral-sh/setup-uv@v7
         with:
           python-version: ${{ matrix.python-version }}
           enable-cache: true
@@ -550,7 +550,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v4
+      - uses: astral-sh/setup-uv@v7
 
       # Build wheels for all packages
       - name: Build packages
@@ -577,7 +577,7 @@ jobs:
           name: wheels
           path: dist/
 
-      - uses: astral-sh/setup-uv@v4
+      - uses: astral-sh/setup-uv@v7
 
       - name: Publish to private PyPI
         run: uv publish dist/*.whl
@@ -658,7 +658,7 @@ If your production environment requires pip:
 
 ## Related Guides
 
-- [UV Getting Started](../../../tutorials/python/uv/uv-getting-started.md)
+- [UV Getting Started](../../../tutorials/languages/python/uv/uv-getting-started.md)
 - [UV Docker Integration](./uv-docker-integration.md)
-- [GitHub Actions Tutorial](../../../tutorials/github-actions/README.md)
+
 - [Official UV Documentation](https://docs.astral.sh/uv/)

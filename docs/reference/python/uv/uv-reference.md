@@ -2,8 +2,8 @@
 
 **🔗 [← Back to UV Reference Index](./README.md)**
 
-> **Document Version:** 1.1
-> **Last Updated:** January 22, 2026
+> **Document Version:** 2.0
+> **Last Updated:** January 27, 2026
 > **Maintainers:** Application Infrastructure Team
 > **Status:** Production
 
@@ -11,11 +11,11 @@
 ![Topic](https://img.shields.io/badge/Topic-CLI-blue)
 
 > [!IMPORTANT]
-> **Related Docs:** [Getting Started](../../../tutorials/python/uv/uv-getting-started.md) | [How-to Guides](../../../how-to/python/uv/) | [Adoption Rationale](../../../explanation/python/uv/README.md)
+> **Related Docs:** [Getting Started](../../../tutorials/languages/python/uv/uv-getting-started.md) | [How-to Guides](../../../how-to/python/uv/) | [Adoption Rationale](../../../explanation/python/uv/README.md)
 
 A complete reference for UV commands, configuration options, and environment variables.
 
-## Table of Contents
+## Table of contents
 
 - [Commands](#commands)
   - [Project Commands](#project-commands)
@@ -69,7 +69,8 @@ Synchronize the project environment with the lock file.
 
 ```bash
 uv sync                           # Sync all dependencies
-uv sync --frozen                  # Fail if lock file is outdated
+uv sync --locked                  # Fail if lock file is outdated
+uv sync --frozen                  # Use lock file as-is (skip checking)
 uv sync --no-dev                  # Skip development dependencies
 uv sync --group <name>            # Include specific dependency group
 uv sync --all-groups              # Include all dependency groups
@@ -398,17 +399,18 @@ uv self update                    # Update UV to latest version
 uv self update --preview          # Update to preview version
 ```
 
-#### `uv self version`
+#### `uv version`
 
 ```bash
-uv self version                   # Show UV version
+uv version                        # Show UV version
+uv --version                      # Show UV version (alternative)
 ```
 
 ---
 
 ## Configuration
 
-### pyproject.toml Options
+### pyproject.toml options
 
 #### Project Metadata
 
@@ -454,23 +456,38 @@ test = [
 # Package type (default: true for libraries)
 package = true
 
-# Development dependencies (alternative to dependency-groups)
-dev-dependencies = [
-    "pytest>=8.0",
-]
-
 # Python version preference
 python-preference = "managed"  # managed, system, only-managed, only-system
 
-# Index configuration
-index-url = "https://pypi.org/simple"
-extra-index-url = ["https://private.pypi.org/simple"]
+# Index configuration (use [[tool.uv.index]] array syntax)
+# See Index Configuration section below
 
 # Compilation options
 compile-bytecode = true
 
 # Resolution strategy
 resolution = "highest"  # highest, lowest, lowest-direct
+```
+
+#### Index configuration
+
+Configure package indexes using the `[[tool.uv.index]]` array syntax:
+
+```toml
+# Default index (PyPI)
+[[tool.uv.index]]
+name = "pypi"
+url = "https://pypi.org/simple"
+default = true
+
+# Additional private index
+[[tool.uv.index]]
+name = "company"
+url = "https://pypi.company.com/simple/"
+
+# Pin a specific package to a specific index
+[tool.uv.sources]
+my-private-package = { index = "company" }
 ```
 
 #### UV Sources
@@ -507,24 +524,29 @@ exclude = ["packages/deprecated"]
 ### Environment Variables
 
 | Variable | Description | Default |
-|----------|-------------|---------|
+|:---|:---|:---|
 | `UV_CACHE_DIR` | Cache directory location | Platform-specific |
 | `UV_COMPILE_BYTECODE` | Compile .pyc files | `0` |
 | `UV_CONCURRENT_DOWNLOADS` | Max parallel downloads | `50` |
 | `UV_CONCURRENT_INSTALLS` | Max parallel installs | `4` |
 | `UV_CONFIG_FILE` | Custom config file path | - |
-| `UV_EXCLUDE_NEWER` | Exclude packages newer than date | - |
+| `UV_EXCLUDE_NEWER` | Exclude packages newer than date (ISO 8601) | - |
 | `UV_EXTRA_INDEX_URL` | Additional package indexes | - |
-| `UV_FROZEN` | Equivalent to --frozen | `0` |
+| `UV_FROZEN` | Equivalent to `--frozen` | `0` |
 | `UV_INDEX_URL` | Primary package index | PyPI |
 | `UV_LINK_MODE` | Link mode (hardlink, copy, symlink) | `hardlink` |
+| `UV_LOCKED` | Equivalent to `--locked` | `0` |
 | `UV_NO_CACHE` | Disable caching | `0` |
+| `UV_NO_DEV` | Exclude dev dependencies | `0` |
 | `UV_NO_PROGRESS` | Disable progress bars | `0` |
 | `UV_OFFLINE` | Disable network access | `0` |
 | `UV_PREVIEW` | Enable preview features | `0` |
+| `UV_PROJECT_ENVIRONMENT` | Custom venv path for project | `.venv` |
+| `UV_PUBLISH_TOKEN` | Token for `uv publish` | - |
 | `UV_PYTHON` | Python version to use | - |
 | `UV_PYTHON_PREFERENCE` | Python preference (managed/system) | `managed` |
 | `UV_SYSTEM_PYTHON` | Use system Python | `0` |
+| `UV_TORCH_BACKEND` | PyTorch backend (cpu, cu124, etc.) | - |
 
 ---
 
@@ -577,8 +599,8 @@ Or with patch version:
 
 ## Related Documentation
 
-- [UV Getting Started](../../../tutorials/python/uv/uv-getting-started.md)
-- [UV Comprehensive Guide](../../../tutorials/python/uv/uv-tutorial.md)
+- [UV Getting Started](../../../tutorials/languages/python/uv/uv-getting-started.md)
+- [UV Comprehensive Guide](../../../tutorials/languages/python/uv/uv-tutorial.md)
 - [UV Adoption Rationale](../../../explanation/python/uv/README.md)
 - [UV Architecture Deep Dive](../../../explanation/python/uv/uv-architecture.md)
 - [Official UV Documentation](https://docs.astral.sh/uv/)

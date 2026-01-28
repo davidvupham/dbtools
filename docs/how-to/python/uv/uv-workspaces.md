@@ -54,9 +54,7 @@ This guide covers setting up and managing UV workspaces for monorepo projects wi
   - [Circular dependencies](#circular-dependencies)
   - [Lock file conflicts](#lock-file-conflicts)
   - [Import errors in development](#import-errors-in-development)
-- [Migration from Other Tools](#migration-from-other-tools)
-  - [From Poetry Workspaces](#from-poetry-workspaces)
-  - [From npm/yarn Workspaces](#from-npmyarn-workspaces)
+- [Migration from pip](#migration-from-pip)
 - [Related Guides](#related-guides)
 
 ## What Are Workspaces?
@@ -378,7 +376,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v4
+      - uses: astral-sh/setup-uv@v7
 
       - name: Sync all packages
         run: uv sync
@@ -404,7 +402,7 @@ jobs:
         package: [my-core, my-api, my-cli]
     steps:
       - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v4
+      - uses: astral-sh/setup-uv@v7
       - run: uv sync
       - run: uv run --package ${{ matrix.package }} pytest
 ```
@@ -441,7 +439,7 @@ jobs:
         package: ${{ fromJson(needs.changes.outputs.packages) }}
     steps:
       - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v4
+      - uses: astral-sh/setup-uv@v7
       - run: uv sync
       - run: uv run --package ${{ matrix.package }} pytest
 ```
@@ -549,52 +547,31 @@ uv sync  # Installs all workspace members as editable
 
 ---
 
-## Migration from Other Tools
+## Migration from pip
 
-### From Poetry Workspaces
+If you have a monorepo where each package has its own `requirements.txt`, convert to a UV workspace:
 
-Poetry uses a different workspace format. Convert:
+1. Create a root `pyproject.toml` with workspace members
+2. Convert each package's requirements to `pyproject.toml`
+3. Run `uv sync` from the workspace root
 
-**Poetry:**
+```bash
+# For each package
+cd packages/core
+uv init
+uv add -r requirements.txt
+cd ../..
 
-```toml
-[tool.poetry.packages]
-include = [
-    { include = "core", from = "packages" },
-]
-```
-
-**UV:**
-
-```toml
-[tool.uv.workspace]
-members = ["packages/core"]
-```
-
-### From npm/yarn Workspaces
-
-Similar concept, different syntax:
-
-**package.json:**
-
-```json
-{
-  "workspaces": ["packages/*"]
-}
-```
-
-**UV:**
-
-```toml
-[tool.uv.workspace]
-members = ["packages/*"]
+# Configure workspace root
+# Add [tool.uv.workspace] members = ["packages/*"] to root pyproject.toml
+uv sync
 ```
 
 ---
 
 ## Related Guides
 
-- [UV Getting Started](../../../tutorials/python/uv/uv-getting-started.md)
+- [UV Getting Started](../../../tutorials/languages/python/uv/uv-getting-started.md)
 - [UV Reference](../../../reference/python/uv/uv-reference.md)
-- [Python Package Structure](../../../reference/python-package-structure.md)
+
 - [Official UV Documentation](https://docs.astral.sh/uv/)

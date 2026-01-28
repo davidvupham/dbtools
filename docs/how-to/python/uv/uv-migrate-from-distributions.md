@@ -11,12 +11,12 @@
 ![Topic](https://img.shields.io/badge/Topic-Migration-purple)
 
 > [!IMPORTANT]
-> **Related Docs:** [Migration from pip/Poetry](./uv-migrate-from-pip.md) | [Python Management](./uv-python-management.md) | [Getting Started](../../../tutorials/python/uv/uv-getting-started.md)
+> **Related Docs:** [Migration from pip](./uv-migrate-from-pip.md) | [Python Management](./uv-python-management.md) | [Getting Started](../../../tutorials/languages/python/uv/uv-getting-started.md)
 
 This guide covers migrating from standalone Python distributions (Anaconda, python.org, Microsoft Store Python, system packages) to UV on Red Hat Enterprise Linux, Ubuntu, and Windows.
 
 > [!NOTE]
-> This guide complements the [pip/Poetry Migration Guide](./uv-migrate-from-pip.md). If you're migrating from pip, Poetry, or Pipenv workflows, see that guide instead.
+> This guide complements the [pip Migration Guide](./uv-migrate-from-pip.md). If you're migrating from pip workflows, see that guide instead.
 
 ## Table of contents
 
@@ -911,8 +911,8 @@ sudo update-ca-certificates
 
 | Guide | Description |
 |:---|:---|
-| [Migration from pip/Poetry](./uv-migrate-from-pip.md) | Migrate from pip, Poetry, Pipenv, pip-tools |
-| [Getting Started with UV](../../../tutorials/python/uv/uv-getting-started.md) | Beginner tutorial for UV |
+| [Migration from pip](./uv-migrate-from-pip.md) | Migrate from pip and pip-tools |
+| [Getting Started with UV](../../../tutorials/languages/python/uv/uv-getting-started.md) | Beginner tutorial for UV |
 | [Python Management](./uv-python-management.md) | Install and manage Python versions |
 | [Docker Integration](./uv-docker-integration.md) | Use UV in Docker containers |
 | [CI/CD Integration](./uv-ci-cd-integration.md) | Set up UV in CI/CD pipelines |

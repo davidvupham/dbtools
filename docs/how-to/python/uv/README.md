@@ -11,7 +11,7 @@
 ![Topic](https://img.shields.io/badge/Topic-How--To-orange)
 
 > [!IMPORTANT]
-> **Related Docs:** [Getting Started](../../../tutorials/python/uv/uv-getting-started.md) | [Reference](../../../reference/python/uv/uv-reference.md) | [Explanation](../../../explanation/python/uv/README.md)
+> **Related Docs:** [Getting Started](../../../tutorials/languages/python/uv/uv-getting-started.md) | [Reference](../../../reference/python/uv/uv-reference.md) | [Explanation](../../../explanation/python/uv/README.md)
 
 Task-oriented guides for common UV workflows and integrations.
 
@@ -24,7 +24,7 @@ Task-oriented guides for common UV workflows and integrations.
 
 | Guide | Description |
 |-------|-------------|
-| [Migrate from pip/Poetry](./uv-migrate-from-pip.md) | Step-by-step migration from pip, Poetry, Pipenv, pip-tools |
+| [Migrate from pip](./uv-migrate-from-pip.md) | Step-by-step migration from pip and pip-tools |
 | [Migrate from Python Distributions](./uv-migrate-from-distributions.md) | Migration from Anaconda, python.org, Microsoft Store, system Python |
 | [Docker Integration](./uv-docker-integration.md) | Best practices for UV in Docker containers |
 | [CI/CD Integration](./uv-ci-cd-integration.md) | GitHub Actions, GitLab CI, Azure DevOps, and more |
@@ -38,7 +38,7 @@ Task-oriented guides for common UV workflows and integrations.
 
 ## Related Documentation
 
-- **Tutorial**: [Getting Started with UV](../../../tutorials/python/uv/uv-getting-started.md)
+- **Tutorial**: [Getting Started with UV](../../../tutorials/languages/python/uv/uv-getting-started.md)
 - **Explanation**: [UV Adoption Rationale](../../../explanation/python/uv/README.md)
 - **Reference**: [UV Command Reference](../../../reference/python/uv/uv-reference.md)
 - **Official Docs**: [UV Documentation](https://docs.astral.sh/uv/) — Astral's official UV documentation

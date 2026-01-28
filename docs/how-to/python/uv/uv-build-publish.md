@@ -1,6 +1,6 @@
 # How to Build and Publish Packages with UV
 
-**[<- Back to UV How-to Index](./README.md)**
+**🔗 [← Back to UV How-to Index](./README.md)**
 
 > **Document Version:** 1.0
 > **Last Updated:** January 22, 2026
@@ -274,7 +274,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: astral-sh/setup-uv@v4
+      - uses: astral-sh/setup-uv@v7
 
       - name: Build package
         run: uv build
@@ -300,7 +300,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: astral-sh/setup-uv@v4
+      - uses: astral-sh/setup-uv@v7
 
       - name: Build package
         run: uv build
@@ -434,7 +434,7 @@ build-backend = "hatchling.build"
 
 ## Related Guides
 
-- [UV Getting Started](../../../tutorials/python/uv/uv-getting-started.md)
+- [UV Getting Started](../../../tutorials/languages/python/uv/uv-getting-started.md)
 - [UV Workspaces](./uv-workspaces.md)
 - [UV CI/CD Integration](./uv-ci-cd-integration.md)
 - [Official UV Publishing Docs](https://docs.astral.sh/uv/guides/publish/)
