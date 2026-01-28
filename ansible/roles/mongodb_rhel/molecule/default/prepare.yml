@@ -20,6 +20,12 @@
           - systemd
         state: present
 
+    - name: Create sysctl.d directory
+      ansible.builtin.file:
+        path: /etc/sysctl.d
+        state: directory
+        mode: "0755"
+
     - name: Create MongoDB data directory
       ansible.builtin.file:
         path: /var/lib/mongo

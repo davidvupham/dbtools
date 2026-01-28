@@ -12,6 +12,8 @@
   vars:
     # Point to the shared config relative to the molecule scenario directory
     mongodb_rhel_config_path: "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') }}/../../../config/mongodb/rhel-best-practices.yml"
+    # Enable container mode to ignore kernel sysctl permission errors
+    mongodb_rhel_container_mode: true
 
   pre_tasks:
     - name: Check if SELinux is available

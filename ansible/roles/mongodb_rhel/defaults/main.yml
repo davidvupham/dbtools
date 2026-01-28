@@ -9,3 +9,8 @@ mongodb_rhel_config_path: "{{ playbook_dir }}/../../config/mongodb/rhel-best-pra
 
 # Set to true to run in validate-only mode (no changes, report only)
 mongodb_rhel_validate_only: false
+
+# Set to true when running in containers where kernel sysctl parameters
+# cannot be modified (permission denied). This allows the role to continue
+# even when kernel-level changes fail, while still verifying file creation.
+mongodb_rhel_container_mode: false

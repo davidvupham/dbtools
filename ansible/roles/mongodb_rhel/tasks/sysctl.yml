@@ -13,3 +13,15 @@
   loop_control:
     label: "{{ item.key }}={{ item.value.value }}"
   when: not mongodb_rhel_validate_only
+  ignore_errors: "{{ mongodb_rhel_container_mode | default(false) }}"
+  register: _sysctl_results
+
+- name: Report sysctl failures in container mode
+  ansible.builtin.debug:
+    msg: "Sysctl parameter {{ item.item.key }} could not be applied (expected in container mode)"
+  loop: "{{ _sysctl_results.results | default([]) }}"
+  loop_control:
+    label: "{{ item.item.key | default('unknown') }}"
+  when:
+    - mongodb_rhel_container_mode | default(false)
+    - item.failed | default(false)

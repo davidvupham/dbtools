@@ -14,6 +14,10 @@
   gather_facts: false
 
   vars:
+    # Enable container mode to skip kernel sysctl verification
+    # Kernel parameters cannot be modified in containers
+    container_mode: true
+
     # Expected sysctl values from rhel-best-practices.yml
     expected_sysctl:
       vm.swappiness: "1"
@@ -27,6 +31,18 @@
       net.core.somaxconn: "65535"
       net.ipv4.tcp_keepalive_time: "120"
       net.ipv4.tcp_max_syn_backlog: "4096"
+
+    # Parameters that cannot be verified in container mode (kernel-level)
+    # These require kernel access which containers don't have
+    container_skip_params:
+      - kernel.threads-max
+      - kernel.pid_max
+      - vm.swappiness
+      - vm.dirty_ratio
+      - vm.dirty_background_ratio
+      - vm.max_map_count
+      - vm.zone_reclaim_mode
+      - fs.file-max
 
     # Parameters that use >= comparison (actual may exceed expected)
     gte_params:
@@ -49,6 +65,17 @@
         label: "{{ item.key }}"
       register: _sysctl_values
       changed_when: false
+      when: not (container_mode | default(false) and item.key in container_skip_params | default([]))
+
+    - name: Report skipped sysctl parameters (container mode)
+      ansible.builtin.debug:
+        msg: "SKIPPED (container mode): {{ item.key }} cannot be verified in containers"
+      loop: "{{ expected_sysctl | dict2items }}"
+      loop_control:
+        label: "{{ item.key }}"
+      when:
+        - container_mode | default(false)
+        - item.key in container_skip_params | default([])
 
     - name: Assert exact-match sysctl parameters
       ansible.builtin.assert:
@@ -59,10 +86,12 @@
           (expected {{ expected_sysctl[item.item.key] }})
         success_msg: >-
           PASS: {{ item.item.key }} = {{ item.stdout }}
-      loop: "{{ _sysctl_values.results }}"
+      loop: "{{ _sysctl_values.results | default([]) }}"
       loop_control:
         label: "{{ item.item.key }}"
-      when: item.item.key not in gte_params
+      when:
+        - item.item.key not in gte_params
+        - not item.skipped | default(false)
 
     - name: Assert gte sysctl parameters
       ansible.builtin.assert:
@@ -74,10 +103,12 @@
         success_msg: >-
           PASS: {{ item.item.key }} = {{ item.stdout }}
           (>= {{ expected_sysctl[item.item.key] }})
-      loop: "{{ _sysctl_values.results }}"
+      loop: "{{ _sysctl_values.results | default([]) }}"
       loop_control:
         label: "{{ item.item.key }}"
-      when: item.item.key in gte_params
+      when:
+        - item.item.key in gte_params
+        - not item.skipped | default(false)
 
     # -----------------------------------------------------------------
     # 2. Verify sysctl config files exist
@@ -190,7 +221,7 @@
           mongodb_rhel VERIFICATION COMPLETE
           ==========================================
 
-          Sysctl Parameters:     VERIFIED
+          Sysctl Parameters:     {{ 'VERIFIED (some skipped in container mode)' if container_mode | default(false) else 'VERIFIED' }}
           Sysctl Config Files:   VERIFIED
           Systemd Limits:        VERIFIED
           THP Tuned Profile:     VERIFIED

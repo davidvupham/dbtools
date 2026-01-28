@@ -22,16 +22,17 @@ dependency:
     requirements-file: ../requirements.yml
 
 driver:
-  name: docker
+  name: podman
 
 platforms:
   - name: rhel9-mongodb
-    image: rockylinux:9
-    command: /sbin/init
+    image: geerlingguy/docker-rockylinux9-ansible:latest
+    command: ""
+    pre_build_image: true
     privileged: true
     tmpfs:
-      - /run
-      - /tmp
+      /run: rw
+      /tmp: rw
     volumes:
       - /sys/fs/cgroup:/sys/fs/cgroup:rw
     groups:
@@ -44,7 +45,8 @@ provisioner:
   config_options:
     defaults:
       callbacks_enabled: profile_tasks
-      stdout_callback: yaml
+      stdout_callback: default
+      result_format: yaml
       timeout: 30
 
 verifier:
