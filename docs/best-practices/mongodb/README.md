@@ -11,3 +11,14 @@
     - OS Tuning (THP, Limits, Kernel)
     - Filesystem (XFS)
     - Systemd configuration
+- **[Instance Configuration](./instance-configuration.md)**
+    - Logging & Log Rotation
+    - Auditing & Security
+    - Process Management
+- **[Storage Engine](./storage-engine.md)**
+    - WiredTiger Cache Tuning
+    - Compression Strategies
+- **[Replica Set Architecture](./replica-set-architecture.md)**
+    - PSS vs PSA Patterns
+    - Voting Member Limits
+    - Hidden/Analytics configurations
