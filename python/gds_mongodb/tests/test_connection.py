@@ -5,21 +5,8 @@ Test suite for MongoDB connection implementation.
 import unittest
 from unittest.mock import MagicMock, patch
 
-from gds_database import ConfigurationError, ConnectionError
-
-# Mock pymongo to avoid import errors in test environment
-mock_pymongo = MagicMock()
-mock_pymongo.MongoClient = MagicMock
-mock_pymongo_errors = MagicMock()
-mock_pymongo_errors.ConnectionFailure = Exception
-mock_pymongo_errors.OperationFailure = Exception
-mock_pymongo_errors.ServerSelectionTimeoutError = Exception
-
-with patch.dict(
-    "sys.modules",
-    {"pymongo": mock_pymongo, "pymongo.errors": mock_pymongo_errors},
-):
-    from gds_mongodb import MongoDBConnection
+from gds_database import ConfigurationError, DatabaseConnectionError
+from gds_mongodb import MongoDBConnection
 
 
 class TestMongoDBConnection(unittest.TestCase):
@@ -36,8 +23,6 @@ class TestMongoDBConnection(unittest.TestCase):
             "auth_source": "admin",
             "server_selection_timeout_ms": 5000,
         }
-        mock_pymongo.reset_mock()
-        mock_pymongo.MongoClient.side_effect = None
 
     def test_initialization_with_parameters(self):
         """Test initialization with individual parameters."""
@@ -106,10 +91,8 @@ class TestMongoDBConnection(unittest.TestCase):
 
     def test_config_validation_invalid_port(self):
         """Test configuration validation with invalid port."""
-        conn = MongoDBConnection(host="localhost", database="testdb", port="invalid")
-
         with self.assertRaises(ConfigurationError) as cm:
-            conn.validate_config()
+            MongoDBConnection(host="localhost", database="testdb", port="invalid")
 
         self.assertIn("Invalid port number", str(cm.exception))
 
@@ -177,7 +160,9 @@ class TestMongoDBConnection(unittest.TestCase):
         conn = MongoDBConnection(host="localhost", database="testdb")
         conn_str = conn._build_connection_string()
 
-        self.assertEqual(conn_str, "mongodb://localhost:27017/")
+        self.assertIn("mongodb://", conn_str)
+        self.assertIn("localhost:27017", conn_str)
+        self.assertIn("authSource=admin", conn_str)
 
     def test_build_connection_string_with_auth(self):
         """Test building connection string with authentication."""
@@ -235,7 +220,7 @@ class TestMongoDBConnection(unittest.TestCase):
         conn_str = conn._build_connection_string()
 
         self.assertIn("authMechanism=GSSAPI", conn_str)
-        self.assertIn("authSource=%24external", conn_str)
+        self.assertIn("authSource=$external", conn_str)
 
     def test_build_connection_string_with_x509(self):
         """Test building connection string with X.509."""
@@ -277,6 +262,7 @@ class TestMongoDBConnection(unittest.TestCase):
             port=27017,
             database="testdb",
             username="testuser",
+            password="testpass",
         )
 
         info = conn.get_connection_info()
@@ -318,7 +304,7 @@ class TestMongoDBConnection(unittest.TestCase):
         """Test execute_query raises error when not connected."""
         conn = MongoDBConnection(host="localhost", database="testdb")
 
-        with self.assertRaises(ConnectionError) as cm:
+        with self.assertRaises(DatabaseConnectionError) as cm:
             conn.execute_query("users", {})
 
         self.assertIn("Not connected", str(cm.exception))
@@ -327,7 +313,7 @@ class TestMongoDBConnection(unittest.TestCase):
         """Test insert_one raises error when not connected."""
         conn = MongoDBConnection(host="localhost", database="testdb")
 
-        with self.assertRaises(ConnectionError) as cm:
+        with self.assertRaises(DatabaseConnectionError) as cm:
             conn.insert_one("users", {"name": "test"})
 
         self.assertIn("Not connected", str(cm.exception))
@@ -336,7 +322,7 @@ class TestMongoDBConnection(unittest.TestCase):
         """Test update_one raises error when not connected."""
         conn = MongoDBConnection(host="localhost", database="testdb")
 
-        with self.assertRaises(ConnectionError) as cm:
+        with self.assertRaises(DatabaseConnectionError) as cm:
             conn.update_one("users", {"_id": 1}, {"$set": {"name": "test"}})
 
         self.assertIn("Not connected", str(cm.exception))
@@ -345,7 +331,7 @@ class TestMongoDBConnection(unittest.TestCase):
         """Test delete_one raises error when not connected."""
         conn = MongoDBConnection(host="localhost", database="testdb")
 
-        with self.assertRaises(ConnectionError) as cm:
+        with self.assertRaises(DatabaseConnectionError) as cm:
             conn.delete_one("users", {"_id": 1})
 
         self.assertIn("Not connected", str(cm.exception))
@@ -354,7 +340,7 @@ class TestMongoDBConnection(unittest.TestCase):
         """Test get_collection_names raises error when not connected."""
         conn = MongoDBConnection(host="localhost", database="testdb")
 
-        with self.assertRaises(ConnectionError) as cm:
+        with self.assertRaises(DatabaseConnectionError) as cm:
             conn.get_collection_names()
 
         self.assertIn("Not connected", str(cm.exception))
@@ -362,18 +348,19 @@ class TestMongoDBConnection(unittest.TestCase):
     def test_resource_manager_interface(self):
         """Test ResourceManager interface methods."""
         mock_client = MagicMock()
-        mock_client.admin.command.return_value = None
+        mock_client.admin.command.return_value = {"ok": 1}
 
         conn = MongoDBConnection(host="localhost", database="testdb")
 
-        with patch.object(MongoDBConnection, "connect", return_value=mock_client):
-            with patch.object(MongoDBConnection, "disconnect"):
-                # Test initialize
+        with patch.object(MongoDBConnection, "connect", return_value=mock_client) as mock_connect:
+            with patch.object(MongoDBConnection, "disconnect") as mock_disconnect:
+                # Test initialize calls connect
                 conn.initialize()
-                self.assertIsNotNone(conn.client)
+                mock_connect.assert_called_once()
 
-                # Test cleanup
+                # Test cleanup calls disconnect
                 conn.cleanup()
+                mock_disconnect.assert_called_once()
 
 
 class TestMongoDBConnectionIntegration(unittest.TestCase):

@@ -6,18 +6,19 @@ including adding and removing members, getting configuration and status,
 and monitoring replica set health.
 """
 
+from __future__ import annotations
+
 import logging
 import time
-from typing import TYPE_CHECKING, Any, Optional, Union
-
-from pymongo import MongoClient
-from pymongo.errors import OperationFailure, ServerSelectionTimeoutError
+from typing import TYPE_CHECKING, Any
 
 from gds_database import (
     ConfigurationError,
     DatabaseConnectionError,
     QueryError,
 )
+from pymongo import MongoClient
+from pymongo.errors import OperationFailure, ServerSelectionTimeoutError
 
 from .connection import MongoDBConnection
 
@@ -78,7 +79,7 @@ class MongoDBReplicaSetManager:
 
     def __init__(
         self,
-        connection: Union[MongoDBConnection, MongoClient],
+        connection: MongoDBConnection | MongoClient,
     ):
         """
         Initialize replica set manager.
@@ -204,7 +205,7 @@ class MongoDBReplicaSetManager:
         arbiter_only: bool = False,
         hidden: bool = False,
         slave_delay: int = 0,
-        tags: Optional[dict[str, str]] = None,
+        tags: dict[str, str] | None = None,
     ) -> dict[str, Any]:
         """
         Add a new member to the replica set.
@@ -383,7 +384,7 @@ class MongoDBReplicaSetManager:
             logger.error(error_msg)
             raise QueryError(error_msg) from e
 
-    def get_primary(self) -> Optional[str]:
+    def get_primary(self) -> str | None:
         """
         Get the current primary member of the replica set.
 
@@ -713,7 +714,7 @@ class MongoDBReplicaSetManager:
             logger.error(error_msg)
             raise QueryError(error_msg) from e
 
-    def monitor_health(self, alert_manager: Optional[Any] = None) -> dict[str, Any]:
+    def monitor_health(self, alert_manager: Any | None = None) -> dict[str, Any]:
         """
         Comprehensive health monitoring for the replica set.
 
@@ -944,7 +945,7 @@ class MongoDBReplicaSetManager:
 
         return check_result
 
-    def _check_primary_availability(self, primary: Optional[str], status: dict[str, Any]) -> dict[str, Any]:
+    def _check_primary_availability(self, primary: str | None, status: dict[str, Any]) -> dict[str, Any]:
         """Check primary availability."""
         check_result = {"status": "healthy", "details": {}, "issues": []}
 
@@ -999,7 +1000,7 @@ class MongoDBReplicaSetManager:
         severity_names = {0: "healthy", 1: "warning", 2: "error", 3: "critical"}
         return severity_names[max_severity]
 
-    def _generate_replica_set_alerts(self, health_data: dict[str, Any]) -> list["Alert"]:
+    def _generate_replica_set_alerts(self, health_data: dict[str, Any]) -> list[Alert]:
         """Generate alerts from health check results."""
         alerts = []
 
@@ -1030,7 +1031,7 @@ class MongoDBReplicaSetManager:
 
         return alerts
 
-    def _map_check_to_alert_type(self, check_name: str) -> "AlertType":
+    def _map_check_to_alert_type(self, check_name: str) -> AlertType:
         """Map health check names to alert types."""
         from .monitoring import AlertType
 

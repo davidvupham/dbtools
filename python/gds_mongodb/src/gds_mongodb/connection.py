@@ -5,24 +5,23 @@ This module provides a concrete implementation of the DatabaseConnection
 interface for MongoDB databases using pymongo.
 """
 
-import logging
-from typing import Any, Optional
-from urllib.parse import quote_plus
+from __future__ import annotations
 
+import logging
+from typing import Any
+
+from gds_database import (
+    ConfigurableComponent,
+    DatabaseConnection,
+    DatabaseConnectionError,
+    QueryError,
+    ResourceManager,
+)
 from pymongo import MongoClient
 from pymongo.errors import (
     ConnectionFailure,
     OperationFailure,
     ServerSelectionTimeoutError,
-)
-
-from gds_database import (
-    ConfigurableComponent,
-    ConfigurationError,
-    DatabaseConnection,
-    DatabaseConnectionError,
-    QueryError,
-    ResourceManager,
 )
 
 from .connection_config import MongoDBConnectionConfig
@@ -72,18 +71,18 @@ class MongoDBConnection(DatabaseConnection, ConfigurableComponent, ResourceManag
 
     def __init__(
         self,
-        host: Optional[str] = None,
-        port: Optional[int] = None,
-        database: Optional[str] = None,
-        username: Optional[str] = None,
-        password: Optional[str] = None,
-        connection_string: Optional[str] = None,
-        auth_source: Optional[str] = None,
-        auth_mechanism: Optional[str] = None,
-        replica_set: Optional[str] = None,
-        tls: Optional[bool] = None,
-        config: Optional["MongoDBConnectionConfig | dict[str, Any]"] = None,
-        **kwargs,
+        host: str | None = None,
+        port: int | None = None,
+        database: str | None = None,
+        username: str | None = None,
+        password: str | None = None,
+        connection_string: str | None = None,
+        auth_source: str | None = None,
+        auth_mechanism: str | None = None,
+        replica_set: str | None = None,
+        tls: bool | None = None,
+        config: MongoDBConnectionConfig | dict[str, Any] | None = None,
+        **kwargs: Any,
     ):
         """
         Initialize MongoDB connection.
@@ -103,54 +102,37 @@ class MongoDBConnection(DatabaseConnection, ConfigurableComponent, ResourceManag
             config: MongoDBConnectionConfig instance or configuration dictionary
             **kwargs: Additional pymongo connection parameters
         """
-        # Handle MongoDBConnectionConfig instance
+        # Build or reuse a MongoDBConnectionConfig for validation and connection building
         if isinstance(config, MongoDBConnectionConfig):
-            conn_config: dict[str, Any] = config.to_dict()
+            self._connection_config = config
         else:
-            # Build configuration from parameters
-            conn_config: dict[str, Any] = dict(config) if config else {}
+            self._connection_config = MongoDBConnectionConfig(
+                host=host,
+                port=port,
+                database=database,
+                username=username,
+                password=password,
+                connection_string=connection_string,
+                auth_source=auth_source,
+                auth_mechanism=auth_mechanism,
+                replica_set=replica_set,
+                tls=tls,
+                config=config if isinstance(config, dict) else None,
+                **kwargs,
+            )
 
-        if connection_string:
-            conn_config["connection_string"] = connection_string
-        if host is not None:
-            conn_config["host"] = host
-        if port is not None:
-            conn_config["port"] = port
-        if database is not None:
-            conn_config["database"] = database
-        if username is not None:
-            conn_config["username"] = username
-        if password is not None:
-            conn_config["password"] = password
-        if auth_source is not None:
-            conn_config["auth_source"] = auth_source
-        if auth_mechanism is not None:
-            conn_config["auth_mechanism"] = auth_mechanism
-        if replica_set is not None:
-            conn_config["replica_set"] = replica_set
-        if tls is not None:
-            conn_config["tls"] = tls
-
-        # Add any additional parameters
-        if kwargs:
-            conn_config.update(kwargs)
-
-        # Set defaults
-        conn_config.setdefault("host", "localhost")
-        conn_config.setdefault("port", 27017)
-        conn_config.setdefault("auth_source", "admin")
-        conn_config.setdefault("server_selection_timeout_ms", 5000)
-
-        # Initialize parent classes
-        ConfigurableComponent.__init__(self, conn_config)
+        # Initialize parent class using the validated config dict
+        ConfigurableComponent.__init__(self, self._connection_config.to_dict())
 
         # Connection state
-        self.client: Optional[MongoClient] = None
+        self.client: MongoClient | None = None
         self._db = None
 
     def validate_config(self) -> bool:
         """
         Validate MongoDB connection configuration.
+
+        Delegates to MongoDBConnectionConfig for validation logic.
 
         Returns:
             True if configuration is valid
@@ -158,60 +140,7 @@ class MongoDBConnection(DatabaseConnection, ConfigurableComponent, ResourceManag
         Raises:
             ConfigurationError: If required configuration is missing or invalid
         """
-        # If connection_string is provided, database is still required
-        if not self.config.get("connection_string"):
-            # Validate individual parameters
-            required_fields = ["host", "database"]
-            missing_fields = [field for field in required_fields if not self.config.get(field)]
-
-            if missing_fields:
-                raise ConfigurationError(f"Missing required configuration fields: {missing_fields}")
-
-            # Validate authentication requirements
-            auth_mechanism = self.config.get("auth_mechanism")
-
-            if auth_mechanism in ["SCRAM-SHA-1", "SCRAM-SHA-256", "PLAIN"]:
-                # These mechanisms require username and password
-                if not self.config.get("username"):
-                    raise ConfigurationError(f"{auth_mechanism} requires username")
-                if not self.config.get("password"):
-                    raise ConfigurationError(f"{auth_mechanism} requires password")
-            elif auth_mechanism == "GSSAPI":
-                # Kerberos authentication requires username
-                if not self.config.get("username"):
-                    raise ConfigurationError("GSSAPI (Kerberos) requires username")
-            elif auth_mechanism == "MONGODB-X509":
-                # X.509 doesn't require password, but needs TLS
-                if not self.config.get("tls"):
-                    raise ConfigurationError("MONGODB-X509 requires TLS to be enabled")
-            elif auth_mechanism and auth_mechanism not in [
-                "SCRAM-SHA-1",
-                "SCRAM-SHA-256",
-                "MONGODB-X509",
-                "GSSAPI",
-                "PLAIN",
-            ]:
-                raise ConfigurationError(
-                    f"Unsupported auth_mechanism: {auth_mechanism}. "
-                    f"Supported: SCRAM-SHA-1, SCRAM-SHA-256, "
-                    f"MONGODB-X509, GSSAPI, PLAIN"
-                )
-            # No auth_mechanism specified, basic validation
-            elif self.config.get("username") and not self.config.get("password"):
-                raise ConfigurationError("Password is required when username is provided")
-        # Connection string provided
-        elif not self.config.get("database"):
-            raise ConfigurationError("Database name is required even when using connection string")
-
-        # Validate port is a number
-        port = self.config.get("port")
-        if port and not isinstance(port, int):
-            try:
-                self.config["port"] = int(port)
-            except ValueError as err:
-                raise ConfigurationError(f"Invalid port number: {port}") from err
-
-        return True
+        return self._connection_config.validate_config()
 
     def connect(self) -> MongoClient:
         """
@@ -281,11 +210,11 @@ class MongoDBConnection(DatabaseConnection, ConfigurableComponent, ResourceManag
     def execute_query(
         self,
         collection: str,
-        filter_query: Optional[dict[str, Any]] = None,
-        projection: Optional[dict[str, Any]] = None,
+        filter_query: dict[str, Any] | None = None,
+        projection: dict[str, Any] | None = None,
         limit: int = 0,
         skip: int = 0,
-        sort: Optional[list[tuple]] = None,
+        sort: list[tuple] | None = None,
     ) -> list[dict[str, Any]]:
         """
         Execute a query and return results.
@@ -343,7 +272,7 @@ class MongoDBConnection(DatabaseConnection, ConfigurableComponent, ResourceManag
             raise QueryError(error_msg) from e
 
     def execute_query_dict(
-        self, collection: str, filter_query: Optional[dict[str, Any]] = None
+        self, collection: str, filter_query: dict[str, Any] | None = None
     ) -> list[dict[str, Any]]:
         """
         Execute query and return results as dictionaries.
@@ -642,36 +571,43 @@ class MongoDBConnection(DatabaseConnection, ConfigurableComponent, ResourceManag
         """
         Begin a new transaction.
 
-        Note: MongoDB transactions require replica sets or sharded clusters.
+        Raises:
+            NotImplementedError: MongoDB multi-document transactions require
+                replica sets and ClientSession. Use pymongo's session API directly
+                for transaction support.
         """
-        if not self.is_connected():
-            raise DatabaseConnectionError("Not connected to database")
-
-        logger.debug("Transaction started (MongoDB session)")
+        raise NotImplementedError(
+            "Multi-document transactions require a replica set and pymongo ClientSession. "
+            "Use client.start_session() and session.start_transaction() directly."
+        )
 
     def commit(self) -> None:
         """
         Commit current transaction.
 
-        Note: For MongoDB, most operations are atomic at the document level.
-        Use sessions for multi-document transactions.
+        Raises:
+            NotImplementedError: MongoDB multi-document transactions require
+                replica sets and ClientSession. Use pymongo's session API directly
+                for transaction support.
         """
-        if not self.is_connected():
-            raise DatabaseConnectionError("Not connected to database")
-
-        logger.debug("Transaction committed")
+        raise NotImplementedError(
+            "Multi-document transactions require a replica set and pymongo ClientSession. "
+            "Use client.start_session() and session.commit_transaction() directly."
+        )
 
     def rollback(self) -> None:
         """
         Rollback current transaction.
 
-        Note: For MongoDB, most operations are atomic at the document level.
-        Use sessions for multi-document transactions.
+        Raises:
+            NotImplementedError: MongoDB multi-document transactions require
+                replica sets and ClientSession. Use pymongo's session API directly
+                for transaction support.
         """
-        if not self.is_connected():
-            raise DatabaseConnectionError("Not connected to database")
-
-        logger.debug("Transaction rolled back")
+        raise NotImplementedError(
+            "Multi-document transactions require a replica set and pymongo ClientSession. "
+            "Use client.start_session() and session.abort_transaction() directly."
+        )
 
     def get_collection_names(self) -> list[str]:
         """
@@ -693,7 +629,7 @@ class MongoDBConnection(DatabaseConnection, ConfigurableComponent, ResourceManag
             logger.error(error_msg)
             raise QueryError(error_msg) from e
 
-    def get_table_names(self, schema: Optional[str] = None) -> list[str]:
+    def get_table_names(self, schema: str | None = None) -> list[str]:
         """
         Get list of collection names (MongoDB equivalent of tables).
 
@@ -768,64 +704,8 @@ class MongoDBConnection(DatabaseConnection, ConfigurableComponent, ResourceManag
 
     def _build_connection_string(self) -> str:
         """Build MongoDB connection string from individual parameters."""
-        config = self.config
-
-        # Build authentication part
-        auth_part = ""
-        auth_mechanism = config.get("auth_mechanism")
-
-        # For most mechanisms, include username:password in URI
-        # MONGODB-X509 doesn't use password in connection string
-        if config.get("username"):
-            if auth_mechanism == "MONGODB-X509":
-                # X.509 uses username but not password in connection string
-                username = quote_plus(config["username"])
-                auth_part = f"{username}@"
-            elif config.get("password"):
-                username = quote_plus(config["username"])
-                password = quote_plus(config["password"])
-                auth_part = f"{username}:{password}@"
-
-        # Build host part
-        host = config["host"]
-        port = config.get("port", 27017)
-        host_part = f"{host}:{port}"
-
-        # Build options part
-        options = []
-        if config.get("auth_source"):
-            options.append(f"authSource={config['auth_source']}")
-        if auth_mechanism:
-            options.append(f"authMechanism={auth_mechanism}")
-        if config.get("replica_set"):
-            options.append(f"replicaSet={config['replica_set']}")
-        if config.get("tls"):
-            options.append("tls=true")
-
-        options_part = "?" + "&".join(options) if options else ""
-
-        # Note: database is not in connection string, accessed after
-        return f"mongodb://{auth_part}{host_part}/{options_part}"
+        return self._connection_config.build_connection_string()
 
     def _build_connection_params(self) -> dict[str, Any]:
         """Build additional connection parameters for MongoClient."""
-        params = {}
-
-        if self.config.get("server_selection_timeout_ms"):
-            params["serverSelectionTimeoutMS"] = self.config["server_selection_timeout_ms"]
-
-        # Add any other pymongo-specific parameters from config
-        pymongo_params = [
-            "maxPoolSize",
-            "minPoolSize",
-            "maxIdleTimeMS",
-            "waitQueueTimeoutMS",
-            "connectTimeoutMS",
-            "socketTimeoutMS",
-        ]
-
-        for param in pymongo_params:
-            if param in self.config:
-                params[param] = self.config[param]
-
-        return params
+        return self._connection_config.build_connection_params()

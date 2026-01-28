@@ -7,13 +7,12 @@ to retrieve and modify MongoDB server configuration settings.
 Reference: https://www.mongodb.com/docs/manual/reference/command/getParameter/
 """
 
-from pymongo.errors import PyMongoError
-
 from gds_mongodb import (
     MongoDBConfiguration,
     MongoDBConnection,
     MongoDBConnectionConfig,
 )
+from pymongo.errors import PyMongoError
 
 
 def example_basic_configuration_retrieval():

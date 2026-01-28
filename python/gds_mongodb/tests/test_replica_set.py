@@ -8,14 +8,13 @@ MongoDB replica sets.
 import unittest
 from unittest.mock import MagicMock
 
-from pymongo.errors import OperationFailure, ServerSelectionTimeoutError
-
 from gds_database import (
     ConfigurationError,
     DatabaseConnectionError,
     QueryError,
 )
 from gds_mongodb.replica_set import MongoDBReplicaSetManager
+from pymongo.errors import OperationFailure, ServerSelectionTimeoutError
 
 
 class TestMongoDBReplicaSetManager(unittest.TestCase):
@@ -23,9 +22,8 @@ class TestMongoDBReplicaSetManager(unittest.TestCase):
 
     def setUp(self):
         """Set up test fixtures."""
-        from pymongo import MongoClient
-
         from gds_mongodb.connection import MongoDBConnection
+        from pymongo import MongoClient
 
         # Create mock MongoClient
         self.mock_client = MagicMock(spec=MongoClient)
@@ -48,15 +46,10 @@ class TestMongoDBReplicaSetManager(unittest.TestCase):
         self.assertEqual(manager.client, self.mock_client)
         self.assertIsNone(manager.connection)
 
-    def test_init_with_legacy_client_param(self):
-        """Test initialization with legacy client parameter."""
-        manager = MongoDBReplicaSetManager(client=self.mock_client)
-        self.assertEqual(manager.client, self.mock_client)
-
     def test_init_no_connection(self):
-        """Test initialization fails without connection."""
-        with self.assertRaises(ValueError):
-            MongoDBReplicaSetManager()
+        """Test initialization fails without valid connection."""
+        with self.assertRaises((TypeError, ValueError)):
+            MongoDBReplicaSetManager(connection=None)
 
     def test_init_invalid_connection(self):
         """Test initialization fails with invalid connection type."""

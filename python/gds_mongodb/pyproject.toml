@@ -15,28 +15,30 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Topic :: Database",
     "Topic :: Database :: Database Engines/Servers",
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 keywords = ["mongodb", "mongo", "database", "connection", "gds", "nosql"]
-requires-python = ">=3.8"
-dependencies = ["gds-database>=1.0.0", "pymongo>=4.0.0"]
+requires-python = ">=3.9"
+dependencies = [
+    "gds-database>=1.0.0",
+    "pymongo>=4.0.0",
+]
 
 [tool.uv.sources]
 gds-database = { workspace = true }
 
-[project.optional-dependencies]
+[dependency-groups]
 dev = [
     "pytest>=7.0",
     "pytest-cov>=4.0",
     "pytest-mock>=3.0",
-    "black>=23.0",
     "ruff>=0.1.0",
     "mypy>=1.0",
 ]

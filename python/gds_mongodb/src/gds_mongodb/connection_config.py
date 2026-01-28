@@ -5,11 +5,13 @@ This module provides configuration classes for MongoDB connections,
 allowing for reusable connection configuration across multiple instances.
 
 Note: This module handles CONNECTION configuration (host, port, auth),
-not server PARAMETER configuration (which is managed by server_config.py).
+not server PARAMETER configuration (which is managed by configuration.py).
 """
 
+from __future__ import annotations
+
 import logging
-from typing import Any, Optional
+from typing import Any
 from urllib.parse import quote_plus
 
 from gds_database import ConfigurableComponent, ConfigurationError
@@ -71,22 +73,22 @@ class MongoDBConnectionConfig(ConfigurableComponent):
 
     def __init__(
         self,
-        host: Optional[str] = None,
-        port: Optional[int] = None,
-        database: Optional[str] = None,
-        username: Optional[str] = None,
-        password: Optional[str] = None,
-        connection_string: Optional[str] = None,
-        auth_source: Optional[str] = None,
-        auth_mechanism: Optional[str] = None,
-        replica_set: Optional[str] = None,
-        tls: Optional[bool] = None,
-        instance_name: Optional[str] = None,
-        environment: Optional[str] = None,
-        description: Optional[str] = None,
-        tags: Optional[list[str]] = None,
-        metadata: Optional[dict[str, Any]] = None,
-        config: Optional[dict[str, Any]] = None,
+        host: str | None = None,
+        port: int | None = None,
+        database: str | None = None,
+        username: str | None = None,
+        password: str | None = None,
+        connection_string: str | None = None,
+        auth_source: str | None = None,
+        auth_mechanism: str | None = None,
+        replica_set: str | None = None,
+        tls: bool | None = None,
+        instance_name: str | None = None,
+        environment: str | None = None,
+        description: str | None = None,
+        tags: list[str] | None = None,
+        metadata: dict[str, Any] | None = None,
+        config: dict[str, Any] | None = None,
         **kwargs,
     ):
         """
@@ -162,7 +164,7 @@ class MongoDBConnectionConfig(ConfigurableComponent):
         super().__init__(config_dict)
 
     @classmethod
-    def from_dict(cls, config_dict: dict[str, Any]) -> "MongoDBConnectionConfig":
+    def from_dict(cls, config_dict: dict[str, Any]) -> MongoDBConnectionConfig:
         """
         Create MongoDBConnectionConfig from dictionary.
 
@@ -185,7 +187,7 @@ class MongoDBConnectionConfig(ConfigurableComponent):
         return cls(config=config_dict)
 
     @classmethod
-    def from_connection_string(cls, connection_string: str, database: str) -> "MongoDBConnectionConfig":
+    def from_connection_string(cls, connection_string: str, database: str) -> MongoDBConnectionConfig:
         """
         Create MongoDBConnectionConfig from connection string.
 
@@ -362,11 +364,11 @@ class MongoDBConnectionConfig(ConfigurableComponent):
         """Get database name from configuration."""
         return self.config["database"]
 
-    def get_username(self) -> Optional[str]:
+    def get_username(self) -> str | None:
         """Get username from configuration."""
         return self.config.get("username")
 
-    def get_auth_mechanism(self) -> Optional[str]:
+    def get_auth_mechanism(self) -> str | None:
         """Get authentication mechanism from configuration."""
         return self.config.get("auth_mechanism")
 
@@ -378,15 +380,15 @@ class MongoDBConnectionConfig(ConfigurableComponent):
         """Check if TLS is enabled."""
         return bool(self.config.get("tls", False))
 
-    def get_instance_name(self) -> Optional[str]:
+    def get_instance_name(self) -> str | None:
         """Get instance name/identifier."""
         return self.config.get("instance_name")
 
-    def get_environment(self) -> Optional[str]:
+    def get_environment(self) -> str | None:
         """Get environment name."""
         return self.config.get("environment")
 
-    def get_description(self) -> Optional[str]:
+    def get_description(self) -> str | None:
         """Get instance description."""
         return self.config.get("description")
 
@@ -435,7 +437,7 @@ class MongoDBConnectionConfig(ConfigurableComponent):
             safe_config.pop(field, None)
         return safe_config
 
-    def clone(self, **overrides) -> "MongoDBConnectionConfig":
+    def clone(self, **overrides) -> MongoDBConnectionConfig:
         """
         Create a copy of this configuration with optional overrides.
 

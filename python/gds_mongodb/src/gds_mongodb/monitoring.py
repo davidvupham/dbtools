@@ -6,11 +6,13 @@ including server status monitoring, database statistics, performance metrics,
 and alerting for MongoDB operations and replica sets.
 """
 
+from __future__ import annotations
+
 import logging
 import time
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Optional, Union
+from typing import Any
 
 from pymongo import MongoClient
 
@@ -64,9 +66,9 @@ class Alert:
     message: str
     source: str
     timestamp: float
-    details: Optional[dict[str, Any]] = None
-    threshold: Optional[Union[int, float]] = None
-    current_value: Optional[Union[int, float]] = None
+    details: dict[str, Any] | None = None
+    threshold: int | float | None = None
+    current_value: int | float | None = None
 
 
 @dataclass
@@ -77,7 +79,7 @@ class MonitoringResult:
     metrics: dict[str, Any]
     alerts: list[Alert]
     success: bool
-    error_message: Optional[str] = None
+    error_message: str | None = None
 
 
 class AlertManager:
@@ -128,7 +130,7 @@ class AlertManager:
             del self.active_alerts[alert_key]
             logger.info(f"Resolved alert {alert_type.value} for {source}")
 
-    def get_active_alerts(self, severity: Optional[AlertSeverity] = None) -> list[Alert]:
+    def get_active_alerts(self, severity: AlertSeverity | None = None) -> list[Alert]:
         """Get all active alerts, optionally filtered by severity."""
         alerts = list(self.active_alerts.values())
         if severity:
@@ -169,8 +171,8 @@ class MongoDBMonitoring:
 
     def __init__(
         self,
-        connection: Union[MongoDBConnection, MongoClient],
-        alert_manager: Optional[AlertManager] = None,
+        connection: MongoDBConnection | MongoClient,
+        alert_manager: AlertManager | None = None,
     ):
         """
         Initialize MongoDB monitoring.
@@ -558,7 +560,7 @@ class MongoDBMonitoring:
 
         return alerts
 
-    def update_thresholds(self, new_thresholds: dict[str, Union[int, float]]) -> None:
+    def update_thresholds(self, new_thresholds: dict[str, int | float]) -> None:
         """Update monitoring thresholds."""
         self.thresholds.update(new_thresholds)
         logger.info(f"Updated monitoring thresholds: {new_thresholds}")

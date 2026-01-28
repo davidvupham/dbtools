@@ -5,9 +5,8 @@ Unit tests for MongoDB Configuration Manager
 from unittest.mock import Mock
 
 import pytest
-from pymongo.errors import PyMongoError
-
 from gds_mongodb.configuration import MongoDBConfiguration
+from pymongo.errors import PyMongoError
 
 
 class TestMongoDBConfiguration:

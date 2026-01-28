@@ -12,12 +12,15 @@ options.
 Reference: https://www.mongodb.com/docs/manual/reference/command/getParameter/
 """
 
-from typing import TYPE_CHECKING, Any, Optional
+from __future__ import annotations
 
-from pymongo.database import Database
+from typing import TYPE_CHECKING, Any
+
 from pymongo.errors import PyMongoError
 
 if TYPE_CHECKING:
+    from pymongo.database import Database
+
     from gds_mongodb.connection import MongoDBConnection
 
 
@@ -51,7 +54,7 @@ class MongoDBConfiguration:
         >>>     all_settings = config.get_all()
     """
 
-    def __init__(self, connection: "MongoDBConnection"):
+    def __init__(self, connection: MongoDBConnection):
         """
         Initialize the configuration manager.
 
@@ -65,7 +68,7 @@ class MongoDBConfiguration:
             raise ValueError("Connection cannot be None")
 
         self._connection = connection
-        self._admin_db: Optional[Database] = None
+        self._admin_db: Database | None = None
 
     def _get_admin_db(self) -> Database:
         """
@@ -374,7 +377,7 @@ class MongoDBConfiguration:
         """
         return self.get_all()
 
-    def set(self, name: str, value: Any, comment: Optional[str] = None) -> dict[str, Any]:
+    def set(self, name: str, value: Any, comment: str | None = None) -> dict[str, Any]:
         """
         Set a runtime-configurable setting value.
 
@@ -423,7 +426,7 @@ class MongoDBConfiguration:
                 raise PyMongoError(f"Configuration '{name}' can only be set at startup, not at runtime: {error_msg}")
             raise PyMongoError(f"Failed to set configuration '{name}': {error_msg}")
 
-    def set_multiple(self, settings: dict[str, Any], comment: Optional[str] = None) -> dict[str, Any]:
+    def set_multiple(self, settings: dict[str, Any], comment: str | None = None) -> dict[str, Any]:
         """
         Set multiple runtime-configurable settings at once.
 

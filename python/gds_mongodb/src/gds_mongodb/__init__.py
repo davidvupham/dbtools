@@ -102,7 +102,9 @@ Package Structure:
     gds_mongodb/
     ├── connection.py          # MongoDBConnection implementation
     ├── connection_config.py   # Connection configuration classes
-    ├── server_config.py       # Server configuration management classes
+    ├── configuration.py       # Server configuration management classes
+    ├── monitoring.py          # Monitoring and alerting classes
+    ├── replica_set.py         # Replica set management classes
     └── __init__.py           # Package exports
 
 For detailed documentation, examples, and advanced usage, see:
@@ -114,6 +116,14 @@ For detailed documentation, examples, and advanced usage, see:
 from .configuration import MongoDBConfiguration
 from .connection import MongoDBConnection
 from .connection_config import MongoDBConnectionConfig
+from .engine import MongoDBDatabase, MongoDBEngine
+from .exceptions import (
+    MongoDBAuthenticationError,
+    MongoDBConfigurationError,
+    MongoDBConnectionError,
+    MongoDBQueryError,
+    MongoDBReplicaSetError,
+)
 from .monitoring import (
     Alert,
     AlertManager,
@@ -130,10 +140,17 @@ __all__ = [
     "AlertManager",
     "AlertSeverity",
     "AlertType",
+    "MongoDBAuthenticationError",
     "MongoDBConfiguration",
+    "MongoDBConfigurationError",
     "MongoDBConnection",
     "MongoDBConnectionConfig",
+    "MongoDBConnectionError",
+    "MongoDBDatabase",
+    "MongoDBEngine",
     "MongoDBMonitoring",
+    "MongoDBQueryError",
+    "MongoDBReplicaSetError",
     "MongoDBReplicaSetManager",
     "MonitoringResult",
 ]

@@ -5,9 +5,8 @@ This example demonstrates advanced querying capabilities
 including sorting, limiting, and complex filters.
 """
 
-from pymongo import ASCENDING, DESCENDING
-
 from gds_mongodb import MongoDBConnection
+from pymongo import ASCENDING, DESCENDING
 
 
 def main():

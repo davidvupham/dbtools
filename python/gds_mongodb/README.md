@@ -542,41 +542,98 @@ except QueryError as e:
 
 ## Testing
 
-Run the test suite:
+### Prerequisites
+
+This package is part of a UV workspace. From the repository root:
 
 ```bash
-# Install dev dependencies
-pip install gds-mongodb[dev]
+# Sync all workspace dependencies
+uv sync
+```
 
-# Run tests
-pytest tests/
+### Unit tests
+
+Unit tests use mocked MongoDB connections and do not require a running server.
+
+```bash
+# Run all unit tests (from repo root)
+uv run pytest python/gds_mongodb/tests/ -v
+
+# Run a specific test file
+uv run pytest python/gds_mongodb/tests/test_engine.py -v
 
 # Run with coverage
-pytest --cov=gds_mongodb tests/
+uv run pytest python/gds_mongodb/tests/ --cov=gds_mongodb --cov-report=term-missing
+
+# Run all workspace tests via Makefile
+make test
+```
+
+### Integration tests
+
+Integration tests run against a live 3-member MongoDB replica set. They are
+marked with `@pytest.mark.integration` and skip automatically when MongoDB is
+not reachable.
+
+```bash
+# 1. Start the replica set (from repo root)
+cd docker/mongodb
+podman-compose up -d    # or: docker compose up -d
+
+# 2. Verify the replica set is healthy
+podman exec mongodb1 mongosh --eval "rs.status()"
+
+# 3. Run integration tests
+uv run pytest python/gds_mongodb/tests/test_integration.py -v -m integration
+
+# 4. Run ALL tests (unit + integration)
+uv run pytest python/gds_mongodb/tests/ -v
+
+# 5. Run only unit tests (skip integration)
+uv run pytest python/gds_mongodb/tests/ -v -m "not integration"
+
+# 6. Tear down the replica set when done
+cd docker/mongodb
+podman-compose down     # or: docker compose down
+```
+
+The replica set exposes ports `27017`, `27018`, and `27019` on localhost.
+See `docker/mongodb/README.md` for full setup and troubleshooting details.
+
+### Linting
+
+```bash
+# Check for lint errors
+uv run ruff check python/gds_mongodb/
+
+# Auto-fix lint errors
+uv run ruff check python/gds_mongodb/ --fix
+
+# Format code
+uv run ruff format python/gds_mongodb/
+
+# Run lint + test together (CI check)
+make ci
 ```
 
 ## Development
 
-### Setting Up Development Environment
+### Setting up the development environment
 
 ```bash
 # Clone the repository
 git clone <repository-url>
-cd gds_mongodb
+cd dbtools
 
-# Create virtual environment
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-
-# Install in development mode
-pip install -e ".[dev]"
+# Sync workspace (installs all dependencies)
+uv sync
 
 # Run linting
-black gds_mongodb tests
-ruff check gds_mongodb tests
+uv run ruff check python/gds_mongodb/
+uv run ruff format python/gds_mongodb/
 
 # Run type checking
-mypy gds_mongodb
+uv run mypy python/gds_mongodb/src/
 ```
 
 ## API Reference

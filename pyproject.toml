@@ -175,6 +175,9 @@ dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
     "PLR2004", # Magic values (OK in tests)
     "B017",    # assert blind exception (OK in tests)
 ]
+"**/engine.py" = [
+    "ARG002",  # Unused method arguments (ABC interface implementations)
+]
 "python/gds_snowflake/test_modules.py" = [
     "F401", # Unused imports (testing import functionality)
 ]
@@ -303,3 +306,6 @@ pythonpath = [
 
 testpaths = ["tests", "python/gds_*/tests"]
 python_files = "test_*.py"
+markers = [
+    "integration: tests requiring a live MongoDB instance (deselect with '-m \"not integration\"')",
+]
