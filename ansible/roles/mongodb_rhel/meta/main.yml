@@ -1,5 +1,7 @@
 ---
 galaxy_info:
+  role_name: mongodb_rhel
+  namespace: gds
   author: dbtools team
   description: Configure RHEL for MongoDB following production best practices
   license: MIT
