@@ -1,0 +1,225 @@
+---
+# kerberos_auth role - Main tasks
+#
+# Ensures a valid Kerberos ticket exists on the Ansible controller before
+# executing tasks that require Kerberos authentication (e.g., WinRM to Windows).
+#
+# This role is designed to run as a dependency or in pre_tasks for playbooks
+# that manage Windows servers via Kerberos authentication.
+
+- name: Validate required variables
+  ansible.builtin.assert:
+    that:
+      - kerberos_keytab_path | length > 0
+      - kerberos_principal | length > 0
+    fail_msg: "kerberos_keytab_path and kerberos_principal must be defined"
+    quiet: true
+  delegate_to: localhost
+  run_once: true
+  tags:
+    - always
+    - kerberos
+    - validate
+
+- name: Locate kinit binary
+  ansible.builtin.command:
+    cmd: which kinit
+  delegate_to: localhost
+  run_once: true
+  register: _kerberos_kinit_which
+  changed_when: false
+  failed_when: _kerberos_kinit_which.rc != 0
+  when: kerberos_kinit_path | length == 0
+  tags:
+    - kerberos
+    - validate
+
+- name: Set kinit path
+  ansible.builtin.set_fact:
+    _kerberos_kinit: "{{ kerberos_kinit_path if kerberos_kinit_path | length > 0 else _kerberos_kinit_which.stdout | trim }}"
+  delegate_to: localhost
+  run_once: true
+  tags:
+    - kerberos
+
+- name: Locate klist binary
+  ansible.builtin.command:
+    cmd: which klist
+  delegate_to: localhost
+  run_once: true
+  register: _kerberos_klist_which
+  changed_when: false
+  failed_when: _kerberos_klist_which.rc != 0
+  when: kerberos_klist_path | length == 0
+  tags:
+    - kerberos
+    - validate
+
+- name: Set klist path
+  ansible.builtin.set_fact:
+    _kerberos_klist: "{{ kerberos_klist_path if kerberos_klist_path | length > 0 else _kerberos_klist_which.stdout | trim }}"
+  delegate_to: localhost
+  run_once: true
+  tags:
+    - kerberos
+
+- name: Verify keytab file exists
+  ansible.builtin.stat:
+    path: "{{ kerberos_keytab_path }}"
+  delegate_to: localhost
+  run_once: true
+  register: _kerberos_keytab_stat
+  tags:
+    - kerberos
+    - validate
+
+- name: Fail if keytab file does not exist
+  ansible.builtin.fail:
+    msg: "Keytab file not found: {{ kerberos_keytab_path }}"
+  when: not _kerberos_keytab_stat.stat.exists
+  delegate_to: localhost
+  run_once: true
+  tags:
+    - kerberos
+    - validate
+
+- name: Check for existing Kerberos ticket
+  ansible.builtin.command:
+    cmd: "{{ _kerberos_klist }} -s"
+  delegate_to: localhost
+  run_once: true
+  register: _kerberos_ticket_check
+  changed_when: false
+  failed_when: false
+  when: not kerberos_force_renewal
+  tags:
+    - kerberos
+
+- name: Get ticket expiration time
+  ansible.builtin.shell:
+    cmd: |
+      set -o pipefail
+      # Match ticket lines containing principal but exclude "Default principal:" line
+      {{ _kerberos_klist }} 2>/dev/null | grep -v "^Default" | grep -i "{{ kerberos_principal }}" | awk '{print $3, $4}'
+    executable: /bin/bash
+  delegate_to: localhost
+  run_once: true
+  register: _kerberos_ticket_expiry
+  changed_when: false
+  failed_when: false
+  when:
+    - not kerberos_force_renewal
+    - _kerberos_ticket_check.rc == 0
+  tags:
+    - kerberos
+
+- name: Calculate remaining ticket lifetime
+  ansible.builtin.shell:
+    cmd: |
+      set -o pipefail
+      # Match ticket lines containing principal but exclude "Default principal:" line
+      expiry_str=$({{ _kerberos_klist }} 2>/dev/null | grep -v "^Default" | grep -i "{{ kerberos_principal }}" | head -1 | awk '{print $3, $4}')
+      if [ -z "$expiry_str" ]; then
+        echo "0"
+        exit 0
+      fi
+      # Parse expiry time - klist output format varies by implementation
+      # Try common formats: "MM/DD/YY HH:MM:SS" or "YYYY-MM-DD HH:MM:SS"
+      expiry_epoch=$(date -d "$expiry_str" +%s 2>/dev/null || echo "0")
+      current_epoch=$(date +%s)
+      remaining=$((expiry_epoch - current_epoch))
+      echo "$remaining"
+    executable: /bin/bash
+  delegate_to: localhost
+  run_once: true
+  register: _kerberos_remaining_lifetime
+  changed_when: false
+  failed_when: false
+  when:
+    - not kerberos_force_renewal
+    - _kerberos_ticket_check.rc == 0
+  tags:
+    - kerberos
+
+- name: Determine if ticket renewal is needed
+  ansible.builtin.set_fact:
+    _kerberos_needs_renewal: >-
+      {{
+        kerberos_force_renewal or
+        _kerberos_ticket_check.rc | default(1) != 0 or
+        (_kerberos_remaining_lifetime.stdout | default('0') | int) < kerberos_min_remaining_lifetime
+      }}
+  delegate_to: localhost
+  run_once: true
+  tags:
+    - kerberos
+
+- name: Display ticket status
+  ansible.builtin.debug:
+    msg: >-
+      Kerberos ticket status: {{ 'renewal needed' if _kerberos_needs_renewal else 'valid' }}
+      {% if not kerberos_force_renewal and _kerberos_ticket_check.rc | default(1) == 0 %}
+      (remaining: {{ _kerberos_remaining_lifetime.stdout | default('unknown') }}s,
+      threshold: {{ kerberos_min_remaining_lifetime }}s)
+      {% endif %}
+  delegate_to: localhost
+  run_once: true
+  tags:
+    - kerberos
+
+- name: Obtain Kerberos ticket from keytab
+  ansible.builtin.command:
+    cmd: "{{ _kerberos_kinit }} -kt {{ kerberos_keytab_path }} {{ kerberos_principal }}"
+  delegate_to: localhost
+  run_once: true
+  register: _kerberos_kinit_result
+  changed_when: true
+  when: _kerberos_needs_renewal
+  no_log: true
+  tags:
+    - kerberos
+
+- name: Verify ticket was obtained successfully
+  ansible.builtin.command:
+    cmd: "{{ _kerberos_klist }} -s"
+  delegate_to: localhost
+  run_once: true
+  changed_when: false
+  failed_when: false
+  register: _kerberos_verify
+  when: _kerberos_needs_renewal
+  tags:
+    - kerberos
+
+- name: Fail if ticket acquisition failed
+  ansible.builtin.fail:
+    msg: "Failed to obtain Kerberos ticket. Check keytab and principal configuration."
+  when:
+    - _kerberos_needs_renewal
+    - _kerberos_verify.rc != 0
+  delegate_to: localhost
+  run_once: true
+  tags:
+    - kerberos
+
+- name: Display ticket information
+  ansible.builtin.command:
+    cmd: "{{ _kerberos_klist }}"
+  delegate_to: localhost
+  run_once: true
+  register: _kerberos_klist_output
+  changed_when: false
+  when: _kerberos_needs_renewal
+  tags:
+    - kerberos
+
+- name: Show obtained ticket details
+  ansible.builtin.debug:
+    msg: "{{ _kerberos_klist_output.stdout_lines }}"
+  delegate_to: localhost
+  run_once: true
+  when:
+    - _kerberos_needs_renewal
+    - _kerberos_klist_output.stdout_lines is defined
+  tags:
+    - kerberos

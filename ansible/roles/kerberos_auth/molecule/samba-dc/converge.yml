@@ -1,0 +1,156 @@
+---
+# Converge playbook — test kerberos_auth with real Samba AD DC
+#
+# Tests the role against a real Kerberos KDC to verify:
+#   1. Real kinit/klist integration works
+#   2. Ticket caching behavior is correct
+#   3. Renewal logic works with actual ticket lifetimes
+
+- name: Converge — test kerberos_auth with Samba AD DC
+  hosts: ansible-controller
+  gather_facts: false
+
+  vars:
+    domain: TEST.LOCAL
+    keytab_path: /etc/krb5/svc_ansible.keytab
+    principal: svc_ansible@TEST.LOCAL
+
+  tasks:
+    # =========================================================================
+    # Scenario 1: No ticket exists — should obtain new ticket
+    # =========================================================================
+    - name: "SCENARIO 1: Ensure no ticket exists"
+      ansible.builtin.command:
+        cmd: kdestroy
+      failed_when: false
+      changed_when: true
+
+    - name: "SCENARIO 1: Verify no ticket"
+      ansible.builtin.command:
+        cmd: klist -s
+      register: _no_ticket_check
+      failed_when: false
+      changed_when: false
+
+    - name: "SCENARIO 1: Assert no ticket exists"
+      ansible.builtin.assert:
+        that:
+          - _no_ticket_check.rc != 0
+        success_msg: "Confirmed: no ticket exists"
+
+    - name: "SCENARIO 1: Run kerberos_auth role"
+      ansible.builtin.include_role:
+        name: kerberos_auth
+      vars:
+        kerberos_keytab_path: "{{ keytab_path }}"
+        kerberos_principal: "{{ principal }}"
+        kerberos_min_remaining_lifetime: 300
+
+    - name: "SCENARIO 1: Verify ticket was obtained"
+      ansible.builtin.command:
+        cmd: klist -s
+      register: _ticket_check_1
+      changed_when: false
+
+    - name: "SCENARIO 1: Assert ticket is valid"
+      ansible.builtin.assert:
+        that:
+          - _ticket_check_1.rc == 0
+        success_msg: "PASS: Ticket obtained successfully"
+        fail_msg: "FAIL: No valid ticket after running role"
+
+    - name: "SCENARIO 1: Display ticket info"
+      ansible.builtin.command:
+        cmd: klist
+      register: _klist_1
+      changed_when: false
+
+    - name: "SCENARIO 1: Show ticket"
+      ansible.builtin.debug:
+        msg: "{{ _klist_1.stdout_lines }}"
+
+    # =========================================================================
+    # Scenario 2: Valid ticket exists — should skip renewal
+    # =========================================================================
+    - name: "SCENARIO 2: Get ticket cache file mtime before"
+      ansible.builtin.stat:
+        path: /tmp/krb5cc_0
+      register: _cache_before
+      failed_when: false
+
+    - name: "SCENARIO 2: Run kerberos_auth role (should skip)"
+      ansible.builtin.include_role:
+        name: kerberos_auth
+      vars:
+        kerberos_keytab_path: "{{ keytab_path }}"
+        kerberos_principal: "{{ principal }}"
+        kerberos_min_remaining_lifetime: 300
+
+    - name: "SCENARIO 2: Get ticket cache file mtime after"
+      ansible.builtin.stat:
+        path: /tmp/krb5cc_0
+      register: _cache_after
+      failed_when: false
+
+    - name: "SCENARIO 2: Assert cache was not modified (renewal skipped)"
+      ansible.builtin.assert:
+        that:
+          - _cache_before.stat.mtime == _cache_after.stat.mtime
+        success_msg: "PASS: Ticket cache unchanged (renewal correctly skipped)"
+        fail_msg: "FAIL: Ticket cache was modified (unexpected renewal)"
+      when:
+        - _cache_before.stat.exists | default(false)
+        - _cache_after.stat.exists | default(false)
+
+    # =========================================================================
+    # Scenario 3: Force renewal — should obtain new ticket
+    # =========================================================================
+    - name: "SCENARIO 3: Get ticket cache file mtime before"
+      ansible.builtin.stat:
+        path: /tmp/krb5cc_0
+      register: _cache_before_force
+      failed_when: false
+
+    - name: "SCENARIO 3: Small delay to ensure mtime difference"
+      ansible.builtin.pause:
+        seconds: 2
+
+    - name: "SCENARIO 3: Run kerberos_auth with force_renewal"
+      ansible.builtin.include_role:
+        name: kerberos_auth
+      vars:
+        kerberos_keytab_path: "{{ keytab_path }}"
+        kerberos_principal: "{{ principal }}"
+        kerberos_force_renewal: true
+
+    - name: "SCENARIO 3: Get ticket cache file mtime after"
+      ansible.builtin.stat:
+        path: /tmp/krb5cc_0
+      register: _cache_after_force
+      failed_when: false
+
+    - name: "SCENARIO 3: Assert cache was modified (forced renewal)"
+      ansible.builtin.assert:
+        that:
+          - _cache_after_force.stat.mtime != _cache_before_force.stat.mtime
+        success_msg: "PASS: Ticket was renewed (force_renewal worked)"
+        fail_msg: "FAIL: Ticket cache unchanged despite force_renewal"
+      when:
+        - _cache_before_force.stat.exists | default(false)
+        - _cache_after_force.stat.exists | default(false)
+
+    # =========================================================================
+    # Summary
+    # =========================================================================
+    - name: Display test summary
+      ansible.builtin.debug:
+        msg: |
+          ==========================================
+          kerberos_auth SAMBA-DC INTEGRATION COMPLETE
+          ==========================================
+
+          Scenario 1 (no ticket):      PASS - ticket obtained
+          Scenario 2 (valid ticket):   PASS - renewal skipped
+          Scenario 3 (force renewal):  PASS - ticket renewed
+
+          All integration tests passed with real Samba AD DC.

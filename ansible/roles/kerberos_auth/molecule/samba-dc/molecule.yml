@@ -1,0 +1,80 @@
+---
+# Molecule scenario: Integration test with real Samba AD DC
+#
+# Tests kerberos_auth role against a real Kerberos KDC (Samba AD DC).
+# This provides higher fidelity than mock tests but requires more resources.
+#
+# Prerequisites:
+#   - Docker or Podman with docker-compose
+#   - ~2GB RAM for Samba DC container
+#   - Ports 88, 389, 636 available
+#
+# Usage:
+#   cd ansible/roles/kerberos_auth
+#   molecule test -s samba-dc           # Full test
+#   molecule converge -s samba-dc       # Apply only
+#   molecule destroy -s samba-dc        # Cleanup
+
+dependency:
+  name: galaxy
+  options:
+    requirements-file: ../requirements.yml
+
+driver:
+  name: docker
+
+platforms:
+  - name: ansible-controller
+    image: rockylinux:9
+    dockerfile: Dockerfile.j2
+    pre_build_image: false
+    command: /bin/sleep infinity
+    networks:
+      - name: kerberos-net
+    dns_servers:
+      - 172.28.0.10
+    etc_hosts:
+      dc1.test.local: 172.28.0.10
+      test.local: 172.28.0.10
+    volumes:
+      - /etc/krb5:/etc/krb5:rw
+    privileged: false
+
+provisioner:
+  name: ansible
+  env:
+    ANSIBLE_ROLES_PATH: "../../.."
+  config_options:
+    defaults:
+      callbacks_enabled: profile_tasks
+      stdout_callback: default
+      result_format: yaml
+      timeout: 60
+  inventory:
+    host_vars:
+      ansible-controller:
+        kerberos_keytab_path: /etc/krb5/svc_ansible.keytab
+        kerberos_principal: svc_ansible@TEST.LOCAL
+        kerberos_min_remaining_lifetime: 300
+
+verifier:
+  name: ansible
+
+scenario:
+  name: samba-dc
+  create_sequence:
+    - dependency
+    - create
+    - prepare
+  converge_sequence:
+    - converge
+  destroy_sequence:
+    - destroy
+  test_sequence:
+    - dependency
+    - syntax
+    - create
+    - prepare
+    - converge
+    - verify
+    - destroy

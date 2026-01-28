@@ -1,0 +1,164 @@
+---
+# Prepare the test environment
+#
+# 1. Configure krb5.conf on the Ansible controller
+# 2. Create service account in Samba AD
+# 3. Generate keytab for service account
+
+- name: Configure Samba DC - Create service account
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  vars:
+    dc_container: samba-dc
+    domain: TEST.LOCAL
+    domain_short: TEST
+    admin_password: P@ssw0rd123
+    service_account: svc_ansible
+    service_account_password: Ansible@123
+
+  tasks:
+    - name: Wait for Samba to be fully operational
+      ansible.builtin.command:
+        cmd: >-
+          docker exec {{ dc_container }}
+          samba-tool domain info 127.0.0.1
+      register: _samba_info
+      until: _samba_info.rc == 0
+      retries: 10
+      delay: 5
+      changed_when: false
+
+    - name: Check if service account exists
+      ansible.builtin.command:
+        cmd: >-
+          docker exec {{ dc_container }}
+          samba-tool user show {{ service_account }}
+      register: _user_check
+      failed_when: false
+      changed_when: false
+
+    - name: Create service account
+      ansible.builtin.command:
+        cmd: >-
+          docker exec {{ dc_container }}
+          samba-tool user create {{ service_account }} '{{ service_account_password }}'
+          --given-name=Ansible --surname=Service
+          --description="Service account for Ansible automation"
+      when: _user_check.rc != 0
+      changed_when: true
+
+    - name: Set service account to never expire
+      ansible.builtin.command:
+        cmd: >-
+          docker exec {{ dc_container }}
+          samba-tool user setexpiry {{ service_account }} --noexpiry
+      changed_when: true
+
+    - name: Generate keytab for service account
+      ansible.builtin.command:
+        cmd: >-
+          docker exec {{ dc_container }}
+          samba-tool domain exportkeytab /tmp/svc_ansible.keytab
+          --principal={{ service_account }}@{{ domain }}
+      changed_when: true
+
+    - name: Copy keytab from DC container
+      ansible.builtin.command:
+        cmd: docker cp {{ dc_container }}:/tmp/svc_ansible.keytab /tmp/svc_ansible.keytab
+      changed_when: true
+
+    - name: Set keytab permissions
+      ansible.builtin.file:
+        path: /tmp/svc_ansible.keytab
+        mode: "0600"
+
+    - name: Display keytab info
+      ansible.builtin.command:
+        cmd: docker exec {{ dc_container }} klist -kt /tmp/svc_ansible.keytab
+      register: _keytab_info
+      changed_when: false
+
+    - name: Show keytab contents
+      ansible.builtin.debug:
+        msg: "{{ _keytab_info.stdout_lines }}"
+
+- name: Configure Ansible controller for Kerberos
+  hosts: ansible-controller
+  gather_facts: false
+
+  vars:
+    dc_hostname: dc1.test.local
+    dc_ip: 172.28.0.10
+    domain: TEST.LOCAL
+    domain_lower: test.local
+
+  tasks:
+    - name: Install Kerberos client packages
+      ansible.builtin.dnf:
+        name:
+          - krb5-workstation
+          - krb5-libs
+        state: present
+
+    - name: Configure /etc/krb5.conf
+      ansible.builtin.copy:
+        dest: /etc/krb5.conf
+        mode: "0644"
+        content: |
+          # Kerberos configuration for Molecule testing
+          # Domain: {{ domain }}
+
+          [libdefaults]
+              default_realm = {{ domain }}
+              dns_lookup_realm = false
+              dns_lookup_kdc = false
+              ticket_lifetime = 24h
+              renew_lifetime = 7d
+              forwardable = true
+              rdns = false
+
+          [realms]
+              {{ domain }} = {
+                  kdc = {{ dc_hostname }}
+                  admin_server = {{ dc_hostname }}
+                  default_domain = {{ domain_lower }}
+              }
+
+          [domain_realm]
+              .{{ domain_lower }} = {{ domain }}
+              {{ domain_lower }} = {{ domain }}
+
+    - name: Create keytab directory
+      ansible.builtin.file:
+        path: /etc/krb5
+        state: directory
+        mode: "0755"
+
+    - name: Copy keytab to controller
+      ansible.builtin.copy:
+        src: /tmp/svc_ansible.keytab
+        dest: /etc/krb5/svc_ansible.keytab
+        mode: "0600"
+
+    - name: Test Kerberos connectivity
+      ansible.builtin.command:
+        cmd: kinit -kt /etc/krb5/svc_ansible.keytab svc_ansible@{{ domain }}
+      changed_when: true
+
+    - name: Verify ticket obtained
+      ansible.builtin.command:
+        cmd: klist
+      register: _klist_output
+      changed_when: false
+
+    - name: Display ticket info
+      ansible.builtin.debug:
+        msg: "{{ _klist_output.stdout_lines }}"
+
+    - name: Destroy test ticket (start fresh for converge)
+      ansible.builtin.command:
+        cmd: kdestroy
+      changed_when: true
+      failed_when: false

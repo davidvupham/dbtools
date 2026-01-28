@@ -1,0 +1,187 @@
+---
+# Verify playbook — assert kerberos_auth role behavior is correct
+#
+# Verifies mock scripts work correctly and role behaves as expected.
+# All verification runs on localhost since that's where the role executes.
+
+- name: Verify kerberos_auth role
+  hosts: all
+  gather_facts: false
+
+  vars:
+    mock_bin_dir: /tmp/kerberos-mock-bin
+    mock_state_dir: /tmp/kerberos-mock-state
+    mock_keytab_path: /tmp/test.keytab
+    mock_principal: svc_ansible@TEST.LOCAL
+
+  tasks:
+    # =========================================================================
+    # 1. Verify mock scripts exist and are executable
+    # =========================================================================
+    - name: Check mock scripts exist
+      ansible.builtin.stat:
+        path: "{{ item }}"
+      loop:
+        - "{{ mock_bin_dir }}/klist-mock"
+        - "{{ mock_bin_dir }}/kinit-mock"
+        - "{{ mock_bin_dir }}/set-ticket-state"
+      delegate_to: localhost
+      register: _mock_scripts
+
+    - name: Assert mock scripts exist
+      ansible.builtin.assert:
+        that:
+          - item.stat.exists
+          - item.stat.executable
+        fail_msg: "FAIL: {{ item.item }} does not exist or is not executable"
+        success_msg: "PASS: {{ item.item }} exists and is executable"
+      loop: "{{ _mock_scripts.results }}"
+      loop_control:
+        label: "{{ item.item }}"
+
+    # =========================================================================
+    # 2. Verify klist-mock responds correctly to different states
+    # =========================================================================
+    - name: Set ticket state to valid for klist test
+      ansible.builtin.command:
+        cmd: "{{ mock_bin_dir }}/set-ticket-state valid"
+      delegate_to: localhost
+      changed_when: true
+
+    - name: Test klist-mock with valid ticket (silent mode)
+      ansible.builtin.command:
+        cmd: "{{ mock_bin_dir }}/klist-mock -s"
+      delegate_to: localhost
+      register: _klist_valid
+      changed_when: false
+      failed_when: false
+
+    - name: Assert klist returns 0 for valid ticket
+      ansible.builtin.assert:
+        that:
+          - _klist_valid.rc == 0
+        success_msg: "PASS: klist-mock returns 0 for valid ticket"
+        fail_msg: "FAIL: klist-mock should return 0 for valid ticket"
+
+    - name: Set ticket state to expired for klist test
+      ansible.builtin.command:
+        cmd: "{{ mock_bin_dir }}/set-ticket-state expired"
+      delegate_to: localhost
+      changed_when: true
+
+    - name: Test klist-mock with expired ticket (silent mode)
+      ansible.builtin.command:
+        cmd: "{{ mock_bin_dir }}/klist-mock -s"
+      delegate_to: localhost
+      register: _klist_expired
+      changed_when: false
+      failed_when: false
+
+    - name: Assert klist returns non-zero for expired ticket
+      ansible.builtin.assert:
+        that:
+          - _klist_expired.rc != 0
+        success_msg: "PASS: klist-mock returns non-zero for expired ticket"
+        fail_msg: "FAIL: klist-mock should return non-zero for expired ticket"
+
+    # =========================================================================
+    # 3. Verify kinit-mock creates valid ticket
+    # =========================================================================
+    - name: Set ticket state to none
+      ansible.builtin.command:
+        cmd: "{{ mock_bin_dir }}/set-ticket-state none"
+      delegate_to: localhost
+      changed_when: true
+
+    - name: Run kinit-mock to obtain ticket
+      ansible.builtin.command:
+        cmd: "{{ mock_bin_dir }}/kinit-mock -kt {{ mock_keytab_path }} {{ mock_principal }}"
+      delegate_to: localhost
+      changed_when: true
+
+    - name: Verify ticket is now valid after kinit
+      ansible.builtin.command:
+        cmd: "{{ mock_bin_dir }}/klist-mock -s"
+      delegate_to: localhost
+      register: _klist_after_kinit
+      changed_when: false
+
+    - name: Assert ticket is valid after kinit
+      ansible.builtin.assert:
+        that:
+          - _klist_after_kinit.rc == 0
+        success_msg: "PASS: kinit-mock successfully creates valid ticket"
+        fail_msg: "FAIL: ticket should be valid after kinit-mock"
+
+    # =========================================================================
+    # 4. Verify keytab file exists
+    # =========================================================================
+    - name: Check keytab file
+      ansible.builtin.stat:
+        path: "{{ mock_keytab_path }}"
+      delegate_to: localhost
+      register: _keytab_stat
+
+    - name: Assert keytab exists with correct permissions
+      ansible.builtin.assert:
+        that:
+          - _keytab_stat.stat.exists
+          - _keytab_stat.stat.mode == "0600"
+        success_msg: "PASS: keytab file exists with mode 0600"
+        fail_msg: "FAIL: keytab file missing or incorrect permissions"
+
+    # =========================================================================
+    # 5. Final integration test - run role and verify behavior
+    # =========================================================================
+    - name: Set ticket to valid for final test
+      ansible.builtin.command:
+        cmd: "{{ mock_bin_dir }}/set-ticket-state valid"
+      delegate_to: localhost
+      changed_when: true
+
+    - name: Clear kinit log
+      ansible.builtin.file:
+        path: "{{ mock_state_dir }}/kinit.log"
+        state: absent
+      delegate_to: localhost
+
+    - name: Run role with valid ticket (final verification)
+      ansible.builtin.include_role:
+        name: kerberos_auth
+      vars:
+        kerberos_keytab_path: "{{ mock_keytab_path }}"
+        kerberos_principal: "{{ mock_principal }}"
+        kerberos_kinit_path: "{{ mock_bin_dir }}/kinit-mock"
+        kerberos_klist_path: "{{ mock_bin_dir }}/klist-mock"
+        kerberos_min_remaining_lifetime: 300
+
+    - name: Check kinit was not called (valid ticket)
+      ansible.builtin.stat:
+        path: "{{ mock_state_dir }}/kinit.log"
+      delegate_to: localhost
+      register: _final_kinit_check
+
+    - name: Assert no unnecessary KDC contact
+      ansible.builtin.assert:
+        that:
+          - not _final_kinit_check.stat.exists
+        success_msg: "PASS: No KDC contact when ticket is valid"
+        fail_msg: "FAIL: Unnecessary kinit call with valid ticket"
+
+    # =========================================================================
+    # Summary
+    # =========================================================================
+    - name: Display verification summary
+      ansible.builtin.debug:
+        msg: |
+          ==========================================
+          kerberos_auth VERIFICATION COMPLETE
+          ==========================================
+
+          Mock Scripts:          VERIFIED
+          klist Behavior:        VERIFIED
+          kinit Behavior:        VERIFIED
+          Keytab File:           VERIFIED
+          Integration Test:      VERIFIED
+
+          All verification checks passed.

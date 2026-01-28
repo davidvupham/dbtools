@@ -1,0 +1,125 @@
+---
+# Verify playbook — confirm kerberos_auth works with real AD
+#
+# Final verification that the role correctly integrates with
+# a real Kerberos infrastructure.
+
+- name: Verify kerberos_auth with Samba AD DC
+  hosts: ansible-controller
+  gather_facts: false
+
+  vars:
+    domain: TEST.LOCAL
+    keytab_path: /etc/krb5/svc_ansible.keytab
+    principal: svc_ansible@TEST.LOCAL
+
+  tasks:
+    # =========================================================================
+    # 1. Verify Kerberos configuration
+    # =========================================================================
+    - name: Check krb5.conf exists
+      ansible.builtin.stat:
+        path: /etc/krb5.conf
+      register: _krb5_conf
+
+    - name: Assert krb5.conf exists
+      ansible.builtin.assert:
+        that:
+          - _krb5_conf.stat.exists
+        success_msg: "PASS: /etc/krb5.conf exists"
+        fail_msg: "FAIL: /etc/krb5.conf not found"
+
+    - name: Check keytab exists
+      ansible.builtin.stat:
+        path: "{{ keytab_path }}"
+      register: _keytab
+
+    - name: Assert keytab exists with correct permissions
+      ansible.builtin.assert:
+        that:
+          - _keytab.stat.exists
+          - _keytab.stat.mode == "0600"
+        success_msg: "PASS: Keytab exists with mode 0600"
+        fail_msg: "FAIL: Keytab missing or wrong permissions"
+
+    # =========================================================================
+    # 2. Verify keytab contents
+    # =========================================================================
+    - name: List keytab entries
+      ansible.builtin.command:
+        cmd: klist -kt {{ keytab_path }}
+      register: _keytab_list
+      changed_when: false
+
+    - name: Assert keytab contains principal
+      ansible.builtin.assert:
+        that:
+          - "'svc_ansible@TEST.LOCAL' in _keytab_list.stdout"
+        success_msg: "PASS: Keytab contains svc_ansible@TEST.LOCAL"
+        fail_msg: "FAIL: Principal not found in keytab"
+
+    - name: Display keytab contents
+      ansible.builtin.debug:
+        msg: "{{ _keytab_list.stdout_lines }}"
+
+    # =========================================================================
+    # 3. Verify current ticket
+    # =========================================================================
+    - name: Check current ticket
+      ansible.builtin.command:
+        cmd: klist
+      register: _current_ticket
+      changed_when: false
+      failed_when: false
+
+    - name: Display current ticket
+      ansible.builtin.debug:
+        msg: "{{ _current_ticket.stdout_lines }}"
+      when: _current_ticket.rc == 0
+
+    - name: Assert valid ticket exists
+      ansible.builtin.assert:
+        that:
+          - _current_ticket.rc == 0
+          - "'svc_ansible@TEST.LOCAL' in _current_ticket.stdout"
+        success_msg: "PASS: Valid ticket exists for svc_ansible@TEST.LOCAL"
+        fail_msg: "FAIL: No valid ticket found"
+
+    # =========================================================================
+    # 4. Verify DC connectivity
+    # =========================================================================
+    - name: Test KDC connectivity
+      ansible.builtin.command:
+        cmd: kinit -kt {{ keytab_path }} {{ principal }}
+      changed_when: true
+
+    - name: Verify fresh ticket
+      ansible.builtin.command:
+        cmd: klist -s
+      register: _fresh_ticket
+      changed_when: false
+
+    - name: Assert fresh ticket is valid
+      ansible.builtin.assert:
+        that:
+          - _fresh_ticket.rc == 0
+        success_msg: "PASS: KDC connectivity verified, fresh ticket obtained"
+        fail_msg: "FAIL: Could not obtain ticket from KDC"
+
+    # =========================================================================
+    # Summary
+    # =========================================================================
+    - name: Display verification summary
+      ansible.builtin.debug:
+        msg: |
+          ==========================================
+          kerberos_auth SAMBA-DC VERIFICATION COMPLETE
+          ==========================================
+
+          Kerberos Config:       VERIFIED
+          Keytab File:           VERIFIED
+          Keytab Contents:       VERIFIED
+          Current Ticket:        VERIFIED
+          KDC Connectivity:      VERIFIED
+
+          All verification checks passed.

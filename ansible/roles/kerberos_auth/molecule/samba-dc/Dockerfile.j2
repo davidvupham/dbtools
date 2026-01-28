@@ -1,0 +1,16 @@
+# Ansible controller container for Kerberos testing
+FROM rockylinux:9
+
+# Install Kerberos client tools and Python
+RUN dnf install -y \
+    krb5-workstation \
+    krb5-libs \
+    python3 \
+    python3-pip \
+    && dnf clean all
+
+# Create keytab directory
+RUN mkdir -p /etc/krb5 && chmod 755 /etc/krb5
+
+# Default command
+CMD ["/bin/sleep", "infinity"]

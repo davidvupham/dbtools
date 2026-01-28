@@ -1,0 +1,27 @@
+---
+# kerberos_auth role - Default variables
+#
+# Configure these variables in group_vars, host_vars, or pass via -e flag.
+# Sensitive values (keytab_path, principal) should be stored in Ansible Vault.
+
+# Path to the keytab file on the Ansible controller
+# Example: /etc/krb5/service.keytab
+kerberos_keytab_path: ""
+
+# Kerberos principal to authenticate as
+# Example: svc_ansible@DOMAIN.COM
+kerberos_principal: ""
+
+# Minimum remaining lifetime (in seconds) before forcing ticket renewal
+# Default: 300 seconds (5 minutes)
+# If ticket expires within this window, a new ticket will be obtained
+kerberos_min_remaining_lifetime: 300
+
+# Path to kinit binary (auto-detected if not specified)
+kerberos_kinit_path: ""
+
+# Path to klist binary (auto-detected if not specified)
+kerberos_klist_path: ""
+
+# Set to true to force ticket renewal regardless of current ticket validity
+kerberos_force_renewal: false

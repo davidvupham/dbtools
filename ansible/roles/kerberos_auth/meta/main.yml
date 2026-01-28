@@ -1,0 +1,23 @@
+---
+galaxy_info:
+  role_name: kerberos_auth
+  namespace: gds
+  author: dbtools team
+  description: Ensure valid Kerberos ticket on Ansible controller for Windows management
+  license: MIT
+  min_ansible_version: "2.14"
+  platforms:
+    - name: EL
+      versions:
+        - "8"
+        - "9"
+    - name: Ubuntu
+      versions:
+        - focal
+        - jammy
+    - name: Debian
+      versions:
+        - bullseye
+        - bookworm
+
+dependencies: []

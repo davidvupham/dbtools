@@ -1,0 +1,177 @@
+---
+# Prepare mock Kerberos environment for testing
+#
+# Creates mock kinit and klist scripts on LOCALHOST (the Ansible controller)
+# since kerberos_auth role delegates all tasks to localhost.
+#
+# The container is only used as a "target host" to trigger the role.
+
+- name: Prepare mock Kerberos environment on localhost
+  hosts: localhost
+  connection: local
+  gather_facts: true
+
+  vars:
+    mock_bin_dir: /tmp/kerberos-mock-bin
+    mock_state_dir: /tmp/kerberos-mock-state
+    mock_keytab_path: /tmp/test.keytab
+    mock_principal: svc_ansible@TEST.LOCAL
+
+  tasks:
+    - name: Create mock bin directory
+      ansible.builtin.file:
+        path: "{{ mock_bin_dir }}"
+        state: directory
+        mode: "0755"
+
+    - name: Create mock state directory
+      ansible.builtin.file:
+        path: "{{ mock_state_dir }}"
+        state: directory
+        mode: "0755"
+
+    - name: Create mock keytab file
+      ansible.builtin.file:
+        path: "{{ mock_keytab_path }}"
+        state: touch
+        mode: "0600"
+        modification_time: preserve
+        access_time: preserve
+
+    - name: Initialize mock state as valid ticket
+      ansible.builtin.copy:
+        dest: "{{ mock_state_dir }}/ticket_status"
+        content: "valid"
+        mode: "0644"
+
+    - name: Create klist mock script
+      ansible.builtin.copy:
+        dest: "{{ mock_bin_dir }}/klist-mock"
+        mode: "0755"
+        content: |
+          #!/bin/bash
+          # Mock klist for Molecule testing
+          # Reads state from {{ mock_state_dir }}/ticket_status
+          #
+          # States: valid, expired, none
+
+          STATE_FILE="{{ mock_state_dir }}/ticket_status"
+          STATE=$(cat "$STATE_FILE" 2>/dev/null || echo "none")
+          PRINCIPAL="{{ mock_principal }}"
+
+          case "$1" in
+            -s)
+              # Silent mode - just check if valid ticket exists
+              if [[ "$STATE" == "valid" ]]; then
+                exit 0
+              else
+                exit 1
+              fi
+              ;;
+            -kt)
+              # List keytab contents
+              echo "Keytab name: FILE:$2"
+              echo "KVNO Principal"
+              echo "---- ----------"
+              echo "   2 $PRINCIPAL"
+              exit 0
+              ;;
+            *)
+              # Default: show ticket cache
+              if [[ "$STATE" == "none" ]]; then
+                echo "klist: No credentials cache found" >&2
+                exit 1
+              fi
+
+              # Use ISO format for dates so date -d can parse them
+              CURRENT_DATE=$(date "+%Y-%m-%d %H:%M:%S")
+
+              if [[ "$STATE" == "valid" ]]; then
+                # Valid ticket - expires in 1 hour
+                EXPIRY_DATE=$(date -d "+1 hour" "+%Y-%m-%d %H:%M:%S")
+              else
+                # Expired ticket - expired 1 hour ago
+                EXPIRY_DATE=$(date -d "-1 hour" "+%Y-%m-%d %H:%M:%S")
+              fi
+
+              echo "Ticket cache: FILE:/tmp/krb5cc_0"
+              echo "Default principal: $PRINCIPAL"
+              echo ""
+              echo "Valid starting          Expires                 Service principal"
+              echo "$CURRENT_DATE  $EXPIRY_DATE  krbtgt/TEST.LOCAL@TEST.LOCAL"
+              echo "$CURRENT_DATE  $EXPIRY_DATE  $PRINCIPAL"
+              exit 0
+              ;;
+          esac
+
+    - name: Create kinit mock script
+      ansible.builtin.copy:
+        dest: "{{ mock_bin_dir }}/kinit-mock"
+        mode: "0755"
+        content: |
+          #!/bin/bash
+          # Mock kinit for Molecule testing
+          # Records that kinit was called and sets ticket to valid
+
+          STATE_FILE="{{ mock_state_dir }}/ticket_status"
+          LOG_FILE="{{ mock_state_dir }}/kinit.log"
+
+          # Log the call
+          echo "$(date '+%Y-%m-%d %H:%M:%S') kinit called with args: $*" >> "$LOG_FILE"
+
+          # Validate keytab argument
+          if [[ "$1" == "-kt" ]]; then
+            KEYTAB="$2"
+            PRINCIPAL="$3"
+
+            if [[ ! -f "$KEYTAB" ]]; then
+              echo "kinit: Keytab file '$KEYTAB' not found" >&2
+              exit 1
+            fi
+
+            echo "kinit: Obtained ticket for $PRINCIPAL (mock)" >> "$LOG_FILE"
+            # Set state to valid
+            echo "valid" > "$STATE_FILE"
+            exit 0
+          fi
+
+          echo "kinit: Usage: kinit -kt <keytab> <principal>" >&2
+          exit 1
+
+    - name: Create helper script to change ticket state
+      ansible.builtin.copy:
+        dest: "{{ mock_bin_dir }}/set-ticket-state"
+        mode: "0755"
+        content: |
+          #!/bin/bash
+          # Helper to change mock ticket state for testing
+          # Usage: set-ticket-state valid|expired|none
+
+          STATE_FILE="{{ mock_state_dir }}/ticket_status"
+
+          case "$1" in
+            valid|expired|none)
+              echo "$1" > "$STATE_FILE"
+              echo "Ticket state set to: $1"
+              ;;
+            *)
+              echo "Usage: $0 valid|expired|none" >&2
+              exit 1
+              ;;
+          esac
+
+    - name: Reset kinit log
+      ansible.builtin.file:
+        path: "{{ mock_state_dir }}/kinit.log"
+        state: absent
+
+    - name: Display mock environment info
+      ansible.builtin.debug:
+        msg: |
+          Mock Kerberos environment created on localhost:
+            klist: {{ mock_bin_dir }}/klist-mock
+            kinit: {{ mock_bin_dir }}/kinit-mock
+            keytab: {{ mock_keytab_path }}
+            principal: {{ mock_principal }}
+            state file: {{ mock_state_dir }}/ticket_status
+            kinit log: {{ mock_state_dir }}/kinit.log

@@ -1,0 +1,29 @@
+---
+# Destroy Samba AD DC infrastructure
+#
+# Stops and removes all containers and volumes created for testing.
+
+- name: Destroy Samba AD DC infrastructure
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  vars:
+    molecule_scenario_directory: "{{ lookup('env', 'MOLECULE_SCENARIO_DIRECTORY') }}"
+
+  tasks:
+    - name: Stop and remove containers with docker-compose
+      ansible.builtin.command:
+        cmd: docker-compose down -v --remove-orphans
+        chdir: "{{ molecule_scenario_directory }}"
+      changed_when: true
+      failed_when: false
+
+    - name: Remove temporary keytab
+      ansible.builtin.file:
+        path: /tmp/svc_ansible.keytab
+        state: absent
+
+    - name: Display cleanup status
+      ansible.builtin.debug:
+        msg: "Samba AD DC infrastructure destroyed"

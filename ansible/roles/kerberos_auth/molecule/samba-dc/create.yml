@@ -1,0 +1,43 @@
+---
+# Create Samba AD DC and Ansible controller containers
+#
+# Uses docker-compose to spin up the infrastructure, then waits
+# for the DC to be healthy before proceeding.
+
+- name: Create Samba AD DC infrastructure
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  vars:
+    molecule_scenario_directory: "{{ lookup('env', 'MOLECULE_SCENARIO_DIRECTORY') }}"
+
+  tasks:
+    - name: Start Samba AD DC with docker-compose
+      ansible.builtin.command:
+        cmd: docker-compose up -d
+        chdir: "{{ molecule_scenario_directory }}"
+      changed_when: true
+
+    - name: Wait for Samba DC to be healthy
+      ansible.builtin.command:
+        cmd: docker inspect --format {% raw %}'{{.State.Health.Status}}'{% endraw %} samba-dc
+      register: _dc_health
+      until: _dc_health.stdout == 'healthy'
+      retries: 30
+      delay: 10
+      changed_when: false
+
+    - name: Display DC status
+      ansible.builtin.debug:
+        msg: "Samba AD DC is ready (status: {{ _dc_health.stdout }})"
+
+    - name: Get DC IP address
+      ansible.builtin.command:
+        cmd: docker inspect --format {% raw %}'{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}'{% endraw %} samba-dc
+      register: _dc_ip
+      changed_when: false
+
+    - name: Display DC IP
+      ansible.builtin.debug:
+        msg: "Samba AD DC IP: {{ _dc_ip.stdout }}"

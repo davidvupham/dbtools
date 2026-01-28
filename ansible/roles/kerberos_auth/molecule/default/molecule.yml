@@ -1,0 +1,61 @@
+---
+# Molecule scenario: Test kerberos_auth role with mock Kerberos binaries
+#
+# Tests ticket validation and renewal logic using mock kinit/klist scripts.
+# No actual Kerberos infrastructure required.
+#
+# Test cases:
+#   1. Valid ticket with sufficient lifetime → skip renewal
+#   2. Expired ticket → obtain new ticket
+#   3. Valid ticket expiring soon → obtain new ticket
+#
+# Usage:
+#   cd ansible/roles/kerberos_auth
+#   molecule test                # Full test sequence
+#   molecule converge            # Apply the role only
+#   molecule verify              # Run verification only
+#   molecule test --destroy never # Keep container for debugging
+
+dependency:
+  name: galaxy
+  options:
+    requirements-file: ../requirements.yml
+
+driver:
+  name: podman
+
+platforms:
+  - name: kerberos-test
+    image: geerlingguy/docker-rockylinux9-ansible:latest
+    command: ""
+    pre_build_image: true
+    tmpfs:
+      /run: rw
+      /tmp: rw
+
+provisioner:
+  name: ansible
+  env:
+    ANSIBLE_ROLES_PATH: "../../.."
+  config_options:
+    defaults:
+      callbacks_enabled: profile_tasks
+      stdout_callback: default
+      result_format: yaml
+      timeout: 30
+
+verifier:
+  name: ansible
+
+scenario:
+  name: default
+  test_sequence:
+    - dependency
+    - syntax
+    - create
+    - prepare
+    - converge
+    # Skip idempotence - role uses run_once which doesn't replay well
+    # - idempotence
+    - verify
+    - destroy

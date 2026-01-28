@@ -22,4 +22,10 @@ galaxy_info:
     - sql_server
     - service_account
 
-dependencies: []
+dependencies:
+  - role: kerberos_auth
+    vars:
+      kerberos_keytab_path: "{{ kerberos_keytab_path | default('') }}"
+      kerberos_principal: "{{ kerberos_principal | default('') }}"
+      kerberos_min_remaining_lifetime: "{{ kerberos_min_remaining_lifetime | default(300) }}"
+    when: kerberos_keytab_path | default('') | length > 0
