@@ -11,7 +11,7 @@
 
 - [Introduction](#introduction)
 - [Architecture Patterns](#architecture-patterns)
-    - [PSS (Primary-Secondary-Secondary)](#pss-primary-secondary-secondary)
+    - [Distributed PSS (5-Node / 3-DC)](#distributed-pss-5-node--3-dc)
     - [PSA (Primary-Secondary-Arbiter)](#psa-primary-secondary-arbiter)
 - [Voting Members](#voting-members)
 - [Hidden and Priority Nodes](#hidden-and-priority-nodes)
@@ -41,6 +41,8 @@ To achieve true enterprise resilience and survive a full data center failure whi
 **Official Reference:** [Distributed Clusters](https://www.mongodb.com/docs/manual/core/replica-set-architecture-geographically-distributed/)
 
 
+
+### PSA (Primary-Secondary-Arbiter)
 
 **Restriction:** Development / Non-Critical Only. DO NOT USE IN PRODUCTION.
 
