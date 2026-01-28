@@ -33,30 +33,36 @@ This is the standard 3-node architecture containing data on all nodes.
 
 ### PSA (Primary-Secondary-Arbiter)
 
-**Restriction:** Cost-sensitive / Non-critical only.
-
-An architecture with 2 data nodes and 1 arbiter (no data).
-*   **Risks:**
-    *   **Data Safety:** `w:majority` essentially becomes `w:2` (all data nodes). If one data node fails, writes may stall or durability is compromised.
-    *   **Operational:** Arbiters put significant pressure on the remaining data node during failures.
-
-> [!WARNING]
-> Avoid PSA architectures for systems requiring strict `w:majority` guarantees.
+*See Critical Risks section below.*
 
 ### Distributed PSS (5-Node / 3-DC)
 
-**Restriction:** High Availability / Disaster Recovery Standard.
+**Restriction:** Enterprise Standard (Minimum for High Availability).
 
-For systems requiring resilience against a full data center failure, a 5-node architecture spread across 3 data centers (2-2-1) is recommended.
+To achieve true enterprise resilience and survive a full data center failure while maintaining `w:majority` write availability, a 5-node architecture distributed across 3 data centers (2-2-1) is the required minimum standard.
 
 *   **Topology:**
-    *   **DC1:** 2 Nodes
-    *   **DC2:** 2 Nodes
-    *   **DC3:** 1 Node
-*   **Resilience:** Can sustain the loss of any single data center (losing 2 nodes leaves 3 voting members, ensuring a majority).
-*   **Write Concern:** Supports `w:majority` even with one DC offline.
+    *   **DC1:** 2 Nodes (Priority High)
+    *   **DC2:** 2 Nodes (Priority Medium)
+    *   **DC3:** 1 Node (Priority Low)
+*   **Why 5 Nodes?**
+    *   Losing any single DC (even one with 2 nodes) leaves 3 voting members active.
+    *   3 out of 5 is a majority, ensuring `w:majority` writes succeed and elections are instant.
+    *   A 3-node PSS system across 3 DCs (1-1-1) becomes read-only if any DC fails (1 node lost leaves 2, but `w:majority` requires 2, leaving zero margin for error or maintenance).
 
-**Official Reference:** [Distributed Clusters](https://www.mongodb.com/docs/manual/core/replica-set-architecture-geographically-distributed/)
+### PSA (Primary-Secondary-Arbiter)
+
+**Restriction:** Development / Non-Critical Only. DO NOT USE IN PRODUCTION.
+
+An architecture with 2 data nodes and 1 arbiter.
+
+*   **Critical Risks:**
+    *   **Write Availability:** If the single Secondary fails, the replica set has only 1 data node. A `w:majority` write requires 2 data nodes. **Writes will stall indefinitely**, causing total application downtime.
+    *   **Data Safety:** You effectively have `w:1` reliability disguised as a replica set.
+    *   **Operational Drag:** Arbiters cause cache pressure on the primary during secondary outages, typically crashing the primary when it is needed most.
+
+> [!CAUTION]
+> Arbiters are strictly prohibited for production systems requiring `w:majority` guarantees. Use the 5-node PSS standard instead.
 
 **Official Reference:** [Replica Set Deployment Architectures](https://www.mongodb.com/docs/manual/core/replica-set-architectures/)
 
