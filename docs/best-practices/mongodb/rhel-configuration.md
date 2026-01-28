@@ -1,6 +1,6 @@
 # MongoDB on Red Hat Linux Best Practices
 
-**[← Back to Database Index](./README.md)**
+**[← Back to MongoDB Index](./README.md)**
 
 > **Document Version:** 1.0
 > **Last Updated:** January 27, 2026
