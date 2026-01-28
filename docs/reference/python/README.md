@@ -32,5 +32,5 @@ This section provides encyclopedic lookups for Python syntax, standard library, 
 ---
 > **Learning Path:**
 >
-> * New to Python? Start with the **[Tutorials](../../tutorials/python/README.md)**.
+> * New to Python? Start with the **[Tutorials](../../tutorials/languages/python/README.md)**.
 > * Want to master Engineering? Take the **[Course](../../courses/python/README.md)**.
