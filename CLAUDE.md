@@ -73,3 +73,9 @@ Key standards documents:
 - `docs/development/coding-standards/python-coding-standards.md`
 - `docs/development/coding-standards/powershell-coding-standards.md`
 - `docs/best-practices/documentation-standards.md`
+
+## Container Runtime
+
+Use the appropriate container runtime based on the Linux distribution:
+- **Ubuntu/Debian**: Use `docker`
+- **RHEL/CentOS/Fedora**: Use `podman`
