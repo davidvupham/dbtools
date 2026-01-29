@@ -1,0 +1,85 @@
+---
+# Samba AD DC for Kerberos integration testing
+#
+# Provides a real Active Directory-compatible domain controller
+# for testing Kerberos authentication without Windows.
+#
+# Usage:
+#   podman-compose up -d
+#   # Wait ~30 seconds for DC to initialize
+#   podman-compose logs -f samba-dc
+#
+# Default credentials:
+#   Domain: TEST.LOCAL
+#   Admin: Administrator / P@ssw0rd123
+#   Test service account created by prepare.yml
+
+services:
+  samba-dc:
+    image: diegogslomp/samba-ad-dc:latest
+    hostname: dc1
+    domainname: test.local
+    container_name: samba-dc
+    environment:
+      REALM: TEST.LOCAL
+      DOMAIN: TEST
+      ADMIN_PASS: P@ssw0rd123
+      DNS_FORWARDER: 8.8.8.8
+    ports:
+      - "53:53/udp"      # DNS
+      - "88:88/tcp"      # Kerberos
+      - "88:88/udp"      # Kerberos
+      - "135:135/tcp"    # RPC
+      - "389:389/tcp"    # LDAP
+      - "389:389/udp"    # LDAP
+      - "445:445/tcp"    # SMB
+      - "464:464/tcp"    # Kerberos kpasswd
+      - "464:464/udp"    # Kerberos kpasswd
+      - "636:636/tcp"    # LDAPS
+      - "3268:3268/tcp"  # Global Catalog
+      - "3269:3269/tcp"  # Global Catalog SSL
+    privileged: true
+    volumes:
+      - samba-data:/var/lib/samba
+      - samba-etc:/etc/samba
+    networks:
+      kerberos-net:
+        ipv4_address: 172.28.0.10
+    healthcheck:
+      test: ["CMD", "samba-tool", "domain", "info", "127.0.0.1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # Test client container (Ansible controller)
+  ansible-controller:
+    image: rockylinux:9
+    hostname: ansible-controller
+    container_name: ansible-controller
+    command: /bin/sleep infinity
+    environment:
+      KRB5_CONFIG: /etc/krb5.conf
+    volumes:
+      - ../../:/role:ro
+      - keytabs:/etc/krb5
+    networks:
+      kerberos-net:
+        ipv4_address: 172.28.0.20
+    dns:
+      - 172.28.0.10
+    depends_on:
+      samba-dc:
+        condition: service_healthy
+
+networks:
+  kerberos-net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.28.0.0/24
+
+volumes:
+  samba-data:
+  samba-etc:
+  keytabs:
