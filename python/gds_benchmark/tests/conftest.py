@@ -3,7 +3,6 @@
 from datetime import datetime
 
 import pytest
-
 from gds_benchmark.models import BenchmarkResult, BenchmarkStatus
 
 

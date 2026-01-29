@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock
 
 import pytest
+
 from gds_notification.providers.base import (
     Notification,
     NotificationPriority,

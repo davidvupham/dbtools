@@ -1,6 +1,7 @@
 import pytest
 from validator import is_valid_username
 
+
 @pytest.mark.parametrize("username, expected", [
     ("admin", True),
     ("user123", True),

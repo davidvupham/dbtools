@@ -1,5 +1,7 @@
-import pytest
 import time
+
+import pytest
+
 
 @pytest.mark.slow
 def test_heavy_computation():
@@ -8,7 +10,7 @@ def test_heavy_computation():
 
 @pytest.mark.skip(reason="Obsolete feature")
 def test_old_feature():
-    assert False
+    raise AssertionError
 
 @pytest.mark.xfail(reason="Known bug")
 def test_buggy_feature():

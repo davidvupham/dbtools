@@ -319,6 +319,9 @@ class Vector:
             return NotImplemented
         return self.x == other.x and self.y == other.y
 
+    def __hash__(self) -> int:
+        return hash((self.x, self.y))
+
     def __abs__(self) -> float:
         """Return magnitude of vector."""
         return math.sqrt(self.x**2 + self.y**2)

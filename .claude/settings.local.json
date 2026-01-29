@@ -37,7 +37,8 @@
       "WebFetch(domain:gist.github.com)",
       "Bash(find:*)",
       "Bash(pwsh:*)",
-      "Skill(technical-writer)"
+      "Skill(technical-writer)",
+      "Bash(python3:*)"
     ]
   }
 }

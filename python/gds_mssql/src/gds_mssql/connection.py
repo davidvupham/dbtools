@@ -9,7 +9,6 @@ import logging
 from typing import Any, Optional
 
 import pyodbc
-
 from gds_database import (
     ConfigurableComponent,
     ConfigurationError,

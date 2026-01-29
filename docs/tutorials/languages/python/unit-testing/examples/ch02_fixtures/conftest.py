@@ -1,5 +1,6 @@
 import pytest
 
+
 class MockDB:
     def __init__(self):
         self.status = "connected"
